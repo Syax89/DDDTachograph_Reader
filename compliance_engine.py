@@ -366,3 +366,87 @@ class ComplianceEngine:
 
     def get_report(self):
         return self.infractions
+
+    def get_daily_summary(self, activities):
+        """
+        Generates daily summaries for the GUI.
+        Returns a list of dictionaries with totals for driving, work, rest and infraction count.
+        """
+        if not activities:
+            return []
+
+        # We need the analyzed timeline to attribute infractions to specific days
+        # and to calculate totals based on the processed (merged) events.
+        timeline = self._build_timeline(activities)
+        infractions = self.analyze(activities)
+
+        daily_data = {}
+
+        # Initialize daily_data with all dates present in activities to ensure we don't skip empty days
+        for day in activities:
+            date_str = day["data"]
+            if date_str not in daily_data:
+                daily_data[date_str] = {
+                    "guida": 0,
+                    "lavoro": 0,
+                    "riposo": 0,
+                    "infrazioni": 0
+                }
+
+        # Aggregate durations from the timeline
+        # Timeline events can span across multiple days
+        for ev in timeline:
+            start_dt = ev["start"]
+            end_dt = ev["end"]
+            tipo = ev["tipo"]
+            
+            curr_dt = start_dt
+            while curr_dt < end_dt:
+                date_str = curr_dt.strftime("%d/%m/%Y")
+                
+                # Calculate end of current day or end of activity
+                next_day_start = (curr_dt + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+                limit = min(end_dt, next_day_start)
+                
+                duration_in_day = int((limit - curr_dt).total_seconds() / 60)
+                
+                if date_str not in daily_data:
+                    daily_data[date_str] = {"guida": 0, "lavoro": 0, "riposo": 0, "infrazioni": 0}
+                
+                if tipo == "GUIDA":
+                    daily_data[date_str]["guida"] += duration_in_day
+                elif tipo == "LAVORO":
+                    daily_data[date_str]["lavoro"] += duration_in_day
+                elif tipo == "RIPOSO" or tipo == "DISPONIBILITÀ":
+                    # Disponibilità is often treated as rest for summary purposes, or can be separate.
+                    # Following typical GUI requirements, we group it with rest or keep separate.
+                    # Here we treat it as Rest/Other than Work.
+                    daily_data[date_str]["riposo"] += duration_in_day
+                
+                curr_dt = limit
+
+        # Count infractions per day
+        for inf in infractions:
+            date_str = inf["data"]
+            if date_str in daily_data:
+                daily_data[date_str]["infrazioni"] += 1
+
+        # Format results
+        summary = []
+        def format_min(m):
+            hours = m // 60
+            minutes = m % 60
+            return f"{hours:02d}:{minutes:02d}"
+
+        sorted_dates = sorted(daily_data.keys(), key=lambda x: datetime.strptime(x, "%d/%m/%Y"))
+        for d_str in sorted_dates:
+            data = daily_data[d_str]
+            summary.append({
+                "Data": d_str,
+                "Guida Totale": format_min(data["guida"]),
+                "Lavoro Totale": format_min(data["lavoro"]),
+                "Riposo Totale": format_min(data["riposo"]),
+                "Infrazioni": data["infrazioni"]
+            })
+
+        return summary
