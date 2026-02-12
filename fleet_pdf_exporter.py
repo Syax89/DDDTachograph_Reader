@@ -56,7 +56,7 @@ def _styles():
 def _kpi_block(title: str, value: str, color=C_BLUE_LT) -> Table:
     """Un blocco KPI 4x1."""
     data = [
-        [Paragraph(f'<font color="#{color.hexval()[1:]}"><b>{value}</b></font>',
+        [Paragraph(f'<font color="#{color.hexval()[2:]}"><b>{value}</b></font>',
                    ParagraphStyle("kv", fontSize=22, fontName="Helvetica-Bold",
                                   alignment=TA_CENTER))],
         [Paragraph(title, ParagraphStyle("kt", fontSize=8, fontName="Helvetica",
