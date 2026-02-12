@@ -138,7 +138,7 @@ class TagNavigator:
 
         is_container = False
         if mode == 'stap' and dtype == 0x04: is_container = True
-        if tag in (0x7621, 0x7622, 0x7F21, 0x7D21, 0xAD21): is_container = True
+        if tag in (0x7621, 0x7631, 0x7F21, 0x7D21, 0xAD21): is_container = True
         if mode == 'annex1c' and tag > 0xFF:
             first_byte = (tag >> ((tag.bit_length() - 1) // 8 * 8)) & 0xFF
             if first_byte & 0x20: is_container = True

@@ -22,3 +22,8 @@ ENV/
 # PyInstaller
 build/
 dist/
+
+# Real DDD test files (personal data)
+test_gen22_*.ddd
+test_real_*.ddd
+*.ddd

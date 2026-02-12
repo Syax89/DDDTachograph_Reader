@@ -30,9 +30,9 @@ class TestGen22Detection:
     """Test Gen 2.2 header detection."""
 
     def test_detect_g22_header(self):
-        """Files starting with 0x7622 should be detected as G2.2."""
-        # Build minimal file: 0x7622 header + length + some padding
-        header = b'\x76\x22'
+        """Files starting with 0x7631 should be detected as G2.2."""
+        # Build minimal file: 0x7631 header + length + some padding
+        header = b'\x76\x31'
         length = struct.pack(">H", 10)
         payload = b'\x00\x02' + b'\x00' * 8  # version + padding
         data = header + length + payload
@@ -68,6 +68,48 @@ class TestGen22Detection:
             assert result["metadata"]["generation"] == "G1 (Digital)"
         finally:
             os.unlink(path)
+
+
+class TestGen22RealFiles:
+    """Test with real DDD files if available."""
+
+    @pytest.fixture
+    def real_g22_path(self):
+        p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'test_gen22_1.ddd')
+        if not os.path.exists(p):
+            pytest.skip("Real Gen 2.2 test file not available")
+        return p
+
+    @pytest.fixture
+    def real_g2_path(self):
+        p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'test_real_g2.ddd')
+        if not os.path.exists(p):
+            pytest.skip("Real G2 test file not available")
+        return p
+
+    @pytest.fixture
+    def real_g1_path(self):
+        p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'test_real_g1.ddd')
+        if not os.path.exists(p):
+            pytest.skip("Real G1 test file not available")
+        return p
+
+    def test_real_g22_detection(self, real_g22_path):
+        result = TachoParser(real_g22_path).parse()
+        assert result["metadata"]["generation"] == "G2.2 (Smart V2)"
+
+    def test_real_g2_still_works(self, real_g2_path):
+        result = TachoParser(real_g2_path).parse()
+        assert result["metadata"]["generation"] == "G2 (Smart)"
+
+    def test_real_g1_still_works(self, real_g1_path):
+        result = TachoParser(real_g1_path).parse()
+        assert result["metadata"]["generation"] == "G1 (Digital)"
+
+    def test_real_g22_no_crash_and_extracts_data(self, real_g22_path):
+        result = TachoParser(real_g22_path).parse()
+        assert result["metadata"]["coverage_pct"] > 0
+        assert "Error" not in result["metadata"].get("integrity_check", "")
 
 
 class TestGen22GracefulFallback:

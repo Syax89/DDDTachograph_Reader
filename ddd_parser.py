@@ -57,7 +57,7 @@ class TachoParser:
             0x0223: "EF_GNSS_Accumulated_Position", 0xC100: "G1_CardCertificate",
             0xC108: "G1_CA_Certificate", 0xC101: "G2_CardCertificate", 0xC109: "G2_CA_Certificate",
             # Gen 2.2 (Smart V2) - Reg. EU 2023/980
-            0x7622: "G22_ApplicationContainer",
+            0x7631: "G22_ApplicationContainer",
             0x0525: "G22_GNSSAccumulatedDriving",
             0x0526: "G22_LoadUnloadOperations",
             0x0527: "G22_TrailerRegistrations",
@@ -103,9 +103,9 @@ class TachoParser:
             self.raw_data = mmap.mmap(self._fd.fileno(), 0, access=mmap.ACCESS_READ)
             
             header = self._safe_read(0, 2)
-            if header == b'\x76\x22':
+            if header == b'\x76\x31':
                 self.results["metadata"]["generation"] = "G2.2 (Smart V2)"
-            elif header == b'\x76\x21':
+            elif header in (b'\x76\x21', b'\x76\x22'):
                 self.results["metadata"]["generation"] = "G2 (Smart)"
             else:
                 self.results["metadata"]["generation"] = "G1 (Digital)"
