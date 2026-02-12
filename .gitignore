@@ -27,3 +27,11 @@ dist/
 test_gen22_*.ddd
 test_real_*.ddd
 *.ddd
+
+# File DDD reali (dati personali, non pushare)
+test_gen22_*.ddd
+test_real_*.ddd
+*.ddd
+!mock.ddd
+!test_recursive.ddd
+!g2_card_test.ddd
