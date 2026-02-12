@@ -9,6 +9,7 @@ from compliance_engine import ComplianceEngine
 from fines_calculator import FinesCalculator
 from export_manager import ExportManager
 from fleet_analytics import FleetAnalytics
+from fleet_pdf_exporter import generate_fleet_pdf
 
 # Impostazioni Tema Aurora ✨
 ctk.set_appearance_mode("Dark")
@@ -234,7 +235,7 @@ class App(ctk.CTk):
         # Toolbar
         toolbar = ctk.CTkFrame(frame, fg_color="transparent")
         toolbar.grid(row=2, column=0, padx=20, pady=(0, 10), sticky="ew")
-        toolbar.grid_columnconfigure(3, weight=1)
+        toolbar.grid_columnconfigure(4, weight=1)
 
         self.fleet_folder_btn = ctk.CTkButton(toolbar, text="📂 Seleziona Cartella", command=self.fleet_select_folder, height=36, font=ctk.CTkFont(weight="bold"))
         self.fleet_folder_btn.grid(row=0, column=0, padx=(0, 10))
@@ -245,8 +246,11 @@ class App(ctk.CTk):
         self.fleet_export_btn = ctk.CTkButton(toolbar, text="⬇ Esporta CSV", command=self.fleet_export_csv, height=36, state="disabled", fg_color="transparent", border_width=1)
         self.fleet_export_btn.grid(row=0, column=2, padx=(0, 10))
 
+        self.fleet_pdf_btn = ctk.CTkButton(toolbar, text="📄 Esporta PDF", command=self.fleet_export_pdf, height=36, state="disabled", fg_color="#1F538D", hover_color="#144070")
+        self.fleet_pdf_btn.grid(row=0, column=3, padx=(0, 10))
+
         self.fleet_status_label = ctk.CTkLabel(toolbar, text="Nessuna cartella selezionata", text_color="gray", anchor="w")
-        self.fleet_status_label.grid(row=0, column=3, padx=10, sticky="ew")
+        self.fleet_status_label.grid(row=0, column=4, padx=10, sticky="ew")
 
         # Stats bar (visibile dopo analisi)
         self.fleet_stats_frame = ctk.CTkFrame(frame, corner_radius=10, fg_color="gray17")
@@ -388,6 +392,7 @@ class App(ctk.CTk):
         self.fleet_stat_labels["fleet_infractions"].configure(text=str(total_infractions), text_color=inf_color)
 
         self.fleet_export_btn.configure(state="normal")
+        self.fleet_pdf_btn.configure(state="normal")
         self.fleet_status_label.configure(text=f"✅ Analisi completata: {ok_count}/{len(results)} file elaborati con successo.", text_color="#2ECC71")
 
     def _fleet_on_error(self, error_msg):
@@ -396,6 +401,22 @@ class App(ctk.CTk):
         self.fleet_analyze_btn.configure(state="normal", text="▶ Analizza")
         self.fleet_status_label.configure(text=f"❌ Errore: {error_msg}", text_color="#E74C3C")
         messagebox.showerror("Errore Analisi Flotta", f"Errore durante l'analisi:\n{error_msg}")
+
+    def fleet_export_pdf(self):
+        if not self.fleet_results:
+            return
+        path = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("PDF Files", "*.pdf")],
+            initialfile="fleet_report.pdf"
+        )
+        if path:
+            try:
+                folder_name = os.path.basename(self.fleet_folder_path) if self.fleet_folder_path else ""
+                generate_fleet_pdf(self.fleet_results, path, folder_name)
+                messagebox.showinfo("Esportazione PDF Flotta", f"Report PDF flotta salvato in:\n{path}")
+            except Exception as e:
+                messagebox.showerror("Errore Esportazione PDF", f"Errore: {e}")
 
     def fleet_export_csv(self):
         if not self.fleet_results:
