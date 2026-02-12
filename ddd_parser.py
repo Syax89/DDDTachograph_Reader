@@ -55,7 +55,20 @@ class TachoParser:
             0x0523: "G2_VehiclesUsed", 0x0524: "G2_DriverActivityData",
             0x0206: "VU_ActivityDailyRecord", 0x0222: "EF_GNSS_Places",
             0x0223: "EF_GNSS_Accumulated_Position", 0xC100: "G1_CardCertificate",
-            0xC108: "G1_CA_Certificate", 0xC101: "G2_CardCertificate", 0xC109: "G2_CA_Certificate"
+            0xC108: "G1_CA_Certificate", 0xC101: "G2_CardCertificate", 0xC109: "G2_CA_Certificate",
+            # Gen 2.2 (Smart V2) - Reg. EU 2023/980
+            0x7622: "G22_ApplicationContainer",
+            0x0525: "G22_GNSSAccumulatedDriving",
+            0x0526: "G22_LoadUnloadOperations",
+            0x0527: "G22_TrailerRegistrations",
+            0x0528: "G22_GNSSEnhancedPlaces",
+            0x0529: "G22_LoadSensorData",
+            0x052A: "G22_BorderCrossings",
+            0x0225: "G22_VU_GNSSADRecord",
+            0x0226: "G22_VU_LoadUnloadRecord",
+            0x0227: "G22_VU_TrailerRecord",
+            0x0228: "G22_VU_BorderCrossingRecord",
+            0xC102: "G22_CardCertificate", 0xC10A: "G22_CA_Certificate"
         }
         json_path = os.path.join(os.path.dirname(os.path.dirname(self.file_path)), 'all_tacho_tags.json')
         if not os.path.exists(json_path): json_path = 'all_tacho_tags.json'
@@ -90,7 +103,12 @@ class TachoParser:
             self.raw_data = mmap.mmap(self._fd.fileno(), 0, access=mmap.ACCESS_READ)
             
             header = self._safe_read(0, 2)
-            self.results["metadata"]["generation"] = "G2 (Smart)" if header == b'\x76\x21' else "G1 (Digital)"
+            if header == b'\x76\x22':
+                self.results["metadata"]["generation"] = "G2.2 (Smart V2)"
+            elif header == b'\x76\x21':
+                self.results["metadata"]["generation"] = "G2 (Smart)"
+            else:
+                self.results["metadata"]["generation"] = "G1 (Digital)"
 
             # Recursive parsing
             self.navigator.parse_stap_recursive(0, self.file_size)

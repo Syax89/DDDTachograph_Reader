@@ -267,4 +267,174 @@ def parse_calibration_data(val, results):
             })
     except: pass
 
+# ─── Gen 2.2 (Smart Tachograph V2) Decoders ─── Reg. EU 2023/980 ───
+
+def _decode_gnss_coord(data, offset):
+    """Decode GNSS coordinates (latitude/longitude) as signed 32-bit, unit 1/10 micro-degree."""
+    if len(data) < offset + 4:
+        return None
+    raw = struct.unpack(">i", data[offset:offset+4])[0]
+    return raw / 10_000_000.0  # degrees
+
+def parse_g22_gnss_accumulated_driving(val, results):
+    """Parse GNSS positions recorded at each activity change (Gen 2.2 mandatory)."""
+    if len(val) < 12:
+        return
+    try:
+        rec_size = 16  # timestamp(4) + lat(4) + lon(4) + speed(2) + heading(2)
+        for i in range(0, len(val) - rec_size + 1, rec_size):
+            chunk = val[i:i+rec_size]
+            ts = struct.unpack(">I", chunk[0:4])[0]
+            if ts == 0 or ts == 0xFFFFFFFF:
+                continue
+            lat = _decode_gnss_coord(chunk, 4)
+            lon = _decode_gnss_coord(chunk, 8)
+            speed = struct.unpack(">H", chunk[12:14])[0]
+            heading = struct.unpack(">H", chunk[14:16])[0]
+            if lat is not None and lon is not None:
+                dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+                results.setdefault("gnss_ad_records", []).append({
+                    "timestamp": dt,
+                    "latitude": round(lat, 7),
+                    "longitude": round(lon, 7),
+                    "speed_kmh": speed,
+                    "heading": heading
+                })
+    except Exception:
+        pass
+
+def parse_g22_load_unload_operations(val, results):
+    """Parse load/unload operation records (Gen 2.2)."""
+    if len(val) < 9:
+        return
+    try:
+        rec_size = 9  # timestamp(4) + operation_type(1) + lat(4) -- minimal
+        # Flexible: try 13-byte records (ts + type + lat + lon)
+        if len(val) >= 13 and len(val) % 13 == 0:
+            rec_size = 13
+        elif len(val) % 9 == 0:
+            rec_size = 9
+        for i in range(0, len(val) - rec_size + 1, rec_size):
+            chunk = val[i:i+rec_size]
+            ts = struct.unpack(">I", chunk[0:4])[0]
+            if ts == 0 or ts == 0xFFFFFFFF:
+                continue
+            op_type = chunk[4]  # 0=load, 1=unload
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+            record = {
+                "timestamp": dt,
+                "operation": "LOAD" if op_type == 0 else "UNLOAD"
+            }
+            if rec_size >= 13:
+                record["latitude"] = round(_decode_gnss_coord(chunk, 5) or 0, 7)
+                record["longitude"] = round(_decode_gnss_coord(chunk, 9) or 0, 7)
+            results.setdefault("load_unload_records", []).append(record)
+    except Exception:
+        pass
+
+def parse_g22_trailer_registrations(val, results):
+    """Parse trailer registration records (Gen 2.2)."""
+    if len(val) < 10:
+        return
+    try:
+        # Each record: timestamp(4) + nation(1) + trailer_plate(up to 14) + coupling(1)
+        rec_size = 24
+        if len(val) % 24 != 0:
+            rec_size = 20  # fallback
+        for i in range(0, len(val) - rec_size + 1, rec_size):
+            chunk = val[i:i+rec_size]
+            ts = struct.unpack(">I", chunk[0:4])[0]
+            if ts == 0 or ts == 0xFFFFFFFF:
+                continue
+            nation = get_nation(chunk[4])
+            plate = decode_string(chunk[5:19], is_id=True)
+            coupling = chunk[19] if rec_size > 19 else 0  # 0=coupled, 1=uncoupled
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+            results.setdefault("trailer_registrations", []).append({
+                "timestamp": dt,
+                "nation": nation,
+                "trailer_plate": plate,
+                "event": "COUPLED" if coupling == 0 else "UNCOUPLED"
+            })
+    except Exception:
+        pass
+
+def parse_g22_gnss_enhanced_places(val, results):
+    """Parse GNSS-enhanced place records (Gen 2.2)."""
+    if len(val) < 12:
+        return
+    try:
+        # timestamp(4) + lat(4) + lon(4) + place_type(1) + nation(1) + region(2)
+        rec_size = 16
+        if len(val) % 16 != 0:
+            rec_size = 12
+        for i in range(0, len(val) - rec_size + 1, rec_size):
+            chunk = val[i:i+rec_size]
+            ts = struct.unpack(">I", chunk[0:4])[0]
+            if ts == 0 or ts == 0xFFFFFFFF:
+                continue
+            lat = _decode_gnss_coord(chunk, 4)
+            lon = _decode_gnss_coord(chunk, 8)
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+            record = {
+                "timestamp": dt,
+                "latitude": round(lat or 0, 7),
+                "longitude": round(lon or 0, 7)
+            }
+            if rec_size >= 14:
+                record["place_type"] = chunk[12]
+                record["nation"] = get_nation(chunk[13])
+            results.setdefault("gnss_places", []).append(record)
+    except Exception:
+        pass
+
+def parse_g22_load_sensor_data(val, results):
+    """Parse load sensor (weight) data (Gen 2.2)."""
+    if len(val) < 8:
+        return
+    try:
+        # timestamp(4) + axle_weight(2) per axle + total(2)
+        ts = struct.unpack(">I", val[0:4])[0]
+        if ts == 0 or ts == 0xFFFFFFFF:
+            return
+        dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+        weights = []
+        for j in range(4, len(val) - 1, 2):
+            w = struct.unpack(">H", val[j:j+2])[0]
+            if w != 0xFFFF:
+                weights.append(w)
+        results.setdefault("load_sensor_data", []).append({
+            "timestamp": dt,
+            "weights_kg": weights
+        })
+    except Exception:
+        pass
+
+def parse_g22_border_crossings(val, results):
+    """Parse border crossing records (Gen 2.2)."""
+    if len(val) < 13:
+        return
+    try:
+        # timestamp(4) + nation_from(1) + nation_to(1) + lat(4) + lon(4) = 14 minimal
+        rec_size = 14
+        if len(val) % 14 != 0:
+            rec_size = 10  # ts + from + to + lat(4)
+        for i in range(0, len(val) - rec_size + 1, rec_size):
+            chunk = val[i:i+rec_size]
+            ts = struct.unpack(">I", chunk[0:4])[0]
+            if ts == 0 or ts == 0xFFFFFFFF:
+                continue
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+            record = {
+                "timestamp": dt,
+                "nation_from": get_nation(chunk[4]),
+                "nation_to": get_nation(chunk[5])
+            }
+            if rec_size >= 14:
+                record["latitude"] = round(_decode_gnss_coord(chunk, 6) or 0, 7)
+                record["longitude"] = round(_decode_gnss_coord(chunk, 10) or 0, 7)
+            results.setdefault("border_crossings", []).append(record)
+    except Exception:
+        pass
+
 # End of file

@@ -119,13 +119,26 @@ class TagNavigator:
             decoders.parse_driver_card_holder_identification(val, self.parser.results)
         elif tag in (0x0504, 0x0524, 0x0206) and length > 100:
             decoders.parse_cyclic_buffer_activities(val, self.parser.results)
+        # Gen 2.2 tags
+        elif tag == 0x0525:
+            decoders.parse_g22_gnss_accumulated_driving(val, self.parser.results)
+        elif tag == 0x0526 or tag == 0x0226:
+            decoders.parse_g22_load_unload_operations(val, self.parser.results)
+        elif tag == 0x0527 or tag == 0x0227:
+            decoders.parse_g22_trailer_registrations(val, self.parser.results)
+        elif tag == 0x0528 or tag == 0x0225:
+            decoders.parse_g22_gnss_enhanced_places(val, self.parser.results)
+        elif tag == 0x0529:
+            decoders.parse_g22_load_sensor_data(val, self.parser.results)
+        elif tag == 0x052A or tag == 0x0228:
+            decoders.parse_g22_border_crossings(val, self.parser.results)
         elif tag == 0x0001 and length >= 17:
             vin = decoders.decode_string(val[:17], is_id=True)
             if vin: self.parser.results["vehicle"]["vin"] = vin
 
         is_container = False
         if mode == 'stap' and dtype == 0x04: is_container = True
-        if tag in (0x7621, 0x7F21, 0x7D21, 0xAD21): is_container = True
+        if tag in (0x7621, 0x7622, 0x7F21, 0x7D21, 0xAD21): is_container = True
         if mode == 'annex1c' and tag > 0xFF:
             first_byte = (tag >> ((tag.bit_length() - 1) // 8 * 8)) & 0xFF
             if first_byte & 0x20: is_container = True

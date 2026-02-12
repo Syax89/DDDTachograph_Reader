@@ -55,6 +55,13 @@ class TachoResult:
     calibrations: List[Dict[str, Any]] = field(default_factory=list)
     raw_tags: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)
     signatures: List[Dict[str, Any]] = field(default_factory=list)
+    # Gen 2.2 specific
+    gnss_ad_records: List[Dict[str, Any]] = field(default_factory=list)
+    load_unload_records: List[Dict[str, Any]] = field(default_factory=list)
+    trailer_registrations: List[Dict[str, Any]] = field(default_factory=list)
+    gnss_places: List[Dict[str, Any]] = field(default_factory=list)
+    load_sensor_data: List[Dict[str, Any]] = field(default_factory=list)
+    border_crossings: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert the result to a dictionary compatible with the original parser."""
@@ -70,5 +77,11 @@ class TachoResult:
             "places": self.places,
             "calibrations": self.calibrations,
             "raw_tags": self.raw_tags,
-            "signatures": self.signatures
+            "signatures": self.signatures,
+            "gnss_ad_records": self.gnss_ad_records,
+            "load_unload_records": self.load_unload_records,
+            "trailer_registrations": self.trailer_registrations,
+            "gnss_places": self.gnss_places,
+            "load_sensor_data": self.load_sensor_data,
+            "border_crossings": self.border_crossings
         }
