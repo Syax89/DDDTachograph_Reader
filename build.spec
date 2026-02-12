@@ -12,11 +12,14 @@ base_path = os.path.abspath(".")
 ctk_path = os.path.dirname(customtkinter.__file__)
 ctk_data = [(ctk_path, "customtkinter")]
 
-# Raccogli i file di reportlab (font, ecc.)
+# Raccogli solo i file essenziali di reportlab (font Type1 e afm — esclude test/samples)
 try:
     import reportlab
     rl_path = os.path.dirname(reportlab.__file__)
-    ctk_data.append((rl_path, "reportlab"))
+    for subdir in ['fonts', 'lib', 'platypus', 'graphics', 'pdfgen', 'pdfbase']:
+        full = os.path.join(rl_path, subdir)
+        if os.path.exists(full):
+            ctk_data.append((full, os.path.join("reportlab", subdir)))
 except ImportError:
     pass
 
@@ -73,7 +76,21 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        # Test e docs inutili
+        'unittest', 'doctest', 'pdb', 'pydoc',
+        # Moduli scientifici pesanti non usati
+        'scipy', 'sklearn', 'matplotlib', 'PIL', 'cv2',
+        # Moduli di rete non usati (eccetto requests)
+        'email', 'html', 'xmlrpc', 'ftplib', 'imaplib', 'poplib', 'smtplib',
+        'telnetlib', 'urllib3',
+        # Moduli database non usati
+        'sqlite3', 'bsddb', 'dbm',
+        # Ottimizzazioni Python non usate
+        'multiprocessing', 'asyncio',
+        # Pandas usa numpy — escludiamo i moduli inutili di numpy
+        'numpy.testing', 'numpy.distutils',
+    ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
@@ -90,7 +107,7 @@ exe = EXE(
     name='TachoReader',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
+    strip=True,
     upx=True,
     console=False,
     disable_windowed_traceback=False,
@@ -106,7 +123,7 @@ coll = COLLECT(
     a.binaries,
     a.zipfiles,
     a.datas,
-    strip=False,
+    strip=True,
     upx=True,
     upx_exclude=[],
     name='TachoReader',
