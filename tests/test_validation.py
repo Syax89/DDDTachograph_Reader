@@ -32,6 +32,13 @@ class TestSignatureValidation(unittest.TestCase):
             self.mock_data['card_cert'], self.mock_data['msca_cert']))
         
         # Valid: MSCA signed by ERCA
+        # Debugging: check subjects/issuers
+        erca_subject = self.mock_data['erca_cert'].subject.rfc4514_string()
+        msca_issuer = self.mock_data['msca_cert'].issuer.rfc4514_string()
+        print(f"DEBUG: ERCA Subject: {erca_subject}")
+        print(f"DEBUG: MSCA Issuer: {msca_issuer}")
+        print(f"DEBUG: Validator Root Keys: {list(self.validator.root_certificates.keys())}")
+
         self.assertTrue(self.validator.verify_certificate_chain(
             self.mock_data['msca_cert'], self.mock_data['erca_cert']))
         

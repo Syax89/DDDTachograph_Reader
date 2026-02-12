@@ -16,7 +16,11 @@ class SignatureValidator:
     def __init__(self, certs_dir=None):
         self.logger = logging.getLogger("SignatureValidator")
         if not self.logger.handlers:
-            logging.basicConfig(level=logging.INFO)
+            handler = logging.StreamHandler()
+            formatter = logging.Formatter('%(levelname)s:%(name)s:%(message)s')
+            handler.setFormatter(formatter)
+            self.logger.addHandler(handler)
+            self.logger.setLevel(logging.INFO)
         
         self.certs_dir = certs_dir or os.path.join(os.path.dirname(__file__), "certs")
         self.root_certificates = {} # Map of KeyID -> Certificate
@@ -113,6 +117,8 @@ class SignatureValidator:
             if isinstance(parent_pubkey, rsa.RSAPublicKey):
                 # G1/G2 RSA validation
                 # Spesso usano PKCS1v15 o ISO9796-2
+                print(f"DEBUG: Verifying RSA signature for {child_cert.subject.rfc4514_string()}")
+                print(f"DEBUG: Hash Algo: {child_cert.signature_hash_algorithm}")
                 parent_pubkey.verify(
                     child_cert.signature,
                     child_cert.tbs_certificate_bytes,
@@ -130,11 +136,12 @@ class SignatureValidator:
                 return False
             return True
         except InvalidSignature:
+            print(f"DEBUG: InvalidSignature for {child_cert.subject.rfc4514_string()} signed by {parent_cert}")
             return False
         except Exception as e:
-            self.logger.error(f"Chain verification error for child {child_cert.subject}: {e}")
             import traceback
-            self.logger.error(traceback.format_exc())
+            print(f"DEBUG: Chain verification error for child {child_cert.subject.rfc4514_string()}: {e}")
+            traceback.print_exc()
             return False
 
     def validate_tacho_chain(self, card_cert_raw, msca_cert_raw, erca_key_id=None):
