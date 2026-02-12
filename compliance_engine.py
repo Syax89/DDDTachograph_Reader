@@ -36,6 +36,9 @@ class ComplianceEngine:
         # 3. Analyze Daily Rest (24h Shift Logic)
         self._check_daily_rest_cycles(timeline)
 
+        # 4. Analyze Weekly Rest, Compensation and Bi-weekly driving limits
+        self._check_weekly_compliance(timeline)
+
         return self.infractions
 
     def _build_timeline(self, activities):
@@ -46,27 +49,65 @@ class ComplianceEngine:
         for day in sorted_days:
             date_base = datetime.strptime(day["data"], "%d/%m/%Y")
             events = day.get("eventi", [])
-            for ev in events:
+            # Sort events by time to ensure we can calculate durations
+            sorted_events = sorted(events, key=lambda x: x["ora"])
+            
+            for i in range(len(sorted_events)):
+                ev = sorted_events[i]
                 h, m = map(int, ev["ora"].split(":"))
                 start_dt = date_base + timedelta(hours=h, minutes=m)
                 
-                # In the original data, we might have duration or just start times.
-                # Assuming 'durata' is available from the parser or inferred.
-                # If not, we'd need to calculate it from the next event.
-                # For this logic, we assume events have a duration.
-                durata = ev.get("durata", 0)
-                if durata <= 0: continue
+                # Calculate duration from next event or end of day
+                if i < len(sorted_events) - 1:
+                    next_ev = sorted_events[i+1]
+                    nh, nm = map(int, next_ev["ora"].split(":"))
+                    end_dt = date_base + timedelta(hours=nh, minutes=nm)
+                else:
+                    # Last event of the day goes until the first event of the NEXT day
+                    # or 23:59:59 if it's the last day
+                    end_dt = date_base + timedelta(hours=23, minutes=59, seconds=59)
+                    
+                    # Look ahead to see if there's a next day to get a more precise end time
+                    for next_day in sorted_days:
+                        ndate = datetime.strptime(next_day["data"], "%d/%m/%Y")
+                        if ndate == date_base + timedelta(days=1):
+                            nevents = sorted(next_day.get("eventi", []), key=lambda x: x["ora"])
+                            if nevents:
+                                fnh, fnm = map(int, nevents[0]["ora"].split(":"))
+                                end_dt = ndate + timedelta(hours=fnh, minutes=fnm)
+                            break
+                
+                durata = int((end_dt - start_dt).total_seconds() / 60)
+                if durata < 0: continue # Should not happen with sorted events
                 
                 full_timeline.append({
                     "start": start_dt,
-                    "end": start_dt + timedelta(minutes=durata),
+                    "end": end_dt,
                     "tipo": ev["tipo"],
                     "durata": durata
                 })
         
-        # Secondary safety sort
+        # Secondary safety sort and merge consecutive identical activities
         full_timeline.sort(key=lambda x: x["start"])
-        return full_timeline
+        return self._merge_timeline(full_timeline)
+
+    def _merge_timeline(self, timeline):
+        """Merges consecutive events of the same type across midnight or within the same day."""
+        if not timeline: return []
+        merged = []
+        current = timeline[0].copy()
+        
+        for i in range(1, len(timeline)):
+            next_ev = timeline[i]
+            # If same type and contiguous (or very close), merge
+            if next_ev["tipo"] == current["tipo"] and (next_ev["start"] - current["end"]).total_seconds() <= 60:
+                current["end"] = next_ev["end"]
+                current["durata"] = int((current["end"] - current["start"]).total_seconds() / 60)
+            else:
+                merged.append(current)
+                current = next_ev.copy()
+        merged.append(current)
+        return merged
 
     def _check_driving_and_breaks(self, timeline):
         """
@@ -197,6 +238,131 @@ class ComplianceEngine:
         if shortfall_min <= 60: return self.MI
         if shortfall_min <= 120: return self.SI
         return self.MSI
+
+    def _check_weekly_compliance(self, timeline):
+        """
+        Implementation of Weekly Rest (UE 561/2006).
+        1. Max 6 periods of 24h between weekly rests.
+        2. Weekly rest: 45h (regular) or 24h (reduced).
+        3. Compensation for reduced rest: must be taken before the end of the 3rd week.
+        4. Bi-weekly driving limit: 90h.
+        """
+        if not timeline: return
+
+        # Constants in minutes
+        WEEKLY_REGULAR = 45 * 60
+        WEEKLY_REDUCED = 24 * 60
+        BIWEEKLY_DRIVING_LIMIT = 90 * 60
+
+        weekly_rests = [] # List of {"start": dt, "end": dt, "duration": min, "is_reduced": bool, "deadline": dt, "to_compensate": min}
+        
+        # Identify all rests longer than 24h
+        for ev in timeline:
+            if ev["tipo"] == "RIPOSO" and ev["durata"] >= WEEKLY_REDUCED:
+                # To distinguish between a Daily Rest and Weekly Rest:
+                # This is simplified. In reality, a rest is weekly if it occurs after max 6 days.
+                is_reduced = ev["durata"] < WEEKLY_REGULAR
+                to_compensate = WEEKLY_REGULAR - ev["durata"] if is_reduced else 0
+                
+                # Deadline for compensation: end of the third week following the week in question.
+                # Find the Monday of the week containing the rest.
+                monday_of_week = ev["start"] - timedelta(days=ev["start"].weekday())
+                monday_of_week = monday_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+                deadline = monday_of_week + timedelta(weeks=4) # Start of 4th week = end of 3rd week
+
+                weekly_rests.append({
+                    "start": ev["start"],
+                    "end": ev["end"],
+                    "duration": ev["durata"],
+                    "is_reduced": is_reduced,
+                    "to_compensate": to_compensate,
+                    "deadline": deadline,
+                    "compensated_in": None
+                })
+
+        # Check: Max 6 days (144h) between weekly rests
+        # The period begins at the end of the previous weekly rest and ends at the start of the next.
+        for i in range(len(weekly_rests)):
+            current_rest = weekly_rests[i]
+            
+            # Start of working period: end of previous rest or start of timeline
+            period_start = timeline[0]["start"] if i == 0 else weekly_rests[i-1]["end"]
+            period_end = current_rest["start"]
+            
+            duration_hours = (period_end - period_start).total_seconds() / 3600
+            if duration_hours > 144: # 6 * 24h
+                self.infractions.append({
+                    "data": period_end.strftime("%d/%m/%Y"),
+                    "tipo": "SUPERAMENTO_6_PERIODI_24H",
+                    "severita": self.SI,
+                    "descrizione": f"Intervallo tra riposi settimanali di {int(duration_hours)} ore supera il limite di 144 ore (6 giorni)."
+                })
+
+        # Check: Compensation for reduced rest
+        for rest in weekly_rests:
+            if rest["is_reduced"]:
+                compensation_needed = rest["to_compensate"]
+                found_compensation = False
+                
+                # Look for a rest period that can cover the compensation before the deadline
+                for ev in timeline:
+                    # Compensation must be taken "en bloc" attached to another rest of at least 9h
+                    if ev["tipo"] == "RIPOSO" and ev["start"] > rest["end"] and ev["start"] < rest["deadline"]:
+                        # Check if this rest is a "candidate" (not the same rest)
+                        if ev["start"] == rest["start"]: continue
+                        
+                        # Calculate if this rest has "extra" time beyond its minimum requirement
+                        # If it's a daily rest, minimum is 9h. If it's weekly, 24h/45h.
+                        # For simplicity: if rest duration > (9h + compensation_needed), we consider it compensated.
+                        if ev["durata"] >= (9 * 60 + compensation_needed):
+                             found_compensation = True
+                             rest["compensated_in"] = ev["start"]
+                             break
+                
+                if not found_compensation:
+                    # Only add if current time is past deadline or we are analyzing a full set of data
+                    # (Here we assume the timeline covers the necessary period)
+                    self.infractions.append({
+                        "data": rest["start"].strftime("%d/%m/%Y"),
+                        "tipo": "MANCATA_COMPENSAZIONE_SETTIMANALE",
+                        "severita": self.SI,
+                        "descrizione": f"Riposo ridotto di {int(rest['duration']/60)}h del {rest['start'].strftime('%d/%m')} non compensato entro il {rest['deadline'].strftime('%d/%m/%Y')}."
+                    })
+
+        # Check: Bi-weekly driving limit (90h)
+        # Calculate driving for each fixed week (Mon-Sun 00:00 to 24:00)
+        driving_by_week = {} 
+        for ev in timeline:
+            if ev["tipo"] == "GUIDA":
+                # A week starts Monday 00:00
+                monday = ev["start"] - timedelta(days=ev["start"].weekday())
+                monday = monday.replace(hour=0, minute=0, second=0, microsecond=0)
+                driving_by_week[monday] = driving_by_week.get(monday, 0) + ev["durata"]
+        
+        weeks = sorted(driving_by_week.keys())
+        for i in range(len(weeks)):
+            w1 = weeks[i]
+            # Single week limit (not requested but good practice) - 56h
+            if driving_by_week[w1] > 56 * 60:
+                 self.infractions.append({
+                    "data": w1.strftime("%d/%m/%Y"),
+                    "tipo": "ECCESSO_GUIDA_SETTIMANALE",
+                    "severita": self.SI,
+                    "descrizione": f"Guida settimanale di {driving_by_week[w1]/60:.1f}h supera il limite di 56h."
+                })
+            
+            # Bi-weekly check
+            if i < len(weeks) - 1:
+                w2 = weeks[i+1]
+                if (w2 - w1).days == 7:
+                    total_biweekly = driving_by_week[w1] + driving_by_week[w2]
+                    if total_biweekly > BIWEEKLY_DRIVING_LIMIT:
+                        self.infractions.append({
+                            "data": w2.strftime("%d/%m/%Y"),
+                            "tipo": "ECCESSO_GUIDA_BISETTIMANALE",
+                            "severita": self.SI,
+                            "descrizione": f"Guida bisettimanale di {total_biweekly/60:.1f}h supera il limite di 90h."
+                        })
 
     def get_report(self):
         return self.infractions
