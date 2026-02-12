@@ -2,3 +2,6 @@ customtkinter
 pyinstaller
 requests
 cryptography
+reportlab
+pandas
+openpyxl

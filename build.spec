@@ -12,6 +12,14 @@ base_path = os.path.abspath(".")
 ctk_path = os.path.dirname(customtkinter.__file__)
 ctk_data = [(ctk_path, "customtkinter")]
 
+# Raccogli i file di reportlab (font, ecc.)
+try:
+    import reportlab
+    rl_path = os.path.dirname(reportlab.__file__)
+    ctk_data.append((rl_path, "reportlab"))
+except ImportError:
+    pass
+
 # Aggiungi i certificati
 certs_path = os.path.join(base_path, "certs")
 added_files = []
@@ -28,7 +36,35 @@ a = Analysis(
     pathex=[base_path],
     binaries=[],
     datas=added_files,
-    hiddenimports=['cryptography', 'requests'],
+    hiddenimports=[
+        'cryptography',
+        'requests',
+        'reportlab',
+        'reportlab.lib',
+        'reportlab.lib.colors',
+        'reportlab.lib.pagesizes',
+        'reportlab.lib.units',
+        'reportlab.lib.styles',
+        'reportlab.lib.enums',
+        'reportlab.platypus',
+        'reportlab.platypus.tables',
+        'reportlab.graphics.shapes',
+        'reportlab.graphics',
+        'pandas',
+        'openpyxl',
+        'fleet_analytics',
+        'fleet_pdf_exporter',
+        'compliance_engine',
+        'fines_calculator',
+        'export_manager',
+        'export_pdf',
+        'geocoding_engine',
+        'signature_validator',
+        'core',
+        'core.tag_navigator',
+        'core.decoders',
+        'core.models',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
