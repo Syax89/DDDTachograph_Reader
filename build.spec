@@ -25,6 +25,11 @@ certs_path = os.path.join(base_path, "certs")
 added_files = []
 if os.path.exists(certs_path):
     added_files.append((certs_path, "certs"))
+
+# Aggiungi il package core/ esplicitamente
+core_path = os.path.join(base_path, "core")
+if os.path.exists(core_path):
+    added_files.append((core_path, "core"))
     
 added_files.extend(ctk_data)
 
@@ -33,7 +38,7 @@ block_cipher = None
 
 a = Analysis(
     ['gui.py'],
-    pathex=[base_path],
+    pathex=[base_path, os.path.join(base_path, 'core')],
     binaries=[],
     datas=added_files,
     hiddenimports=[
