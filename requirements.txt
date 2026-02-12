@@ -1,2 +1,4 @@
 customtkinter
 pyinstaller
+requests
+cryptography

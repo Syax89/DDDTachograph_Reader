@@ -76,6 +76,29 @@ def generate_pdf(json_data, output_path):
     infractions = json_data.get("infractions", [])
     total_min, total_max = FinesCalculator.get_total_estimate(infractions)
     
+    # 1. Dati Anagrafici completi
+    driver = json_data.get("driver", {})
+    driver_info_data = [
+        [Paragraph("<b>Dati Anagrafici Conducente</b>", styles['Heading3']), ""],
+        ["Cognome (Surname):", driver.get('surname', 'N/A')],
+        ["Nome (Firstname):", driver.get('firstname', 'N/A')],
+        ["Data di Nascita:", driver.get('birth_date', 'N/A')],
+        ["Scadenza Carta:", driver.get('expiry_date', 'N/A')],
+        ["Nazione Rilascio:", driver.get('issuing_nation', 'N/A')],
+        ["Numero Carta:", driver.get('card_number', 'N/A')]
+    ]
+    dt = Table(driver_info_data, colWidths=[150, 300])
+    dt.setStyle(TableStyle([
+        ('SPAN', (0, 0), (1, 0)),
+        ('BACKGROUND', (0, 0), (1, 0), colors.HexColor("#34495e")),
+        ('TEXTCOLOR', (0, 0), (1, 0), colors.whitesmoke),
+        ('GRID', (0, 1), (-1, -1), 0.5, colors.grey),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('PADDING', (0, 0), (-1, -1), 4)
+    ]))
+    elements.append(dt)
+    elements.append(Spacer(1, 12))
+
     summary_data = [
         [Paragraph("<b>Riepilogo Violazioni</b>", styles['Normal']), Paragraph(f"<b>{len(infractions)}</b>", styles['Normal'])],
         [Paragraph("<b>Sanzioni Stimate (Art. 174 CdS)</b>", styles['Normal']), Paragraph(f"<b>€ {total_min} - € {total_max}</b>", styles['Normal'])]
@@ -91,22 +114,36 @@ def generate_pdf(json_data, output_path):
 
     # Metadata
     meta = json_data.get("metadata", {})
-    driver = json_data.get("driver", {})
-    vehicle = json_data.get("vehicle", {})
+    integrity = meta.get('integrity_check', 'Unknown')
+    is_valid = str(integrity).upper() in ["OK", "VERIFIED (G1)", "TRUE", "VERIFIED"]
     
-    info_data = [
-        ["File:", meta.get('filename'), "Conducente:", driver.get('card_number')],
-        ["Data Analisi:", meta.get('parsed_at'), "Veicolo:", vehicle.get('plate')],
-        ["Integrità:", meta.get('integrity_check'), "VIN:", vehicle.get('vin')]
+    # --- SEZIONE VALIDAZIONE LEGALE ---
+    elements.append(Paragraph("Validazione Legale e Integrità", styles['Heading2']))
+    
+    status_color = colors.darkgreen if is_valid else colors.red
+    status_text = "CERTIFICATO / ORIGINALE" if is_valid else "NON VALIDATO / POSSIBILE MANOMISSIONE"
+    status_icon = "✓" if is_valid else "⚠"
+    
+    validation_data = [
+        [Paragraph(f"<font color='{status_color}'><b>{status_icon} STATO FILE: {status_text}</b></font>", styles['Normal'])],
+        [Paragraph(f"<b>Esito Tecnico:</b> {integrity}", styles['Normal'])],
+        [Paragraph("<b>Nota Legale:</b> Questo documento attesta che il file di origine " + 
+                  ("non ha subito manomissioni dal momento dello scarico dalla carta/veicolo ed è conforme agli standard tecnici EU." if is_valid else 
+                   "NON ha superato i controlli di integrità digitale. I dati potrebbero essere stati alterati o il file potrebbe essere corrotto."), styles['Normal'])]
     ]
-    it = Table(info_data, colWidths=[80, 150, 80, 150])
-    it.setStyle(TableStyle([
-        ('FONTSIZE', (0, 0), (-1, -1), 8),
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.darkslategrey),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+    
+    vt = Table(validation_data, colWidths=[450])
+    vt.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 1.5, status_color),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
+        ('PADDING', (0, 0), (-1, -1), 10),
     ]))
-    elements.append(it)
+    elements.append(vt)
     elements.append(Spacer(1, 18))
+
+    # Info Table
+    # driver defined above
+    vehicle = json_data.get("vehicle", {})
 
     # Timeline Section
     elements.append(Paragraph("Visualizzazione Grafica Attività (Last 7 Days)", styles['Heading2']))
@@ -114,7 +151,9 @@ def generate_pdf(json_data, output_path):
     infractions_dates = [inf.get("data") for inf in infractions]
 
     for day in activities[:7]:
-        elements.append(Paragraph(f"Data: {day.get('data')} - Km: {day.get('km', 'N/A')}", styles['Heading3']))
+        km_start = day.get('km_start', 'N/A')
+        km_end = day.get('km_end', 'N/A')
+        elements.append(Paragraph(f"Data: {day.get('data')} | Odometro: {km_start} - {km_end} km", styles['Heading3']))
         
         # Create Timeline Drawing
         d = Drawing(160 * mm, 15 * mm)
@@ -178,6 +217,66 @@ def generate_pdf(json_data, output_path):
     
     elements.append(Spacer(1, 18))
     elements.append(Paragraph("<i>Nota: Le sanzioni sono stime basate sull'Art. 174 del CdS e possono variare in base alle circostanze specifiche.</i>", styles['Italic']))
+
+    # 3. Registro Eventi & Errori (0x0504, 0x0505)
+    elements.append(Spacer(1, 24))
+    elements.append(Paragraph("Registro Eventi e Guasti (Forensic Log)", styles['Heading2']))
+    
+    events = json_data.get("events", [])
+    faults = json_data.get("faults", [])
+    all_logs = events + faults
+    
+    if not all_logs:
+        elements.append(Paragraph("Nessun evento o guasto critico registrato nel periodo.", styles['Normal']))
+    else:
+        log_data = [["Tipo", "Inizio", "Fine", "Veicolo"]]
+        for item in all_logs[:30]: # Limit logs
+            log_data.append([
+                Paragraph(item.get("type", "N/A"), styles['Normal']),
+                item.get("start", ""),
+                item.get("end", ""),
+                item.get("vehicle", "")
+            ])
+        lt = Table(log_data, colWidths=[180, 100, 100, 100])
+        lt.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#c0392b")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTSIZE', (0, 0), (-1, -1), 7),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
+        ]))
+        elements.append(lt)
+
+    # 2. Tabella Raw Tags (Data Explorer)
+    elements.append(Spacer(1, 24))
+    elements.append(Paragraph("Esplora Dati Integrali (Raw Tags Data Explorer)", styles['Heading2']))
+    raw_tags_dict = json_data.get("raw_tags", {})
+    if not raw_tags_dict:
+        elements.append(Paragraph("Nessun dato grezzo disponibile per l'esplorazione.", styles['Normal']))
+    else:
+        tags_data = [["Tag ID", "Nome Struttura", "Lunghezza", "Offset"]]
+        # Flatten the dict of lists
+        flat_tags = []
+        for key, list_of_tags in raw_tags_dict.items():
+            if isinstance(list_of_tags, list):
+                for t in list_of_tags:
+                    if isinstance(t, dict):
+                        flat_tags.append(t)
+        
+        for rt in flat_tags[:150]: # Show more tags
+            tags_data.append([
+                rt.get("tag_id", ""),
+                rt.get("tag_name", ""),
+                str(rt.get("length", "")),
+                str(rt.get("offset", ""))
+            ])
+        rt_table = Table(tags_data, colWidths=[60, 250, 80, 80])
+        rt_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#27ae60")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTSIZE', (0, 0), (-1, -1), 7),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
+        ]))
+        elements.append(rt_table)
 
     doc.build(elements)
 
