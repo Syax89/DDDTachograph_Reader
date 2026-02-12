@@ -46,6 +46,25 @@ class SignatureValidator:
                     path = os.path.join(self.certs_dir, filename)
                     with open(path, "rb") as f:
                         cert_data = f.read()
+                        
+                        # Handle JRC custom PEM format
+                        if b"BEGIN ERCA PK" in cert_data:
+                            lines = cert_data.decode().splitlines()
+                            base64_data = "".join([l for l in lines if not l.startswith("---")])
+                            from cryptography.hazmat.primitives import serialization
+                            import base64
+                            # In G1, EC_PK is usually a raw RSA public key modulus + exponent
+                            # but JRC provides it in a custom base64 wrap
+                            # For simplicity, if we can't load as X509, we'll store as raw
+                            try:
+                                # Try as PEM first
+                                pem_data = f"-----BEGIN PUBLIC KEY-----\n{base64_data}\n-----END PUBLIC KEY-----".encode()
+                                pub_key = serialization.load_pem_public_key(pem_data)
+                                self.root_certificates["ERCA_G1"] = pub_key
+                                self.logger.info("Loaded Root Public Key (G1) from JRC format")
+                                continue
+                            except: pass
+
                         # Prova a caricare come X.509
                         try:
                             cert = x509.load_pem_x509_certificate(cert_data)
