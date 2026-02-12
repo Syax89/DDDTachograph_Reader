@@ -5,6 +5,20 @@ __pycache__/
 env/
 venv/
 ENV/
-*.ddd
-output.json
 .DS_Store
+
+# Tachograph files
+*.ddd
+*.DDD
+*.bin
+
+# Output files
+*.json
+*.pdf
+*.csv
+!test_data.json # keep if needed, but we just deleted it
+!requirements.txt
+
+# PyInstaller
+build/
+dist/
