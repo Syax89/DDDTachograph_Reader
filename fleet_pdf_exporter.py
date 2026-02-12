@@ -177,9 +177,18 @@ def generate_fleet_pdf(results: list, output_path: str, folder_name: str = ""):
         row_bg = colors.white if i % 2 == 0 else C_LIGHT
 
         # Integrità
-        is_ok_int = str(integrity).upper() in ["OK", "VERIFIED (G1)", "TRUE", "VERIFIED"]
+        int_upper = str(integrity).upper()
+        VERIFIED_STATES    = {"OK", "VERIFIED (G1)", "TRUE", "VERIFIED", "VERIFIED (LOCAL CHAIN)"}
+        UNVERIFIABLE_STATES = {"INCOMPLETE CERTIFICATES", "INCOMPLETE_CERTIFICATES",
+                                "NO CERTIFICATES", "UNKNOWN"}
+        if int_upper in VERIFIED_STATES:
+            int_color, int_icon = "#1E8449", "✓ "
+        elif int_upper in UNVERIFIABLE_STATES:
+            int_color, int_icon = "#B7860B", "? "
+        else:
+            int_color, int_icon = "#C0392B", "✗ "
         int_para = Paragraph(
-            f'<font color="{"#1E8449" if is_ok_int else "#C0392B"}">{"✓ " if is_ok_int else "⚠ "}{integrity}</font>',
+            f'<font color="{int_color}">{int_icon}{integrity}</font>',
             ParagraphStyle("int", fontSize=7, fontName="Helvetica-Bold", alignment=TA_CENTER)
         )
 

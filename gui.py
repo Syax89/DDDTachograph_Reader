@@ -497,15 +497,32 @@ class App(ctk.CTk):
         self.welcome_stats["ORE GUIDA"].configure(text=f"{total_min // 60}h {total_min % 60}m")
         
         integrity = data['metadata'].get('integrity_check', 'Unknown')
-        is_valid = str(integrity).upper() in ["OK", "VERIFIED (G1)", "TRUE", "VERIFIED"]
-        
-        if is_valid:
+        integrity_upper = str(integrity).upper()
+
+        # Tre stati: VERIFICATO / NON VERIFICABILE (cert mancanti) / MANOMESSO
+        VERIFIED_STATES    = {"OK", "VERIFIED (G1)", "TRUE", "VERIFIED", "VERIFIED (LOCAL CHAIN)"}
+        UNVERIFIABLE_STATES = {"INCOMPLETE CERTIFICATES", "INCOMPLETE_CERTIFICATES",
+                               "NO CERTIFICATES", "UNKNOWN"}
+        is_verified     = integrity_upper in VERIFIED_STATES
+        is_unverifiable = integrity_upper in UNVERIFIABLE_STATES
+
+        if is_verified:
             self.legal_banner.configure(fg_color="#1B5E20")
-            self.legal_status_label.configure(text=f"✓ FILE CERTIFICATO: Il file non ha subito manomissioni ({integrity})", text_color="white")
+            self.legal_status_label.configure(
+                text=f"✓ FILE CERTIFICATO — Firma digitale valida. Il file non ha subito manomissioni. ({integrity})",
+                text_color="white")
             self.welcome_stats["STATO INTEGRITÀ"].configure(text="CERTIFICATO", text_color="#2ECC71")
+        elif is_unverifiable:
+            self.legal_banner.configure(fg_color="#4A3800")
+            self.legal_status_label.configure(
+                text=f"⚠ Firma non verificabile — Certificati ERCA non presenti nel sistema. I dati estratti sono comunque leggibili. ({integrity})",
+                text_color="#F0C040")
+            self.welcome_stats["STATO INTEGRITÀ"].configure(text="NON VERIF.", text_color="#F0C040")
         else:
             self.legal_banner.configure(fg_color="#B71C1C")
-            self.legal_status_label.configure(text=f"⚠ ATTENZIONE: Integrità non verificata o file non valido ({integrity})", text_color="white")
+            self.legal_status_label.configure(
+                text=f"✗ FIRMA NON VALIDA — Il file potrebbe essere stato manomesso. ({integrity})",
+                text_color="white")
             self.welcome_stats["STATO INTEGRITÀ"].configure(text="NON VALIDO", text_color="#E74C3C")
 
         for item in self.tag_tree.get_children(): self.tag_tree.delete(item)
