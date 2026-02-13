@@ -1,87 +1,41 @@
-name: Build and Release
+name: Build TachoReader
 
 on:
   push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
 
 jobs:
   build:
-    name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest, macos-latest]
-        include:
-          - os: windows-latest
-            artifact_name: TachoReader-Windows.zip
-            executable_path: dist/TachoReader
-          - os: macos-latest
-            artifact_name: TachoReader-Mac.zip
-            executable_path: dist/TachoReader.app
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Build with PyInstaller
-        run: |
-          pyinstaller build.spec
-
-      - name: Create Zip Archive (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          powershell Compress-Archive -Path ${{ matrix.executable_path }} -DestinationPath ${{ matrix.artifact_name }}
-
-      - name: Create Zip Archive (Mac)
-        if: matrix.os == 'macos-latest'
-        run: |
-          zip -r ${{ matrix.artifact_name }} ${{ matrix.executable_path }}
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: ${{ matrix.artifact_name }}
-
-  release:
-    name: Create GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    permissions:
-      contents: write
-    steps:
-      - name: Download Windows Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: TachoReader-Windows.zip
-
-      - name: Download Mac Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: TachoReader-Mac.zip
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            TachoReader-Windows.zip
-            TachoReader-Mac.zip
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-data: 3.11
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller customtkinter
+        
+    - name: Build with PyInstaller
+      run: |
+        pyinstaller build.spec
+        
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: TachoReader-${{ matrix.os }}
+        path: |
+          dist/TachoReader.exe
+          dist/TachoReader.app
+          dist/TachoReader
