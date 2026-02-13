@@ -95,6 +95,9 @@ class TachoParser:
 
             # Recursive parsing
             self.navigator.parse_stap_recursive(0, self.file_size)
+            
+            # Deep Scan pass
+            self.navigator.deep_scan()
 
             self.results["metadata"]["coverage_pct"] = self.get_coverage_report()
             

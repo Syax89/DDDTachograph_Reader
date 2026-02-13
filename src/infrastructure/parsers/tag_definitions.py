@@ -33,6 +33,7 @@ TACHO_TAGS = {
 
     # --- Generation 2.2 (Smart V2) - Reg. EU 2021/1228 & 2023/980 ---
     0x7631: "G22_ApplicationContainer",
+    0x7F21: "G22_CardCertificateContainer",
     0x7F4E: "G22_SecurityContainer",
     0x0525: "G22_GNSSAccumulatedDriving",
     0x0526: "G22_LoadUnloadOperations",

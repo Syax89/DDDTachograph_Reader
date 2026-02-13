@@ -31,80 +31,73 @@ class TagNavigator:
             return tag, length, pos - start
         except Exception: return None, None, 0
 
-    def parse_annex1c(self, start_pos, end_pos, depth, parent_path):
-        if depth > 12: return
-        pos = start_pos
-        unparsed_start = -1
-        while pos < end_pos:
-            matched = False
-            # 1. BER-TLV multi-byte
-            if pos < end_pos and (self.parser.raw_data[pos] & 0x1F) == 0x1F:
-                tag, length, h = self.read_ber_tlv(self.parser.raw_data, pos)
-                if tag is not None and length is not None and pos + h + length <= end_pos:
-                    hi = tag >> 8 if tag > 0xFF else 0
-                    if tag in self.parser.TAGS or hi in (0x7F, 0x5F, 0xBF):
-                        if unparsed_start != -1:
-                            self.record_unparsed(unparsed_start, pos, depth, parent_path)
-                            unparsed_start = -1
-                        val = self.parser._safe_read(pos + h, length)
-                        if val is not None:
-                            self.record_and_dispatch(tag, length, val, pos, h, depth, parent_path, mode='annex1c')
-                            pos += h + length; matched = True
-            # 2. Tag2+Len2
-            if not matched and pos + 4 <= end_pos:
-                raw4 = self.parser._safe_read(pos, 4)
-                if raw4:
-                    t2, l2 = struct.unpack(">HH", raw4)
-                    if t2 in self.parser.TAGS and 0 <= l2 <= (end_pos - pos - 4):
-                        if unparsed_start != -1:
-                            self.record_unparsed(unparsed_start, pos, depth, parent_path)
-                            unparsed_start = -1
-                        val = self.parser._safe_read(pos + 4, l2)
-                        if val is not None:
-                            self.record_and_dispatch(t2, l2, val, pos, 4, depth, parent_path, mode='annex1c')
-                            pos += 4 + l2; matched = True
-            # 3. BER-TLV single-byte
-            if not matched:
-                tag, length, h = self.read_ber_tlv(self.parser.raw_data, pos)
-                if tag is not None and tag in self.parser.TAGS and pos + h + length <= end_pos:
-                    if unparsed_start != -1:
-                        self.record_unparsed(unparsed_start, pos, depth, parent_path)
-                        unparsed_start = -1
-                    val = self.parser._safe_read(pos + h, length)
-                    if val is not None:
-                        self.record_and_dispatch(tag, length, val, pos, h, depth, parent_path, mode='annex1c')
-                        pos += h + length; matched = True
-            if not matched:
-                if unparsed_start == -1: unparsed_start = pos
-                pos += 1
-        
-        if unparsed_start != -1:
-            self.record_unparsed(unparsed_start, end_pos, depth, parent_path)
-
     def parse_stap_recursive(self, start_pos, end_pos, depth=0, parent_path=""):
+        """
+        New Smart Hybrid Parser: Tries all known formats (STAP, BER, T2L2) 
+        at each position to ensure 100% meaningful coverage.
+        """
         if depth > 12: return
         pos = start_pos
         unparsed_start = -1
         
         while pos < end_pos:
             matched = False
-            if pos + 5 <= end_pos:
+            match_len = 0
+            
+            # --- 1. Try STAP (5 bytes header) ---
+            if not matched and pos + 5 <= end_pos:
                 try:
                     hdr = self.parser._safe_read(pos, 5)
                     if hdr:
                         tag, dtype, length = struct.unpack(">HBH", hdr)
-                        if tag not in (0, 0xFFFF) and dtype <= 0x04 and pos + 5 + length <= end_pos:
+                        if tag in self.parser.TAGS and dtype <= 0x04 and pos + 5 + length <= end_pos:
                             if unparsed_start != -1:
                                 self.record_unparsed(unparsed_start, pos, depth, parent_path)
                                 unparsed_start = -1
                             
                             val = self.parser._safe_read(pos + 5, length)
-                            if val is not None:
-                                self.record_and_dispatch(tag, length, val, pos, 5, depth, parent_path, mode='stap', dtype=dtype)
-                                pos += 5 + length
-                                matched = True
+                            self.record_and_dispatch(tag, length, val, pos, 5, depth, parent_path, mode='stap', dtype=dtype)
+                            pos += 5 + length
+                            matched = True
                 except Exception: pass
-            
+
+            # --- 2. Try BER-TLV ---
+            if not matched:
+                tag, length, h = self.read_ber_tlv(self.parser.raw_data, pos)
+                if tag is not None and length is not None and pos + h + length <= end_pos:
+                    # Valid BER match if:
+                    # - Known tag
+                    # - Or starts with 0x7F, 0x5F, 0xBF, 0x76, 0xAD (common tachograph roots)
+                    # - Or bit 5 is set (constructed)
+                    hi = tag >> 8 if tag > 0xFF else tag
+                    if (tag in self.parser.TAGS or 
+                        hi in (0x7F, 0x5F, 0xBF, 0x76, 0xAD) or
+                        (tag > 0xFF and ((tag >> ((tag.bit_length() - 1) // 8 * 8)) & 0x20))):
+                        
+                        if unparsed_start != -1:
+                            self.record_unparsed(unparsed_start, pos, depth, parent_path)
+                            unparsed_start = -1
+                        val = self.parser._safe_read(pos + h, length)
+                        self.record_and_dispatch(tag, length, val, pos, h, depth, parent_path, mode='annex1c')
+                        pos += h + length
+                        matched = True
+
+            # --- 3. Try Tag2 + Len2 (4 bytes header) ---
+            if not matched and pos + 4 <= end_pos:
+                try:
+                    raw4 = self.parser._safe_read(pos, 4)
+                    if raw4:
+                        t2, l2 = struct.unpack(">HH", raw4)
+                        if t2 in self.parser.TAGS and 0 <= l2 <= (end_pos - pos - 4):
+                            if unparsed_start != -1:
+                                self.record_unparsed(unparsed_start, pos, depth, parent_path)
+                                unparsed_start = -1
+                            val = self.parser._safe_read(pos + 4, l2)
+                            self.record_and_dispatch(t2, l2, val, pos, 4, depth, parent_path, mode='annex1c')
+                            pos += 4 + l2
+                            matched = True
+                except Exception: pass
+
             if not matched:
                 if unparsed_start == -1: unparsed_start = pos
                 pos += 1
@@ -112,17 +105,75 @@ class TagNavigator:
         if unparsed_start != -1:
             self.record_unparsed(unparsed_start, end_pos, depth, parent_path)
 
+    def parse_annex1c(self, start_pos, end_pos, depth, parent_path):
+        # Redirect to the new hybrid parser for consistency
+        self.parse_stap_recursive(start_pos, end_pos, depth, parent_path)
+
     def record_unparsed(self, start, end, depth, parent_path):
         length = end - start
         if length <= 0: return
+        
         self.parser.bytes_covered += length
-        key = f"{parent_path} > UNPARSED" if parent_path else "UNPARSED"
         val = self.parser.raw_data[start:end]
+        
+        # Check if it's padding (all same byte like 0x00, 0xFF, 0x5A)
+        is_padding = False
+        if length > 8:
+            first_byte = val[0]
+            if all(b == first_byte for b in val):
+                is_padding = True
+        
+        tag_name = "Padding" if is_padding else "Unparsed Data"
+        tag_id = "0xPAD" if is_padding else "0x0000"
+        
+        key = f"{parent_path} > {tag_name}" if parent_path else tag_name
         self.parser.results["raw_tags"].setdefault(key, []).append({
-            "offset": f"0x{start:08X}", "tag_id": "0x0000", "tag_name": "Unparsed Data",
+            "offset": f"0x{start:08X}", "tag_id": tag_id, "tag_name": tag_name,
             "data_type": "RAW", "length": length, "depth": depth,
             "data_hex": val[:128].hex() + ("..." if length > 128 else "")
         })
+
+    def deep_scan(self):
+        """
+        Final pass to find meaningful tags inside large unparsed blocks.
+        Uses a sliding window to find any known tag ID in the raw data.
+        """
+        unparsed_occs = []
+        for key, occs in list(self.parser.results["raw_tags"].items()):
+            if "Unparsed Data" in key:
+                for occ in occs:
+                    if occ['length'] > 10:
+                        unparsed_occs.append((key, occ))
+        
+        known_tags = set(self.parser.TAGS.keys())
+        
+        for key, occ in unparsed_occs:
+            start = int(occ['offset'], 16)
+            end = start + occ['length']
+            pos = start
+            
+            while pos < end - 4:
+                found = False
+                # Try STAP at this position
+                try:
+                    hdr = self.parser._safe_read(pos, 5)
+                    if hdr:
+                        tag, dtype, length = struct.unpack(">HBH", hdr)
+                        if tag in known_tags and dtype <= 0x04 and pos + 5 + length <= end:
+                            self.parse_stap_recursive(pos, pos + 5 + length, occ['depth'] + 1, f"DEEP_{pos:X}")
+                            pos += 5 + length
+                            found = True
+                except: pass
+                
+                # Try BER at this position
+                if not found:
+                    tag, length, h = self.read_ber_tlv(self.parser.raw_data, pos)
+                    if tag in known_tags and pos + h + length <= end:
+                        self.parse_stap_recursive(pos, pos + h + length, occ['depth'] + 1, f"DEEP_{pos:X}")
+                        pos += h + length
+                        found = True
+                
+                if not found: pos += 1
 
     def record_and_dispatch(self, tag, length, val, pos, h_size, depth, parent_path, mode='stap', dtype=None):
         # Specific tag overrides for common DDD variants
@@ -169,12 +220,31 @@ class TagNavigator:
             vin = decoders.decode_string(val[:17], is_id=True)
             if vin: self.parser.results["vehicle"]["vin"] = vin
 
+        # Tag che sappiamo essere contenitori (BER o STAP)
+        CONTAINER_TAGS = {
+            0x7621, 0x7631, 0x7F21, 0x7D21, 0xAD21, 0x7F4E, 0x7F60, 0x7F61, 
+            0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x052A, # Nuovi G2.2
+            0x0225, 0x0226, 0x0227, 0x0228
+        }
+
         is_container = False
         if mode == 'stap' and dtype == 0x04: is_container = True
-        if tag in (0x7621, 0x7631, 0x7F21, 0x7D21, 0xAD21): is_container = True
+        if tag in CONTAINER_TAGS: is_container = True
+        
+        # Euristiche per BER-TLV (bit 5 indica costruttore/container)
         if mode == 'annex1c' and tag > 0xFF:
             first_byte = (tag >> ((tag.bit_length() - 1) // 8 * 8)) & 0xFF
             if first_byte & 0x20: is_container = True
+        
+        # Se non è un container noto, proviamo a vedere se "sembra" un container
+        # Analizziamo i primi byte per cercare pattern TLV o STAP validi
+        if not is_container and length > 10:
+            # Check for STAP header pattern
+            if val[2] <= 0x04 and int.from_bytes(val[3:5], 'big') < length:
+                is_container = True
+            # Check for BER-TLV pattern (tag > 0x40 and reasonable length)
+            elif (val[0] & 0x1F) == 0x1F and val[1] < 0x80 and val[1] < length:
+                is_container = True
 
         if not is_container: self.parser.bytes_covered += length
 
