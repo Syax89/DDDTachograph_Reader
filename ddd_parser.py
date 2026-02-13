@@ -2,7 +2,12 @@ import struct
 import os
 import json
 import mmap
+import logging
 from datetime import datetime
+
+# Configure basic logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 try:
     from geocoding_engine import process_locations_with_geocoding
@@ -13,6 +18,7 @@ except ImportError:
 from signature_validator import SignatureValidator
 from core.models import TachoResult
 from core.tag_navigator import TagNavigator
+from src.infrastructure.parsers.tag_definitions import TACHO_TAGS
 
 class TachoParser:
     """
@@ -42,34 +48,7 @@ class TachoParser:
 
     def _load_tags(self):
         """Load tags from internal defaults and optional JSON file."""
-        tags = {
-            0x0001: "VU_VehicleIdentification", 0x0002: "EF_ICC", 0x0005: "EF_IC",
-            0x0101: "G2_CardIccIdentification", 0x0102: "G2_CardIdentification",
-            0x0103: "G2_CardCertificate", 0x0104: "G2_MemberStateCertificate",
-            0x0201: "G2_DriverCardHolderIdentification", 0x0501: "G1_CardIccIdentification",
-            0x0502: "G1_EventsData", 0x0503: "G1_FaultsData", 0x0504: "G1_DriverActivityData",
-            0x0505: "G1_VehiclesUsed", 0x0506: "G1_Places", 0x0507: "G1_CurrentUsage",
-            0x0508: "G1_ControlActivityData", 0x050C: "CalibrationData",
-            0x050E: "G1_CardDownload", 0x0520: "G1_Identification",
-            0x0521: "G1_DrivingLicenceInfo", 0x0522: "G1_SpecificConditions",
-            0x0523: "G2_VehiclesUsed", 0x0524: "G2_DriverActivityData",
-            0x0206: "VU_ActivityDailyRecord", 0x0222: "EF_GNSS_Places",
-            0x0223: "EF_GNSS_Accumulated_Position", 0xC100: "G1_CardCertificate",
-            0xC108: "G1_CA_Certificate", 0xC101: "G2_CardCertificate", 0xC109: "G2_CA_Certificate",
-            # Gen 2.2 (Smart V2) - Reg. EU 2023/980
-            0x7631: "G22_ApplicationContainer",
-            0x0525: "G22_GNSSAccumulatedDriving",
-            0x0526: "G22_LoadUnloadOperations",
-            0x0527: "G22_TrailerRegistrations",
-            0x0528: "G22_GNSSEnhancedPlaces",
-            0x0529: "G22_LoadSensorData",
-            0x052A: "G22_BorderCrossings",
-            0x0225: "G22_VU_GNSSADRecord",
-            0x0226: "G22_VU_LoadUnloadRecord",
-            0x0227: "G22_VU_TrailerRecord",
-            0x0228: "G22_VU_BorderCrossingRecord",
-            0xC102: "G22_CardCertificate", 0xC10A: "G22_CA_Certificate"
-        }
+        tags = TACHO_TAGS.copy()
         json_path = os.path.join(os.path.dirname(os.path.dirname(self.file_path)), 'all_tacho_tags.json')
         if not os.path.exists(json_path): json_path = 'all_tacho_tags.json'
         if os.path.exists(json_path):
@@ -77,13 +56,17 @@ class TachoParser:
                 with open(json_path, 'r') as f:
                     extra_tags = json.load(f)
                     for k, v in extra_tags.items(): tags[int(k, 16)] = v
-            except: pass
+            except (json.JSONDecodeError, ValueError) as e:
+                logger.warning(f"Failed to load extra tags from {json_path}: {e}")
         return tags
 
     def _safe_read(self, pos, length):
         if pos < 0 or length < 0 or (pos + length) > self.file_size: return None
-        try: return self.raw_data[pos : pos + length]
-        except: return None
+        try:
+            return self.raw_data[pos : pos + length]
+        except Exception as e:
+            logger.error(f"Safe read failed at pos {pos}, length {length}: {e}")
+            return None
 
     def get_coverage_report(self):
         """Returns the percentage of bytes assigned to identified fields."""
@@ -137,8 +120,10 @@ class TachoParser:
             self.results["metadata"]["integrity_check"] = self.validation_status
 
             if GEOCODING_AVAILABLE and self.results["locations"]:
-                try: self.results = process_locations_with_geocoding(self.results)
-                except: pass
+                try:
+                    self.results = process_locations_with_geocoding(self.results)
+                except Exception as e:
+                    logger.error(f"Geocoding processing failed: {e}")
 
         except Exception as e:
             self.results["metadata"]["integrity_check"] = f"Error: {str(e)}"

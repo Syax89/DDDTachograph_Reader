@@ -525,14 +525,49 @@ class App(ctk.CTk):
                 text_color="white")
             self.welcome_stats["STATO INTEGRITÀ"].configure(text="NON VALIDO", text_color="#E74C3C")
 
+        # Treeview risultati
         for item in self.tag_tree.get_children(): self.tag_tree.delete(item)
         raw_tags = data.get('raw_tags', {})
-        if isinstance(raw_tags, dict):
-            for k, v in raw_tags.items():
-                self.tag_tree.insert("", "end", values=("N/A", v.get('tag', '??'), v.get('name', k), v.get('length', 0), "Data"))
-        elif isinstance(raw_tags, list):
-            for tag in raw_tags:
-                self.tag_tree.insert("", "end", values=(tag.get('offset', 'N/A'), tag.get('tag', '??'), tag.get('name', '??'), tag.get('length', 0), tag.get('type', 'Data')))
+        
+        # Mappa per tenere traccia dei nodi creati (per gerarchia)
+        node_map = {}
+
+        # Ordiniamo le chiavi per profondità e poi per offset per una visualizzazione coerente
+        all_items = []
+        for path, occurrences in raw_tags.items():
+            for occ in occurrences:
+                all_items.append((path, occ))
+        
+        # Sort by offset (hex string to int)
+        all_items.sort(key=lambda x: int(x[1]['offset'], 16))
+
+        for path, occ in all_items:
+            # Dividiamo il path per trovare il genitore
+            parts = path.split(" > ")
+            current_path = ""
+            parent_node = ""
+            
+            for i, part in enumerate(parts):
+                current_path = f"{current_path} > {part}" if current_path else part
+                if current_path not in node_map:
+                    if i == len(parts) - 1:
+                        # È la foglia (il tag corrente)
+                        node_id = self.tag_tree.insert(parent_node, "end", text=part, values=(
+                            occ.get('offset', 'N/A'),
+                            occ.get('tag_id', '??'),
+                            occ.get('tag_name', '??'),
+                            occ.get('length', 0),
+                            occ.get('data_type', 'Data')
+                        ), open=True)
+                        node_map[current_path] = node_id
+                    else:
+                        # È un nodo intermedio (container)
+                        node_id = self.tag_tree.insert(parent_node, "end", text=part, values=(
+                            "---", "---", part, "---", "Container"
+                        ), open=True)
+                        node_map[current_path] = node_id
+                
+                parent_node = node_map[current_path]
 
         for item in self.act_tree.get_children(): self.act_tree.delete(item)
         for day in data.get('daily_summaries', []):

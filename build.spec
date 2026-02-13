@@ -29,10 +29,14 @@ added_files = []
 if os.path.exists(certs_path):
     added_files.append((certs_path, "certs"))
 
-# Aggiungi il package core/ esplicitamente
+# Aggiungi i package core/ e src/ esplicitamente
 core_path = os.path.join(base_path, "core")
 if os.path.exists(core_path):
     added_files.append((core_path, "core"))
+
+src_path = os.path.join(base_path, "src")
+if os.path.exists(src_path):
+    added_files.append((src_path, "src"))
     
 added_files.extend(ctk_data)
 
@@ -41,7 +45,7 @@ block_cipher = None
 
 a = Analysis(
     ['gui.py'],
-    pathex=[base_path, os.path.join(base_path, 'core')],
+    pathex=[base_path, os.path.join(base_path, 'core'), os.path.join(base_path, 'src')],
     binaries=[],
     datas=added_files,
     hiddenimports=[
@@ -72,6 +76,20 @@ a = Analysis(
         'core.tag_navigator',
         'core.decoders',
         'core.models',
+        'src',
+        'src.domain',
+        'src.domain.models',
+        'src.domain.models.entities',
+        'src.domain.models.value_objects',
+        'src.domain.repositories',
+        'src.domain.repositories.tachograph_repository',
+        'src.infrastructure',
+        'src.infrastructure.repositories',
+        'src.infrastructure.repositories.file_tacho_repository',
+        'src.infrastructure.parsers',
+        'src.infrastructure.parsers.tag_definitions',
+        'src.infrastructure.mappers',
+        'src.infrastructure.mappers.tacho_mapper',
     ],
     hookspath=[],
     hooksconfig={},
