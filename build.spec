@@ -49,6 +49,8 @@ a = Analysis(
     binaries=[],
     datas=added_files,
     hiddenimports=[
+        'darkdetect',
+        'tkinter',
         'cryptography',
         'requests',
         'reportlab',
@@ -127,7 +129,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=True,
     upx=True,
-    console=False,
+    console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

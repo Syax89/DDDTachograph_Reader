@@ -1,3 +1,13 @@
+import sys
+import os
+
+# Aggiungi le cartelle core e src al path per gestire i bundle PyInstaller
+if getattr(sys, 'frozen', False):
+    bundle_dir = sys._MEIPASS
+    sys.path.append(os.path.join(bundle_dir, 'core'))
+    sys.path.append(os.path.join(bundle_dir, 'src'))
+    sys.path.append(bundle_dir)
+
 import customtkinter as ctk
 from tkinter import filedialog, messagebox, ttk
 import json
