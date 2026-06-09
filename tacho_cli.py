@@ -11,6 +11,13 @@ import logging
 from datetime import datetime
 
 
+class _BytesEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, bytes):
+            return obj.hex()
+        return super().default(obj)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="🚛 DDD Tachograph Reader CLI - Analizzatore file tachigrafo digitale",
@@ -75,9 +82,12 @@ Esempi:
     if args.all is not None:
         out_dir = args.all if args.all != "auto" else f"{basename}_output"
         os.makedirs(out_dir, exist_ok=True)
-        args.json = resolve_path("auto", "json", out_dir)
-        args.pdf = resolve_path("auto", "pdf", out_dir)
-        args.excel = resolve_path("auto", "xlsx", out_dir)
+        if args.json is None:
+            args.json = resolve_path("auto", "json", out_dir)
+        if args.pdf is None:
+            args.pdf = resolve_path("auto", "pdf", out_dir)
+        if args.excel is None:
+            args.excel = resolve_path("auto", "xlsx", out_dir)
 
     generated = []
 
@@ -85,7 +95,7 @@ Esempi:
     if args.json:
         json_path = resolve_path(args.json, "json")
         with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(result, f, indent=2, ensure_ascii=False)
+            json.dump(result, f, indent=2, ensure_ascii=False, cls=_BytesEncoder)
         generated.append(("JSON", json_path))
 
     # PDF output
@@ -127,7 +137,7 @@ def print_summary(data):
     vehicle = data.get("vehicle", {})
     activities = data.get("activities", [])
     infractions = data.get("infractions", [])
-    sig = data.get("signature_status", {})
+    sig = data.get("signature_verification", {})
 
     print("=" * 60)
     print("🚛 DDD TACHOGRAPH READER - RIEPILOGO")

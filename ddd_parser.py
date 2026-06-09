@@ -240,7 +240,10 @@ class TachoParser:
         covered_ranges = []
         for occs in self.results.get("raw_tags", {}).values():
             for occ in occs:
-                off = int(occ["offset"], 16)
+                try:
+                    off = int(occ["offset"], 16)
+                except (ValueError, KeyError):
+                    continue
                 length = occ.get("length", 0)
                 if length > 0:
                     covered_ranges.append((off, off + length))
@@ -263,8 +266,13 @@ class TachoParser:
         if cursor < self.file_size:
             self.navigator.record_unparsed(cursor, self.file_size, 0, "GAP_FILLER")
 
-        # Normalize bytes_covered: after filling all gaps, it equals file_size
-        self.bytes_covered = self.file_size
+        # Recompute bytes_covered from merged raw_tag ranges.
+        # If any tags were parsed, gaps are filled with GAP_FILLER entries making 100%.
+        raw_covered = sum(e - s for s, e in merged)
+        if raw_covered > 0:
+            self.bytes_covered = self.file_size
+        else:
+            self.bytes_covered = 0
 
     def parse(self):
         if not os.path.exists(self.file_path):
@@ -393,6 +401,7 @@ class TachoParser:
             self.results["generations"] = build_generations_tree(self.results, self.TAGS)
 
         except Exception as e:
+            logger.error("Parse failed for %s: %s", self.file_path, e, exc_info=True)
             self.results["metadata"]["integrity_check"] = f"Error: {str(e)}"
         finally:
             if self.raw_data: self.raw_data.close()

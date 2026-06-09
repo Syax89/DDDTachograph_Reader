@@ -365,7 +365,8 @@ class DeterministicParser:
                 else:
                     dec.decoder_fn(payload, self.results)
             except Exception:
-                pass
+                import logging
+                logging.getLogger("ddd_tacho").debug("Decoder dispatch failed for tag 0x%04X", tag)
 
     def _parse_container(self, tag: int, payload: bytes, container_offset: int, depth: int, parent_path: str):
         dec = self.registry.get_decoder(tag)
@@ -431,7 +432,7 @@ def quick_coverage_check(raw_data: bytes) -> Dict[str, Any]:
             parser.coverage.mark_unknown(pos, min(pos + 1, file_size), raw_data[pos:pos + 1])
             pos += 1
             continue
-        tag, length, hdr_size, payload = result
+        tag, length, hdr_size, payload, _ = result
         parser.coverage.mark_classified(pos, pos + hdr_size + length, f"Tag_{tag:04X}")
         pos += hdr_size + length
 

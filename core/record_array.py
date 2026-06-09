@@ -106,6 +106,8 @@ def decode_g2_driver_record(data: bytes, offset: int = 0):
         elif 946684800 <= expiry_val <= 4102444800:
             card_expiry = expiry_val
             pos += 4
+        else:
+            pos += 4
 
     if pos >= len(data):
         return None

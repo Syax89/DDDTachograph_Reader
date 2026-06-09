@@ -316,10 +316,10 @@ class DataTable(ttk.Frame):
 
         def key(row):
             v = row[idx] if idx < len(row) else ""
-            num = v.replace(".", "").replace(",", ".").replace("-", "", 1)
             try:
-                return (0, float(num))
-            except ValueError:
+                num = float(str(v).replace(",", "."))
+                return (0, num)
+            except (ValueError, TypeError):
                 return (1, str(v).lower())
 
         self._all_rows.sort(key=key, reverse=descending)
@@ -408,13 +408,21 @@ class TachoExplorer(tk.Tk):
             return
         self.status.config(text="Parsing in corso…")
         self.update()
-        try:
-            data = TachoParser(path).parse()
-        except Exception as e:
-            messagebox.showerror("Errore di parsing", str(e))
-            self.status.config(text="Pronto — apri un file .ddd")
-            return
+        import threading
+        def _parse():
+            try:
+                data = TachoParser(path).parse()
+            except Exception as e:
+                self.after(0, lambda: self._parse_error(str(e)))
+                return
+            self.after(0, lambda: self._parse_done(data, path))
+        threading.Thread(target=_parse, daemon=True).start()
 
+    def _parse_error(self, msg):
+        messagebox.showerror("Errore di parsing", msg)
+        self.status.config(text="Pronto — apri un file .ddd")
+
+    def _parse_done(self, data, path):
         self.current_data = data
         self.current_file = path
         self._populate_tree(data)
