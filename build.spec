@@ -26,9 +26,6 @@ a = Analysis(
     hiddenimports=[
         'tkinter',
         'cryptography',
-        'pandas',
-        'openpyxl',
-        'export_manager',
         'signature_validator',
         'core',
         'core.tag_navigator',

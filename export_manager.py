@@ -1,6 +1,10 @@
-import pandas as pd
 import os
 from datetime import datetime
+
+def _get_pandas():
+    import pandas as pd
+    return pd
+
 
 class ExportManager:
     @staticmethod
@@ -8,6 +12,7 @@ class ExportManager:
         """
         Esporta i dati in un file Excel con fogli multipli.
         """
+        pd = _get_pandas()
         with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
             # 1. Foglio Riepilogo
             metadata = data.get('metadata', {})
@@ -59,6 +64,7 @@ class ExportManager:
         """
         Esporta i dati in un formato CSV piatto per sistemi contabili.
         """
+        pd = _get_pandas()
         rows = []
         driver_name = f"{data.get('driver', {}).get('surname', '')} {data.get('driver', {}).get('firstname', '')}".strip()
         card_number = data.get('driver', {}).get('card_number', 'N/A')
