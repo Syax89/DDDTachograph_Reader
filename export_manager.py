@@ -83,7 +83,8 @@ class ExportManager:
                         h2, m2 = map(int, ora_fine.split(':'))
                         diff = (h2 * 60 + m2) - (h1 * 60 + m1)
                         durata = f"{diff} min"
-                    except: pass
+                    except (ValueError, TypeError, AttributeError):
+                        pass
                 
                 rows.append({
                     'Data': date,

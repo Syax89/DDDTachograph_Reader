@@ -24,8 +24,7 @@ class VIN:
     
     def __post_init__(self):
         if len(self.value) != 17:
-            # We might want to be less strict during initial parsing but warn
-            pass
+            raise ValueError(f"Invalid VIN length: expected 17, got {len(self.value)}")
 
 @dataclass(frozen=True)
 class GeoCoordinate:

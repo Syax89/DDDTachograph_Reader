@@ -141,7 +141,7 @@ def parse_cyclic_buffer_activities(val, results):
             
             prev_len, rec_len, ts = struct.unpack(">HHI", header_data)
             
-            if rec_len < 14 or rec_len > 2048 or ts == 0 or ts == 0xFFFFFFFF: break
+            if rec_len < 14 or rec_len > 2048 or ts == 0 or ts == 0xFFFFFFFF: continue
             
             try:
                 dt = datetime.fromtimestamp(ts, tz=timezone.utc)
@@ -334,7 +334,7 @@ def parse_g1_current_usage(val, results):
     if len(val) < 19: return
     try:
         ts = struct.unpack(">I", val[0:4])[0]
-        if ts == 0 or ts == 0xFFFFFFFF or ts > 1798758400: return
+        if ts == 0 or ts == 0xFFFFFFFF or ts > 4102444800: return
         results["vehicle"]["plate"] = decode_string(val[5:19], is_id=True)
         results["vehicle"]["registration_nation"] = get_nation(val[4])
     except (struct.error, IndexError, ValueError): pass
@@ -695,7 +695,7 @@ def parse_g1_events_data(val, results):
                 end_ts = struct.unpack(">I", val[off+5:off+9])[0]
                 if begin_ts == 0 or begin_ts == 0xFFFFFFFF:
                     off += rec_size
-                    break
+                    continue
                 nation = get_nation(val[off+9])
                 plate = decode_string(val[off+10:off+24], is_id=True)
                 results["events"].append({
@@ -727,7 +727,7 @@ def parse_g1_faults_data(val, results):
                 end_ts = struct.unpack(">I", val[off+5:off+9])[0]
                 if begin_ts == 0 or begin_ts == 0xFFFFFFFF:
                     off += rec_size
-                    break
+                    continue
                 nation = get_nation(val[off+9])
                 plate = decode_string(val[off+10:off+24], is_id=True)
                 results["faults"].append({
@@ -1077,9 +1077,10 @@ def parse_specific_conditions(val, results):
             if ts < 946684800 or ts > 4102444800:
                 off += rec_size; continue
             cond_type = chunk[4]
-            if cond_type not in (0x00, 0x01, 0x02):  # only valid types per Annex 1C
+            if cond_type not in (0x00, 0x01, 0x02, 0x03, 0x04):
                 off += rec_size; continue
-            types = {0x00: "Ferry", 0x01: "Train", 0x02: "OutOfScope"}
+            types = {0x00: "Ferry", 0x01: "Train", 0x02: "OutOfScope",
+                     0x03: "BeginAreaNoGNSS", 0x04: "EndAreaNoGNSS"}
             dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
             results.setdefault("specific_conditions", []).append({
                 "timestamp": dt,

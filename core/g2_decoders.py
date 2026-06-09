@@ -156,7 +156,7 @@ def parse_g2_time_adjustment(data: bytes, offset: int = 0):
                     if 0x20 <= b < 0x7F:
                         ws_card += chr(b)
                     else:
-                        ws_card += f"\\x{b:02X}" if i < pos + 17 else ""
+                        ws_card += f"\\x{b:02X}" if i <= pos + 17 else ""
                 result["workshop_card"] = f"{get_nation(ws_issuer)}{ws_card}"
                 pos += 18
             if pos + 3 <= len(rec):
@@ -577,7 +577,12 @@ def parse_g22_controller_identification(data: bytes, offset: int = 0):
 
 
 def _read_coded_string(data: bytes, offset: int):
-    """Read a coded string (codePage + size + text) from binary data."""
+    """Read a coded string (codePage + size + text) from binary data.
+
+    Per Annex 1B/1C, the code_page byte selects the character encoding:
+      0x01 = Latin-1, 0x02 = Latin-2, etc.
+    Defaults to latin-1 for unknown code pages.
+    """
     if offset + 2 > len(data):
         return "", offset
     code_page = data[offset]
@@ -585,7 +590,26 @@ def _read_coded_string(data: bytes, offset: int):
     offset += 2
     if offset + size > len(data):
         return "", min(offset, len(data))
-    text = data[offset:offset + size].decode("latin-1", errors="replace").strip()
+
+    encoding_map = {
+        0x01: "iso-8859-1",
+        0x02: "iso-8859-2",
+        0x03: "iso-8859-3",
+        0x04: "iso-8859-4",
+        0x05: "iso-8859-5",
+        0x06: "iso-8859-6",
+        0x07: "iso-8859-7",
+        0x08: "iso-8859-8",
+        0x09: "iso-8859-9",
+        0x0A: "iso-8859-10",
+        0x0B: "iso-8859-11",
+        0x0D: "iso-8859-13",
+        0x0E: "iso-8859-14",
+        0x0F: "iso-8859-15",
+        0x10: "iso-8859-16",
+    }
+    encoding = encoding_map.get(code_page, "latin-1")
+    text = data[offset:offset + size].decode(encoding, errors="replace").strip()
     return text, offset + size
 
 

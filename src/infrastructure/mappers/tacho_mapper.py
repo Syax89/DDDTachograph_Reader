@@ -53,25 +53,12 @@ class TachoDomainMapper:
         issuing_nation_str = data.get("issuing_nation", "N/A")
         issuing_nation = None
         if issuing_nation_str and issuing_nation_str != "N/A":
-             # Extract code from "Italy (I)" or "I" format if necessary
-             # The decoder returns things like "I", "E", "Unknown(00)"
-             # We need to be careful with NationCode validation (max 3 chars)
-             clean_code = issuing_nation_str.split('(')[0].strip()
-             if len(clean_code) <= 3:
-                 issuing_nation = NationCode(clean_code)
-             else:
-                 # Fallback for full names or weird formats? 
-                 # For now, if it's too long, we might default to None or truncate
-                 # But NationCode raises ValueError if > 3.
-                 # Let's try to handle "Unknown(XX)" case
-                 if "Unknown" in issuing_nation_str:
-                     pass # invalid
-                 elif len(issuing_nation_str) > 3:
-                      # Maybe it's a full name? The decoder returns "I", "E", etc.
-                      # Let's assume it's fine if it's short.
-                      pass
-                 else:
-                     issuing_nation = NationCode(issuing_nation_str)
+            clean_code = issuing_nation_str.split('(')[0].strip()
+            if len(clean_code) <= 3 and clean_code:
+                try:
+                    issuing_nation = NationCode(clean_code)
+                except ValueError:
+                    pass
 
         return Driver(
             card_number=card_number,

@@ -127,8 +127,8 @@ class SignatureValidator:
             # Actually, Annex 1B specifies a complex split of the modulus.
             
             if recovered[0] != 0x6A or recovered[127] != 0xBC:
-                # ISO 9796-2 Trailer check (simplified)
-                pass
+                self.logger.warning("G1 ISO 9796-2 trailer check failed")
+                return None
             
             return recovered
         except Exception as e:
@@ -238,7 +238,7 @@ class SignatureValidator:
             msca_pubkey = self._get_rsa_public_key(msca_n)
             card_pubkey = self._get_rsa_public_key(card_n)
 
-            return "Verified (G1)", card_pubkey
+            return True, card_pubkey
 
         except Exception as e:
             self.logger.error(f"G1 Chain validation failed: {e}")
@@ -266,8 +266,8 @@ class SignatureValidator:
 
             return True, card_cert.public_key()
         except Exception:
-            # Fallback per certificati non-X.509
-            return "G2 (Unknown Format)", None
+            self.logger.warning("G2 certificate is not standard X.509 DER")
+            return False, None
 
     def validate_block(self, data, signature, public_key, algorithm='RSA'):
         """
