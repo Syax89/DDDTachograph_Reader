@@ -289,6 +289,7 @@ class TachoParser:
             
             first_byte = self._safe_read(0, 1)
             self.is_vu = (first_byte == b'\x76')
+            self.results["metadata"]["is_vu"] = self.is_vu
             
             if self.use_deterministic:
                 from core.deterministic_parser import DeterministicParser

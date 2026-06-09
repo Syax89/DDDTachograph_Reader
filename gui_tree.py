@@ -493,12 +493,15 @@ class TachoExplorer(tk.Tk):
         self._add_section("", "📄  Info File", cols, rows)
 
         drv = data.get("driver", {})
-        if any(drv.values()):
+        veh = data.get("vehicle", {})
+        is_vu = meta.get("is_vu", False)
+
+        # Carta conducente: mostra il titolare. VU: mostra il veicolo.
+        if not is_vu and any(drv.values()):
             cols, rows = _kv_rows(drv)
             self._add_section("", "👤  Conducente / Titolare", cols, rows)
 
-        veh = data.get("vehicle", {})
-        if any(veh.values()):
+        if is_vu and any(veh.values()):
             cols, rows = _kv_rows(veh)
             self._add_section("", "🚚  Veicolo", cols, rows)
 
