@@ -553,7 +553,8 @@ class TachoExplorer(tk.Tk):
             self._add_section("", "📦  Generazioni rilevate", cols, rows)
 
     def _populate_activities(self, parent, activities):
-        """Crea sotto-nodi per ogni giorno, ciascuno con i propri eventi."""
+        """Crea un nodo 'Attività' espandibile con i giorni come figli."""
+        act_node = self.tree.insert(parent, tk.END, text="Attività giornaliere", open=True)
         for day in activities:
             if not isinstance(day, dict):
                 continue
@@ -575,7 +576,7 @@ class TachoExplorer(tk.Tk):
                 cols = ["Ora", "Tipo"]
                 rows = [[fmt_val("—"), fmt_val("(nessun evento)")]]
 
-            self._add_section(parent, date_str, cols, rows)
+            self._add_section(act_node, date_str, cols, rows)
 
     def _populate_security(self, data):
         sv = data.get("signature_verification")
