@@ -58,7 +58,7 @@ GROUPS = [
 
 # data_key → (etichetta, gruppo, transformer opzionale)
 LIST_SECTIONS = [
-    ("activities", "Attività giornaliere", "activity", "activities"),
+    # "activities" gestito a parte (gerarchia per giorno) — vedi _populate_activities
     ("vehicle_sessions", "Veicoli usati", "activity", None),
     ("events", "Eventi", "activity", None),
     ("faults", "Guasti", "activity", None),
@@ -512,13 +512,19 @@ class TachoExplorer(tk.Tk):
             cols, rows = _rows_for(records, transformer)
             sections_by_group.setdefault(group, []).append((label, cols, rows))
 
+        # Attività: gerarchia per giorno (espansa sotto il gruppo activity)
+        activities = data.get("activities") or []
+        has_activity_group = activities or "activity" in sections_by_group
+
         for group_key, group_label in GROUPS:
             if group_key == "security" or group_key == "raw":
                 continue
-            entries = sections_by_group.get(group_key)
-            if not entries:
+            if group_key == "activity" and not has_activity_group:
                 continue
+            entries = sections_by_group.get(group_key, [])
             gnode = self.tree.insert("", tk.END, text=group_label, open=True)
+            if group_key == "activity" and activities:
+                self._populate_activities(gnode, activities)
             for label, cols, rows in entries:
                 self._add_section(gnode, label, cols, rows)
 
@@ -542,6 +548,31 @@ class TachoExplorer(tk.Tk):
                     for g, v in gens.items()}
             cols, rows = _kv_rows(flat)
             self._add_section("", "📦  Generazioni rilevate", cols, rows)
+
+    def _populate_activities(self, parent, activities):
+        """Crea sotto-nodi per ogni giorno, ciascuno con i propri eventi."""
+        for day in activities:
+            if not isinstance(day, dict):
+                continue
+            events = day.get("eventi", day.get("changes", []))
+            date_str = day.get("data", day.get("timestamp", "?"))
+            km = day.get("km", 0)
+
+            if isinstance(events, list) and events:
+                rows = []
+                for ev in events:
+                    if isinstance(ev, dict):
+                        rows.append([
+                            fmt_val(ev.get("ora", ev.get("time", "?"))),
+                            fmt_val(ev.get("tipo", ev.get("type", "?"))),
+                            fmt_val(km),
+                        ])
+                cols = ["Ora", "Tipo", "km"]
+            else:
+                cols = ["Ora", "Tipo"]
+                rows = [[fmt_val("—"), fmt_val("(nessun evento)")]]
+
+            self._add_section(parent, date_str, cols, rows)
 
     def _populate_security(self, data):
         sv = data.get("signature_verification")
