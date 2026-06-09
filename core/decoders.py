@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from core.logger import get_logger
 from core.constants import MAX_ODO_DISTANCE_KM
+from core.event_fault_codes import describe_event, describe_fault, describe_card_event_group, describe_card_fault_group
 
 _log = get_logger(__name__)
 
@@ -103,11 +104,12 @@ def decode_activity_val(val):
     card_status = (val >> 13) & 1    # 0=Inserted, 1=Not
     act_code = (val >> 11) & 3
     mins = val & 0x07FF
-    acts = {0: "RIPOSO", 1: "DISPONIBILITÀ", 2: "LAVORO", 3: "GUIDA"}
+    acts = {0: "REST", 1: "AVAILABLE", 2: "WORK", 3: "DRIVE"}
     return {
-        "tipo": acts.get(act_code, "SCONOSCIUTO"),
+        "tipo": acts.get(act_code, "UNKNOWN"),
+        "activity": acts.get(act_code, "UNKNOWN"),
         "ora": f"{mins // 60:02d}:{mins % 60:02d}",
-        "slot": "Secondo" if slot else "Primo",
+        "slot": "Second" if slot else "First",
         "team": bool(driving_status),
         "card_present": not bool(card_status)
     }
@@ -184,20 +186,21 @@ def parse_g2_vu_record(val, results, tag):
     Handles tags 0x0509-0x0512 (G2 VU records) and 0x052B-0x0533 (G2.2 VU records).
     The raw value may be a RecordArray or a single record.
     """
-    try:
-        from . import g2_decoders
-        from .record_array import RecordArrayParser
+    # Lazy imports to break circular dependency (g2_decoders -> decoders -> g2_decoders)
+    from . import g2_decoders as _g2
+    from .record_array import RecordArrayParser as _RAP
 
-        decoders_map = g2_decoders.G2_VU_RECORD_DECODERS
+    try:
+        decoders_map = _g2.G2_VU_RECORD_DECODERS
         if tag not in decoders_map:
             return
 
         name, decode_fn, default_size = decoders_map[tag]
 
-        hdr = RecordArrayParser.parse_header(val, 0)
+        hdr = _RAP.parse_header(val, 0)
         if hdr and hdr["record_size"] > 0 and hdr["no_of_records"] > 0:
             records = []
-            for idx, rec, _ in RecordArrayParser.iter_records(val, 0):
+            for idx, rec, _ in _RAP.iter_records(val, 0):
                 decoded = decode_fn(rec, 0)
                 if decoded:
                     records.append(decoded)
@@ -348,7 +351,7 @@ def parse_g1_vehicles_used(val, results):
             if odo_end == 0xFFFFFF or odo_end == 0xFFFFFFFF: odo_end = None
 
             start_date = datetime.fromtimestamp(first_use_ts, tz=timezone.utc).isoformat()
-            end_date = "Sessione Aperta"
+            end_date = "Open Session"
             if last_use_ts != 0xFFFFFFFF and last_use_ts > 946684800:
                  try: end_date = datetime.fromtimestamp(last_use_ts, tz=timezone.utc).isoformat()
                  except (OSError, ValueError, OverflowError): pass
@@ -720,12 +723,15 @@ def parse_g1_events_data(val, results):
     if len(val) < 24: return
     try:
         off = 0
-        event_types = [
-            "TimeOverlap", "LastCardSession", "PowerSupplyInterruption",
-            "CardConflict", "TimeDifference", "DrivingWithoutCard"
+        group_descriptions = [
+            describe_card_event_group(0),
+            describe_card_event_group(1),
+            describe_card_event_group(2),
+            describe_card_event_group(3),
+            describe_card_event_group(4),
+            describe_card_event_group(5),
         ]
-        for group_idx, etype in enumerate(event_types):
-            # Ogni record: eventType(1) + beginTime(4) + endTime(4) + nation(1) + plate(14) = 24 bytes
+        for group_idx in range(6):
             rec_size = 24
             while off + rec_size <= len(val):
                 ev_type = val[off]
@@ -740,7 +746,7 @@ def parse_g1_events_data(val, results):
                 nation = get_nation(val[off+9])
                 plate = decode_string(val[off+10:off+24], is_id=True)
                 results["events"].append({
-                    "event_group": etype,
+                    "descrizione": f"{group_descriptions[group_idx]} — code 0x{ev_type:02X}",
                     "event_type_code": ev_type,
                     "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
                     "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A",
@@ -756,8 +762,11 @@ def parse_g1_faults_data(val, results):
     if len(val) < 24: return
     try:
         off = 0
-        fault_groups = ["RecordingEquipment", "Card"]
-        for group_idx, group_name in enumerate(fault_groups):
+        group_descriptions = [
+            describe_card_fault_group(0),
+            describe_card_fault_group(1),
+        ]
+        for group_idx in range(2):
             rec_size = 24
             while off + rec_size <= len(val):
                 fault_type = val[off]
@@ -772,7 +781,7 @@ def parse_g1_faults_data(val, results):
                 nation = get_nation(val[off+9])
                 plate = decode_string(val[off+10:off+24], is_id=True)
                 results["faults"].append({
-                    "fault_group": group_name,
+                    "descrizione": f"{group_descriptions[group_idx]} — code 0x{fault_type:02X}",
                     "fault_type_code": fault_type,
                     "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
                     "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A",
@@ -1654,9 +1663,9 @@ def _parse_trep_02_activities(data, results):
                     break
 
             if changes_list:
-                type_map_it = {"drive": "GUIDA", "rest": "RIPOSO", "work": "LAVORO", "available": "DISPONIBILE", "break_rest": "RIPOSO"}
+                type_map_it = {"drive": "DRIVE", "rest": "REST", "work": "WORK", "available": "AVAILABLE", "break_rest": "REST"}
                 eventi = [
-                    {"tipo": type_map_it.get(c.get("activity", "work"), "LAVORO"),
+                    {"tipo": type_map_it.get(c.get("activity", "work"), "WORK"),
                      "ora": f"{c['minute'] // 60:02d}:{c['minute'] % 60:02d}"}
                     for c in changes_list[:50]
                 ]
@@ -1713,6 +1722,7 @@ def _parse_vu_fault_record(data, offset):
     if begin_ts < 946684800 or begin_ts > 4102444800:
         return None
     return {
+        "descrizione": describe_fault(fault_type),
         "fault_type": fault_type,
         "fault_purpose": fault_purpose,
         "begin_time": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
@@ -1736,6 +1746,7 @@ def _parse_vu_event_record(data, offset):
     if begin_ts < 946684800 or begin_ts > 4102444800:
         return None
     return {
+        "descrizione": describe_event(evt_type),
         "event_type": evt_type,
         "event_purpose": evt_purpose,
         "begin_time": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
@@ -1753,13 +1764,6 @@ def _parse_trep_03_events_faults(data, results):
 
     Falls back to heuristic pattern matching if structured parsing fails.
     """
-    event_map = {
-        0x01: "InsertNonValidCard", 0x02: "CardConflict", 0x03: "TimeOverlap",
-        0x04: "DriveNoValidCard", 0x05: "CardInsertWhileDriving",
-        0x06: "LastSessionNotClosed", 0x07: "OverSpeeding",
-        0x08: "PowerInterruption", 0x09: "MotionDataError",
-        0x0A: "SecurityBreach", 0x0B: "SensorFault", 0x0C: "VUInternalFault",
-    }
     try:
         if len(data) < 6: return
         body = data[2:] if len(data) > 2 and data[0] == 0x00 else data
@@ -1795,7 +1799,7 @@ def _parse_trep_03_events_faults(data, results):
                 for evt in event_records:
                     evt_type = evt["event_type"]
                     results.setdefault("events", []).append({
-                        "type": event_map.get(evt_type, f"Event_{evt_type:02X}"),
+                        "descrizione": describe_event(evt_type),
                         "type_code": evt_type,
                         "begin_time": evt["begin_time"],
                         "end_time": evt["end_time"],
@@ -1815,14 +1819,6 @@ def _parse_trep_03_events_faults_heuristic(data, results):
     import re
     try:
         _log.warning("TREP 03: primary structured parser failed, entering heuristic fallback")
-
-        event_map = {
-            0x01: "InsertNonValidCard", 0x02: "CardConflict", 0x03: "TimeOverlap",
-            0x04: "DriveNoValidCard", 0x05: "CardInsertWhileDriving",
-            0x06: "LastSessionNotClosed", 0x07: "OverSpeeding",
-            0x08: "PowerInterruption", 0x09: "MotionDataError",
-            0x0A: "SecurityBreach", 0x0B: "SensorFault", 0x0C: "VUInternalFault",
-        }
         surname = firstname = card_num = ""
         card_match = re.search(rb'[\x01\x02][\x1a\x1b]([A-Z]\d{14,20})', data)
         if card_match:
@@ -1856,7 +1852,7 @@ def _parse_trep_03_events_faults_heuristic(data, results):
                 evt = _parse_vu_event_record(data, pos)
                 if evt is not None:
                     results.setdefault("events", []).append({
-                        "type": event_map.get(evt["event_type"], f"Event_{evt['event_type']:02X}"),
+                        "descrizione": describe_event(evt["event_type"]),
                         "type_code": evt["event_type"],
                         "begin_time": evt["begin_time"],
                         "end_time": evt["end_time"],
@@ -1888,7 +1884,7 @@ def _parse_trep_03_events_faults_heuristic(data, results):
                         dt1 = datetime.fromtimestamp(ts1, tz=timezone.utc).isoformat()
                         dt2 = datetime.fromtimestamp(ts2, tz=timezone.utc).isoformat()
                         results.setdefault("events", []).append({
-                            "type": event_map.get(ev_type, f"Event_{ev_type:02X}"),
+                            "descrizione": describe_event(ev_type),
                             "type_code": ev_type,
                             "begin_time": dt1,
                             "end_time": dt2,

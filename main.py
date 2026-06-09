@@ -10,9 +10,9 @@ from ddd_parser import TachoParser
 
 def main():
     parser = argparse.ArgumentParser(description="DDD Tachograph File Reader - Structural TLV Parser")
-    parser.add_argument("file", help="Percorso del file .ddd da leggere")
-    parser.add_argument("-o", "--output", help="Percorso del file JSON di output")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Output verboso")
+    parser.add_argument("file", help="Path to .ddd file to read")
+    parser.add_argument("-o", "--output", help="Path to output JSON file")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 
@@ -27,11 +27,11 @@ def main():
         
         
     except Exception as e:
-        print(f"Errore critico durante il parsing: {e}", file=sys.stderr)
+        print(f"Critical parsing error: {e}", file=sys.stderr)
         sys.exit(1)
 
     if result is None:
-        print("Errore: Impossibile leggere il file.", file=sys.stderr)
+        print("Error: Cannot read the file.", file=sys.stderr)
         sys.exit(1)
 
     output_json = json.dumps(result, indent=4, ensure_ascii=False)
@@ -39,7 +39,7 @@ def main():
     if args.output:
         with open(args.output, 'w', encoding='utf-8') as f:
             f.write(output_json)
-        print(f"Dati salvati in {args.output}")
+        print(f"Data saved to {args.output}")
     else:
         print(output_json)
 

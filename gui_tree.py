@@ -1,14 +1,14 @@
-"""Tacho Explorer — visualizzatore DDD stile regedit.
+"""Tacho Explorer — DDD viewer, regedit-style.
 
 Layout:
     ┌────────────────────────┬─────────────────────────────────────┐
-    │  Albero sezioni        │  Contenuto sezione (tabella Excel)   │
-    │  (stile regedit)       │  intestazioni · righe · ordinabile   │
+    │  Section tree          │  Section content (table)             │
+    │  (regedit-style)       │  headers · rows · sortable           │
     └────────────────────────┴─────────────────────────────────────┘
 
-A sinistra l'albero gerarchico delle sezioni del file; a destra il contenuto
-della sezione selezionata mostrato in forma tabellare (una riga per record,
-una colonna per campo), con ordinamento per colonna e filtro testuale.
+On the left, the hierarchical section tree; on the right, the selected
+section's content shown in table form (one row per record, one column per
+field), with column sorting and text filtering.
 """
 
 import os
@@ -37,77 +37,82 @@ ROW_EVEN = "#ffffff"
 ROW_ODD = "#f2f6fb"
 HEADER_BG = "#e3e9f2"
 
-# Chiavi interne da non mostrare come colonne (rumore di servizio).
-HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size"}
-# Colonne tecniche spinte in fondo alla tabella.
-TRAILING_KEYS = ["record_type", "confidence"]
+# Internal keys to hide from columns (service noise).
+HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence"}
+# Descriptive columns pushed to table start.
+LEADING_KEYS = ["descrizione"]
+# Technical columns pushed to table end.
+TRAILING_KEYS = ["record_type"]
 
 
-# ── Definizione delle sezioni (data-driven) ─────────────────────────────────
+# ── Section definitions (data-driven) ─────────────────────────────────────
 #
-# Ogni voce di lista nel dict del parser diventa una tabella. I gruppi danno
-# all'albero la struttura "a cartelle" stile regedit.
+# Each parser dict list entry becomes a table. Groups give the tree its
+# regedit-style folder structure.
 
 GROUPS = [
-    ("activity", "📊  Attività & Utilizzo"),
-    ("g22", "🛰️  G2.2 — Smart V2"),
-    ("vu", "🚚  Unità di Bordo (VU)"),
-    ("security", "🔐  Sicurezza & Certificati"),
-    ("raw", "🧩  Tag Grezzi"),
+    ("activity", "\U0001f4ca  Activity & Usage"),
+    ("g22", "\U0001f6f0\ufe0f  G2.2 \u2014 Smart V2"),
+    ("vu", "\U0001f69a  Vehicle Unit (VU)"),
+    ("security", "\U0001f510  Security & Certificates"),
+    ("raw", "\U0001f9e9  Raw Tags"),
 ]
 
-# data_key → (etichetta, gruppo, transformer opzionale)
+# data_key → (label, group, optional transformer)
 LIST_SECTIONS = [
-    # "activities" gestito a parte (gerarchia per giorno) — vedi _populate_activities
-    ("vehicle_sessions", "Veicoli usati", "activity", None),
-    ("events", "Eventi", "activity", None),
-    ("faults", "Guasti", "activity", None),
-    ("places", "Luoghi", "activity", None),
-    ("specific_conditions", "Condizioni specifiche", "activity", None),
-    ("calibrations", "Calibrazioni", "activity", None),
+    # "activities" handled separately (day hierarchy) — see _populate_activities
+    ("vehicle_sessions", "Vehicles Used", "activity", None),
+    ("events", "Events", "activity", None),
+    ("overspeeding_events", "Overspeeding Events", "activity", None),
+    ("faults", "Faults", "activity", None),
+    ("places", "Places", "activity", None),
+    ("specific_conditions", "Specific Conditions", "activity", None),
+    ("calibrations", "Calibrations", "activity", None),
 
-    ("gnss_ad_records", "GNSS — Guida accumulata", "g22", None),
-    ("gnss_places", "GNSS — Luoghi", "g22", None),
-    ("border_crossings", "Attraversamenti di confine", "g22", None),
-    ("load_unload_records", "Carico / Scarico", "g22", None),
-    ("load_sensor_data", "Sensore di carico", "g22", None),
-    ("trailer_registrations", "Rimorchi", "g22", None),
+    ("gnss_ad_records", "GNSS — Accumulated Driving", "g22", None),
+    ("gnss_places", "GNSS — Places", "g22", None),
+    ("border_crossings", "Border Crossings", "g22", None),
+    ("load_unload_records", "Load / Unload", "g22", None),
+    ("load_sensor_data", "Load Sensor", "g22", None),
+    ("trailer_registrations", "Trailers", "g22", None),
 
-    ("vu_identifications", "Identificazione VU", "vu", None),
-    ("sensor_pairings", "Accoppiamento sensore", "vu", None),
-    ("card_iw_records", "Inserimento / Estrazione carta", "vu", None),
-    ("card_records", "Record carta", "vu", None),
-    ("download_activities", "Scaricamenti", "vu", None),
-    ("power_interruptions", "Interruzioni alimentazione", "vu", None),
-    ("overspeeding_control", "Controllo eccesso velocità", "vu", None),
-    ("its_consents", "Consensi ITS", "vu", None),
-    ("vu_record_arrays", "RecordArray VU (raw)", "vu", None),
+    ("vu_identifications", "VU Identification", "vu", None),
+    ("sensor_pairings", "Sensor Pairing", "vu", None),
+    ("card_iw_records", "Card Insertion / Withdrawal", "vu", None),
+    ("card_records", "Card Records", "vu", None),
+    ("company_locks", "Company Locks", "vu", None),
+    ("download_activities", "Downloads", "vu", None),
+    ("power_interruptions", "Power Supply Interruptions", "vu", None),
+    ("overspeeding_control", "Overspeeding Control", "vu", None),
+    ("control_activities", "Control Activities", "vu", None),
+    ("its_consents", "ITS Consents", "vu", None),
+    ("vu_record_arrays", "VU Record Array (raw)", "vu", None),
 ]
 
 
 def _row_activities(rec):
-    """Espande ogni giornata in singole righe evento (Riposo, Guida, ecc.)."""
+    """Expands each day into single event rows (Rest, Drive, etc.)."""
     events = rec.get("eventi", rec.get("changes", []))
     if not isinstance(events, list) or not events:
         return {
-            "Data": rec.get("data", rec.get("timestamp", "?")),
-            "Ora": "—",
-            "Tipo": "(nessun evento)",
+            "Date": rec.get("data", rec.get("timestamp", "?")),
+            "Time": "\u2014",
+            "Type": "(no event)",
             "km": rec.get("km", 0),
         }
     rows = []
     for ev in events:
         if isinstance(ev, dict):
             rows.append({
-                "Data": rec.get("data", rec.get("timestamp", "?")),
-                "Ora": ev.get("ora", ev.get("time", "?")),
-                "Tipo": ev.get("tipo", ev.get("type", "?")),
+                "Date": rec.get("data", rec.get("timestamp", "?")),
+                "Time": ev.get("ora", ev.get("time", "?")),
+                "Type": ev.get("tipo", ev.get("type", "?")),
                 "km": rec.get("km", 0),
             })
     return rows if rows else {
-        "Data": rec.get("data", ""),
-        "Ora": "—",
-        "Tipo": "(nessun evento)",
+        "Date": rec.get("data", ""),
+        "Time": "\u2014",
+        "Type": "(no event)",
         "km": rec.get("km", 0),
     }
 
@@ -117,15 +122,15 @@ TRANSFORMERS = {
 }
 
 
-# ── Formattazione valori ────────────────────────────────────────────────────
+# ── Value formatting ───────────────────────────────────────────────────────
 
-# Sentinella "dato non disponibile" del tachigrafo (0xFFFFFF su 3 byte).
+# Tachograph "data not available" sentinel (0xFFFFFF on 3 bytes).
 _NOT_AVAILABLE_INTS = {0xFFFFFF, 0xFFFFFFFF}
 _ISO_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2})?")
 
 
 def _fmt_iso(s):
-    """Converte un timestamp ISO (2025-04-23T08:37:00+00:00) in 2025-04-23 08:37."""
+    """Convert ISO timestamp (2025-04-23T08:37:00+00:00) to 2025-04-23 08:37."""
     m = _ISO_RE.match(s)
     return f"{m.group(1)} {m.group(2)}" if m else s
 
@@ -137,48 +142,48 @@ def _fmt_coords(lat, lon):
 
 
 def _fmt_dict(d):
-    """Riassunto leggibile delle strutture annidate note del tachigrafo."""
-    # Slot carta assente
+    """Readable summary of known tachograph nested structures."""
+    # Card slot absent
     if d.get("present") is False:
-        return "—"
-    # Coordinate GNSS (gnss_place → geo, oppure geo diretto)
+        return "\u2014"
+    # GNSS coordinates (gnss_place → geo, or direct geo)
     geo = d.get("geo") if isinstance(d.get("geo"), dict) else None
     if geo and ("latitude_deg" in geo or "longitude_deg" in geo):
         return _fmt_coords(geo.get("latitude_deg"), geo.get("longitude_deg"))
     if "latitude_deg" in d or "longitude_deg" in d:
         return _fmt_coords(d.get("latitude_deg"), d.get("longitude_deg"))
-    # Numero carta (FullCardNumber)
+    # Card number (FullCardNumber)
     if d.get("card_number"):
         return str(d["card_number"])
-    # Immatricolazione veicolo
+    # Vehicle registration
     if "plate" in d:
         plate = str(d.get("plate", "")).strip()
         nation = str(d.get("nation", "")).strip()
         if not plate or set(plate) <= {"?"}:
-            return "—"
+            return "\u2014"
         return f"{nation} {plate}".strip() if "No information" not in nation else plate
-    # Fallback generico compatto
+    # Compact generic fallback
     items = ", ".join(f"{k}={fmt_val(val)}" for k, val in d.items())
-    return items if len(items) <= 80 else items[:80] + "…"
+    return items if len(items) <= 80 else items[:80] + "\u2026"
 
 
 def fmt_val(v):
     if v is None:
         return ""
     if isinstance(v, bool):
-        return "Sì" if v else "No"
+        return "Yes" if v else "No"
     if isinstance(v, float):
         s = f"{v:.6f}".rstrip("0").rstrip(".")
         return s if s else "0"
     if isinstance(v, int):
         if v in _NOT_AVAILABLE_INTS:
             return "N/A"
-        # Separatore migliaia (spazio, non '.', per non confondersi coi decimali)
-        # solo per valori grandi: i piccoli interi/coefficienti restano grezzi.
+        # Thousands separator (space, not '.', to avoid confusion with decimals)
+        # only for large values: small integers / coefficients stay raw.
         return f"{v:,}".replace(",", " ") if abs(v) >= 10000 else str(v)
     if isinstance(v, (bytes, bytearray)):
         h = v.hex()
-        return h if len(h) <= 64 else h[:64] + "…"
+        return h if len(h) <= 64 else h[:64] + "\u2026"
     if isinstance(v, dict):
         return _fmt_dict(v)
     if isinstance(v, list):
@@ -186,14 +191,14 @@ def fmt_val(v):
             return ""
         if all(not isinstance(x, (dict, list)) for x in v):
             return ", ".join(fmt_val(x) for x in v)
-        return f"[{len(v)} elementi]"
+        return f"[{len(v)} items]"
     if isinstance(v, str):
         return _fmt_iso(v)
     return str(v)
 
 
 def _columns_for(records, transformer):
-    """Deriva l'ordine delle colonne dall'unione delle chiavi dei record."""
+    """Derive column order from the union of record keys."""
     if transformer:
         sample = transformer(records[0])
         if isinstance(sample, list):
@@ -202,11 +207,15 @@ def _columns_for(records, transformer):
     cols = []
     for rec in records:
         if not isinstance(rec, dict):
-            return ["Valore"]
+            return ["Value"]
         for k in rec:
-            if k in HIDDEN_KEYS or k in TRAILING_KEYS or k in cols:
+            if k in HIDDEN_KEYS or k in LEADING_KEYS or k in TRAILING_KEYS or k in cols:
                 continue
             cols.append(k)
+    # Leading keys at the front (if present)
+    for k in LEADING_KEYS:
+        if any(isinstance(r, dict) and k in r for r in records):
+            cols.insert(0, k)
     for k in TRAILING_KEYS:
         if any(isinstance(r, dict) and k in r for r in records):
             cols.append(k)
@@ -229,25 +238,24 @@ def _rows_for(records, transformer):
 
 
 def _kv_rows(d):
-    """Converte un dict in righe (Campo, Valore)."""
-    return ["Campo", "Valore"], [[str(k), fmt_val(v)] for k, v in d.items()]
+    """Convert a dict to (Field, Value) rows."""
+    return ["Field", "Value"], [[str(k), fmt_val(v)] for k, v in d.items()]
 
 
 def _clean_tag_name(name):
-    """Nome leggibile di un tag grezzo (toglie prefisso generazione, marca i non
-    interpretati)."""
+    """Readable raw tag name (strips generation prefix, marks uninterpreted)."""
     if not name or name.startswith("BER_") or "_BER_" in name:
-        return "(non interpretato)"
+        return "(uninterpreted)"
     for pfx in ("G22_", "G2_", "G1_", "VU_", "EF_"):
         if name.startswith(pfx):
             return name[len(pfx):]
     return name
 
 
-# ── Tabella stile Excel ─────────────────────────────────────────────────────
+# ── Excel-style data table ─────────────────────────────────────────────────
 
 class DataTable(ttk.Frame):
-    """Treeview a sole intestazioni: griglia con colonne ordinabili e filtro."""
+    """Header-only treeview: grid with sortable columns and filter."""
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -261,7 +269,7 @@ class DataTable(ttk.Frame):
 
         filt = ttk.Frame(self)
         filt.pack(fill=tk.X, padx=8, pady=(0, 4))
-        ttk.Label(filt, text="🔎").pack(side=tk.LEFT)
+        ttk.Label(filt, text="\U0001f50e").pack(side=tk.LEFT)
         self.filter_var = tk.StringVar()
         self.filter_var.trace_add("write", lambda *_: self._apply_filter())
         self.filter_entry = ttk.Entry(filt, textvariable=self.filter_var)
@@ -291,8 +299,8 @@ class DataTable(ttk.Frame):
     def show(self, title, columns, rows, meta=""):
         self.title_lbl.config(text=title)
         self.count_lbl.config(
-            text=f"{len(rows)} righe · {len(columns)} colonne"
-            + (f"   —   {meta}" if meta else ""))
+            text=f"{len(rows)} rows \u00b7 {len(columns)} columns"
+            + (f"   \u2014   {meta}" if meta else ""))
         self.filter_var.set("")
 
         self._cols = list(columns)
@@ -346,12 +354,12 @@ class DataTable(ttk.Frame):
         self._all_rows.sort(key=key, reverse=descending)
         self._sort_state[col] = not descending
         for c in self._cols:
-            self.tv.heading(c, text=str(c) + (" ▾" if c == col and descending
-                                              else " ▴" if c == col else ""))
+            self.tv.heading(c, text=str(c) + (" \u25be" if c == col and descending
+                                              else " \u25b4" if c == col else ""))
         self._apply_filter()
 
 
-# ── Applicazione principale ─────────────────────────────────────────────────
+# ── Main application ─────────────────────────────────────────────────────
 
 class TachoExplorer(tk.Tk):
     def __init__(self):
@@ -385,9 +393,9 @@ class TachoExplorer(tk.Tk):
     def _build_ui(self):
         top = ttk.Frame(self, padding=(10, 8))
         top.pack(fill=tk.X)
-        ttk.Button(top, text="📂  Apri file DDD…", command=self._open_file).pack(
+        ttk.Button(top, text="\U0001f4c2  Open DDD file\u2026", command=self._open_file).pack(
             side=tk.LEFT, padx=(0, 14))
-        self.lbl_file = ttk.Label(top, text="Nessun file caricato",
+        self.lbl_file = ttk.Label(top, text="No file loaded",
                                   font=("", 11, "bold"))
         self.lbl_file.pack(side=tk.LEFT)
         self.lbl_gen = ttk.Label(top, text="")
@@ -398,7 +406,7 @@ class TachoExplorer(tk.Tk):
         pw = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
         pw.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
 
-        # Sinistra: albero
+        # Left: tree
         left = ttk.Frame(pw)
         pw.add(left, weight=1)
         scroll = ttk.Scrollbar(left, orient=tk.VERTICAL)
@@ -410,24 +418,24 @@ class TachoExplorer(tk.Tk):
         self.tree.column("#0", width=340, minwidth=200)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
-        # Destra: tabella
+        # Right: table
         right = ttk.Frame(pw)
         pw.add(right, weight=3)
         self.table = DataTable(right)
         self.table.pack(fill=tk.BOTH, expand=True)
 
-        self.status = ttk.Label(self, text="Pronto — apri un file .ddd",
+        self.status = ttk.Label(self, text="Ready \u2014 open a .ddd file",
                                 relief=tk.SUNKEN, anchor=tk.W, padding=(6, 2))
         self.status.pack(side=tk.BOTTOM, fill=tk.X)
 
-    # ── Apertura file ───────────────────────────────────────
+    # ── File open ──────────────────────────────────────────
 
     def _open_file(self):
         path = filedialog.askopenfilename(
-            filetypes=[("File DDD", "*.ddd *.DDD"), ("Tutti i file", "*.*")])
+            filetypes=[("DDD Files", "*.ddd *.DDD"), ("All Files", "*.*")])
         if not path:
             return
-        self.status.config(text="Parsing in corso…")
+        self.status.config(text="Parsing\u2026")
         self.update()
         import threading
         def _parse():
@@ -440,8 +448,8 @@ class TachoExplorer(tk.Tk):
         threading.Thread(target=_parse, daemon=True).start()
 
     def _parse_error(self, msg):
-        messagebox.showerror("Errore di parsing", msg)
-        self.status.config(text="Pronto — apri un file .ddd")
+        messagebox.showerror("Parsing Error", msg)
+        self.status.config(text="Ready \u2014 open a .ddd file")
 
     def _parse_done(self, data, path):
         self.current_data = data
@@ -450,25 +458,25 @@ class TachoExplorer(tk.Tk):
         self._update_top_bar(data)
         meta = data.get("metadata", {})
         self.status.config(
-            text=f"Caricato: {os.path.basename(path)}  |  "
+            text=f"Loaded: {os.path.basename(path)}  |  "
                  f"{meta.get('generation', '?')}  |  "
-                 f"Copertura: {meta.get('coverage_pct', 0)}%")
+                 f"Coverage: {meta.get('coverage_pct', 0)}%")
 
     def _update_top_bar(self, data):
         meta = data.get("metadata", {})
         gen = meta.get("generation", "Unknown")
         cov = meta.get("coverage_pct", 0)
         self.lbl_file.config(text=os.path.basename(self.current_file))
-        self.lbl_gen.config(text=f"● {gen}",
+        self.lbl_gen.config(text=f"\u25cf {gen}",
                             foreground=GEN_COLORS.get(gen, GEN_COLORS["Unknown"]))
         cov_color = "#2e7d32" if cov >= 100 else ("#f57c00" if cov >= 80 else "#c62828")
-        self.lbl_cov.config(text=f"Copertura: {cov:.0f}%", foreground=cov_color)
+        self.lbl_cov.config(text=f"Coverage: {cov:.0f}%", foreground=cov_color)
 
-    # ── Costruzione albero ──────────────────────────────────
+    # ── Tree construction ───────────────────────────────────
 
     def _add_section(self, parent, label, columns, rows, meta=""):
         n = len(rows)
-        text = f"{label}  ({n})" if columns != ["Campo", "Valore"] else label
+        text = f"{label}  ({n})" if columns != ["Field", "Value"] else label
         iid = self.tree.insert(parent, tk.END, text=text)
         self._payloads[iid] = (label, columns, rows, meta)
         return iid
@@ -478,61 +486,69 @@ class TachoExplorer(tk.Tk):
         self._payloads.clear()
         meta = data.get("metadata", {})
 
-        # ── File Info (chiave/valore) ──
+        # ── File Info (key/value) ──
         is_vu = meta.get("is_vu", False)
         info = {
-            "Nome file": os.path.basename(self.current_file),
-            "Dimensione": f"{meta.get('file_size_bytes', 0):,} byte".replace(",", " "),
-            "Origine": "Unità di bordo (VU)" if is_vu else "Carta conducente",
-            "Generazione": meta.get("generation", "?"),
-            "Copertura": f"{meta.get('coverage_pct', 0)}%",
-            "Integrità": meta.get("integrity_check", "N/A"),
-            "Fallimenti decoder": meta.get("decoder_failure_count", 0),
+            "Filename": os.path.basename(self.current_file),
+            "Size": f"{meta.get('file_size_bytes', 0):,} bytes".replace(",", " "),
+            "Origin": "Vehicle Unit (VU)" if is_vu else "Driver Card",
+            "Generation": meta.get("generation", "?"),
+            "Coverage": f"{meta.get('coverage_pct', 0)}%",
+            "Integrity": meta.get("integrity_check", "N/A"),
+            "Decoder failures": meta.get("decoder_failure_count", 0),
             "Parsed at": meta.get("parsed_at", ""),
         }
         cols, rows = _kv_rows(info)
-        self._add_section("", "📄  Info File", cols, rows)
+        self._add_section("", "\U0001f4c4  File Info", cols, rows)
 
         drv = data.get("driver", {})
         veh = data.get("vehicle", {})
 
-        # Carta conducente: mostra il titolare. VU: mostra il veicolo.
+        # Driver card: show holder. VU: show vehicle.
         if not is_vu and any(drv.values()):
             cols, rows = _kv_rows(drv)
-            self._add_section("", "👤  Conducente / Titolare", cols, rows)
+            self._add_section("", "\U0001f464  Driver / Cardholder", cols, rows)
 
         if is_vu:
-            # Nei file VU i dati veicolo sono spesso nelle calibrazioni,
-            # non nel dict "vehicle" (che può contenere "N/A").
             veh_info = dict(veh)
-            for cal in data.get("calibrations") or []:
-                if isinstance(cal, dict):
-                    vin = cal.get("vin", "")
-                    if vin and vin not in ("N/A", "?????????????????"):
-                        veh_info["vin"] = vin
-                    plate = cal.get("plate") or (cal.get("vehicle_registration") or {}).get("plate", "")
-                    if plate and plate not in ("N/A", ""):
-                        veh_info["plate"] = plate
-                    nation = cal.get("registration_nation") or (cal.get("vehicle_registration") or {}).get("nation", "")
-                    if nation and "No information" not in str(nation) and nation != "N/A":
-                        veh_info["registration_nation"] = nation
-                    if veh_info.get("vin") not in ("N/A", "", None):
-                        break
+            # Calibration fallback — only if vehicle dict still has defaults
+            if veh_info.get("plate") in ("N/A", "") and veh_info.get("vin") in ("N/A", ""):
+                for cal in data.get("calibrations") or []:
+                    if isinstance(cal, dict):
+                        vin = cal.get("vin", "")
+                        if vin and vin not in ("N/A", "?????????????????"):
+                            veh_info.setdefault("vin", vin)
+                        plate = cal.get("plate") or (cal.get("vehicle_registration") or {}).get("plate", "")
+                        # Skip garbage plates (all ?, all unprintable, empty)
+                        if plate and plate.strip() and not all(c in '?\\x' for c in plate) and plate not in ("N/A", ""):
+                            veh_info.setdefault("plate", plate)
+                        nation = cal.get("registration_nation") or (cal.get("vehicle_registration") or {}).get("nation", "")
+                        if nation and "No information" not in str(nation) and nation != "N/A":
+                            veh_info.setdefault("registration_nation", nation)
             if any(v for v in veh_info.values() if v not in ("N/A", "", None)):
                 cols, rows = _kv_rows(veh_info)
-                self._add_section("", "🚚  Veicolo", cols, rows)
+                self._add_section("", "\U0001f69a  Vehicle", cols, rows)
 
-        # ── Gruppi di liste ──
+        # ── List groups ──
         sections_by_group = {}
         for key, label, group, tname in LIST_SECTIONS:
             records = data.get(key) or []
             if not records:
                 continue
-            transformer = TRANSFORMERS.get(tname) if tname else None
-            cols, rows = _rows_for(records, transformer)
+            # Single-record dicts (like vu_identifications) → Field/Value
+            if key == "vu_identifications" and isinstance(records, list) and len(records) == 1:
+                cols, rows = _kv_rows(records[0])
+            else:
+                transformer = TRANSFORMERS.get(tname) if tname else None
+                cols, rows = _rows_for(records, transformer)
             sections_by_group.setdefault(group, []).append((label, cols, rows))
 
-        # Attività: gerarchia per giorno (espansa sotto il gruppo activity)
+        # ── Skip VU group for driver cards ──
+        actual_is_vu = meta.get("is_vu", False)
+        if not actual_is_vu:
+            sections_by_group.pop("vu", None)
+
+        # Activities: day hierarchy (expanded under activity group)
         activities = data.get("activities") or []
         has_activity_group = activities or "activity" in sections_by_group
 
@@ -541,6 +557,8 @@ class TachoExplorer(tk.Tk):
                 continue
             if group_key == "activity" and not has_activity_group:
                 continue
+            if group_key == "vu" and not actual_is_vu:
+                continue
             entries = sections_by_group.get(group_key, [])
             gnode = self.tree.insert("", tk.END, text=group_label, open=True)
             if group_key == "activity" and activities:
@@ -548,30 +566,30 @@ class TachoExplorer(tk.Tk):
             for label, cols, rows in entries:
                 self._add_section(gnode, label, cols, rows)
 
-        # ── Sicurezza ──
+        # ── Security ──
         self._populate_security(data)
 
-        # ── Tag grezzi ──
-        # Nei file VU il walk BER-TLV è un artefatto: cammina dentro record,
-        # certificati e firme già decodificati (copertura 100%) inventando tag
-        # da byte crittografici. Mostriamo i tag grezzi solo per le carte, dove
-        # sono i veri identificatori EF/strutturali.
+        # ── Raw tags ──
+        # In VU files the BER-TLV walk is an artifact: it walks inside records,
+        # certificates and signatures already decoded (100% coverage), inventing
+        # tags from cryptographic bytes. Show raw tags only for cards, where
+        # they are the actual EF/structural identifiers.
         raw = data.get("raw_tags", {})
-        is_vu = bool(data.get("vu_record_arrays"))
-        if raw and not is_vu:
+        is_vu_raw = bool(data.get("vu_record_arrays"))
+        if raw and not is_vu_raw:
             self._populate_raw_tags(raw)
 
-        # ── Generazioni rilevate ──
+        # ── Detected generations ──
         gens = data.get("generations", {})
         if gens:
             flat = {g: ", ".join(v.keys()) if isinstance(v, dict) else str(v)
                     for g, v in gens.items()}
             cols, rows = _kv_rows(flat)
-            self._add_section("", "📦  Generazioni rilevate", cols, rows)
+            self._add_section("", "\U0001f4e6  Detected Generations", cols, rows)
 
     def _populate_activities(self, parent, activities):
-        """Crea un nodo 'Attività' espandibile con i giorni come figli."""
-        act_node = self.tree.insert(parent, tk.END, text="Attività giornaliere")
+        """Create an expandable 'Activities' node with days as children."""
+        act_node = self.tree.insert(parent, tk.END, text="Daily Activities")
         for day in reversed(activities):
             if not isinstance(day, dict):
                 continue
@@ -588,10 +606,10 @@ class TachoExplorer(tk.Tk):
                             fmt_val(ev.get("tipo", ev.get("type", "?"))),
                             fmt_val(km),
                         ])
-                cols = ["Ora", "Tipo", "km"]
+                cols = ["Time", "Type", "km"]
             else:
-                cols = ["Ora", "Tipo"]
-                rows = [[fmt_val("—"), fmt_val("(nessun evento)")]]
+                cols = ["Time", "Type"]
+                rows = [[fmt_val("\u2014"), fmt_val("(no event)")]]
 
             self._add_section(act_node, date_str, cols, rows)
 
@@ -599,37 +617,46 @@ class TachoExplorer(tk.Tk):
         sv = data.get("signature_verification")
         certs = data.get("certificates") or []
         cvc = data.get("vu_certificates") or []
-        if not sv and not certs and not cvc:
+        chip = data.get("card_chip") or {}
+        icc = data.get("card_icc") or {}
+        if not sv and not certs and not cvc and not chip and not icc:
             return
-        gnode = self.tree.insert("", tk.END, text="🔐  Sicurezza & Certificati",
+        gnode = self.tree.insert("", tk.END,
+                                 text="\U0001f510  Security & Certificates",
                                  open=True)
         if cvc:
             cols, rows = _rows_for(cvc, None)
-            self._add_section(gnode, "Certificati CVC (decodificati)", cols, rows,
-                              meta="Appendice 11 · CAR=autorità emittente, "
-                                   "CHR=titolare, validità da TimeReal")
+            self._add_section(gnode, "CVC Certificates (decoded)", cols, rows,
+                              meta="Appendix 11 \u00b7 CAR=issuing authority, "
+                                   "CHR=holder, validity from TimeReal")
         if sv:
             summary = {
-                "Disponibile": sv.get("available"),
-                "Catena MSCA→VU": sv.get("msca_to_vu"),
-                "Ancorata a root ERCA": sv.get("root_anchored"),
-                "Tutte le firme TREP valide": sv.get("all_treps_valid"),
-                "Riepilogo": sv.get("summary", ""),
+                "Available": sv.get("available"),
+                "MSCA\u2192VU chain": sv.get("msca_to_vu"),
+                "Anchored to ERCA root": sv.get("root_anchored"),
+                "All TREP signatures valid": sv.get("all_treps_valid"),
+                "Summary": sv.get("summary", ""),
             }
             cols, rows = _kv_rows(summary)
-            self._add_section(gnode, "Verifica firme", cols, rows)
+            self._add_section(gnode, "Signature Verification", cols, rows)
             treps = sv.get("treps") or []
             if treps:
                 cols, rows = _rows_for(treps, None)
-                self._add_section(gnode, "Firme per sezione (TREP)", cols, rows)
+                self._add_section(gnode, "Section Signatures (TREP)", cols, rows)
         if certs:
             cols, rows = _rows_for(certs, None)
-            self._add_section(gnode, "Certificati", cols, rows)
+            self._add_section(gnode, "Certificates", cols, rows)
+        if chip:
+            cols, rows = _kv_rows(chip)
+            self._add_section(gnode, "IC Chip (EF_ICC / EF_IC)", cols, rows)
+        if icc:
+            cols, rows = _kv_rows(icc)
+            self._add_section(gnode, "ICC Identification", cols, rows)
 
     def _populate_raw_tags(self, raw):
-        """Tabella di sintesi dei tag attraversati dal navigator BER-TLV ma non
-        mappati a una struttura decodificata. Aggregati per tag (un record per
-        tag), così non si elencano migliaia di occorrenze ripetute."""
+        """Summary table of tags traversed by BER-TLV parser but not decoded.
+        Aggregated per tag (one record per tag), so thousands of repeated
+        occurrences are not listed individually."""
         agg = {}
         for occs in raw.values():
             for o in occs if isinstance(occs, list) else [occs]:
@@ -650,22 +677,22 @@ class TachoExplorer(tk.Tk):
         if not agg:
             return
 
-        cols = ["Tag", "Nome", "Occorrenze", "Byte tot.", "1° offset",
-                "Gen", "Hex (1ª occ.)"]
+        cols = ["Tag", "Name", "Occurrences", "Total Bytes", "1st Offset",
+                "Gen", "Hex (1st occ.)"]
         rows = []
         for a in sorted(agg.values(), key=lambda r: r["tid"]):
             h = a["hex"]
             rows.append([
                 a["tid"], a["name"], fmt_val(a["count"]), fmt_val(a["bytes"]),
                 a["offset"], a["gen"],
-                h[:48] + "…" if len(h) > 48 else h,
+                h[:48] + "\u2026" if len(h) > 48 else h,
             ])
         self._add_section(
-            "", "🧩  Tag Grezzi", cols, rows,
-            meta="tag attraversati dal parser BER-TLV ma non decodificati · "
-                 "\"(non interpretato)\" = nessuna struttura nota associata")
+            "", "\U0001f9e9  Raw Tags", cols, rows,
+            meta="tags traversed by BER-TLV parser but not decoded \u00b7 "
+                 "\"(uninterpreted)\" = no known structure associated")
 
-    # ── Selezione → tabella ─────────────────────────────────
+    # ── Selection → table ──────────────────────────────────
 
     def _on_select(self, _event):
         sel = self.tree.selection()
@@ -676,11 +703,11 @@ class TachoExplorer(tk.Tk):
             label, cols, rows, meta = payload
             self.table.show(label, cols, rows, meta)
         else:
-            # nodo gruppo: mostra elenco delle sotto-sezioni
+            # group node: show list of sub-sections
             children = self.tree.get_children(sel[0])
             rows = [[self.tree.item(c, "text")] for c in children]
             self.table.show(self.tree.item(sel[0], "text").strip(),
-                            ["Sotto-sezione"], rows)
+                            ["Sub-section"], rows)
 
 
 def main():

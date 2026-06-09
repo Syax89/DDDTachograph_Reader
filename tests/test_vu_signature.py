@@ -39,13 +39,13 @@ class TestVuSignatures(unittest.TestCase):
                                 f"all TREP signatures must verify: {rep['summary']}")
 
     def test_tampering_is_detected(self):
-        from core.vu_signature_verifier import _iter_sections
+        from core.vu_record_dispatcher import iter_vu_sections
         name, data = next(_g2_vu_files())
 
         # Flip a byte inside the payload of the first signed data record, so it
         # falls squarely within a signature's covered region.
         target = None
-        for sec in _iter_sections(data):
+        for sec in iter_vu_sections(data):
             has_sig = any(r[1] == 0x08 for r in sec["records"])
             data_recs = [r for r in sec["records"] if r[1] not in (0x04, 0x0F, 0x08)]
             if has_sig and data_recs:

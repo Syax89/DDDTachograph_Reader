@@ -46,9 +46,11 @@ class TagNavigator:
         if depth == 0 or mode == 'stap':
             # Strict sequential STAP block parsing
             while pos < end_pos:
-                # Skip repeating padding bytes (0x00, 0xFF, 0x55)
+                # Skip repeating padding bytes (0x00, 0xFF, 0x55) — advance to end of run
                 if pos + 1 < end_pos and self.parser.raw_data[pos] == self.parser.raw_data[pos+1] and self.parser.raw_data[pos] in (0x00, 0xFF, 0x55):
-                    pos += 1
+                    pad_byte = self.parser.raw_data[pos]
+                    while pos < end_pos and self.parser.raw_data[pos] == pad_byte:
+                        pos += 1
                     continue
                     
                 if pos + 5 > end_pos:
@@ -204,39 +206,31 @@ class TagNavigator:
                 if not found: pos += 1
 
     def record_and_dispatch(self, tag, length, val, pos, h_size, depth, parent_path, mode='stap', dtype=None):
-        # Specific tag overrides for common DDD variants
-        tag_names_override = {}
-        
-        tag_name = tag_names_override.get(tag, self.parser.TAGS.get(tag, f"BER_{tag:04X}"))
+        import inspect
+        tag_name = self.parser.TAGS.get(tag, f"BER_{tag:04X}")
         self.parser.bytes_covered += h_size
 
         # VU overview vehicle identification decoding at offsets 420 and 442
         if self.parser.is_vu and depth == 0:
             if pos == 420 and length == 17:
-                # First part of VIN
                 vin_prefix = val[2:17].decode('latin-1', errors='ignore').strip()
                 self.parser.results["vehicle"]["vin"] = vin_prefix
                 self.parser.results["metadata"]["source"] = "VU"
                 self.record_raw_tag(tag, tag_name, length, val, pos, depth, parent_path, dtype, mode)
                 return
             elif pos == 442 and (length == 14 or length == 15):
-                # Suffix of VIN is the Tag itself
                 try:
                     vin_suffix = struct.pack(">H", tag).decode('latin-1', errors='ignore')
                 except (struct.error, UnicodeDecodeError):
                     vin_suffix = ""
-                
                 if "vin" in self.parser.results["vehicle"] and self.parser.results["vehicle"]["vin"]:
                     self.parser.results["vehicle"]["vin"] += vin_suffix
-                
-                # Parse Nation and Plate
                 if len(val) >= 4:
                     self.parser.results["vehicle"]["registration_nation"] = decoders.get_nation(val[2])
                     plate_start = 3
                     if val[3] < 0x20 or val[3] >= 0x7F:
                         plate_start = 4
                     self.parser.results["vehicle"]["plate"] = decoders.decode_string(val[plate_start:], is_id=True)
-                
                 self.record_raw_tag(tag, tag_name, length, val, pos, depth, parent_path, dtype, mode)
                 return
 
@@ -246,58 +240,39 @@ class TagNavigator:
             self.dispatch_container_if_needed(tag, length, val, pos, h_size, depth, parent_path, mode, dtype)
             return
 
-        # Leaf data dispatchers (moved up)
-        if not self.parser.is_vu:
-            if tag == 0x0002:
-                decoders.parse_ef_icc(val, self.parser.results)
-            elif tag == 0x0005:
-                decoders.parse_ef_ic(val, self.parser.results)
-            elif tag == 0x0520:
-                decoders.parse_g1_identification(val, self.parser.results)
-            elif tag == 0x0501:
-                decoders.parse_g1_app_identification(val, self.parser.results)
-            elif tag == 0x0521:
-                decoders.parse_g1_driving_licence(val, self.parser.results)
-            elif tag == 0x0508:
-                decoders.parse_control_activity_data(val, self.parser.results)
-            elif tag == 0x050E:
-                decoders.parse_card_download(val, self.parser.results)
-        else:
-            if tag == 0x0001:
-                decoders.parse_vu_vehicle_identification(val, self.parser.results)
+        # Data-driven decoder dispatch via registry
+        dispatched = False
+        try:
+            from .decoder_registry import DecoderRegistry
+            reg = DecoderRegistry.instance()
+            dec = reg.get_decoder(tag)
+            if dec and dec.decoder_fn:
+                # Context-sensitive filtering
+                if dec.card_only and self.parser.is_vu:
+                    pass
+                elif dec.vu_only and not self.parser.is_vu:
+                    pass
+                else:
+                    fn = dec.decoder_fn
+                    sig = inspect.signature(fn)
+                    n_params = len([p for p in sig.parameters.values()
+                                    if p.default is inspect.Parameter.empty
+                                    and p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)])
+                    if n_params == 3:
+                        fn(val, self.parser.results, tag)
+                    else:
+                        fn(val, self.parser.results)
+                    dispatched = True
+        except Exception:
+            pass
 
-        # Shared dispatchers (both card and VU)
-        if tag == 0x0101:
-            decoders.parse_g2_card_icc_identification(val, self.parser.results)
-        elif tag == 0x0102:
-            decoders.parse_card_identification(val, self.parser.results)
-        elif tag == 0x0201:
-            decoders.parse_driver_card_holder_identification(val, self.parser.results)
-        elif tag == 0x0502:
-            decoders.parse_g1_events_data(val, self.parser.results)
-        elif tag == 0x0503:
-            decoders.parse_g1_faults_data(val, self.parser.results)
-        elif tag in (0x0504, 0x0524, 0x0206) and length > 100:
+        # Special case: cyclic buffer requires minimum length validation
+        if not dispatched and tag in (0x0504, 0x0524, 0x0206) and length > 100:
             decoders.parse_cyclic_buffer_activities(val, self.parser.results)
-        elif tag == 0x0505 or tag == 0x0523:
-            decoders.parse_g1_vehicles_used(val, self.parser.results)
-        elif tag == 0x0506:
-            decoders.parse_g1_places(val, self.parser.results)
-        elif tag == 0x0507:
-            decoders.parse_g1_current_usage(val, self.parser.results)
-        elif tag == 0x050C:
-            decoders.parse_calibration_data(val, self.parser.results)
-        elif tag == 0x0522:
-            decoders.parse_specific_conditions(val, self.parser.results)
+            dispatched = True
 
-        # G2 VU RecordArray decoders (0x0509-0x0512, 0x052B-0x0533)
-        if tag in (0x0509, 0x050A, 0x050B, 0x050D, 0x050F,
-                   0x0510, 0x0511, 0x0512, 0x052B, 0x052C,
-                   0x052D, 0x052E, 0x052F, 0x0530, 0x0531, 0x0532, 0x0533):
-            decoders.parse_g2_vu_record(val, self.parser.results, tag)
-
-        # Detect G2 RecordArray activity data in large unknown payloads
-        if tag not in self.parser.TAGS and length > 5000:
+        # Detect G2 RecordArray activity data in large unknown payloads (heuristic)
+        if not dispatched and tag not in self.parser.TAGS and length > 5000:
             first_bytes = val[:6]
             if len(first_bytes) >= 4:
                 lead = struct.unpack(">H", first_bytes[:2])[0]
@@ -308,46 +283,7 @@ class TagNavigator:
                 elif lead in (0x7622, 0x7632) or lead1 in (0x7622, 0x7632):
                     decoders._parse_trep_02_activities(val, self.parser.results)
                 elif lead == 0x7668 or lead1 == 0x6864:
-                    # G2 marker 0x76 followed by 0x6864
                     decoders._parse_trep_02_activities(val[1:], self.parser.results)
-
-        # Gen 2.2 tags
-        if tag == 0x0525 or tag == 0x0225:
-            decoders.parse_g22_gnss_accumulated_driving(val, self.parser.results)
-        elif tag == 0x0526 or tag == 0x0226:
-            decoders.parse_g22_load_unload_operations(val, self.parser.results)
-        elif tag == 0x0527 or tag == 0x0227:
-            decoders.parse_g22_trailer_registrations(val, self.parser.results)
-        elif tag == 0x0528:
-            decoders.parse_g22_gnss_enhanced_places(val, self.parser.results)
-        elif tag == 0x0529:
-            decoders.parse_g22_load_sensor_data(val, self.parser.results)
-        elif tag == 0x052A or tag == 0x0228:
-            decoders.parse_g22_border_crossings(val, self.parser.results)
-
-        # G22 certificate sub-tags (inside security containers)
-        if tag in (0x5F20, 0x5F24, 0x5F25, 0x5F29, 0x5F4C):
-            decoders.parse_g22_certificate_subtag(val, self.parser.results, tag)
-        elif tag == 0x5F37:
-            decoders.parse_certificate_signature(val, self.parser.results)
-        elif tag == 0x7F49:
-            decoders.parse_public_key_info(val, self.parser.results)
-        elif tag == 0x0100:
-            decoders.parse_card_issuer_identification(val, self.parser.results)
-        elif tag == 0x2020:
-            decoders.parse_company_holder_data(val, self.parser.results)
-        elif tag in (0x42, 0x4208):
-            decoders.parse_g22_certificate_profile(val, self.parser.results)
-        elif tag == 0x0222:
-            decoders.parse_g22_gnss_enhanced_places(val, self.parser.results)
-        elif tag == 0x0223:
-            decoders.parse_g22_gnss_accumulated_driving(val, self.parser.results)
-        elif tag in (0x960F, 0x6399):
-            decoders.parse_g22_auth_subtag(val, self.parser.results, tag)
-
-        # Certificate structural decoders
-        elif tag in (0xC100, 0xC108, 0xC101, 0xC109, 0xC102, 0xC10A, 0x0103, 0x0104):
-            decoders.parse_g1_certificate(val, self.parser.results)
 
         self.record_raw_tag(tag, tag_name, length, val, pos, depth, parent_path, dtype, mode)
         self.dispatch_container_if_needed(tag, length, val, pos, h_size, depth, parent_path, mode, dtype)
@@ -417,7 +353,7 @@ class TagNavigator:
 
         try:
             from .decoder_registry import DecoderRegistry
-            reg = DecoderRegistry()
+            reg = DecoderRegistry.instance()
             dec = reg.get_decoder(tag)
             if dec:
                 return {
@@ -475,6 +411,11 @@ class TagNavigator:
             "Certificates": (3 * fs // 4, max(3 * fs // 4, fs - 512)),
             "Signature/Tail": (max(0, fs - 512), fs),
         }
+        # Remove Signature/Tail overlap from Certificates
+        tail_start = max(0, fs - 512)
+        cert_start, cert_end = sections["Certificates"]
+        if cert_end > tail_start:
+            sections["Certificates"] = (cert_start, tail_start)
 
         covered_ranges = []
         for key, occs in self.parser.results["raw_tags"].items():
@@ -528,7 +469,7 @@ class TagNavigator:
         """
         try:
             from .decoder_registry import DecoderRegistry
-            reg = DecoderRegistry()
+            reg = DecoderRegistry.instance()
         except ImportError:
             return []
         
@@ -563,24 +504,17 @@ class TagNavigator:
         return missing
 
     def dispatch_container_if_needed(self, tag, length, val, pos, h_size, depth, parent_path, mode, dtype):
-        CONTAINER_TAGS = {
-            0x7621, 0x7622, 0x7623, 0x7624,
-            0x7631, 0x7632, 0x7633, 0x7634,
-            0x7601, 0x7602, 0x7603, 0x7604, 0x7605,
-            0x7F21, 0x7D21, 0xAD21, 0x7F4E, 0x7F60, 0x7F61, 
-            0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x052A,
-            0x0225, 0x0226, 0x0227, 0x0228
-        }
-        # Tags with dedicated decoders that fully handle inner data — skip recursion
-        NO_RECURSE_TAGS = {0x7F49, 0x5F37, 0x42, 0x4208}
-        is_container = tag in CONTAINER_TAGS or (tag & 0xFF00) == 0x7600
+        from .decoder_registry import DecoderRegistry
+        reg = DecoderRegistry.instance()
+        is_container = reg.is_container(tag)
 
         # Euristiche per BER-TLV (bit 5 indica costruttore/container)
         if mode == 'annex1c' and tag > 0xFF:
             first_byte = (tag >> ((tag.bit_length() - 1) // 8 * 8)) & 0xFF
             if first_byte & 0x20: is_container = True
-        
+
         # Skip recursion for tags with dedicated leaf decoders (overrides BER heuristic)
+        NO_RECURSE_TAGS = {0x7F49, 0x5F37, 0x42, 0x4208}
         if tag in NO_RECURSE_TAGS:
             is_container = False
 

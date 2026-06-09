@@ -1,9 +1,9 @@
-"""Accesso condiviso ai file DDD reali di esempio.
+"""Shared access to real DDD sample files.
 
-I file in ``DDD/`` contengono dati personali (nomi conducenti, numeri carta, VIN)
-e sono volutamente esclusi dal versionamento (vedi ``.gitignore``). I test che li
-richiedono devono **skippare** in modo pulito quando la cartella non è presente
-(es. in CI), invece di fallire.
+The files in ``DDD/`` contain personal data (driver names, card numbers, VINs)
+and are intentionally excluded from version control (see ``.gitignore``). Tests
+that require them should cleanly skip when the folder is not present
+(e.g. in CI) instead of failing.
 """
 import os
 import unittest
@@ -13,7 +13,7 @@ DDD_DIR = os.path.join(ROOT_DIR, "DDD")
 
 
 def real_ddd_files():
-    """Percorsi dei file .ddd reali presenti, lista vuota se DDD/ è assente."""
+    """Paths to present .ddd files, empty list if DDD/ is absent."""
     if not os.path.isdir(DDD_DIR):
         return []
     return [os.path.join(DDD_DIR, n) for n in sorted(os.listdir(DDD_DIR))
@@ -24,4 +24,4 @@ HAS_REAL_FILES = bool(real_ddd_files())
 
 requires_real_files = unittest.skipUnless(
     HAS_REAL_FILES,
-    "file DDD reali assenti (DDD/ è git-ignored: contiene dati personali)")
+    "real DDD files absent (DDD/ is git-ignored: contains personal data)")

@@ -312,10 +312,29 @@ class TachoParser:
 
             # Verify dispatch coverage in debug mode
             if logger.isEnabledFor(logging.DEBUG):
-                missing = self.navigator.verify_dispatch_coverage()
-                if missing:
-                    logger.debug("Missing dispatch entries for tags: %s",
-                                 [f"0x{t:04X}" for t in missing])
+                if self.use_deterministic:
+                    from core.decoder_registry import DecoderRegistry
+                    from core.deterministic_parser import DeterministicParser
+                    reg = DecoderRegistry.instance()
+                    # Build a set of tags that have decoders registered
+                    registered = {t for t in reg.get_all_tags() if reg.get_decoder(t) and reg.get_decoder(t).decoder_fn}
+                    seen = set()
+                    for occs in self.results.get("raw_tags", {}).values():
+                        for occ in occs:
+                            try:
+                                tid = int(occ.get("tag_id", "0x0"), 16)
+                                seen.add(tid)
+                            except (ValueError, KeyError):
+                                continue
+                    unhandled = registered - seen
+                    if unhandled:
+                        logger.debug("Registered tags not encountered in file: %s",
+                                     [f"0x{t:04X}" for t in sorted(unhandled)])
+                else:
+                    missing = self.navigator.verify_dispatch_coverage()
+                    if missing:
+                        logger.debug("Missing dispatch entries for tags: %s",
+                                     [f"0x{t:04X}" for t in missing])
 
             # Deprecation warning for legacy parsing path
             if not self.use_deterministic:
@@ -337,10 +356,15 @@ class TachoParser:
                     # nothing for these files).
                     try:
                         from core.vu_record_dispatcher import walk_vu_record_arrays
-                        walk_vu_record_arrays(self.raw_data, self.results)
+                        walker_success = walk_vu_record_arrays(self.raw_data, self.results)
+                        # Only fall back to heuristic if the walker produced NO results
+                        if not walker_success or not self.results.get("vu_record_arrays"):
+                            decoders.parse_vu_download_messages(self.raw_data, self.results)
                     except Exception as exc:
                         logger.debug("VU RecordArray dispatch failed: %s", exc)
-                        decoders.parse_vu_download_messages(self.raw_data, self.results)
+                        # Fall back only if nothing was produced
+                        if not self.results.get("vu_record_arrays"):
+                            decoders.parse_vu_download_messages(self.raw_data, self.results)
                     # Cryptographic integrity: verify the ECDSA download signatures
                     # and the MSCA→VU certificate chain (Annex 1C Appendix 11).
                     try:

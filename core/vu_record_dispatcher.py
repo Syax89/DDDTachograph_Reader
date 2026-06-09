@@ -26,6 +26,8 @@ from datetime import datetime, timezone
 
 from core.logger import get_logger
 from core import decoders
+from core.constants import RECORD_ARRAY_MAX_RECORDS, RECORD_ARRAY_MAX_SIZE
+from core.event_fault_codes import describe_event, describe_fault
 
 _log = get_logger(__name__)
 
@@ -561,6 +563,8 @@ def _decode_record(record_type, rec):
         prefix = _decode_event_fault_prefix(rec)
         if prefix:
             out.update(prefix)
+            type_code = prefix.get("type_code")
+            out["descrizione"] = describe_event(type_code) if record_type == 0x15 else describe_fault(type_code)
         else:
             out["raw_hex"] = rec[:48].hex()
         return out
@@ -621,63 +625,57 @@ def _decode_record(record_type, rec):
     return out
 
 
+def iter_vu_sections(data):
+    """Yield sections from a VU RecordArray stream as {marker, trep, records: [(pos, rt, rs, nr, end), ...]}.
+
+    This is the canonical section iterator shared by ``walk_vu_record_arrays``
+    and ``vu_signature_verifier._iter_sections``.
+    """
+    n = len(data)
+    pos = 0
+    cur = None
+    while pos + 5 <= n:
+        if data[pos] == 0x76:
+            if cur:
+                yield cur
+            cur = {"marker": pos, "trep": data[pos + 1], "records": []}
+            pos += 2
+            continue
+        rt = data[pos]
+        rs = struct.unpack(">H", data[pos + 1:pos + 3])[0]
+        nr = struct.unpack(">H", data[pos + 3:pos + 5])[0]
+        if rt > 0x60 or rs > RECORD_ARRAY_MAX_SIZE or nr > RECORD_ARRAY_MAX_RECORDS or (rs == 0 and nr > 0) or pos + 5 + rs * nr > n:
+            break
+        if cur is not None:
+            cur["records"].append((pos, rt, rs, nr, pos + 5 + rs * nr))
+        pos += 5 + rs * nr
+    if cur:
+        yield cur
+
+
 def walk_vu_record_arrays(data, results):
     """Walk the VU RecordArray stream, dispatch by recordType, and populate
     ``results``. Returns a list of section summaries (also stored under
     ``results['vu_record_arrays']``)."""
     data = bytes(data)
-    n = len(data)
     sections = []
-    current = None
-    pos = 0
-    guard = 0
 
-    def finalize(section):
-        if section is None:
-            return
+    for sec in iter_vu_sections(data):
+        current = {"trep": sec["trep"], "name": TREP_SECTIONS.get(sec["trep"], f"TREP_0x{sec['trep']:02X}"),
+                   "records": {}}
+        for (pos, rt, rs, nr, end) in sec["records"]:
+            rpos = pos + 5
+            for _ in range(nr):
+                rec = data[rpos:rpos + rs]
+                current["records"].setdefault(rt, []).append(_decode_record(rt, rec))
+                rpos += rs
         sections.append({
-            "trep": f"0x{section['trep']:02X}",
-            "section": section["name"],
-            "record_counts": {f"0x{rt:02X}": len(v) for rt, v in section["records"].items()},
+            "trep": f"0x{current['trep']:02X}",
+            "section": current["name"],
+            "record_counts": {f"0x{rt:02X}": len(v) for rt, v in current["records"].items()},
         })
-        _emit_section(section, results)
+        _emit_section(current, results)
 
-    while pos + 5 <= n and guard < 2_000_000:
-        guard += 1
-        # TREP section marker 0x76 0xNN (recordType can never be 0x76)
-        if data[pos] == 0x76:
-            trep = data[pos + 1]
-            finalize(current)
-            current = {"trep": trep, "name": TREP_SECTIONS.get(trep, f"TREP_0x{trep:02X}"),
-                       "records": {}}
-            pos += 2
-            continue
-
-        record_type = data[pos]
-        record_size = struct.unpack(">H", data[pos + 1:pos + 3])[0]
-        no_of_records = struct.unpack(">H", data[pos + 3:pos + 5])[0]
-
-        # Validate; bail to the deterministic parser's territory on garbage.
-        if record_type > 0x60 or record_size > 4096 or no_of_records > 20000:
-            break
-        if record_size == 0 and no_of_records > 0:
-            break
-        end = pos + 5 + record_size * no_of_records
-        if end > n:
-            break
-
-        if current is None:
-            current = {"trep": 0x00, "name": "Unframed", "records": {}}
-
-        bucket = current["records"].setdefault(record_type, [])
-        rpos = pos + 5
-        for _ in range(no_of_records):
-            rec = data[rpos:rpos + record_size]
-            bucket.append(_decode_record(record_type, rec))
-            rpos += record_size
-        pos = end
-
-    finalize(current)
     results["vu_record_arrays"] = sections
     return sections
 
@@ -685,6 +683,21 @@ def walk_vu_record_arrays(data, results):
 def _emit_section(section, results):
     """Map decoded section records into the app's existing result lists."""
     recs = section["records"]
+
+    # Vehicle identification: write the first found VIN, plate, nation
+    # into results["vehicle"]. G2 uses 0x0B (VehicleRegistrationNumber),
+    # G2.2 uses 0x24 (VehicleRegistrationIdentification), both use 0x0A (VIN).
+    for rt in (0x0A, 0x0B, 0x24):
+        for r in recs.get(rt, []):
+            vin = r.get("vin")
+            nation = r.get("nation")
+            plate = r.get("plate")
+            if vin and results["vehicle"]["vin"] == "N/A":
+                results["vehicle"]["vin"] = vin
+            if nation and results["vehicle"]["registration_nation"] == "N/A":
+                results["vehicle"]["registration_nation"] = nation
+            if plate and results["vehicle"]["plate"] == "N/A":
+                results["vehicle"]["plate"] = plate
 
     # Border crossings (0x22) and load/unload (0x23) — confirmed structures.
     for rt, key in ((0x22, "border_crossings"), (0x23, "load_unload_records")):
@@ -716,8 +729,11 @@ def _emit_section(section, results):
     for rt, key in ((0x15, "events"), (0x18, "faults")):
         for r in recs.get(rt, []):
             if r.get("begin"):
+                type_code = r.get("type_code")
+                desc = describe_event(type_code) if key == "events" else describe_fault(type_code)
                 results.setdefault(key, []).append({
-                    "event_type_code" if key == "events" else "fault_type_code": r.get("type_code"),
+                    "descrizione": desc,
+                    "event_type_code" if key == "events" else "fault_type_code": type_code,
                     "record_purpose": r.get("record_purpose"),
                     "begin": r.get("begin"),
                     "end": r.get("end") or "N/A",

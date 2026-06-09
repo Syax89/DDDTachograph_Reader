@@ -10,59 +10,56 @@ class ExportManager:
     @staticmethod
     def export_to_excel(data, filepath):
         """
-        Esporta i dati in un file Excel con fogli multipli.
+        Exports data to an Excel file with multiple sheets.
         """
         pd = _get_pandas()
         with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
-            # 1. Foglio Riepilogo
+            # 1. Summary sheet
             metadata = data.get('metadata', {})
             driver = data.get('driver', {})
             vehicle = data.get('vehicle', {})
             
             summary_data = {
-                'Campo': [
-                    'File', 'Data Analisi', 'Integrità', 
-                    'Conducente', 'N. Carta', 
-                    'Veicolo', 'Targa', 'VIN',
-                    'Distanza Totale (KM)', 'Ore Guida Totali'
+                'Field': [
+                    'File', 'Analysis Date', 'Integrity', 
+                    'Driver', 'Card No.', 
+                    'Vehicle', 'Plate', 'VIN',
+                    'Total Distance (KM)', 'Total Driving Hours'
                 ],
-                'Valore': [
+                'Value': [
                     metadata.get('filename', 'N/A'),
                     metadata.get('parsed_at', datetime.now().strftime("%Y-%m-%d %H:%M")),
                     metadata.get('integrity_check', 'OK'),
                     f"{driver.get('surname', '')} {driver.get('firstname', '')}".strip() or 'N/A',
                     driver.get('card_number', 'N/A'),
-                    'N/A', # Placeholder for vehicle type if needed
+                    'N/A',
                     vehicle.get('plate', 'N/A'),
                     vehicle.get('vin', 'N/A'),
                     ExportManager._calculate_total_km(data.get('activities', [])),
                     ExportManager._calculate_total_hours(data.get('daily_summaries', []))
                 ]
             }
-            pd.DataFrame(summary_data).to_excel(writer, sheet_name='Riepilogo', index=False)
+            pd.DataFrame(summary_data).to_excel(writer, sheet_name='Summary', index=False)
 
-            # 2. Foglio Attività Giornaliere
+            # 2. Daily Activities sheet
             daily_summaries = data.get('daily_summaries', [])
             if daily_summaries:
-                pd.DataFrame(daily_summaries).to_excel(writer, sheet_name='Attività Giornaliere', index=False)
+                pd.DataFrame(daily_summaries).to_excel(writer, sheet_name='Daily Activities', index=False)
 
-            # 3. Foglio Infrazioni
+            # 3. Infringements sheet
             infractions = data.get('infractions', [])
             if infractions:
-                pd.DataFrame(infractions).to_excel(writer, sheet_name='Infrazioni', index=False)
+                pd.DataFrame(infractions).to_excel(writer, sheet_name='Infringements', index=False)
 
-            # 4. Foglio Posizioni GPS (se disponibili)
+            # 4. GPS Positions sheet (if available)
             gps_data = data.get('locations', []) or data.get('gps_positions', [])
             if gps_data:
-                pd.DataFrame(gps_data).to_excel(writer, sheet_name='Posizioni GPS', index=False)
-            
-            # Formattazione base (opzionale, Pandas lo fa già decentemente)
-            # Potremmo aggiungere formattazione openpyxl qui se necessario
+                pd.DataFrame(gps_data).to_excel(writer, sheet_name='GPS Positions', index=False)
 
     @staticmethod
     def export_to_csv(data, filepath):
         """
-        Esporta i dati in un formato CSV piatto per sistemi contabili.
+        Exports data to flat CSV format for accounting systems.
         """
         pd = _get_pandas()
         rows = []
@@ -76,31 +73,31 @@ class ExportManager:
             
             for i in range(len(events)):
                 ev = events[i]
-                tipo = ev.get('tipo', 'N/A')
-                ora_inizio = ev.get('ora', 'N/A')
+                activity_type = ev.get('tipo', 'N/A')
+                start_time = ev.get('ora', 'N/A')
                 
-                # Calcola ora fine (se c'è un evento successivo)
-                ora_fine = "23:59"
-                durata = "N/D"
+                # Calculate end time (from next event)
+                end_time = "23:59"
+                duration = "N/A"
                 if i < len(events) - 1:
-                    ora_fine = events[i+1].get('ora', '23:59')
+                    end_time = events[i+1].get('ora', '23:59')
                     try:
-                        h1, m1 = map(int, ora_inizio.split(':'))
-                        h2, m2 = map(int, ora_fine.split(':'))
+                        h1, m1 = map(int, start_time.split(':'))
+                        h2, m2 = map(int, end_time.split(':'))
                         diff = (h2 * 60 + m2) - (h1 * 60 + m1)
-                        durata = f"{diff} min"
+                        duration = f"{diff} min"
                     except (ValueError, TypeError, AttributeError):
                         pass
                 
                 rows.append({
-                    'Data': date,
-                    'Inizio': ora_inizio,
-                    'Fine': ora_fine,
-                    'Durata': durata,
-                    'Tipo Attività': tipo,
-                    'Conducente': driver_name,
-                    'Carta': card_number,
-                    'Veicolo': plate
+                    'Date': date,
+                    'Start': start_time,
+                    'End': end_time,
+                    'Duration': duration,
+                    'Activity Type': activity_type,
+                    'Driver': driver_name,
+                    'Card': card_number,
+                    'Vehicle': plate
                 })
         
         if rows:
@@ -121,7 +118,7 @@ class ExportManager:
         total_min = 0
         for day in daily_summaries:
             try:
-                time_str = day.get('Guida Totale', '00:00')
+                time_str = day.get('Total Drive', '00:00')
                 if ':' not in time_str:
                     time_str = '00:00'
                 h, m = map(int, time_str.split(':'))

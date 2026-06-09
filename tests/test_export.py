@@ -5,7 +5,7 @@ import unittest
 import pandas as pd
 from datetime import datetime
 
-# Assicura che il progetto sia nel path
+# Ensure project is in path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from export_manager import ExportManager
@@ -37,25 +37,25 @@ class TestExportManager(unittest.TestCase):
                     "data": "01/06/2026",
                     "km": 150,
                     "eventi": [
-                        {"tipo": "GUIDA", "ora": "08:00"},
-                        {"tipo": "RIPOSO", "ora": "12:00"}
+                        {"tipo": "DRIVE", "ora": "08:00"},
+                        {"tipo": "REST", "ora": "12:00"}
                     ]
                 },
                 {
                     "data": "02/06/2026",
                     "km": 200,
                     "eventi": [
-                        {"tipo": "GUIDA", "ora": "09:00"},
-                        {"tipo": "RIPOSO", "ora": "13:00"}
+                        {"tipo": "DRIVE", "ora": "09:00"},
+                        {"tipo": "REST", "ora": "13:00"}
                     ]
                 }
             ],
             "daily_summaries": [
-                {"Data": "01/06/2026", "Guida Totale": "04:00", "Lavoro Totale": "00:00", "Riposo Totale": "20:00", "Infrazioni": 0},
-                {"Data": "02/06/2026", "Guida Totale": "04:00", "Lavoro Totale": "00:00", "Riposo Totale": "20:00", "Infrazioni": 1}
+                {"Data": "01/06/2026", "Total Drive": "04:00", "Total Work": "00:00", "Total Rest": "20:00", "Infringements": 0},
+                {"Data": "02/06/2026", "Total Drive": "04:00", "Total Work": "00:00", "Total Rest": "20:00", "Infringements": 1}
             ],
             "infractions": [
-                {"data": "02/06/2026", "tipo": "ECCESSO_GUIDA_CONTINUA", "severita": "SI", "descrizione": "Superato il limite di guida"}
+                {"data": "02/06/2026", "tipo": "CONTINUOUS_DRIVE_EXCEEDED", "severita": "SI", "descrizione": "Driving limit exceeded"}
             ],
             "locations": [
                 {"date": "01/06/2026 10:00", "latitude": 45.4642, "longitude": 9.1900, "description": "Milano"},
@@ -74,23 +74,23 @@ class TestExportManager(unittest.TestCase):
         
         # Verify the sheets exist and are populated
         xls = pd.ExcelFile(self.excel_path)
-        self.assertIn("Riepilogo", xls.sheet_names)
-        self.assertIn("Attività Giornaliere", xls.sheet_names)
-        self.assertIn("Infrazioni", xls.sheet_names)
-        self.assertIn("Posizioni GPS", xls.sheet_names)
+        self.assertIn("Summary", xls.sheet_names)
+        self.assertIn("Daily Activities", xls.sheet_names)
+        self.assertIn("Infringements", xls.sheet_names)
+        self.assertIn("GPS Positions", xls.sheet_names)
         
-        # Test Riepilogo content
-        df_summary = pd.read_excel(xls, "Riepilogo")
+        # Test Summary content
+        df_summary = pd.read_excel(xls, "Summary")
         self.assertEqual(df_summary.shape[0], 10)
-        self.assertIn("Milano", str(pd.read_excel(xls, "Posizioni GPS").iloc[0]["description"]))
+        self.assertIn("Milano", str(pd.read_excel(xls, "GPS Positions").iloc[0]["description"]))
         
         # Verify KM calculations (150 + 200 = 350)
-        km_row = df_summary[df_summary["Campo"] == "Distanza Totale (KM)"]
-        self.assertEqual(km_row["Valore"].values[0], 350)
+        km_row = df_summary[df_summary["Field"] == "Total Distance (KM)"]
+        self.assertEqual(km_row["Value"].values[0], 350)
         
         # Verify hours calculations (4h + 4h = 8h 0m)
-        hours_row = df_summary[df_summary["Campo"] == "Ore Guida Totali"]
-        self.assertEqual(hours_row["Valore"].values[0], "8h 0m")
+        hours_row = df_summary[df_summary["Field"] == "Total Driving Hours"]
+        self.assertEqual(hours_row["Value"].values[0], "8h 0m")
 
     def test_export_to_csv(self):
         """Test exporting data to CSV format."""
@@ -99,13 +99,13 @@ class TestExportManager(unittest.TestCase):
         
         # Verify content of the CSV
         df_csv = pd.read_csv(self.csv_path, sep=';')
-        self.assertIn("Data", df_csv.columns)
-        self.assertIn("Inizio", df_csv.columns)
-        self.assertIn("Tipo Attività", df_csv.columns)
-        self.assertIn("Conducente", df_csv.columns)
+        self.assertIn("Date", df_csv.columns)
+        self.assertIn("Start", df_csv.columns)
+        self.assertIn("Activity Type", df_csv.columns)
+        self.assertIn("Driver", df_csv.columns)
         
-        self.assertEqual(df_csv.iloc[0]["Conducente"], "Rossi Mario")
-        self.assertEqual(df_csv.iloc[0]["Veicolo"], "AA123BB")
+        self.assertEqual(df_csv.iloc[0]["Driver"], "Rossi Mario")
+        self.assertEqual(df_csv.iloc[0]["Vehicle"], "AA123BB")
 
 if __name__ == '__main__':
     unittest.main()

@@ -19,13 +19,12 @@ Empirically confirmed on the real files in ``DDD/``:
   * every TREP signature verifies under the VU key — the signed region is the
     section's data records, excluding the embedded certificates in the Overview.
 """
-import struct
-
 from cryptography.hazmat.primitives.asymmetric import ec, utils
 from cryptography.hazmat.primitives import hashes
 from cryptography.exceptions import InvalidSignature
 
 from core.logger import get_logger
+from .vu_record_dispatcher import iter_vu_sections
 
 _log = get_logger(__name__)
 
@@ -136,31 +135,6 @@ def verify_cvc_chain_link(child, parent_pub, parent_hash):
     return _verify_ecdsa(parent_pub, parent_hash, child["signature"], child["body_tlv"])
 
 
-def _iter_sections(data):
-    """Yield sections {marker, trep, records:[(pos,rt,rs,nr,end)]} from a VU stream."""
-    n = len(data)
-    pos = 0
-    cur = None
-    while pos + 5 <= n:
-        if data[pos] == 0x76:
-            if cur:
-                yield cur
-            cur = {"marker": pos, "trep": data[pos + 1], "records": []}
-            pos += 2
-            continue
-        rt = data[pos]
-        rs = struct.unpack(">H", data[pos + 1:pos + 3])[0]
-        nr = struct.unpack(">H", data[pos + 3:pos + 5])[0]
-        if rt > 0x60 or rs > 4096 or nr > 20000 or (rs == 0 and nr > 0) or pos + 5 + rs * nr > n:
-            break
-        if cur is not None:
-            cur["records"].append((pos, rt, rs, nr, pos + 5 + rs * nr))
-        pos += 5 + rs * nr
-    if cur:
-        yield cur
-
-
-# Nome leggibile della curva (per la vista decodificata dei certificati).
 _CURVE_NAMES = {
     "2b2403030208010107": "brainpoolP256r1",
     "2b2403030208010b0d": "brainpoolP384r1",
@@ -170,7 +144,6 @@ _CURVE_NAMES = {
     "2b81040023": "NIST P-521",
 }
 
-# Ruolo del certificato in base al recordType che lo trasporta.
 _CERT_ROLES = {0x04: "MemberState (MSCA)", 0x0F: "Vehicle Unit (VU)"}
 
 
@@ -198,7 +171,7 @@ def decode_vu_certificates(raw_data):
     out = []
     seen = set()
     try:
-        for sec in _iter_sections(data):
+        for sec in iter_vu_sections(data):
             for (pos, rt, rs, nr, end) in sec["records"]:
                 if rt not in _CERT_ROLES or nr == 0:
                     continue
@@ -241,7 +214,7 @@ def verify_vu_download(raw_data, erca_keys=None):
     report = {"available": False, "msca_to_vu": False, "root_anchored": False,
               "treps": [], "all_treps_valid": False, "summary": ""}
     try:
-        sections = list(_iter_sections(data))
+        sections = list(iter_vu_sections(data))
         if not sections:
             report["summary"] = "No VU sections found"
             return report

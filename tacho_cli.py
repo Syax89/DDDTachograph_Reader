@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 DDD Tachograph Reader - Full CLI
-Analizza file .ddd e genera report in JSON, PDF o Excel.
+Analyzes .ddd files and generates reports in JSON, PDF or Excel.
 """
 import argparse
 import json
@@ -20,27 +20,27 @@ class _BytesEncoder(json.JSONEncoder):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="🚛 DDD Tachograph Reader CLI - Analizzatore file tachigrafo digitale",
+        description="🚛 DDD Tachograph Reader CLI - Digital Tachograph File Analyzer",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Esempi:
-  tacho-cli file.ddd                     # Output JSON a schermo
-  tacho-cli file.ddd --json report.json  # Salva JSON
-  tacho-cli file.ddd --pdf report.pdf    # Genera PDF
-  tacho-cli file.ddd --excel report.xlsx # Genera Excel
-  tacho-cli file.ddd --all output_dir/   # Genera tutti i formati
-  tacho-cli file.ddd --summary           # Solo riepilogo testuale
+Examples:
+  tacho-cli file.ddd                     # JSON output to screen
+  tacho-cli file.ddd --json report.json  # Save JSON
+  tacho-cli file.ddd --pdf report.pdf    # Generate PDF
+  tacho-cli file.ddd --excel report.xlsx # Generate Excel
+  tacho-cli file.ddd --all output_dir/   # Generate all formats
+  tacho-cli file.ddd --summary           # Text summary only
         """
     )
-    parser.add_argument("file", help="Percorso del file .ddd da analizzare")
-    parser.add_argument("--json", nargs="?", const="auto", metavar="FILE", help="Genera output JSON (opzionale: percorso file)")
-    parser.add_argument("--pdf", nargs="?", const="auto", metavar="FILE", help="Genera report PDF (opzionale: percorso file)")
-    parser.add_argument("--excel", nargs="?", const="auto", metavar="FILE", help="Genera report Excel (opzionale: percorso file)")
-    parser.add_argument("--all", nargs="?", const="auto", metavar="DIR", help="Genera tutti i formati in una directory")
-    parser.add_argument("--summary", action="store_true", help="Mostra riepilogo testuale compatto")
-    parser.add_argument("--legacy", action="store_true", help="Usa il parser legacy (non deterministico) per retrocompatibilita'")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Output verboso di debug")
-    parser.add_argument("-q", "--quiet", action="store_true", help="Nessun output a schermo (solo file)")
+    parser.add_argument("file", help="Path to .ddd file to analyze")
+    parser.add_argument("--json", nargs="?", const="auto", metavar="FILE", help="Generate JSON output (optional: file path)")
+    parser.add_argument("--pdf", nargs="?", const="auto", metavar="FILE", help="Generate PDF report (optional: file path)")
+    parser.add_argument("--excel", nargs="?", const="auto", metavar="FILE", help="Generate Excel report (optional: file path)")
+    parser.add_argument("--all", nargs="?", const="auto", metavar="DIR", help="Generate all formats in a directory")
+    parser.add_argument("--summary", action="store_true", help="Show compact text summary")
+    parser.add_argument("--legacy", action="store_true", help="Use legacy (non-deterministic) parser for backward compatibility")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose debug output")
+    parser.add_argument("-q", "--quiet", action="store_true", help="No screen output (files only)")
 
     args = parser.parse_args()
 
@@ -50,7 +50,7 @@ Esempi:
     )
 
     if not os.path.isfile(args.file):
-        print(f"❌ File non trovato: {args.file}", file=sys.stderr)
+        print(f"❌ File not found: {args.file}", file=sys.stderr)
         sys.exit(1)
 
     # Parse
@@ -59,14 +59,14 @@ Esempi:
         ddd = TachoParser(args.file, use_deterministic=not args.legacy)
         result = ddd.parse()
     except Exception as e:
-        print(f"❌ Errore parsing: {e}", file=sys.stderr)
+        print(f"❌ Parsing error: {e}", file=sys.stderr)
         if args.verbose:
             import traceback
             traceback.print_exc()
         sys.exit(1)
 
     if result is None:
-        print("❌ Impossibile leggere il file.", file=sys.stderr)
+        print("❌ Cannot read the file.", file=sys.stderr)
         sys.exit(1)
 
     # Auto-generate output basename
@@ -100,7 +100,7 @@ Esempi:
 
     # PDF output
     if args.pdf:
-        print("⚠️ PDF export non disponibile in questa versione.", file=sys.stderr)
+        print("⚠️ PDF export not available in this version.", file=sys.stderr)
 
     # Excel output
     if args.excel:
@@ -110,7 +110,7 @@ Esempi:
             ExportManager.export_to_excel(result, excel_path)
             generated.append(("Excel", excel_path))
         except Exception as e:
-            print(f"⚠️ Errore generazione Excel: {e}", file=sys.stderr)
+            print(f"⚠️ Excel generation error: {e}", file=sys.stderr)
             if args.verbose:
                 import traceback
                 traceback.print_exc()
@@ -124,14 +124,14 @@ Esempi:
         pass  # summary already printed above
 
     if not args.quiet and generated:
-        print(f"\n📁 File generati:")
+        print(f"\n📁 Generated files:")
         for fmt, path in generated:
             size = os.path.getsize(path)
             print(f"   {fmt}: {path} ({format_size(size)})")
 
 
 def print_summary(data):
-    """Stampa un riepilogo compatto a schermo."""
+    """Prints a compact summary to screen."""
     meta = data.get("metadata", {})
     driver = data.get("driver", {})
     vehicle = data.get("vehicle", {})
@@ -140,7 +140,7 @@ def print_summary(data):
     sig = data.get("signature_verification", {})
 
     print("=" * 60)
-    print("🚛 DDD TACHOGRAPH READER - RIEPILOGO")
+    print("🚛 DDD TACHOGRAPH READER - SUMMARY")
     print("=" * 60)
 
     # File info
@@ -151,43 +151,43 @@ def print_summary(data):
     # Signature
     if sig:
         status = sig.get("status", sig.get("overall", "N/D"))
-        print(f"🔐 Integrità: {status}")
+        print(f"🔐 Integrity: {status}")
 
     # Driver
     name = driver.get("name", driver.get("surname", ""))
     first = driver.get("first_name", driver.get("firstname", ""))
     card = driver.get("card_number", "N/D")
     if name or first:
-        print(f"\n👤 Conducente: {first} {name}".strip())
+        print(f"\n👤 Driver: {first} {name}".strip())
     if card != "N/D":
-        print(f"   Carta: {card}")
+        print(f"   Card: {card}")
 
     # Vehicle
     vin = vehicle.get("vin", "N/D")
     plate = vehicle.get("plate", vehicle.get("registration", "N/D"))
     if vin != "N/D" or plate != "N/D":
-        print(f"\n🚗 Veicolo: {plate} (VIN: {vin})")
+        print(f"\n🚗 Vehicle: {plate} (VIN: {vin})")
 
     # Activities summary
     if activities:
-        total_drive = sum(a.get("duration_min", 0) for a in activities if a.get("type") == "GUIDA")
-        total_work = sum(a.get("duration_min", 0) for a in activities if a.get("type") == "LAVORO")
-        total_rest = sum(a.get("duration_min", 0) for a in activities if a.get("type") in ("RIPOSO", "DISPONIBILITA"))
+        total_drive = sum(a.get("duration_min", 0) for a in activities if a.get("type") == "DRIVE")
+        total_work = sum(a.get("duration_min", 0) for a in activities if a.get("type") == "WORK")
+        total_rest = sum(a.get("duration_min", 0) for a in activities if a.get("type") in ("REST", "AVAILABLE"))
         days = len(set(a.get("date", "") for a in activities if a.get("date")))
 
-        print(f"\n📊 Attività ({len(activities)} record, {days} giorni):")
-        print(f"   🟦 Guida:  {total_drive // 60}h {total_drive % 60}m")
-        print(f"   🟨 Lavoro: {total_work // 60}h {total_work % 60}m")
-        print(f"   🟩 Riposo: {total_rest // 60}h {total_rest % 60}m")
+        print(f"\n📊 Activity ({len(activities)} records, {days} days):")
+        print(f"   🟦 Drive:  {total_drive // 60}h {total_drive % 60}m")
+        print(f"   🟨 Work:   {total_work // 60}h {total_work % 60}m")
+        print(f"   🟩 Rest:   {total_rest // 60}h {total_rest % 60}m")
 
     # Infractions
     if infractions:
         total_fines = sum(i.get("fine_eur", 0) for i in infractions)
-        print(f"\n⚠️ Infrazioni: {len(infractions)} (Sanzioni stimate: €{total_fines:,.0f})")
+        print(f"\n⚠️ Infringements: {len(infractions)} (Estimated penalties: €{total_fines:,.0f})")
         for inf in infractions[:5]:
             print(f"   • {inf.get('description', inf.get('type', 'N/D'))}")
         if len(infractions) > 5:
-            print(f"   ... e altre {len(infractions) - 5}")
+            print(f"   ... and {len(infractions) - 5} more")
 
     print("\n" + "=" * 60)
 

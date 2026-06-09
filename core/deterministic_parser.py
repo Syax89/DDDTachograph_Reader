@@ -78,9 +78,14 @@ class CoverageTracker:
             "Header": (0, min(256, file_size)),
             "Driver Data": (256, min(file_size // 2, file_size)),
             "Vehicle Data": (file_size // 2, max(file_size // 2, min(3 * file_size // 4, file_size))),
-            "Certificates": (3 * file_size // 4, file_size),
+            "Certificates": (3 * file_size // 4, max(3 * file_size // 4, file_size - 512)),
             "Signature/Tail": (max(0, file_size - 512), file_size),
         }
+        # Remove Signature/Tail overlap from Certificates
+        tail_start = max(0, file_size - 512)
+        cert_start, cert_end = sections["Certificates"]
+        if cert_end > tail_start:
+            sections["Certificates"] = (cert_start, tail_start)
 
         self.merge_ranges()
         report = {}

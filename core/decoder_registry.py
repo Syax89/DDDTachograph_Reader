@@ -28,11 +28,23 @@ class TagDecoder:
 class DecoderRegistry:
     """Central registry of all known tag decoders with spec references."""
 
+    _instance: Optional["DecoderRegistry"] = None
+
     def __init__(self):
         self._registry: Dict[int, TagDecoder] = {}
         self._container_tags: set = set()
         self._signature_tags: set = set()
         self._build()
+
+    @classmethod
+    def instance(cls) -> "DecoderRegistry":
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    @classmethod
+    def reset_instance(cls) -> None:
+        cls._instance = None
 
     def _build(self):
         from . import decoders

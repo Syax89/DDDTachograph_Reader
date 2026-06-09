@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from .decoders import decode_string, get_nation
 from core.logger import get_logger
+from core.event_fault_codes import describe_fault
 
 _log = get_logger(__name__)
 
@@ -464,6 +465,7 @@ def parse_g22_sensor_fault(data: bytes, offset: int = 0):
         payload_preview += "..."
 
     return {
+        "descrizione": describe_fault(evt_type),
         "event_type": evt_type,
         "event_purpose": evt_purpose,
         "fault_type_hint": fault_type_hint,
