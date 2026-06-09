@@ -1,6 +1,6 @@
 # DDD Tachograph Reader
 
-> Professional `.ddd` digital tachograph file analyzer — full decoding with tree-structured data exploration.
+> Open Source  `.ddd` digital tachograph file analyzer — full decoding with tree-structured data exploration.
 
 [![Build and Release](https://github.com/Syax89/ddd-tachograph-reader/actions/workflows/build.yml/badge.svg)](https://github.com/Syax89/ddd-tachograph-reader/actions/workflows/build.yml)
 [![Latest Release](https://img.shields.io/github/v/release/Syax89/ddd-tachograph-reader)](https://github.com/Syax89/ddd-tachograph-reader/releases/latest)
