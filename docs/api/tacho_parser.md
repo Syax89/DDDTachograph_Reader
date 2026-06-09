@@ -123,24 +123,16 @@ parser = TachoParser("/path/to/file.ddd", use_deterministic=False)
 results = parser.parse()
 ```
 
-### Using FleetAnalytics for batch processing
+## See Also
 
-```python
-from fleet_analytics import FleetAnalytics
-
-analyzer = FleetAnalytics("/path/to/DDD/folder")
-results = analyzer.run()
-analyzer.print_report()
-analyzer.save_csv("report.csv")
-```
+- [TachoResult](models.md) — Data structure returned by parse()
+- [ExportManager](export_manager.md) — Export results to Excel/CSV
 
 ## See Also
 
 - [TachoResult](models.md) — Output data model
 - [DeterministicParser](deterministic_parser.md) — Two-pass parser used by default
 - [TagNavigator](tag_navigator.md) — Legacy recursive parser
-- [SignatureValidator](signature_validator.md) — Certificate validation
-- [ComplianceEngine](compliance_engine.md) — EU 561/2006 analysis
 
 ## Common Tasks
 
@@ -182,18 +174,4 @@ parser = TachoParser("my_tacho.ddd")
 data = parser.parse()
 coverage = data["metadata"]["coverage_pct"]
 print(f"Byte coverage: {coverage}%")
-```
-
-### Apply compliance checks
-
-```python
-from ddd_parser import TachoParser
-from compliance_engine import ComplianceEngine
-
-parser = TachoParser("my_tacho.ddd")
-data = parser.parse()
-engine = ComplianceEngine()
-infractions = engine.analyze(data["activities"])
-for inf in infractions:
-    print(f"{inf['data']} - {inf['tipo']} [{inf['severita']}]: {inf['descrizione']}")
 ```

@@ -26,7 +26,7 @@ class _CountingHandler(logging.Handler):
             message = record.getMessage()
         except Exception:
             return
-        if "fail" in message.lower():
+        if " fail" in message.lower() or message.lower().endswith("failed"):
             self.failure_count += 1
             if len(self.failures) < 500:
                 self.failures.append(message)

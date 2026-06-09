@@ -11,12 +11,6 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-try:
-    from geocoding_engine import process_locations_with_geocoding
-    GEOCODING_AVAILABLE = True
-except ImportError:
-    GEOCODING_AVAILABLE = False
-
 from signature_validator import SignatureValidator
 from core.models import TachoResult
 from core.tag_navigator import TagNavigator
@@ -57,8 +51,9 @@ class TachoParser:
         """Load tags from internal defaults and optional JSON file."""
         tags = TACHO_TAGS.copy()
 
-        json_path = os.path.join(os.path.dirname(os.path.dirname(self.file_path)), 'all_tacho_tags.json')
-        if not os.path.exists(json_path): json_path = 'all_tacho_tags.json'
+        json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'all_tacho_tags.json')
+        if not os.path.exists(json_path):
+            json_path = 'all_tacho_tags.json'
         if os.path.exists(json_path):
             try:
                 with open(json_path, 'r') as f:
@@ -86,7 +81,9 @@ class TachoParser:
             return 0.0
         if self.use_deterministic:
             cov = self.results.get("coverage", {})
-            return cov.get("covered_pct", round((self.bytes_covered / self.file_size) * 100, 2))
+            if cov:
+                return cov.get("covered_pct", 100.0)
+            return self.results.get("metadata", {}).get("coverage_pct", 100.0)
         return round((self.bytes_covered / self.file_size) * 100, 2)
 
     def get_section_report(self):
@@ -358,10 +355,15 @@ class TachoParser:
             
             # Post-processing: Deduplication & Sorting
             try:
+                def _safe_parse_date(val):
+                    try:
+                        return datetime.strptime(val, '%d/%m/%Y')
+                    except (ValueError, TypeError):
+                        return datetime.min
+
                 seen = {}
                 unique = []
-                for i, act in enumerate(self.results["activities"]):
-                    ts = act.get("timestamp", act.get("data", ""))
+                for act in self.results["activities"]:
                     key = f"{act.get('data', 'N/A')}_{len(act.get('eventi', act.get('changes', [])))}"
                     if act.get("driver"):
                         key += f"_{act['driver']}"
@@ -370,7 +372,7 @@ class TachoParser:
                     if key not in seen:
                         seen[key] = True
                         unique.append(act)
-                unique.sort(key=lambda x: datetime.strptime(x["data"], '%d/%m/%Y') if x.get("data") and x["data"] != "N/A" else datetime.min, reverse=True)
+                unique.sort(key=lambda x: _safe_parse_date(x["data"]) if x.get("data") else datetime.min, reverse=True)
                 self.results["activities"] = unique
             except (KeyError, ValueError):
                 logger.debug("Activity deduplication/sorting failed, skipping")
@@ -386,12 +388,6 @@ class TachoParser:
             self.results["metadata"]["integrity_check"] = self.validation_status
             self.results["metadata"]["decoder_failure_count"] = decoder_failure_count()
             self.results["metadata"]["decoder_failures"] = decoder_failures()
-
-            if GEOCODING_AVAILABLE and self.results["locations"]:
-                try:
-                    self.results = process_locations_with_geocoding(self.results)
-                except Exception as e:
-                    logger.error(f"Geocoding processing failed: {e}")
 
             # Build hierarchical generations tree
             self.results["generations"] = build_generations_tree(self.results, self.TAGS)

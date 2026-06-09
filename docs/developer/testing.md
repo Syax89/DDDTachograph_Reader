@@ -39,7 +39,6 @@ pip install pytest-cov
 | `tests/test_validation.py` | Certificate chain validation (ERCA/MSCA) |
 | `tests/test_semantic_coverage.py` | Semantic field coverage (do decoders populate all expected fields) |
 | `tests/test_real_semantic_coverage.py` | Real-file semantic coverage against DDD/ samples |
-| `tests/test_fleet_analytics.py` | Fleet analytics and aggregation |
 | `tests/test_g22_auth_and_triage.py` | G2.2 authentication data and unparsed pattern triage |
 
 ## Writing New Tests

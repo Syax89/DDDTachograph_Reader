@@ -35,13 +35,10 @@ flowchart TD
     G --> H
     H --> I["Field-level Decoders\n(decoders.py / g2_decoders.py)"]
     I --> J[TachoResult]
-    J --> K[ComplianceEngine.analyze]
-    J --> L[SignatureValidator.validate_tacho_chain]
-    J --> M[ExportManager / export_pdf]
+    J --> K[SignatureValidator.validate_tacho_chain]
     D --> N["_fill_coverage_gaps + deep_scan"]
     N --> G
-    K --> O["Infractions + Fines"]
-    O --> M
+    F --> output["JSON via TachoResult.to_dict()"]
     L --> O
 ```
 
@@ -194,18 +191,6 @@ TachoResult
 
 `build_generations_tree()` (line 113) organizes results into a hierarchical view: `{Generation 1: {...}, Generation 2: {...}, Generation 2.2: {...}}`.
 
-### ComplianceEngine (`compliance_engine.py:19`)
-
-Analyzes driver activities for EU 561/2006 violations:
-- **Continuous driving**: max 4.5 hours before mandatory 45-minute break
-- **Split breaks**: 15 min + 30 min within driving period
-- **Daily rest**: 11 hours (reducible to 9 hours, max 3x/week)
-- **Weekly rest**: 45 hours (reducible to 24 hours with compensation)
-- **Bi-weekly driving**: max 90 hours
-- **Daily driving**: max 9 hours (extendable to 10 hours, 2x/week)
-
-Infraction severities: **MSI** (Most Serious), **SI** (Serious), **MI** (Minor).
-
 ### SignatureValidator (`signature_validator.py:10`)
 
 Validates digital certificate chains. Supports RSA (G1/G2) and ECDSA (G2). Hierarchy:
@@ -215,13 +200,9 @@ Validates digital certificate chains. Supports RSA (G1/G2) and ECDSA (G2). Hiera
 
 ### Export Layer
 
-- **ExportManager** (`export_manager.py:5`): Multi-sheet Excel (Riepilogo, Attività Giornaliere, Infrazioni, Posizioni GPS) and CSV export
-- **export_pdf** (`export_pdf.py`): PDF report generation
-- **fines_calculator** (`fines_calculator.py`): Fine estimation based on infraction severity and Italian regulations
-- **fleet_analytics** (`fleet_analytics.py`): Multi-driver comparative analysis
-- **fleet_pdf_exporter** (`fleet_pdf_exporter.py`): Fleet-level PDF reports
+- **ExportManager** (`export_manager.py:5`): Multi-sheet Excel (Riepilogo, Attività Giornaliere) and CSV export
 
 ### GUI Layer
 
 - **gui_tree.py**: Desktop application (tkinter/ttk). Regedit-style section tree on the left, Excel-style data table on the right (sortable columns, text filter). Data-driven: sections are derived from the parser output.
-- **tacho_cli.py** (`tacho_cli.py:14`): CLI with `--json`, `--pdf`, `--excel`, `--all`, `--summary`, `--geocode` flags
+- **tacho_cli.py** (`tacho_cli.py:14`): CLI with `--json`, `--excel`, `--all`, `--summary` flags

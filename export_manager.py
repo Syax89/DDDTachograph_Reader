@@ -114,7 +114,10 @@ class ExportManager:
         total_min = 0
         for day in daily_summaries:
             try:
-                h, m = map(int, day.get('Guida Totale', '0:0').split(':'))
+                time_str = day.get('Guida Totale', '00:00')
+                if ':' not in time_str:
+                    time_str = '00:00'
+                h, m = map(int, time_str.split(':'))
                 total_min += h * 60 + m
-            except: pass
+            except (ValueError, TypeError): pass
         return f"{total_min // 60}h {total_min % 60}m"

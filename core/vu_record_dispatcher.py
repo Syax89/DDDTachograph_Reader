@@ -566,7 +566,7 @@ def _decode_record(record_type, rec):
         return out
     if record_type == 0x24 and len(rec) >= 15:
         out["nation"] = decoders.get_nation(rec[0])
-        out["plate"] = decoders.decode_string(rec[1:15]) if hasattr(decoders, "decode_string") else rec[1:15].hex()
+        out["plate"] = decoders.decode_string(rec[1:15])
         return out
     if record_type == 0x0A and len(rec) >= 17:
         out["confidence"] = "high"
