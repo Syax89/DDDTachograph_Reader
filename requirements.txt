@@ -1,5 +1,4 @@
 pyinstaller
 cryptography
-reportlab
 pandas
 openpyxl

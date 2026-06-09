@@ -1,41 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
 import sys
-from PyInstaller.utils.hooks import collect_data_files
 
-# Percorso della directory base
 base_path = os.path.abspath(".")
 
-# La GUI (gui_tree.py) usa solo tkinter/ttk puro — nessuna dipendenza esterna.
-ctk_data = []
-
-# Raccogli solo i file essenziali di reportlab (font Type1 e afm — esclude test/samples)
-try:
-    import reportlab
-    rl_path = os.path.dirname(reportlab.__file__)
-    for subdir in ['fonts', 'lib', 'platypus', 'graphics', 'pdfgen', 'pdfbase']:
-        full = os.path.join(rl_path, subdir)
-        if os.path.exists(full):
-            ctk_data.append((full, os.path.join("reportlab", subdir)))
-except ImportError:
-    pass
-
-# Aggiungi i certificati
+# Certificati ERCA (necessari per signature validation)
 certs_path = os.path.join(base_path, "certs")
 added_files = []
 if os.path.exists(certs_path):
     added_files.append((certs_path, "certs"))
 
-# Aggiungi i package core/ e src/ esplicitamente
-core_path = os.path.join(base_path, "core")
-if os.path.exists(core_path):
-    added_files.append((core_path, "core"))
-
-src_path = os.path.join(base_path, "src")
-if os.path.exists(src_path):
-    added_files.append((src_path, "src"))
-    
-added_files.extend(ctk_data)
+# NOTA: core/ e src/ NON vanno in datas — PyInstaller li raccoglie automaticamente
+# dagli hiddenimports. Metterli in datas duplica ogni modulo nella build dist.
+# reportlab NON e' usato (PDF export disabilitato: "non disponibile").
+# requests NON e' importato da nessun modulo applicativo.
 
 # Configurazione PyInstaller
 block_cipher = None
@@ -48,18 +26,6 @@ a = Analysis(
     hiddenimports=[
         'tkinter',
         'cryptography',
-        'requests',
-        'reportlab',
-        'reportlab.lib',
-        'reportlab.lib.colors',
-        'reportlab.lib.pagesizes',
-        'reportlab.lib.units',
-        'reportlab.lib.styles',
-        'reportlab.lib.enums',
-        'reportlab.platypus',
-        'reportlab.platypus.tables',
-        'reportlab.graphics.shapes',
-        'reportlab.graphics',
         'pandas',
         'openpyxl',
         'export_manager',
