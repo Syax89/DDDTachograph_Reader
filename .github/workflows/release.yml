@@ -1,0 +1,66 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build Windows executable
+      run: |
+        pyinstaller --onedir --name TachoReader --add-data "core;core" --add-data "src;src" --hidden-import core.event_fault_codes --hidden-import core.tag_navigator --hidden-import core.decoders --hidden-import core.models --hidden-import core.g2_decoders --hidden-import core.decoder_registry --hidden-import core.deterministic_parser --hidden-import core.record_array --hidden-import core.logger --hidden-import core.tag_definitions --hidden-import core.vu_record_dispatcher --hidden-import core.vu_signature_verifier --hidden-import core.constants --hidden-import signature_validator --hidden-import cryptography gui_tree.py
+
+    - name: Package as zip
+      shell: pwsh
+      run: |
+        Compress-Archive -Path dist/TachoReader/* -DestinationPath TachoReader-v${{ github.ref_name }}-windows-x64.zip
+
+    - name: Upload to release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: TachoReader-v${{ github.ref_name }}-windows-x64.zip
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build macOS app
+      run: |
+        pyinstaller --onedir --name TachoReader --add-data "core:core" --add-data "src:src" --hidden-import core.event_fault_codes --hidden-import core.tag_navigator --hidden-import core.decoders --hidden-import core.models --hidden-import core.g2_decoders --hidden-import core.decoder_registry --hidden-import core.deterministic_parser --hidden-import core.record_array --hidden-import core.logger --hidden-import core.tag_definitions --hidden-import core.vu_record_dispatcher --hidden-import core.vu_signature_verifier --hidden-import core.constants --hidden-import signature_validator --hidden-import cryptography --windowed gui_tree.py
+
+    - name: Create DMG
+      run: |
+        hdiutil create -volname "TachoReader" -srcfolder dist/TachoReader.app -ov -format UDZO TachoReader-v${{ github.ref_name }}-macos.dmg
+
+    - name: Upload to release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: TachoReader-v${{ github.ref_name }}-macos.dmg
