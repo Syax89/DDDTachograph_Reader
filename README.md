@@ -1,6 +1,6 @@
 # DDD Tachograph Reader
 
-> Analizzatore professionale per file `.ddd` di tachigrafi digitali — decoding completo con struttura ad albero.
+> Professional `.ddd` digital tachograph file analyzer — full decoding with tree-structured data exploration.
 
 [![Build and Release](https://github.com/Syax89/ddd-tachograph-reader/actions/workflows/build.yml/badge.svg)](https://github.com/Syax89/ddd-tachograph-reader/actions/workflows/build.yml)
 [![Latest Release](https://img.shields.io/github/v/release/Syax89/ddd-tachograph-reader)](https://github.com/Syax89/ddd-tachograph-reader/releases/latest)
@@ -9,42 +9,41 @@
 
 ---
 
-## Funzionalita
+## Features
 
-### Decodifica File
-- **Multi-Generazione**: G1 (Annex 1B), G2 Smart (Annex 1C), **Gen 2.2 Smart V2** (Reg. EU 2023/980)
-- **Anagrafica completa**: Nome, cognome, data di nascita, numero carta, scadenza, nazione
-- **Attivita giornaliere**: Guida, lavoro, disponibilita, riposo
-- **Dati veicolo**: VIN, targa, nazione di registrazione, odometro
-- **Posizioni GNSS**: Coordinate, attraversamenti confine, luoghi
-- **Record VU**: Inserimenti/estrazioni carta, calibrazioni, sensori, eventi/guasti
+### File Decoding
+- **Multi-generation**: G1 (Annex 1B), G2 Smart (Annex 1C), **Gen 2.2 Smart V2** (Reg. EU 2023/980)
+- **Driver data**: Surname, first name, date of birth, card number, expiry, issuing nation
+- **Daily activities**: Driving, work, availability, rest/break
+- **Vehicle data**: VIN, plate, registration nation, odometer
+- **GNSS positions**: Coordinates, border crossings, places
+- **VU records**: Card insertions/withdrawals, calibrations, sensors, events/faults
 
-### Integrita
-- Verifica crittografica firme digitali catena ERCA -> MSCA -> Carta/VU
-- Parsing ricorsivo BER-TLV e STAP (container annidati)
-- Copertura 100% byte su tutti i file testati
-- Struttura ad albero per esplorazione dati
+### Integrity
+- Cryptographic signature verification (ERCA → MSCA → Card/VU chain)
+- Recursive BER-TLV and STAP parsing (nested containers)
+- 100% byte coverage on all tested files
+- Tree structure for data exploration
 
-### Esportazione
-- Export JSON, Excel, CSV
-- Report PDF singolo conducente e flotta
-- GUI interattiva con navigazione ad albero
+### Export
+- JSON, Excel, CSV export
+- Interactive GUI with tree navigation
 
 ---
 
-## Download & Utilizzo
+## Download & Usage
 
-### Eseguibile (consigliato)
-Scarica dalla sezione **[Releases](https://github.com/Syax89/ddd-tachograph-reader/releases/latest)**:
+### Pre-built Executable (recommended)
+Download from the **[Releases](https://github.com/Syax89/ddd-tachograph-reader/releases/latest)** page:
 
-| Piattaforma | File |
-|------------|------|
+| Platform | File |
+|----------|------|
 | Windows | `TachoReader-Windows.zip` |
 | macOS | `TachoReader-Mac.zip` |
 
-Estrai e avvia `TachoReader` — nessuna installazione richiesta.
+Extract and run `TachoReader` — no installation required.
 
-### Da sorgente (sviluppatori)
+### From Source (developers)
 
 ```bash
 git clone https://github.com/Syax89/ddd-tachograph-reader.git
@@ -55,74 +54,74 @@ pip install -r requirements.txt
 python gui_tree.py
 
 # CLI
-python tacho_cli.py percorso/file.ddd
+python tacho_cli.py path/to/file.ddd
 ```
 
 ---
 
-## Struttura Progetto
+## Project Structure
 
 ```
 ddd-tachograph-reader/
-├── gui_tree.py               # GUI (albero + tabella, tkinter)
-├── tacho_cli.py              # CLI principale
-├── main.py                   # CLI legacy
-├── ddd_parser.py             # Parser principale
+├── gui_tree.py                  # GUI (tree + table, tkinter)
+├── tacho_cli.py                 # Main CLI
+├── ddd_parser.py                # Core parser entry point
+├── signature_validator.py       # Certificate chain validation
+├── export_manager.py            # Excel/CSV export
 ├── core/
-│   ├── tag_navigator.py      # Navigazione ricorsiva BER-TLV / STAP
-│   ├── decoders.py           # Decoder tag (G1, G2, G2.2)
-│   ├── decoder_registry.py   # Registro centralizzato tag->decoder
-│   ├── deterministic_parser.py # Parser deterministico two-pass
-│   ├── g2_decoders.py        # Decoder VU RecordArray G2/G2.2
-│   ├── record_array.py       # Parser RecordArray Annex 1C
-│   ├── vu_record_dispatcher.py # Dispatcher stream VU
-│   ├── vu_signature_verifier.py # Verifica firme ECDSA VU
-│   ├── models.py             # Modelli dati (TachoResult)
-│   ├── tag_definitions.py    # Tag ID -> nomi
-│   ├── constants.py          # Costanti condivise
-│   └── logger.py             # Logging centralizzato
-├── export_manager.py         # Export Excel/CSV
-├── signature_validator.py    # Validazione catena certificati
-├── certs/                    # Certificati ERCA radice
-├── tests/                    # Suite di test (>150 test)
-├── specs/                    # Specifiche e verifica
-├── docs/                     # Documentazione
-└── .github/workflows/        # CI/CD build Win/Mac
+│   ├── tag_navigator.py         # Recursive BER-TLV / STAP navigation
+│   ├── decoders.py              # Tag decoders (G1, G2, G2.2)
+│   ├── decoder_registry.py      # Centralized tag→decoder registry
+│   ├── deterministic_parser.py  # Schema-driven two-pass parser
+│   ├── g2_decoders.py           # G2/G2.2 VU RecordArray decoders
+│   ├── record_array.py          # RecordArray parser (Annex 1C)
+│   ├── vu_record_dispatcher.py  # VU stream dispatcher
+│   ├── vu_signature_verifier.py # ECDSA signature verification
+│   ├── models.py                # Data models (TachoResult)
+│   ├── tag_definitions.py       # Tag ID → name mappings
+│   ├── constants.py             # Shared constants
+│   └── logger.py                # Centralized logging
+├── src/                         # Domain/infrastructure layer
+├── certs/                       # ERCA root certificates
+├── tests/                       # Test suite (118 tests)
+├── specs/                       # Specifications and audits
+├── docs/                        # Documentation
+└── .github/workflows/           # CI/CD (Windows/macOS builds)
 ```
 
 ---
 
-## Formati Supportati
+## Supported Formats
 
-| Generazione | Standard | Header | Note |
-|------------|----------|--------|------|
-| G1 Digital | Annex 1B (Reg. 3821/85) | variabile | Tachigrafi classici |
+| Generation | Standard | Header | Notes |
+|------------|----------|--------|-------|
+| G1 Digital | Annex 1B (Reg. 3821/85) | variable | Legacy tachographs |
 | G2 Smart | Annex 1C (Reg. 2016/799) | `0x7621` | Smart Tachograph V1 |
 | **G2.2 Smart V2** | Annex 1C (Reg. 2023/980) | `0x7631` | Smart Tachograph V2 |
 
 ---
 
-## Test
+## Testing
 
 ```bash
 pip install pytest
 pytest tests/ -v
 ```
 
-127+ test: detection multi-generazione, parser G1/G2/G2.2, coverage, firme digitali.
+118 tests: multi-generation detection, G1/G2/G2.2 parsing, byte coverage, fuzzing, digital signatures.
 
 ---
 
-## Build Eseguibile
+## Building from Source
 
 ```bash
 pip install pyinstaller
 pyinstaller build.spec
-# Output: dist/TachoReader (Mac) / dist/TachoReader.exe (Windows)
+# Output: dist/TachoReader (macOS) / dist/TachoReader.exe (Windows)
 ```
 
 ---
 
-## Licenza
+## License
 
-MIT (c) [Syax89](https://github.com/Syax89)
+MIT © [Syax89](https://github.com/Syax89)
