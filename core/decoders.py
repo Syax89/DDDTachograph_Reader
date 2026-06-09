@@ -3,6 +3,7 @@ import struct
 from datetime import datetime, timezone
 
 from core.logger import get_logger
+from core.constants import MAX_ODO_DISTANCE_KM
 
 _log = get_logger(__name__)
 
@@ -278,10 +279,11 @@ def parse_g1_vehicles_used(val, results):
             if 946684800 <= candidate <= 2000000000:
                 rec_size = 35
     
+    consecutive_garbage = 0
     for i in range(len(rec_data) // rec_size):
         chunk = rec_data[i*rec_size:(i+1)*rec_size]
         if len(chunk) < rec_size: break
-        
+
         try:
             if rec_size == 31:
                 # Annex 1B (G1) - Correct field order: odo_begin(3), odo_end(3), first_use(4), last_use(4), nation(1), plate(14)
@@ -299,9 +301,47 @@ def parse_g1_vehicles_used(val, results):
                 last_use_ts = struct.unpack(">I", chunk[12:16])[0]
                 nation_code = chunk[16]
                 plate = decode_string(chunk[17:31], is_id=True)
-            
+
+            # Strict plate validation: reject records with garbage plates.
+            stripped = plate.strip().rstrip('\x00')
+            if not stripped or len(stripped) < 2:
+                consecutive_garbage += 1
+                if consecutive_garbage >= 3: break
+                continue
+            if not all(0x20 <= ord(c) < 0x7F for c in stripped):
+                consecutive_garbage += 1
+                if consecutive_garbage >= 3: break
+                continue
+            alpha_ratio = sum(1 for c in stripped if c.isalnum()) / len(stripped) if stripped else 0
+            if alpha_ratio < 0.5:
+                consecutive_garbage += 1
+                if consecutive_garbage >= 3: break
+                continue
+
+            # Reject VIN-length strings (14+ chars) — real plates are shorter
+            if len(stripped) >= 14:
+                consecutive_garbage += 1
+                if consecutive_garbage >= 3: break
+                continue
+
+            if nation_code > 0x50:
+                consecutive_garbage += 1
+                if consecutive_garbage >= 3: break
+                continue
+
+            if odo_begin is not None and odo_begin > MAX_ODO_DISTANCE_KM * 100:
+                consecutive_garbage += 1
+                if consecutive_garbage >= 3: break
+                continue
+            if odo_end is not None and odo_end > MAX_ODO_DISTANCE_KM * 100:
+                consecutive_garbage += 1
+                if consecutive_garbage >= 3: break
+                continue
+
             # Sanitization
-            if first_use_ts < 946684800 or first_use_ts > 2000000000: # Ignore dates before 2000 or after 2033
+            if first_use_ts < 946684800 or first_use_ts > 2000000000:
+                consecutive_garbage += 1
+                if consecutive_garbage >= 3: break
                 continue
 
             if odo_begin == 0xFFFFFF or odo_begin == 0xFFFFFFFF: odo_begin = None
@@ -326,6 +366,7 @@ def parse_g1_vehicles_used(val, results):
                 "odometer_end": odo_end,
                 "distance": distance
             })
+            consecutive_garbage = 0
         except (struct.error, IndexError, ValueError, KeyError) as exc:
             _log.debug("Vehicle used record parse failed: %s", exc)
             continue
