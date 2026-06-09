@@ -86,12 +86,29 @@ LIST_SECTIONS = [
 
 
 def _row_activities(rec):
-    changes = rec.get("eventi", rec.get("changes", []))
-    return {
-        "Data": rec.get("data", rec.get("timestamp", "?")),
+    """Espande ogni giornata in singole righe evento (Riposo, Guida, ecc.)."""
+    events = rec.get("eventi", rec.get("changes", []))
+    if not isinstance(events, list) or not events:
+        return {
+            "Data": rec.get("data", rec.get("timestamp", "?")),
+            "Ora": "—",
+            "Tipo": "(nessun evento)",
+            "km": rec.get("km", 0),
+        }
+    rows = []
+    for ev in events:
+        if isinstance(ev, dict):
+            rows.append({
+                "Data": rec.get("data", rec.get("timestamp", "?")),
+                "Ora": ev.get("ora", ev.get("time", "?")),
+                "Tipo": ev.get("tipo", ev.get("type", "?")),
+                "km": rec.get("km", 0),
+            })
+    return rows if rows else {
+        "Data": rec.get("data", ""),
+        "Ora": "—",
+        "Tipo": "(nessun evento)",
         "km": rec.get("km", 0),
-        "N° cambi": len(changes) if isinstance(changes, list) else changes,
-        "Origine": rec.get("source", ""),
     }
 
 
@@ -179,6 +196,8 @@ def _columns_for(records, transformer):
     """Deriva l'ordine delle colonne dall'unione delle chiavi dei record."""
     if transformer:
         sample = transformer(records[0])
+        if isinstance(sample, list):
+            sample = sample[0]
         return list(sample.keys())
     cols = []
     for rec in records:
@@ -200,10 +219,12 @@ def _rows_for(records, transformer):
     for rec in records:
         if transformer:
             rec = transformer(rec)
-        if isinstance(rec, dict):
-            rows.append([fmt_val(rec.get(c)) for c in cols])
-        else:
-            rows.append([fmt_val(rec)])
+        items = rec if isinstance(rec, list) else [rec]
+        for item in items:
+            if isinstance(item, dict):
+                rows.append([fmt_val(item.get(c)) for c in cols])
+            else:
+                rows.append([fmt_val(item)])
     return cols, rows
 
 
