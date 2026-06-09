@@ -65,7 +65,7 @@ cd ddd-tachograph-reader
 pip install -r requirements.txt
 
 # GUI
-python gui.py
+python gui_tree.py
 
 # CLI (output JSON)
 python main.py percorso/file.ddd
@@ -80,7 +80,7 @@ python fleet_analytics.py /cartella/con/ddd/
 
 ```
 ddd-tachograph-reader/
-├── gui.py                    # Interfaccia grafica (CustomTkinter)
+├── gui_tree.py               # Interfaccia grafica (albero + tabella, tkinter)
 ├── main.py                   # Entry point CLI
 ├── ddd_parser.py             # Parser principale
 ├── core/

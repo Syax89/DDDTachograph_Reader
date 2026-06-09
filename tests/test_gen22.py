@@ -15,6 +15,17 @@ from core.decoders import (
     parse_g22_gnss_enhanced_places,
     parse_g22_load_sensor_data,
     parse_g22_border_crossings,
+    parse_g2_vu_record,
+)
+from core.g2_decoders import (
+    parse_g22_detailed_speed,
+    parse_g2_sensor_gnss_coupled,
+    parse_g2_sensor_paired,
+    parse_g22_overspeeding_event,
+    parse_g22_overspeeding_control,
+    parse_g22_time_adj_gnss,
+    parse_g22_power_interruption,
+    parse_g22_sensor_fault,
 )
 
 
@@ -143,26 +154,42 @@ class TestGen22GracefulFallback:
         parse_g22_load_sensor_data(b'\x00' * 3, results)
         assert results.get("load_sensor_data") is None
 
+    def test_short_detailed_speed(self):
+        assert parse_g22_detailed_speed(b'\x00' * 10) is None
+
+    def test_short_overspeeding_event(self):
+        assert parse_g22_overspeeding_event(b'\x00' * 10) is None
+
+    def test_short_overspeeding_control(self):
+        assert parse_g22_overspeeding_control(b'\x00' * 3) is None
+
+    def test_short_time_adj_gnss(self):
+        assert parse_g22_time_adj_gnss(b'\x00' * 3) is None
+
+    def test_short_power_interruption(self):
+        assert parse_g22_power_interruption(b'\x00' * 10) is None
+
+    def test_short_sensor_fault(self):
+        assert parse_g22_sensor_fault(b'\x00' * 10) is None
+
 
 class TestGen22Decoders:
     """Test actual decoding of Gen 2.2 fields."""
 
     def test_gnss_accumulated_driving_decode(self):
-        """Correctly decode a GNSS accumulated driving record."""
+        """Correctly decode a GNSS accumulated driving record (Annex 1C §2.79: 13 bytes)."""
         ts = 1700000000  # 2023-11-14
         lat = int(45.4642 * 10_000_000)  # Milan
         lon = int(9.1900 * 10_000_000)
-        speed = 85
-        heading = 180
-        record = struct.pack(">IiiHH", ts, lat, lon, speed, heading)
+        accuracy = 0x03  # 3 meters
+        record = struct.pack(">IBii", ts, accuracy, lat, lon)
         results = {}
         parse_g22_gnss_accumulated_driving(record, results)
         assert len(results["gnss_ad_records"]) == 1
         r = results["gnss_ad_records"][0]
         assert abs(r["latitude"] - 45.4642) < 0.001
         assert abs(r["longitude"] - 9.19) < 0.001
-        assert r["speed_kmh"] == 85
-        assert r["heading"] == 180
+        assert r["gnss_accuracy"] == 0x03
 
     def test_load_sensor_data_decode(self):
         """Correctly decode load sensor data."""
@@ -191,15 +218,166 @@ class TestGen22Decoders:
         assert abs(r["latitude"] - 47.0) < 0.001
 
     def test_trailer_registrations_decode(self):
-        """Correctly decode trailer registration."""
+        """Correctly decode trailer registration (ASN.1: 20 bytes)."""
         ts = 1700000000
         nation = 0x1A  # Italy
         plate = b'AB12345CD     '  # 14 bytes
         coupling = 0  # coupled
-        padding = b'\x00' * 5  # pad to 24 bytes
-        record = struct.pack(">IB", ts, nation) + plate + bytes([coupling]) + padding
+        record = struct.pack(">IB", ts, nation) + plate + bytes([coupling])
         results = {}
         parse_g22_trailer_registrations(record, results)
         assert len(results["trailer_registrations"]) == 1
         assert results["trailer_registrations"][0]["event"] == "COUPLED"
         assert "AB12345CD" in results["trailer_registrations"][0]["trailer_plate"]
+
+    def test_detailed_speed_decode(self):
+        ts = 1700000000
+        speed_samples = bytes(range(60))
+        record = struct.pack(">I", ts) + speed_samples
+
+        decoded = parse_g22_detailed_speed(record)
+
+        assert decoded["raw_timestamp"] == ts
+        assert decoded["speeds_kmh"] == list(range(60))
+        assert decoded["valid_speed_count"] == 60
+        assert decoded["max_speed_kmh"] == 59
+        assert decoded["avg_speed_kmh"] == 29.5
+
+    def test_g22_sensor_gnss_decode_reuses_g2_structure(self):
+        ts = 1700000000
+        record = struct.pack(">QQI", 0x0102030405060708, 0x1112131415161718, ts)
+
+        decoded = parse_g2_sensor_gnss_coupled(record)
+
+        assert decoded["serial_number"] == "0x0102030405060708"
+        assert decoded["approval_number"] == "0x1112131415161718"
+        assert decoded["coupling_date"] != "N/A"
+
+    def test_g22_sensor_paired_decode_reuses_g2_structure(self):
+        first_ts = 1700000000
+        current_ts = 1700003600
+        record = struct.pack(">QQII", 0x0102030405060708, 0x1112131415161718, first_ts, current_ts)
+
+        decoded = parse_g2_sensor_paired(record)
+
+        assert decoded["serial_number"] == "0x0102030405060708"
+        assert decoded["approval_number"] == "0x1112131415161718"
+        assert decoded["pairing_first"] != "N/A"
+        assert decoded["pairing_current"] != "N/A"
+
+    def test_g22_record_array_dispatches_high_priority_records(self):
+        ts = 1700000000
+        record = struct.pack(">I", ts) + bytes(range(60))
+        record_array = struct.pack(">BHH", 1, 64, 1) + record
+        results = {}
+
+        parse_g2_vu_record(record_array, results, 0x052C)
+
+        assert len(results["detailed_speed"]) == 1
+        assert results["detailed_speed"][0]["max_speed_kmh"] == 59
+
+    def test_overspeeding_event_decode(self):
+        ts_begin = 1700000000
+        ts_end = 1700003600
+        record = struct.pack(">BBIIBB", 0x01, 0x02, ts_begin, ts_end, 120, 95)
+        record += struct.pack(">BB", 0x01, 0x1A)  # gen=1, nation=I
+        record += b'DRV12345CARD    '  # 16-byte card number
+        record += struct.pack(">BB", 0x01, 0x02)  # repl=1, renew=2
+        record += struct.pack(">B", 0x03)  # similarEvents=3
+        decoded = parse_g22_overspeeding_event(record)
+        assert decoded is not None
+        assert decoded["event_type"] == 0x01
+        assert decoded["event_purpose"] == 0x02
+        assert decoded["max_speed_kmh"] == 120
+        assert decoded["average_speed_kmh"] == 95
+        assert decoded["similar_events"] == 0x03
+        assert decoded["card_begin"]["nation"] == "I"
+        assert decoded["card_begin"]["generation"] == 1
+        assert decoded["begin_time"] != "N/A"
+        assert decoded["end_time"] != "N/A"
+
+    def test_overspeeding_control_decode(self):
+        ts_last = 1700000000
+        ts_first = 1699900000
+        record = struct.pack(">IIH", ts_last, ts_first, 42)
+        decoded = parse_g22_overspeeding_control(record)
+        assert decoded is not None
+        assert decoded["number_of_overspeed"] == 42
+        assert decoded["last_control_time"] != "N/A"
+        assert decoded["first_overspeed_since"] != "N/A"
+
+    def test_time_adj_gnss_decode(self):
+        ts_old = 1700000000
+        ts_new = 1700003600
+        record = struct.pack(">II", ts_old, ts_new)
+        decoded = parse_g22_time_adj_gnss(record)
+        assert decoded is not None
+        assert decoded["old_time"] != "N/A"
+        assert decoded["new_time"] != "N/A"
+
+    def test_power_interruption_decode(self):
+        ts_begin = 1700000000
+        ts_end = 1700003600
+        record = struct.pack(">BBII", 0x01, 0x02, ts_begin, ts_end)
+        for _ in range(4):
+            record += struct.pack(">BB", 0x01, 0x1A)
+            record += b'DRV12345CARD    '
+            record += struct.pack(">BB", 0x01, 0x02)
+        decoded = parse_g22_power_interruption(record)
+        assert decoded is not None
+        assert decoded["event_type"] == 0x01
+        assert decoded["event_purpose"] == 0x02
+        assert decoded["begin_time"] != "N/A"
+        assert decoded["end_time"] != "N/A"
+        assert decoded["card_driver_begin"]["nation"] == "I"
+        assert decoded["card_driver_end"]["nation"] == "I"
+        assert decoded["card_codriver_begin"]["nation"] == "I"
+        assert decoded["card_codriver_end"]["nation"] == "I"
+
+    def test_sensor_fault_decode(self):
+        ts_begin = 1700000000
+        ts_end = 1700003600
+        record = struct.pack(">BBII", 0x01, 0x02, ts_begin, ts_end)
+        for _ in range(4):
+            record += struct.pack(">BB", 0x01, 0x1A)
+            record += b'DRV12345CARD    '
+            record += struct.pack(">BB", 0x01, 0x02)
+        decoded = parse_g22_sensor_fault(record)
+        assert decoded is not None
+        assert decoded["event_type"] == 0x01
+        assert decoded["event_purpose"] == 0x02
+        assert decoded["begin_time"] != "N/A"
+        assert decoded["end_time"] != "N/A"
+        assert "raw_hex" in decoded
+
+    def test_overspeeding_event_record_array_dispatch(self):
+        ts_begin = 1700000000
+        ts_end = 1700003600
+        record = struct.pack(">BBIIBB", 0x01, 0x02, ts_begin, ts_end, 120, 95)
+        record += struct.pack(">BB", 0x01, 0x1A)
+        record += b'DRV12345CARD    '
+        record += struct.pack(">BB", 0x01, 0x02)
+        record += struct.pack(">B", 0x03)
+        record_array = struct.pack(">BHH", 1, 33, 1) + record
+        results = {}
+
+        parse_g2_vu_record(record_array, results, 0x052D)
+
+        assert len(results["overspeeding_events"]) == 1
+        assert results["overspeeding_events"][0]["max_speed_kmh"] == 120
+
+    def test_power_interruption_record_array_dispatch(self):
+        ts_begin = 1700000000
+        ts_end = 1700003600
+        record = struct.pack(">BBII", 0x01, 0x02, ts_begin, ts_end)
+        for _ in range(4):
+            record += struct.pack(">BB", 0x01, 0x1A)
+            record += b'DRV12345CARD    '
+            record += struct.pack(">BB", 0x01, 0x02)
+        record_array = struct.pack(">BHH", 1, 90, 1) + record
+        results = {}
+
+        parse_g2_vu_record(record_array, results, 0x0530)
+
+        assert len(results["power_interruptions"]) == 1
+        assert results["power_interruptions"][0]["event_type"] == 0x01

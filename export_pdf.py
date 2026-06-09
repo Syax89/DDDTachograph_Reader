@@ -1,3 +1,4 @@
+"""Single-driver PDF report generation using ReportLab. Creates detailed compliance reports with timeline visualization and infraction summaries."""
 import json
 import sys
 import os

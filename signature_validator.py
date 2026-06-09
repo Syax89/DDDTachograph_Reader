@@ -1,7 +1,9 @@
+"""Digital signature validator for tachograph certificate chains. Verifies ERCA/MSCA certificate hierarchies using ECDSA public key cryptography."""
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa, ec, utils
 from cryptography.exceptions import InvalidSignature
+import datetime
 import logging
 import os
 import struct
@@ -62,8 +64,17 @@ class SignatureValidator:
                                 pub_key = serialization.load_pem_public_key(pem_data)
                                 self.root_certificates["ERCA_G1"] = pub_key
                                 self.logger.info("Loaded Root Public Key (G1) from JRC format")
-                                continue
-                            except: pass
+                            except Exception:
+                                # JRC ERCA PK files (e.g. EC_PK) hold a raw EC point, not a
+                                # standard SubjectPublicKeyInfo. Store the decoded bytes as
+                                # raw key material rather than falling through to the generic
+                                # X.509/PEM loaders (which would log a misleading error).
+                                try:
+                                    self.root_certificates[f"ERCA_RAW_{filename}"] = base64.b64decode(base64_data)
+                                    self.logger.debug("Stored raw ERCA PK material from %s", filename)
+                                except Exception as exc:
+                                    self.logger.debug("Could not decode ERCA PK %s: %s", filename, exc)
+                            continue
 
                         # Prova a caricare come X.509
                         try:
@@ -124,9 +135,39 @@ class SignatureValidator:
             self.logger.error(f"G1 Unwrapping failed: {e}")
             return None
 
-    def verify_certificate_chain(self, child_cert, parent_cert):
-        """Verifies if child_cert is signed by parent_cert."""
+    def _certificate_is_valid_now(self, cert):
+        """True if ``cert`` (an x509.Certificate) is within its validity period.
+        Returns True for non-X.509 inputs (raw G1 public keys carry no dates)."""
+        not_after = getattr(cert, "not_valid_after_utc", None)
+        not_before = getattr(cert, "not_valid_before_utc", None)
+        if not_after is None or not_before is None:
+            # Older cryptography: fall back to naive UTC.
+            na = getattr(cert, "not_valid_after", None)
+            nb = getattr(cert, "not_valid_before", None)
+            if na is None or nb is None:
+                return True  # not an X.509 cert (e.g. raw RSA key)
+            not_after = na.replace(tzinfo=datetime.timezone.utc)
+            not_before = nb.replace(tzinfo=datetime.timezone.utc)
+        now = datetime.datetime.now(datetime.timezone.utc)
+        if now > not_after:
+            self.logger.warning("Certificate expired on %s", not_after.isoformat())
+            return False
+        if now < not_before:
+            self.logger.warning("Certificate not yet valid (valid from %s)", not_before.isoformat())
+            return False
+        return True
+
+    def verify_certificate_chain(self, child_cert, parent_cert, check_expiry=True):
+        """Verifies if child_cert is signed by parent_cert.
+
+        When ``check_expiry`` is True, the child certificate's validity period is
+        enforced: an expired or not-yet-valid certificate fails verification even
+        if its signature is cryptographically correct.
+        """
         try:
+            if check_expiry and not self._certificate_is_valid_now(child_cert):
+                return False
+
             # Se parent_cert è una PublicKey (G1)
             if isinstance(parent_cert, (rsa.RSAPublicKey, ec.EllipticCurvePublicKey)):
                 parent_pubkey = parent_cert
@@ -134,10 +175,10 @@ class SignatureValidator:
                 parent_pubkey = parent_cert.public_key()
 
             if isinstance(parent_pubkey, rsa.RSAPublicKey):
-                # G1/G2 RSA validation
-                # Spesso usano PKCS1v15 o ISO9796-2
-                print(f"DEBUG: Verifying RSA signature for {child_cert.subject.rfc4514_string()}")
-                print(f"DEBUG: Hash Algo: {child_cert.signature_hash_algorithm}")
+                # G1/G2 RSA validation (PKCS1v15 / ISO9796-2)
+                self.logger.debug("Verifying RSA signature for %s (hash=%s)",
+                                  child_cert.subject.rfc4514_string(),
+                                  child_cert.signature_hash_algorithm)
                 parent_pubkey.verify(
                     child_cert.signature,
                     child_cert.tbs_certificate_bytes,
@@ -155,12 +196,11 @@ class SignatureValidator:
                 return False
             return True
         except InvalidSignature:
-            print(f"DEBUG: InvalidSignature for {child_cert.subject.rfc4514_string()} signed by {parent_cert}")
+            self.logger.debug("InvalidSignature for %s", child_cert.subject.rfc4514_string())
             return False
         except Exception as e:
-            import traceback
-            print(f"DEBUG: Chain verification error for child {child_cert.subject.rfc4514_string()}: {e}")
-            traceback.print_exc()
+            self.logger.debug("Chain verification error for %s: %s",
+                              getattr(child_cert, "subject", "?"), e)
             return False
 
     def validate_tacho_chain(self, card_cert_raw, msca_cert_raw, erca_key_id=None):

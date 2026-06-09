@@ -58,7 +58,7 @@ def setup_mock_certs(base_dir):
     
     # 1. ERCA (Root)
     erca_key = generate_rsa_pair()
-    erca_cert = create_cert("ERCA-Root", erca_key, is_ca=True)
+    erca_cert = create_cert("ERCA-Root", erca_key, subject_key=erca_key.public_key(), is_ca=True)
     
     with open(os.path.join(certs_dir, "erca_root.pem"), "wb") as f:
         f.write(erca_cert.public_bytes(serialization.Encoding.PEM))

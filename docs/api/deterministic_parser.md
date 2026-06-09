@@ -1,0 +1,258 @@
+# DeterministicParser
+
+Deterministic parser that guarantees 100% byte coverage through a schema-driven two-pass architecture. The default parser since TachoParser v5.1.
+
+**File:** `core/deterministic_parser.py`
+
+---
+
+## Class: `CoverageTracker`
+
+```python
+class CoverageTracker:
+    """Tracks which byte ranges have been covered during parsing."""
+```
+
+### Constructor
+
+```python
+def __init__(self, total_size: int)
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `total_size` | `int` | Total file size in bytes |
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `mark_covered(start, end)` | Records a byte range as covered |
+| `mark_classified(start, end, classification)` | Records a range with a classification label (e.g., `"Tag_0520"`) |
+| `mark_padding(start, end, fill_byte)` | Records a padding range with the fill byte value |
+| `mark_unknown(start, end, data)` | Records bytes that could not be classified |
+| `merge_ranges()` | Merges overlapping covered ranges |
+| `get_coverage_pct()` | Returns total coverage percentage (0.0–100.0) |
+| `get_uncovered_ranges()` | Returns list of `(start, end)` tuples for uncovered bytes |
+| `get_section_report(file_size)` | Returns per-section coverage breakdown |
+
+**Internal state:**
+- `covered_ranges` — List of `(start, end)` tuples
+- `classifications` — Dict counting bytes per classification label
+- `unknown_ranges` — List of `(start, end, data)` for unclassified bytes
+
+---
+
+## Class: `DeterministicParser`
+
+```python
+class DeterministicParser:
+    """
+    Two-pass architecture:
+    1. Structural pass: parse every byte through known STAP/BER-TLV
+    2. Semantic pass: validate record sizes, checksums, field ranges
+    """
+```
+
+### Constructor
+
+```python
+def __init__(self, parser=None, registry: DecoderRegistry = None)
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `parser` | `TachoParser` or `None` | `None` | Reference to parent TachoParser for state sharing |
+| `registry` | `DecoderRegistry` or `None` | `None` | Decoder registry; creates new default if None |
+
+### Method: `parse()`
+
+```python
+def parse(self, raw_data: bytes, is_vu: bool) -> Dict[str, Any]
+```
+
+Main entry point. Executes the two-pass deterministic parse.
+
+**Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `raw_data` | `bytes` | Raw file contents (typically from mmap) |
+| `is_vu` | `bool` | Whether the file is a vehicle unit download |
+
+**Returns:** `Dict[str, Any]` — Complete parsed result (equivalent to `TachoResult().to_dict()`)
+
+**Two-pass architecture:**
+
+**Pass 1 — Structural:**
+1. Creates a `CoverageTracker` for the file size
+2. Initializes a fresh `TachoResult` dictionary
+3. Detects generation from first 2 bytes
+4. Sets top-level mode: `'stap'` for G1, `'ber'` for G2/G2.2
+5. Iterates byte-by-byte through the file:
+   - Skips padding blocks (0x00, 0xFF, 0x55)
+   - Tries STAP (G1) or BER-TLV (G2/G2.2) header reading
+   - On success: records the tag, dispatches its decoder, recurses into containers
+   - On failure: marks 1 byte as unknown and advances
+6. Collects unknown ranges into `raw_tags`
+
+**Pass 2 — Semantic:**
+- Record sizes, checksums, and field ranges are validated by individual decoders
+- Coverage data is assembled into the `"coverage"` and `"sections"` keys
+
+**Output structure:**
+```python
+{
+    "metadata": {...},
+    "driver": {...},
+    "vehicle": {...},
+    "activities": [...],
+    # ... all TachoResult fields ...
+    "raw_tags": {
+        "Padding": [...],
+        "Unparsed Data": [...],
+        "0520_G1_Identification": [...],
+        # ... etc ...
+    },
+    "coverage": {
+        "total_bytes": 12345,
+        "covered_pct": 100.0,
+        "classifications": {
+            "Tag_0520": 143,
+            "Tag_0504": 8192,
+            "Padding(0x00)": 512,
+            # ...
+        },
+        "uncovered_ranges": []
+    },
+    "sections": {
+        "Header": {"start": "0x000000", "end": "0x000100", "size": 256, "covered": 256, "coverage_pct": 100.0},
+        "Driver Data": {...},
+        "Vehicle Data": {...},
+        "Certificates": {...},
+        "Signature/Tail": {...}
+    }
+}
+```
+
+---
+
+## Utility: `quick_coverage_check()`
+
+```python
+def quick_coverage_check(raw_data: bytes) -> Dict[str, Any]
+```
+
+Standalone coverage check without full parsing. Useful for fast file validation.
+
+**Parameters:**
+- `raw_data` — Raw file bytes
+
+**Returns:** `dict` with keys `"total_bytes"`, `"covered_pct"`, `"uncovered_ranges"`, `"classifications"`.
+
+**Implementation** (`core/deterministic_parser.py:417-442`): Creates a lightweight `DeterministicParser`, skips padding, tries STAP/BER at each position, and tallies coverage without invoking decoders or building full results.
+
+---
+
+## How DeterministicParser Differs from Legacy `TagNavigator`
+
+| Aspect | DeterministicParser | Legacy TagNavigator |
+|--------|--------------------|---------------------|
+| **Approach** | Schema-driven, sequential with known structures | Recursive STAP + heuristic BER-TLV scanning |
+| **Coverage** | 100% by design (all unparseable bytes tracked) | 100% via post-parse `_fill_coverage_gaps()` |
+| **Dispatch** | Via `DecoderRegistry._dispatch_decoder()` | Via inline if/elif chain in `record_and_dispatch()` |
+| **Container recursion** | `_parse_container()` — recursive with mode inference | `dispatch_container_if_needed()` — mode-dependent |
+| **Padding detection** | Inline during parse (`_skip_padding`) | Post-parse analysis in `record_unparsed()` |
+| **Unknown bytes** | Tracked per-byte in `CoverageTracker.unknown_ranges` | Tracked per-range via `record_unparsed()` |
+| **Deep scan** | Not needed (sequential coverage) | Separate `deep_scan()` pass for heuristic recovery |
+| **Section report** | `CoverageTracker.get_section_report()` | `TagNavigator.get_section_report()` |
+| **Default** | Yes (since v5.1) | No (opt-in via `use_deterministic=False`) |
+
+---
+
+## Usage Example
+
+```python
+# Default usage via TachoParser
+from ddd_parser import TachoParser
+
+parser = TachoParser("file.ddd", use_deterministic=True)  # default
+data = parser.parse()
+
+# Inspect deterministic coverage
+cov = data["coverage"]
+print(f"Total: {cov['total_bytes']} bytes, Covered: {cov['covered_pct']}%")
+print(f"Classifications: {dict(cov['classifications'])}")
+
+# Section-level breakdown
+for section, info in data["sections"].items():
+    print(f"{section}: {info['coverage_pct']}% ({info['covered']}/{info['size']})")
+```
+
+### Direct usage (standalone)
+
+```python
+from core.deterministic_parser import DeterministicParser
+
+with open("file.ddd", "rb") as f:
+    raw = f.read()
+
+parser = DeterministicParser()
+results = parser.parse(raw, is_vu=(raw[0] == 0x76))
+print(results["metadata"]["generation"])
+```
+
+### Quick coverage check
+
+```python
+from core.deterministic_parser import quick_coverage_check
+
+with open("file.ddd", "rb") as f:
+    raw = f.read()
+
+coverage = quick_coverage_check(raw)
+print(f"Coverage: {coverage['covered_pct']}%")
+if coverage["uncovered_ranges"]:
+    for start, end in coverage["uncovered_ranges"]:
+        print(f"  Uncovered: {start} - {end} ({end - start} bytes)")
+```
+
+## See Also
+
+- [TachoParser](tacho_parser.md) — Main parser that uses DeterministicParser by default
+- [TagNavigator](tag_navigator.md) — Legacy alternative parser
+- [DecoderRegistry](decoder_registry.md) — Registry used for tag dispatch
+
+## Common Tasks
+
+### Compare deterministic vs legacy coverage
+
+```python
+from ddd_parser import TachoParser
+
+# Deterministic
+d = TachoParser("file.ddd", use_deterministic=True).parse()
+print(f"Deterministic coverage: {d['metadata']['coverage_pct']}%")
+
+# Legacy
+l = TachoParser("file.ddd", use_deterministic=False).parse()
+print(f"Legacy coverage: {l['metadata']['coverage_pct']}%")
+```
+
+### Check classification breakdown
+
+```python
+parser = TachoParser("file.ddd")
+data = parser.parse()
+classes = data["coverage"]["classifications"]
+for label, count in sorted(classes.items(), key=lambda x: -x[1]):
+    print(f"  {label}: {count} bytes")
+```
+
+### Find uncovered byte ranges
+
+```python
+parser = TachoParser("file.ddd")
+data = parser.parse()
+for start, end, size in data["coverage"]["uncovered_ranges"]:
+    print(f"Gap: {start}–{end} ({size} bytes)")
+```

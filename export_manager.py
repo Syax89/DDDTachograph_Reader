@@ -47,7 +47,7 @@ class ExportManager:
                 pd.DataFrame(infractions).to_excel(writer, sheet_name='Infrazioni', index=False)
 
             # 4. Foglio Posizioni GPS (se disponibili)
-            gps_data = data.get('gps_positions', [])
+            gps_data = data.get('locations', []) or data.get('gps_positions', [])
             if gps_data:
                 pd.DataFrame(gps_data).to_excel(writer, sheet_name='Posizioni GPS', index=False)
             

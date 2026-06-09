@@ -92,25 +92,26 @@ class TestSignatureValidation(unittest.TestCase):
         self.assertTrue(self.validator.validate_block(data, signature, pub_key, algorithm='ECDSA'))
 
     def test_expired_certificate(self):
-        """Test if expired certificates are handled (Validator should ideally check dates)."""
-        # Note: Current signature_validator.py does NOT check for expiration in verify_certificate_chain.
-        # This is a potential bug/improvement to report.
+        """Expired certificates must fail chain verification (expiration enforced)."""
+        import datetime
         card_cert = self.mock_data['expired_card_cert']
         msca_cert = self.mock_data['msca_cert']
-        
-        # Chain verification might still "pass" cryptographically but we should check validity dates
-        # Let's see how it behaves.
-        res = self.validator.verify_certificate_chain(card_cert, msca_cert)
-        
-        # If I want to enforce expiration check, I should update the code or report it.
-        # For now, let's see if it just does cryptographic check.
-        self.assertTrue(res, "Cryptographic check should pass even if expired")
-        
-        # But we want to ensure the system detects expiration. 
-        # I will add a check for dates in my test and see if validator provides such info.
-        import datetime
+
+        # Sanity: the fixture is actually expired.
         now = datetime.datetime.now(datetime.timezone.utc)
-        self.assertTrue(card_cert.not_valid_after_utc < now)
+        not_after = getattr(card_cert, "not_valid_after_utc", None) \
+            or card_cert.not_valid_after.replace(tzinfo=datetime.timezone.utc)
+        self.assertTrue(not_after < now, "fixture should be expired")
+
+        # With expiry enforced (default), verification must fail on dates.
+        self.assertFalse(
+            self.validator.verify_certificate_chain(card_cert, msca_cert),
+            "Expired certificate must not pass chain verification",
+        )
+
+        # With the date check disabled, expiration alone no longer rejects it
+        # (only the cryptographic signature is evaluated). Just exercise the path.
+        self.validator.verify_certificate_chain(card_cert, msca_cert, check_expiry=False)
 
 if __name__ == '__main__':
     unittest.main()

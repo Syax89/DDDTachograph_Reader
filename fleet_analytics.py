@@ -1,3 +1,4 @@
+"""Multi-file fleet batch analysis for DDD tachograph data. Processes multiple .ddd files to produce aggregated driver/vehicle analytics and comparative reports."""
 import os
 import json
 import glob
@@ -6,6 +7,7 @@ from ddd_parser import TachoParser
 from compliance_engine import ComplianceEngine
 
 class FleetAnalytics:
+    """Multi-file fleet analytics engine that processes multiple .ddd files and produces aggregated driver/vehicle statistics with comparative reporting."""
     def __init__(self, folder_path):
         self.folder_path = folder_path
         self.results = []

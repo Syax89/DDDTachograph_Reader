@@ -32,6 +32,7 @@ Esempi:
     parser.add_argument("--all", nargs="?", const="auto", metavar="DIR", help="Genera tutti i formati in una directory")
     parser.add_argument("--summary", action="store_true", help="Mostra riepilogo testuale compatto")
     parser.add_argument("--geocode", action="store_true", help="Abilita reverse geocoding coordinate GNSS")
+    parser.add_argument("--legacy", action="store_true", help="Usa il parser legacy (non deterministico) per retrocompatibilita'")
     parser.add_argument("-v", "--verbose", action="store_true", help="Output verboso di debug")
     parser.add_argument("-q", "--quiet", action="store_true", help="Nessun output a schermo (solo file)")
 
@@ -49,7 +50,7 @@ Esempi:
     # Parse
     try:
         from ddd_parser import TachoParser
-        ddd = TachoParser(args.file)
+        ddd = TachoParser(args.file, use_deterministic=not args.legacy)
         result = ddd.parse()
     except Exception as e:
         print(f"❌ Errore parsing: {e}", file=sys.stderr)

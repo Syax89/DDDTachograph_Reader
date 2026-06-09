@@ -1,4 +1,20 @@
+"""EU 561/2006 driving and rest period compliance analysis. Checks continuous driving limits, daily/weekly rest, bi-weekly driving caps, and produces infraction reports with severity classification."""
 from datetime import datetime, timedelta
+
+
+def _normalize_activity(tipo: str) -> str:
+    """Normalize activity type to Italian names (GUIDA/RIPOSO/LAVORO/DISPONIBILE)."""
+    t = tipo.upper().strip()
+    if t in ("GUIDA", "DRIVE"):
+        return "GUIDA"
+    if t in ("RIPOSO", "REST", "BREAK_REST", "BREAK"):
+        return "RIPOSO"
+    if t in ("LAVORO", "WORK"):
+        return "LAVORO"
+    if t in ("DISPONIBILE", "DISPONIBILITÀ", "AVAILABLE", "DISPONIBILITA"):
+        return "DISPONIBILE"
+    return "LAVORO"
+
 
 class ComplianceEngine:
     """
@@ -35,6 +51,9 @@ class ComplianceEngine:
 
         # 3. Analyze Daily Rest (24h Shift Logic)
         self._check_daily_rest_cycles(timeline)
+
+        # 3b. Analyze Daily Driving Limit (Art. 6.1 EU 561/2006)
+        self._check_daily_driving_limit(timeline)
 
         # 4. Analyze Weekly Rest, Compensation and Bi-weekly driving limits
         self._check_weekly_compliance(timeline)
@@ -83,7 +102,7 @@ class ComplianceEngine:
                 full_timeline.append({
                     "start": start_dt,
                     "end": end_dt,
-                    "tipo": ev["tipo"],
+                    "tipo": _normalize_activity(ev.get("tipo", "LAVORO")),
                     "durata": durata
                 })
         
@@ -119,7 +138,7 @@ class ComplianceEngine:
         has_15m_part = False
 
         for ev in timeline:
-            tipo = ev["tipo"]
+            tipo = _normalize_activity(ev["tipo"])
             durata = ev["durata"]
 
             if tipo == "GUIDA":
@@ -138,8 +157,8 @@ class ComplianceEngine:
                     driving_accumulator = 0
                     has_15m_part = False
 
-            elif tipo in ["RIPOSO", "DISPONIBILITÀ"]:
-                # Logic for Split Break
+            elif tipo == "RIPOSO":
+                # Logic for Split Break - only REST counts as break per EU 561/2006 Art. 4(d)
                 if durata >= 45:
                     driving_accumulator = 0
                     has_15m_part = False
@@ -159,53 +178,46 @@ class ComplianceEngine:
         """
         Objective 3: Implementa il calcolo del 'Turno di 24 ore'.
         Rule: Within 24h from the start of activities, a rest of 11h (or 9h reduced) must be completed.
+        Distinguishes regular rest (``>=`` 11h / 660 min) from reduced rest (``>=`` 9h / 540 min, < 11h).
+        Tracks reduced daily rests between consecutive weekly rests (max 3 allowed).
         """
         if not timeline: return
 
-        # Identify the start of the first shift
-        # A shift starts after a significant rest (> 9h)
+        reduced_rests_between_weekly = 0
+
         idx = 0
         n = len(timeline)
-        
+
         while idx < n:
-            # Start of a shift is the first non-rest activity
             shift_start_ev = None
             for i in range(idx, n):
                 if timeline[i]["tipo"] != "RIPOSO":
                     shift_start_ev = timeline[i]
                     idx = i
                     break
-            
+
             if not shift_start_ev: break
-            
+
             shift_limit = shift_start_ev["start"] + timedelta(hours=24)
-            
-            # Look for the longest rest period that FINISHES within this 24h window
-            # and starts after the activities began.
+
             max_rest_in_window = 0
             found_rest_end = shift_start_ev["start"]
-            
-            # Track if we found a valid daily rest
+
             current_idx = idx
             while current_idx < n and timeline[current_idx]["start"] < shift_limit:
                 ev = timeline[current_idx]
                 if ev["tipo"] == "RIPOSO":
-                    # Rest must be finished within the 24h window to count
-                    # If it overflows, only the part within 24h counts? 
-                    # Actually, the requirement is "completed within 24h".
                     if ev["end"] <= shift_limit:
                         max_rest_in_window = max(max_rest_in_window, ev["durata"])
                     else:
-                        # Part of rest within window
                         minutes_within = (shift_limit - ev["start"]).total_seconds() / 60
                         if minutes_within > 0:
                             max_rest_in_window = max(max_rest_in_window, minutes_within)
-                
+
                 found_rest_end = ev["end"]
                 current_idx += 1
 
-            # Determine infraction
-            if max_rest_in_window < 540: # Less than 9h (minimum reduced rest)
+            if max_rest_in_window < 540:
                 shortfall = 540 - max_rest_in_window
                 severity = self._get_rest_severity(shortfall)
                 self.infractions.append({
@@ -214,18 +226,101 @@ class ComplianceEngine:
                     "severita": severity,
                     "descrizione": f"Entro il turno di 24h (inizio {shift_start_ev['start'].strftime('%H:%M')}), il riposo massimo completato è di {int(max_rest_in_window)} min (minimo 9h)."
                 })
-            
-            # Advance to the next shift: find the next activity after a rest > 9h
-            # This is a simplification: usually the next shift starts after the daily rest.
+
             found_next_shift = False
             for i in range(current_idx - 1, n):
                 if timeline[i]["tipo"] == "RIPOSO" and timeline[i]["durata"] >= 540:
                     idx = i + 1
                     found_next_shift = True
                     break
-            
+
             if not found_next_shift:
-                break # No more shifts found
+                break
+
+        # ── Reduced rest quality tracking (between consecutive weekly rests) ──
+        for ev in timeline:
+            if ev["tipo"] != "RIPOSO":
+                continue
+            if ev["durata"] >= 1440:  # weekly rest (>= 24h) resets the counter
+                reduced_rests_between_weekly = 0
+            elif ev["durata"] >= 540 and ev["durata"] < 660:
+                # reduced daily rest: >= 9h but < 11h
+                reduced_rests_between_weekly += 1
+                if reduced_rests_between_weekly > 3:
+                    self.infractions.append({
+                        "data": ev["start"].strftime("%d/%m/%Y"),
+                        "tipo": "ECCESSO_RIPOSI_RIDOTTI",
+                        "severita": self.SI,
+                        "descrizione": f"Superati 3 riposi ridotti ({int(ev['durata']/60)}h) tra due riposi settimanali consecutivi."
+                    })
+                    reduced_rests_between_weekly = 0  # reset to avoid duplicate infractions for the same period
+
+    def _check_daily_driving_limit(self, timeline):
+        """
+        Art. 6.1 EU 561/2006: max 9h driving per shift, extendable to 10h max 2x/week.
+        Identifies shifts between daily rests (>=9h) and checks daily driving total.
+        """
+        if not timeline: return
+
+        weekly_extensions = {}  # {week_monday: count}
+        shift_start_idx = 0
+        n = len(timeline)
+
+        for i in range(n):
+            ev = timeline[i]
+            if ev["tipo"] == "RIPOSO" and ev["durata"] >= 540:
+                shift_events = timeline[shift_start_idx:i]
+
+                if shift_events:
+                    driving_total = sum(e["durata"] for e in shift_events if e["tipo"] == "GUIDA")
+                    shift_date = shift_events[0]["start"]
+                    monday = (shift_date - timedelta(days=shift_date.weekday())).replace(
+                        hour=0, minute=0, second=0, microsecond=0)
+
+                    if driving_total > 600:
+                        self.infractions.append({
+                            "data": shift_date.strftime("%d/%m/%Y"),
+                            "tipo": "ECCESSO_GUIDA_GIORNALIERA",
+                            "severita": self.MSI if driving_total > 660 else self.SI,
+                            "descrizione": f"Guida giornaliera di {driving_total/60:.1f}h supera il limite massimo di 10h."
+                        })
+                    elif driving_total > 540:
+                        weekly_extensions[monday] = weekly_extensions.get(monday, 0) + 1
+                        if weekly_extensions[monday] > 2:
+                            self.infractions.append({
+                                "data": shift_date.strftime("%d/%m/%Y"),
+                                "tipo": "ECCESSO_ESTENSIONI_GUIDA_SETTIMANALI",
+                                "severita": self.MI,
+                                "descrizione": f"Guida giornaliera di {driving_total/60:.1f}h: 3\u00aa estensione a 10h nella stessa settimana (max 2)."
+                            })
+
+                shift_start_idx = i + 1
+
+        # Last shift (after last rest)
+        if shift_start_idx < n:
+            shift_events = timeline[shift_start_idx:]
+            driving_total = sum(e["durata"] for e in shift_events if e["tipo"] == "GUIDA")
+            if driving_total > 0:
+                shift_date = shift_events[0]["start"]
+                monday = (shift_date - timedelta(days=shift_date.weekday())).replace(
+                    hour=0, minute=0, second=0, microsecond=0)
+
+                if driving_total > 600:
+                    self.infractions.append({
+                        "data": shift_date.strftime("%d/%m/%Y"),
+                        "tipo": "ECCESSO_GUIDA_GIORNALIERA",
+                        "severita": self.MSI if driving_total > 660 else self.SI,
+                        "descrizione": f"Guida giornaliera di {driving_total/60:.1f}h supera il limite massimo di 10h."
+                    })
+                elif driving_total > 540:
+                    weekly_extensions[monday] = weekly_extensions.get(monday, 0) + 1
+                    if weekly_extensions[monday] > 2:
+                        self.infractions.append({
+                            "data": shift_date.strftime("%d/%m/%Y"),
+                            "tipo": "ECCESSO_ESTENSIONI_GUIDA_SETTIMANALI",
+                            "severita": self.MI,
+                            "descrizione": f"Guida giornaliera di {driving_total/60:.1f}h: 3\u00aa estensione a 10h nella stessa settimana (max 2)."
+                        })
 
     def _get_driving_severity(self, excess_min):
         """Objective 4: Aggiungi la severità dell'infrazione."""
@@ -390,6 +485,7 @@ class ComplianceEngine:
                     "guida": 0,
                     "lavoro": 0,
                     "riposo": 0,
+                    "disponibilita": 0,
                     "infrazioni": 0
                 }
 
@@ -417,11 +513,10 @@ class ComplianceEngine:
                     daily_data[date_str]["guida"] += duration_in_day
                 elif tipo == "LAVORO":
                     daily_data[date_str]["lavoro"] += duration_in_day
-                elif tipo == "RIPOSO" or tipo == "DISPONIBILITÀ":
-                    # Disponibilità is often treated as rest for summary purposes, or can be separate.
-                    # Following typical GUI requirements, we group it with rest or keep separate.
-                    # Here we treat it as Rest/Other than Work.
+                elif tipo == "RIPOSO":
                     daily_data[date_str]["riposo"] += duration_in_day
+                elif tipo == "DISPONIBILE":
+                    daily_data[date_str]["disponibilita"] += duration_in_day
                 
                 curr_dt = limit
 

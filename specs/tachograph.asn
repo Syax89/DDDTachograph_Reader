@@ -1,0 +1,493 @@
+-- Tachograph Data Structures — Annex 1B & Annex 1C
+-- Formal ASN.1 schema for deterministic parsing
+-- References: Reg. CE 1360/2002, Reg. EU 165/2014, Reg. EU 2021/1228, Reg. EU 2023/980
+-- Agent 5 — Architecture: Schema-Driven Parser
+
+TachoDefinitions DEFINITIONS IMPLICIT TAGS ::= BEGIN
+
+-- ── Primitives (Annex 1B §2) ──
+
+TimeReal ::= INTEGER (0..4294967295)
+-- seconds since 1970-01-01 00:00:00 UTC, unsigned 32-bit big-endian
+
+Datef ::= SEQUENCE {
+    yearHigh  INTEGER (0..99),
+    yearLow   INTEGER (0..99),
+    month     INTEGER (1..12),
+    day       INTEGER (1..31)
+}
+-- BCD-encoded: 4 bytes, each byte = 2 BCD digits
+
+Name ::= SEQUENCE {
+    codePage INTEGER (0..255),
+    name     IA5String (SIZE(35))
+}
+-- 36 bytes total
+
+CardNumber ::= SEQUENCE {
+    codePage INTEGER (0..255),
+    number   IA5String (SIZE(15))
+}
+-- 16 bytes total
+
+FullCardNumber ::= SEQUENCE {
+    codePage       INTEGER (0..255),
+    nation         NationNumeric,
+    cardNumber     IA5String (SIZE(15)),
+    cardNumberTerm INTEGER (0..255) OPTIONAL
+}
+-- 18-19 bytes
+
+InternationalString {INTEGER:L} ::= SEQUENCE {
+    codePage INTEGER (0..255),
+    content  IA5String (SIZE(L))
+}
+
+SimpleString {INTEGER:L} ::= IA5String (SIZE(L))
+
+NationNumeric ::= INTEGER (0..255)
+
+ExtendedSerialNumber ::= OCTET STRING (SIZE(8))
+
+UInt24 ::= OCTET STRING (SIZE(3))
+
+BCDString {INTEGER:L} ::= OCTET STRING (SIZE(L))
+
+-- ── Vehicle Identification ──
+
+VehicleRegistrationIdentification ::= SEQUENCE {
+    vehicleRegistrationNation NationNumeric,
+    vehicleRegistrationNumber InternationalString{13}
+}
+-- 15 bytes
+
+VehicleIdentificationNumber ::= SimpleString{17}
+
+-- ── Activity Change ──
+
+ActivityChangeInfo ::= SEQUENCE {
+    slot          INTEGER (0..1),
+    drivingStatus INTEGER (0..1),
+    cardStatus    INTEGER (0..1),
+    activity      INTEGER (0..3),
+    minutes       INTEGER (0..1439)
+}
+-- Packed in 2 bytes
+
+-- ── Card Event Record ──
+
+CardEventRecord ::= SEQUENCE {
+    eventType              INTEGER (0..255),
+    eventBeginTime         TimeReal,
+    eventEndTime           TimeReal,
+    vehicleRegistration    VehicleRegistrationIdentification
+}
+-- 24 bytes
+
+CardEventData ::= SEQUENCE (SIZE(6)) OF SEQUENCE (SIZE(1..255)) OF CardEventRecord
+
+-- ── Card Fault Record ──
+
+CardFaultRecord ::= SEQUENCE {
+    faultType              INTEGER (0..255),
+    faultBeginTime         TimeReal,
+    faultEndTime           TimeReal,
+    vehicleRegistration    VehicleRegistrationIdentification
+}
+-- 24 bytes
+
+CardFaultData ::= SEQUENCE (SIZE(2)) OF SEQUENCE (SIZE(1..255)) OF CardFaultRecord
+
+-- ── Vehicles Used ──
+
+CardVehiclesUsedRecord ::= SEQUENCE {
+    vehicleOdometerBegin        UInt24,
+    vehicleOdometerEnd          UInt24,
+    vehicleFirstUse             TimeReal,
+    vehicleLastUse              TimeReal,
+    vehicleRegistrationNation   NationNumeric,
+    vehicleRegistrationNumber   InternationalString{13},
+    vuDataBlockCounter          BCDString{2}
+}
+-- 31 bytes (G1)
+
+CardVehiclesUsedRecordG2 ::= SEQUENCE {
+    vehicleOdometerBegin        INTEGER (0..4294967295),
+    vehicleOdometerEnd          INTEGER (0..4294967295),
+    vehicleFirstUse             TimeReal,
+    vehicleLastUse              TimeReal,
+    vehicleRegistrationNation   NationNumeric,
+    vehicleRegistrationNumber   InternationalString{13},
+    vuDataBlockCounter          BCDString{2},
+    vehicleOdometerDifference   INTEGER (0..65535)
+}
+-- 35 bytes (G2)
+
+-- ── Daily Activity Buffer (Cyclic) ──
+
+DailyActivityBuffer ::= SEQUENCE {
+    oldestPointer INTEGER (0..65535),
+    newestPointer INTEGER (0..65535),
+    dailyRecords  SEQUENCE (SIZE(1..366)) OF DailyRecord
+}
+
+DailyRecord ::= SEQUENCE {
+    previousRecordLength    INTEGER (0..65535),
+    currentRecordLength     INTEGER (0..65535),
+    timeReal                TimeReal,
+    dailyPresenceCounter    INTEGER (0..65535),
+    dayDistance             INTEGER (0..65535),
+    activityChanges         SEQUENCE OF ActivityChangeInfo
+}
+
+-- ── Card Application Identification ──
+
+DriverCardApplicationIdentification ::= SEQUENCE {
+    typeOfTachographCardId      INTEGER (0..255),
+    cardStructureVersion        INTEGER (0..65535),
+    noOfEventsPerType           INTEGER (0..255),
+    noOfFaultsPerType           INTEGER (0..255),
+    activityStructureLength     INTEGER (0..65535),
+    noOfCardVehicleRecords      INTEGER (0..65535),
+    noOfCardPlaceRecords        INTEGER (0..255)
+}
+-- 10 bytes
+
+-- ── Card Identification (G1) ──
+
+CardIdentification ::= SEQUENCE {
+    cardIssuingMemberState      NationNumeric,
+    cardNumber                  CardNumber,
+    cardIssuingAuthorityName    Name,
+    cardIssueDate               TimeReal,
+    cardValidityBegin           TimeReal,
+    cardExpiryDate              TimeReal
+}
+-- 65 bytes
+
+-- ── Driver Card Holder Identification ──
+
+DriverCardHolderIdentification ::= SEQUENCE {
+    cardHolderSurname           Name,
+    cardHolderFirstNames        Name,
+    cardHolderBirthDate         Datef,
+    cardHolderPreferredLanguage SimpleString{2}
+}
+-- 78 bytes
+
+-- ── Driving Licence Info ──
+
+DrivingLicenceInfo ::= SEQUENCE {
+    drivingLicenceIssuingAuthority  Name,
+    drivingLicenceIssuingNation     NationNumeric,
+    drivingLicenceNumber            SimpleString{16}
+}
+-- 53 bytes
+
+-- ── Specific Conditions ──
+
+SpecificConditionRecord ::= SEQUENCE {
+    entryTime               TimeReal,
+    specificConditionType   INTEGER (0..2)
+}
+-- 5 bytes
+
+-- ── Places ──
+
+PlaceRecord ::= SEQUENCE {
+    entryTime               TimeReal,
+    entryTypeDailyWorkPeriod INTEGER (1..2),
+    dailyWorkPeriodCountry  NationNumeric,
+    dailyWorkPeriodRegion   INTEGER (0..255),
+    vehicleOdometerValue    UInt24
+}
+-- 10 bytes (minimum)
+
+-- ── Current Usage ──
+
+CardCurrentUse ::= SEQUENCE {
+    sessionOpenTime             TimeReal,
+    vehicleRegistrationNation   NationNumeric,
+    vehicleRegistrationNumber   InternationalString{13}
+}
+-- 19 bytes
+
+-- ── Control Activity Data ──
+
+ControlActivityRecord ::= SEQUENCE {
+    controlType                 INTEGER (0..255),
+    controlTime                 TimeReal,
+    controlCardNumber           FullCardNumber,
+    vehicleRegistrationNation   NationNumeric,
+    vehicleRegistrationNumber   InternationalString{13},
+    controlDownloadPeriodBegin  TimeReal,
+    controlDownloadPeriodEnd    TimeReal
+}
+-- 46 bytes
+
+-- ── Calibration Data ──
+
+CalibrationRecord ::= SEQUENCE {
+    calibrationPurpose              INTEGER (0..255),
+    workshopName                    Name,
+    workshopAddress                 Name,
+    workshopCardNumber              FullCardNumber,
+    workshopCardExpiryDate          TimeReal,
+    vehicleIdentificationNumber     VehicleIdentificationNumber,
+    vehicleRegistrationNation       NationNumeric,
+    vehicleRegistrationNumber       InternationalString{13},
+    vehicleCharacteristicConstant   INTEGER (0..65535),
+    constantOfRecordingEquipment    INTEGER (0..65535),
+    tyreCircumference               INTEGER (0..65535),
+    tyreSize                        SimpleString{15},
+    authorisedSpeed                 INTEGER (0..255),
+    oldOdometerValue                UInt24,
+    newOdometerValue                UInt24,
+    oldTimeValue                    TimeReal,
+    newTimeValue                    TimeReal,
+    nextCalibrationDate             TimeReal
+}
+-- 105 bytes (G1) or 161 bytes (G2)
+
+-- ── Card ICC ──
+
+CardIccIdentification ::= SEQUENCE {
+    clockStop                   INTEGER (0..255),
+    cardExtendedSerialNumber    ExtendedSerialNumber,
+    cardApprovalNumber          SimpleString{8},
+    cardPersonaliserId          INTEGER (0..255),
+    embedderIcAssemblerId       SEQUENCE {
+        countryCode    INTEGER (0..65535),
+        bcdCode        INTEGER (0..99),
+        manufacturer   INTEGER (0..255)
+    },
+    icIdentifier                INTEGER (0..65535),
+    historicalInfo              OCTET STRING OPTIONAL
+}
+
+-- ── Certificates ──
+
+Certificate ::= SEQUENCE {
+    signature                   OCTET STRING (SIZE(128)),
+    publicKeyRemainder          OCTET STRING (SIZE(58)),
+    certificationAuthorityReference SEQUENCE {
+        nation      NationNumeric,
+        nationCode  SimpleString{3},
+        serialNumber INTEGER (0..255),
+        additionalInfo INTEGER (0..65535),
+        caIdentifier INTEGER (0..255)
+    }
+}
+-- 194 bytes (G1)
+
+-- ── VU Technical Data (TREP 01) ──
+
+TransferDataOverview ::= SEQUENCE {
+    memberStateCertificate      Certificate,
+    vuCertificate               Certificate,
+    vehicleIdentificationNumber VehicleIdentificationNumber,
+    vehicleRegistration         VehicleRegistrationIdentification,
+    currentDateTime             TimeReal,
+    vuDownloadablePeriod        SEQUENCE {
+        minDownloadableTimeDate TimeReal,
+        maxDownloadableTimeDate TimeReal
+    },
+    cardSlotsStatus             INTEGER (0..255),
+    vuDownloadActivityData      OCTET STRING,
+    vuCompanyLocksData          OCTET STRING,
+    vuControlActivityData       OCTET STRING,
+    signature                   OCTET STRING (SIZE(128))
+}
+
+-- ── VU Activities (TREP 02) ──
+
+VuCardIWRecord ::= SEQUENCE {
+    cardInsertionTime       TimeReal,
+    vehicleRegistrationNation NationNumeric,
+    vehicleRegistrationNumber InternationalString{13},
+    cardWithdrawalTime      TimeReal,
+    cardNumber              FullCardNumber
+}
+
+VuActivityDailyData ::= SEQUENCE {
+    activityDate            Datef,
+    odometerValueMidnight   UInt24,
+    vuCardIWData            SEQUENCE OF VuCardIWRecord,
+    vuActivityDailyData     SEQUENCE OF ActivityChangeInfo,
+    vuPlaceDailyWorkPeriod  SEQUENCE OF PlaceRecord,
+    vuSpecificConditionData SEQUENCE OF SpecificConditionRecord,
+    signature               OCTET STRING (SIZE(128))
+}
+
+-- ── VU Events & Faults (TREP 03) ──
+
+VuFaultRecord ::= SEQUENCE {
+    faultType               INTEGER (0..255),
+    faultRecordPurpose      INTEGER (0..255),
+    faultBeginTime          TimeReal,
+    faultEndTime            TimeReal,
+    cardNumberDriverBegin   FullCardNumber,
+    cardNumberCodriverBegin FullCardNumber,
+    cardNumberDriverEnd     FullCardNumber,
+    cardNumberCodriverEnd   FullCardNumber
+}
+
+VuEventRecord ::= SEQUENCE {
+    eventType               INTEGER (0..255),
+    eventRecordPurpose      INTEGER (0..255),
+    eventBeginTime          TimeReal,
+    eventEndTime            TimeReal,
+    cardNumberDriverBegin   FullCardNumber,
+    cardNumberCodriverBegin FullCardNumber,
+    cardNumberDriverEnd     FullCardNumber,
+    cardNumberCodriverEnd   FullCardNumber,
+    similarEventsNumber     INTEGER (0..255)
+}
+
+TransferDataEventsAndFaults ::= SEQUENCE {
+    vuFaultData                 SEQUENCE OF VuFaultRecord,
+    vuEventData                 SEQUENCE OF VuEventRecord,
+    overspeedingControlData     OCTET STRING,
+    vuOverspeedingEventData     OCTET STRING,
+    vuTimeAdjustmentData        OCTET STRING,
+    signature                   OCTET STRING (SIZE(128))
+}
+
+-- ── VU Speed (TREP 04) ──
+
+SpeedInfoBlock ::= SEQUENCE {
+    speedBlockBeginDate         TimeReal,
+    speedsPerMinute             SEQUENCE (SIZE(1..60)) OF INTEGER (0..255)
+}
+
+TransferDetailedSpeed ::= SEQUENCE {
+    speedInfo                   SEQUENCE OF SpeedInfoBlock,
+    signature                   OCTET STRING (SIZE(128))
+}
+
+-- ── G2.2 GNSS / New Data Types (confirmed from Reg. 2021/1228 Annex 1C) ──
+
+GNSSAccumulatedDrivingRecord ::= SEQUENCE {
+    timestamp       TimeReal,                       -- 4 bytes
+    gnssAccuracy    INTEGER (0..255),               -- 1 byte (metres)
+    latitude        INTEGER (-900000000..900000000), -- 4 bytes signed, 1/10 micro-degree
+    longitude       INTEGER (-1800000000..1800000000) -- 4 bytes signed, 1/10 micro-degree
+}
+-- 13 bytes per Annex 1C §2.79 (amended Reg. 2021/1228)
+
+GNSSPlaceAuthRecord ::= SEQUENCE {
+    timestamp              TimeReal,                -- 4 bytes
+    gnssAccuracy           INTEGER (0..255),        -- 1 byte
+    latitude               INTEGER (-900000000..900000000), -- 4 bytes
+    longitude              INTEGER (-1800000000..1800000000), -- 4 bytes
+    authenticationStatus   INTEGER (0..1)           -- 1 byte (0=not auth, 1=auth)
+}
+-- 14 bytes per Annex 1C §2.79c
+
+-- ── Card-side G2.2 Records (card EF files 0x0225-0x0228) ──
+
+LoadUnloadRecord ::= SEQUENCE {
+    timestamp       TimeReal,                       -- 4 bytes
+    operationType   INTEGER (0..3),                 -- 1 byte (§2.114a: 01=Load, 02=Unload, 03=Simultaneous)
+    latitude        INTEGER (-900000000..900000000), -- 4 bytes
+    longitude       INTEGER (-1800000000..1800000000) -- 4 bytes
+}
+-- 13 bytes (card-side simple format)
+
+CardLoadUnloadRecord ::= SEQUENCE {                 -- Annex 1C §2.24d
+    timestamp              TimeReal,                -- 4 bytes
+    operationType          INTEGER (0..3),          -- 1 byte
+    gnssPlaceRecord        GNSSPlaceAuthRecord,     -- 14 bytes (ts+accuracy+geo+auth)
+    vehicleOdometerValue   INTEGER (0..9999999)     -- 3 bytes UInt24
+}
+-- 21 bytes (card-side full format with GNSS auth + odometer)
+
+TrailerRegistrationRecord ::= SEQUENCE {
+    timestamp       TimeReal,                       -- 4 bytes
+    trailerNation   NationNumeric,                  -- 1 byte
+    trailerPlate    InternationalString{13},        -- 14 bytes (codePage 1 + chars 13)
+    couplingStatus  INTEGER (0..1)                  -- 1 byte
+}
+-- 20 bytes
+
+BorderCrossingRecord ::= SEQUENCE {
+    timestamp       TimeReal,                       -- 4 bytes
+    nationFrom      NationNumeric,                  -- 1 byte
+    nationTo        NationNumeric,                  -- 1 byte
+    latitude        INTEGER (-900000000..900000000), -- 4 bytes
+    longitude       INTEGER (-1800000000..1800000000) -- 4 bytes
+}
+-- 14 bytes (card-side simple format)
+
+CardBorderCrossingRecord ::= SEQUENCE {             -- Annex 1C §2.11b
+    countryLeft            NationNumeric,           -- 1 byte (FF=Rest of World)
+    countryEntered         NationNumeric,           -- 1 byte
+    gnssPlaceAuthRecord    GNSSPlaceAuthRecord,     -- 14 bytes
+    vehicleOdometerValue   INTEGER (0..9999999)     -- 3 bytes UInt24
+}
+-- 19 bytes (card-side full format with GNSS auth + odometer)
+
+-- ── FullCardNumber types ──
+
+FullCardNumber ::= SEQUENCE {                       -- Annex 1C §2.73 (18 bytes)
+    cardType                 INTEGER (0..255),      -- 1 byte
+    cardIssuingMemberState   NationNumeric,         -- 1 byte
+    cardNumber               IA5String (SIZE(16))   -- 16 bytes
+}
+
+FullCardNumberAndGeneration ::= SEQUENCE {          -- Annex 1C §2.74 (20 bytes)
+    generation               INTEGER (0..255),      -- 1 byte
+    cardIssuingMemberState   NationNumeric,         -- 1 byte
+    cardNumber               IA5String (SIZE(16)),  -- 16 bytes
+    replacementIndex         INTEGER (0..255),      -- 1 byte
+    renewalIndex             INTEGER (0..255)       -- 1 byte
+}
+
+VehicleRegistrationIdentification ::= SEQUENCE {    -- Annex 1C §2.166 (15 bytes)
+    vehicleRegistrationNation NationNumeric,        -- 1 byte
+    vehicleRegistrationNumber  InternationalString{13} -- 14 bytes
+}
+
+-- ── VU Data Types (Annex 1C §4.5) ──
+
+VuCalibrationRecord ::= SEQUENCE {                  -- Annex 1C §2.174 (~167 bytes)
+    calibrationPurpose              INTEGER (0..255),     -- 1 byte
+    workshopName                    Name(36),             -- 36 bytes
+    workshopAddress                 Address(36),          -- 36 bytes
+    workshopCardNumber              FullCardNumber,       -- 18 bytes
+    workshopCardExpiryDate          TimeReal,             -- 4 bytes
+    vehicleIdentificationNumber     VehicleIdentificationNumber, -- 17 bytes
+    vehicleRegistrationIdentification VehicleRegistrationIdentification, -- 15 bytes
+    wVehicleCharacteristicConstant  INTEGER (0..65535),  -- 2 bytes
+    kConstantOfRecordingEquipment   INTEGER (0..65535),  -- 2 bytes
+    lTyreCircumference              INTEGER (0..65535),  -- 2 bytes
+    tyreSize                        SimpleString(15),     -- 15 bytes
+    authorisedSpeed                 INTEGER (0..255),     -- 1 byte
+    oldOdometerValue                INTEGER (0..16777215), -- 3 bytes UInt24
+    newOdometerValue                INTEGER (0..16777215), -- 3 bytes UInt24
+    oldTimeValue                    TimeReal,             -- 4 bytes
+    newTimeValue                    TimeReal,             -- 4 bytes
+    nextCalibrationDate             TimeReal              -- 4 bytes
+}
+-- 167 bytes
+
+-- ── Confirmed Record Sizes Summary ──
+-- CardSlotsStatus          1 byte       (§2.34)
+-- CurrentDateTime          4 bytes      (§2.54, TimeReal)
+-- OdometerValueMidnight    3 bytes      (§2.114, UInt24)
+-- ActivityChangeInfo       2 bytes      (§2.1, UInt16)
+-- VehicleIdentificationNumber 17 bytes  (§2.165)
+-- MemberStateCertificate   194 bytes     (§2.96)
+-- Signature (RSA)          128 bytes     (§2.149)
+-- VuDetailedSpeedBlock     64 bytes      (§2.190: TimeReal(4) + 60×UInt8)
+
+-- ── G2 RecordArray Structure ──
+
+RecordArrayHeader ::= SEQUENCE {
+    recordType   INTEGER (0..255),
+    recordSize   INTEGER (0..65535),
+    noOfRecords  INTEGER (0..65535)
+}
+-- 5 bytes
+
+END

@@ -1,16 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
 import sys
-import customtkinter
 from PyInstaller.utils.hooks import collect_data_files
 
 # Percorso della directory base
 base_path = os.path.abspath(".")
 
-# Raccogli i file di dati di customtkinter
-# PyInstaller spesso ha problemi a trovare i file .json e .txt di customtkinter
-ctk_path = os.path.dirname(customtkinter.__file__)
-ctk_data = [(ctk_path, "customtkinter")]
+# La GUI (gui_tree.py) usa solo tkinter/ttk puro — nessuna dipendenza esterna.
+ctk_data = []
 
 # Raccogli solo i file essenziali di reportlab (font Type1 e afm — esclude test/samples)
 try:
@@ -44,12 +41,11 @@ added_files.extend(ctk_data)
 block_cipher = None
 
 a = Analysis(
-    ['gui.py'],
+    ['gui_tree.py'],
     pathex=[base_path, os.path.join(base_path, 'core'), os.path.join(base_path, 'src')],
     binaries=[],
     datas=added_files,
     hiddenimports=[
-        'darkdetect',
         'tkinter',
         'cryptography',
         'requests',

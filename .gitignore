@@ -1,3 +1,4 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -7,31 +8,28 @@ venv/
 ENV/
 .DS_Store
 
-# Tachograph files
-*.ddd
-*.DDD
-*.bin
-
-# Output files
-*.json
-*.pdf
-*.csv
-!test_data.json # keep if needed, but we just deleted it
-!requirements.txt
-
 # PyInstaller
 build/
 dist/
 
-# Real DDD test files (personal data)
-test_gen22_*.ddd
-test_real_*.ddd
+# ─────────────────────────────────────────────────────────────
+# Dati personali — NON committare (repo pubblico).
+# I file DDD reali e i golden snapshot contengono nomi conducenti,
+# numeri carta e VIN.
+# ─────────────────────────────────────────────────────────────
 *.ddd
+*.DDD
+*.bin
+DDD/
+tests/golden/
+# Regolamento UE (documento esterno, non sorgente)
+*.xhtml
 
-# File DDD reali (dati personali, non pushare)
-test_gen22_*.ddd
-test_real_*.ddd
-*.ddd
-!mock.ddd
-!test_recursive.ddd
-!g2_card_test.ddd
+# File mock/test generati a runtime
+tests/mock_data/
+
+# Output generati
+*.json
+*.pdf
+*.csv
+specs/*_report.json
