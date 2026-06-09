@@ -18,26 +18,36 @@ import json
 import traceback
 import logging
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 # ── Windows High-DPI ────────────────────────────────────────────────────────
+_WIN_SCALE = 1.0
 if sys.platform == "win32":
     try:
         from ctypes import windll
-        windll.shcore.SetProcessDpiAwareness(1)  # Per-Monitor DPI
+        # Try SetProcessDpiAwareness(2) — Per-Monitor V2 (Win 10 1703+)
+        windll.shcore.SetProcessDpiAwareness(2)
     except Exception:
         try:
-            from ctypes import windll
             windll.user32.SetProcessDPIAware()
         except Exception:
             pass
+    # Get system DPI to compute scaling factor
+    try:
+        hdc = windll.user32.GetDC(0)
+        if hdc:
+            dpi = windll.gdi32.GetDeviceCaps(hdc, 88) or 96  # LOGPIXELSX
+            windll.user32.ReleaseDC(0, hdc)
+            _WIN_SCALE = dpi / 96.0
+    except Exception:
+        _WIN_SCALE = 1.5  # fallback guess for >96 dpi
 
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+import tkinter as tk  # noqa: E402
+from tkinter import ttk, filedialog, messagebox  # noqa: E402
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from ddd_parser import TachoParser
-from core.encoding import BytesEncoder
-from core.models import _clean_tag_name
+from ddd_parser import TachoParser  # noqa: E402
+from core.encoding import BytesEncoder  # noqa: E402
+from core.models import _clean_tag_name  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
 
@@ -409,7 +419,7 @@ class TachoExplorer(tk.Tk):
 
         try:
             if sys.platform == "win32":
-                self.call("tk", "scaling", 1.5)
+                self.call("tk", "scaling", max(_WIN_SCALE, 1.25))
             else:
                 self.call("tk", "scaling", 1.0)
         except Exception:
@@ -425,7 +435,7 @@ class TachoExplorer(tk.Tk):
                 pass
         style.configure("Treeview.Heading", background=HEADER_BG,
                         font=("", 10, "bold"))
-        style.configure("Treeview", rowheight=28 if sys.platform == "win32" else 24)
+        style.configure("Treeview", rowheight=int(24 * max(_WIN_SCALE, 1.25)) if sys.platform == "win32" else 24)
 
         self.current_data = None
         self.current_file = None
