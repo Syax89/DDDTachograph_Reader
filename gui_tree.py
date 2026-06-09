@@ -18,6 +18,18 @@ import json
 import traceback
 import logging
 
+# ── Windows High-DPI ────────────────────────────────────────────────────────
+if sys.platform == "win32":
+    try:
+        from ctypes import windll
+        windll.shcore.SetProcessDpiAwareness(1)  # Per-Monitor DPI
+    except Exception:
+        try:
+            from ctypes import windll
+            windll.user32.SetProcessDPIAware()
+        except Exception:
+            pass
+
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 
@@ -396,7 +408,10 @@ class TachoExplorer(tk.Tk):
         self.minsize(900, 560)
 
         try:
-            self.call("tk", "scaling", 1.0)
+            if sys.platform == "win32":
+                self.call("tk", "scaling", 1.5)
+            else:
+                self.call("tk", "scaling", 1.0)
         except Exception:
             _log.debug("tk scaling not available")
 
@@ -410,7 +425,7 @@ class TachoExplorer(tk.Tk):
                 pass
         style.configure("Treeview.Heading", background=HEADER_BG,
                         font=("", 10, "bold"))
-        style.configure("Treeview", rowheight=24)
+        style.configure("Treeview", rowheight=28 if sys.platform == "win32" else 24)
 
         self.current_data = None
         self.current_file = None
