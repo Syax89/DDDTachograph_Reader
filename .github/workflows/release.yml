@@ -27,7 +27,7 @@ jobs:
 
     - name: Build Windows executable
       run: |
-        pyinstaller --onedir --name TachoReader --add-data "core;core" --add-data "src;src" --hidden-import core.event_fault_codes --hidden-import core.tag_navigator --hidden-import core.decoders --hidden-import core.models --hidden-import core.g2_decoders --hidden-import core.decoder_registry --hidden-import core.deterministic_parser --hidden-import core.record_array --hidden-import core.logger --hidden-import core.tag_definitions --hidden-import core.vu_record_dispatcher --hidden-import core.vu_signature_verifier --hidden-import core.coverage_utils --hidden-import core.encoding --hidden-import core.constants --hidden-import export_manager --hidden-import signature_validator --hidden-import cryptography gui_tree.py
+        pyinstaller --onedir --name TachoReader --add-data "core;core" --add-data "src;src" --hidden-import core.event_fault_codes --hidden-import core.tag_navigator --hidden-import core.decoders --hidden-import core.models --hidden-import core.g2_decoders --hidden-import core.decoder_registry --hidden-import core.deterministic_parser --hidden-import core.record_array --hidden-import core.logger --hidden-import core.tag_definitions --hidden-import core.vu_record_dispatcher --hidden-import core.vu_signature_verifier --hidden-import core.coverage_utils --hidden-import core.encoding --hidden-import core.constants --hidden-import core.ber_tlv --hidden-import core.curve_oids --hidden-import export_manager --hidden-import signature_validator --hidden-import cryptography gui_tree.py
 
     - name: Package as zip
       shell: pwsh
