@@ -35,6 +35,7 @@ a = Analysis(
         'core.decoder_registry',
         'core.deterministic_parser',
         'core.record_array',
+        'core.event_fault_codes',
         'core.logger',
         'core.tag_definitions',
         'core.vu_record_dispatcher',
