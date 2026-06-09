@@ -501,9 +501,26 @@ class TachoExplorer(tk.Tk):
             cols, rows = _kv_rows(drv)
             self._add_section("", "👤  Conducente / Titolare", cols, rows)
 
-        if is_vu and any(veh.values()):
-            cols, rows = _kv_rows(veh)
-            self._add_section("", "🚚  Veicolo", cols, rows)
+        if is_vu:
+            # Nei file VU i dati veicolo sono spesso nelle calibrazioni,
+            # non nel dict "vehicle" (che può contenere "N/A").
+            veh_info = dict(veh)
+            for cal in data.get("calibrations") or []:
+                if isinstance(cal, dict):
+                    vin = cal.get("vin", "")
+                    if vin and vin not in ("N/A", "?????????????????"):
+                        veh_info["vin"] = vin
+                    plate = cal.get("plate") or (cal.get("vehicle_registration") or {}).get("plate", "")
+                    if plate and plate not in ("N/A", ""):
+                        veh_info["plate"] = plate
+                    nation = cal.get("registration_nation") or (cal.get("vehicle_registration") or {}).get("nation", "")
+                    if nation and "No information" not in str(nation) and nation != "N/A":
+                        veh_info["registration_nation"] = nation
+                    if veh_info.get("vin") not in ("N/A", "", None):
+                        break
+            if any(v for v in veh_info.values() if v not in ("N/A", "", None)):
+                cols, rows = _kv_rows(veh_info)
+                self._add_section("", "🚚  Veicolo", cols, rows)
 
         # ── Gruppi di liste ──
         sections_by_group = {}
