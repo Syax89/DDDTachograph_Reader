@@ -65,22 +65,26 @@ python tacho_cli.py path/to/file.ddd
 ddd-tachograph-reader/
 ├── gui_tree.py                  # GUI (tree + table, tkinter)
 ├── tacho_cli.py                 # Main CLI
+├── main.py                      # Minimal CLI entry point
 ├── ddd_parser.py                # Core parser entry point
 ├── signature_validator.py       # Certificate chain validation
-├── export_manager.py            # Excel/CSV export
+├── export_manager.py            # Comprehensive Excel/CSV/JSON export
 ├── core/
 │   ├── tag_navigator.py         # Recursive BER-TLV / STAP navigation
 │   ├── decoders.py              # Tag decoders (G1, G2, G2.2)
+│   ├── g2_decoders.py           # G2/G2.2 VU RecordArray decoders
 │   ├── decoder_registry.py      # Centralized tag→decoder registry
 │   ├── deterministic_parser.py  # Schema-driven two-pass parser
-│   ├── g2_decoders.py           # G2/G2.2 VU RecordArray decoders
 │   ├── record_array.py          # RecordArray parser (Annex 1C)
-│   ├── vu_record_dispatcher.py  # VU stream dispatcher
-│   ├── vu_signature_verifier.py # ECDSA signature verification
+│   ├── vu_record_dispatcher.py  # VU RecordArray stream dispatcher
+│   ├── vu_signature_verifier.py # ECDSA + CVC certificate verification
 │   ├── models.py                # Data models (TachoResult)
 │   ├── tag_definitions.py       # Tag ID → name mappings
+│   ├── coverage_utils.py        # Shared interval merge + padding detection
+│   ├── encoding.py              # Shared BytesEncoder for JSON
+│   ├── event_fault_codes.py     # 28 event + 17 fault descriptions (EU Reg.)
 │   ├── constants.py             # Shared constants
-│   └── logger.py                # Centralized logging
+│   └── logger.py                # Centralized logging (thread-safe)
 ├── src/                         # Domain/infrastructure layer
 ├── certs/                       # ERCA root certificates
 ├── tests/                       # Test suite (118 tests)
@@ -108,7 +112,7 @@ pip install pytest
 pytest tests/ -v
 ```
 
-118 tests: multi-generation detection, G1/G2/G2.2 parsing, byte coverage, fuzzing, digital signatures.
+114 tests: multi-generation detection, G1/G2/G2.2 parsing, byte coverage, fuzzing, digital signatures.
 
 ---
 

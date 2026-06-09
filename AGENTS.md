@@ -5,18 +5,28 @@ Cross-platform (Windows/macOS) application for parsing, analyzing and visualizin
 
 ## Key architecture
 - **Core parser**: `ddd_parser.py` → `core/tag_navigator.py` (STAP/BER-TLV recursive) → `core/decoders.py` (field-level decoders)
-- **Coverage**: `_fill_coverage_gaps()` in `ddd_parser.py` guarantees 100% byte coverage
-- **Decoder registry**: `core/decoder_registry.py` — centralized tag→decoder mapping with spec references
-- **Deterministic parser**: `core/deterministic_parser.py` — schema-driven two-pass parser (migration target)
+- **Coverage**: `_fill_coverage_gaps()` in `ddd_parser.py` — guaranteed 100% byte coverage; shared range-merging via `core/coverage_utils.py`
+- **Decoder registry**: `core/decoder_registry.py` — centralized tag→decoder mapping with spec references (singleton pattern)
+- **Deterministic parser**: `core/deterministic_parser.py` — schema-driven two-pass parser (migration target; now the default)
+- **VU RecordArray**: `core/vu_record_dispatcher.py` walks the Annex 1C RecordArray stream by recordType; `core/record_array.py` provides the low-level parser
+- **VU crypto**: `core/vu_signature_verifier.py` — ECDSA TREP signatures + CVC certificate chain verification (Appendix 11)
+- **Event/fault codes**: `core/event_fault_codes.py` — 28 event types + 17 fault types per EU Reg. 2016/799 + 2023/980
+- **Shared utils**: `core/coverage_utils.py` (interval merging, padding detection), `core/encoding.py` (BytesEncoder for JSON), `core/constants.py` (epochs, MAX_TLV_LENGTH)
+- **Logger**: `core/logger.py` — centralized logging with _CountingHandler for decoder failure metrics; thread-safe via lock
 - **Three generations**: G1 (Annex 1B, STAP encoding), G2 (Annex 1C, BER-TLV), G2.2 (Annex 1C update, BER-TLV)
 - **Detection**: First 2 bytes of file: `0x7631`=G2.2, `0x7621`/`0x7622`=G2, else G1
 - **Output models**: `core/models.py` (TachoResult hierarchy)
+- **GUI**: `gui_tree.py` — regedit-style tree + table viewer with Excel/CSV/JSON export
+- **CLI**: `tacho_cli.py` — full-featured CLI; `main.py` — minimal CLI
+- **Export**: `export_manager.py` — comprehensive multi-sheet Excel + flat CSV export
 
 ## Running tests
 ```bash
-/usr/local/bin/python3.9 -m pytest tests/ -v
+python3 -m pytest tests/ -v
 ```
-Requires: `pip install cryptography reportlab pandas openpyxl requests`
+Requires: `pip install -r requirements.txt` (pytest, pyinstaller, cryptography, pandas, openpyxl)
+
+Tests use a conftest.py fixture that resets the DecoderRegistry singleton between tests.
 
 ## Spec documentation
 All tag specifications are in `specs/`:
@@ -26,6 +36,8 @@ All tag specifications are in `specs/`:
 - `tachograph.asn` — Formal ASN.1 schema
 - `architecture_migration_plan.md` — Migration plan to deterministic parser
 - `coverage_audit.py` — Run with `python3 specs/coverage_audit.py` for file-by-file coverage report
+- `semantic_coverage_audit.py` — Semantic coverage audit (unparsed bytes per file)
+- `compare_parsers.py` — Legacy vs deterministic parser comparison
 
 ## Key regulations
 - Reg. 3821/85 Annex 1B — G1 tachograph spec
@@ -34,4 +46,4 @@ All tag specifications are in `specs/`:
 - Reg. EU 2021/1228 — G2.2 additional specs
 
 ## Coverage guarantee
-All 8 DDD files in `DDD/` achieve **100% byte coverage** (0 unparsed blocks). The `_fill_coverage_gaps()` method in `ddd_parser.py` ensures any bytes missed by the STAP/BER parser are filled as gap-tracked ranges. Coverage audit: `python3 specs/coverage_audit.py`.
+All 8 DDD files in `DDD/` achieve **100% byte coverage** (0 unparsed blocks). The `_fill_coverage_gaps()` method in `ddd_parser.py` ensures any bytes missed by the STAP/BER parser are filled as gap-tracked ranges. Shared interval merging via `core/coverage_utils.merge_intervals()`. Coverage audit: `python3 specs/coverage_audit.py`.

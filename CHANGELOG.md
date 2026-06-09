@@ -1,6 +1,38 @@
 # Changelog
 
-## [1.6.0] - 2025-06-09
+## [1.7.0] - 2025-06-09
+### Added
+- GUI Export button with Excel (.xlsx), CSV (.csv), JSON (.json) formats
+- `core/coverage_utils.py` — shared `merge_intervals()`, `coverage_pct()`, `is_padding_block()`
+- `core/encoding.py` — shared `BytesEncoder` (moved from tacho_cli.py, also used by gui_tree.py and main.py)
+- `tests/conftest.py` — `autouse` fixture resetting DecoderRegistry singleton between tests
+- Thread-safety lock in `core/logger.py` for concurrent parser instances
+- Iteration cap in `deep_scan()` (max 10000 iterations) preventing infinite loops
+- Idempotent `parse()` — state fully reset on each call
+
+### Fixed
+- **Bug**: STAP empty-tag slots (0x0000, 0xFFFF, 0x5555) used `break` stopping the block → `continue`
+- **Bug**: VU `iter_vu_sections` used `break` on invalid RecordArray header → skips record, continues
+- **Bug**: `decode_date` timestamp upper bound `< 4102444800` → `<= 4102444800`
+- **Bug**: `get_coverage_report()` returned `0.0` for unparsed files → returns `None`
+- **Bug**: Padding skip required 2+ identical bytes → now handles single padding bytes
+- **Bug**: `read_ber_tlv` and `_try_read_ber_tlv` hardcoded `0x100000` → `MAX_TLV_LENGTH` from constants
+- **Bug**: Activity dedup `except (KeyError, ValueError)` too broad → removed, uses `.get()` calls
+- **Bug**: Decoder dispatch silent `except Exception` → logs at WARNING level with traceback
+- **Bug**: mmap file descriptor leak if `mmap.mmap()` fails → immediate close
+- **Bug**: Duplicate range-merging logic in 3 places → single `merge_intervals()` in coverage_utils
+- **Bug**: Duplicate padding detection in 2 places → single `is_padding_block()` in coverage_utils
+- **Bug**: Italian docstrings in `vu_signature_verifier.py` → translated to English
+- **Bug**: `signature_validator.py` crash on cryptography >= 43 (missing `tbs_certificate_bytes`) → safe accessor
+- **Test**: Export assertions updated for new comprehensive multi-sheet format
+- **Test**: Mock G1 VU coverage minimum raised to 30%, generation test fixed
+
+### Changed
+- ExportManager rewritten for full-content export (all sections from TachoResult)
+- GUI button labels simplified: "Open DDD file", "Export" (menu: Excel, CSV, JSON)
+- `tacho_cli.py` reused shared `BytesEncoder` from `core/encoding.py`
+- `main.py` reused shared `BytesEncoder`, removed dead code
+- Requirements.txt includes `pytest` as explicit dependency
 ### Added
 - `core/event_fault_codes.py` — 28 event types + 17 fault types per EU Reg. 2016/799 + 2023/980
 - `descrizione` field in all event/fault entries with human-readable descriptions
