@@ -8,6 +8,21 @@ import logging
 import os
 import struct
 
+
+def _get_tbs_bytes(cert):
+    """Safe accessor for x509.Certificate.to-be-signed bytes.
+    
+    tbs_certificate_bytes was removed in cryptography >= 43.0.
+    Falls back to re-encoding when the attribute is absent.
+    """
+    tbs = getattr(cert, "tbs_certificate_bytes", None)
+    if tbs is not None:
+        return tbs
+    try:
+        return cert.tbs_precertificate_bytes
+    except AttributeError:
+        return cert.public_bytes(serialization.Encoding.DER)
+
 class SignatureValidator:
     """
     Validates digital signatures for Tachograph files (Annex 1B/1C).
@@ -43,6 +58,8 @@ class SignatureValidator:
         if not os.path.exists(self.certs_dir):
             return
         for filename in os.listdir(self.certs_dir):
+            if not os.path.isfile(os.path.join(self.certs_dir, filename)):
+                continue
             if filename.endswith(".pem") or filename.endswith(".cer"):
                 try:
                     path = os.path.join(self.certs_dir, filename)
@@ -177,11 +194,11 @@ class SignatureValidator:
             if isinstance(parent_pubkey, rsa.RSAPublicKey):
                 # G1/G2 RSA validation (PKCS1v15 / ISO9796-2)
                 self.logger.debug("Verifying RSA signature for %s (hash=%s)",
-                                  child_cert.subject.rfc4514_string(),
-                                  child_cert.signature_hash_algorithm)
+                                   child_cert.subject.rfc4514_string(),
+                                   child_cert.signature_hash_algorithm)
                 parent_pubkey.verify(
                     child_cert.signature,
-                    child_cert.tbs_certificate_bytes,
+                    _get_tbs_bytes(child_cert),
                     padding.PKCS1v15(),
                     child_cert.signature_hash_algorithm,
                 )
@@ -189,7 +206,7 @@ class SignatureValidator:
                 # G2 ECDSA validation
                 parent_pubkey.verify(
                     child_cert.signature,
-                    child_cert.tbs_certificate_bytes,
+                    _get_tbs_bytes(child_cert),
                     ec.ECDSA(child_cert.signature_hash_algorithm),
                 )
             else:
@@ -208,40 +225,58 @@ class SignatureValidator:
         Validates the full chain: ERCA -> MSCA -> Card.
         Returns (is_valid, card_public_key)
         """
-        # Distinguiamo tra G1 e G2 in base alla lunghezza
-        if len(card_cert_raw) == 194: # G1 (Public key n [128] + e [8] + Rest) - Approssimativo
-             return self._validate_g1_chain(card_cert_raw, msca_cert_raw)
+        # G1 certs: raw RSA field concatenations (Annex 1B), typical 128 or 194 bytes.
+        # G2 certs: X.509 DER (starts with ASN.1 SEQUENCE 0x30) or CVC (starts 0x7F).
+        is_likely_g2 = card_cert_raw[0] in (0x30, 0x7F)
+        is_known_g1_size = len(card_cert_raw) in (128, 194)
+
+        if is_likely_g2 and not is_known_g1_size:
+            return self._validate_g2_chain(card_cert_raw, msca_cert_raw)
         else:
-             return self._validate_g2_chain(card_cert_raw, msca_cert_raw)
+            return self._validate_g1_chain(card_cert_raw, msca_cert_raw)
 
     def _validate_g1_chain(self, card_cert_raw, msca_cert_raw):
-        """G1 RSA-based chain validation."""
-        try:
-            # In G1, i certificati sono concatenazioni di campi fissi.
-            # 1. Recupero Modulus MSCA (Semplificato)
-            if len(msca_cert_raw) < 128:
-                 return False, None
-            msca_n = msca_cert_raw[:128]
-            
-            # 2. Recupero Modulus Card (Semplificato)
-            if len(card_cert_raw) < 128:
-                 return False, None
-            card_n = card_cert_raw[:128]
+        """G1 RSA-based chain validation (Annex 1B, Appendix 11).
 
-            # In un file .ddd reale, se i dati sono tutti zero (\x00),
-            # l'istanziazione di RSA fallisce giustamente.
-            # Aggiungiamo un controllo di sanità.
-            if all(b == 0 for b in msca_n) or all(b == 0 for b in card_n):
-                self.logger.warning("Empty/Null G1 modulus found.")
-                return "Invalid (Null Data)", None
+        In G1, the card certificate is RSA-encrypted with the MSCA private key.
+        Verification consists of decrypting it with the MSCA public key and
+        checking the ISO 9796-2 trailer bytes (0x6A … 0xBC).
+        """
+        try:
+            if len(msca_cert_raw) < 128:
+                return False, None
+            msca_n = msca_cert_raw[:128]
+
+            if all(b == 0 for b in msca_n):
+                self.logger.warning("Empty/Null G1 MSCA modulus found.")
+                return False, None
 
             msca_pubkey = self._get_rsa_public_key(msca_n)
-            card_pubkey = self._get_rsa_public_key(card_n)
 
+            if len(card_cert_raw) != 128:
+                if len(card_cert_raw) < 128:
+                    return False, None
+                card_raw = card_cert_raw[:128]
+            else:
+                card_raw = card_cert_raw
+
+            unwrapped = self.unwrap_g1_certificate(card_raw, msca_pubkey)
+            if unwrapped is None:
+                self.logger.warning("G1 certificate chain verification FAILED — unwrap unsuccessful")
+                return False, None
+
+            card_n = unwrapped[58:][:58]
+            if len(card_n) < 1 or all(b == 0 for b in card_n):
+                self.logger.warning("Empty/Null G1 card modulus extracted from unwrapped cert.")
+                return False, None
+            card_n = card_n[:58]
+
+            card_pubkey = self._get_rsa_public_key(card_n)
+            self.logger.info("G1 certificate chain VERIFIED (ISO 9796-2 unwrap OK)")
             return True, card_pubkey
 
         except Exception as e:
-            self.logger.error(f"G1 Chain validation failed: {e}")
+            self.logger.error("G1 Chain validation failed: %s", e)
             return False, None
 
     def _validate_g2_chain(self, card_cert_raw, msca_cert_raw):
@@ -266,6 +301,7 @@ class SignatureValidator:
 
             return True, card_cert.public_key()
         except Exception:
+            self.logger.debug("G2 chain validation error", exc_info=True)
             self.logger.warning("G2 certificate is not standard X.509 DER")
             return False, None
 

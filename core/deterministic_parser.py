@@ -8,10 +8,12 @@ Strategy:
 """
 
 import struct
+import inspect
 from typing import Dict, Any, List, Optional, Tuple
 from collections import defaultdict
 from datetime import datetime
 
+from .constants import MAX_TLV_LENGTH
 from .decoder_registry import DecoderRegistry, TagDecoder
 
 
@@ -44,21 +46,15 @@ class CoverageTracker:
     def merge_ranges(self):
         if not self.covered_ranges:
             return
-        self.covered_ranges.sort()
-        merged = [self.covered_ranges[0]]
-        for rng in self.covered_ranges[1:]:
-            last = merged[-1]
-            if rng[0] <= last[1]:
-                merged[-1] = (last[0], max(last[1], rng[1]))
-            else:
-                merged.append(rng)
-        self.covered_ranges = merged
+        from core.coverage_utils import merge_intervals
+        self.covered_ranges = merge_intervals(self.covered_ranges)
 
     def get_coverage_pct(self) -> float:
         if self.total_size == 0:
             return 0.0
         self.merge_ranges()
-        return round(sum(e - s for s, e in self.covered_ranges) / self.total_size * 100, 2)
+        from core.coverage_utils import coverage_pct
+        return coverage_pct(sum(e - s for s, e in self.covered_ranges), self.total_size)
 
     def get_uncovered_ranges(self) -> List[Tuple[int, int]]:
         self.merge_ranges()
@@ -116,7 +112,6 @@ class DeterministicParser:
     2. Semantic pass: validate record sizes, checksums, field ranges
     """
 
-    PADDING_BYTES = {0x00, 0xFF, 0x55}
 
     def __init__(self, parser=None, registry: DecoderRegistry = None):
         self.parser = parser
@@ -216,8 +211,9 @@ class DeterministicParser:
         return f"{parent_path} > {raw_key}" if parent_path else raw_key
 
     def _skip_padding(self, raw_data: bytes, pos: int, end: int) -> int:
+        from core.coverage_utils import is_padding_block
         start = pos
-        while pos + 1 < end and raw_data[pos] == raw_data[pos+1] and raw_data[pos] in self.PADDING_BYTES:
+        while pos + 1 < end and is_padding_block(bytes([raw_data[pos], raw_data[pos+1]])) is not None:
             pos += 1
         if pos > start:
             pos += 1
@@ -233,8 +229,9 @@ class DeterministicParser:
         return pos
 
     def _skip_padding_inner(self, data: bytes, pos: int, end: int, base_offset: int, depth: int, parent_path: str) -> int:
+        from core.coverage_utils import is_padding_block
         start = pos
-        while pos + 1 < end and data[pos] == data[pos+1] and data[pos] in self.PADDING_BYTES:
+        while pos + 1 < end and is_padding_block(bytes([data[pos], data[pos+1]])) is not None:
             pos += 1
         if pos > start:
             pos += 1
@@ -262,7 +259,7 @@ class DeterministicParser:
             return None
         if dtype > 0x0F:
             return None
-        if length > 0x100000:
+        if length > MAX_TLV_LENGTH:
             return None
         if pos + 5 + length > end:
             return None
@@ -302,7 +299,7 @@ class DeterministicParser:
                 return None
             pos += nb
 
-        if length > 0x100000:
+        if length > MAX_TLV_LENGTH:
             return None
         if start + (pos - start) + length > end:
             return None
@@ -360,7 +357,6 @@ class DeterministicParser:
         dec = self.registry.get_decoder(tag)
         if dec and dec.decoder_fn:
             try:
-                import inspect
                 sig = inspect.signature(dec.decoder_fn)
                 n_params = len([p for p in sig.parameters.values()
                                 if p.default is inspect.Parameter.empty
@@ -371,7 +367,8 @@ class DeterministicParser:
                     dec.decoder_fn(payload, self.results)
             except Exception:
                 import logging
-                logging.getLogger("ddd_tacho").debug("Decoder dispatch failed for tag 0x%04X", tag)
+                logging.getLogger("ddd_tacho").debug(
+                    "Decoder dispatch failed for tag 0x%04X", tag, exc_info=True)
 
     def _parse_container(self, tag: int, payload: bytes, container_offset: int, depth: int, parent_path: str):
         dec = self.registry.get_decoder(tag)

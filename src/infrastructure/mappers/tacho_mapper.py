@@ -16,7 +16,13 @@ class TachoDomainMapper:
         metadata = parser_result.get("metadata", {})
         filename = metadata.get("filename", "unknown.ddd")
         parsed_at_str = metadata.get("parsed_at")
-        parsed_at = datetime.fromisoformat(parsed_at_str) if parsed_at_str else datetime.now()
+        if parsed_at_str:
+            try:
+                parsed_at = datetime.fromisoformat(parsed_at_str)
+            except (ValueError, TypeError):
+                parsed_at = datetime.now()
+        else:
+            parsed_at = datetime.now()
 
         # Map Driver
         driver_data = parser_result.get("driver", {})
@@ -40,17 +46,17 @@ class TachoDomainMapper:
 
     @staticmethod
     def _map_driver(data: Dict[str, Any]) -> Optional[Driver]:
-        card_number = data.get("card_number", "N/A")
+        card_number = data.get("card_number") or "N/A"
         if card_number == "N/A":
             return None
         
-        surname = data.get("surname", "N/A")
-        firstname = data.get("firstname", "N/A")
+        surname = data.get("surname") or "N/A"
+        firstname = data.get("firstname") or "N/A"
         
-        birth_date = TachoDomainMapper._parse_date(data.get("birth_date", "N/A"))
-        expiry_date = TachoDomainMapper._parse_date(data.get("expiry_date", "N/A"))
+        birth_date = TachoDomainMapper._parse_date(data.get("birth_date") or "N/A")
+        expiry_date = TachoDomainMapper._parse_date(data.get("expiry_date") or "N/A")
         
-        issuing_nation_str = data.get("issuing_nation", "N/A")
+        issuing_nation_str = data.get("issuing_nation") or "N/A"
         issuing_nation = None
         if issuing_nation_str and issuing_nation_str != "N/A":
             clean_code = issuing_nation_str.split('(')[0].strip()
@@ -71,30 +77,26 @@ class TachoDomainMapper:
 
     @staticmethod
     def _map_vehicle(data: Dict[str, Any]) -> Optional[Vehicle]:
-        vin_str = data.get("vin", "N/A")
+        vin_str = data.get("vin") or "N/A"
         if vin_str == "N/A":
             return None
         
-        # VIN validation might fail if strictly 17 chars and the file has bad data
-        # We'll try to construct it.
         try:
-            # Pad or truncate if necessary? 
-            # The VIN value object merely warns or we can make it loose.
-            # core/models.py value_objects.py has a check len == 17 but it's a post_init pass?
-            # Actually value_objects.py: if len != 17: pass (it does nothing)
             vin = VIN(vin_str)
-        except ValueError:
-            return None
+        except Exception:
+            vin = VIN(value=vin_str)
 
-        plate = data.get("plate", "N/A")
+        plate = data.get("plate") or "N/A"
         
-        reg_nation_str = data.get("registration_nation", "N/A")
+        reg_nation_str = data.get("registration_nation") or "N/A"
         reg_nation = None
-        if reg_nation_str and reg_nation_str != "N/A" and len(reg_nation_str) <= 3:
-            try:
-                reg_nation = NationCode(reg_nation_str)
-            except ValueError:
-                pass
+        if reg_nation_str and reg_nation_str != "N/A":
+            clean_code = reg_nation_str.split('(')[0].strip()
+            if clean_code and len(clean_code) <= 3:
+                try:
+                    reg_nation = NationCode(clean_code)
+                except ValueError:
+                    pass
 
         return Vehicle(
             vin=vin,
@@ -129,19 +131,18 @@ class TachoDomainMapper:
                     event_time = base_date + timedelta(minutes=offset_minutes)
                     
                     tipo_str = event.get("tipo", "UNKNOWN")
-                    # Map Italian strings to ActivityType
-                    # acts = {0: "RIPOSO", 1: "DISPONIBILITÀ", 2: "LAVORO", 3: "GUIDA"}
+                    tipo_upper = str(tipo_str).upper()
                     activity_type = ActivityType.UNKNOWN
-                    if tipo_str == "RIPOSO":
+                    if tipo_upper in ("RIPOSO", "REST"):
                         activity_type = ActivityType.BREAK
-                    elif tipo_str == "DISPONIBILITÀ":
+                    elif tipo_upper in ("DISPONIBILITÀ", "DISPONIBILITA", "AVAILABILITY", "AVAILABLE"):
                         activity_type = ActivityType.AVAILABILITY
-                    elif tipo_str == "LAVORO":
+                    elif tipo_upper in ("LAVORO", "WORK"):
                         activity_type = ActivityType.WORK
-                    elif tipo_str == "GUIDA":
+                    elif tipo_upper in ("GUIDA", "DRIVING", "DRIVE"):
                         activity_type = ActivityType.DRIVING
                     
-                    is_manual = not event.get("card_present", True) # Assuming card_present=False means manual? 
+                    is_manual = event.get("card_present") is False
                     # Actually `is_manual` usually means "Manual Entry". 
                     # The parser has `card_present` and `slot`.
                     # Let's map `is_manual` to checking `card_present` for now, or maybe just default False.

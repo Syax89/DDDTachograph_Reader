@@ -15,13 +15,27 @@ import os
 import sys
 import re
 import json
+import traceback
+import logging
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 
+_log = logging.getLogger("tacho_gui")
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from ddd_parser import TachoParser
+from core.encoding import BytesEncoder
+
+try:
+    from export_manager import ExportManager
+except ImportError:
+    ExportManager = None
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 
 
 # ── Palette ────────────────────────────────────────────────────────────────
@@ -157,8 +171,8 @@ def _fmt_dict(d):
         return str(d["card_number"])
     # Vehicle registration
     if "plate" in d:
-        plate = str(d.get("plate", "")).strip()
-        nation = str(d.get("nation", "")).strip()
+        plate = (d.get("plate") or "").strip() if d.get("plate") is not None else ""
+        nation = (d.get("nation") or "").strip() if d.get("nation") is not None else ""
         if not plate or set(plate) <= {"?"}:
             return "\u2014"
         return f"{nation} {plate}".strip() if "No information" not in nation else plate
@@ -371,13 +385,16 @@ class TachoExplorer(tk.Tk):
         try:
             self.call("tk", "scaling", 1.0)
         except Exception:
-            pass
+            _log.debug("tk scaling not available")
 
         style = ttk.Style(self)
         try:
             style.theme_use("clam")
         except Exception:
-            pass
+            try:
+                style.theme_use("aqua")
+            except Exception:
+                pass
         style.configure("Treeview.Heading", background=HEADER_BG,
                         font=("", 10, "bold"))
         style.configure("Treeview", rowheight=24)
@@ -385,16 +402,29 @@ class TachoExplorer(tk.Tk):
         self.current_data = None
         self.current_file = None
         self._payloads = {}  # iid -> (title, columns, rows, meta)
+        self._destroyed = False
 
         self._build_ui()
+        try:
+            self.protocol("WM_DELETE_WINDOW", self._on_close)
+        except Exception:
+            _log.debug("WM_DELETE_WINDOW not supported")
 
     # ── Layout ──────────────────────────────────────────────
 
     def _build_ui(self):
         top = ttk.Frame(self, padding=(10, 8))
         top.pack(fill=tk.X)
-        ttk.Button(top, text="\U0001f4c2  Open DDD file\u2026", command=self._open_file).pack(
-            side=tk.LEFT, padx=(0, 14))
+        ttk.Button(top, text="\U0001f4c2  Open DDD file", command=self._open_file).pack(
+            side=tk.LEFT, padx=(0, 8))
+        self.btn_export = ttk.Menubutton(top, text="\U0001f4e4  Export",
+                                         state=tk.DISABLED)
+        export_menu = tk.Menu(self.btn_export, tearoff=0)
+        export_menu.add_command(label="Excel (.xlsx)", command=self._export_excel)
+        export_menu.add_command(label="CSV (.csv)", command=self._export_csv)
+        export_menu.add_command(label="JSON (.json)", command=self._export_json)
+        self.btn_export["menu"] = export_menu
+        self.btn_export.pack(side=tk.LEFT, padx=(0, 14))
         self.lbl_file = ttk.Label(top, text="No file loaded",
                                   font=("", 11, "bold"))
         self.lbl_file.pack(side=tk.LEFT)
@@ -436,31 +466,114 @@ class TachoExplorer(tk.Tk):
         if not path:
             return
         self.status.config(text="Parsing\u2026")
-        self.update()
-        import threading
-        def _parse():
-            try:
-                data = TachoParser(path).parse()
-            except Exception as e:
-                self.after(0, lambda: self._parse_error(str(e)))
-                return
-            self.after(0, lambda: self._parse_done(data, path))
-        threading.Thread(target=_parse, daemon=True).start()
+        self.update_idletasks()
+        try:
+            data = TachoParser(path).parse()
+        except Exception as e:
+            self._parse_error(str(e))
+            return
+        if not self._destroyed:
+            self._parse_done(data, path)
 
     def _parse_error(self, msg):
-        messagebox.showerror("Parsing Error", msg)
+        try:
+            messagebox.showerror("Parsing Error", str(msg))
+        except Exception:
+            pass
         self.status.config(text="Ready \u2014 open a .ddd file")
 
+    # ── Export ────────────────────────────────────────────
+
+    def _export_excel(self):
+        if not self.current_data:
+            return
+        if ExportManager is None or pd is None:
+            messagebox.showwarning("Export Unavailable",
+                                   "Excel export requires pandas and openpyxl.\n"
+                                   "pip install pandas openpyxl")
+            return
+        path = filedialog.asksaveasfilename(
+            defaultextension=".xlsx",
+            filetypes=[("Excel Workbook", "*.xlsx"), ("All Files", "*.*")],
+            initialfile=os.path.splitext(os.path.basename(self.current_file))[0] + "_export.xlsx")
+        if not path:
+            return
+        try:
+            self.status.config(text="Exporting to Excel\u2026")
+            self.update_idletasks()
+            ExportManager.export_to_excel(self.current_data, path)
+            self.status.config(text=f"Exported: {os.path.basename(path)}")
+            messagebox.showinfo("Export Complete", f"Excel saved to:\n{path}")
+        except Exception as e:
+            self.status.config(text="Export failed")
+            messagebox.showerror("Export Error", str(e))
+
+    def _export_csv(self):
+        if not self.current_data:
+            return
+        if ExportManager is None or pd is None:
+            messagebox.showwarning("Export Unavailable",
+                                   "CSV export requires pandas.\n"
+                                   "pip install pandas")
+            return
+        path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")],
+            initialfile=os.path.splitext(os.path.basename(self.current_file))[0] + "_export.csv")
+        if not path:
+            return
+        try:
+            self.status.config(text="Exporting to CSV\u2026")
+            self.update_idletasks()
+            ExportManager.export_to_csv(self.current_data, path)
+            self.status.config(text=f"Exported: {os.path.basename(path)}")
+            messagebox.showinfo("Export Complete", f"CSV saved to:\n{path}")
+        except Exception as e:
+            self.status.config(text="Export failed")
+            messagebox.showerror("Export Error", str(e))
+
+    def _export_json(self):
+        if not self.current_data:
+            return
+        path = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("JSON Files", "*.json"), ("All Files", "*.*")],
+            initialfile=os.path.splitext(os.path.basename(self.current_file))[0] + "_export.json")
+        if not path:
+            return
+        try:
+            self.status.config(text="Exporting to JSON\u2026")
+            self.update_idletasks()
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(self.current_data, f, indent=2, ensure_ascii=False,
+                          cls=BytesEncoder)
+            self.status.config(text=f"Exported: {os.path.basename(path)}")
+            messagebox.showinfo("Export Complete", f"JSON saved to:\n{path}")
+        except Exception as e:
+            self.status.config(text="Export failed")
+            messagebox.showerror("Export Error", str(e))
+
+    def _on_close(self):
+        self._destroyed = True
+        self.destroy()
+
     def _parse_done(self, data, path):
-        self.current_data = data
-        self.current_file = path
-        self._populate_tree(data)
-        self._update_top_bar(data)
-        meta = data.get("metadata", {})
-        self.status.config(
-            text=f"Loaded: {os.path.basename(path)}  |  "
-                 f"{meta.get('generation', '?')}  |  "
-                 f"Coverage: {meta.get('coverage_pct', 0)}%")
+        try:
+            self.current_data = data
+            self.current_file = path
+            self._populate_tree(data)
+            self._update_top_bar(data)
+            self.btn_export.config(state=tk.NORMAL)
+            meta = data.get("metadata", {})
+            self.status.config(
+                text=f"Loaded: {os.path.basename(path)}  |  "
+                     f"{meta.get('generation', '?')}  |  "
+                     f"Coverage: {meta.get('coverage_pct', 0)}%")
+        except Exception:
+            _log.error("GUI render failed: %s", traceback.format_exc())
+            messagebox.showerror("Rendering Error",
+                                  f"Failed to display file:\n{traceback.format_exc()}")
+            self.status.config(text="Ready \u2014 open a .ddd file")
 
     def _update_top_bar(self, data):
         meta = data.get("metadata", {})
@@ -510,24 +623,27 @@ class TachoExplorer(tk.Tk):
             self._add_section("", "\U0001f464  Driver / Cardholder", cols, rows)
 
         if is_vu:
-            veh_info = dict(veh)
-            # Calibration fallback — only if vehicle dict still has defaults
-            if veh_info.get("plate") in ("N/A", "") and veh_info.get("vin") in ("N/A", ""):
-                for cal in data.get("calibrations") or []:
-                    if isinstance(cal, dict):
-                        vin = cal.get("vin", "")
-                        if vin and vin not in ("N/A", "?????????????????"):
-                            veh_info.setdefault("vin", vin)
-                        plate = cal.get("plate") or (cal.get("vehicle_registration") or {}).get("plate", "")
-                        # Skip garbage plates (all ?, all unprintable, empty)
-                        if plate and plate.strip() and not all(c in '?\\x' for c in plate) and plate not in ("N/A", ""):
-                            veh_info.setdefault("plate", plate)
-                        nation = cal.get("registration_nation") or (cal.get("vehicle_registration") or {}).get("nation", "")
-                        if nation and "No information" not in str(nation) and nation != "N/A":
-                            veh_info.setdefault("registration_nation", nation)
-            if any(v for v in veh_info.values() if v not in ("N/A", "", None)):
-                cols, rows = _kv_rows(veh_info)
-                self._add_section("", "\U0001f69a  Vehicle", cols, rows)
+            try:
+                veh_info = dict(veh)
+                plate_val = veh_info.get("plate")
+                vin_val = veh_info.get("vin")
+                if (plate_val is None or plate_val in ("N/A", "")) and (vin_val is None or vin_val in ("N/A", "")):
+                    for cal in data.get("calibrations") or []:
+                        if isinstance(cal, dict):
+                            vin = cal.get("vin", "")
+                            if vin and vin not in ("N/A", "?????????????????"):
+                                veh_info["vin"] = vin
+                            plate = cal.get("plate") or (cal.get("vehicle_registration") or {}).get("plate", "")
+                            if plate and plate.strip() and not all(c in '?\\x' for c in plate) and plate not in ("N/A", ""):
+                                veh_info["plate"] = plate
+                            nation = cal.get("registration_nation") or (cal.get("vehicle_registration") or {}).get("nation", "")
+                            if nation and "No information" not in str(nation) and nation != "N/A":
+                                veh_info["registration_nation"] = nation
+                if any(v for v in veh_info.values() if v not in ("N/A", "", None)):
+                    cols, rows = _kv_rows(veh_info)
+                    self._add_section("", "\U0001f69a  Vehicle", cols, rows)
+            except Exception:
+                _log.debug("Vehicle section render failed: %s", traceback.format_exc())
 
         # ── List groups ──
         sections_by_group = {}

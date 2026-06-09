@@ -58,6 +58,8 @@ def _tlv(data):
         len_len = 1
         if length & 0x80:
             nb = length & 0x7F
+            if nb == 0:
+                return out
             length = int.from_bytes(data[i + tag_len + 1:i + tag_len + 1 + nb], "big")
             len_len = 1 + nb
         start = i + tag_len + len_len
@@ -148,8 +150,8 @@ _CERT_ROLES = {0x04: "MemberState (MSCA)", 0x0F: "Vehicle Unit (VU)"}
 
 
 def _cvc_date(hex_str):
-    """Le date di validità CVC del tachigrafo sono TimeReal (uint32, secondi dal
-    1970-01-01 UTC). Ritorna ISO 'YYYY-MM-DD' oppure '' se non interpretabile."""
+    """CVC validity dates are TimeReal (uint32, seconds since 1970-01-01 UTC).
+    Returns ISO 'YYYY-MM-DD' or '' if unparseable."""
     if not hex_str:
         return ""
     try:
@@ -164,9 +166,9 @@ def _cvc_date(hex_str):
 
 
 def decode_vu_certificates(raw_data):
-    """Estrae e decodifica i campi dei certificati CVC (Appendice 11) presenti
-    nel download VU: ruolo, CAR, CHR, curva, validità. Ritorna una lista di dict.
-    Non verifica le firme (per quello vedi verify_vu_download)."""
+    """Extract and decode CVC certificate fields (Appendix 11) from the VU download:
+    role, CAR, CHR, curve, validity. Returns a list of dicts.
+    Does not verify signatures (see verify_vu_download for that)."""
     data = bytes(raw_data)
     out = []
     seen = set()
@@ -233,17 +235,21 @@ def verify_vu_download(raw_data, erca_keys=None):
 
         report["available"] = True
         vu = parse_cvc(vu_raw)
+        if vu is None:
+            report["summary"] = "VU certificate (0x0F) parsing failed"
+            return report
         vu_pub, vu_hash = cvc_public_key(vu)
 
         # MSCA → VU chain link.
         if msca_raw:
             msca = parse_cvc(msca_raw)
-            msca_pub, msca_hash = cvc_public_key(msca)
-            report["msca_to_vu"] = verify_cvc_chain_link(vu, msca_pub, msca_hash)
-            # Optional root anchor: verify the MSCA cert against a supplied ERCA key.
-            if erca_keys and msca.get("car") in erca_keys:
-                erca_pub, erca_hash = erca_keys[msca["car"]]
-                report["root_anchored"] = verify_cvc_chain_link(msca, erca_pub, erca_hash)
+            if msca is not None:
+                msca_pub, msca_hash = cvc_public_key(msca)
+                report["msca_to_vu"] = verify_cvc_chain_link(vu, msca_pub, msca_hash)
+                # Optional root anchor: verify the MSCA cert against a supplied ERCA key.
+                if erca_keys and msca.get("car") in erca_keys:
+                    erca_pub, erca_hash = erca_keys[msca["car"]]
+                    report["root_anchored"] = verify_cvc_chain_link(msca, erca_pub, erca_hash)
 
         # Per-TREP data signatures, verified with the VU public key.
         all_valid = True
@@ -263,6 +269,8 @@ def verify_vu_download(raw_data, erca_keys=None):
                     start = end  # advance past a leading certificate record
                 else:
                     break
+            if start == sig_pos:
+                continue
             valid = _verify_ecdsa(vu_pub, vu_hash, sig, data[start:sig_pos])
             all_valid = all_valid and valid
             report["treps"].append({

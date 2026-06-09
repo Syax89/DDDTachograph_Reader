@@ -29,7 +29,6 @@ tests/golden/
 tests/mock_data/
 
 # Output generati
-*.json
 *.pdf
 *.csv
 specs/*_report.json

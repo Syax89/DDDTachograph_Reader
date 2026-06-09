@@ -24,7 +24,8 @@ class VIN:
     
     def __post_init__(self):
         if len(self.value) != 17:
-            raise ValueError(f"Invalid VIN length: expected 17, got {len(self.value)}")
+            import logging
+            logging.getLogger("ddd_tacho").debug("VIN length != 17: got %d chars ('%s')", len(self.value), self.value)
 
 @dataclass(frozen=True)
 class GeoCoordinate:

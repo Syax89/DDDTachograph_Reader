@@ -10,12 +10,7 @@ import os
 import logging
 from datetime import datetime
 
-
-class _BytesEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, bytes):
-            return obj.hex()
-        return super().default(obj)
+from core.encoding import BytesEncoder
 
 
 def main():
@@ -65,10 +60,6 @@ Examples:
             traceback.print_exc()
         sys.exit(1)
 
-    if result is None:
-        print("❌ Cannot read the file.", file=sys.stderr)
-        sys.exit(1)
-
     # Auto-generate output basename
     basename = os.path.splitext(os.path.basename(args.file))[0]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -95,7 +86,7 @@ Examples:
     if args.json:
         json_path = resolve_path(args.json, "json")
         with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(result, f, indent=2, ensure_ascii=False, cls=_BytesEncoder)
+            json.dump(result, f, indent=2, ensure_ascii=False, cls=BytesEncoder)
         generated.append(("JSON", json_path))
 
     # PDF output
@@ -121,7 +112,7 @@ Examples:
 
     # Default: print JSON to stdout if no output flags
     if not args.json and not args.pdf and not args.excel and not args.summary and not args.quiet:
-        pass  # summary already printed above
+        print(json.dumps(result, indent=2, ensure_ascii=False, cls=BytesEncoder))
 
     if not args.quiet and generated:
         print(f"\n📁 Generated files:")
@@ -136,7 +127,7 @@ def print_summary(data):
     driver = data.get("driver", {})
     vehicle = data.get("vehicle", {})
     activities = data.get("activities", [])
-    infractions = data.get("infractions", [])
+    infractions = data.get("infractions") or []
     sig = data.get("signature_verification", {})
 
     print("=" * 60)
@@ -170,12 +161,46 @@ def print_summary(data):
 
     # Activities summary
     if activities:
-        total_drive = sum(a.get("duration_min", 0) for a in activities if a.get("type") == "DRIVE")
-        total_work = sum(a.get("duration_min", 0) for a in activities if a.get("type") == "WORK")
-        total_rest = sum(a.get("duration_min", 0) for a in activities if a.get("type") in ("REST", "AVAILABLE"))
-        days = len(set(a.get("date", "") for a in activities if a.get("date")))
+        drive_min = 0
+        work_min = 0
+        rest_min = 0
+        dates = set()
+        for day_block in activities:
+            if not isinstance(day_block, dict):
+                continue
+            date_val = day_block.get("data", day_block.get("date", ""))
+            if date_val:
+                dates.add(date_val)
+            events = day_block.get("eventi", day_block.get("changes", []))
+            for i, ev in enumerate(events):
+                if not isinstance(ev, dict):
+                    continue
+                tipo = ev.get("tipo", ev.get("type", ""))
+                start_time = ev.get("ora", ev.get("time", ""))
+                if i < len(events) - 1:
+                    next_ev = events[i + 1]
+                    end_time = next_ev.get("ora", next_ev.get("time", ""))
+                else:
+                    end_time = "24:00"
+                try:
+                    h1, m1 = map(int, str(start_time).split(':')[:2])
+                    h2, m2 = map(int, str(end_time).split(':')[:2])
+                    dur = max(0, (h2 * 60 + m2) - (h1 * 60 + m1))
+                except (ValueError, TypeError):
+                    dur = 0
+                tipo_upper = str(tipo).upper()
+                if tipo_upper in ("GUIDA", "DRIVING", "DRIVE"):
+                    drive_min += dur
+                elif tipo_upper in ("LAVORO", "WORK"):
+                    work_min += dur
+                elif tipo_upper in ("RIPOSO", "REST", "DISPONIBILITA", "AVAILABILITY", "AVAILABLE", "BREAK"):
+                    rest_min += dur
+        days = len(dates)
+        total_drive = drive_min
+        total_work = work_min
+        total_rest = rest_min
 
-        print(f"\n📊 Activity ({len(activities)} records, {days} days):")
+        print(f"\n📊 Activity ({len(activities)} daily blocks, {days} days):")
         print(f"   🟦 Drive:  {total_drive // 60}h {total_drive % 60}m")
         print(f"   🟨 Work:   {total_work // 60}h {total_work % 60}m")
         print(f"   🟩 Rest:   {total_rest // 60}h {total_rest % 60}m")

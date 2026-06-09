@@ -14,8 +14,8 @@ class Driver:
 
 @dataclass
 class Vehicle:
-    vin: VIN
-    plate: str
+    vin: Optional[VIN] = None
+    plate: str = "N/A"
     registration_nation: Optional[NationCode] = None
 
 @dataclass

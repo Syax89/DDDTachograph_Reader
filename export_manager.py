@@ -1,127 +1,195 @@
 import os
+import json
 from datetime import datetime
+
 
 def _get_pandas():
     import pandas as pd
     return pd
 
 
+def _flatten_dict(d, parent_key="", sep="_"):
+    items = {}
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.update(_flatten_dict(v, new_key, sep))
+        elif isinstance(v, list):
+            items[new_key] = json.dumps(v, default=str)[:2000]
+        elif isinstance(v, bytes):
+            items[new_key] = v.hex()
+        else:
+            items[new_key] = v
+    return items
+
+
+def _flatten_records(records):
+    if not records:
+        return [], []
+    flat = []
+    all_keys = set()
+    for rec in records:
+        if isinstance(rec, dict):
+            f = _flatten_dict(rec)
+            all_keys.update(f.keys())
+            flat.append(f)
+    cols = sorted(all_keys)
+    rows = [{c: d.get(c, "") for c in cols} for d in flat]
+    return cols, rows
+
+
+_EXCEL_MAX_ROWS = 50000
+
+
 class ExportManager:
     @staticmethod
     def export_to_excel(data, filepath):
-        """
-        Exports data to an Excel file with multiple sheets.
-        """
         pd = _get_pandas()
-        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
-            # 1. Summary sheet
-            metadata = data.get('metadata', {})
-            driver = data.get('driver', {})
-            vehicle = data.get('vehicle', {})
-            
-            summary_data = {
-                'Field': [
-                    'File', 'Analysis Date', 'Integrity', 
-                    'Driver', 'Card No.', 
-                    'Vehicle', 'Plate', 'VIN',
-                    'Total Distance (KM)', 'Total Driving Hours'
-                ],
-                'Value': [
-                    metadata.get('filename', 'N/A'),
-                    metadata.get('parsed_at', datetime.now().strftime("%Y-%m-%d %H:%M")),
-                    metadata.get('integrity_check', 'OK'),
-                    f"{driver.get('surname', '')} {driver.get('firstname', '')}".strip() or 'N/A',
-                    driver.get('card_number', 'N/A'),
-                    'N/A',
-                    vehicle.get('plate', 'N/A'),
-                    vehicle.get('vin', 'N/A'),
-                    ExportManager._calculate_total_km(data.get('activities', [])),
-                    ExportManager._calculate_total_hours(data.get('daily_summaries', []))
+        meta = data.get("metadata", {})
+        driver = data.get("driver", {})
+        vehicle = data.get("vehicle", {})
+
+        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+            metadata_rows = [
+                {"Field": "Filename", "Value": meta.get("filename", "N/A")},
+                {"Field": "Generation", "Value": meta.get("generation", "N/A")},
+                {"Field": "File Size (bytes)", "Value": meta.get("file_size_bytes", 0)},
+                {"Field": "Coverage (%)", "Value": meta.get("coverage_pct", 0)},
+                {"Field": "Integrity", "Value": meta.get("integrity_check", "N/A")},
+                {"Field": "Parsed At", "Value": meta.get("parsed_at", "")},
+                {"Field": "Source", "Value": "Vehicle Unit (VU)" if meta.get("is_vu") else "Driver Card"},
+                {"Field": "Decoder Failures", "Value": meta.get("decoder_failure_count", 0)},
+            ]
+            pd.DataFrame(metadata_rows).to_excel(writer, sheet_name="Summary", index=False)
+
+            driver_rows = [{"Field": k, "Value": v} for k, v in driver.items()]
+            pd.DataFrame(driver_rows).to_excel(writer, sheet_name="Driver", index=False)
+
+            vehicle_rows = [{"Field": k, "Value": v} for k, v in vehicle.items()]
+            pd.DataFrame(vehicle_rows).to_excel(writer, sheet_name="Vehicle", index=False)
+
+            if data.get("signature_verification"):
+                sv = data["signature_verification"]
+                treps = sv.get("treps") or []
+                sig_rows = [
+                    {"Field": "Available", "Value": sv.get("available")},
+                    {"Field": "MSCA to VU chain", "Value": sv.get("msca_to_vu")},
+                    {"Field": "Root Anchored", "Value": sv.get("root_anchored")},
+                    {"Field": "All TREPs valid", "Value": sv.get("all_treps_valid")},
+                    {"Field": "Summary", "Value": sv.get("summary", "")},
+                    {"Field": "TREPs verified", "Value": len(treps)},
                 ]
-            }
-            pd.DataFrame(summary_data).to_excel(writer, sheet_name='Summary', index=False)
+                pd.DataFrame(sig_rows).to_excel(writer, sheet_name="Signatures", index=False)
+                if treps:
+                    cols, rows = _flatten_records(treps)
+                    if rows:
+                        pd.DataFrame(rows, columns=cols).to_excel(
+                            writer, sheet_name="TREP Signatures", index=False)
 
-            # 2. Daily Activities sheet
-            daily_summaries = data.get('daily_summaries', [])
-            if daily_summaries:
-                pd.DataFrame(daily_summaries).to_excel(writer, sheet_name='Daily Activities', index=False)
+            if data.get("vu_certificates"):
+                cols, rows = _flatten_records(data["vu_certificates"])
+                if rows:
+                    pd.DataFrame(rows, columns=cols).to_excel(
+                        writer, sheet_name="VU Certificates", index=False)
 
-            # 3. Infringements sheet
-            infractions = data.get('infractions', [])
-            if infractions:
-                pd.DataFrame(infractions).to_excel(writer, sheet_name='Infringements', index=False)
+            _SECTIONS = [
+                ("activities", "Daily Activities"),
+                ("events", "Events"),
+                ("faults", "Faults"),
+                ("places", "Places"),
+                ("calibrations", "Calibrations"),
+                ("vehicle_sessions", "Vehicle Sessions"),
+                ("locations", "GPS Locations"),
+                ("gnss_ad_records", "GNSS Accumulated Driving"),
+                ("gnss_places", "GNSS Places"),
+                ("border_crossings", "Border Crossings"),
+                ("load_unload_records", "Load Unload"),
+                ("load_sensor_data", "Load Sensor Data"),
+                ("trailer_registrations", "Trailer Registrations"),
+                ("overspeeding_events", "Overspeeding Events"),
+                ("overspeeding_control", "Overspeeding Control"),
+                ("power_interruptions", "Power Interruptions"),
+                ("company_locks", "Company Locks"),
+                ("control_activities", "Control Activities"),
+                ("specific_conditions", "Specific Conditions"),
+                ("vu_identifications", "VU Identifications"),
+                ("sensor_pairings", "Sensor Pairings"),
+                ("card_iw_records", "Card Insertion Withdrawal"),
+                ("time_adjustments", "Time Adjustments"),
+                ("its_consents", "ITS Consents"),
+                ("download_activities", "Download Activities"),
+                ("card_downloads", "Card Downloads"),
+                ("workshops", "Calibration Workshops"),
+                ("inserted_drivers", "Inserted Drivers"),
+                ("signed_daily_records", "Signed Daily Records"),
+            ]
 
-            # 4. GPS Positions sheet (if available)
-            gps_data = data.get('locations', []) or data.get('gps_positions', [])
-            if gps_data:
-                pd.DataFrame(gps_data).to_excel(writer, sheet_name='GPS Positions', index=False)
+            for key, label in _SECTIONS:
+                items = data.get(key) or []
+                if not items:
+                    continue
+                if not isinstance(items, list):
+                    items = [items]
+                if key == "activities":
+                    rows = ExportManager._expand_activities(items)
+                    if rows:
+                        pd.DataFrame(rows).to_excel(
+                            writer, sheet_name=label[:31], index=False)
+                else:
+                    cols, rows = _flatten_records(items[: _EXCEL_MAX_ROWS])
+                    if rows:
+                        pd.DataFrame(rows, columns=cols).to_excel(
+                            writer, sheet_name=label[:31], index=False)
+
+    @staticmethod
+    def _expand_activities(activities):
+        rows = []
+        for day in activities:
+            if not isinstance(day, dict):
+                continue
+            date_str = day.get("data", day.get("timestamp", "N/A"))
+            km = day.get("km", 0)
+            events = day.get("eventi", day.get("changes", []))
+            if not isinstance(events, list) or not events:
+                rows.append({
+                    "Date": date_str, "Time": "", "Activity Type": "",
+                    "km": km, "Source": day.get("source", ""),
+                })
+                continue
+            for ev in events:
+                if not isinstance(ev, dict):
+                    continue
+                rows.append({
+                    "Date": date_str,
+                    "Time": ev.get("ora", ev.get("time", ev.get("minute", ""))),
+                    "Activity Type": ev.get("tipo", ev.get("type", ev.get("activity", ""))),
+                    "km": km,
+                    "Slot": ev.get("slot", ""),
+                    "Crew": ev.get("crew", ""),
+                    "Card Present": ev.get("card_present", ""),
+                    "Source": day.get("source", ev.get("source", "")),
+                })
+        return rows
 
     @staticmethod
     def export_to_csv(data, filepath):
-        """
-        Exports data to flat CSV format for accounting systems.
-        """
         pd = _get_pandas()
-        rows = []
-        driver_name = f"{data.get('driver', {}).get('surname', '')} {data.get('driver', {}).get('firstname', '')}".strip()
-        card_number = data.get('driver', {}).get('card_number', 'N/A')
-        plate = data.get('vehicle', {}).get('plate', 'N/A')
-        
-        for day in data.get('activities', []):
-            date = day.get('data', 'N/A')
-            events = day.get('eventi', [])
-            
-            for i in range(len(events)):
-                ev = events[i]
-                activity_type = ev.get('tipo', 'N/A')
-                start_time = ev.get('ora', 'N/A')
-                
-                # Calculate end time (from next event)
-                end_time = "23:59"
-                duration = "N/A"
-                if i < len(events) - 1:
-                    end_time = events[i+1].get('ora', '23:59')
-                    try:
-                        h1, m1 = map(int, start_time.split(':'))
-                        h2, m2 = map(int, end_time.split(':'))
-                        diff = (h2 * 60 + m2) - (h1 * 60 + m1)
-                        duration = f"{diff} min"
-                    except (ValueError, TypeError, AttributeError):
-                        pass
-                
-                rows.append({
-                    'Date': date,
-                    'Start': start_time,
-                    'End': end_time,
-                    'Duration': duration,
-                    'Activity Type': activity_type,
-                    'Driver': driver_name,
-                    'Card': card_number,
-                    'Vehicle': plate
-                })
-        
-        if rows:
-            pd.DataFrame(rows).to_csv(filepath, index=False, sep=';', encoding='utf-8-sig')
+        rows = ExportManager._expand_activities(data.get("activities", []))
+        if not rows:
+            pd.DataFrame([{"Info": "No activities found"}]).to_csv(
+                filepath, index=False, sep=";", encoding="utf-8-sig")
+            return
+        driver = data.get("driver", {})
+        vehicle = data.get("vehicle", {})
+        driver_name = (
+            f"{(driver.get('surname') or '')} {(driver.get('firstname') or '')}".strip()
+        )
+        card = driver.get("card_number") or "N/A"
+        plate = vehicle.get("plate") or "N/A"
 
-    @staticmethod
-    def _calculate_total_km(activities):
-        total = 0
-        for d in activities:
-            try:
-                total += int(d.get('km', 0))
-            except (ValueError, TypeError):
-                pass
-        return total
+        for r in rows:
+            r["Driver"] = driver_name
+            r["Card Number"] = card
+            r["Vehicle Plate"] = plate
 
-    @staticmethod
-    def _calculate_total_hours(daily_summaries):
-        total_min = 0
-        for day in daily_summaries:
-            try:
-                time_str = day.get('Total Drive', '00:00')
-                if ':' not in time_str:
-                    time_str = '00:00'
-                h, m = map(int, time_str.split(':'))
-                total_min += h * 60 + m
-            except (ValueError, TypeError): pass
-        return f"{total_min // 60}h {total_min % 60}m"
+        pd.DataFrame(rows).to_csv(filepath, index=False, sep=";", encoding="utf-8-sig")

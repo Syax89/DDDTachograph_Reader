@@ -44,7 +44,7 @@ class TestMockDDDCoverage(unittest.TestCase):
         self._parse_and_check("mock_g1_card.ddd", min_pct=50)
 
     def test_mock_g1_vu_coverage(self):
-        self._parse_and_check("mock_g1_vu.ddd", min_pct=0)
+        self._parse_and_check("mock_g1_vu.ddd", min_pct=30)
 
     def test_mock_g2_card_coverage(self):
         self._parse_and_check("mock_g2_card.ddd", min_pct=40)
@@ -71,10 +71,10 @@ class TestMockDDDGenerationDetection(unittest.TestCase):
         result = TachoParser(path).parse()
         self.assertEqual(result["metadata"]["generation"], "G1 (Digital)")
 
-    def test_g1_vu_detected_as_g2(self):
+    def test_g1_vu_detected_as_g1(self):
         path = os.path.join(MOCK_DIR, "mock_g1_vu.ddd")
         result = TachoParser(path).parse()
-        self.assertIn("G", result["metadata"]["generation"])
+        self.assertEqual(result["metadata"]["generation"], "G1 (Digital)")
 
     def test_g2_card_detected_as_g2(self):
         path = os.path.join(MOCK_DIR, "mock_g2_card.ddd")
@@ -133,19 +133,19 @@ class TestMockDDDContentExtraction(unittest.TestCase):
         path = os.path.join(MOCK_DIR, "mock_g22_card.ddd")
         result = TachoParser(path).parse()
         # Mock generator WIP — GNSS data may not fully extract
-        self.assertIsNotNone(result.get("metadata"))
+        self.assertIsNotNone(result.get("gnss_ad_records"))
 
     def test_g22_card_has_trailer_data(self):
         path = os.path.join(MOCK_DIR, "mock_g22_card.ddd")
         result = TachoParser(path).parse()
         # Mock generator WIP — trailer data may not fully extract
-        self.assertIsNotNone(result.get("raw_tags"))
+        self.assertIsNotNone(result.get("trailer_registrations"))
 
     def test_g22_card_has_border_crossings(self):
         path = os.path.join(MOCK_DIR, "mock_g22_card.ddd")
         result = TachoParser(path).parse()
         # Mock generator WIP — border data may not fully extract
-        self.assertIsNotNone(result.get("raw_tags"))
+        self.assertIsNotNone(result.get("border_crossings"))
 
 
 class TestRealDDDCoverage(unittest.TestCase):
@@ -196,7 +196,7 @@ class TestRealDDDCoverage(unittest.TestCase):
                 result = parser.parse()
                 cov = result["metadata"]["coverage_pct"]
                 self.assertGreaterEqual(
-                    cov, 0,
+                    cov, 85,
                     f"{fname}: coverage {cov}% (target: >=85%)"
                 )
 

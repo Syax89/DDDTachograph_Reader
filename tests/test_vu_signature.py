@@ -8,7 +8,7 @@ import unittest
 
 from ddd_parser import TachoParser
 from core.vu_signature_verifier import (
-    verify_vu_download, parse_cvc, decode_vu_certificates)
+    verify_vu_download, decode_vu_certificates)
 from tests.real_data import requires_real_files
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

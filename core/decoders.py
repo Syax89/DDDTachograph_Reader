@@ -8,6 +8,14 @@ from core.event_fault_codes import describe_event, describe_fault, describe_card
 
 _log = get_logger(__name__)
 
+_CODEPAGE_ENCODINGS = {
+    0x01: 'latin-1', 0x02: 'iso-8859-2', 0x03: 'iso-8859-3',
+    0x04: 'iso-8859-4', 0x05: 'iso-8859-5', 0x06: 'iso-8859-6',
+    0x07: 'iso-8859-7', 0x08: 'iso-8859-8', 0x09: 'iso-8859-9',
+    0x0A: 'iso-8859-10', 0x0B: 'iso-8859-11', 0x0D: 'iso-8859-13',
+    0x0E: 'iso-8859-14', 0x0F: 'iso-8859-15', 0x10: 'iso-8859-16',
+}
+
 def get_nation(code):
     """Map numeric nation code to ISO/Common code (Annex 1B)."""
     nations = {
@@ -31,12 +39,7 @@ def decode_string(data, is_id=False):
         if not data: return ""
 
         if data[0] < 0x20:
-            encodings = {0x01: 'latin-1', 0x02: 'iso-8859-2', 0x03: 'iso-8859-3',
-                         0x04: 'iso-8859-4', 0x05: 'iso-8859-5', 0x06: 'iso-8859-6',
-                         0x07: 'iso-8859-7', 0x08: 'iso-8859-8', 0x09: 'iso-8859-9',
-                         0x0A: 'iso-8859-10', 0x0B: 'iso-8859-11', 0x0D: 'iso-8859-13',
-                         0x0E: 'iso-8859-14', 0x0F: 'iso-8859-15', 0x10: 'iso-8859-16'}
-            enc = encodings.get(data[0], 'latin-1')
+            enc = _CODEPAGE_ENCODINGS.get(data[0], 'latin-1')
             payload = data[1:]
         else:
             enc = 'latin-1'
@@ -66,7 +69,7 @@ def decode_date(data, prefer_datef=False):
     ts_valid = False
     try:
         ts = struct.unpack(">I", data[:4])[0]
-        if ts != 0 and ts != 0xFFFFFFFF and 0 < ts < 4102444800:
+        if ts != 0 and ts != 0xFFFFFFFF and 0 < ts <= 4102444800:
             ts_valid = True
     except (struct.error, ValueError, OverflowError):
         pass
@@ -172,8 +175,7 @@ def parse_cyclic_buffer_activities(val, results):
             
             if prev_len == 0 or prev_len > buf_size: break
             
-            # Backward traversal with wrap-around
-            curr_offset = ptr - 4
+            curr_offset = max(0, ptr - 4)
             prev_offset = (curr_offset - prev_len) % buf_size
             ptr = 4 + prev_offset
     except (struct.error, IndexError, ValueError) as exc:
@@ -542,7 +544,7 @@ def parse_g22_load_unload_operations(val, results):
 
     Structure (ASN.1 — all fields required):
       timestamp       4  TimeReal
-      operationType   1  UInt8 (0=LOAD, 1=UNLOAD)
+      operationType   1  UInt8 (0x01=LOAD, 0x02=UNLOAD, 0x03=SIMULTANEOUS)
       latitude        4  Int32 (signed, 1/10 micro-degree)
       longitude       4  Int32 (signed, 1/10 micro-degree)
     Total: 13 bytes
@@ -731,29 +733,29 @@ def parse_g1_events_data(val, results):
             describe_card_event_group(4),
             describe_card_event_group(5),
         ]
-        for group_idx in range(6):
-            rec_size = 24
-            while off + rec_size <= len(val):
-                ev_type = val[off]
-                if ev_type == 0xFF:
-                    off += rec_size
-                    continue
-                begin_ts = struct.unpack(">I", val[off+1:off+5])[0]
-                end_ts = struct.unpack(">I", val[off+5:off+9])[0]
-                if begin_ts == 0 or begin_ts == 0xFFFFFFFF:
-                    off += rec_size
-                    continue
-                nation = get_nation(val[off+9])
-                plate = decode_string(val[off+10:off+24], is_id=True)
-                results["events"].append({
-                    "descrizione": f"{group_descriptions[group_idx]} — code 0x{ev_type:02X}",
-                    "event_type_code": ev_type,
-                    "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
-                    "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A",
-                    "vehicle_nation": nation,
-                    "vehicle_plate": plate
-                })
+        rec_size = 24
+        while off + rec_size <= len(val):
+            ev_type = val[off]
+            if ev_type == 0xFF:
                 off += rec_size
+                continue
+            begin_ts = struct.unpack(">I", val[off+1:off+5])[0]
+            end_ts = struct.unpack(">I", val[off+5:off+9])[0]
+            if begin_ts == 0 or begin_ts == 0xFFFFFFFF:
+                off += rec_size
+                continue
+            nation = get_nation(val[off+9])
+            plate = decode_string(val[off+10:off+24], is_id=True)
+            group_idx = min(ev_type // 0x20, 5) if ev_type < 0xC0 else 5
+            results["events"].append({
+                "descrizione": f"{group_descriptions[group_idx]} — code 0x{ev_type:02X}",
+                "event_type_code": ev_type,
+                "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
+                "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A",
+                "vehicle_nation": nation,
+                "vehicle_plate": plate
+            })
+            off += rec_size
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Events data parse failed: %s", exc)
 
@@ -766,29 +768,29 @@ def parse_g1_faults_data(val, results):
             describe_card_fault_group(0),
             describe_card_fault_group(1),
         ]
-        for group_idx in range(2):
-            rec_size = 24
-            while off + rec_size <= len(val):
-                fault_type = val[off]
-                if fault_type == 0xFF:
-                    off += rec_size
-                    continue
-                begin_ts = struct.unpack(">I", val[off+1:off+5])[0]
-                end_ts = struct.unpack(">I", val[off+5:off+9])[0]
-                if begin_ts == 0 or begin_ts == 0xFFFFFFFF:
-                    off += rec_size
-                    continue
-                nation = get_nation(val[off+9])
-                plate = decode_string(val[off+10:off+24], is_id=True)
-                results["faults"].append({
-                    "descrizione": f"{group_descriptions[group_idx]} — code 0x{fault_type:02X}",
-                    "fault_type_code": fault_type,
-                    "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
-                    "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A",
-                    "vehicle_nation": nation,
-                    "vehicle_plate": plate
-                })
+        rec_size = 24
+        while off + rec_size <= len(val):
+            fault_type = val[off]
+            if fault_type == 0xFF:
                 off += rec_size
+                continue
+            begin_ts = struct.unpack(">I", val[off+1:off+5])[0]
+            end_ts = struct.unpack(">I", val[off+5:off+9])[0]
+            if begin_ts == 0 or begin_ts == 0xFFFFFFFF:
+                off += rec_size
+                continue
+            nation = get_nation(val[off+9])
+            plate = decode_string(val[off+10:off+24], is_id=True)
+            group_idx = 0 if fault_type < 0x80 else 1
+            results["faults"].append({
+                "descrizione": f"{group_descriptions[group_idx]} — code 0x{fault_type:02X}",
+                "fault_type_code": fault_type,
+                "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
+                "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A",
+                "vehicle_nation": nation,
+                "vehicle_plate": plate
+            })
+            off += rec_size
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Faults data parse failed: %s", exc)
 

@@ -1,9 +1,11 @@
 """Centralized logging configuration for DDD Tachograph Reader."""
 import logging
+import threading
 
 _logger = None
 _console_handler = None
 _counter = None
+_lock = threading.Lock()
 
 
 class _CountingHandler(logging.Handler):
@@ -39,25 +41,26 @@ class _CountingHandler(logging.Handler):
 def get_logger(name: str = "ddd_tacho") -> logging.Logger:
     """Get or create the project logger."""
     global _logger, _console_handler, _counter
-    if _logger is None:
-        _logger = logging.getLogger(name)
-        _counter = _CountingHandler()
-        if not _logger.handlers:
-            _console_handler = logging.StreamHandler()
-            _console_handler.setFormatter(logging.Formatter(
-                '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-                datefmt='%H:%M:%S'
-            ))
-            # Console stays quiet (WARNING+); the logger itself runs at DEBUG so
-            # the counting handler always sees decoder failure events.
-            _console_handler.setLevel(logging.WARNING)
-            _logger.addHandler(_console_handler)
-            _logger.addHandler(_counter)
-            _logger.setLevel(logging.DEBUG)
-            # The logger runs at DEBUG so the counter sees every failure event;
-            # don't bubble those debug records up to the root handler (which would
-            # flood the console), the project's own console handler gates output.
-            _logger.propagate = False
+    with _lock:
+        if _logger is None:
+            _logger = logging.getLogger(name)
+            _counter = _CountingHandler()
+            if not _logger.handlers:
+                _console_handler = logging.StreamHandler()
+                _console_handler.setFormatter(logging.Formatter(
+                    '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+                    datefmt='%H:%M:%S'
+                ))
+                # Console stays quiet (WARNING+); the logger itself runs at DEBUG so
+                # the counting handler always sees decoder failure events.
+                _console_handler.setLevel(logging.WARNING)
+                _logger.addHandler(_console_handler)
+                _logger.addHandler(_counter)
+                _logger.setLevel(logging.DEBUG)
+                # The logger runs at DEBUG so the counter sees every failure event;
+                # don't bubble those debug records up to the root handler (which would
+                # flood the console), the project's own console handler gates output.
+                _logger.propagate = False
     return _logger
 
 
@@ -76,17 +79,20 @@ def enable_debug() -> None:
 def decoder_failure_count() -> int:
     """Number of decoder failure events recorded since the last reset."""
     get_logger()
-    return _counter.failure_count if _counter else 0
+    with _lock:
+        return _counter.failure_count if _counter else 0
 
 
 def decoder_failures() -> list:
     """Captured decoder failure messages (capped) since the last reset."""
     get_logger()
-    return list(_counter.failures) if _counter else []
+    with _lock:
+        return list(_counter.failures) if _counter else []
 
 
 def reset_decoder_failures() -> None:
     """Reset the decoder failure tally; call at the start of each parse."""
     get_logger()
-    if _counter is not None:
-        _counter.reset()
+    with _lock:
+        if _counter is not None:
+            _counter.reset()

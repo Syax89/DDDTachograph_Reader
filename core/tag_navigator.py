@@ -1,6 +1,8 @@
 """Recursive STAP/BER-TLV tag navigator for DDD tachograph files. Handles multi-generation tag dispatch, container recursion, deep scan recovery, and coverage tracking."""
 import struct
+import inspect
 from . import decoders
+from core.constants import MAX_TLV_LENGTH
 from core.logger import get_logger
 
 _log = get_logger(__name__)
@@ -31,23 +33,26 @@ class TagNavigator:
                 if nb == 0 or nb > 3 or pos + nb > len(data): return None, None, 0
                 length = int.from_bytes(data[pos:pos+nb], 'big')
                 pos += nb
-            if length > 0x100000: return None, None, 0
+            if length > MAX_TLV_LENGTH: return None, None, 0
             return tag, length, pos - start
-        except Exception: return None, None, 0
+        except (IndexError, ValueError, TypeError, struct.error):
+            return None, None, 0
 
     def parse_stap_recursive(self, start_pos, end_pos, depth=0, parent_path="", mode='stap'):
         """
         New Smart Hybrid Parser: Tries known formats (STAP or BER depending on mode) 
         at each position to ensure 100% meaningful coverage.
         """
-        if depth > 12: return
+        if depth > 12:
+            _log.debug("Recursion depth limit reached at offset 0x%X, depth=%d", start_pos, depth)
+            return
         pos = start_pos
         
         if depth == 0 or mode == 'stap':
             # Strict sequential STAP block parsing
             while pos < end_pos:
-                # Skip repeating padding bytes (0x00, 0xFF, 0x55) — advance to end of run
-                if pos + 1 < end_pos and self.parser.raw_data[pos] == self.parser.raw_data[pos+1] and self.parser.raw_data[pos] in (0x00, 0xFF, 0x55):
+                # Skip padding bytes (0x00, 0xFF, 0x55) — advance to end of run
+                if self.parser.raw_data[pos] in (0x00, 0xFF, 0x55):
                     pad_byte = self.parser.raw_data[pos]
                     while pos < end_pos and self.parser.raw_data[pos] == pad_byte:
                         pos += 1
@@ -62,7 +67,8 @@ class TagNavigator:
                 tag, dtype, length = struct.unpack(">HBH", hdr)
                 
                 if tag in (0x0000, 0xFFFF, 0x5555):
-                    break
+                    pos += 5
+                    continue
                     
                 if pos + 5 + length > end_pos:
                     break
@@ -143,12 +149,9 @@ class TagNavigator:
         self.parser.bytes_covered += length
         val = self.parser.raw_data[start:end]
         
-        # Check if it's padding (all same byte like 0x00, 0xFF, 0x5A)
-        is_padding = False
-        if length > 8:
-            first_byte = val[0]
-            if all(b == first_byte for b in val):
-                is_padding = True
+        # Check if it's padding (all same byte like 0x00, 0xFF, 0x55)
+        from core.coverage_utils import is_padding_block
+        is_padding = is_padding_block(val) is not None
         
         tag_name = "Padding" if is_padding else "Unparsed Data"
         tag_id = "0xPAD" if is_padding else "0x0000"
@@ -178,8 +181,13 @@ class TagNavigator:
             start = int(occ['offset'], 16)
             end = start + occ['length']
             pos = start
+            max_scans = 10000
+            scans = 0
             
             while pos < end - 4:
+                scans += 1
+                if scans > max_scans:
+                    break
                 found = False
                 # Try STAP at this position
                 try:
@@ -206,11 +214,12 @@ class TagNavigator:
                 if not found: pos += 1
 
     def record_and_dispatch(self, tag, length, val, pos, h_size, depth, parent_path, mode='stap', dtype=None):
-        import inspect
         tag_name = self.parser.TAGS.get(tag, f"BER_{tag:04X}")
         self.parser.bytes_covered += h_size
 
-        # VU overview vehicle identification decoding at offsets 420 and 442
+        # VU overview vehicle identification decoding at offsets 420 and 442.
+        # NOTE: These are byte-offset heuristics for a specific VU firmware layout.
+        # A change in certificate sizes or optional fields will shift these offsets.
         if self.parser.is_vu and depth == 0:
             if pos == 420 and length == 17:
                 vin_prefix = val[2:17].decode('latin-1', errors='ignore').strip()
@@ -263,8 +272,8 @@ class TagNavigator:
                     else:
                         fn(val, self.parser.results)
                     dispatched = True
-        except Exception:
-            pass
+        except Exception as e:
+            _log.warning("Decoder dispatch failed for tag 0x%04X at offset 0x%X: %s", tag, pos, e)
 
         # Special case: cyclic buffer requires minimum length validation
         if not dispatched and tag in (0x0504, 0x0524, 0x0206) and length > 100:
@@ -424,15 +433,8 @@ class TagNavigator:
                 length = occ["length"]
                 covered_ranges.append((off, off + length))
 
-        covered_ranges.sort()
-        merged = []
-        for rng in covered_ranges:
-            if rng[0] >= rng[1]:
-                continue
-            if merged and rng[0] <= merged[-1][1]:
-                merged[-1] = (merged[-1][0], max(merged[-1][1], rng[1]))
-            else:
-                merged.append(rng)
+        from core.coverage_utils import merge_intervals
+        merged = merge_intervals(covered_ranges)
 
         report = {}
         for section_name, (sec_start, sec_end) in sections.items():

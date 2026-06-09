@@ -5,23 +5,27 @@ import unittest
 import pandas as pd
 from datetime import datetime
 
-# Ensure project is in path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from export_manager import ExportManager
+
 
 class TestExportManager(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.excel_path = os.path.join(self.tmpdir, "export_test.xlsx")
         self.csv_path = os.path.join(self.tmpdir, "export_test.csv")
-        
-        # Mock data representing parsed tachograph output
+
         self.mock_data = {
             "metadata": {
                 "filename": "mock_file.ddd",
                 "parsed_at": "2026-06-08 19:00",
-                "integrity_check": "VERIFIED (LOCAL CHAIN)"
+                "integrity_check": "VERIFIED (LOCAL CHAIN)",
+                "generation": "G2 (Smart)",
+                "file_size_bytes": 12345,
+                "coverage_pct": 100.0,
+                "is_vu": False,
+                "decoder_failure_count": 0,
             },
             "driver": {
                 "firstname": "Mario",
@@ -50,17 +54,19 @@ class TestExportManager(unittest.TestCase):
                     ]
                 }
             ],
-            "daily_summaries": [
-                {"Data": "01/06/2026", "Total Drive": "04:00", "Total Work": "00:00", "Total Rest": "20:00", "Infringements": 0},
-                {"Data": "02/06/2026", "Total Drive": "04:00", "Total Work": "00:00", "Total Rest": "20:00", "Infringements": 1}
+            "events": [
+                {"descrizione": "Over speeding", "begin": "2026-06-01T10:30:00+00:00", "end": "2026-06-01T10:35:00+00:00", "confidence": "high"},
             ],
-            "infractions": [
-                {"data": "02/06/2026", "tipo": "CONTINUOUS_DRIVE_EXCEEDED", "severita": "SI", "descrizione": "Driving limit exceeded"}
+            "faults": [
+                {"descrizione": "Sensor fault", "begin": "2026-06-02T11:00:00+00:00", "end": "N/A", "confidence": "medium"},
             ],
             "locations": [
                 {"date": "01/06/2026 10:00", "latitude": 45.4642, "longitude": 9.1900, "description": "Milano"},
                 {"date": "02/06/2026 11:00", "latitude": 41.9028, "longitude": 12.4964, "description": "Roma"}
-            ]
+            ],
+            "border_crossings": [
+                {"confidence": "high", "country_left": "I", "country_entered": "F", "odometer_km": 12345},
+            ],
         }
 
     def tearDown(self):
@@ -68,44 +74,44 @@ class TestExportManager(unittest.TestCase):
         shutil.rmtree(self.tmpdir)
 
     def test_export_to_excel(self):
-        """Test exporting data to Excel format with multiple sheets."""
         ExportManager.export_to_excel(self.mock_data, self.excel_path)
         self.assertTrue(os.path.exists(self.excel_path))
-        
-        # Verify the sheets exist and are populated
+
         xls = pd.ExcelFile(self.excel_path)
-        self.assertIn("Summary", xls.sheet_names)
-        self.assertIn("Daily Activities", xls.sheet_names)
-        self.assertIn("Infringements", xls.sheet_names)
-        self.assertIn("GPS Positions", xls.sheet_names)
-        
-        # Test Summary content
+        sheet_names = set(xls.sheet_names)
+
+        self.assertIn("Summary", sheet_names)
+        self.assertIn("Driver", sheet_names)
+        self.assertIn("Vehicle", sheet_names)
+        self.assertIn("Daily Activities", sheet_names)
+        self.assertIn("Events", sheet_names)
+        self.assertIn("Faults", sheet_names)
+        self.assertIn("GPS Locations", sheet_names)
+        self.assertIn("Border Crossings", sheet_names)
+
         df_summary = pd.read_excel(xls, "Summary")
-        self.assertEqual(df_summary.shape[0], 10)
-        self.assertIn("Milano", str(pd.read_excel(xls, "GPS Positions").iloc[0]["description"]))
-        
-        # Verify KM calculations (150 + 200 = 350)
-        km_row = df_summary[df_summary["Field"] == "Total Distance (KM)"]
-        self.assertEqual(km_row["Value"].values[0], 350)
-        
-        # Verify hours calculations (4h + 4h = 8h 0m)
-        hours_row = df_summary[df_summary["Field"] == "Total Driving Hours"]
-        self.assertEqual(hours_row["Value"].values[0], "8h 0m")
+        self.assertEqual(df_summary.shape[0], 8)
+
+        df_activities = pd.read_excel(xls, "Daily Activities")
+        self.assertEqual(len(df_activities), 4)
+        self.assertIn("Date", df_activities.columns)
+        self.assertIn("Activity Type", df_activities.columns)
 
     def test_export_to_csv(self):
-        """Test exporting data to CSV format."""
         ExportManager.export_to_csv(self.mock_data, self.csv_path)
         self.assertTrue(os.path.exists(self.csv_path))
-        
-        # Verify content of the CSV
-        df_csv = pd.read_csv(self.csv_path, sep=';')
+
+        df_csv = pd.read_csv(self.csv_path, sep=";")
         self.assertIn("Date", df_csv.columns)
-        self.assertIn("Start", df_csv.columns)
+        self.assertIn("Time", df_csv.columns)
         self.assertIn("Activity Type", df_csv.columns)
         self.assertIn("Driver", df_csv.columns)
-        
-        self.assertEqual(df_csv.iloc[0]["Driver"], "Rossi Mario")
-        self.assertEqual(df_csv.iloc[0]["Vehicle"], "AA123BB")
+        self.assertIn("Card Number", df_csv.columns)
+        self.assertIn("Vehicle Plate", df_csv.columns)
 
-if __name__ == '__main__':
+        self.assertEqual(df_csv.iloc[0]["Driver"], "Rossi Mario")
+        self.assertEqual(df_csv.iloc[0]["Vehicle Plate"], "AA123BB")
+
+
+if __name__ == "__main__":
     unittest.main()

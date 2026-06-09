@@ -6,6 +6,7 @@ import json
 import sys
 import logging
 from ddd_parser import TachoParser
+from core.encoding import BytesEncoder
 
 
 def main():
@@ -24,17 +25,11 @@ def main():
     try:
         ddd = TachoParser(args.file)
         result = ddd.parse()
-        
-        
     except Exception as e:
         print(f"Critical parsing error: {e}", file=sys.stderr)
         sys.exit(1)
 
-    if result is None:
-        print("Error: Cannot read the file.", file=sys.stderr)
-        sys.exit(1)
-
-    output_json = json.dumps(result, indent=4, ensure_ascii=False)
+    output_json = json.dumps(result, indent=4, ensure_ascii=False, cls=BytesEncoder)
 
     if args.output:
         with open(args.output, 'w', encoding='utf-8') as f:

@@ -517,6 +517,26 @@ def _decode_event_fault_prefix(rec):
     }
 
 
+_RECORD_DECODERS = {
+    0x22: decode_border_crossing,
+    0x23: decode_load_unload,
+    0x1C: decode_place_daily,
+    0x09: decode_specific_condition,
+    0x16: decode_gnss_ad,
+    0x1A: decode_overspeeding_control,
+    0x1B: decode_overspeeding_event,
+    0x1E: decode_time_adjustment,
+    0x1F: decode_power_interruption,
+    0x17: decode_its_consent,
+    0x10: decode_company_lock,
+    0x11: decode_control_activity,
+    0x19: decode_vu_identification,
+    0x0C: decode_calibration,
+    0x0D: decode_card_iw,
+    0x14: decode_download_activity,
+    0x20: decode_sensor_paired,
+}
+
 def _decode_record(record_type, rec):
     """Decode a single record by recordType. Returns a dict (always includes
     record_type, size, confidence)."""
@@ -524,27 +544,8 @@ def _decode_record(record_type, rec):
     out = {"record_type": f"0x{record_type:02X}", "name": name,
            "size": len(rec), "confidence": confidence}
 
-    _structured = {
-        0x22: decode_border_crossing,
-        0x23: decode_load_unload,
-        0x1C: decode_place_daily,
-        0x09: decode_specific_condition,
-        0x16: decode_gnss_ad,
-        0x1A: decode_overspeeding_control,
-        0x1B: decode_overspeeding_event,
-        0x1E: decode_time_adjustment,
-        0x1F: decode_power_interruption,
-        0x17: decode_its_consent,
-        0x10: decode_company_lock,
-        0x11: decode_control_activity,
-        0x19: decode_vu_identification,
-        0x0C: decode_calibration,
-        0x0D: decode_card_iw,
-        0x14: decode_download_activity,
-        0x20: decode_sensor_paired,
-    }
-    if record_type in _structured:
-        decoded = _structured[record_type](rec)
+    if record_type in _RECORD_DECODERS:
+        decoded = _RECORD_DECODERS[record_type](rec)
         if decoded:
             out.update(decoded)
         else:
@@ -644,7 +645,10 @@ def iter_vu_sections(data):
         rt = data[pos]
         rs = struct.unpack(">H", data[pos + 1:pos + 3])[0]
         nr = struct.unpack(">H", data[pos + 3:pos + 5])[0]
-        if rt > 0x60 or rs > RECORD_ARRAY_MAX_SIZE or nr > RECORD_ARRAY_MAX_RECORDS or (rs == 0 and nr > 0) or pos + 5 + rs * nr > n:
+        if rt > 0x60 or rs > RECORD_ARRAY_MAX_SIZE or nr > RECORD_ARRAY_MAX_RECORDS or (rs == 0 and nr > 0):
+            pos += 5
+            continue
+        if pos + 5 + rs * nr > n:
             break
         if cur is not None:
             cur["records"].append((pos, rt, rs, nr, pos + 5 + rs * nr))
