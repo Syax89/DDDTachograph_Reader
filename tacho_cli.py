@@ -31,7 +31,6 @@ Esempi:
     parser.add_argument("--excel", nargs="?", const="auto", metavar="FILE", help="Genera report Excel (opzionale: percorso file)")
     parser.add_argument("--all", nargs="?", const="auto", metavar="DIR", help="Genera tutti i formati in una directory")
     parser.add_argument("--summary", action="store_true", help="Mostra riepilogo testuale compatto")
-    parser.add_argument("--geocode", action="store_true", help="Abilita reverse geocoding coordinate GNSS")
     parser.add_argument("--legacy", action="store_true", help="Usa il parser legacy (non deterministico) per retrocompatibilita'")
     parser.add_argument("-v", "--verbose", action="store_true", help="Output verboso di debug")
     parser.add_argument("-q", "--quiet", action="store_true", help="Nessun output a schermo (solo file)")
@@ -63,38 +62,6 @@ Esempi:
         print("❌ Impossibile leggere il file.", file=sys.stderr)
         sys.exit(1)
 
-    # Compliance analysis
-    try:
-        from compliance_engine import ComplianceEngine
-        engine = ComplianceEngine()
-        result["infractions"] = engine.analyze(result.get("activities", []))
-    except Exception as e:
-        logging.warning(f"Compliance engine: {e}")
-        result["infractions"] = []
-
-    # Signature validation
-    try:
-        from signature_validator import SignatureValidator
-        sv = SignatureValidator()
-        sig_result = sv.validate_file(args.file)
-        result["signature_status"] = sig_result
-    except Exception as e:
-        logging.warning(f"Signature validation: {e}")
-
-    # Geocoding
-    if args.geocode:
-        try:
-            from geocoding_engine import GeocodingEngine
-            geo = GeocodingEngine()
-            activities = result.get("activities", [])
-            for act in activities:
-                if act.get("gnss_lat") and act.get("gnss_lon"):
-                    city = geo.reverse(act["gnss_lat"], act["gnss_lon"])
-                    if city:
-                        act["location"] = city
-        except Exception as e:
-            logging.warning(f"Geocoding: {e}")
-
     # Auto-generate output basename
     basename = os.path.splitext(os.path.basename(args.file))[0]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -123,16 +90,7 @@ Esempi:
 
     # PDF output
     if args.pdf:
-        pdf_path = resolve_path(args.pdf, "pdf")
-        try:
-            from export_pdf import generate_pdf_report
-            generate_pdf_report(result, pdf_path)
-            generated.append(("PDF", pdf_path))
-        except Exception as e:
-            print(f"⚠️ Errore generazione PDF: {e}", file=sys.stderr)
-            if args.verbose:
-                import traceback
-                traceback.print_exc()
+        print("⚠️ PDF export non disponibile in questa versione.", file=sys.stderr)
 
     # Excel output
     if args.excel:

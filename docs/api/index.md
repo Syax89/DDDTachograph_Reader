@@ -7,11 +7,5 @@
 - [DecoderRegistry](decoder_registry.md) — Centralized tag-to-decoder mapping
 - [DeterministicParser](deterministic_parser.md) — Schema-driven two-pass parser
 
-## Analysis
-- [ComplianceEngine](compliance_engine.md) — EU 561/2006 compliance checks
-- [SignatureValidator](signature_validator.md) — Certificate chain validation
-- [FleetAnalytics](fleet_analytics.md) — Multi-file batch analysis
-
 ## Export
 - [ExportManager](export_manager.md) — Excel/CSV export
-- [Export PDF](export_pdf.md) — PDF report generation

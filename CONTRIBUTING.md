@@ -10,9 +10,8 @@ python3 -m pytest tests/ -v
 ## Project Structure
 - `core/` — Parser engine (navigator, decoders, registry, models)
 - `ddd_parser.py` — Main entry point
-- `compliance_engine.py` — EU 561/2006 checks
 - `gui_tree.py` — Desktop application (tkinter: tree view + Excel-style table)
-- `tests/` — Test suite (52+ tests)
+- `tests/` — Test suite (150+ tests)
 - `specs/` — Tag specifications and verification docs
 
 ## How to Add a New Decoder

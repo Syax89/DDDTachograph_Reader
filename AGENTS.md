@@ -28,7 +28,6 @@ All tag specifications are in `specs/`:
 - `coverage_audit.py` — Run with `python3 specs/coverage_audit.py` for file-by-file coverage report
 
 ## Key regulations
-- EU 561/2006 — Driving/rest rules (compliance_engine.py)
 - Reg. 3821/85 Annex 1B — G1 tachograph spec
 - Reg. EU 2016/799 Annex 1C — G2 smart tachograph spec
 - Reg. EU 2023/980 — G2.2 smart tacho V2

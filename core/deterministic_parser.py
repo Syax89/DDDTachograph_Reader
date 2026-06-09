@@ -355,11 +355,12 @@ class DeterministicParser:
         dec = self.registry.get_decoder(tag)
         if dec and dec.decoder_fn:
             try:
-                if tag in (0x5F29, 0x5F4C, 0x5F20, 0x5F25, 0x5F24, 0x960F, 0x6399):
-                    dec.decoder_fn(payload, self.results, tag)
-                elif tag in (0x0509, 0x050A, 0x050B, 0x050D, 0x050F,
-                           0x0510, 0x0511, 0x0512, 0x052B, 0x052C,
-                           0x052D, 0x052E, 0x052F, 0x0530, 0x0531, 0x0532, 0x0533):
+                import inspect
+                sig = inspect.signature(dec.decoder_fn)
+                n_params = len([p for p in sig.parameters.values()
+                                if p.default is inspect.Parameter.empty
+                                and p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)])
+                if n_params == 3:
                     dec.decoder_fn(payload, self.results, tag)
                 else:
                     dec.decoder_fn(payload, self.results)

@@ -595,7 +595,7 @@ class TagNavigator:
                 if length >= 2 and val[0] == 0x00: inner_start += 2
                 # G1 VU containers (0x7601-0x7604) have STAP inner data
                 # G2/G2.2 containers (0x7621-0x7634) have BER-TLV inner data
-                is_g1_vu = (tag & 0xFFF0) == 0x7600
+                is_g1_vu = tag in (0x7601, 0x7602, 0x7603, 0x7604, 0x7605)
                 if is_g1_vu:
                     # Extract G1 VU overview data via heuristic text scan
                     # (the container uses Annex 1B sequential records, not STAP)

@@ -265,9 +265,18 @@ def parse_g1_vehicles_used(val, results):
     # Determine record size: 31 (G1) or 35 (G2)
     # The first 2 bytes are an index/pointer
     rec_data = val[2:]
-    rec_size = 31 # Default G1
-    if len(rec_data) % 35 == 0:
-        rec_size = 35 # G2
+    divisible_31 = len(rec_data) % 31 == 0
+    divisible_35 = len(rec_data) % 35 == 0
+    rec_size = 31
+    if divisible_35 and not divisible_31:
+        rec_size = 35
+    elif divisible_35 and divisible_31:
+        # Both sizes fit — try to validate the first record with G2 size first,
+        # fall back to G1 if the timestamp is out of range
+        if len(rec_data) >= 35:
+            candidate = struct.unpack(">I", rec_data[8:12])[0]
+            if 946684800 <= candidate <= 2000000000:
+                rec_size = 35
     
     for i in range(len(rec_data) // rec_size):
         chunk = rec_data[i*rec_size:(i+1)*rec_size]
@@ -305,7 +314,8 @@ def parse_g1_vehicles_used(val, results):
                  except (OSError, ValueError, OverflowError): pass
 
             distance = (odo_end - odo_begin) if (odo_begin is not None and odo_end is not None) else 0
-            if distance < 0 or distance > 1000000: distance = 0 # Anti-junk
+            if distance is not None and (distance < 0 or distance > 1000000):
+                distance = None  # odo reset or anomaly, don't report
 
             results["vehicle_sessions"].append({
                 "vehicle_plate": plate,
