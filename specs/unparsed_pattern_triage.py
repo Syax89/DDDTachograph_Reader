@@ -9,7 +9,7 @@ import json
 import os
 import sys
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Mapping, Tuple
+from typing import Any, Dict, List, Mapping
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

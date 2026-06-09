@@ -2,7 +2,7 @@
 import struct
 from datetime import datetime, timezone
 
-from .decoders import decode_string, get_nation
+from .decoders import get_nation
 from core.logger import get_logger
 from core.event_fault_codes import describe_fault
 
@@ -556,14 +556,17 @@ def parse_g22_controller_identification(data: bytes, offset: int = 0):
     rec = data[offset:]
     pos = 0
     try:
-        manufacturer_code = rec[pos]; pos += 1
+        manufacturer_code = rec[pos]
+        pos += 1
         manuf_name, pos = _read_coded_string(rec, pos)
         hw_version, pos = _read_coded_string(rec, pos)
         sw_version, pos = _read_coded_string(rec, pos)
         if pos + 18 > len(rec):
             return None
-        approval = struct.unpack(">Q", rec[pos:pos + 8])[0]; pos += 8
-        serial = struct.unpack(">Q", rec[pos:pos + 8])[0]; pos += 8
+        approval = struct.unpack(">Q", rec[pos:pos + 8])[0]
+        pos += 8
+        serial = struct.unpack(">Q", rec[pos:pos + 8])[0]
+        pos += 8
         mfg_year = rec[pos] if pos < len(rec) else 0
         return {
             "manufacturer_code": manufacturer_code,

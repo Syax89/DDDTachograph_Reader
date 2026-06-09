@@ -29,6 +29,7 @@ from .vu_record_dispatcher import iter_vu_sections
 _log = get_logger(__name__)
 
 # Curve OID (inside 0x7F49 → 0x06) → (curve, hash). Tacho Gen2 uses these.
+# See core/curve_oids.py for canonical OID strings.
 _CURVES = {
     "2b2403030208010107": (ec.BrainpoolP256R1(), hashes.SHA256),  # brainpoolP256r1
     "2b2403030208010b0d": (ec.BrainpoolP384R1(), hashes.SHA384),  # brainpoolP384r1

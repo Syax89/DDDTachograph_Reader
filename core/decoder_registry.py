@@ -4,8 +4,9 @@ Architecture: Schema-Driven Parser — Agent 5
 All known tag definitions consolidated in one place for deterministic dispatch.
 """
 
-from dataclasses import dataclass, field
-from typing import Optional, Callable, Dict, Any, List
+from dataclasses import dataclass
+from typing import Optional, Callable, Dict, List
+import threading
 
 
 @dataclass
@@ -29,6 +30,7 @@ class DecoderRegistry:
     """Central registry of all known tag decoders with spec references."""
 
     _instance: Optional["DecoderRegistry"] = None
+    _lock: threading.Lock = threading.Lock()
 
     def __init__(self):
         self._registry: Dict[int, TagDecoder] = {}
@@ -39,12 +41,15 @@ class DecoderRegistry:
     @classmethod
     def instance(cls) -> "DecoderRegistry":
         if cls._instance is None:
-            cls._instance = cls()
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = cls()
         return cls._instance
 
     @classmethod
     def reset_instance(cls) -> None:
-        cls._instance = None
+        with cls._lock:
+            cls._instance = None
 
     def _build(self):
         from . import decoders
@@ -149,8 +154,8 @@ class DecoderRegistry:
 
             TagDecoder(0x050C, "CalibrationData",
                        decoders.parse_calibration_data,
-                       annex_ref="Annex 1B §2.25", generation="all",
-                       min_length=105),
+                       annex_ref="Annex 1B §2.118", generation="all",
+                       min_length=167),
 
             TagDecoder(0x050D, "VuTimeAdjustmentData",
                        decoders.parse_g2_vu_record,

@@ -1,6 +1,4 @@
-import os
 import json
-from datetime import datetime
 
 
 def _get_pandas():
@@ -136,6 +134,10 @@ class ExportManager:
                         pd.DataFrame(rows).to_excel(
                             writer, sheet_name=label[:31], index=False)
                 else:
+                    if len(items) > _EXCEL_MAX_ROWS:
+                        import logging
+                        logging.getLogger("export").warning(
+                            "Truncating '%s' from %d to %d rows (Excel limit)", label, len(items), _EXCEL_MAX_ROWS)
                     cols, rows = _flatten_records(items[: _EXCEL_MAX_ROWS])
                     if rows:
                         pd.DataFrame(rows, columns=cols).to_excel(
@@ -166,7 +168,6 @@ class ExportManager:
                     "km": km,
                     "Slot": ev.get("slot", ""),
                     "Crew": ev.get("crew", ""),
-                    "Card Present": ev.get("card_present", ""),
                     "Source": day.get("source", ev.get("source", "")),
                 })
         return rows
@@ -174,11 +175,42 @@ class ExportManager:
     @staticmethod
     def export_to_csv(data, filepath):
         pd = _get_pandas()
-        rows = ExportManager._expand_activities(data.get("activities", []))
-        if not rows:
-            pd.DataFrame([{"Info": "No activities found"}]).to_csv(
+        all_rows = []
+
+        activities = data.get("activities", [])
+        for row in ExportManager._expand_activities(activities):
+            row["Section"] = "Activities"
+            all_rows.append(row)
+
+        _EXTRA_SECTIONS = [
+            ("events", "Events"),
+            ("faults", "Faults"),
+            ("places", "Places"),
+            ("calibrations", "Calibrations"),
+            ("vehicle_sessions", "Vehicle Sessions"),
+            ("locations", "GPS Locations"),
+            ("gnss_ad_records", "GNSS Accumulated Driving"),
+            ("gnss_places", "GNSS Places"),
+            ("border_crossings", "Border Crossings"),
+            ("overspeeding_events", "Overspeeding Events"),
+            ("specific_conditions", "Specific Conditions"),
+            ("card_downloads", "Card Downloads"),
+        ]
+        for key, label in _EXTRA_SECTIONS:
+            items = data.get(key) or []
+            if not isinstance(items, list):
+                items = [items]
+            for item in items:
+                if isinstance(item, dict):
+                    flat = {k: (v.hex() if isinstance(v, bytes) else str(v)) for k, v in item.items()}
+                    flat["Section"] = label
+                    all_rows.append(flat)
+
+        if not all_rows:
+            pd.DataFrame([{"Info": "No data found"}]).to_csv(
                 filepath, index=False, sep=";", encoding="utf-8-sig")
             return
+
         driver = data.get("driver", {})
         vehicle = data.get("vehicle", {})
         driver_name = (
@@ -187,9 +219,9 @@ class ExportManager:
         card = driver.get("card_number") or "N/A"
         plate = vehicle.get("plate") or "N/A"
 
-        for r in rows:
-            r["Driver"] = driver_name
-            r["Card Number"] = card
-            r["Vehicle Plate"] = plate
+        for r in all_rows:
+            r.setdefault("Driver", driver_name)
+            r.setdefault("Card Number", card)
+            r.setdefault("Vehicle Plate", plate)
 
-        pd.DataFrame(rows).to_csv(filepath, index=False, sep=";", encoding="utf-8-sig")
+        pd.DataFrame(all_rows).to_csv(filepath, index=False, sep=";", encoding="utf-8-sig")
