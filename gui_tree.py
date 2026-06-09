@@ -479,10 +479,11 @@ class TachoExplorer(tk.Tk):
         meta = data.get("metadata", {})
 
         # ── File Info (chiave/valore) ──
+        is_vu = meta.get("is_vu", False)
         info = {
             "Nome file": os.path.basename(self.current_file),
             "Dimensione": f"{meta.get('file_size_bytes', 0):,} byte".replace(",", " "),
-            "Origine": meta.get("source", "Carta conducente"),
+            "Origine": "Unità di bordo (VU)" if is_vu else "Carta conducente",
             "Generazione": meta.get("generation", "?"),
             "Copertura": f"{meta.get('coverage_pct', 0)}%",
             "Integrità": meta.get("integrity_check", "N/A"),
@@ -494,7 +495,6 @@ class TachoExplorer(tk.Tk):
 
         drv = data.get("driver", {})
         veh = data.get("vehicle", {})
-        is_vu = meta.get("is_vu", False)
 
         # Carta conducente: mostra il titolare. VU: mostra il veicolo.
         if not is_vu and any(drv.values()):
@@ -554,8 +554,8 @@ class TachoExplorer(tk.Tk):
 
     def _populate_activities(self, parent, activities):
         """Crea un nodo 'Attività' espandibile con i giorni come figli."""
-        act_node = self.tree.insert(parent, tk.END, text="Attività giornaliere", open=True)
-        for day in activities:
+        act_node = self.tree.insert(parent, tk.END, text="Attività giornaliere")
+        for day in reversed(activities):
             if not isinstance(day, dict):
                 continue
             events = day.get("eventi", day.get("changes", []))
