@@ -91,7 +91,8 @@ Examples:
 
     # PDF output
     if args.pdf:
-        print("⚠️ PDF export not available in this version.", file=sys.stderr)
+        print("ERROR: PDF export is not implemented.", file=sys.stderr)
+        sys.exit(1)
 
     # Excel output
     if args.excel:
@@ -115,7 +116,7 @@ Examples:
         print(json.dumps(result, indent=2, ensure_ascii=False, cls=BytesEncoder))
 
     if not args.quiet and generated:
-        print(f"\n📁 Generated files:")
+        print("\n📁 Generated files:")
         for fmt, path in generated:
             size = os.path.getsize(path)
             print(f"   {fmt}: {path} ({format_size(size)})")

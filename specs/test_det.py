@@ -17,7 +17,7 @@ def test():
         print("Raw tags keys:")
         for k in sorted(res.get("raw_tags", {}).keys()):
             print(f"  {k}: {len(res['raw_tags'][k])} occurrences")
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
 

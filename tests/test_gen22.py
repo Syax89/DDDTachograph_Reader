@@ -12,7 +12,6 @@ from core.decoders import (
     parse_g22_gnss_accumulated_driving,
     parse_g22_load_unload_operations,
     parse_g22_trailer_registrations,
-    parse_g22_gnss_enhanced_places,
     parse_g22_load_sensor_data,
     parse_g22_border_crossings,
     parse_g2_vu_record,
@@ -177,17 +176,18 @@ class TestGen22Decoders:
     """Test actual decoding of Gen 2.2 fields."""
 
     def test_gnss_accumulated_driving_decode(self):
-        """Correctly decode a GNSS accumulated driving record (Annex 1C §2.79: 13 bytes)."""
+        """Correctly decode a GNSS accumulated driving record (Annex 1C §2.79: 11 bytes)."""
         ts = 1700000000  # 2023-11-14
-        lat = int(45.4642 * 10_000_000)  # Milan
-        lon = int(9.1900 * 10_000_000)
         accuracy = 0x03  # 3 meters
-        record = struct.pack(">IBii", ts, accuracy, lat, lon)
+        # Annex 1C §2.76: GeoCoordinates as signed int24 ±DDMM.M ×10
+        lat_raw = 45279   # 45°27.852'N → 4527.85 × 10
+        lon_raw = 9114    # 009°11.4'E → 911.4 × 10
+        record = struct.pack(">IB", ts, accuracy) + lat_raw.to_bytes(3, 'big', signed=True) + lon_raw.to_bytes(3, 'big', signed=True)
         results = {}
         parse_g22_gnss_accumulated_driving(record, results)
         assert len(results["gnss_ad_records"]) == 1
         r = results["gnss_ad_records"][0]
-        assert abs(r["latitude"] - 45.4642) < 0.001
+        assert abs(r["latitude"] - 45.465) < 0.001
         assert abs(r["longitude"] - 9.19) < 0.001
         assert r["gnss_accuracy"] == 0x03
 
@@ -202,13 +202,13 @@ class TestGen22Decoders:
         assert results["load_sensor_data"][0]["weights_kg"] == [5000, 7000, 12000]
 
     def test_border_crossings_decode(self):
-        """Correctly decode border crossing records."""
+        """Correctly decode border crossing records (annex 1c §2.76: 12 bytes)."""
         ts = 1700000000
         nation_from = 0x1A  # Italy
         nation_to = 0x0D    # Germany
-        lat = int(47.0 * 10_000_000)
-        lon = int(11.0 * 10_000_000)
-        record = struct.pack(">IBBii", ts, nation_from, nation_to, lat, lon)
+        lat_raw = 47000  # 47°00.0'N → 4700.0 × 10
+        lon_raw = 11000  # 011°00.0'E → 1100.0 × 10
+        record = struct.pack(">IBB", ts, nation_from, nation_to) + lat_raw.to_bytes(3, 'big', signed=True) + lon_raw.to_bytes(3, 'big', signed=True)
         results = {}
         parse_g22_border_crossings(record, results)
         assert len(results["border_crossings"]) == 1

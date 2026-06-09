@@ -1,12 +1,11 @@
 """Digital signature validator for tachograph certificate chains. Verifies ERCA/MSCA certificate hierarchies using ECDSA public key cryptography."""
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding, rsa, ec, utils
+from cryptography.hazmat.primitives.asymmetric import padding, rsa, ec
 from cryptography.exceptions import InvalidSignature
 import datetime
 import logging
 import os
-import struct
 
 
 def _get_tbs_bytes(cert):
@@ -69,7 +68,7 @@ class SignatureValidator:
                         # Handle JRC custom PEM format
                         if b"BEGIN ERCA PK" in cert_data:
                             lines = cert_data.decode().splitlines()
-                            base64_data = "".join([l for l in lines if not l.startswith("---")])
+                            base64_data = "".join([line for line in lines if not line.startswith("---")])
                             from cryptography.hazmat.primitives import serialization
                             import base64
                             # In G1, EC_PK is usually a raw RSA public key modulus + exponent

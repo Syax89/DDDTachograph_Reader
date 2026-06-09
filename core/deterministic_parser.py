@@ -13,8 +13,9 @@ from typing import Dict, Any, List, Optional, Tuple
 from collections import defaultdict
 from datetime import datetime
 
-from .constants import MAX_TLV_LENGTH
-from .decoder_registry import DecoderRegistry, TagDecoder
+from .constants import MAX_TLV_LENGTH, MAX_RECURSION_DEPTH
+from .decoder_registry import DecoderRegistry
+from .ber_tlv import read_ber_tlv_header
 
 
 class CoverageTracker:
@@ -268,44 +269,13 @@ class DeterministicParser:
         return (tag, length, 5, payload, dtype)
 
     def _try_read_ber_tlv(self, raw_data: bytes, pos: int, end: int) -> Optional[Tuple[int, int, int, bytes, None]]:
-        if pos >= end:
+        tag_val, length, hdr_size = read_ber_tlv_header(raw_data, pos)
+        if tag_val is None:
             return None
-        start = pos
-        b0 = raw_data[pos]; pos += 1
-        if b0 in (0x00, 0xFF):
+        if pos + hdr_size + length > end:
             return None
-
-        tag_val = b0
-        if (b0 & 0x1F) == 0x1F:
-            while pos < end:
-                b = raw_data[pos]; pos += 1
-                tag_val = (tag_val << 8) | b
-                if not (b & 0x80):
-                    break
-
-        if pos >= end:
-            return None
-
-        lb = raw_data[pos]; pos += 1
-        if lb < 0x80:
-            length = lb
-        else:
-            nb = lb & 0x7F
-            if nb == 0 or nb > 3 or pos + nb > end:
-                return None
-            try:
-                length = int.from_bytes(raw_data[pos:pos + nb], 'big')
-            except (ValueError, IndexError):
-                return None
-            pos += nb
-
-        if length > MAX_TLV_LENGTH:
-            return None
-        if start + (pos - start) + length > end:
-            return None
-
-        payload = raw_data[pos:pos + length]
-        return (tag_val, length, pos - start, payload, None)
+        payload = raw_data[pos + hdr_size:pos + hdr_size + length]
+        return (tag_val, length, hdr_size, payload, None)
 
     def _parse_at_position(self, raw_data: bytes, pos: int, end: int) -> Optional[Tuple[int, int, int, bytes, Any]]:
         stap = self._try_read_stap(raw_data, pos, end)
@@ -371,6 +341,8 @@ class DeterministicParser:
                     "Decoder dispatch failed for tag 0x%04X", tag, exc_info=True)
 
     def _parse_container(self, tag: int, payload: bytes, container_offset: int, depth: int, parent_path: str):
+        if depth > MAX_RECURSION_DEPTH:
+            return
         dec = self.registry.get_decoder(tag)
         mode = 'ber' if dec and dec.generation in ('G2', 'G2.2') else 'stap'
         inner_start = 0

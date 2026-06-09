@@ -1,5 +1,4 @@
 """Main parser entry point for DDD tachograph files. Provides TachoParser class with generation detection, deterministic/legacy parsing, and post-processing (dedup, geocoding, forensic validation)."""
-import struct
 import os
 import json
 import mmap
@@ -7,15 +6,14 @@ import warnings
 import logging
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
-
 from signature_validator import SignatureValidator
-from core.models import TachoResult
+from core.models import TachoResult, build_generations_tree
 from core.tag_navigator import TagNavigator
-from core.models import build_generations_tree
 from core import decoders
 from core.tag_definitions import TACHO_TAGS
 from core.logger import decoder_failure_count, decoder_failures, reset_decoder_failures
+
+logger = logging.getLogger(__name__)
 
 class TachoParser:
     """
@@ -66,7 +64,8 @@ class TachoParser:
         return tags
 
     def _safe_read(self, pos, length):
-        if pos < 0 or length < 0 or (pos + length) > self.file_size: return None
+        if pos < 0 or length < 0 or (pos + length) > self.file_size:
+            return None
         try:
             return self.raw_data[pos : pos + length]
         except Exception as e:
@@ -272,7 +271,7 @@ class TachoParser:
         # Recompute bytes_covered from merged raw_tag ranges.
         # If any tags were parsed, gaps are filled with GAP_FILLER entries making 100%.
         raw_covered = sum(e - s for s, e in merged)
-        self.results["metadata"]["raw_bytes_parsed"] = self.bytes_covered
+        self.results["metadata"]["raw_bytes_parsed"] = raw_covered
         self.bytes_covered = self.file_size
         self.results["metadata"]["total_bytes_covered"] = self.bytes_covered
 
@@ -431,10 +430,16 @@ class TachoParser:
             # Forensic Validation
             if self.card_cert_raw and self.msca_cert_raw:
                 status, pubkey = self.validator.validate_tacho_chain(self.card_cert_raw, self.msca_cert_raw)
-                if status is True: self.validation_status, self.card_public_key = "Verified", pubkey
-                elif status == "Incomplete (Missing ERCA)": self.validation_status, self.card_public_key = "Verified (Local Chain)", pubkey
-                else: self.validation_status = "Invalid Certificate Chain"
-            else: self.validation_status = "Incomplete Certificates"
+                if status is True:
+                    self.validation_status = "Verified"
+                    self.card_public_key = pubkey
+                elif status == "Incomplete (Missing ERCA)":
+                    self.validation_status = "Verified (Local Chain)"
+                    self.card_public_key = pubkey
+                else:
+                    self.validation_status = "Invalid Certificate Chain"
+            else:
+                self.validation_status = "Incomplete Certificates"
 
             self.results["metadata"]["integrity_check"] = self.validation_status
             self.results["metadata"]["decoder_failure_count"] = decoder_failure_count()

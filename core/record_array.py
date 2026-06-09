@@ -1,5 +1,4 @@
 import struct
-from datetime import datetime, timezone
 
 
 class RecordArrayParser:
@@ -111,8 +110,7 @@ def decode_g2_driver_record(data: bytes, offset: int = 0):
 
     if pos >= len(data):
         return None
-    code_page = data[pos]
-    pos += 1
+    pos += 1  # skip code_page
     if pos + 35 > len(data):
         return None
     surname = data[pos:pos + 35].decode("latin-1", errors="replace").strip()
@@ -120,8 +118,7 @@ def decode_g2_driver_record(data: bytes, offset: int = 0):
 
     if pos >= len(data):
         return None
-    code_page = data[pos]
-    pos += 1
+    pos += 1  # skip code_page
     if pos + 35 > len(data):
         return None
     firstname = data[pos:pos + 35].decode("latin-1", errors="replace").strip()
@@ -129,8 +126,7 @@ def decode_g2_driver_record(data: bytes, offset: int = 0):
 
     if pos + 18 > len(data):
         return None
-    code_page = data[pos]
-    pos += 1
+    pos += 1  # skip code_page
     nation = data[pos]
     pos += 1
     card_number = ""
@@ -181,8 +177,6 @@ def decode_g2_daily_record(data: bytes, offset: int = 0):
     rec_data = data[offset:]
 
     tag = struct.unpack(">H", rec_data[0:2])[0]
-    dtype = rec_data[2]
-    length = struct.unpack(">H", rec_data[3:5])[0]
     daily_counter = struct.unpack(">I", rec_data[5:9])[0]
     day_field = struct.unpack(">H", rec_data[17:19])[0]
     changes_count = struct.unpack(">H", rec_data[20:22])[0]
@@ -208,7 +202,6 @@ def decode_g2_daily_record(data: bytes, offset: int = 0):
             continue
         slot = (c >> 15) & 1
         crew = (c >> 14) & 1
-        card_present = (c >> 13) & 1
         activity = (c >> 11) & 3
         minute = c & 0x7FF
         if minute > 1439:
@@ -218,7 +211,6 @@ def decode_g2_daily_record(data: bytes, offset: int = 0):
             "activity": activity_map.get(activity, f"type_{activity}"),
             "slot": slot + 1,
             "crew": bool(crew),
-            "card_present": not bool(card_present),
         })
 
     sig_len = rec_data[44 + 1] if len(rec_data) > 45 else 0

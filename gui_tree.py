@@ -21,12 +21,13 @@ import logging
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 
-_log = logging.getLogger("tacho_gui")
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from ddd_parser import TachoParser
 from core.encoding import BytesEncoder
+from core.models import _clean_tag_name
+
+_log = logging.getLogger("tacho_gui")
 
 try:
     from export_manager import ExportManager
@@ -82,6 +83,11 @@ LIST_SECTIONS = [
     ("places", "Places", "activity", None),
     ("specific_conditions", "Specific Conditions", "activity", None),
     ("calibrations", "Calibrations", "activity", None),
+    ("card_downloads", "Card Downloads", "activity", None),
+    ("workshops", "Calibration Workshops", "activity", None),
+    ("previous_vehicle", "Previous Vehicle", "activity", None),
+    ("card_issuer", "Card Issuer", "activity", None),
+    ("company_holders", "Company Holders", "activity", None),
 
     ("gnss_ad_records", "GNSS — Accumulated Driving", "g22", None),
     ("gnss_places", "GNSS — Places", "g22", None),
@@ -94,12 +100,16 @@ LIST_SECTIONS = [
     ("sensor_pairings", "Sensor Pairing", "vu", None),
     ("card_iw_records", "Card Insertion / Withdrawal", "vu", None),
     ("card_records", "Card Records", "vu", None),
+    ("time_adjustments", "Time Adjustments", "vu", None),
     ("company_locks", "Company Locks", "vu", None),
     ("download_activities", "Downloads", "vu", None),
     ("power_interruptions", "Power Supply Interruptions", "vu", None),
     ("overspeeding_control", "Overspeeding Control", "vu", None),
     ("control_activities", "Control Activities", "vu", None),
     ("its_consents", "ITS Consents", "vu", None),
+    ("signed_daily_records", "Signed Daily Records", "vu", None),
+    ("inserted_drivers", "Inserted Drivers", "vu", None),
+    ("speed_blocks", "Detailed Speed Blocks", "vu", None),
     ("vu_record_arrays", "VU Record Array (raw)", "vu", None),
 ]
 
@@ -107,27 +117,33 @@ LIST_SECTIONS = [
 def _row_activities(rec):
     """Expands each day into single event rows (Rest, Drive, etc.)."""
     events = rec.get("eventi", rec.get("changes", []))
+    driver = rec.get("driver", "")
+    daily_counter = rec.get("daily_counter", "")
+
+    base = {
+        "Date": rec.get("data", rec.get("timestamp", "?")),
+        "km": rec.get("km", 0),
+        "Driver": fmt_val(driver) if driver else "",
+        "Day #": str(daily_counter) if daily_counter != "" else "",
+    }
+
     if not isinstance(events, list) or not events:
-        return {
-            "Date": rec.get("data", rec.get("timestamp", "?")),
-            "Time": "\u2014",
-            "Type": "(no event)",
-            "km": rec.get("km", 0),
-        }
+            return {**base, "Time": "\u2014", "Type": "(no event)", "Slot": "", "Crew": ""}
+
     rows = []
     for ev in events:
         if isinstance(ev, dict):
-            rows.append({
-                "Date": rec.get("data", rec.get("timestamp", "?")),
+            slot = ev.get("slot", "")
+            if isinstance(slot, int):
+                slot = f"Slot {slot}"
+            rows.append({**base,
                 "Time": ev.get("ora", ev.get("time", "?")),
                 "Type": ev.get("tipo", ev.get("type", "?")),
-                "km": rec.get("km", 0),
+                "Slot": fmt_val(slot) if slot else "",
+                "Crew": fmt_val(ev.get("crew", ev.get("team", ""))),
             })
-    return rows if rows else {
-        "Date": rec.get("data", ""),
-        "Time": "\u2014",
-        "Type": "(no event)",
-        "km": rec.get("km", 0),
+    return rows if rows else {**base,
+        "Time": "\u2014", "Type": "(no event)", "Slot": "", "Crew": "",
     }
 
 
@@ -256,14 +272,11 @@ def _kv_rows(d):
     return ["Field", "Value"], [[str(k), fmt_val(v)] for k, v in d.items()]
 
 
-def _clean_tag_name(name):
-    """Readable raw tag name (strips generation prefix, marks uninterpreted)."""
+def _clean_tag_name_display(name):
+    """Readable raw tag name for GUI display (wraps core _clean_tag_name)."""
     if not name or name.startswith("BER_") or "_BER_" in name:
         return "(uninterpreted)"
-    for pfx in ("G22_", "G2_", "G1_", "VU_", "EF_"):
-        if name.startswith(pfx):
-            return name[len(pfx):]
-    return name
+    return _clean_tag_name(name)
 
 
 # ── Excel-style data table ─────────────────────────────────────────────────
@@ -607,6 +620,8 @@ class TachoExplorer(tk.Tk):
             "Origin": "Vehicle Unit (VU)" if is_vu else "Driver Card",
             "Generation": meta.get("generation", "?"),
             "Coverage": f"{meta.get('coverage_pct', 0)}%",
+            "Bytes Parsed": f"{meta.get('raw_bytes_parsed', 0):,}".replace(",", " "),
+            "Bytes Covered": f"{meta.get('total_bytes_covered', 0):,}".replace(",", " "),
             "Integrity": meta.get("integrity_check", "N/A"),
             "Decoder failures": meta.get("decoder_failure_count", 0),
             "Parsed at": meta.get("parsed_at", ""),
@@ -647,6 +662,19 @@ class TachoExplorer(tk.Tk):
 
         # ── List groups ──
         sections_by_group = {}
+
+        # Single-record dicts → Field/Value (rendered before list loops)
+        _DICT_SECTIONS = {
+            "vu_info": "VU Manufacturer Info",
+            "card_issuer": "Card Issuer",
+            "card_application": "Card Application Info",
+        }
+        for dk, dl in _DICT_SECTIONS.items():
+            dv = data.get(dk) or {}
+            if isinstance(dv, dict) and dv:
+                cols, rows = _kv_rows(dv)
+                sections_by_group.setdefault("activity", []).append((dl, cols, rows))
+
         for key, label, group, tname in LIST_SECTIONS:
             records = data.get(key) or []
             if not records:
@@ -712,22 +740,38 @@ class TachoExplorer(tk.Tk):
             events = day.get("eventi", day.get("changes", []))
             date_str = day.get("data", day.get("timestamp", "?"))
             km = day.get("km", 0)
+            driver = day.get("driver", "")
+            daily_counter = day.get("daily_counter", "")
 
             if isinstance(events, list) and events:
                 rows = []
                 for ev in events:
                     if isinstance(ev, dict):
+                        slot = ev.get("slot", "")
+                        if isinstance(slot, int):
+                            slot = f"Slot {slot}"
                         rows.append([
                             fmt_val(ev.get("ora", ev.get("time", "?"))),
                             fmt_val(ev.get("tipo", ev.get("type", "?"))),
+                            fmt_val(slot) if slot else "",
+                            fmt_val(ev.get("crew", ev.get("team", ""))),
                             fmt_val(km),
                         ])
-                cols = ["Time", "Type", "km"]
+                cols = ["Time", "Type", "Slot", "Crew", "km"]
             else:
                 cols = ["Time", "Type"]
                 rows = [[fmt_val("\u2014"), fmt_val("(no event)")]]
 
-            self._add_section(act_node, date_str, cols, rows)
+            label = date_str
+            extras = []
+            if driver:
+                extras.append(str(driver))
+            if daily_counter != "":
+                extras.append(f"#{daily_counter}")
+            if extras:
+                label = f"{date_str}  [{', '.join(extras)}]"
+
+            self._add_section(act_node, label, cols, rows)
 
     def _populate_security(self, data):
         sv = data.get("signature_verification")
@@ -781,7 +825,7 @@ class TachoExplorer(tk.Tk):
                 tid = o.get("tag_id", "")
                 a = agg.get(tid)
                 if a is None:
-                    a = {"tid": tid, "name": _clean_tag_name(o.get("tag_name", "")),
+                    a = {"tid": tid, "name": _clean_tag_name_display(o.get("tag_name", "")),
                          "count": 0, "bytes": 0, "offset": o.get("offset", ""),
                          "gen": o.get("generation", ""), "hex": o.get("data_hex", "")}
                     agg[tid] = a

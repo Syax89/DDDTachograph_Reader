@@ -2,7 +2,7 @@
 import struct
 import inspect
 from . import decoders
-from core.constants import MAX_TLV_LENGTH
+from core.ber_tlv import read_ber_tlv_header
 from core.logger import get_logger
 
 _log = get_logger(__name__)
@@ -14,29 +14,7 @@ class TagNavigator:
         self.parser = parser
 
     def read_ber_tlv(self, data, pos):
-        if pos >= len(data): return None, None, 0
-        try:
-            start = pos
-            b0 = data[pos]; pos += 1
-            if b0 in (0x00, 0xFF): return None, None, 0
-            tag = b0
-            if (b0 & 0x1F) == 0x1F:
-                while pos < len(data):
-                    b = data[pos]; pos += 1
-                    tag = (tag << 8) | b
-                    if not (b & 0x80): break
-            if pos >= len(data): return None, None, 0
-            lb = data[pos]; pos += 1
-            if lb < 0x80: length = lb
-            else:
-                nb = lb & 0x7F
-                if nb == 0 or nb > 3 or pos + nb > len(data): return None, None, 0
-                length = int.from_bytes(data[pos:pos+nb], 'big')
-                pos += nb
-            if length > MAX_TLV_LENGTH: return None, None, 0
-            return tag, length, pos - start
-        except (IndexError, ValueError, TypeError, struct.error):
-            return None, None, 0
+        return read_ber_tlv_header(data, pos)
 
     def parse_stap_recursive(self, start_pos, end_pos, depth=0, parent_path="", mode='stap'):
         """
@@ -112,7 +90,8 @@ class TagNavigator:
                         pos += h + length
                         matched = True
                 if not matched:
-                    if unparsed_start == -1: unparsed_start = pos
+                    if unparsed_start == -1:
+                        unparsed_start = pos
                     pos += 1
             if unparsed_start != -1:
                 self.record_unparsed(unparsed_start, end_pos, depth, parent_path)
@@ -144,7 +123,8 @@ class TagNavigator:
 
     def record_unparsed(self, start, end, depth, parent_path):
         length = end - start
-        if length <= 0: return
+        if length <= 0:
+            return
         
         self.parser.bytes_covered += length
         val = self.parser.raw_data[start:end]
@@ -201,7 +181,8 @@ class TagNavigator:
                             self.parse_stap_recursive(pos, pos + 5 + length, occ['depth'] + 1, f"DEEP_{pos:X}")
                             pos += 5 + length
                             found = True
-                except (struct.error, IndexError, ValueError): pass
+                except (struct.error, IndexError, ValueError):
+                    pass
                 
                 # Try BER at this position
                 if not found:
@@ -211,7 +192,8 @@ class TagNavigator:
                         pos += h + length
                         found = True
                 
-                if not found: pos += 1
+                if not found:
+                    pos += 1
 
     def record_and_dispatch(self, tag, length, val, pos, h_size, depth, parent_path, mode='stap', dtype=None):
         tag_name = self.parser.TAGS.get(tag, f"BER_{tag:04X}")
@@ -312,8 +294,10 @@ class TagNavigator:
             "generation": spec_info["generation"],
             "data_hex": val.hex() if length <= 128 else f"{val[:128].hex()}..."
         })
-        if tag in (0xC108, 0x0104): self.parser.msca_cert_raw = val
-        elif tag in (0xC100, 0x0103, 0xC101, 0x7F21): self.parser.card_cert_raw = val
+        if tag in (0xC108, 0x0104):
+            self.parser.msca_cert_raw = val
+        elif tag in (0xC100, 0x0103, 0xC101, 0x7F21):
+            self.parser.card_cert_raw = val
 
     def _get_spec_meta(self, tag):
         """Return spec verification metadata for a tag.
@@ -513,7 +497,8 @@ class TagNavigator:
         # Euristiche per BER-TLV (bit 5 indica costruttore/container)
         if mode == 'annex1c' and tag > 0xFF:
             first_byte = (tag >> ((tag.bit_length() - 1) // 8 * 8)) & 0xFF
-            if first_byte & 0x20: is_container = True
+            if first_byte & 0x20:
+                is_container = True
 
         # Skip recursion for tags with dedicated leaf decoders (overrides BER heuristic)
         NO_RECURSE_TAGS = {0x7F49, 0x5F37, 0x42, 0x4208}
@@ -528,7 +513,8 @@ class TagNavigator:
             full_key = f"{parent_path} > {raw_key}" if parent_path else raw_key
             inner_start, inner_end = pos + h_size, pos + h_size + length
             if (tag & 0xFF00) == 0x7600:
-                if length >= 2 and val[0] == 0x00: inner_start += 2
+                if length >= 2 and val[0] == 0x00:
+                    inner_start += 2
                 # G1 VU containers (0x7601-0x7604) have STAP inner data
                 # G2/G2.2 containers (0x7621-0x7634) have BER-TLV inner data
                 is_g1_vu = tag in (0x7601, 0x7602, 0x7603, 0x7604, 0x7605)
@@ -545,6 +531,9 @@ class TagNavigator:
                     self.parse_annex1c(inner_start, inner_end, depth + 1, full_key)
                 else:
                     self.parse_annex1c(inner_start, inner_end, depth + 1, full_key)
-            elif tag == 0x7F21: self.parse_annex1c(inner_start, inner_end, depth + 1, full_key)
-            elif mode == 'stap': self.parse_stap_recursive(inner_start, inner_end, depth + 1, full_key)
-            else: self.parse_annex1c(inner_start, inner_end, depth + 1, full_key)
+            elif tag == 0x7F21:
+                self.parse_annex1c(inner_start, inner_end, depth + 1, full_key)
+            elif mode == 'stap':
+                self.parse_stap_recursive(inner_start, inner_end, depth + 1, full_key)
+            else:
+                self.parse_annex1c(inner_start, inner_end, depth + 1, full_key)

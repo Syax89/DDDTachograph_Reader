@@ -33,10 +33,12 @@ def get_nation(code):
 
 def decode_string(data, is_id=False):
     """Decode binary string handling CodePage byte (Annex 1B/1C)."""
-    if not data: return ""
+    if not data:
+        return ""
     try:
         data = data.rstrip(b'\x00\xff')
-        if not data: return ""
+        if not data:
+            return ""
 
         if data[0] < 0x20:
             enc = _CODEPAGE_ENCODINGS.get(data[0], 'latin-1')
@@ -60,7 +62,8 @@ def decode_date(data, prefer_datef=False):
     if it yields a valid date. Useful for fields like CardHolderBirthDate that
     use the Datef format (Annex 1B §2.26) rather than TimeReal.
     """
-    if len(data) < 4: return "N/A"
+    if len(data) < 4:
+        return "N/A"
 
     datef_result = decode_datef(data[:4])
     datef_valid = datef_result != "N/A"
@@ -87,7 +90,8 @@ def decode_date(data, prefer_datef=False):
 
 def decode_datef(data):
     """Decode Datef (4-byte BCD: YY YY MM DD per Annex 1B §2.26)."""
-    if len(data) < 4: return "N/A"
+    if len(data) < 4:
+        return "N/A"
     try:
         yh = (data[0] >> 4) * 10 + (data[0] & 0x0F)
         yl = (data[1] >> 4) * 10 + (data[1] & 0x0F)
@@ -104,7 +108,6 @@ def decode_activity_val(val):
     """Decode 2-byte activityChangeInfo."""
     slot = (val >> 15) & 1
     driving_status = (val >> 14) & 1 # 0=Single, 1=Crew
-    card_status = (val >> 13) & 1    # 0=Inserted, 1=Not
     act_code = (val >> 11) & 3
     mins = val & 0x07FF
     acts = {0: "REST", 1: "AVAILABLE", 2: "WORK", 3: "DRIVE"}
@@ -114,13 +117,13 @@ def decode_activity_val(val):
         "ora": f"{mins // 60:02d}:{mins % 60:02d}",
         "slot": "Second" if slot else "First",
         "team": bool(driving_status),
-        "card_present": not bool(card_status)
     }
 
 def get_cyclic_data(data, start, length, base_offset=4):
     """Read data from a cyclic buffer handling wrap-around."""
     buf_size = len(data) - base_offset
-    if buf_size <= 0: return b'\x00' * length
+    if buf_size <= 0:
+        return b'\x00' * length
     
     start_rel = (start - base_offset) % buf_size
     end_rel = start_rel + length
@@ -133,9 +136,10 @@ def get_cyclic_data(data, start, length, base_offset=4):
         return part1 + part2
 
 def parse_cyclic_buffer_activities(val, results):
-    if len(val) < 16: return
+    if len(val) < 16:
+        return
     try:
-        # print(f"DEBUG: Parsing Cyclic Buffer (len={len(val)})")
+        pass
         buf_size = len(val) - 4
         newest_ptr = struct.unpack(">H", val[2:4])[0]
         ptr = 4 + newest_ptr
@@ -143,11 +147,13 @@ def parse_cyclic_buffer_activities(val, results):
         
         for _ in range(366):
             header_data = get_cyclic_data(val, ptr, 8)
-            if len(header_data) < 8: break
+            if len(header_data) < 8:
+                break
             
             prev_len, rec_len, ts = struct.unpack(">HHI", header_data)
             
-            if rec_len < 14 or rec_len > 2048 or ts == 0 or ts == 0xFFFFFFFF: continue
+            if rec_len < 14 or rec_len > 2048 or ts == 0 or ts == 0xFFFFFFFF:
+                continue
             
             try:
                 dt = datetime.fromtimestamp(ts, tz=timezone.utc)
@@ -166,14 +172,17 @@ def parse_cyclic_buffer_activities(val, results):
                 if act_len > 0:
                     act_data = get_cyclic_data(val, ptr+12, act_len)
                     for i in range(0, len(act_data), 2):
-                        if i + 2 > len(act_data): break
+                        if i + 2 > len(act_data):
+                            break
                         ev_val = struct.unpack(">H", act_data[i:i+2])[0]
                         if ev_val != 0xFFFF: # Fix Midnight Bug (allow 0)
                             daily["eventi"].append(decode_activity_val(ev_val))
                 
-                if daily["eventi"]: results["activities"].append(daily)
+                if daily["eventi"]:
+                    results["activities"].append(daily)
             
-            if prev_len == 0 or prev_len > buf_size: break
+            if prev_len == 0 or prev_len > buf_size:
+                break
             
             curr_offset = max(0, ptr - 4)
             prev_offset = (curr_offset - prev_len) % buf_size
@@ -237,26 +246,36 @@ def parse_g2_vu_record(val, results, tag):
         _log.debug("G2 VU record parse failed for tag 0x%04X: %s", tag, exc)
 
 def parse_g1_identification(val, results):
-    if len(val) < 65: return
+    if len(val) < 65:
+        return
     off = 0
     # CardIdentification (65 bytes)
-    results["driver"]["issuing_nation"] = get_nation(val[off]); off += 1
-    results["driver"]["card_number"] = decode_string(val[off:off+16], is_id=True); off += 16
+    results["driver"]["issuing_nation"] = get_nation(val[off])
+    off += 1
+    results["driver"]["card_number"] = decode_string(val[off:off+16], is_id=True)
+    off += 16
     off += 36 # cardIssuingAuthorityName
     off += 4 + 4 # cardIssueDate, cardValidityBegin
-    results["driver"]["expiry_date"] = decode_date(val[off:off+4]); off += 4
+    results["driver"]["expiry_date"] = decode_date(val[off:off+4])
+    off += 4
     
     # DriverCardHolderIdentification (78 bytes)
     if len(val) >= off + 78:
-        results["driver"]["surname"] = decode_string(val[off:off+36]); off += 36
-        results["driver"]["firstname"] = decode_string(val[off:off+36]); off += 36
-        results["driver"]["birth_date"] = decode_date(val[off:off+4], prefer_datef=True); off += 4
-        results["driver"]["preferred_language"] = decode_string(val[off:off+2]); off += 2
+        results["driver"]["surname"] = decode_string(val[off:off+36])
+        off += 36
+        results["driver"]["firstname"] = decode_string(val[off:off+36])
+        off += 36
+        results["driver"]["birth_date"] = decode_date(val[off:off+4], prefer_datef=True)
+        off += 4
+        results["driver"]["preferred_language"] = decode_string(val[off:off+2])
+        off += 2
     elif len(val) >= off + 36: # Partial (e.g. G2 internal)
-        results["driver"]["surname"] = decode_string(val[off:off+36]); off += 36
+        results["driver"]["surname"] = decode_string(val[off:off+36])
+        off += 36
 
 def parse_g1_driving_licence(val, results):
-    if len(val) < 53: return
+    if len(val) < 53:
+        return
     results["driver"]["licence_issuing_nation"] = get_nation(val[36])
     results["driver"]["licence_number"] = decode_string(val[37:53], is_id=True)
 
@@ -266,7 +285,8 @@ def parse_g1_vehicles_used(val, results):
     In G1: Fixed 31-byte records.
     In G2: Fixed 35-byte records (Annex 1C).
     """
-    if len(val) < 4: return
+    if len(val) < 4:
+        return
     
     # Determine record size: 31 (G1) or 35 (G2)
     # The first 2 bytes are an index/pointer
@@ -287,7 +307,8 @@ def parse_g1_vehicles_used(val, results):
     consecutive_garbage = 0
     for i in range(len(rec_data) // rec_size):
         chunk = rec_data[i*rec_size:(i+1)*rec_size]
-        if len(chunk) < rec_size: break
+        if len(chunk) < rec_size:
+            break
 
         try:
             if rec_size == 31:
@@ -311,52 +332,64 @@ def parse_g1_vehicles_used(val, results):
             stripped = plate.strip().rstrip('\x00')
             if not stripped or len(stripped) < 2:
                 consecutive_garbage += 1
-                if consecutive_garbage >= 3: break
+                if consecutive_garbage >= 3:
+                    break
                 continue
             if not all(0x20 <= ord(c) < 0x7F for c in stripped):
                 consecutive_garbage += 1
-                if consecutive_garbage >= 3: break
+                if consecutive_garbage >= 3:
+                    break
                 continue
             alpha_ratio = sum(1 for c in stripped if c.isalnum()) / len(stripped) if stripped else 0
             if alpha_ratio < 0.5:
                 consecutive_garbage += 1
-                if consecutive_garbage >= 3: break
+                if consecutive_garbage >= 3:
+                    break
                 continue
 
             # Reject VIN-length strings (14+ chars) — real plates are shorter
             if len(stripped) >= 14:
                 consecutive_garbage += 1
-                if consecutive_garbage >= 3: break
+                if consecutive_garbage >= 3:
+                    break
                 continue
 
             if nation_code > 0x50:
                 consecutive_garbage += 1
-                if consecutive_garbage >= 3: break
+                if consecutive_garbage >= 3:
+                    break
                 continue
 
             if odo_begin is not None and odo_begin > MAX_ODO_DISTANCE_KM * 100:
                 consecutive_garbage += 1
-                if consecutive_garbage >= 3: break
+                if consecutive_garbage >= 3:
+                    break
                 continue
             if odo_end is not None and odo_end > MAX_ODO_DISTANCE_KM * 100:
                 consecutive_garbage += 1
-                if consecutive_garbage >= 3: break
+                if consecutive_garbage >= 3:
+                    break
                 continue
 
             # Sanitization
             if first_use_ts < 946684800 or first_use_ts > 2000000000:
                 consecutive_garbage += 1
-                if consecutive_garbage >= 3: break
+                if consecutive_garbage >= 3:
+                    break
                 continue
 
-            if odo_begin == 0xFFFFFF or odo_begin == 0xFFFFFFFF: odo_begin = None
-            if odo_end == 0xFFFFFF or odo_end == 0xFFFFFFFF: odo_end = None
+            if odo_begin == 0xFFFFFF or odo_begin == 0xFFFFFFFF:
+                odo_begin = None
+            if odo_end == 0xFFFFFF or odo_end == 0xFFFFFFFF:
+                odo_end = None
 
             start_date = datetime.fromtimestamp(first_use_ts, tz=timezone.utc).isoformat()
             end_date = "Open Session"
             if last_use_ts != 0xFFFFFFFF and last_use_ts > 946684800:
-                 try: end_date = datetime.fromtimestamp(last_use_ts, tz=timezone.utc).isoformat()
-                 except (OSError, ValueError, OverflowError): pass
+                 try:
+                     end_date = datetime.fromtimestamp(last_use_ts, tz=timezone.utc).isoformat()
+                 except (OSError, ValueError, OverflowError):
+                     pass
 
             distance = (odo_end - odo_begin) if (odo_begin is not None and odo_end is not None) else 0
             if distance is not None and (distance < 0 or distance > 1000000):
@@ -377,13 +410,16 @@ def parse_g1_vehicles_used(val, results):
             continue
 
 def parse_g1_current_usage(val, results):
-    if len(val) < 19: return
+    if len(val) < 19:
+        return
     try:
         ts = struct.unpack(">I", val[0:4])[0]
-        if ts == 0 or ts == 0xFFFFFFFF or ts > 4102444800: return
+        if ts == 0 or ts == 0xFFFFFFFF or ts > 4102444800:
+            return
         results["vehicle"]["plate"] = decode_string(val[5:19], is_id=True)
         results["vehicle"]["registration_nation"] = get_nation(val[4])
-    except (struct.error, IndexError, ValueError): pass
+    except (struct.error, IndexError, ValueError):
+        pass
 
 def parse_card_identification(val, results):
     """Parse CardIdentification (tag 0x0102) — Annex 1B §2.15, 65 bytes.
@@ -397,7 +433,8 @@ def parse_card_identification(val, results):
       CardExpiryDate            4  TimeReal
     Total: 65 bytes
     """
-    if len(val) < 65: return
+    if len(val) < 65:
+        return
     results["driver"]["issuing_nation"] = get_nation(val[0])
     results["driver"]["card_number"] = decode_string(val[1:17], is_id=True)
     results["driver"]["issuing_authority"] = decode_string(val[17:53])
@@ -406,16 +443,17 @@ def parse_card_identification(val, results):
     results["driver"]["expiry_date"] = decode_date(val[61:65])
 
 def parse_driver_card_holder_identification(val, results):
-    if len(val) < 78: return
+    if len(val) < 78:
+        return
     results["driver"]["surname"] = decode_string(val[0:36])
     results["driver"]["firstname"] = decode_string(val[36:72])
     results["driver"]["birth_date"] = decode_date(val[72:76], prefer_datef=True)
     results["driver"]["preferred_language"] = decode_string(val[76:78])
 
 def parse_calibration_data(val, results):
-    """Parse CalibrationData (tag 0x050C) — Annex 1B §2.25.
+    """Parse CalibrationData (tag 0x050C) — Annex 1B §2.118, 167 bytes per record.
 
-    Record structure (C# VehicleUnitData.config, 167 bytes):
+    Record structure (Annex 1B §2.118 VuCalibrationRecord):
       CalibrationPurpose              1  UInt8
       WorkshopName                   36  Name (CodePage + 35 chars)
       WorkshopAddress                36  Address (CodePage + 35 chars)
@@ -436,21 +474,40 @@ def parse_calibration_data(val, results):
       NextCalibrationDate             4  TimeReal
     Total: 167 bytes
     """
-    if len(val) < 105: return
+    if len(val) < 105:
+        return
     try:
         data = val[2:]  # skip 2-byte header pointer
-        rec_size = 167 if len(data) % 167 == 0 else (105 if len(data) % 105 == 0 else 167)
+
+        # Annex 1B §2.118 VuCalibrationRecord = 167 bytes.
+        # Some G2 files contain 105-byte non-standard records (likely a
+        # reduced layout without workshop fields). Prefer 167, fall back to 105.
+        if len(data) % 167 == 0:
+            rec_size = 167
+        elif len(data) % 105 == 0:
+            rec_size = 105
+            _log.debug("Calibration: non-standard 105-byte records")
+        else:
+            return
+
         for i in range(0, len(data) - rec_size + 1, rec_size):
             chunk = data[i:i + rec_size]
             purpose = chunk[0]
 
-            workshop_name = decode_string(chunk[1:37]) if rec_size >= 167 else ""
-            workshop_address = decode_string(chunk[37:73]) if rec_size >= 167 else ""
-            ws_card_nation = get_nation(chunk[73])
-            ws_card_number = decode_string(chunk[74:90], is_id=True)
-            ws_card_expiry = decode_date(chunk[91:95]) if rec_size >= 167 else "N/A"
+            if rec_size >= 167:
+                workshop_name = decode_string(chunk[1:37])
+                workshop_address = decode_string(chunk[37:73])
+                ws_card_nation = get_nation(chunk[73])
+                ws_card_number = decode_string(chunk[74:90], is_id=True)
+                ws_card_expiry = decode_date(chunk[91:95])
+            else:
+                workshop_name = ""
+                workshop_address = ""
+                ws_card_nation = "N/A"
+                ws_card_number = "N/A"
+                ws_card_expiry = "N/A"
 
-            vin = decode_string(chunk[95:112] if rec_size >= 167 else chunk[1:18], is_id=True)
+            vin_off = 95 if rec_size >= 167 else 1
             nation_off = 112 if rec_size >= 167 else 18
             plate_off = 113 if rec_size >= 167 else 19
             w_off = 127 if rec_size >= 167 else 33
@@ -460,6 +517,7 @@ def parse_calibration_data(val, results):
             speed_off = 148 if rec_size >= 167 else 54
             odo_off = 149 if rec_size >= 167 else 55
 
+            vin = decode_string(chunk[vin_off:vin_off + 17], is_id=True)
             nation = get_nation(chunk[nation_off])
             plate = decode_string(chunk[plate_off:plate_off + 14])
             w_const = struct.unpack(">H", chunk[w_off:w_off + 2])[0]
@@ -468,9 +526,11 @@ def parse_calibration_data(val, results):
             tyre = decode_string(chunk[tyre_off:tyre_off + 15])
             speed = chunk[speed_off]
             old_odo = int.from_bytes(chunk[odo_off:odo_off + 3], 'big')
-            if old_odo == 0xFFFFFF: old_odo = None
+            if old_odo == 0xFFFFFF:
+                old_odo = None
             new_odo = int.from_bytes(chunk[odo_off + 3:odo_off + 6], 'big') if rec_size >= 167 else None
-            if new_odo == 0xFFFFFF: new_odo = None
+            if new_odo == 0xFFFFFF:
+                new_odo = None
             old_time = decode_date(chunk[odo_off + 6:odo_off + 10]) if rec_size >= 167 else "N/A"
             new_time = decode_date(chunk[odo_off + 10:odo_off + 14]) if rec_size >= 167 else "N/A"
             next_cal = decode_date(chunk[odo_off + 14:odo_off + 18]) if rec_size >= 167 else "N/A"
@@ -501,25 +561,37 @@ def parse_calibration_data(val, results):
 # ─── Gen 2.2 (Smart Tachograph V2) Decoders ─── Reg. EU 2023/980 ───
 
 def _decode_gnss_coord(data, offset):
-    """Decode GNSS coordinates (latitude/longitude) as signed 32-bit, unit 1/10 micro-degree."""
-    if len(data) < offset + 4:
+    """Decode GeoCoordinates — Annex 1C §2.76: signed int24, ±DDMM.M ×10.
+    
+    Latitude:  ±DDMM.M × 10  (e.g. 45°31.2'N → +45312)
+    Longitude: ±DDDMM.M × 10 (e.g. 009°12.5'E → +9125)
+    Unknown position = 0x7FFFFF (3 bytes).
+    Returns decimal degrees, or None on no-fix / out of bounds.
+    """
+    if len(data) < offset + 3:
         return None
-    raw = struct.unpack(">i", data[offset:offset+4])[0]
-    return raw / 10_000_000.0  # degrees
+    raw = int.from_bytes(data[offset:offset + 3], 'big', signed=True)
+    if raw == 0x7FFFFF:
+        return None
+    sign = -1 if raw < 0 else 1
+    v = abs(raw) / 10.0          # DDMM.M
+    deg = int(v // 100)
+    minutes = v - deg * 100
+    return round(sign * (deg + minutes / 60.0), 7)
 
 def parse_g22_gnss_accumulated_driving(val, results):
-    """Parse GNSSAccumulatedDrivingRecord — Annex 1C §2.79 (13 bytes per record).
+    """Parse GNSSAccumulatedDrivingRecord — Annex 1C §2.79 (11 bytes per record).
 
     Structure (Annex 1C §2.79, amended Reg. 2021/1228):
       timeStamp        4  TimeReal
       gnssAccuracy     1  UInt8 (metres)
-      geoCoordinates   8  latitude(4, signed) + longitude(4, signed)
-    Total: 13 bytes
+      geoCoordinates   6  latitude(3, signed int24) + longitude(3, signed int24) — §2.76
+    Total: 11 bytes
     """
-    if len(val) < 13:
+    if len(val) < 11:
         return
     try:
-        rec_size = 13
+        rec_size = 11
         for i in range(0, len(val) - rec_size + 1, rec_size):
             chunk = val[i:i + rec_size]
             ts = struct.unpack(">I", chunk[0:4])[0]
@@ -527,7 +599,7 @@ def parse_g22_gnss_accumulated_driving(val, results):
                 continue
             gnss_accuracy = chunk[4]
             lat = _decode_gnss_coord(chunk, 5)
-            lon = _decode_gnss_coord(chunk, 9)
+            lon = _decode_gnss_coord(chunk, 8)
             if lat is not None and lon is not None:
                 dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
                 results.setdefault("gnss_ad_records", []).append({
@@ -540,19 +612,19 @@ def parse_g22_gnss_accumulated_driving(val, results):
         _log.debug("GNSS accumulated driving parse failed: %s", exc)
 
 def parse_g22_load_unload_operations(val, results):
-    """Parse VuLoadUnloadRecord — ASN.1 (tachograph.asn:379-384), 13 bytes per record.
+    """Parse VuLoadUnloadRecord — ASN.1 (tachograph.asn:379-384), 11 bytes per record.
 
-    Structure (ASN.1 — all fields required):
+    Structure (all fields required):
       timestamp       4  TimeReal
       operationType   1  UInt8 (0x01=LOAD, 0x02=UNLOAD, 0x03=SIMULTANEOUS)
-      latitude        4  Int32 (signed, 1/10 micro-degree)
-      longitude       4  Int32 (signed, 1/10 micro-degree)
-    Total: 13 bytes
+      latitude        3  Int24 (signed, ±DDMM.M ×10)
+      longitude       3  Int24 (signed, ±DDDMM.M ×10)
+    Total: 11 bytes
     """
-    if len(val) < 13:
+    if len(val) < 11:
         return
     try:
-        rec_size = 13
+        rec_size = 11
         for i in range(0, len(val) - rec_size + 1, rec_size):
             chunk = val[i:i + rec_size]
             ts = struct.unpack(">I", chunk[0:4])[0]
@@ -560,7 +632,7 @@ def parse_g22_load_unload_operations(val, results):
                 continue
             op_type = chunk[4]
             lat = _decode_gnss_coord(chunk, 5)
-            lon = _decode_gnss_coord(chunk, 9)
+            lon = _decode_gnss_coord(chunk, 8)
             if lat is not None and lon is not None:
                 dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
                 op_map = {0x01: "LOAD", 0x02: "UNLOAD", 0x03: "SIMULTANEOUS"}
@@ -606,19 +678,19 @@ def parse_g22_trailer_registrations(val, results):
         _log.debug("Trailer registrations parse failed: %s", exc)
 
 def parse_g22_gnss_enhanced_places(val, results):
-    """Parse GNSSPlaceAuthRecord — Annex 1C §2.79c (14 bytes per record).
+    """Parse GNSSPlaceAuthRecord — Annex 1C §2.79c (12 bytes per record).
 
-    Structure (Annex 1C §2.79c):
+    Structure (Annex 1C §2.79c + §2.76):
       timeStamp             4  TimeReal
       gnssAccuracy          1  UInt8 (metres)
-      geoCoordinates        8  latitude(4, signed) + longitude(4, signed)
+      geoCoordinates        6  latitude(3, int24) + longitude(3, int24)
       authenticationStatus  1  UInt8 (0=not authenticated, 1=authenticated)
-    Total: 14 bytes
+    Total: 12 bytes
     """
-    if len(val) < 14:
+    if len(val) < 12:
         return
     try:
-        rec_size = 14
+        rec_size = 12
         for i in range(0, len(val) - rec_size + 1, rec_size):
             chunk = val[i:i + rec_size]
             ts = struct.unpack(">I", chunk[0:4])[0]
@@ -626,8 +698,8 @@ def parse_g22_gnss_enhanced_places(val, results):
                 continue
             gnss_accuracy = chunk[4]
             lat = _decode_gnss_coord(chunk, 5)
-            lon = _decode_gnss_coord(chunk, 9)
-            auth_status = chunk[13]
+            lon = _decode_gnss_coord(chunk, 8)
+            auth_status = chunk[11]
             if lat is not None and lon is not None:
                 dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
                 results.setdefault("gnss_places", []).append({
@@ -664,27 +736,27 @@ def parse_g22_load_sensor_data(val, results):
         _log.debug("Load sensor data parse failed: %s", exc)
 
 def parse_g22_border_crossings(val, results):
-    """Parse VuBorderCrossingRecord — ASN.1 (tachograph.asn:393-399), 14 bytes.
+    """Parse VuBorderCrossingRecord — ASN.1 (tachograph.asn:393-399), 12 bytes.
 
-    Structure (ASN.1 — all fields required):
+    Structure (all fields required, Annex 1C §2.76 for geo):
       timestamp      4  TimeReal
       nationFrom     1  NationNumeric
       nationTo       1  NationNumeric
-      latitude       4  Int32 (signed, 1/10 micro-degree)
-      longitude      4  Int32 (signed, 1/10 micro-degree)
-    Total: 14 bytes
+      latitude       3  Int24 (signed, ±DDMM.M ×10)
+      longitude      3  Int24 (signed, ±DDDMM.M ×10)
+    Total: 12 bytes
     """
-    if len(val) < 14:
+    if len(val) < 12:
         return
     try:
-        rec_size = 14
+        rec_size = 12
         for i in range(0, len(val) - rec_size + 1, rec_size):
             chunk = val[i:i + rec_size]
             ts = struct.unpack(">I", chunk[0:4])[0]
             if ts == 0 or ts == 0xFFFFFFFF:
                 continue
             lat = _decode_gnss_coord(chunk, 6)
-            lon = _decode_gnss_coord(chunk, 10)
+            lon = _decode_gnss_coord(chunk, 9)
             if lat is not None and lon is not None:
                 dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
                 results.setdefault("border_crossings", []).append({
@@ -699,7 +771,8 @@ def parse_g22_border_crossings(val, results):
 
 def parse_g1_app_identification(val, results):
     """Parse DriverCardApplicationIdentification (tag 0x0501)."""
-    if len(val) < 10: return
+    if len(val) < 10:
+        return
     try:
         app_type = val[0]
         version = struct.unpack(">H", val[1:3])[0]
@@ -722,7 +795,8 @@ def parse_g1_app_identification(val, results):
 
 def parse_g1_events_data(val, results):
     """Parse CardEventData (tag 0x0502) — 6 gruppi di eventi."""
-    if len(val) < 24: return
+    if len(val) < 24:
+        return
     try:
         off = 0
         group_descriptions = [
@@ -761,7 +835,8 @@ def parse_g1_events_data(val, results):
 
 def parse_g1_faults_data(val, results):
     """Parse CardFaultData (tag 0x0503) — 2 gruppi: RecordingEquipment + Card (Annex 1C §2.21)."""
-    if len(val) < 24: return
+    if len(val) < 24:
+        return
     try:
         off = 0
         group_descriptions = [
@@ -797,36 +872,40 @@ def parse_g1_faults_data(val, results):
 def parse_g1_places(val, results):
     """Parse CardPlaceDailyWorkPeriod (tag 0x0506) — Annex 1B §2.22, 10 bytes per record.
 
-    Structure (Annex 1B §2.22 / C# VehicleUnitData.config):
+    Annex 1B §2.84 PlaceRecord:
       EntryTime                4  TimeReal
       EntryTypeDailyWorkPeriod 1  UInt8 (0x01=START, 0x02=END)
       DailyWorkPeriodCountry   1  NationNumeric
       DailyWorkPeriodRegion    1  UInt8
       VehicleOdometerValue     3  UInt24
-    Total (base): 10 bytes
-
-    Extended variants (13, 27 bytes) include additional vehicle registration fields.
+    Total: 10 bytes (Annex 1B confirmed).
     """
-    if len(val) < 12: return
+    if len(val) < 12:
+        return
     try:
         off = 2  # skip 2-byte header pointer to newest record
         body = val[off:] if len(val) > off else val
 
-        rec_size = 10
+        # Detect stride: data may be 10-, 13- or 27-byte aligned (non-standard
+        # extensions observed in G2 files). Always decode 10-byte base record,
+        # but use the detected stride for iteration.
+        stride = 10
         if len(body) % 10 == 0:
-            rec_size = 10
+            stride = 10
         elif len(body) % 13 == 0:
-            rec_size = 13
+            stride = 13
+            _log.debug("Places: non-standard 13-byte stride detected")
         elif len(body) % 27 == 0:
-            rec_size = 27
+            stride = 27
+            _log.debug("Places: non-standard 27-byte stride detected")
         else:
             return
 
         MIN_TS = 946684800
         MAX_TS = 4102444800
 
-        for i in range(0, len(body) - rec_size + 1, rec_size):
-            chunk = body[i:i + rec_size]
+        for i in range(0, len(body) - stride + 1, stride):
+            chunk = body[i:i + stride]
             ts = struct.unpack(">I", chunk[0:4])[0]
             if ts < MIN_TS or ts > MAX_TS:
                 continue
@@ -843,18 +922,11 @@ def parse_g1_places(val, results):
                 "entry_type": "START" if entry_type == 0x01 else "END",
                 "type_code": entry_type,
                 "nation": get_nation(nation_code),
+                "region": chunk[6],
             }
-            if rec_size >= 10:
-                record["region"] = chunk[6]
-                odo_val = int.from_bytes(chunk[7:10], 'big')
-                if odo_val != 0xFFFFFF and odo_val < 10000000:
-                    record["odometer_km"] = odo_val
-            if rec_size >= 27:
-                record["plate_nation"] = get_nation(chunk[10])
-                record["plate"] = decode_string(chunk[11:25], is_id=True)
-            elif rec_size >= 13:
-                record["plate_nation"] = get_nation(chunk[10])
-                record["plate"] = decode_string(chunk[11:13], is_id=True)
+            odo_val = int.from_bytes(chunk[7:10], 'big')
+            if odo_val != 0xFFFFFF and odo_val < 10000000:
+                record["odometer_km"] = odo_val
             results["places"].append(record)
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Places parse failed: %s", exc)
@@ -872,7 +944,8 @@ def parse_g2_card_icc_identification(val, results):
       HistoricalBytes   variable  (remaining)
     Minimum: 24 bytes
     """
-    if len(val) < 8: return
+    if len(val) < 8:
+        return
     try:
         chip_info = {
             "clock_stop": "Normal" if val[0] == 0 else f"Stopped(0x{val[0]:02X})",
@@ -952,7 +1025,8 @@ def parse_g22_certificate_subtag(val, results, tag):
 
 def parse_vu_vehicle_identification(val, results):
     """Parse VU_VehicleIdentification (tag 0x0001 in VU context)."""
-    if len(val) < 32: return
+    if len(val) < 32:
+        return
     try:
         # Only decode if format looks like standard VRN data:
         # byte[0] = nation (0x00-0xFD), byte[1:15] = readable plate, byte[15:32] = readable VIN
@@ -980,7 +1054,8 @@ def parse_ef_icc(val, results):
       HistoricalBytes   variable  (remaining data)
     Minimum: 24 bytes (1+8+8+1+4+2)
     """
-    if len(val) < 4: return
+    if len(val) < 4:
+        return
     try:
         clock_stop = val[0]
         chip_info = {
@@ -1015,7 +1090,8 @@ def parse_ef_ic(val, results):
       IcSerialNumber           4  UInt32
       IcManufacturingReferences 4  UInt32
     """
-    if len(val) < 8: return
+    if len(val) < 8:
+        return
     try:
         ic_serial = struct.unpack(">I", val[0:4])[0]
         ic_mfr = struct.unpack(">I", val[4:8])[0]
@@ -1032,12 +1108,14 @@ def parse_ef_ic(val, results):
 
 def parse_previous_vehicle_info(val, results):
     """Extract PreviousVehicleInfo from tag 0x0507 or 0x0520."""
-    if len(val) < 19: return
+    if len(val) < 19:
+        return
     try:
         nation = get_nation(val[0])
         plate = decode_string(val[1:15], is_id=True)
         ts = struct.unpack(">I", val[15:19])[0]
-        if ts == 0 or ts == 0xFFFFFFFF: return
+        if ts == 0 or ts == 0xFFFFFFFF:
+            return
         dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat() if ts < 4102444800 else "N/A"
         prev = {"plate": plate, "nation": nation, "withdrawal_time": dt}
         if len(val) >= 20:
@@ -1059,7 +1137,8 @@ def parse_control_activity_data(val, results):
       DownloadPeriodEnd     4  TimeReal
     Total: 46 bytes per record
     """
-    if len(val) < 10: return
+    if len(val) < 10:
+        return
     try:
         off = 2  # skip header pointer
         rec_size = 46
@@ -1068,7 +1147,8 @@ def parse_control_activity_data(val, results):
             control_type = chunk[0]
             ts = struct.unpack(">I", chunk[1:5])[0]
             if ts == 0 or ts == 0xFFFFFFFF or ts < 946684800:
-                off += rec_size; continue
+                off += rec_size
+                continue
 
             card_issuer = chunk[5]
             card_num = decode_string(chunk[6:22], is_id=True)
@@ -1103,7 +1183,8 @@ def parse_control_activity_data(val, results):
 
 def parse_card_download(val, results):
     """Parse CardDownload (tag 0x050E) — download timestamp records."""
-    if len(val) < 4: return
+    if len(val) < 4:
+        return
     try:
         off = 2  # skip pointer
         rec_size = 4  # TimeReal timestamps
@@ -1118,19 +1199,26 @@ def parse_card_download(val, results):
         _log.debug("Card download parse failed: %s", exc)
 
 def parse_specific_conditions(val, results):
-    """Parse SpecificConditions (tag 0x0522) — ferry/train/out-of-scope (Annex 1C §2.152)."""
-    if len(val) < 8: return
+    """Parse SpecificConditions (tag 0x0522) — ferry/train/out-of-scope (Annex 1B §2.27 / Annex 1C §2.152).
+
+    Annex 1B §2.154 SpecificConditionRecord = entryTime(4) + specificConditionType(1) = 5 bytes.
+    The data may contain a 2-byte header pointer prefix that we skip.
+    """
+    if len(val) < 7:
+        return
     try:
         off = 2  # skip pointer
-        rec_size = 6  # entryTime(4) + specificConditionType(1) + padding
+        rec_size = 5  # entryTime(4) + specificConditionType(1) per Annex 1B §2.154
         while off + rec_size <= len(val):
             chunk = val[off:off+rec_size]
             ts = struct.unpack(">I", chunk[0:4])[0]
             if ts < 946684800 or ts > 4102444800:
-                off += rec_size; continue
+                off += rec_size
+                continue
             cond_type = chunk[4]
             if cond_type not in (0x00, 0x01, 0x02, 0x03, 0x04):
-                off += rec_size; continue
+                off += rec_size
+                continue
             types = {0x00: "Ferry", 0x01: "Train", 0x02: "OutOfScope",
                      0x03: "BeginAreaNoGNSS", 0x04: "EndAreaNoGNSS"}
             dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
@@ -1156,7 +1244,8 @@ def parse_g1_certificate(val, results):
       CaIdentifier                1  UInt8
     Total: 194 bytes
     """
-    if len(val) < 194: return
+    if len(val) < 194:
+        return
     try:
         sig = val[0:128]
         pk_remainder = val[128:186]
@@ -1411,7 +1500,8 @@ def parse_g1_vu_overview(val, results):
     fixed_fields_parsed = set()
     regex_fields_parsed = set()
     try:
-        if len(val) < 200: return
+        if len(val) < 200:
+            return
 
         body = val[2:] if len(val) > 2 and val[0] == 0x00 else val
 
@@ -1511,7 +1601,6 @@ def parse_vu_download_messages(raw_data, results):
       0x05 = Technical data (calibrations)
       0x06 = Card download
     """
-    import re
     try:
         pos = 0
         found_messages = []
@@ -1581,14 +1670,19 @@ def _parse_trep_02_activities(data, results):
             return
 
         off = 10  # skip binary header (4+2+2+2)
-        surname = decode_string(data[off:off+36]); off += 36
-        if off < len(data) and data[off] <= 0x02: off += 1
-        firstname = decode_string(data[off:off+36]); off += 36
-        if off < len(data) and data[off] <= 0x02: off += 1
+        surname = decode_string(data[off:off+36])
+        off += 36
+        if off < len(data) and data[off] <= 0x02:
+            off += 1
+        firstname = decode_string(data[off:off+36])
+        off += 36
+        if off < len(data) and data[off] <= 0x02:
+            off += 1
         card_start = off
         if off < len(data) and not (0x30 <= data[off] <= 0x39 or 0x41 <= data[off] <= 0x5A):
             off += 1
-        card_num = decode_string(data[off:off+17]); off += 17
+        card_num = decode_string(data[off:off+17])
+        off += 17
 
         surname_s = surname.strip()
         firstname_s = firstname.strip()
@@ -1639,20 +1733,23 @@ def _parse_trep_02_activities(data, results):
         while scan + 10 <= len(data):
             ts = struct.unpack(">I", data[scan:scan+4])[0]
             if not (946684800 <= ts <= 4102444800):
-                scan += 1; continue
+                scan += 1
+                continue
 
             odo = int.from_bytes(data[scan+4:scan+7], 'big')
             card_inserted = data[scan+7]
             no_changes = struct.unpack(">H", data[scan+8:scan+10])[0]
 
             if no_changes == 0 or no_changes > 1440:
-                scan += 1; continue
+                scan += 1
+                continue
 
             pair_pos = scan + 10
             max_changes = min(no_changes, 300)
             changes_list = []
             for _ in range(max_changes):
-                if pair_pos + 4 > len(data): break
+                if pair_pos + 4 > len(data):
+                    break
                 slot = struct.unpack(">H", data[pair_pos:pair_pos+2])[0]
                 act = struct.unpack(">H", data[pair_pos+2:pair_pos+4])[0]
                 pair_pos += 4
@@ -1767,7 +1864,8 @@ def _parse_trep_03_events_faults(data, results):
     Falls back to heuristic pattern matching if structured parsing fails.
     """
     try:
-        if len(data) < 6: return
+        if len(data) < 6:
+            return
         body = data[2:] if len(data) > 2 and data[0] == 0x00 else data
 
         fault_records = []
@@ -1901,7 +1999,8 @@ def _parse_trep_03_events_faults_heuristic(data, results):
 def _parse_trep_04_speed(data, results):
     """Parse TREP 04 (Detailed Speed) message — minute-by-minute speed blocks."""
     try:
-        if len(data) < 8: return
+        if len(data) < 8:
+            return
         pos = 0
         speed_blocks = results.setdefault("speed_blocks", [])
         
@@ -1909,7 +2008,8 @@ def _parse_trep_04_speed(data, results):
             # Speed block: noOfMinutes (2) + timestamp (4) + speedValues
             no_minutes = struct.unpack(">H", data[pos:pos+2])[0]
             pos += 2
-            if pos + 4 > len(data): break
+            if pos + 4 > len(data):
+                break
             ts = struct.unpack(">I", data[pos:pos+4])[0]
             pos += 4
             
@@ -1954,13 +2054,16 @@ def _parse_trep_05_technical(data, results):
             _log.debug("TREP 05: data too short (len=%d)", len(data))
             return
         off = 0
-        mfr = decode_string(data[off:off+36]); off += 36
+        mfr = decode_string(data[off:off+36])
+        off += 36
         if mfr.strip():
             results.setdefault("vu_info", {})["manufacturer"] = mfr.strip()
-        addr = decode_string(data[off:off+36]); off += 36
+        addr = decode_string(data[off:off+36])
+        off += 36
         if addr.strip():
             results.setdefault("vu_info", {})["manufacturer_address"] = addr.strip()
-        approval = decode_string(data[off:off+8]); off += 8
+        approval = decode_string(data[off:off+8])
+        off += 8
         if approval.strip():
             results.setdefault("vu_info", {})["approval_number"] = approval.strip()
 
@@ -2065,7 +2168,8 @@ def _parse_trep_05_technical(data, results):
             tyre = decode_string(fixed[21:36])
             speed_limit = fixed[36]
             odo = int.from_bytes(fixed[37:40], 'big')
-            if odo == 0xFFFFFF: odo = None
+            if odo == 0xFFFFFF:
+                odo = None
 
             # Find timestamp (4 bytes before VIN)
             ts = 0
@@ -2130,7 +2234,8 @@ def _parse_trep_06_card_download(data, results):
     """Parse TREP 06 (Card Download) message — data downloaded from inserted cards."""
     import re
     try:
-        if len(data) < 20: return
+        if len(data) < 20:
+            return
         downloads = results.setdefault("card_downloads", [])
         
         # Find card numbers
@@ -2173,45 +2278,24 @@ def parse_g22_certificate_profile(val, results):
     identify OID/algorithm sections, and extract nested tags.
     Falls back to Latin-1 text decode + raw hex.
     """
-    import re
+    from core.ber_tlv import read_ber_tlv_header
+
     try:
         profile = {"raw_hex": val.hex().upper()}
 
-        # Attempt BER-TLV structure detection within the profile data
         nested_tags = []
         pos = 0
         while pos + 2 <= len(val):
-            b0 = val[pos]
-            if b0 in (0x00, 0xFF):
+            if val[pos] in (0x00, 0xFF):
                 pos += 1
                 continue
-            tag = b0
-            tag_start = pos
-            pos += 1
-            if pos >= len(val):
-                break
-            if (b0 & 0x1F) == 0x1F:
-                while pos < len(val):
-                    b = val[pos]
-                    pos += 1
-                    tag = (tag << 8) | b
-                    if not (b & 0x80):
-                        break
-            if pos >= len(val):
-                break
-            lb = val[pos]
-            pos += 1
-            if lb < 0x80:
-                length = lb
-            else:
-                nb = lb & 0x7F
-                if nb == 0 or nb > 3 or pos + nb > len(val):
-                    break
-                length = int.from_bytes(val[pos:pos + nb], 'big')
-                pos += nb
-            if length == 0 or length > 0x100000 or pos + length > len(val):
-                break
-            tag_data = val[pos:pos + length]
+
+            tag, length, hdr_size = read_ber_tlv_header(val, pos)
+            if tag is None or length == 0 or pos + hdr_size + length > len(val):
+                pos += 1
+                continue
+
+            tag_data = val[pos + hdr_size:pos + hdr_size + length]
             tag_desc = f"0x{tag:04X}"
             if tag == 0x06:
                 tag_desc = "OID"
@@ -2231,10 +2315,10 @@ def parse_g22_certificate_profile(val, results):
                 "tag": f"0x{tag:04X}",
                 "tag_desc": tag_desc,
                 "length": length,
-                "offset": tag_start,
+                "offset": pos,
                 "data_hex": tag_data[:64].hex().upper() + ("..." if len(tag_data) > 64 else ""),
             })
-            pos += length
+            pos += hdr_size + length
 
         if nested_tags:
             profile["nested_tags"] = nested_tags

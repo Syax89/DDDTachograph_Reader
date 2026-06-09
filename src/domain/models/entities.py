@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional
-from .value_objects import ActivityType, NationCode, VIN, GeoCoordinate
+from .value_objects import ActivityType, NationCode, VIN
 
 @dataclass
 class Driver:

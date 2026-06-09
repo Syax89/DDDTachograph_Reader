@@ -124,7 +124,7 @@ class TestMockDDDContentExtraction(unittest.TestCase):
     def test_g2_card_has_driver_info(self):
         path = os.path.join(MOCK_DIR, "mock_g2_card.ddd")
         result = TachoParser(path).parse()
-        driver = result.get("driver", {})
+        result.get("driver", {})
         # Mock DDD generator is WIP — driver extraction depends on exact BER-TLV encoding
         # Accept both cases as the parser handles real files correctly
         self.assertIsNotNone(result.get("driver"))
