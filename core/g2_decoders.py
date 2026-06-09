@@ -251,20 +251,19 @@ def parse_g2_sensor_gnss_coupled(data: bytes, offset: int = 0):
 
 
 def _parse_card_number_gen(data: bytes, offset: int):
-    """Parse 20-byte FullCardNumber+Gen field.
+    """Parse 19-byte FullCardNumberAndGeneration field (Annex 1C §2.74).
 
-    Structure (Annex 1C):
-      cardGeneration (1 byte)
-      cardIssuingMemberState (1 byte)
-      cardNumber (16 bytes)
-      replacementIndex (1 byte)
-      renewalIndex (1 byte)
-    Total: 20 bytes
+    Structure:
+      cardType (1 byte: 0x01=Driver, 0x02=Company, 0x03=Control, 0x04=Workshop)
+      cardIssuingMemberState (1 byte: NationNumeric)
+      cardNumber (16 bytes: IA5String)
+      generation (1 byte: 0x00=Gen1, 0x01=Gen2)
+    Total: 19 bytes
     """
-    if offset + 20 > len(data):
+    if offset + 19 > len(data):
         return None
     rec = data[offset:]
-    generation = rec[0]
+    card_type = rec[0]
     issuer = rec[1]
     card_num = ""
     for i in range(2, 18):
@@ -273,33 +272,31 @@ def _parse_card_number_gen(data: bytes, offset: int):
             card_num += chr(b)
         else:
             card_num += f"\\x{b:02X}"
-    repl_idx = rec[18]
-    renew_idx = rec[19]
+    generation = rec[18]
     nation = get_nation(issuer)
     return {
-        "generation": generation,
+        "card_type": card_type,
         "nation": nation,
         "card_number": f"{nation}{card_num}",
-        "replacement_index": repl_idx,
-        "renewal_index": renew_idx,
+        "generation": generation,
     }
 
 
 def parse_g22_overspeeding_event(data: bytes, offset: int = 0):
     """Decode VuOverSpeedingEventData (tag 0x052D).
 
-    Structure (Annex 1C §2.215, G2 estimate):
+    Structure (Annex 1C §2.215):
       eventType (1 byte)
       eventRecordPurpose (1 byte)
       eventBeginTime (4 bytes: timeReal)
       eventEndTime (4 bytes: timeReal)
       maxSpeedValue (1 byte: km/h)
       averageSpeedValue (1 byte: km/h)
-      cardNumberAndGenDriverSlotBegin (20 bytes: FullCardNumber+Gen)
+      cardNumberAndGenDriverSlotBegin (19 bytes: FullCardNumberAndGeneration)
       similarEventsNumber (1 byte)
-    Total: 33 bytes
+    Total: 32 bytes
     """
-    rec_size = 33
+    rec_size = 32
     if offset + rec_size > len(data):
         return None
     rec = data[offset:offset + rec_size]
@@ -310,7 +307,7 @@ def parse_g22_overspeeding_event(data: bytes, offset: int = 0):
     max_speed = rec[10]
     avg_speed = rec[11]
     card_info = _parse_card_number_gen(rec, 12)
-    similar_events = rec[32]
+    similar_events = rec[31]
     return {
         "event_type": evt_type,
         "event_purpose": evt_purpose,
@@ -328,19 +325,19 @@ def parse_g22_overspeeding_event(data: bytes, offset: int = 0):
 def parse_g22_overspeeding_control(data: bytes, offset: int = 0):
     """Decode VuOverSpeedingControlData (tag 0x052E).
 
-    Structure (Annex 1C §2.212, G2):
+    Structure (Annex 1C §2.212):
       lastOverspeedControlTime (4 bytes: timeReal)
       firstOverspeedSince (4 bytes: timeReal)
-      numberOfOverspeedSince (2 bytes: UInt16)
-    Total: 10 bytes
+      numberOfOverspeedSince (1 byte: UInt8)
+    Total: 9 bytes
     """
-    rec_size = 10
+    rec_size = 9
     if offset + rec_size > len(data):
         return None
     rec = data[offset:offset + rec_size]
     last_ts = struct.unpack(">I", rec[0:4])[0]
     first_ts = struct.unpack(">I", rec[4:8])[0]
-    num_overspeed = struct.unpack(">H", rec[8:10])[0]
+    num_overspeed = rec[8]
     return {
         "last_control_time": datetime.fromtimestamp(last_ts, tz=timezone.utc).isoformat()
         if 946684800 <= last_ts <= 4102444800 else "N/A",
@@ -375,18 +372,19 @@ def parse_g22_time_adj_gnss(data: bytes, offset: int = 0):
 def parse_g22_power_interruption(data: bytes, offset: int = 0):
     """Decode VuPowerSupplyInterruptionData (tag 0x0530).
 
-    Structure (Annex 1C §2.240, G2 estimate):
+    Structure (Annex 1C §2.240):
       eventType (1 byte)
       eventRecordPurpose (1 byte)
       eventBeginTime (4 bytes: timeReal)
       eventEndTime (4 bytes: timeReal)
-      cardNumberAndGenDriverSlotBegin (20 bytes: FullCardNumber+Gen)
-      cardNumberAndGenDriverSlotEnd (20 bytes: FullCardNumber+Gen)
-      cardNumberAndGenCodriverSlotBegin (20 bytes: FullCardNumber+Gen)
-      cardNumberAndGenCodriverSlotEnd (20 bytes: FullCardNumber+Gen)
-    Total: 90 bytes
+      cardNumberAndGenDriverSlotBegin (19 bytes)
+      cardNumberAndGenDriverSlotEnd (19 bytes)
+      cardNumberAndGenCodriverSlotBegin (19 bytes)
+      cardNumberAndGenCodriverSlotEnd (19 bytes)
+      tail (1 byte)
+    Total: 87 bytes
     """
-    rec_size = 90
+    rec_size = 87
     if offset + rec_size > len(data):
         return None
     rec = data[offset:offset + rec_size]
@@ -402,9 +400,9 @@ def parse_g22_power_interruption(data: bytes, offset: int = 0):
         "end_time": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat()
         if 946684800 <= end_ts <= 4102444800 else "N/A",
         "card_driver_begin": _parse_card_number_gen(rec, 10),
-        "card_driver_end": _parse_card_number_gen(rec, 30),
-        "card_codriver_begin": _parse_card_number_gen(rec, 50),
-        "card_codriver_end": _parse_card_number_gen(rec, 70),
+        "card_driver_end": _parse_card_number_gen(rec, 29),
+        "card_codriver_begin": _parse_card_number_gen(rec, 48),
+        "card_codriver_end": _parse_card_number_gen(rec, 67),
     }
 
 
@@ -474,9 +472,9 @@ def parse_g22_sensor_fault(data: bytes, offset: int = 0):
         "end_time": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat()
         if 946684800 <= end_ts <= 4102444800 else "N/A",
         "card_driver_begin": _parse_card_number_gen(rec, 10),
-        "card_driver_end": _parse_card_number_gen(rec, 30),
-        "card_codriver_begin": _parse_card_number_gen(rec, 50),
-        "card_codriver_end": _parse_card_number_gen(rec, 70),
+        "card_driver_end": _parse_card_number_gen(rec, 29),
+        "card_codriver_begin": _parse_card_number_gen(rec, 48),
+        "card_codriver_end": _parse_card_number_gen(rec, 67),
         "payload_bytes": payload_len,
         "payload_hex": payload_preview,
         "non_zero_regions": non_zero_regions if non_zero_regions else [],
@@ -629,10 +627,10 @@ G2_VU_RECORD_DECODERS = {
     0x0512: ("ITSConsent", parse_g2_its_consent, 23),
     0x052B: ("ControllerIdentification", parse_g22_controller_identification, 0),
     0x052C: ("DetailedSpeed", parse_g22_detailed_speed, 64),
-    0x052D: ("OverSpeedingEvent", parse_g22_overspeeding_event, 33),
-    0x052E: ("OverSpeedingControl", parse_g22_overspeeding_control, 10),
+    0x052D: ("OverSpeedingEvent", parse_g22_overspeeding_event, 32),
+    0x052E: ("OverSpeedingControl", parse_g22_overspeeding_control, 9),
     0x052F: ("TimeAdjGNSS", parse_g22_time_adj_gnss, 8),
-    0x0530: ("PowerInterruption", parse_g22_power_interruption, 90),
+    0x0530: ("PowerInterruption", parse_g22_power_interruption, 87),
     0x0531: ("SensorFault", parse_g22_sensor_fault, 90),
     0x0532: ("SensorGNSS", parse_g2_sensor_gnss_coupled, 20),
     0x0533: ("SensorPaired", parse_g2_sensor_paired, 24),

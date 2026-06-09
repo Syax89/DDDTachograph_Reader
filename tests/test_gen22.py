@@ -280,9 +280,10 @@ class TestGen22Decoders:
         ts_begin = 1700000000
         ts_end = 1700003600
         record = struct.pack(">BBIIBB", 0x01, 0x02, ts_begin, ts_end, 120, 95)
-        record += struct.pack(">BB", 0x01, 0x1A)  # gen=1, nation=I
+        # FullCardNumberAndGeneration: cardType(1) + nation(1) + card(16) + gen(1) = 19 bytes
+        record += struct.pack(">BB", 0x01, 0x1A)  # cardType=1, nation=I
         record += b'DRV12345CARD    '  # 16-byte card number
-        record += struct.pack(">BB", 0x01, 0x02)  # repl=1, renew=2
+        record += struct.pack(">B", 0x01)  # generation=1
         record += struct.pack(">B", 0x03)  # similarEvents=3
         decoded = parse_g22_overspeeding_event(record)
         assert decoded is not None
@@ -299,7 +300,7 @@ class TestGen22Decoders:
     def test_overspeeding_control_decode(self):
         ts_last = 1700000000
         ts_first = 1699900000
-        record = struct.pack(">IIH", ts_last, ts_first, 42)
+        record = struct.pack(">IIB", ts_last, ts_first, 42)
         decoded = parse_g22_overspeeding_control(record)
         assert decoded is not None
         assert decoded["number_of_overspeed"] == 42
@@ -320,9 +321,11 @@ class TestGen22Decoders:
         ts_end = 1700003600
         record = struct.pack(">BBII", 0x01, 0x02, ts_begin, ts_end)
         for _ in range(4):
+            # FullCardNumberAndGeneration: cardType(1) + nation(1) + card(16) + gen(1) = 19
             record += struct.pack(">BB", 0x01, 0x1A)
             record += b'DRV12345CARD    '
-            record += struct.pack(">BB", 0x01, 0x02)
+            record += struct.pack(">B", 0x01)
+        record += b'\x00'  # tail byte
         decoded = parse_g22_power_interruption(record)
         assert decoded is not None
         assert decoded["event_type"] == 0x01
@@ -341,7 +344,8 @@ class TestGen22Decoders:
         for _ in range(4):
             record += struct.pack(">BB", 0x01, 0x1A)
             record += b'DRV12345CARD    '
-            record += struct.pack(">BB", 0x01, 0x02)
+            record += struct.pack(">B", 0x01)
+        record += b'\x00' * (90 - len(record))  # pad to 90 bytes
         decoded = parse_g22_sensor_fault(record)
         assert decoded is not None
         assert decoded["event_type"] == 0x01
@@ -356,9 +360,9 @@ class TestGen22Decoders:
         record = struct.pack(">BBIIBB", 0x01, 0x02, ts_begin, ts_end, 120, 95)
         record += struct.pack(">BB", 0x01, 0x1A)
         record += b'DRV12345CARD    '
-        record += struct.pack(">BB", 0x01, 0x02)
+        record += struct.pack(">B", 0x01)
         record += struct.pack(">B", 0x03)
-        record_array = struct.pack(">BHH", 1, 33, 1) + record
+        record_array = struct.pack(">BHH", 1, 32, 1) + record
         results = {}
 
         parse_g2_vu_record(record_array, results, 0x052D)
@@ -373,8 +377,9 @@ class TestGen22Decoders:
         for _ in range(4):
             record += struct.pack(">BB", 0x01, 0x1A)
             record += b'DRV12345CARD    '
-            record += struct.pack(">BB", 0x01, 0x02)
-        record_array = struct.pack(">BHH", 1, 90, 1) + record
+            record += struct.pack(">B", 0x01)
+        record += b'\x00'  # tail byte
+        record_array = struct.pack(">BHH", 1, 87, 1) + record
         results = {}
 
         parse_g2_vu_record(record_array, results, 0x0530)
