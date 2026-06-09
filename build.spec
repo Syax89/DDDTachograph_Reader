@@ -74,6 +74,14 @@ a = Analysis(
         'core.tag_navigator',
         'core.decoders',
         'core.models',
+        'core.g2_decoders',
+        'core.decoder_registry',
+        'core.deterministic_parser',
+        'core.record_array',
+        'core.logger',
+        'core.tag_definitions',
+        'core.vu_record_dispatcher',
+        'core.vu_signature_verifier',
         'src',
         'src.domain',
         'src.domain.models',
@@ -93,18 +101,11 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=[
-        # Test e docs inutili
-        'unittest', 'doctest', 'pdb', 'pydoc',
-        # Moduli scientifici pesanti non usati
-        'scipy', 'sklearn', 'matplotlib', 'PIL', 'cv2',
-        # Moduli di rete non usati (eccetto requests)
-        'email', 'html', 'xmlrpc', 'ftplib', 'imaplib', 'poplib', 'smtplib',
-        'telnetlib', 'urllib3',
-        # Moduli database non usati
-        'sqlite3', 'bsddb', 'dbm',
-        # Ottimizzazioni Python non usate
-        'multiprocessing', 'asyncio',
-        # Pandas usa numpy — escludiamo i moduli inutili di numpy
+        # Solo librerie di terze parti pesanti che l'app NON usa.
+        # NB: non escludere moduli stdlib (email, html, urllib3, http, ...):
+        # cryptography e requests li importano e la loro assenza fa crashare
+        # l'eseguibile all'avvio.
+        'scipy', 'sklearn', 'matplotlib', 'cv2',
         'numpy.testing', 'numpy.distutils',
     ],
     win_no_prefer_redirects=False,
