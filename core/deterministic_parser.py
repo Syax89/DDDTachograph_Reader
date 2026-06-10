@@ -317,8 +317,12 @@ class DeterministicParser:
         if self.parser:
             if tag in (0xC108, 0x0104):
                 self.parser.msca_cert_raw = payload
+                if length == 194:  # keep the G1 copy for the G1 RSA chain
+                    self.parser.msca_cert_g1 = payload
             elif tag in (0xC100, 0x0103, 0xC101, 0x7F21):
                 self.parser.card_cert_raw = payload
+                if length == 194:
+                    self.parser.card_cert_g1 = payload
 
     def _dispatch_decoder(self, tag: int, payload: bytes, dtype: Optional[int] = None):
         if dtype in (1, 3, 11, 15):

@@ -296,8 +296,12 @@ class TagNavigator:
         })
         if tag in (0xC108, 0x0104):
             self.parser.msca_cert_raw = val
+            if length == 194:  # keep the G1 copy for the G1 RSA chain
+                self.parser.msca_cert_g1 = val
         elif tag in (0xC100, 0x0103, 0xC101, 0x7F21):
             self.parser.card_cert_raw = val
+            if length == 194:
+                self.parser.card_cert_g1 = val
 
     def _get_spec_meta(self, tag):
         """Return spec verification metadata for a tag.

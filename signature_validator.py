@@ -59,6 +59,17 @@ class SignatureValidator:
         for filename in os.listdir(self.certs_dir):
             if not os.path.isfile(os.path.join(self.certs_dir, filename)):
                 continue
+            if filename.endswith(".bin"):
+                # Raw JRC ERCA PK material (e.g. EC_PK.bin: KID(8) + n(128) + e(8))
+                try:
+                    with open(os.path.join(self.certs_dir, filename), "rb") as f:
+                        raw = f.read()
+                    if len(raw) in (136, 144):
+                        self.root_certificates[f"ERCA_RAW_{filename}"] = raw
+                        self.logger.info("Loaded raw ERCA PK material from %s", filename)
+                except OSError as exc:
+                    self.logger.debug("Could not read %s: %s", filename, exc)
+                continue
             if filename.endswith(".pem") or filename.endswith(".cer"):
                 try:
                     path = os.path.join(self.certs_dir, filename)
@@ -132,16 +143,11 @@ class SignatureValidator:
             
             # Format to 128 bytes
             recovered = m.to_bytes(128, 'big')
-            
-            # G1 Certificate Content (Recovered block):
-            # 1 byte: 0x6A (Trailer)
-            # 1 byte: Header 0x01
-            # 1 byte: Certificate Profile
-            # 14 bytes: Authority Reference
-            # 1 byte: Hash Algorithm Indicator
-            # 58 bytes: Public Key Modulus (partially here, partially in the file)
-            # Actually, Annex 1B specifies a complex split of the modulus.
-            
+
+            # ISO 9796-2 recovered block (Annex 1B Appendix 11):
+            # 0x6A || C'[0:106] || SHA1(C')(20 bytes) || 0xBC
+            # (the remaining 58 bytes of C' travel in clear after the signature)
+
             if recovered[0] != 0x6A or recovered[127] != 0xBC:
                 self.logger.warning("G1 ISO 9796-2 trailer check failed")
                 return None
@@ -234,45 +240,89 @@ class SignatureValidator:
         else:
             return self._validate_g1_chain(card_cert_raw, msca_cert_raw)
 
+    def _g1_erca_key(self):
+        """Return the G1 ERCA root RSA public key from the loaded root material.
+
+        Accepts either an already-parsed RSAPublicKey, or raw JRC EC_PK bytes:
+        KID(8) + n(128) + e(8) = 144 bytes, or n(128) + e(8) = 136 bytes.
+        """
+        for material in self.root_certificates.values():
+            if isinstance(material, rsa.RSAPublicKey):
+                return material
+            if not isinstance(material, (bytes, bytearray)):
+                continue
+            if len(material) == 144:
+                n = int.from_bytes(material[8:136], 'big')
+                e = int.from_bytes(material[136:144], 'big')
+            elif len(material) == 136:
+                n = int.from_bytes(material[0:128], 'big')
+                e = int.from_bytes(material[128:136], 'big')
+            else:
+                continue
+            try:
+                return rsa.RSAPublicNumbers(e, n).public_key()
+            except ValueError as exc:
+                self.logger.debug("Invalid raw ERCA PK material: %s", exc)
+        return None
+
+    def _g1_recover_key(self, cert_raw, parent_pubkey):
+        """Unwrap a 194-byte G1 certificate (Annex 1B Appendix 11) with the parent
+        RSA key and rebuild the certified key.
+
+        Layout: signature Sn(128) + remainder Cn'(58) + CAR(8).
+        Recovered Sn = 0x6A || C'[0:106] || SHA1(C')(20) || 0xBC, where the full
+        content C' (164 bytes) = CPI(1) CAR(8) CHA(7) EOV(4) CHR(8) n(128) e(8);
+        the last 58 bytes of C' travel in clear as the remainder.
+
+        Returns (public_key, content) on success, (None, None) on failure.
+        """
+        import hashlib
+        if len(cert_raw) < 186:
+            return None, None
+        sig, remainder = cert_raw[:128], cert_raw[128:186]
+        recovered = self.unwrap_g1_certificate(sig, parent_pubkey)
+        if recovered is None:
+            return None, None
+        content = recovered[1:107] + remainder
+        digest = recovered[107:127]
+        if hashlib.sha1(content).digest() != digest:
+            self.logger.warning("G1 ISO 9796-2 SHA-1 digest mismatch")
+            return None, None
+        n = int.from_bytes(content[28:156], 'big')
+        e = int.from_bytes(content[156:164], 'big')
+        try:
+            return rsa.RSAPublicNumbers(e, n).public_key(), content
+        except ValueError as exc:
+            self.logger.warning("G1 certified key is invalid: %s", exc)
+            return None, None
+
     def _validate_g1_chain(self, card_cert_raw, msca_cert_raw):
         """G1 RSA-based chain validation (Annex 1B, Appendix 11).
 
-        In G1, the card certificate is RSA-encrypted with the MSCA private key.
-        Verification consists of decrypting it with the MSCA public key and
-        checking the ISO 9796-2 trailer bytes (0x6A … 0xBC).
+        Full chain: the MSCA certificate is unwrapped with the ERCA root key,
+        then the card certificate with the recovered MSCA key. Each unwrap
+        checks the ISO 9796-2 trailer (0x6A … 0xBC) and the SHA-1 digest of the
+        certificate content. Without the ERCA root key nothing can be verified
+        (the MSCA public modulus only exists inside its ERCA-signed envelope).
         """
         try:
-            if len(msca_cert_raw) < 128:
-                return False, None
-            msca_n = msca_cert_raw[:128]
+            erca_pub = self._g1_erca_key()
+            if erca_pub is None:
+                self.logger.warning("G1 ERCA root key not available — chain cannot be verified")
+                return "Cannot Verify (Missing ERCA Root)", None
 
-            if all(b == 0 for b in msca_n):
-                self.logger.warning("Empty/Null G1 MSCA modulus found.")
-                return False, None
-
-            msca_pubkey = self._get_rsa_public_key(msca_n)
-
-            if len(card_cert_raw) != 128:
-                if len(card_cert_raw) < 128:
-                    return False, None
-                card_raw = card_cert_raw[:128]
-            else:
-                card_raw = card_cert_raw
-
-            unwrapped = self.unwrap_g1_certificate(card_raw, msca_pubkey)
-            if unwrapped is None:
-                self.logger.warning("G1 certificate chain verification FAILED — unwrap unsuccessful")
+            msca_pub, _ = self._g1_recover_key(msca_cert_raw, erca_pub)
+            if msca_pub is None:
+                self.logger.warning("G1 MSCA certificate unwrap FAILED under ERCA root")
                 return False, None
 
-            card_n = unwrapped[58:][:58]
-            if len(card_n) < 1 or all(b == 0 for b in card_n):
-                self.logger.warning("Empty/Null G1 card modulus extracted from unwrapped cert.")
+            card_pub, _ = self._g1_recover_key(card_cert_raw, msca_pub)
+            if card_pub is None:
+                self.logger.warning("G1 card certificate unwrap FAILED under MSCA key")
                 return False, None
-            card_n = card_n[:58]
 
-            card_pubkey = self._get_rsa_public_key(card_n)
-            self.logger.info("G1 certificate chain VERIFIED (ISO 9796-2 unwrap OK)")
-            return True, card_pubkey
+            self.logger.info("G1 certificate chain VERIFIED (ERCA→MSCA→card, ISO 9796-2 + SHA-1)")
+            return True, card_pub
 
         except Exception as e:
             self.logger.error("G1 Chain validation failed: %s", e)

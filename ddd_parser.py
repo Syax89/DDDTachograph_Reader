@@ -31,6 +31,8 @@ class TachoParser:
         self.card_public_key = None
         self.msca_cert_raw = None
         self.card_cert_raw = None
+        self.msca_cert_g1 = None
+        self.card_cert_g1 = None
         self.validation_status = "Pending"
         self.is_vu = False
         self.use_deterministic = use_deterministic
@@ -292,6 +294,8 @@ class TachoParser:
         self.card_public_key = None
         self.msca_cert_raw = None
         self.card_cert_raw = None
+        self.msca_cert_g1 = None
+        self.card_cert_g1 = None
         self.validation_status = "Pending"
 
         try:
@@ -430,12 +434,26 @@ class TachoParser:
             # Forensic Validation
             if self.card_cert_raw and self.msca_cert_raw:
                 status, pubkey = self.validator.validate_tacho_chain(self.card_cert_raw, self.msca_cert_raw)
+                # The last certificates seen in the file may be the G2 copies;
+                # if the chain did not fully verify and distinct G1 (194-byte)
+                # certificates are also present, try the G1 chain and keep the
+                # better outcome.
+                if status is not True and self.card_cert_g1 and self.msca_cert_g1 and \
+                        (self.card_cert_g1 != self.card_cert_raw or self.msca_cert_g1 != self.msca_cert_raw):
+                    g1_status, g1_pubkey = self.validator.validate_tacho_chain(
+                        self.card_cert_g1, self.msca_cert_g1)
+                    rank = {True: 3, "Incomplete (Missing ERCA)": 2,
+                            "Cannot Verify (Missing ERCA Root)": 1}
+                    if rank.get(g1_status, 0) > rank.get(status, 0):
+                        status, pubkey = g1_status, g1_pubkey
                 if status is True:
                     self.validation_status = "Verified"
                     self.card_public_key = pubkey
                 elif status == "Incomplete (Missing ERCA)":
                     self.validation_status = "Verified (Local Chain)"
                     self.card_public_key = pubkey
+                elif status == "Cannot Verify (Missing ERCA Root)":
+                    self.validation_status = "Unverified (Missing ERCA Root)"
                 else:
                     self.validation_status = "Invalid Certificate Chain"
             else:
