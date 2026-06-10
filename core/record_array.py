@@ -1,5 +1,7 @@
 import struct
 
+from .decoders import get_nation
+
 
 class RecordArrayParser:
     """Parse G2/G2.2 RecordArray structures per Annex 1C Appendix 7.
@@ -56,7 +58,7 @@ def decode_card_number(data: bytes, offset: int = 0) -> str:
         return ""
     nation = data[offset]
     if 0x01 <= nation <= 0xFD:
-        result.append(chr(0x40 + nation))
+        result.append(get_nation(nation))
     offset += 1
     for i in range(16):
         if offset + i >= len(data):
@@ -139,7 +141,7 @@ def decode_g2_driver_record(data: bytes, offset: int = 0):
     if pos < len(data) and data[pos] == 0x02:
         pos += 1
 
-    nation_char = chr(0x40 + nation) if 0x01 <= nation <= 0xFD else f"0x{nation:02X}"
+    nation_char = get_nation(nation) if 0x01 <= nation <= 0xFD else f"0x{nation:02X}"
 
     return {
         "surname": surname,
@@ -155,7 +157,7 @@ def decode_g2_driver_record(data: bytes, offset: int = 0):
 def decode_g2_daily_record(data: bytes, offset: int = 0):
     """Decode a G2/G2.2 daily activity record from TREP 02 Activities.
 
-    Structure (113 bytes for G2):
+    Structure (112 bytes for G2 with a 64-byte signature):
       [0-1]   uint16 pseudo-tag (0x7622 G2, 0x7632 G2.2)
       [2]     uint8 dtype
       [3-4]   uint16 length
@@ -224,7 +226,9 @@ def decode_g2_daily_record(data: bytes, offset: int = 0):
         "changes": changes,
         "counters_raw": counters,
         "sig_len": sig_len,
-        "record_size": 48 + sig_len if sig_len else 113,
+        # signature starts at offset 48; default to a 64-byte signature when
+        # sig_len is absent (48 + 64 = 112)
+        "record_size": 48 + sig_len if sig_len else 112,
     }
 
 
@@ -283,7 +287,7 @@ def parse_g2_trep02_activities(data: bytes, results: dict):
                     first_daily_pos = scan
                     break
 
-    if first_daily_pos:
+    if first_daily_pos is not None:
         pos = first_daily_pos
         last_counter = None
         while pos + 22 <= len(data):

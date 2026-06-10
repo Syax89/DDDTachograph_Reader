@@ -285,12 +285,14 @@ def _coord_to_deg(raw):
 
 def decode_geo_coordinates(data, off):
     """GeoCoordinates (6 bytes): latitude(3) + longitude(3), signed int24,
-    each coded as ±DDMM.M ×10 (Annex 1C §2.76). 0xFFFFFF = no fix."""
+    each coded as ±DDMM.M ×10 (Annex 1C §2.76). Unknown position is encoded
+    as 0x7FFFFF (per coordinate); all-0xFF marks an empty/padded record."""
     if off + 6 > len(data):
         return None
     lat_raw = data[off:off + 3]
     lon_raw = data[off + 3:off + 6]
-    if lat_raw == b"\xff\xff\xff" and lon_raw == b"\xff\xff\xff":
+    if (lat_raw == b"\xff\xff\xff" and lon_raw == b"\xff\xff\xff") or \
+            lat_raw == b"\x7f\xff\xff" or lon_raw == b"\x7f\xff\xff":
         return {"fix": False}
     lat = _s24(lat_raw)
     lon = _s24(lon_raw)
