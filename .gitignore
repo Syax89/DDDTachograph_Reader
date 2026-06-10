@@ -27,6 +27,7 @@ tests/golden/
 
 # File mock/test generati a runtime
 tests/mock_data/
+tests/certs/
 
 # Output generati
 *.pdf

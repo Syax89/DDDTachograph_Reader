@@ -1,6 +1,7 @@
 import unittest
 import os
 import sys
+import tempfile
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
@@ -15,8 +16,14 @@ class TestSignatureValidation(unittest.TestCase):
     def setUpClass(cls):
         cls.test_dir = os.path.dirname(__file__)
         cls.project_dir = os.path.abspath(os.path.join(cls.test_dir, '..'))
-        cls.mock_data = setup_mock_certs(cls.test_dir)
-        cls.validator = SignatureValidator(certs_dir=os.path.join(cls.test_dir, "certs"))
+        # Cert mock in una directory temporanea: non devono sporcare il repo.
+        cls._tmp_dir = tempfile.TemporaryDirectory()
+        cls.mock_data = setup_mock_certs(cls._tmp_dir.name)
+        cls.validator = SignatureValidator(certs_dir=os.path.join(cls._tmp_dir.name, "certs"))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._tmp_dir.cleanup()
 
     def test_erca_loading(self):
         """Test if ERCA certificates are loaded correctly."""

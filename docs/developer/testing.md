@@ -162,5 +162,4 @@ This produces a per-file breakdown of:
 
 - **`DDD/`**: 8 real-world DDD files from various tachograph models (G1, G2, G2.2)
 - **`tests/mock_data/`**: Static binary test fixtures
-- **`tests/certs/`**: Test certificates for signature validation
-- **`tests/generate_mock_data.py`**: Programmatic test data generation
+- **`tests/generate_mock_data.py`**: Programmatic test data generation; mock certificates for signature validation are written to a temporary directory at test time
