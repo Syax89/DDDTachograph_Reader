@@ -80,7 +80,7 @@ def decode_g2_driver_record(data: bytes, offset: int = 0):
       [marker 0x76?] [prefix 0x6864] [meta 2] [cardExpiry 4?] [cardHolderName 72] [fullCardNumber 18]
 
     cardHolderName = codePage(1) + surname(35) + codePage(1) + firstname(35) = 72 bytes
-    fullCardNumber = codePage(1) + nation(1) + cardNumber(16) + terminator(0x02) = 19 bytes
+    fullCardNumber = cardType(1) + nation(1) + cardNumber(16) + terminator(0x02) = 19 bytes
     """
     if offset >= len(data):
         return None
@@ -314,4 +314,11 @@ def parse_g2_trep02_activities(data: bytes, results: dict):
             rec_size = daily.get("record_size", 113)
             pos += rec_size
 
-    activity_list.sort(key=lambda x: x.get("data", ""), reverse=True)
+    def _date_key(entry):
+        try:
+            day, month, year = entry.get("data", "").split("/")
+            return (int(year), int(month), int(day))
+        except (ValueError, AttributeError):
+            return (0, 0, 0)
+
+    activity_list.sort(key=_date_key, reverse=True)

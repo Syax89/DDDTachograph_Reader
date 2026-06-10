@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from core.logger import get_logger
 from core.constants import MAX_ODO_DISTANCE_KM
-from core.event_fault_codes import describe_event, describe_fault, describe_card_event_group, describe_card_fault_group
+from core.event_fault_codes import describe_event, describe_fault
 
 _log = get_logger(__name__)
 
@@ -522,7 +522,8 @@ def parse_calibration_data(val, results):
 
             vin = decode_string(chunk[vin_off:vin_off + 17], is_id=True)
             nation = get_nation(chunk[nation_off])
-            plate = decode_string(chunk[plate_off:plate_off + 14])
+            # VehicleRegistrationNumber = codePage(1) + 13 chars
+            plate = decode_string(chunk[plate_off + 1:plate_off + 14], is_id=True)
             w_const = struct.unpack(">H", chunk[w_off:w_off + 2])[0]
             k_const = struct.unpack(">H", chunk[k_off:k_off + 2])[0]
             l_const = struct.unpack(">H", chunk[l_off:l_off + 2])[0]
@@ -773,7 +774,15 @@ def parse_g22_border_crossings(val, results):
         _log.debug("Border crossings parse failed: %s", exc)
 
 def parse_g1_app_identification(val, results):
-    """Parse DriverCardApplicationIdentification (tag 0x0501)."""
+    """Parse DriverCardApplicationIdentification (tag 0x0501).
+
+    G1 (Annex 1B §2.61, 10 bytes): type(1) + version(2) + noOfEventsPerType(1)
+    + noOfFaultsPerType(1) + activityStructureLength(2) + noOfCardVehicleRecords(2)
+    + noOfCardPlaceRecords(1).
+    G2 (Annex 1C §2.61, 17 bytes): noOfCardPlaceRecords becomes 2 bytes, followed
+    by noOfGNSSADRecords(2) + noOfSpecificConditionRecords(2) +
+    noOfCardVehicleUnitRecords(2).
+    """
     if len(val) < 10:
         return
     try:
@@ -783,34 +792,38 @@ def parse_g1_app_identification(val, results):
         no_faults = val[4]
         activity_len = struct.unpack(">H", val[5:7])[0]
         no_vehicles = struct.unpack(">H", val[7:9])[0]
-        no_places = val[9]
-        results.setdefault("card_application", {}).update({
+        info = {
             "type": app_type,
             "version": version,
             "no_events_per_type": no_events,
             "no_faults_per_type": no_faults,
             "activity_structure_length": activity_len,
             "no_vehicle_records": no_vehicles,
-            "no_place_records": no_places
-        })
+        }
+        if len(val) >= 17:
+            info["no_place_records"] = struct.unpack(">H", val[9:11])[0]
+            info["no_gnss_ad_records"] = struct.unpack(">H", val[11:13])[0]
+            info["no_specific_condition_records"] = struct.unpack(">H", val[13:15])[0]
+            info["no_card_vehicle_unit_records"] = struct.unpack(">H", val[15:17])[0]
+        else:
+            info["no_place_records"] = val[9]
+        results.setdefault("card_application", {}).update(info)
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("App identification parse failed: %s", exc)
 
 def parse_g1_events_data(val, results):
-    """Parse CardEventData (tag 0x0502) — 6 gruppi di eventi."""
+    """Parse CardEventData (tag 0x0502) — CardEventRecords of 24 bytes.
+
+    Record (Annex 1B §2.19): eventType(1, EventFaultType) + eventBeginTime(4) +
+    eventEndTime(4) + eventVehicleRegistration(15: nation + plate).
+    Records are deduplicated across the G1/G2 EF copies."""
     if len(val) < 24:
         return
     try:
         off = 0
-        group_descriptions = [
-            describe_card_event_group(0),
-            describe_card_event_group(1),
-            describe_card_event_group(2),
-            describe_card_event_group(3),
-            describe_card_event_group(4),
-            describe_card_event_group(5),
-        ]
         rec_size = 24
+        seen = {(e.get("event_type_code"), e.get("begin"), e.get("end"))
+                for e in results["events"] if isinstance(e, dict)}
         while off + rec_size <= len(val):
             ev_type = val[off]
             if ev_type == 0xFF:
@@ -823,12 +836,17 @@ def parse_g1_events_data(val, results):
                 continue
             nation = get_nation(val[off+9])
             plate = decode_string(val[off+10:off+24], is_id=True)
-            group_idx = min(ev_type // 0x20, 5) if ev_type < 0xC0 else 5
+            begin = datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat()
+            end = datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A"
+            if (ev_type, begin, end) in seen:
+                off += rec_size
+                continue
+            seen.add((ev_type, begin, end))
             results["events"].append({
-                "descrizione": f"{group_descriptions[group_idx]} — code 0x{ev_type:02X}",
+                "descrizione": describe_event(ev_type),
                 "event_type_code": ev_type,
-                "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
-                "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A",
+                "begin": begin,
+                "end": end,
                 "vehicle_nation": nation,
                 "vehicle_plate": plate
             })
@@ -837,16 +855,18 @@ def parse_g1_events_data(val, results):
         _log.debug("Events data parse failed: %s", exc)
 
 def parse_g1_faults_data(val, results):
-    """Parse CardFaultData (tag 0x0503) — 2 gruppi: RecordingEquipment + Card (Annex 1C §2.21)."""
+    """Parse CardFaultData (tag 0x0503) — CardFaultRecords of 24 bytes.
+
+    Record (Annex 1B §2.21): faultType(1, EventFaultType 0x30-0x4F) +
+    faultBeginTime(4) + faultEndTime(4) + faultVehicleRegistration(15).
+    Records are deduplicated across the G1/G2 EF copies."""
     if len(val) < 24:
         return
     try:
         off = 0
-        group_descriptions = [
-            describe_card_fault_group(0),
-            describe_card_fault_group(1),
-        ]
         rec_size = 24
+        seen = {(f.get("fault_type_code"), f.get("begin"), f.get("end"))
+                for f in results["faults"] if isinstance(f, dict)}
         while off + rec_size <= len(val):
             fault_type = val[off]
             if fault_type == 0xFF:
@@ -859,12 +879,17 @@ def parse_g1_faults_data(val, results):
                 continue
             nation = get_nation(val[off+9])
             plate = decode_string(val[off+10:off+24], is_id=True)
-            group_idx = 0 if fault_type < 0x80 else 1
+            begin = datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat()
+            end = datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A"
+            if (fault_type, begin, end) in seen:
+                off += rec_size
+                continue
+            seen.add((fault_type, begin, end))
             results["faults"].append({
-                "descrizione": f"{group_descriptions[group_idx]} — code 0x{fault_type:02X}",
+                "descrizione": describe_fault(fault_type),
                 "fault_type_code": fault_type,
-                "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
-                "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A",
+                "begin": begin,
+                "end": end,
                 "vehicle_nation": nation,
                 "vehicle_plate": plate
             })
@@ -1172,12 +1197,19 @@ def parse_control_activity_data(val, results):
       DownloadPeriodBegin   4  TimeReal
       DownloadPeriodEnd    4  TimeReal
     Total: 46 bytes per record
+
+    The card EF is a single bare 46-byte record (no pointer, Annex 1B §2.15a);
+    variants with a 2-byte header are detected by alignment. Records are
+    deduplicated across the G1/G2 EF copies.
     """
-    if len(val) < 10:
+    if len(val) < 46:
         return
     try:
-        off = 2  # skip header pointer
         rec_size = 46
+        off = 0 if len(val) % rec_size == 0 else 2
+        existing = results.setdefault("control_activities", [])
+        seen = {(c.get("timestamp"), c.get("control_type"))
+                for c in existing if isinstance(c, dict)}
         while off + rec_size <= len(val):
             chunk = val[off:off + rec_size]
             control_type = chunk[0]
@@ -1197,11 +1229,15 @@ def parse_control_activity_data(val, results):
             download_end = struct.unpack(">I", chunk[42:46])[0]
 
             dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+            if (dt, control_type) in seen:
+                off += rec_size
+                continue
+            seen.add((dt, control_type))
             begin_dt = datetime.fromtimestamp(download_begin, tz=timezone.utc).isoformat() if 946684800 <= download_begin <= 4102444800 else "N/A"
             end_dt = datetime.fromtimestamp(download_end, tz=timezone.utc).isoformat() if 946684800 <= download_end <= 4102444800 else "N/A"
 
             nation_char = get_nation(card_nation)
-            results.setdefault("control_activities", []).append({
+            existing.append({
                 "control_type": control_type,
                 "timestamp": dt,
                 "control_card": f"{nation_char}{card_num}",
@@ -1531,6 +1567,109 @@ def parse_company_holder_data(val, results):
     except (ValueError, TypeError, IndexError) as exc:
         _log.debug("Company holder data parse failed: %s", exc)
 
+def _parse_g1_overview_tail(body, off, results):
+    """Parse the variable tail of a G1 TREP 01 Overview after the 433-byte
+    fixed prefix (Annex 1B §2.2.6.1):
+
+      VuDownloadActivityData (58): downloadingTime(4) + fullCardNumber(18) +
+                                   companyOrWorkshopName(36)
+      VuCompanyLocksData: noOfLocks(1) + record(98: lockIn(4) + lockOut(4) +
+                          companyName(36) + companyAddress(36) + cardNumber(18))×N
+      VuControlActivityData: noOfControls(1) + record(31: controlType(1) +
+                          controlTime(4) + cardNumber(18) + periodBegin(4) +
+                          periodEnd(4))×N
+
+    Returns True when the structure validates (bounds + plausible counts).
+    """
+    try:
+        if off + 58 + 2 > len(body):
+            return False
+        dl_ts = struct.unpack(">I", body[off:off + 4])[0]
+        dl_card = _parse_full_card_number(body, off + 4)
+        dl_company = decode_string(body[off + 22:off + 58])
+        off += 58
+
+        n_locks = body[off]
+        off += 1
+        if off + n_locks * 98 + 1 > len(body):
+            return False
+        locks = []
+        for _ in range(n_locks):
+            rec = body[off:off + 98]
+            lock_in = struct.unpack(">I", rec[0:4])[0]
+            lock_out = struct.unpack(">I", rec[4:8])[0]
+            if 946684800 <= lock_in <= 4102444800:
+                locks.append({
+                    "lock_in_time": datetime.fromtimestamp(lock_in, tz=timezone.utc).isoformat(),
+                    "lock_out_time": datetime.fromtimestamp(lock_out, tz=timezone.utc).isoformat()
+                    if 946684800 <= lock_out <= 4102444800 else None,
+                    "company_name": decode_string(rec[8:44]),
+                    "company_address": decode_string(rec[44:80]),
+                    "company_card": _parse_full_card_number(rec, 80),
+                })
+            off += 98
+
+        n_ctrl = body[off]
+        off += 1
+        if off + n_ctrl * 31 > len(body):
+            return False
+        controls = []
+        for _ in range(n_ctrl):
+            rec = body[off:off + 31]
+            ctrl_ts = struct.unpack(">I", rec[1:5])[0]
+            if 946684800 <= ctrl_ts <= 4102444800:
+                begin_ts = struct.unpack(">I", rec[23:27])[0]
+                end_ts = struct.unpack(">I", rec[27:31])[0]
+                controls.append({
+                    "control_type": rec[0],
+                    "control_time": datetime.fromtimestamp(ctrl_ts, tz=timezone.utc).isoformat(),
+                    "control_card": _parse_full_card_number(rec, 5),
+                    "download_period_begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat()
+                    if 946684800 <= begin_ts <= 4102444800 else None,
+                    "download_period_end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat()
+                    if 946684800 <= end_ts <= 4102444800 else None,
+                })
+            off += 31
+
+        # A populated section must decode mostly valid records, otherwise this
+        # is garbage following a false-positive container marker.
+        if (n_locks + n_ctrl) > 0 and (len(locks) + len(controls)) < max(1, (n_locks + n_ctrl) // 2):
+            return False
+
+        if 946684800 <= dl_ts <= 4102444800:
+            results.setdefault("vu_overview", {}).setdefault("last_download", {
+                "time": datetime.fromtimestamp(dl_ts, tz=timezone.utc).isoformat(),
+                "card": dl_card,
+                "company": dl_company,
+            })
+        if dl_company:
+            results.setdefault("company_info", {}).setdefault("name", dl_company)
+
+        existing_locks = results.setdefault("company_locks", [])
+        seen = {(lk.get("lock_in_time"), str(lk.get("company_card")))
+                for lk in existing_locks if isinstance(lk, dict)}
+        for lk in locks:
+            key = (lk["lock_in_time"], str(lk["company_card"]))
+            if key not in seen:
+                seen.add(key)
+                existing_locks.append(lk)
+
+        existing_ctrl = results.setdefault("control_activities", [])
+        seen = {(c.get("control_time"), c.get("control_type"))
+                for c in existing_ctrl if isinstance(c, dict)}
+        for c in controls:
+            key = (c["control_time"], c["control_type"])
+            if key not in seen:
+                seen.add(key)
+                existing_ctrl.append(c)
+
+        _log.debug("VU overview tail: %d locks, %d controls", len(locks), len(controls))
+        return True
+    except (struct.error, IndexError, ValueError) as exc:
+        _log.debug("VU overview tail parse failed: %s", exc)
+        return False
+
+
 def parse_g1_vu_overview(val, results):
     """Parse G1 VU Overview (TREP 01, container 0x7601) — Annex 1B §4.5.3.2.2.
 
@@ -1556,9 +1695,26 @@ def parse_g1_vu_overview(val, results):
         if len(val) < 200:
             return
 
-        body = val[2:] if len(val) > 2 and val[0] == 0x00 else val
+        # A candidate body alignment is accepted only when the VIN field at
+        # offset 388 is a full 17-char alphanumeric string AND at least one of
+        # the three TimeReal fields at 420-432 decodes to a plausible date.
+        # This rejects false-positive 0x76 0x01 markers inside certificate or
+        # activity data (which is dense with valid timestamps).
+        body = None
+        candidates = [val[2:], val] if (len(val) > 2 and val[0] == 0x00) else [val, val[2:]]
+        for cand in candidates:
+            if len(cand) >= 433:
+                vin_check = decode_string(cand[388:405], is_id=True)
+                ts_fields = struct.unpack(">III", cand[420:432])
+                if (len(vin_check) == 17 and vin_check.replace(" ", "").isalnum()
+                        and any(946684800 <= t <= 4102444800 for t in ts_fields)):
+                    body = cand
+                    break
+        body_validated = body is not None
+        if body is None:
+            body = val[2:] if len(val) > 2 and val[0] == 0x00 else val
 
-        if len(body) >= 433:
+        if body_validated:
             try:
                 parse_g1_certificate(body[0:194], results)
                 fixed_fields_parsed.add("ms_certificate")
@@ -1598,6 +1754,10 @@ def parse_g1_vu_overview(val, results):
                     "raw": f"0x{slot_status:02X}",
                 }
                 fixed_fields_parsed.add("card_slots")
+
+                if _parse_g1_overview_tail(body, 433, results):
+                    fixed_fields_parsed.update(
+                        ("download_activity", "company_locks", "control_activities"))
             except (struct.error, IndexError, ValueError) as exc:
                 _log.debug("VU overview fixed-offset parse failed: %s", exc)
 
@@ -1625,7 +1785,7 @@ def parse_g1_vu_overview(val, results):
         for m in re.finditer(rb'[A-Z][A-Z .&\-]{5,35}\s{2,}', val):
             text = m.group().decode('latin-1').strip()
             if text and len(text) > 5 and not text.startswith('VU'):
-                results.setdefault("company_info", {})["name"] = text
+                results.setdefault("company_info", {}).setdefault("name", text)
                 regex_fields_parsed.add("company_name")
                 break
 
@@ -1670,7 +1830,7 @@ def parse_vu_download_messages(raw_data, results):
         for msg_offset, trep in found_messages:
             data = raw_data[msg_offset + 2:]  # Skip SID+TREP
             if trep == 0x01:
-                pass  # Overview handled by STAP parser + parse_g1_vu_overview
+                parse_g1_vu_overview(data, results)
             elif trep == 0x02:
                 _parse_trep_02_activities(data, results)
             elif trep == 0x03:
@@ -1713,6 +1873,9 @@ def _parse_trep_02_activities(data, results):
             _log.debug("TREP 02: G2 RecordArray format detected, delegating to structured parser")
             from .record_array import parse_g2_trep02_activities
             parse_g2_trep02_activities(data, results)
+            return
+
+        if _parse_trep_02_g1_structured(data, results):
             return
 
         if len(data) < 110:
@@ -1851,6 +2014,165 @@ def _parse_trep_02_activities(data, results):
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 02 activities parse failed: %s", exc)
 
+def _parse_trep_02_g1_structured(data, results):
+    """Parse a G1 TREP 02 (Activities) message — Annex 1B §2.2.6.2:
+
+      dateOfDay(4, TimeReal) + odometerValueMidnight(3) +
+      VuCardIWData:       noOfIWRecords(2) + VuCardIWRecord(129)×N
+      VuActivityDailyData: noOfActivityChanges(2) + ActivityChangeInfo(2)×N
+      VuPlaceDailyWorkPeriodData: noOfPlaceRecords(1) + record(28)×N
+      VuSpecificConditionData:    noOfSpecificConditionRecords(2) + record(5)×N
+
+    VuCardIWRecord (129): holderSurname(36) + holderFirstNames(36) +
+      fullCardNumber(18) + cardExpiry(4) + insertionTime(4) + odoInsertion(3) +
+      cardSlot(1) + withdrawalTime(4) + odoWithdrawal(3) +
+      previousVehicle(15) + previousWithdrawalTime(4) + manualInputFlag(1)
+
+    Place record (28): fullCardNumber(18) + entryTime(4) + entryType(1) +
+      country(1) + region(1) + odometer(3)
+
+    Validated against real G1 VU downloads (one message per downloaded day,
+    each followed by its 128-byte RSA signature). Returns True when the
+    structure validates; the caller falls back to the heuristic otherwise.
+    """
+    try:
+        if len(data) < 11:
+            return False
+        date_ts = struct.unpack(">I", data[0:4])[0]
+        if not (946684800 <= date_ts <= 4102444800):
+            return False
+        odo_midnight = int.from_bytes(data[4:7], 'big')
+        pos = 7
+
+        n_iw = struct.unpack(">H", data[pos:pos + 2])[0]
+        pos += 2
+        if n_iw > 100 or pos + n_iw * 129 + 2 > len(data):
+            return False
+        iw_records = []
+        for _ in range(n_iw):
+            rec = data[pos:pos + 129]
+            ins_ts = struct.unpack(">I", rec[94:98])[0]
+            wdr_ts = struct.unpack(">I", rec[102:106])[0]
+            iw_records.append({
+                "holder_surname": decode_string(rec[0:36]),
+                "holder_first_names": decode_string(rec[36:72]),
+                "card": _parse_full_card_number(rec, 72),
+                "card_expiry": decode_date(rec[90:94]),
+                "insertion_time": datetime.fromtimestamp(ins_ts, tz=timezone.utc).isoformat()
+                if 946684800 <= ins_ts <= 4102444800 else None,
+                "odometer_insertion_km": int.from_bytes(rec[98:101], 'big'),
+                "card_slot": rec[101],
+                "withdrawal_time": datetime.fromtimestamp(wdr_ts, tz=timezone.utc).isoformat()
+                if 946684800 <= wdr_ts <= 4102444800 else None,
+                "odometer_withdrawal_km": int.from_bytes(rec[106:109], 'big'),
+                "manual_input": bool(rec[128]),
+            })
+            pos += 129
+
+        n_ch = struct.unpack(">H", data[pos:pos + 2])[0]
+        pos += 2
+        if n_ch > 5000 or pos + n_ch * 2 + 1 > len(data):
+            return False
+        changes = []
+        for i in range(n_ch):
+            v = struct.unpack(">H", data[pos + i * 2:pos + i * 2 + 2])[0]
+            changes.append(decode_activity_val(v))
+        pos += n_ch * 2
+
+        n_pl = data[pos]
+        pos += 1
+        if pos + n_pl * 28 + 2 > len(data):
+            return False
+        entry_names = {0x00: "START", 0x01: "END", 0x02: "START", 0x03: "END"}
+        places = []
+        for _ in range(n_pl):
+            rec = data[pos:pos + 28]
+            ts = struct.unpack(">I", rec[18:22])[0]
+            if 946684800 <= ts <= 4102444800 and rec[22] in entry_names:
+                places.append({
+                    "timestamp": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
+                    "entry_type": entry_names[rec[22]],
+                    "type_code": rec[22],
+                    "nation": get_nation(rec[23]),
+                    "region": rec[24],
+                    "odometer_km": int.from_bytes(rec[25:28], 'big'),
+                    "card_driver": _parse_full_card_number(rec, 0),
+                })
+            pos += 28
+
+        n_sc = struct.unpack(">H", data[pos:pos + 2])[0]
+        pos += 2
+        if n_sc > 1000 or pos + n_sc * 5 > len(data):
+            return False
+        sc_types = {0x00: "Ferry", 0x01: "Train", 0x02: "OutOfScope",
+                    0x03: "BeginAreaNoGNSS", 0x04: "EndAreaNoGNSS"}
+        conditions = []
+        for _ in range(n_sc):
+            rec = data[pos:pos + 5]
+            ts = struct.unpack(">I", rec[0:4])[0]
+            if 946684800 <= ts <= 4102444800 and rec[4] in sc_types:
+                conditions.append({
+                    "timestamp": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
+                    "condition": sc_types[rec[4]],
+                    "type_code": rec[4],
+                })
+            pos += 5
+
+        # Emit (with dedup — the message scan can revisit the same block).
+        drivers = results.setdefault("inserted_drivers", [])
+        for iw in iw_records:
+            card_num = (iw["card"] or {}).get("card_number", "")
+            dk = f"{iw['holder_surname']}|{iw['holder_first_names']}|{card_num}"
+            if iw["holder_surname"] and not any(d.get("_key") == dk for d in drivers):
+                drivers.append({
+                    "surname": iw["holder_surname"],
+                    "firstname": iw["holder_first_names"],
+                    "card_number": card_num,
+                    "_key": dk,
+                })
+        existing_iw = results.setdefault("card_iw_records", [])
+        seen = {(r.get("insertion_time"), str(r.get("card"))) for r in existing_iw if isinstance(r, dict)}
+        for iw in iw_records:
+            key = (iw["insertion_time"], str(iw["card"]))
+            if key not in seen:
+                seen.add(key)
+                existing_iw.append(iw)
+
+        date_str = datetime.fromtimestamp(date_ts, tz=timezone.utc).strftime('%d/%m/%Y')
+        if changes:
+            activities = results.setdefault("activities", [])
+            if not any(a.get("data") == date_str and a.get("source") == "vu_trep02"
+                       for a in activities if isinstance(a, dict)):
+                activities.append({
+                    "data": date_str,
+                    "km": odo_midnight,
+                    "eventi": changes,
+                    "changes_count": n_ch,
+                    "source": "vu_trep02",
+                })
+
+        existing_places = results.setdefault("places", [])
+        seen = {(p.get("timestamp"), p.get("type_code")) for p in existing_places if isinstance(p, dict)}
+        for p in places:
+            key = (p["timestamp"], p["type_code"])
+            if key not in seen:
+                seen.add(key)
+                existing_places.append(p)
+
+        existing_sc = results.setdefault("specific_conditions", [])
+        seen = {(c.get("timestamp"), c.get("type_code")) for c in existing_sc if isinstance(c, dict)}
+        for c in conditions:
+            key = (c["timestamp"], c["type_code"])
+            if key not in seen:
+                seen.add(key)
+                existing_sc.append(c)
+
+        return True
+    except (struct.error, IndexError, ValueError) as exc:
+        _log.debug("TREP 02 G1 structured parse failed: %s", exc)
+        return False
+
+
 def _parse_full_card_number(data, offset):
     """Parse 18-byte FullCardNumber (Annex 1B §2.73):
     cardType(1) + cardIssuingMemberState(1) + cardNumber(16)."""
@@ -1916,58 +2238,171 @@ def _parse_vu_event_record(data, offset):
 
 
 def _parse_trep_03_events_faults(data, results):
-    """Parse TREP 03 (Events & Faults) — ASN.1 VuFaultRecord(82B) + VuEventRecord(83B).
+    """Parse TREP 03 (Events & Faults) — Annex 1B §2.2.6.3 deterministic layout:
 
-    Falls back to heuristic pattern matching if structured parsing fails.
+      VuFaultData:             noOfVuFaults(1) + VuFaultRecord(82)×N
+      VuEventData:             noOfVuEvents(1) + VuEventRecord(83)×N
+      VuOverSpeedingControlData(9)
+      VuOverSpeedingEventData: noOfVuOverSpeedingEvents(1) + record(31)×N
+      VuTimeAdjustmentData:    noOfVuTimeAdjustments(1) + record(98)×N
+
+    Validated against real G1 VU downloads (each TREP block is followed by its
+    128-byte RSA signature). Falls back to heuristic pattern matching if the
+    count-prefixed structure does not validate.
     """
+    if not _parse_trep_03_structured(data, results):
+        _parse_trep_03_events_faults_heuristic(data, results)
+
+
+def _parse_trep_03_structured(data, results):
+    """Count-prefixed TREP 03 walk. Returns True when the structure validates."""
     try:
-        if len(data) < 6:
-            return
-        body = data[2:] if len(data) > 2 and data[0] == 0x00 else data
-
-        fault_records = []
-        event_records = []
+        if len(data) < 12:
+            return False
         pos = 0
-        record_count = 0
+        n_faults = data[pos]
+        pos += 1
+        if pos + n_faults * 82 > len(data):
+            return False
+        faults = []
+        for _ in range(n_faults):
+            rec = _parse_vu_fault_record(data, pos)
+            if rec is not None:
+                faults.append(rec)
+            pos += 82
 
-        while pos + 82 <= len(body) and record_count < 500:
-            if 0x01 <= body[pos] <= 0xFF:
-                fault = _parse_vu_fault_record(body, pos)
-                if fault is not None:
-                    fault_records.append(fault)
-                    pos += 82
-                    record_count += 1
-                    continue
-            if pos + 83 <= len(body):
-                evt = _parse_vu_event_record(body, pos)
-                if evt is not None:
-                    event_records.append(evt)
-                    pos += 83
-                    record_count += 1
-                    continue
-            break
+        n_events = data[pos]
+        pos += 1
+        if pos + n_events * 83 > len(data):
+            return False
+        events = []
+        for _ in range(n_events):
+            rec = _parse_vu_event_record(data, pos)
+            if rec is not None:
+                events.append(rec)
+            pos += 83
 
-        total_records = len(fault_records) + len(event_records)
+        # Records can be empty (0xFF padding) but a populated structure must
+        # decode mostly valid timestamps, otherwise this is a false positive.
+        total = n_faults + n_events
+        if total > 0 and (len(faults) + len(events)) < max(1, total // 2):
+            return False
 
-        if total_records > 0:
-            if fault_records:
-                results.setdefault("faults", []).extend(fault_records)
-            if event_records:
-                for evt in event_records:
-                    evt_type = evt["event_type"]
-                    results.setdefault("events", []).append({
-                        "descrizione": describe_event(evt_type),
-                        "type_code": evt_type,
-                        "begin_time": evt["begin_time"],
-                        "end_time": evt["end_time"],
-                        "similar_events": evt["similar_events"],
-                        "card_driver_begin": evt["card_driver_begin"],
-                    })
-            return
+        if pos + 9 > len(data):
+            return False
+        osc_last = struct.unpack(">I", data[pos:pos + 4])[0]
+        osc_first = struct.unpack(">I", data[pos + 4:pos + 8])[0]
+        osc_count = data[pos + 8]
+        pos += 9
+
+        n_overs = data[pos]
+        pos += 1
+        if pos + n_overs * 31 > len(data):
+            return False
+        overspeed = []
+        for _ in range(n_overs):
+            rec = data[pos:pos + 31]
+            begin_ts = struct.unpack(">I", rec[2:6])[0]
+            end_ts = struct.unpack(">I", rec[6:10])[0]
+            if 946684800 <= begin_ts <= 4102444800:
+                overspeed.append({
+                    "descrizione": describe_event(rec[0]),
+                    "event_type": rec[0],
+                    "record_purpose": rec[1],
+                    "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
+                    "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat()
+                    if 946684800 <= end_ts <= 4102444800 else "N/A",
+                    "max_speed_kmh": rec[10],
+                    "average_speed_kmh": rec[11],
+                    "card_driver": _parse_full_card_number(rec, 12),
+                    "similar_events": rec[30],
+                })
+            pos += 31
+
+        n_adj = data[pos]
+        pos += 1
+        if pos + n_adj * 98 > len(data):
+            return False
+        adjustments = []
+        for _ in range(n_adj):
+            rec = data[pos:pos + 98]
+            old_ts = struct.unpack(">I", rec[0:4])[0]
+            new_ts = struct.unpack(">I", rec[4:8])[0]
+            if 946684800 <= new_ts <= 4102444800:
+                adjustments.append({
+                    "old_time": datetime.fromtimestamp(old_ts, tz=timezone.utc).isoformat()
+                    if 946684800 <= old_ts <= 4102444800 else "N/A",
+                    "new_time": datetime.fromtimestamp(new_ts, tz=timezone.utc).isoformat(),
+                    "workshop_name": decode_string(rec[8:44]),
+                    "workshop_address": decode_string(rec[44:80]),
+                    "workshop_card": _parse_full_card_number(rec, 80),
+                })
+            pos += 98
+
+        # Emit with dedup — the message scan can hit the same block twice.
+        # Keys include end time and record purpose: the VU stores distinct
+        # records sharing the same (type, begin), e.g. one per record purpose.
+        existing_faults = results.setdefault("faults", [])
+        seen = {(f.get("fault_type"), f.get("begin_time"), f.get("end_time"), f.get("fault_purpose"))
+                for f in existing_faults if isinstance(f, dict)}
+        for f in faults:
+            key = (f.get("fault_type"), f.get("begin_time"), f.get("end_time"), f.get("fault_purpose"))
+            if key not in seen:
+                seen.add(key)
+                existing_faults.append(f)
+
+        existing_events = results.setdefault("events", [])
+        seen = {(e.get("type_code"), e.get("begin_time"), e.get("end_time"), e.get("record_purpose"))
+                for e in existing_events if isinstance(e, dict)}
+        for evt in events:
+            key = (evt["event_type"], evt["begin_time"], evt["end_time"], evt["event_purpose"])
+            if key not in seen:
+                seen.add(key)
+                existing_events.append({
+                    "descrizione": describe_event(evt["event_type"]),
+                    "type_code": evt["event_type"],
+                    "record_purpose": evt["event_purpose"],
+                    "begin_time": evt["begin_time"],
+                    "end_time": evt["end_time"],
+                    "similar_events": evt["similar_events"],
+                    "card_driver_begin": evt["card_driver_begin"],
+                })
+
+        if 946684800 <= osc_last <= 4102444800 or 946684800 <= osc_first <= 4102444800:
+            ctrl = {
+                "last_control_time": datetime.fromtimestamp(osc_last, tz=timezone.utc).isoformat()
+                if 946684800 <= osc_last <= 4102444800 else "N/A",
+                "first_overspeed_since": datetime.fromtimestamp(osc_first, tz=timezone.utc).isoformat()
+                if 946684800 <= osc_first <= 4102444800 else "N/A",
+                "number_of_overspeed": osc_count,
+            }
+            ctrl_list = results.setdefault("overspeeding_control", [])
+            if ctrl not in ctrl_list:
+                ctrl_list.append(ctrl)
+
+        existing_overs = results.setdefault("overspeeding_events", [])
+        seen = {(o.get("event_type"), o.get("begin"), o.get("end"), o.get("record_purpose"))
+                for o in existing_overs if isinstance(o, dict)}
+        for o in overspeed:
+            key = (o["event_type"], o["begin"], o["end"], o["record_purpose"])
+            if key not in seen:
+                seen.add(key)
+                existing_overs.append(o)
+
+        existing_adj = results.setdefault("time_adjustments", [])
+        seen = {(a.get("old_time"), a.get("new_time")) for a in existing_adj if isinstance(a, dict)}
+        for a in adjustments:
+            key = (a["old_time"], a["new_time"])
+            if key not in seen:
+                seen.add(key)
+                existing_adj.append(a)
+
+        _log.debug("TREP 03 structured: %d faults, %d events, %d overspeeding, %d time adj",
+                   len(faults), len(events), len(overspeed), len(adjustments))
+        return True
     except (struct.error, IndexError, ValueError) as exc:
-        _log.debug("TREP 03 events/faults parse failed: %s", exc)
-
-    _parse_trep_03_events_faults_heuristic(data, results)
+        _log.debug("TREP 03 structured parse failed: %s", exc)
+        return False
 
 
 def _parse_trep_03_events_faults_heuristic(data, results):
@@ -2054,75 +2489,80 @@ def _parse_trep_03_events_faults_heuristic(data, results):
         _log.debug("TREP 03 heuristic parse failed: %s", exc)
 
 def _parse_trep_04_speed(data, results):
-    """Parse TREP 04 (Detailed Speed) message — minute-by-minute speed blocks."""
+    """Parse TREP 04 (VuDetailedSpeedData) — Annex 1B §2.2.6.4:
+    noOfSpeedBlocks(2) + N × VuDetailedSpeedBlock(64), each block =
+    speedBlockBeginDate(4, TimeReal) + 60 speed samples (1 byte per second).
+
+    Consecutive one-minute blocks are aggregated into driving runs to keep
+    the output compact (one entry per uninterrupted recording period).
+    """
     try:
-        if len(data) < 8:
+        if len(data) < 2 + 64:
             return
-        pos = 0
+        n_blocks = struct.unpack(">H", data[0:2])[0]
+        if n_blocks == 0 or 2 + n_blocks * 64 > len(data):
+            return
+        first_ts = struct.unpack(">I", data[2:6])[0]
+        if not (946684800 <= first_ts <= 4102444800):
+            return  # false-positive message marker
+
         speed_blocks = results.setdefault("speed_blocks", [])
-        
-        while pos + 8 <= len(data):
-            # Speed block: noOfMinutes (2) + timestamp (4) + speedValues
-            no_minutes = struct.unpack(">H", data[pos:pos+2])[0]
-            pos += 2
-            if pos + 4 > len(data):
-                break
-            ts = struct.unpack(">I", data[pos:pos+4])[0]
-            pos += 4
-            
-            if not (946684800 <= ts <= 4102444800):
-                # Not a valid timestamp — try resyncing
-                continue
-            
-            if pos + no_minutes > len(data):
-                no_minutes = len(data) - pos
-            
-            if no_minutes > 1440:
-                # Probably a false positive, skip
-                continue
-            
-            # Read speed values (1 byte per minute, value = km/h), filter > 200 km/h
-            speeds = [s for s in data[pos:pos+min(no_minutes, 1440)] if s <= 200]
-            pos += no_minutes
-            
-            dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
-            avg_speed = round(sum(speeds) / len(speeds), 1) if speeds else 0
-            max_speed = max(speeds) if speeds else 0
-            
+        seen = {b.get("timestamp") for b in speed_blocks if isinstance(b, dict)}
+
+        run_start_ts = None
+        run_minutes = 0
+        run_speeds = []
+        prev_ts = None
+
+        def _flush():
+            if run_start_ts is None or not run_speeds:
+                return
+            dt = datetime.fromtimestamp(run_start_ts, tz=timezone.utc).isoformat()
+            if dt in seen:
+                return
+            seen.add(dt)
             speed_blocks.append({
                 "timestamp": dt,
-                "minutes": no_minutes,
-                "average_speed_kmh": avg_speed,
-                "max_speed_kmh": max_speed,
-                "speeds_sample": speeds[:60],  # First 60 minutes for readability
+                "minutes": run_minutes,
+                "average_speed_kmh": round(sum(run_speeds) / len(run_speeds), 1),
+                "max_speed_kmh": max(run_speeds),
+                "speeds_sample": run_speeds[:60],
             })
+
+        for i in range(n_blocks):
+            blk = data[2 + i * 64:2 + (i + 1) * 64]
+            ts = struct.unpack(">I", blk[0:4])[0]
+            if not (946684800 <= ts <= 4102444800):
+                continue
+            speeds = [s for s in blk[4:64] if s != 0xFF]
+            if prev_ts is None or ts - prev_ts != 60:
+                _flush()
+                run_start_ts = ts
+                run_minutes = 0
+                run_speeds = []
+            run_minutes += 1
+            run_speeds.extend(speeds)
+            prev_ts = ts
+        _flush()
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 04 speed parse failed: %s", exc)
 
 def _parse_trep_05_technical(data, results):
-    """Parse TREP 05 (Technical/Calibration) message — VU info + calibration records.
+    """Parse TREP 05 (Technical Data) — Annex 1B §2.2.6.5 deterministic layout:
 
-    Attempts structured calibration record extraction (167-byte records) first,
-    then falls back to regex VIN-scan heuristic.
+      VuIdentification (116): manufacturerName(36) + manufacturerAddress(36) +
+        partNumber(16) + serialNumber(8) + softwareVersion(4) +
+        softwareInstallationDate(4) + manufacturingDate(4) + approvalNumber(8)
+      SensorPaired (20): serialNumber(8) + approvalNumber(8) + pairingDateFirst(4)
+      VuCalibrationData: noOfCalibrationRecords(1) + VuCalibrationRecord(167)×N
+
+    Falls back to regex VIN-scan heuristic when the structure does not validate.
     """
     import re
     try:
         if len(data) < 50:
             _log.debug("TREP 05: data too short (len=%d)", len(data))
             return
-        off = 0
-        mfr = decode_string(data[off:off+36])
-        off += 36
-        if mfr.strip():
-            results.setdefault("vu_info", {})["manufacturer"] = mfr.strip()
-        addr = decode_string(data[off:off+36])
-        off += 36
-        if addr.strip():
-            results.setdefault("vu_info", {})["manufacturer_address"] = addr.strip()
-        approval = decode_string(data[off:off+8])
-        off += 8
-        if approval.strip():
-            results.setdefault("vu_info", {})["approval_number"] = approval.strip()
 
         cal_records = results.setdefault("calibrations", [])
         workshops = results.setdefault("workshops", [])
@@ -2131,73 +2571,126 @@ def _parse_trep_05_technical(data, results):
                        0x04:"Inspection", 0x05:"PeriodicInspection", 0x06:"Coupling",
                        0x0A:"EnforcementInspection"}
 
+        def _decode_cal_record(chunk):
+            """Decode one 167-byte VuCalibrationRecord (Annex 1B §2.118).
+            Returns the entry dict or None when the record is empty/garbage."""
+            vin = decode_string(chunk[95:112], is_id=True)
+            if len(vin) != 17 or not vin.isalnum():
+                return None
+            purpose = chunk[0]
+            workshop_name = decode_string(chunk[1:37])
+            workshop_address = decode_string(chunk[37:73])
+            # FullCardNumber (§2.73): cardType(1) + nation(1) + cardNumber(16)
+            ws_card_nation = get_nation(chunk[74])
+            ws_card_number = decode_string(chunk[75:91], is_id=True)
+            ws_card_expiry = decode_date(chunk[91:95])
+            nation = get_nation(chunk[112])
+            # VehicleRegistrationNumber = codePage(1) + 13 chars
+            plate = decode_string(chunk[114:127], is_id=True)
+            w_const = struct.unpack(">H", chunk[127:129])[0]
+            k_const = struct.unpack(">H", chunk[129:131])[0]
+            l_const = struct.unpack(">H", chunk[131:133])[0]
+            tyre = decode_string(chunk[133:148])
+            speed = chunk[148]
+            old_odo = int.from_bytes(chunk[149:152], 'big')
+            if old_odo == 0xFFFFFF:
+                old_odo = None
+            new_odo = int.from_bytes(chunk[152:155], 'big')
+            if new_odo == 0xFFFFFF:
+                new_odo = None
+            old_time = decode_date(chunk[155:159])
+            new_time = decode_date(chunk[159:163])
+            next_cal = decode_date(chunk[163:167])
+            if old_time == "N/A":
+                return None
+            if not (0 < w_const < 65535 and 0 < l_const < 65535):
+                return None
+            return {
+                "_key": f"{vin}|{old_time}|{workshop_name}|{old_odo}|{purpose}",
+                "timestamp": old_time,
+                "purpose": purpose_map.get(purpose, f"0x{purpose:02X}" if purpose else ""),
+                "purpose_code": purpose,
+                "vin": vin,
+                "registration_nation": nation,
+                "plate": plate,
+                "workshop": workshop_name,
+                "workshop_address": workshop_address,
+                "workshop_card": f"{ws_card_nation}{ws_card_number}",
+                "workshop_card_expiry": ws_card_expiry,
+                "w_constant": w_const,
+                "k_constant": k_const,
+                "l_tyre_circumference": l_const,
+                "tyre_size": tyre,
+                "speed_limit": speed,
+                "odometer": old_odo,
+                "new_odometer": new_odo,
+                "old_time": old_time,
+                "new_time": new_time,
+                "next_calibration_date": next_cal,
+            }
+
+        # Attempt 1: deterministic VuIdentification + SensorPaired + calibrations
         structured_count = 0
+        mfr = decode_string(data[0:36])
+        addr = decode_string(data[36:72])
+        n_cal = data[136] if len(data) > 136 else 0
+        structure_fits = len(data) >= 137 + n_cal * 167
+        if len(mfr) >= 3 and structure_fits:
+            decoded = []
+            for i in range(n_cal):
+                chunk = data[137 + i * 167:137 + (i + 1) * 167]
+                entry = _decode_cal_record(chunk)
+                if entry is not None:
+                    decoded.append(entry)
+            # A populated calibration area must decode mostly valid records,
+            # otherwise this is a false-positive message marker.
+            if n_cal == 0 or len(decoded) >= max(1, n_cal // 2):
+                vu_info = results.setdefault("vu_info", {})
+                vu_info["manufacturer"] = mfr
+                if addr:
+                    vu_info["manufacturer_address"] = addr
+                part_number = decode_string(data[72:88], is_id=True)
+                if part_number:
+                    vu_info["part_number"] = part_number
+                vu_info["serial_number"] = data[88:96].hex().upper()
+                sw_version = decode_string(data[96:100], is_id=True)
+                if sw_version:
+                    vu_info["software_version"] = sw_version
+                sw_install = decode_date(data[100:104])
+                if sw_install != "N/A":
+                    vu_info["software_install_date"] = sw_install
+                mfg_date = decode_date(data[104:108])
+                if mfg_date != "N/A":
+                    vu_info["manufacturing_date"] = mfg_date
+                approval = decode_string(data[108:116], is_id=True)
+                if approval:
+                    vu_info["approval_number"] = approval
+                vu_info["sensor_serial_number"] = data[116:124].hex().upper()
+                sensor_approval = decode_string(data[124:132], is_id=True)
+                if sensor_approval:
+                    vu_info["sensor_approval_number"] = sensor_approval
+                sensor_pairing = decode_date(data[132:136])
+                if sensor_pairing != "N/A":
+                    vu_info["sensor_pairing_date"] = sensor_pairing
 
-        # Attempt 1: Structured 167-byte calibration record detection
-        rec_size = 167
-        if len(data) >= off + rec_size:
-            for i in range(off, len(data) - rec_size + 1, rec_size):
-                chunk = data[i:i + rec_size]
-                vin = decode_string(chunk[95:112], is_id=True)
-                if len(vin) != 17 or not vin.isalnum():
-                    continue
-                try:
-                    purpose = chunk[0]
-                    workshop_name = decode_string(chunk[1:37])
-                    workshop_address = decode_string(chunk[37:73])
-                    # FullCardNumber (§2.73): cardType(1) + nation(1) + cardNumber(16)
-                    ws_card_nation = get_nation(chunk[74])
-                    ws_card_number = decode_string(chunk[75:91], is_id=True)
-                    ws_card_expiry = decode_date(chunk[91:95])
-                    nation = get_nation(chunk[112])
-                    plate = decode_string(chunk[113:127])
-                    w_const = struct.unpack(">H", chunk[127:129])[0]
-                    k_const = struct.unpack(">H", chunk[129:131])[0]
-                    l_const = struct.unpack(">H", chunk[131:133])[0]
-                    tyre = decode_string(chunk[133:148])
-                    speed = chunk[148]
-                    old_odo = int.from_bytes(chunk[149:152], 'big')
-                    if old_odo == 0xFFFFFF:
-                        old_odo = None
-                    old_time = decode_date(chunk[155:159])
-                    new_time = decode_date(chunk[159:163])
-                    next_cal = decode_date(chunk[163:167])
-                    if old_time == "N/A":
-                        continue
-                    cal_key = f"{vin}|{old_time}|{workshop_name}|{old_odo}"
-                    if not any(c.get("_key") == cal_key for c in cal_records) and 0 < w_const < 65535 and 0 < l_const < 65535:
-                        cal_records.append({
-                            "_key": cal_key,
-                            "timestamp": old_time,
-                            "purpose": purpose_map.get(purpose, f"0x{purpose:02X}" if purpose else ""),
-                            "purpose_code": purpose,
-                            "vin": vin,
-                            "registration_nation": nation,
-                            "plate": plate,
-                            "workshop": workshop_name,
-                            "workshop_address": workshop_address,
-                            "workshop_card": f"{ws_card_nation}{ws_card_number}",
-                            "workshop_card_expiry": ws_card_expiry,
-                            "w_constant": w_const,
-                            "k_constant": k_const,
-                            "l_tyre_circumference": l_const,
-                            "tyre_size": tyre,
-                            "speed_limit": speed,
-                            "odometer": old_odo,
-                            "old_time": old_time,
-                            "new_time": new_time,
-                            "next_calibration_date": next_cal,
-                        })
-                        if workshop_name and workshop_name not in workshops:
-                            workshops.append(workshop_name)
-                        cal_vins.add(vin)
+                for entry in decoded:
+                    if not any(c.get("_key") == entry["_key"] for c in cal_records):
+                        cal_records.append(entry)
+                        if entry["workshop"] and entry["workshop"] not in workshops:
+                            workshops.append(entry["workshop"])
+                        cal_vins.add(entry["vin"])
                         structured_count += 1
-                except (struct.error, IndexError, ValueError):
-                    continue
 
-        if structured_count > 0:
-            _log.debug("TREP 05: structured 167B record extraction found %d calibrations", structured_count)
+        if structured_count > 0 or (len(mfr) >= 3 and structure_fits and n_cal == 0):
+            _log.debug("TREP 05: structured parse found %d calibrations", structured_count)
             return
+
+        # Fallback: legacy header decode (manufacturer fields only)
+        if mfr:
+            results.setdefault("vu_info", {}).setdefault("manufacturer", mfr)
+        if addr:
+            results.setdefault("vu_info", {}).setdefault("manufacturer_address", addr)
+        off = 80
 
         # Attempt 2: Regex VIN-scan heuristic (original fallback)
         _log.debug("TREP 05: structured record extraction failed, falling back to regex VIN-scan")
