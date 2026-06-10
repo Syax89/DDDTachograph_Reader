@@ -93,11 +93,18 @@ def build_g1_vehicles():
 
 
 def build_g1_places():
+    """EF Places (G1, Annex 1B §2.27): placePointerNewestRecord(1) + N x PlaceRecord(10).
+
+    PlaceRecord: entryTime(4) + entryType(1, 0=begin/1=end) + country(1) +
+    region(1) + odometer(3).
+    """
     body = bytearray()
     for d in range(3):
-        body.extend(struct.pack(">IBB3s", ts(2025,5,1+d,8), 0x01, get_nation_byte(), b"RM "))
-        body.extend(b'\x00\x00\x64')
-    return struct.pack(">H", 0) + bytes(body)
+        body.extend(struct.pack(">IBBB", ts(2025,5,1+d,8), 0x00, get_nation_byte(), 0x12))
+        body.extend((50000 + d * 300).to_bytes(3, 'big'))
+        body.extend(struct.pack(">IBBB", ts(2025,5,1+d,17), 0x01, get_nation_byte(), 0x12))
+        body.extend((50150 + d * 300).to_bytes(3, 'big'))
+    return bytes([len(body) // 10 - 1]) + bytes(body)
 
 
 def build_g1_current_usage():
@@ -131,11 +138,13 @@ def build_g1_calibrations():
 
 
 def build_g1_card_download():
-    return struct.pack(">HI", 0, ts(2025,5,3,18))
+    """EF Card_Download (Annex 1B §2.18): a single 4-byte TimeReal, no header."""
+    return struct.pack(">I", ts(2025,5,3,18))
 
 
 def build_g1_specific_conditions():
-    return struct.pack(">HIB", 0, ts(2025,4,12,14), 0x00)
+    """EF Specific_Conditions (G1, Annex 1B §2.27): 5-byte records, no header."""
+    return struct.pack(">IB", ts(2025,4,12,14), 0x00) + struct.pack(">IB", ts(2025,4,12,18), 0x02)
 
 
 def build_g2_icc():

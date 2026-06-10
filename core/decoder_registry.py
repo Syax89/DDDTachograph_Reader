@@ -292,12 +292,12 @@ class DecoderRegistry:
             TagDecoder(0x052D, "VuOverSpeedingEventData",
                        decoders.parse_g2_vu_record,
                        annex_ref="Annex 1C §2.215", generation="G2.2",
-                       vu_only=True, priority=1, record_size=33),
+                       vu_only=True, priority=1, record_size=32),
 
             TagDecoder(0x052E, "VuOverSpeedingControlData",
                        decoders.parse_g2_vu_record,
                        annex_ref="Annex 1C §2.212", generation="G2.2",
-                       vu_only=True, priority=1, record_size=10),
+                       vu_only=True, priority=1, record_size=9),
 
             TagDecoder(0x052F, "VuTimeAdjustmentGNSSRecord",
                        decoders.parse_g2_vu_record,
@@ -307,7 +307,7 @@ class DecoderRegistry:
             TagDecoder(0x0530, "VuPowerSupplyInterruptionData",
                        decoders.parse_g2_vu_record,
                        annex_ref="Annex 1C §2.240", generation="G2.2",
-                       vu_only=True, priority=1, record_size=90),
+                       vu_only=True, priority=1, record_size=87),
 
             TagDecoder(0x0531, "VuSensorFaultData",
                        decoders.parse_g2_vu_record,
