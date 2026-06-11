@@ -209,9 +209,9 @@ def _fmt_dict(d):
         return _fmt_coords(geo.get("latitude_deg"), geo.get("longitude_deg"))
     if "latitude_deg" in d or "longitude_deg" in d:
         return _fmt_coords(d.get("latitude_deg"), d.get("longitude_deg"))
-    # Card number (FullCardNumber)
-    if d.get("card_number"):
-        return str(d["card_number"])
+    # Card number (FullCardNumber) — empty number means no card in slot
+    if "card_number" in d:
+        return str(d["card_number"]).strip() or "—"
     # Vehicle registration
     if "plate" in d:
         plate = (d.get("plate") or "").strip() if d.get("plate") is not None else ""
@@ -844,6 +844,10 @@ class TachoExplorer(tk.Tk):
             if group_key == "vu" and not actual_is_vu:
                 continue
             entries = sections_by_group.get(group_key, [])
+            # Skip groups with nothing to show (e.g. "G2.2 — Smart V2" on a
+            # G1 file): an empty folder is just noise.
+            if not entries and not (group_key == "activity" and activities):
+                continue
             gnode = self.tree.insert("", tk.END, text=group_label, open=False)
             if group_key == "activity" and activities:
                 self._populate_activities(gnode, activities)
