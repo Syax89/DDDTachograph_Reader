@@ -32,12 +32,12 @@ jobs:
     - name: Package as zip
       shell: pwsh
       run: |
-        Compress-Archive -Path dist/TachoReader/* -DestinationPath TachoReader-v${{ github.ref_name }}-windows-x64.zip
+        Compress-Archive -Path dist/TachoReader/* -DestinationPath TachoReader-${{ github.ref_name }}-windows-x64.zip
 
     - name: Upload to release
       uses: softprops/action-gh-release@v2
       with:
-        files: TachoReader-v${{ github.ref_name }}-windows-x64.zip
+        files: TachoReader-${{ github.ref_name }}-windows-x64.zip
 
   build-macos:
     runs-on: macos-latest
@@ -61,9 +61,9 @@ jobs:
 
     - name: Create DMG
       run: |
-        hdiutil create -volname "TachoReader" -srcfolder dist/TachoReader.app -ov -format UDZO TachoReader-v${{ github.ref_name }}-macos.dmg
+        hdiutil create -volname "TachoReader" -srcfolder dist/TachoReader.app -ov -format UDZO TachoReader-${{ github.ref_name }}-macos.dmg
 
     - name: Upload to release
       uses: softprops/action-gh-release@v2
       with:
-        files: TachoReader-v${{ github.ref_name }}-macos.dmg
+        files: TachoReader-${{ github.ref_name }}-macos.dmg
