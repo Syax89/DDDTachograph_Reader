@@ -190,7 +190,9 @@ class TachoParser:
                     try:
                         from core.vu_signature_verifier import (
                             verify_vu_download, decode_vu_certificates)
-                        self.results["signature_verification"] = verify_vu_download(self.raw_data)
+                        erca_keys = self.validator._g2_erca_keys() or None
+                        self.results["signature_verification"] = verify_vu_download(
+                            self.raw_data, erca_keys=erca_keys)
                         self.results["vu_certificates"] = decode_vu_certificates(self.raw_data)
                     except Exception as exc:
                         logger.debug("VU signature verification unavailable: %s", exc, exc_info=False)
@@ -232,6 +234,16 @@ class TachoParser:
             self.results["activities"] = unique
 
             # Forensic Validation
+            # G1 VU files carry certificates inside TREP 01 Overview rather than
+            # as separate STAP/BER-TLV records — pull them from the internal keys
+            # set by parse_g1_vu_overview when the deterministic parser didn't
+            # capture them.
+            g1_vu_msca = self.results.pop("_g1_vu_msca_cert", None)
+            g1_vu_card = self.results.pop("_g1_vu_card_cert", None)
+            if not self.card_cert_raw and not self.msca_cert_raw:
+                if g1_vu_msca and g1_vu_card:
+                    self.card_cert_g1 = g1_vu_card
+                    self.msca_cert_g1 = g1_vu_msca
             if self.card_cert_raw and self.msca_cert_raw:
                 status, pubkey = self.validator.validate_tacho_chain(self.card_cert_raw, self.msca_cert_raw)
                 # The last certificates seen in the file may be the G2 copies;
@@ -242,22 +254,82 @@ class TachoParser:
                         (self.card_cert_g1 != self.card_cert_raw or self.msca_cert_g1 != self.msca_cert_raw):
                     g1_status, g1_pubkey = self.validator.validate_tacho_chain(
                         self.card_cert_g1, self.msca_cert_g1)
-                    rank = {True: 3, "Incomplete (Missing ERCA)": 2,
+                    rank = {True: 4,
+                            "Incomplete (Missing ERCA)": 3,
+                            "Partial — MSCA→Card verified (no ERCA root)": 2,
                             "Cannot Verify (Missing ERCA Root)": 1}
                     if rank.get(g1_status, 0) > rank.get(status, 0):
                         status, pubkey = g1_status, g1_pubkey
-                if status is True:
-                    self.validation_status = "Verified"
-                    self.card_public_key = pubkey
-                elif status == "Incomplete (Missing ERCA)":
-                    self.validation_status = "Verified (Local Chain)"
-                    self.card_public_key = pubkey
-                elif status == "Cannot Verify (Missing ERCA Root)":
-                    self.validation_status = "Unverified (Missing ERCA Root)"
-                else:
-                    self.validation_status = "Invalid Certificate Chain"
+            elif self.card_cert_g1 and self.msca_cert_g1:
+                # G1 VU files: certificates were extracted from TREP 01 Overview
+                # and stored directly as the G1 copies.
+                status, pubkey = self.validator.validate_tacho_chain(
+                    self.card_cert_g1, self.msca_cert_g1)
             else:
-                self.validation_status = "Incomplete Certificates"
+                status, pubkey = False, None
+
+            if status is True:
+                self.validation_status = "Verified"
+                self.card_public_key = pubkey
+            elif status == "Partial — MSCA→Card verified (no ERCA root)":
+                self.validation_status = "Verified (Partial — CVC MSCA→Card)"
+                self.card_public_key = pubkey
+            elif status == "Incomplete (Missing ERCA)":
+                self.validation_status = "Verified (Local Chain)"
+                self.card_public_key = pubkey
+            elif status == "Cannot Verify (Missing ERCA Root)":
+                self.validation_status = "Unverified (Missing ERCA Root)"
+            elif status is not False:
+                self.validation_status = str(status)
+            else:
+                self.validation_status = "Invalid Certificate Chain"
+
+            had_certs = bool((self.card_cert_raw and self.msca_cert_raw)
+                             or (self.card_cert_g1 and self.msca_cert_g1))
+            if not self.card_public_key:
+                # Card chain didn't produce a key — check VU verification.
+                sv = self.results.get("signature_verification") or {}
+                if sv.get("msca_to_vu") is True:
+                    if sv.get("all_treps_valid") and sv.get("root_anchored"):
+                        self.validation_status = "Verified (VU Chain)"
+                    elif sv.get("all_treps_valid"):
+                        self.validation_status = "Verified (VU — TREP ok, chain partial)"
+                    else:
+                        self.validation_status = "Partial (VU — chain ok)"
+                elif not had_certs:
+                    self.validation_status = "Incomplete Certificates"
+                # else: keep the negative chain outcome (e.g. "Invalid
+                # Certificate Chain") — a failed chain must stay visible.
+
+            # EF signature verification: verify each EF data block against
+            # the card public key (forensic data integrity check).
+            ef_data_raw = self.results.pop("_ef_data", None)
+            ef_sig_raw = self.results.pop("_ef_signatures", None)
+            if ef_data_raw is not None and ef_sig_raw is not None:
+                from core.ef_signature_verifier import pair_ef_records, verify_ef_pairs
+                from cryptography.hazmat.primitives.asymmetric import rsa as _rsa
+                ef_data_map = {(tag, dtype): payload for tag, dtype, payload in ef_data_raw}
+                ef_sig_map = {(tag, dtype): payload for tag, dtype, payload in ef_sig_raw}
+                pairs = pair_ef_records(ef_data_map, ef_sig_map)
+                key_type = "RSA" if isinstance(self.card_public_key, _rsa.RSAPublicKey) else (
+                    "EC" if self.card_public_key is not None else None)
+                # When the G2 chain failed, try to extract the EC public key
+                # from the G2 CVC certificate for G2 EF ECDSA verification.
+                card_ec_key = None
+                card_ec_hash = None
+                if key_type == "RSA" and self.card_cert_raw:
+                    try:
+                        from core.vu_signature_verifier import parse_cvc, cvc_public_key
+                        cvc = parse_cvc(self.card_cert_raw)
+                        if cvc and cvc.get("public_point"):
+                            card_ec_key, card_ec_hash = cvc_public_key(cvc)
+                    except Exception:
+                        pass
+                ef_report = verify_ef_pairs(pairs, self.card_public_key,
+                                            self.validator,
+                                            self.results["metadata"]["generation"],
+                                            key_type, card_ec_key, card_ec_hash)
+                self.results["ef_signature_verification"] = ef_report
 
             self.results["metadata"]["integrity_check"] = self.validation_status
             self.results["metadata"]["decoder_failure_count"] = decoder_failure_count()

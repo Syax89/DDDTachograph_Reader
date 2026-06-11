@@ -18,7 +18,7 @@ _ISO_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2})?")
 HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
                "non_zero_regions", "name", "size", "confidence", "counters_raw"}
 # Descriptive columns pushed to the table start / technical ones to the end.
-LEADING_KEYS = ["description", "timestamp", "date", "begin", "begin_time", "start"]
+LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label", "timestamp", "date", "begin", "begin_time", "start"]
 TRAILING_KEYS = ["record_type", "type_code"]
 
 # Acronyms kept upper-case when humanising keys.
@@ -61,6 +61,7 @@ EXPORT_SECTIONS = [
     ("company_holders", "Company Holders"),
     ("signed_daily_records", "Signed Daily Records"),
     ("locations", "GPS Locations"),
+    ("ef_signature_verification", "EF Card Data Signatures"),
 ]
 
 
@@ -218,6 +219,7 @@ def summary_rows(data):
     driver = data.get("driver", {})
     vehicle = data.get("vehicle", {})
     sv = data.get("signature_verification") or {}
+    efv = data.get("ef_signature_verification") or {}
 
     rows = [
         (tr("File"), meta.get("filename", "N/A")),
@@ -232,6 +234,8 @@ def summary_rows(data):
         rows.append((tr("Reader version"), meta["app_version"]))
     if sv.get("summary"):
         rows.append((tr("Signature verification"), sv["summary"]))
+    if efv.get("summary"):
+        rows.append((tr("EF card data signatures"), efv["summary"]))
 
     if driver.get("surname", "N/A") != "N/A" or driver.get("card_number", "N/A") != "N/A":
         rows.append(("", ""))
@@ -257,18 +261,26 @@ def section_tables(data, max_rows=None):
         items = data.get(key) or []
         if not items:
             continue
-        if not isinstance(items, list):
-            items = [items]
         if key == "activities":
+            if not isinstance(items, list):
+                items = [items]
             recs = expand_activities(items)
             if not recs:
                 continue
             headers = list(recs[0].keys())
             rows = [[r.get(h, "") for h in headers] for r in recs]
-        elif all(not isinstance(x, dict) for x in items):
-            headers, rows = [tr("Value")], [[fmt_value(x)] for x in items]
+        elif key == "ef_signature_verification" and isinstance(items, dict):
+            ef_results = items.get("ef_results") or []
+            if not ef_results:
+                continue
+            headers, rows = records_to_table(ef_results)
         else:
-            headers, rows = records_to_table(items)
+            if not isinstance(items, list):
+                items = [items]
+            if all(not isinstance(x, dict) for x in items):
+                headers, rows = [tr("Value")], [[fmt_value(x)] for x in items]
+            else:
+                headers, rows = records_to_table(items)
         if not rows:
             continue
         truncated = False

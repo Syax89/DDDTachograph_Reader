@@ -79,7 +79,7 @@ HEADER_BG = "#e3e9f2"
 # (e.g. "_key" dedup markers) are always hidden — see _columns_for.
 HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence"}
 # Descriptive columns pushed to table start.
-LEADING_KEYS = ["description"]
+LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
 # Technical columns pushed to table end.
 TRAILING_KEYS = ["record_type"]
 
@@ -487,6 +487,8 @@ class TachoExplorer(tk.Tk):
         self.lbl_file = ttk.Label(top, text="No file loaded",
                                   font=("", 11, "bold"))
         self.lbl_file.pack(side=tk.LEFT)
+        self.lbl_status = ttk.Label(top, text="", font=("", 10))
+        self.lbl_status.pack(side=tk.LEFT, padx=(6, 0))
         self.lbl_gen = ttk.Label(top, text="")
         self.lbl_gen.pack(side=tk.RIGHT, padx=8)
         self.lbl_cov = ttk.Label(top, text="")
@@ -684,6 +686,56 @@ class TachoExplorer(tk.Tk):
                             foreground=GEN_COLORS.get(gen, GEN_COLORS["Unknown"]))
         cov_color = "#2e7d32" if cov >= 100 else ("#f57c00" if cov >= 80 else "#c62828")
         self.lbl_cov.config(text=f"Coverage: {cov:.0f}%", foreground=cov_color)
+        self._update_status_badge(data)
+
+    def _update_status_badge(self, data):
+        integrity = (data.get("metadata") or {}).get("integrity_check", "")
+        efv = data.get("ef_signature_verification") or {}
+        sv = data.get("signature_verification") or {}
+
+        ef_ok = efv.get("failed", 1) == 0 and efv.get("verified", 0) > 0
+        sv_ok = sv.get("all_treps_valid") is True
+        chain_ok = "Verified" in integrity
+
+        if chain_ok and ef_ok:
+            text = "\u2705  All signatures verified"
+            color = "#2e7d32"
+        elif sv_ok and sv.get("root_anchored"):
+            text = "\u2705  VU signatures verified (root anchored)"
+            color = "#2e7d32"
+        elif sv_ok:
+            text = f"\u2705  VU TREP sigs ok ({sv.get('trep_count', '')})"
+            color = "#2e7d32"
+        elif chain_ok and efv.get("verified", 0) > 0:
+            text = f"\u26a0\ufe0f  EF sigs {efv['verified']}/{efv.get('total', '?')} verified"
+            color = "#e65100"
+        elif ef_ok:
+            text = "\u26a0\ufe0f  Partial verification"
+            color = "#e65100"
+        elif integrity.startswith("Verified") or integrity.startswith("Partial"):
+            text = "\u26a0\ufe0f  Partial verification"
+            color = "#f57c00"
+        elif integrity == "Invalid Certificate Chain":
+            text = "\u274c  Certificate chain invalid"
+            color = "#c62828"
+        elif "Missing ERCA" in integrity:
+            text = "\u26a0\ufe0f  ERCA root not available"
+            color = "#f57c00"
+        elif "Incomplete" in integrity:
+            text = "\u2753  No certificates"
+            color = "#757575"
+        elif "Error" in integrity:
+            text = "\u274c  Parse error"
+            color = "#c62828"
+        else:
+            text = ""
+            color = "#757575"
+
+        self.lbl_status.config(text=text, foreground=color)
+        # Also update the window title with a compact status.
+        parts = [f"Tacho Explorer v{__version__}", text[:1],
+                 os.path.basename(self.current_file or "")]
+        self.title("  ".join(p for p in parts if p))
 
     # ── Tree construction ───────────────────────────────────
 
@@ -792,7 +844,7 @@ class TachoExplorer(tk.Tk):
             if group_key == "vu" and not actual_is_vu:
                 continue
             entries = sections_by_group.get(group_key, [])
-            gnode = self.tree.insert("", tk.END, text=group_label, open=True)
+            gnode = self.tree.insert("", tk.END, text=group_label, open=False)
             if group_key == "activity" and activities:
                 self._populate_activities(gnode, activities)
             for label, cols, rows in entries:
@@ -863,15 +915,30 @@ class TachoExplorer(tk.Tk):
 
     def _populate_security(self, data):
         sv = data.get("signature_verification")
+        efv = data.get("ef_signature_verification")
         certs = data.get("certificates") or []
         cvc = data.get("vu_certificates") or []
         chip = data.get("card_chip") or {}
         icc = data.get("card_icc") or {}
-        if not sv and not certs and not cvc and not chip and not icc:
+        if not sv and not efv and not certs and not cvc and not chip and not icc:
             return
         gnode = self.tree.insert("", tk.END,
                                  text="\U0001f510  Security & Certificates",
-                                 open=True)
+                                 open=False)
+        if efv:
+            ef_summary = {
+                "Summary": efv.get("summary", ""),
+                "Verified": efv.get("verified"),
+                "Failed": efv.get("failed"),
+                "Skipped": efv.get("skipped"),
+                "Total": efv.get("total"),
+            }
+            cols, rows = _kv_rows(ef_summary)
+            self._add_section(gnode, "EF Signatures (Card Data Integrity)", cols, rows)
+            ef_results = efv.get("ef_results") or []
+            if ef_results:
+                cols, rows = _rows_for(ef_results, None)
+                self._add_section(gnode, "EF Signature Details", cols, rows)
         if cvc:
             cols, rows = _rows_for(cvc, None)
             self._add_section(gnode, "CVC Certificates (decoded)", cols, rows,

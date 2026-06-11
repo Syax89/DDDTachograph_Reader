@@ -118,6 +118,43 @@ def specific_condition_label(code) -> str:
         return "Unknown"
     return SPECIFIC_CONDITION_LABELS.get(code, f"0x{code:02X}")
 
+# ── Calibration purpose (Annex 1B §2.118) ──────────────────────────────────
+#
+# CalibrationPurpose codes assigned during workshop calibrations.
+#   0x01 Activation — first activation of the VU
+#   0x02 FirstInstall — first installation of the VU in this vehicle
+#   0x03 FirstInstallOther — first installation in a different vehicle
+#   0x04 Inspection — periodic inspection (G1: Annex 1B §2.117)
+#   0x05 PeriodicInspection — periodical inspection (G2: Annex 1C §2.168)
+#   0x06 Coupling — coupling of a motion sensor
+#   0x0A EnforcementInspection — enforcement inspection
+
+CALIBRATION_PURPOSE: dict[int, str] = {
+    0x01: "Activation",
+    0x02: "First installation",
+    0x03: "First installation (other vehicle)",
+    0x04: "Inspection",
+    0x05: "Periodic inspection",
+    0x06: "Coupling",
+    0x0A: "Enforcement inspection",
+}
+
+# ── Control activity type (Annex 1B §2.15a, Annex 1C §2.99) ──────────────
+#
+# ControlType codes recorded when a controller downloads or inspects
+# the VU/card data.
+#   0x01 Roadside — roadside check by enforcement
+#   0x02 Company — company check
+#   0x03 Workshop — workshop calibration/inspection
+#   0x04 Remote — remote download (G2.2)
+
+CONTROL_TYPE: dict[int, str] = {
+    0x01: "Roadside check",
+    0x02: "Company check",
+    0x03: "Workshop check",
+    0x04: "Remote download",
+}
+
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
 def describe_event(code) -> str:
@@ -164,3 +201,17 @@ def describe_fault(code) -> str:
 def describe_specific_condition(code: int) -> str:
     """Return description for a specific condition type code."""
     return SPECIFIC_CONDITION_TYPES.get(code, f"Condition 0x{code:02X}")
+
+
+def describe_calibration_purpose(code) -> str:
+    """Return a human-readable label for a CalibrationPurpose byte."""
+    if code is None:
+        return "Unknown"
+    return CALIBRATION_PURPOSE.get(code, f"0x{code:02X}")
+
+
+def describe_control_type(code) -> str:
+    """Return a human-readable label for a ControlType byte."""
+    if code is None:
+        return "Unknown"
+    return CONTROL_TYPE.get(code, f"0x{code:02X}")

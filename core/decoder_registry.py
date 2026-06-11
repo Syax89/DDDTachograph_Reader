@@ -213,7 +213,6 @@ class DecoderRegistry:
                        min_length=20, record_size=18),
 
             TagDecoder(0x0206, "VU_ActivityDailyRecord",
-                       decoders.parse_cyclic_buffer_activities,
                        annex_ref="Annex 1C", generation="G2",
                        min_length=100),
 
@@ -344,6 +343,10 @@ class DecoderRegistry:
 
             TagDecoder(0x7605, "G1_VU_TechnicalData",
                        annex_ref="Annex 1B §4.5.3.2.2", generation="G1",
+                       vu_only=True, container=True),
+
+            TagDecoder(0x7606, "G1_VU_CardDownload",
+                       annex_ref="Annex 1B §4.5.3.2.6", generation="G1",
                        vu_only=True, container=True),
 
             # ── G2 VU Containers ──

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from core.logger import get_logger
 from core.constants import MAX_ODO_DISTANCE_KM
-from core.event_fault_codes import describe_event, describe_fault
+from core.event_fault_codes import describe_event, describe_fault, describe_calibration_purpose, describe_control_type
 
 _log = get_logger(__name__)
 
@@ -571,6 +571,7 @@ def parse_calibration_data(val, results):
 
             results["calibrations"].append({
                 "purpose_code": purpose,
+                "purpose": describe_calibration_purpose(purpose),
                 "workshop_name": workshop_name,
                 "workshop_address": workshop_address,
                 "workshop_card": f"{ws_card_nation}{ws_card_number}" if rec_size >= 167 else "N/A",
@@ -701,12 +702,14 @@ def parse_g22_trailer_registrations(val, results):
             nation = get_nation(chunk[4])
             plate = decode_string(chunk[5:19], is_id=True)
             coupling = chunk[19]
+            coupling_map = {0: "COUPLED", 1: "UNCOUPLED"}
             dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
             results.setdefault("trailer_registrations", []).append({
                 "timestamp": dt,
                 "nation": nation,
                 "trailer_plate": plate,
-                "event": "COUPLED" if coupling == 0 else "UNCOUPLED"
+                "coupling_code": coupling,
+                "event": coupling_map.get(coupling, f"UNKNOWN_{coupling:02X}")
                 })
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Trailer registrations parse failed: %s", exc)
@@ -1363,6 +1366,7 @@ def parse_control_activity_data(val, results):
             nation_char = get_nation(card_nation)
             existing.append({
                 "control_type": control_type,
+                "control_type_label": describe_control_type(control_type),
                 "timestamp": dt,
                 "control_card": f"{nation_char}{card_num}",
                 "card_nation": nation_char,
@@ -1746,6 +1750,7 @@ def _parse_g1_overview_tail(body, off, results):
                 end_ts = struct.unpack(">I", rec[27:31])[0]
                 controls.append({
                     "control_type": rec[0],
+                    "control_type_label": describe_control_type(rec[0]),
                     "control_time": datetime.fromtimestamp(ctrl_ts, tz=timezone.utc).isoformat(),
                     "control_card": _parse_full_card_number(rec, 5),
                     "download_period_begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat()
@@ -1842,9 +1847,12 @@ def parse_g1_vu_overview(val, results):
             try:
                 parse_g1_certificate(body[0:194], results)
                 fixed_fields_parsed.add("ms_certificate")
+                # Store raw certificates for chain validation in ddd_parser.py.
+                results["_g1_vu_msca_cert"] = body[0:194]
                 if body[194:388]:
                     parse_g1_certificate(body[194:388], results)
                     fixed_fields_parsed.add("vu_certificate")
+                    results["_g1_vu_card_cert"] = body[194:388]
 
                 vin_raw = body[388:405]
                 vin = decode_string(vin_raw, is_id=True)
@@ -2691,9 +2699,6 @@ def _parse_trep_05_technical(data, results):
         cal_records = results.setdefault("calibrations", [])
         workshops = results.setdefault("workshops", [])
         cal_vins = results.setdefault("calibration_vins", set())
-        purpose_map = {0x01:"Activation", 0x02:"FirstInstall", 0x03:"FirstInstallOther",
-                       0x04:"Inspection", 0x05:"PeriodicInspection", 0x06:"Coupling",
-                       0x0A:"EnforcementInspection"}
 
         def _decode_cal_record(chunk):
             """Decode one 167-byte VuCalibrationRecord (Annex 1B §2.118).
@@ -2732,7 +2737,7 @@ def _parse_trep_05_technical(data, results):
             return {
                 "_key": f"{vin}|{old_time}|{workshop_name}|{old_odo}|{purpose}",
                 "timestamp": old_time,
-                "purpose": purpose_map.get(purpose, f"0x{purpose:02X}" if purpose else ""),
+                "purpose": describe_calibration_purpose(purpose),
                 "purpose_code": purpose,
                 "vin": vin,
                 "registration_nation": nation,
@@ -2885,7 +2890,7 @@ def _parse_trep_05_technical(data, results):
                 cal_records.append({
                     "_key": cal_key,
                     "timestamp": dt_str,
-                    "purpose": purpose_map.get(purpose, f"0x{purpose:02X}" if purpose else ""),
+                    "purpose": describe_calibration_purpose(purpose),
                     "purpose_code": purpose,
                     "vin": vin,
                     "registration_nation": get_nation(nation),
@@ -2943,6 +2948,24 @@ def _parse_trep_06_card_download(data, results):
                 dk = f"{s}|{f}|card_dl"
                 if not any(d.get("_key") == dk for d in drivers):
                     drivers.append({"surname": s, "firstname": f, "card_number": "", "_key": dk})
+        
+        # Card download data contains the card's Elementary Files including
+        # the cyclic buffer of daily activities (tag 0x0504, Annex 1B §2.32).
+        # This EF is the same for both G1 and G2 driver cards.
+        # Embedded as STAP records: tag(2BE) + dtype(1) + length(2BE) + payload.
+        pos = 0
+        while pos + 5 <= len(data):
+            stag, dtype, slen = struct.unpack(">HBH", data[pos:pos + 5])
+            if stag == 0x0504 and dtype <= 0x0F and 16 <= slen <= 0x100000 \
+                    and pos + 5 + slen <= len(data):
+                end = pos + 5 + slen
+                try:
+                    parse_cyclic_buffer_activities(data[pos + 5:end], results)
+                except Exception as exc:
+                    _log.debug("TREP 06 embedded 0x0504 parse failed: %s", exc)
+                pos = end  # don't rescan inside the matched EF
+            else:
+                pos += 1
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 06 card download parse failed: %s", exc)
 

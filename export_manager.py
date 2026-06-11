@@ -6,7 +6,6 @@ the three formats present the same content consistently.
 """
 import logging
 
-from core.i18n import tr
 from core.report_format import records_to_table, section_tables, summary_rows
 
 _log = logging.getLogger("export")

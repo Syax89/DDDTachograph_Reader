@@ -127,8 +127,8 @@ class TestFullDecodeCoverage(unittest.TestCase):
             if not name.lower().endswith(".ddd"):
                 continue
             data = open(_path(name), "rb").read()
-            if not data.startswith(b"\x76"):
-                continue  # card file, not a VU stream
+            if not data.startswith(b"\x76") or data[1] in (0x06, 0x26, 0x36):
+                continue  # card file or TREP card download, not a VU RecordArray stream
             with self.subTest(file=name):
                 raw = 0
                 total = 0
@@ -140,7 +140,7 @@ class TestFullDecodeCoverage(unittest.TestCase):
                     rt = data[pos]
                     rs = struct.unpack(">H", data[pos + 1:pos + 3])[0]
                     nr = struct.unpack(">H", data[pos + 3:pos + 5])[0]
-                    if rt > 0x60 or rs > 4096 or nr > 20000 or (rs == 0 and nr > 0) \
+                    if rt < 0x01 or rt > 0x60 or rs > 4096 or nr > 20000 or (rs == 0 and nr > 0) \
                             or pos + 5 + rs * nr > len(data):
                         break
                     p = pos + 5

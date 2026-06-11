@@ -1,4 +1,4 @@
-"""Data models for tachograph parsing results. Defines TachoResult, DriverInfo, VehicleInfo and related dataclasses used throughout the pipeline."""
+"""Data models for tachograph parsing results. Defines TachoResult and related utilities used throughout the pipeline."""
 from dataclasses import dataclass, field
 from typing import List, Dict, Any
 from datetime import datetime
@@ -20,24 +20,6 @@ def _tag_generation(name: str) -> str:
         return "Generation 1"
     # Unprefixed tags: classify by tag ID range
     return "Generation 1"
-
-@dataclass
-class DriverInfo:
-    card_number: str = "N/A"
-    surname: str = "N/A"
-    firstname: str = "N/A"
-    birth_date: str = "N/A"
-    expiry_date: str = "N/A"
-    issuing_nation: str = "N/A"
-    preferred_language: str = "N/A"
-    licence_number: str = "N/A"
-    licence_issuing_nation: str = "N/A"
-
-@dataclass
-class VehicleInfo:
-    vin: str = "N/A"
-    plate: str = "N/A"
-    registration_nation: str = "N/A"
 
 @dataclass
 class TachoResult:

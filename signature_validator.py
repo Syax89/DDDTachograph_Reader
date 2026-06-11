@@ -48,9 +48,19 @@ class SignatureValidator:
     def _ensure_certs_dir(self):
         if not os.path.exists(self.certs_dir):
             os.makedirs(self.certs_dir)
-            # Create a placeholder info file
+            self.logger.warning(
+                "ERCA certificates directory '%s' does not exist and has been created. "
+                "Without ERCA root certificates all chain validations will report "
+                "'Cannot Verify (Missing ERCA Root)'. Place root certificates "
+                "(.pem / .cer / .bin) in this directory.", self.certs_dir)
             with open(os.path.join(self.certs_dir, "README.txt"), "w") as f:
-                f.write("Place European Root Certificates (ERCA) here in PEM format.\n")
+                f.write(
+                    "Place European Root Certificates (ERCA) here.\n\n"
+                    "G1 (Annex 1B, RSA): EC_PK.bin / EC_PK.pem "
+                    "(raw KID(8) + n(128) + e(8)).\n"
+                    "G2 (Annex 1C, ECDSA): raw uncompressed EC point (.bin), "
+                    "DER/PEM SubjectPublicKeyInfo, or CVC root certificate.\n\n"
+                    "Published by the EU JRC: https://dtc.jrc.ec.europa.eu/\n")
 
     def _load_root_certificates(self):
         """Loads ERCA certificates from the certs directory."""
@@ -60,13 +70,19 @@ class SignatureValidator:
             if not os.path.isfile(os.path.join(self.certs_dir, filename)):
                 continue
             if filename.endswith(".bin"):
-                # Raw JRC ERCA PK material (e.g. EC_PK.bin: KID(8) + n(128) + e(8))
+                # Raw ERCA PK material:
+                #   G1 RSA: KID(8) + n(128) + e(8) = 144, or n(128) + e(8) = 136
+                #   G2 EC:  uncompressed point = 65 (256-bit), 97 (384),
+                #           129 (brainpoolP512r1), 133 (NIST P-521)
+                #   CVC:   0x7F21 container (variable length, ≥ 100 bytes)
                 try:
                     with open(os.path.join(self.certs_dir, filename), "rb") as f:
                         raw = f.read()
-                    if len(raw) in (136, 144):
+                    if len(raw) in (65, 97, 129, 133, 136, 144) or (
+                        len(raw) >= 100 and raw[0] == 0x7F):
                         self.root_certificates[f"ERCA_RAW_{filename}"] = raw
-                        self.logger.info("Loaded raw ERCA PK material from %s", filename)
+                        self.logger.info("Loaded raw ERCA PK material (%d bytes) from %s",
+                                       len(raw), filename)
                 except OSError as exc:
                     self.logger.debug("Could not read %s: %s", filename, exc)
                 continue
@@ -102,6 +118,25 @@ class SignatureValidator:
                                 except Exception as exc:
                                     self.logger.debug("Could not decode ERCA PK %s: %s", filename, exc)
                             continue
+
+                        # Handle CVC certificate in PEM wrapping
+                        # ("-----BEGIN CERTIFICATE-----" with CVC base64 content).
+                        if b"BEGIN CERTIFICATE" in cert_data:
+                            import base64
+                            lines = cert_data.decode().splitlines()
+                            b64 = "".join(
+                                line for line in lines
+                                if not line.startswith("---"))
+                            try:
+                                raw = base64.b64decode(b64)
+                            except Exception:
+                                raw = None
+                            if raw and len(raw) >= 100 and raw[0] == 0x7F:
+                                self.root_certificates[f"ERCA_CVC_{filename}"] = raw
+                                self.logger.info(
+                                    "Loaded CVC ERCA certificate (%d bytes) from %s",
+                                    len(raw), filename)
+                                continue
 
                         # Prova a caricare come X.509
                         try:
@@ -265,6 +300,74 @@ class SignatureValidator:
                 self.logger.debug("Invalid raw ERCA PK material: %s", exc)
         return None
 
+    def _g2_erca_keys(self):
+        """Return a dict of CAR→(ECPublicKey, hash) for every G2 ERCA-2
+        root key found in the loaded root material.
+
+        Accepts:
+          - An ``EllipticCurvePublicKey`` already parsed (e.g. from a
+            DER/PEM SubjectPublicKeyInfo).
+          - A CVC certificate (0x7F21) — the CAR is read from the cert.
+          - Raw bytes that look like an uncompressed EC point: 65 bytes
+            (brainpool/NIST 256), 97 (384), 129 (brainpoolP512r1),
+            133 (NIST P-521).
+
+        For parsed keys and raw points the real CAR (the JRC-published KID)
+        is unknown, so a synthetic key is used: anchoring then relies on the
+        try-all fallback in :func:`core.vu_signature_verifier.verify_vu_download`.
+        """
+        import hashlib
+
+        def _hash_for(key_size):
+            return {256: hashes.SHA256, 384: hashes.SHA384,
+                    512: hashes.SHA512, 521: hashes.SHA512}.get(key_size, hashes.SHA256)
+
+        # Candidate curves per uncompressed-point length (Annex 1C Part B
+        # allows both brainpool and NIST curves; 65/97 bytes are ambiguous).
+        point_curves = {
+            65: (ec.BrainpoolP256R1(), ec.SECP256R1()),
+            97: (ec.BrainpoolP384R1(), ec.SECP384R1()),
+            129: (ec.BrainpoolP512R1(),),
+            133: (ec.SECP521R1(),),
+        }
+
+        result = {}
+        for material in self.root_certificates.values():
+            if isinstance(material, ec.EllipticCurvePublicKey):
+                encoded = material.public_bytes(
+                    serialization.Encoding.X962,
+                    serialization.PublicFormat.UncompressedPoint)
+                car = hashlib.sha256(encoded).hexdigest()[:16]
+                result[car] = (material, _hash_for(material.curve.key_size))
+                self.logger.info("Registered G2 ERCA-2 key (synthetic CAR=%s)", car)
+                continue
+            if isinstance(material, (bytes, bytearray)):
+                if material[0] == 0x7F and len(material) >= 100:
+                    # CVC certificate — parse it to extract the public key.
+                    from core.vu_signature_verifier import parse_cvc, cvc_public_key
+                    try:
+                        cvc = parse_cvc(bytes(material))
+                        if cvc and cvc.get("public_point"):
+                            pub, hash_algo = cvc_public_key(cvc)
+                            car = cvc.get("car", "")
+                            if pub is not None and car:
+                                result[car] = (pub, hash_algo)
+                                self.logger.info("Registered G2 ERCA-2 CVC key (CAR=%s, curve=%s)",
+                                               car, pub.curve.name)
+                    except Exception as exc:
+                        self.logger.debug("CVC ERCA key parse failed: %s", exc)
+                    continue
+                for curve in point_curves.get(len(material), ()):
+                    try:
+                        pub = ec.EllipticCurvePublicKey.from_encoded_point(curve, bytes(material))
+                    except (ValueError, TypeError):
+                        continue  # point not on this candidate curve
+                    car = hashlib.sha256(bytes(material)).hexdigest()[:16]
+                    result[f"{car}:{curve.name}"] = (pub, _hash_for(curve.key_size))
+                    self.logger.info("Registered G2 ERCA-2 raw key (synthetic CAR=%s, curve=%s)",
+                                   car, curve.name)
+        return result
+
     def _g1_recover_key(self, cert_raw, parent_pubkey):
         """Unwrap a 194-byte G1 certificate (Annex 1B Appendix 11) with the parent
         RSA key and rebuild the certified key.
@@ -329,19 +432,28 @@ class SignatureValidator:
             return False, None
 
     def _validate_g2_chain(self, card_cert_raw, msca_cert_raw):
-        """G2 ECDSA-based chain validation (Standard X.509 or BER-TLV)."""
+        """G2 ECDSA-based chain validation (X.509 DER or CVC).
+
+        When the certificates are CVC-encoded (starting with ``0x7F``), the
+        MSCA→Card link is verified via :func:`core.vu_signature_verifier.verify_cvc_chain_link`.
+        Without a G2 ERCA root key the ERCA→MSCA link cannot be anchored, so
+        the chain is reported as *partial* rather than full.
+        """
+        # CVC path (0x7F21 containers — ISO 7816-8).
+        if card_cert_raw[0] == 0x7F and msca_cert_raw[0] == 0x7F:
+            return self._validate_g2_cvc_chain(card_cert_raw, msca_cert_raw)
+
+        # Standard X.509 DER path.
         try:
-            # Spesso i file G2 usano formati BER-TLV che non sono x509 diretti
-            # ma se sono standard:
             card_cert = x509.load_der_x509_certificate(card_cert_raw)
             msca_cert = x509.load_der_x509_certificate(msca_cert_raw)
-            
+
             if not self.verify_certificate_chain(card_cert, msca_cert):
                 return False, None
-            
+
             msca_issuer = msca_cert.issuer.rfc4514_string()
             erca_cert = self.root_certificates.get(msca_issuer)
-            
+
             if not erca_cert:
                 return "Incomplete (Missing ERCA)", card_cert.public_key()
 
@@ -353,6 +465,40 @@ class SignatureValidator:
             self.logger.debug("G2 chain validation error", exc_info=True)
             self.logger.warning("G2 certificate is not standard X.509 DER")
             return False, None
+
+    def _validate_g2_cvc_chain(self, card_cert_raw, msca_cert_raw):
+        """Validate a G2 CVC certificate chain (MSCA→Card link).
+
+        Returns ``(status, ec_public_key)``.  *status* is one of:
+          ``"Partial — MSCA→Card verified (no ERCA root)"``,
+          ``"Partial — MSCA→Card FAILED"``, or ``False``.
+        """
+        from core.vu_signature_verifier import parse_cvc, cvc_public_key, verify_cvc_chain_link
+
+        try:
+            card_cvc = parse_cvc(card_cert_raw)
+            msca_cvc = parse_cvc(msca_cert_raw)
+        except Exception as exc:
+            self.logger.warning("G2 CVC parse failed: %s", exc)
+            return False, None
+
+        if card_cvc is None or msca_cvc is None:
+            self.logger.warning("G2 CVC: missing card or MSCA certificate")
+            return False, None
+
+        msca_pub, msca_hash = cvc_public_key(msca_cvc)
+        card_pub, _ = cvc_public_key(card_cvc)
+
+        if msca_pub is None or card_pub is None:
+            self.logger.warning("G2 CVC: could not extract public keys")
+            return False, None
+
+        if not verify_cvc_chain_link(card_cvc, msca_pub, msca_hash):
+            self.logger.warning("G2 CVC MSCA→Card link FAILED")
+            return "Partial — MSCA→Card FAILED", None
+
+        self.logger.info("G2 CVC MSCA→Card link VERIFIED")
+        return "Partial — MSCA→Card verified (no ERCA root)", card_pub
 
     def validate_block(self, data, signature, public_key, algorithm='RSA'):
         """
@@ -379,6 +525,45 @@ class SignatureValidator:
             return True
         except InvalidSignature:
             return False
+        except Exception:
+            return False
+
+    def verify_g1_data_signature(self, public_key, signature, data):
+        """Verify a G1 Annex 1B EF data signature (ISO 9796-2 Scheme 1, SHA-1).
+
+        The 128-byte RSA signature is decrypted with the card's public key
+        and the recovered block must contain the SHA-1 hash of *data*.
+        Falls back to RSA PKCS#1 v1.5 with SHA-1 if the ISO 9796-2
+        trailer is not found.
+        """
+        import hashlib
+        if not isinstance(public_key, rsa.RSAPublicKey):
+            return False
+        if len(signature) != 128:
+            return False
+
+        # Try ISO 9796-2 recovery (Annex 1B Appendix 11, same as cert chain).
+        try:
+            n = public_key.public_numbers().n
+            e = public_key.public_numbers().e
+            c = int.from_bytes(signature, 'big')
+            m = pow(c, e, n)
+            recovered = m.to_bytes(128, 'big')
+
+            if recovered[0] == 0x6A and recovered[127] == 0xBC:
+                data_hash = hashlib.sha1(data).digest()
+                # The SHA-1 hash sits before the 0xBC trailer; the exact
+                # offset depends on the ISO 9796-2 padding of the message.
+                for off in range(1, 108):
+                    if recovered[off:off + 20] == data_hash:
+                        return True
+        except Exception:
+            pass
+
+        # Fallback: PKCS#1 v1.5 with SHA-1.
+        try:
+            public_key.verify(signature, data, padding.PKCS1v15(), hashes.SHA1())
+            return True
         except Exception:
             return False
 

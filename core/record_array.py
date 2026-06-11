@@ -215,7 +215,7 @@ def decode_g2_daily_record(data: bytes, offset: int = 0):
             "crew": bool(crew),
         })
 
-    sig_len = rec_data[44 + 1] if len(rec_data) > 45 else 0
+    sig_len = rec_data[45] if len(rec_data) > 45 else None
 
     return {
         "generation": generation,
@@ -228,7 +228,7 @@ def decode_g2_daily_record(data: bytes, offset: int = 0):
         "sig_len": sig_len,
         # signature starts at offset 48; default to a 64-byte signature when
         # sig_len is absent (48 + 64 = 112)
-        "record_size": 48 + sig_len if sig_len else 112,
+        "record_size": 48 + (sig_len if sig_len is not None else 64),
     }
 
 
