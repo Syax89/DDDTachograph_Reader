@@ -52,7 +52,7 @@ RECORD_TYPES = {
     0x0B: ("VehicleRegistrationNumber", "medium"), # G2 (14)
     0x0C: ("VuCalibrationRecord", "low"),          # (222/252)
     0x0D: ("VuCardIWRecord", "low"),               # (131)
-    0x0E: ("VuCardRecord", "low"),                 # (45)
+    0x0E: ("VuCardRecord", "high"),                # (45) cardAndGen+serial+ver+number
     0x0F: ("VUCertificate", "low"),                # (205) raw cert
     0x10: ("VuCompanyLocksRecord", "low"),         # (99)
     0x11: ("VuControlActivityRecord", "low"),      # (32)
@@ -67,10 +67,10 @@ RECORD_TYPES = {
     0x1A: ("VuOverSpeedingControlData", "high"),   # (9)
     0x1B: ("VuOverSpeedingEventRecord", "medium"), # (32)
     0x1C: ("VuPlaceDailyWorkPeriodRecord", "high"),# (40/41)
-    0x1E: ("VuTimeAdjustmentRecord", "medium"),    # (99)
+    0x1E: ("VuTimeAdjustmentRecord", "high"),      # (99) old+new+name+addr+cardAndGen
     0x1F: ("VuPowerSupplyInterruptionRecord", "medium"),  # (87)
-    0x20: ("VuSensorPairedRecord", "low"),         # (28)
-    0x21: ("VuSensorExternalGNSSCoupledRecord", "low"),   # (28)
+    0x20: ("VuSensorPairedRecord", "medium"),      # (28) serial+approval+date
+    0x21: ("VuSensorExternalGNSSCoupledRecord", "medium"),  # (28) serial+approval+date
     0x22: ("VuBorderCrossingRecord", "high"),      # (55)
     0x23: ("VuLoadUnloadRecord", "high"),          # (58)
     0x24: ("VehicleRegistrationIdentification", "medium"),  # G2.2 (15)
@@ -251,6 +251,36 @@ def decode_sensor_paired(rec):
         "sensor_approval": "".join(chr(b) if 0x20 <= b < 0x7F else "" for b in rec[8:24]).strip(),
         "pairing_date": _iso(struct.unpack(">I", rec[24:28])[0]),
     }
+
+
+def decode_sensor_gnss_coupled(rec):
+    """SensorExternalGNSSCoupledRecord (28): sensorSerialNumber(8) +
+    sensorApprovalNumber(16) + sensorCouplingDate(4)."""
+    if len(rec) < 28:
+        return None
+    return {
+        "confidence": "medium",
+        "sensor_serial": rec[0:8].hex(),
+        "sensor_approval": "".join(chr(b) if 0x20 <= b < 0x7F else "" for b in rec[8:24]).strip(),
+        "coupling_date": _iso(struct.unpack(">I", rec[24:28])[0]),
+    }
+
+
+def decode_vu_card_record(rec):
+    """VuCardRecord (45): cardNumberAndGenerationInformation(19) +
+    cardExtendedSerialNumber(8) + cardStructureVersion(2) + cardNumber(16).
+    Confirmed against real G2/G2.2 VU downloads."""
+    if len(rec) < 19:
+        return None
+    out = {"confidence": "medium", "card": decode_full_card_number_gen(rec, 0)}
+    if len(rec) >= 45:
+        out["confidence"] = "high"
+        out["card_extended_serial"] = rec[19:27].hex()
+        out["card_structure_version"] = rec[27:29].hex()
+        out["card_number"] = _ascii(rec, 29, 16)
+    else:
+        out["raw_tail_hex"] = rec[19:].hex()
+    return out
 
 
 def decode_full_card_number_gen(data, off):
@@ -455,16 +485,23 @@ def decode_its_consent(rec):
 
 
 def decode_time_adjustment(rec):
-    """VuTimeAdjustmentRecord — oldTimeValue(4) + newTimeValue(4) + workshop info.
-    Decode the two timestamps; surface the rest raw."""
+    """VuTimeAdjustmentRecord (99): oldTimeValue(4) + newTimeValue(4) +
+    workshopName(36) + workshopAddress(36) + workshopCardNumberAndGen(19)."""
     if len(rec) < 8:
         return None
-    return {
+    out = {
         "confidence": "medium",
         "old_time": _iso(struct.unpack(">I", rec[0:4])[0]),
         "new_time": _iso(struct.unpack(">I", rec[4:8])[0]),
-        "raw_tail_hex": rec[8:].hex(),
     }
+    if len(rec) >= 99:
+        out["confidence"] = "high"
+        out["workshop_name"] = decode_name(rec, 8)
+        out["workshop_address"] = decode_name(rec, 44)
+        out["workshop_card"] = decode_full_card_number_gen(rec, 80)
+    else:
+        out["raw_tail_hex"] = rec[8:].hex()
+    return out
 
 
 def decode_border_crossing(rec):
@@ -535,8 +572,10 @@ _RECORD_DECODERS = {
     0x19: decode_vu_identification,
     0x0C: decode_calibration,
     0x0D: decode_card_iw,
+    0x0E: decode_vu_card_record,
     0x14: decode_download_activity,
     0x20: decode_sensor_paired,
+    0x21: decode_sensor_gnss_coupled,
 }
 
 def _decode_record(record_type, rec):
@@ -583,12 +622,6 @@ def _decode_record(record_type, rec):
         out["confidence"] = "high"
         out["nation"] = decoders.get_nation(rec[0])
         out["plate"] = decoders.decode_string(rec[1:14], is_id=True)
-        return out
-    if record_type == 0x0E and len(rec) >= 19:
-        # VuCardRecord: cardNumberAndGenerationInformation(19) + serial + ...
-        out["confidence"] = "medium"
-        out["card"] = decode_full_card_number_gen(rec, 0)
-        out["raw_tail_hex"] = rec[19:].hex()
         return out
     if record_type == 0x02 and len(rec) >= 1:
         out["confidence"] = "high"
@@ -726,7 +759,8 @@ def _emit_section(section, results):
                     (0x1E, "time_adjustments"), (0x10, "company_locks"),
                     (0x11, "control_activities"), (0x19, "vu_identifications"),
                     (0x0C, "calibrations"), (0x0D, "card_iw_records"),
-                    (0x14, "download_activities"), (0x20, "sensor_pairings")):
+                    (0x0E, "card_records"), (0x14, "download_activities"),
+                    (0x20, "sensor_pairings"), (0x21, "sensor_gnss_couplings")):
         for r in recs.get(rt, []):
             results.setdefault(key, []).append(r)
 

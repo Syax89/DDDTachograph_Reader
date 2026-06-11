@@ -243,27 +243,27 @@ class TestGen22Decoders:
         assert decoded["max_speed_kmh"] == 59
         assert decoded["avg_speed_kmh"] == 29.5
 
-    def test_g22_sensor_gnss_decode_reuses_g2_structure(self):
+    def test_g22_sensor_gnss_decode_normative_record(self):
+        """SensorExternalGNSSCoupledRecord (28B): serial(8) + approval(16 IA5) + date(4)."""
         ts = 1700000000
-        record = struct.pack(">QQI", 0x0102030405060708, 0x1112131415161718, ts)
+        record = struct.pack(">Q", 0x0102030405060708) + b'e1-0002         ' + struct.pack(">I", ts)
 
         decoded = parse_g2_sensor_gnss_coupled(record)
 
-        assert decoded["serial_number"] == "0x0102030405060708"
-        assert decoded["approval_number"] == "0x1112131415161718"
-        assert decoded["coupling_date"] != "N/A"
+        assert decoded["sensor_serial"] == "0102030405060708"
+        assert decoded["sensor_approval"] == "e1-0002"
+        assert decoded["coupling_date"] is not None
 
-    def test_g22_sensor_paired_decode_reuses_g2_structure(self):
-        first_ts = 1700000000
-        current_ts = 1700003600
-        record = struct.pack(">QQII", 0x0102030405060708, 0x1112131415161718, first_ts, current_ts)
+    def test_g22_sensor_paired_decode_normative_record(self):
+        """SensorPairedRecord (28B): serial(8) + approval(16 IA5) + pairingDate(4)."""
+        ts = 1700000000
+        record = struct.pack(">Q", 0x0102030405060708) + b'e1-0002         ' + struct.pack(">I", ts)
 
         decoded = parse_g2_sensor_paired(record)
 
-        assert decoded["serial_number"] == "0x0102030405060708"
-        assert decoded["approval_number"] == "0x1112131415161718"
-        assert decoded["pairing_first"] != "N/A"
-        assert decoded["pairing_current"] != "N/A"
+        assert decoded["sensor_serial"] == "0102030405060708"
+        assert decoded["sensor_approval"] == "e1-0002"
+        assert decoded["pairing_date"] is not None
 
     def test_g22_record_array_dispatches_high_priority_records(self):
         ts = 1700000000

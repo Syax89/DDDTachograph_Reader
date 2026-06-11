@@ -1,8 +1,16 @@
-"""G2/G2.2 Vehicle Unit record decoders for RecordArray format (Annex 1C Appendix 7). Handles individual VU record types (cards, IW, time adjustments, sensors, ITS, G2.2-specific records)."""
+"""G2/G2.2 Vehicle Unit record decoders for the tag-keyed (0x05xx) dispatch path.
+
+Real G2/G2.2 VU downloads are recordType-keyed RecordArray streams handled by
+:mod:`core.vu_record_dispatcher`; this module covers the same record bodies
+when they arrive wrapped in TLV tags (0x0509-0x0533). Decoders whose layout is
+confirmed in the dispatcher delegate to it, so there is a single byte-level
+definition per record type.
+"""
 import struct
 from datetime import datetime, timezone
 
 from .decoders import get_nation
+from . import vu_record_dispatcher as _vrd
 from core.logger import get_logger
 from core.event_fault_codes import describe_fault
 
@@ -10,93 +18,19 @@ _log = get_logger(__name__)
 
 
 def parse_g2_card_record(data: bytes, offset: int = 0):
-    """Decode a G2 VuCardRecord (tag 0x0509).
-
-    Structure (Annex 1C, §4.5.3.2.8):
-      fullCardNumber (18 bytes: cardIssuingMemberState + cardNumber)
-      cardExpiryDate (4 bytes: timeReal)
-      cardConsecutiveIndex (1 byte)
-      cardReplacementIndex (1 byte)
-      cardRenewalIndex (1 byte)
-      cardApprovalNumber (4 bytes)
-    Total: 29 bytes
-    """
-    if offset + 29 > len(data):
-        return None
-    rec = data[offset:]
-    card_issuer = rec[0]
-    card_number = ""
-    for i in range(1, 17):
-        b = rec[i]
-        if 0x20 <= b < 0x7F:
-            card_number += chr(b)
-        else:
-            card_number += f"\\x{b:02X}"
-    expiry_ts = struct.unpack(">I", rec[17:21])[0]
-    expiry = "N/A"
-    if 946684800 <= expiry_ts <= 4102444800:
-        expiry = datetime.fromtimestamp(expiry_ts, tz=timezone.utc).isoformat()
-    cons_idx = rec[21]
-    repl_idx = rec[22]
-    renew_idx = rec[23]
-    approval = struct.unpack(">I", rec[24:28])[0] if len(rec) >= 28 else 0
-    nation = get_nation(card_issuer)
-    return {
-        "card_number": f"{nation}{card_number}",
-        "expiry_date": expiry,
-        "consecutive_index": cons_idx,
-        "replacement_index": repl_idx,
-        "renewal_index": renew_idx,
-        "approval_number": f"0x{approval:08X}",
-    }
+    """Decode a G2 VuCardRecord (tag 0x0509) — Annex 1C §2.187, 45 bytes:
+    cardNumberAndGenerationInformation(19) + cardExtendedSerialNumber(8) +
+    cardStructureVersion(2) + cardNumber(16)."""
+    return _vrd.decode_vu_card_record(data[offset:])
 
 
 def parse_g2_card_iw_record(data: bytes, offset: int = 0):
-    """Decode a G2 VuCardIWRecord (tag 0x050A) - card Insert/Withdrawal.
-
-    Structure (Annex 1C, §4.5.3.2.9):
-      cardInsertionType (1 byte: Inserted(1)/Withdrawn(0))
-      cardInsertionTime (4 bytes: timeReal)
-      vehicleOdometerValue (3 bytes)
-      cardSlot (1 byte: driverSlot(0)/co-driverSlot(1))
-      cardIssuingMemberState (1 byte)
-      cardNumber (16 bytes)
-      cardConsecutiveIndex (1 byte)
-      cardReplacementIndex (1 byte)
-      cardRenewalIndex (1 byte)
-    Total: 29 bytes
-    """
-    if offset + 29 > len(data):
-        return None
-    rec = data[offset:]
-    insertion_type = rec[0]
-    insertion_time = struct.unpack(">I", rec[1:5])[0]
-    odo = int.from_bytes(rec[5:8], "big")
-    slot = rec[8]
-    issuer = rec[9]
-    card_num = ""
-    for i in range(10, 26):
-        b = rec[i]
-        if 0x20 <= b < 0x7F:
-            card_num += chr(b)
-        else:
-            card_num += f"\\x{b:02X}"
-    cons_idx = rec[26]
-    repl_idx = rec[27]
-    renew_idx = rec[28]
-    ts = "N/A"
-    if 946684800 <= insertion_time <= 4102444800:
-        ts = datetime.fromtimestamp(insertion_time, tz=timezone.utc).isoformat()
-    return {
-        "type": "inserted" if insertion_type == 1 else "withdrawn",
-        "timestamp": ts,
-        "odometer": odo,
-        "slot": "driver" if slot == 0 else "co-driver",
-        "card_number": f"{get_nation(issuer)}{card_num}",
-        "consecutive_index": cons_idx,
-        "replacement_index": repl_idx,
-        "renewal_index": renew_idx,
-    }
+    """Decode a G2 VuCardIWRecord (tag 0x050A) — Annex 1C §2.189, 131 bytes:
+    holderSurname(36) + holderFirstNames(36) + fullCardNumberAndGen(19) +
+    cardExpiry(4) + insertionTime(4) + odoInsertion(3) + cardSlot(1) +
+    withdrawalTime(4) + odoWithdrawal(3) + previousVehicleInfo(20) +
+    manualInputFlag(1)."""
+    return _vrd.decode_card_iw(data[offset:])
 
 
 def parse_g2_downloadable_period(data: bytes, offset: int = 0):
@@ -121,133 +55,30 @@ def parse_g2_downloadable_period(data: bytes, offset: int = 0):
 
 
 def parse_g2_time_adjustment(data: bytes, offset: int = 0):
-    """Decode VuTimeAdjustmentData (tag 0x050D) — Annex 1C §4.5.3.2.12.
-
-    Structure (variable-length, minimum 9 bytes):
-      timeAdjustmentType   1  UInt8 (0=auto, 1=manual, 2=workshop)
-      oldTimeValue         4  TimeReal
-      newTimeValue         4  TimeReal
-      [workshopName]       variable  coded string (codePage+size+text)
-      [workshopCardNumber] 18 bytes  FullCardNumber
-      [vehicleOdometer]    3 bytes   UInt24
-    """
-    if offset + 9 > len(data):
-        return None
-    rec = data[offset:]
-    adj_type = rec[0]
-    old_ts = struct.unpack(">I", rec[1:5])[0]
-    new_ts = struct.unpack(">I", rec[5:9])[0]
-    type_map = {0: "automatic", 1: "manual", 2: "workshop"}
-    result = {
-        "type": type_map.get(adj_type, f"0x{adj_type:02X}"),
-        "old_time": datetime.fromtimestamp(old_ts, tz=timezone.utc).isoformat()
-        if 946684800 <= old_ts <= 4102444800 else "N/A",
-        "new_time": datetime.fromtimestamp(new_ts, tz=timezone.utc).isoformat()
-        if 946684800 <= new_ts <= 4102444800 else "N/A",
-    }
-    if adj_type in (1, 2) and len(rec) >= 11:
-        try:
-            ws_name, pos = _read_coded_string(rec, 9)
-            result["workshop_name"] = ws_name
-            if pos + 18 <= len(rec):
-                ws_issuer = rec[pos]
-                ws_card = ""
-                for i in range(pos + 1, pos + 18):
-                    b = rec[i]
-                    if 0x20 <= b < 0x7F:
-                        ws_card += chr(b)
-                    else:
-                        ws_card += f"\\x{b:02X}" if i <= pos + 17 else ""
-                result["workshop_card"] = f"{get_nation(ws_issuer)}{ws_card}"
-                pos += 18
-            if pos + 3 <= len(rec):
-                odo = int.from_bytes(rec[pos:pos + 3], 'big')
-                if odo != 0xFFFFFF:
-                    result["odometer"] = odo
-        except (struct.error, IndexError):
-            _log.debug("Time adjustment workshop data parse failed (adj_type=%d)", adj_type)
-    return result
+    """Decode a VuTimeAdjustmentRecord (tag 0x050D) — Annex 1C §2.229, 99 bytes:
+    oldTimeValue(4) + newTimeValue(4) + workshopName(36) + workshopAddress(36) +
+    workshopCardNumberAndGen(19)."""
+    return _vrd.decode_time_adjustment(data[offset:])
 
 
 def parse_g2_company_locks(data: bytes, offset: int = 0):
-    """Decode VuCompanyLocksData (tag 0x050F).
-
-    Structure (Annex 1C, §4.5.3.2.14):
-      companyCardNumber (17 bytes: nation + cardNumber)
-      lockInTime (4 bytes: timeReal)
-      lockOutTime (4 bytes: timeReal)
-    Total: 25 bytes
-    """
-    if offset + 25 > len(data):
-        return None
-    rec = data[offset:]
-    issuer = rec[0]
-    card_num = ""
-    for i in range(1, 17):
-        b = rec[i]
-        if 0x20 <= b < 0x7F:
-            card_num += chr(b)
-        else:
-            card_num += f"\\x{b:02X}"
-    lock_in = struct.unpack(">I", rec[17:21])[0]
-    lock_out = struct.unpack(">I", rec[21:25])[0]
-    return {
-        "company_card": f"{get_nation(issuer)}{card_num}",
-        "lock_in": datetime.fromtimestamp(lock_in, tz=timezone.utc).isoformat()
-        if 946684800 <= lock_in <= 4102444800 else "N/A",
-        "lock_out": datetime.fromtimestamp(lock_out, tz=timezone.utc).isoformat()
-        if 946684800 <= lock_out <= 4102444800 else "N/A",
-    }
+    """Decode a VuCompanyLocksRecord (tag 0x050F) — Annex 1C §2.183, 99 bytes:
+    lockInTime(4) + lockOutTime(4) + companyName(36) + companyAddress(36) +
+    companyCardNumberAndGen(19)."""
+    return _vrd.decode_company_lock(data[offset:])
 
 
 def parse_g2_sensor_paired(data: bytes, offset: int = 0):
-    """Decode SensorPairedData (tag 0x0510).
-
-    Structure (Annex 1C, §4.5.3.2.15):
-      sensorSerialNumber (8 bytes)
-      sensorApprovalNumber (8 bytes)
-      sensorPairingDateFirst (4 bytes: timeReal)
-      sensorPairingDateCurrent (4 bytes: timeReal)
-    Total: 24 bytes
-    """
-    if offset + 24 > len(data):
-        return None
-    rec = data[offset:]
-    serial = struct.unpack(">Q", rec[0:8])[0]
-    approval = struct.unpack(">Q", rec[8:16])[0]
-    first_date = struct.unpack(">I", rec[16:20])[0]
-    current_date = struct.unpack(">I", rec[20:24])[0]
-    return {
-        "serial_number": f"0x{serial:016X}",
-        "approval_number": f"0x{approval:016X}",
-        "pairing_first": datetime.fromtimestamp(first_date, tz=timezone.utc).isoformat()
-        if 946684800 <= first_date <= 4102444800 else "N/A",
-        "pairing_current": datetime.fromtimestamp(current_date, tz=timezone.utc).isoformat()
-        if 946684800 <= current_date <= 4102444800 else "N/A",
-    }
+    """Decode a SensorPairedRecord (tag 0x0510/0x0533) — Annex 1C §2.156, 28 bytes:
+    sensorSerialNumber(8) + sensorApprovalNumber(16) + sensorPairingDate(4)."""
+    return _vrd.decode_sensor_paired(data[offset:])
 
 
 def parse_g2_sensor_gnss_coupled(data: bytes, offset: int = 0):
-    """Decode SensorExternalGNSSCoupledData (tag 0x0511/0x0532).
-
-    Structure (Annex 1C, §4.5.3.2.16):
-      serialNumber (8 bytes)
-      approvalNumber (8 bytes)
-      couplingDate (4 bytes: timeReal)
-    Total: 20 bytes
-    """
-    if offset + 20 > len(data):
-        return None
-    rec = data[offset:]
-    serial = struct.unpack(">Q", rec[0:8])[0]
-    approval = struct.unpack(">Q", rec[8:16])[0]
-    coupling_date = struct.unpack(">I", rec[16:20])[0]
-    return {
-        "serial_number": f"0x{serial:016X}",
-        "approval_number": f"0x{approval:016X}",
-        "coupling_date": datetime.fromtimestamp(coupling_date, tz=timezone.utc).isoformat()
-        if 946684800 <= coupling_date <= 4102444800 else "N/A",
-    }
+    """Decode a SensorExternalGNSSCoupledRecord (tag 0x0511/0x0532) — Annex 1C
+    §2.131, 28 bytes: sensorSerialNumber(8) + sensorApprovalNumber(16) +
+    sensorCouplingDate(4)."""
+    return _vrd.decode_sensor_gnss_coupled(data[offset:])
 
 
 def _parse_card_number_gen(data: bytes, offset: int):
@@ -507,33 +338,9 @@ def parse_g22_detailed_speed(data: bytes, offset: int = 0):
 
 
 def parse_g2_its_consent(data: bytes, offset: int = 0):
-    """Decode VuITSConsentData (tag 0x0512).
-
-    Structure (Annex 1C, §4.5.3.2.17):
-      consentType (1 byte: noConsentGiven(0)/consentGiven(1))
-      consentTime (4 bytes: timeReal)
-      cardNumber (18 bytes)
-    Total: 23 bytes
-    """
-    if offset + 23 > len(data):
-        return None
-    rec = data[offset:]
-    consent_type = rec[0]
-    consent_time = struct.unpack(">I", rec[1:5])[0]
-    issuer = rec[5]
-    card_num = ""
-    for i in range(6, 22):
-        b = rec[i]
-        if 0x20 <= b < 0x7F:
-            card_num += chr(b)
-        else:
-            card_num += f"\\x{b:02X}"
-    return {
-        "consent": "given" if consent_type == 1 else "not_given",
-        "timestamp": datetime.fromtimestamp(consent_time, tz=timezone.utc).isoformat()
-        if 946684800 <= consent_time <= 4102444800 else "N/A",
-        "card_number": f"{get_nation(issuer)}{card_num}",
-    }
+    """Decode a VuITSConsentRecord (tag 0x0512) — Annex 1C §2.208, 20 bytes:
+    cardNumberAndGen(19) + consent(1)."""
+    return _vrd.decode_its_consent(data[offset:])
 
 
 def parse_g22_controller_identification(data: bytes, offset: int = 0):
@@ -617,14 +424,14 @@ def _read_coded_string(data: bytes, offset: int):
 
 
 G2_VU_RECORD_DECODERS = {
-    0x0509: ("CardRecord", parse_g2_card_record, 29),
-    0x050A: ("CardIWRecord", parse_g2_card_iw_record, 29),
+    0x0509: ("CardRecord", parse_g2_card_record, 45),
+    0x050A: ("CardIWRecord", parse_g2_card_iw_record, 131),
     0x050B: ("DownloadablePeriod", parse_g2_downloadable_period, 8),
-    0x050D: ("TimeAdjustment", parse_g2_time_adjustment, 9),
-    0x050F: ("CompanyLocks", parse_g2_company_locks, 25),
-    0x0510: ("SensorPaired", parse_g2_sensor_paired, 24),
-    0x0511: ("SensorGNSS", parse_g2_sensor_gnss_coupled, 20),
-    0x0512: ("ITSConsent", parse_g2_its_consent, 23),
+    0x050D: ("TimeAdjustment", parse_g2_time_adjustment, 99),
+    0x050F: ("CompanyLocks", parse_g2_company_locks, 99),
+    0x0510: ("SensorPaired", parse_g2_sensor_paired, 28),
+    0x0511: ("SensorGNSS", parse_g2_sensor_gnss_coupled, 28),
+    0x0512: ("ITSConsent", parse_g2_its_consent, 20),
     0x052B: ("ControllerIdentification", parse_g22_controller_identification, 0),
     0x052C: ("DetailedSpeed", parse_g22_detailed_speed, 64),
     0x052D: ("OverSpeedingEvent", parse_g22_overspeeding_event, 32),
