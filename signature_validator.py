@@ -364,8 +364,9 @@ class SignatureValidator:
             return self.verify_ecdsa_signature(public_key, signature, data, hash_algo=hashes.SHA256())
         return False
 
-    def verify_rsa_signature(self, public_key, signature, data, hash_algo=hashes.SHA256()):
-        """Verifies RSA signature (Annex 1B/1C)."""
+    def verify_rsa_signature(self, public_key, signature, data, hash_algo=None):
+        """Verifies RSA signature (Annex 1B/1C). Defaults to SHA-256."""
+        hash_algo = hash_algo or hashes.SHA256()
         if not isinstance(public_key, rsa.RSAPublicKey):
             return False
         try:
@@ -381,8 +382,9 @@ class SignatureValidator:
         except Exception:
             return False
 
-    def verify_ecdsa_signature(self, public_key, signature, data, hash_algo=hashes.SHA256()):
-        """Verifies ECDSA signature (Annex 1C)."""
+    def verify_ecdsa_signature(self, public_key, signature, data, hash_algo=None):
+        """Verifies ECDSA signature (Annex 1C). Defaults to SHA-256."""
+        hash_algo = hash_algo or hashes.SHA256()
         if not isinstance(public_key, ec.EllipticCurvePublicKey):
             return False
         try:

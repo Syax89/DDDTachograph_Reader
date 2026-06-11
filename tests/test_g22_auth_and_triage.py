@@ -47,13 +47,14 @@ class TestUnparsedPatternTriage(unittest.TestCase):
             raise unittest.SkipTest("DDD directory not found")
 
     def test_triage_runs_and_returns_top_patterns(self):
+        # An empty report means every byte of every real file is classified
+        # (the goal); when patterns do remain, validate their shape.
         report = triage_directory(DDD_DIR, top_n=5)
-        self.assertGreater(len(report), 0)
-        first = report[0]
-        self.assertIn("pattern", first)
-        self.assertIn("count", first)
-        self.assertIn("total_bytes", first)
-        self.assertGreaterEqual(first["count"], 1)
+        for entry in report:
+            self.assertIn("pattern", entry)
+            self.assertIn("count", entry)
+            self.assertIn("total_bytes", entry)
+            self.assertGreaterEqual(entry["count"], 1)
 
 
 if __name__ == "__main__":

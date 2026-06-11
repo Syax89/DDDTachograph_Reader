@@ -106,11 +106,14 @@ def _iso(ts):
 
 
 def decode_name(data, off, length=36):
-    """Name / Address type: codePage(1) + IA5String(length-1). Returns the text."""
+    """Name / Address type: codePage(1) + chars(length-1). Returns the text.
+
+    Decodes via the declared code page (defaults to latin-1) so accented
+    characters in names/addresses are preserved instead of dropped.
+    """
     if off + length > len(data):
         return ""
-    body = data[off + 1:off + length]
-    return "".join(chr(b) if 0x20 <= b < 0x7F else "" for b in body).strip()
+    return decoders.decode_string(data[off:off + length])
 
 
 def decode_company_lock(rec):
@@ -241,28 +244,42 @@ def decode_download_activity(rec):
 
 
 def decode_sensor_paired(rec):
-    """SensorPairedRecord (28): sensorSerialNumber(8) + sensorApprovalNumber(16) +
-    sensorPairingDate(4)."""
-    if len(rec) < 28:
+    """SensorPairedRecord — G2 (28): sensorSerialNumber(8) +
+    sensorApprovalNumber(16) + sensorPairingDate(4).
+
+    Shorter variants (e.g. 20/24 bytes from some G2.2 tag-keyed arrays) keep
+    the serial first and the TimeReal date last, with a shorter approval
+    number in between; they are decoded with ``confidence: low`` instead of
+    being dropped."""
+    if len(rec) < 12:
         return None
+    full = len(rec) >= 28
+    approval_end = 24 if full else len(rec) - 4
+    date_off = 24 if full else len(rec) - 4
     return {
-        "confidence": "medium",
+        "confidence": "medium" if full else "low",
         "sensor_serial": rec[0:8].hex(),
-        "sensor_approval": "".join(chr(b) if 0x20 <= b < 0x7F else "" for b in rec[8:24]).strip(),
-        "pairing_date": _iso(struct.unpack(">I", rec[24:28])[0]),
+        "sensor_approval": _ascii(rec, 8, approval_end - 8),
+        "pairing_date": _iso(struct.unpack(">I", rec[date_off:date_off + 4])[0]),
     }
 
 
 def decode_sensor_gnss_coupled(rec):
-    """SensorExternalGNSSCoupledRecord (28): sensorSerialNumber(8) +
-    sensorApprovalNumber(16) + sensorCouplingDate(4)."""
-    if len(rec) < 28:
+    """SensorExternalGNSSCoupledRecord — G2 (28): sensorSerialNumber(8) +
+    sensorApprovalNumber(16) + sensorCouplingDate(4).
+
+    Shorter variants (e.g. 20 bytes from some G2.2 tag-keyed arrays) are
+    decoded with the same serial-first / date-last layout, ``confidence: low``."""
+    if len(rec) < 12:
         return None
+    full = len(rec) >= 28
+    approval_end = 24 if full else len(rec) - 4
+    date_off = 24 if full else len(rec) - 4
     return {
-        "confidence": "medium",
+        "confidence": "medium" if full else "low",
         "sensor_serial": rec[0:8].hex(),
-        "sensor_approval": "".join(chr(b) if 0x20 <= b < 0x7F else "" for b in rec[8:24]).strip(),
-        "coupling_date": _iso(struct.unpack(">I", rec[24:28])[0]),
+        "sensor_approval": _ascii(rec, 8, approval_end - 8),
+        "coupling_date": _iso(struct.unpack(">I", rec[date_off:date_off + 4])[0]),
     }
 
 
@@ -390,16 +407,19 @@ def decode_place_daily(rec):
 
 
 def decode_specific_condition(rec):
-    """VuSpecificConditionRecord (5 bytes): entryTime(4) + specificConditionType(1)."""
+    """VuSpecificConditionRecord (5 bytes): entryTime(4) + specificConditionType(1).
+
+    Type codes per Annex 1C §2.154: 0x01/0x02 = Out of scope Begin/End,
+    0x03/0x04 = Ferry-Train crossing Begin/End, 0x00 = RFU.
+    """
     if len(rec) < 5:
         return None
-    types = {0x00: "Ferry", 0x01: "Train", 0x02: "OutOfScope",
-             0x03: "BeginAreaNoGNSS", 0x04: "EndAreaNoGNSS"}
+    from core.event_fault_codes import specific_condition_label
     code = rec[4]
     return {
         "confidence": "high",
         "timestamp": _iso(struct.unpack(">I", rec[0:4])[0]),
-        "condition": types.get(code, f"0x{code:02X}"),
+        "condition": specific_condition_label(code),
         "type_code": code,
     }
 
@@ -606,7 +626,7 @@ def _decode_record(record_type, rec):
         if prefix:
             out.update(prefix)
             type_code = prefix.get("type_code")
-            out["descrizione"] = describe_event(type_code) if record_type == 0x15 else describe_fault(type_code)
+            out["description"] = describe_event(type_code) if record_type == 0x15 else describe_fault(type_code)
         else:
             out["raw_hex"] = rec[:48].hex()
         return out
@@ -670,8 +690,10 @@ def iter_vu_sections(data):
     n = len(data)
     pos = 0
     cur = None
+    # Valid TREP bytes following a 0x76 section marker (G1/G2/G2.2 + card download).
+    trep_bytes = set(TREP_SECTIONS) | {0x06, 0x26, 0x36}
     while pos + 5 <= n:
-        if data[pos] == 0x76:
+        if data[pos] == 0x76 and data[pos + 1] in trep_bytes:
             if cur:
                 yield cur
             cur = {"marker": pos, "trep": data[pos + 1], "records": []}
@@ -681,7 +703,9 @@ def iter_vu_sections(data):
         rs = struct.unpack(">H", data[pos + 1:pos + 3])[0]
         nr = struct.unpack(">H", data[pos + 3:pos + 5])[0]
         if rt > 0x60 or rs > RECORD_ARRAY_MAX_SIZE or nr > RECORD_ARRAY_MAX_RECORDS or (rs == 0 and nr > 0):
-            pos += 5
+            # Resync one byte at a time: skipping a whole header width here
+            # could jump over the start of a valid RecordArray after junk.
+            pos += 1
             continue
         if pos + 5 + rs * nr > n:
             break
@@ -702,7 +726,7 @@ def walk_vu_record_arrays(data, results):
     for sec in iter_vu_sections(data):
         current = {"trep": sec["trep"], "name": TREP_SECTIONS.get(sec["trep"], f"TREP_0x{sec['trep']:02X}"),
                    "records": {}}
-        for (pos, rt, rs, nr, end) in sec["records"]:
+        for (pos, rt, rs, nr, _end) in sec["records"]:
             rpos = pos + 5
             for _ in range(nr):
                 rec = data[rpos:rpos + rs]
@@ -772,7 +796,7 @@ def _emit_section(section, results):
                 type_code = r.get("type_code")
                 desc = describe_event(type_code) if key == "events" else describe_fault(type_code)
                 results.setdefault(key, []).append({
-                    "descrizione": desc,
+                    "description": desc,
                     "event_type_code" if key == "events" else "fault_type_code": type_code,
                     "record_purpose": r.get("record_purpose"),
                     "begin": r.get("begin"),
@@ -795,7 +819,8 @@ def _emit_section(section, results):
             if r.get("odometer_km"):
                 km = r["odometer_km"]
                 break
-        eventi = [r["activity"] for r in recs.get(0x01, []) if r.get("activity")]
-        if eventi:
+        changes = [r["activity"] for r in recs.get(0x01, []) if r.get("activity")]
+        if changes:
             results.setdefault("activities", []).append(
-                {"data": date_str, "km": int(km), "eventi": eventi, "source": "vu_recordarray"})
+                {"date": date_str, "odometer_km": int(km), "changes": changes,
+                 "source": "vu_recordarray"})

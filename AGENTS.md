@@ -24,7 +24,7 @@ Cross-platform (Windows/macOS) application for parsing, analyzing and visualizin
 ```bash
 python3 -m pytest tests/ -v
 ```
-Requires: `pip install -r requirements.txt` (pytest, pyinstaller, cryptography, pandas, openpyxl)
+Requires: `pip install -r requirements.txt` (pytest, pyinstaller, cryptography, openpyxl, reportlab)
 
 Tests use a conftest.py fixture that resets the DecoderRegistry singleton between tests.
 

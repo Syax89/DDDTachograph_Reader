@@ -136,35 +136,53 @@ class DeterministicParser:
 
         pos = 0
         file_size = len(raw_data)
-        
-        # Top-level mode is 'stap' for G1, 'ber' for G2/G2.2
-        mode = 'stap' if self.generation == 'G1' else 'ber'
 
-        while pos < file_size:
-            pos = self._skip_padding(raw_data, pos, file_size)
+        if is_vu and self.generation in ("G2", "G2.2"):
+            # Gen2/2.2 VU downloads are recordType-keyed RecordArray streams
+            # (Annex 1C Appendix 7), not TLV: walking them as BER would
+            # misread 0x76 as a 1-byte tag and classify garbage.
+            self._parse_vu_stream(raw_data)
+        elif is_vu and self.generation == "G1" and self._parse_g1_vu_stream(raw_data):
+            # G1 VU downloads are SID/TREP messages with structure-determined
+            # lengths (Annex 1B §2.2.6) — walked deterministically above;
+            # falls through to the generic TLV walk when validation fails
+            # (e.g. synthetic/truncated files).
+            pass
+        else:
+            # Top-level mode is 'stap' for G1, 'ber' for G2/G2.2
+            mode = 'stap' if self.generation == 'G1' else 'ber'
 
-            if pos >= file_size:
-                break
+            while pos < file_size:
+                pos = self._skip_padding(raw_data, pos, file_size)
 
-            if mode == 'stap':
-                result = self._try_read_stap(raw_data, pos, file_size)
-            else:
-                result = self._try_read_ber_tlv(raw_data, pos, file_size)
+                if pos >= file_size:
+                    break
 
-            if result is None:
-                self.coverage.mark_unknown(pos, pos + 1, raw_data[pos:pos + 1])
-                pos += 1
-                continue
+                if mode == 'stap':
+                    result = self._try_read_stap(raw_data, pos, file_size)
+                else:
+                    result = self._try_read_ber_tlv(raw_data, pos, file_size)
 
-            tag, length, hdr_size, payload, dtype = result
-            self.coverage.mark_classified(pos, pos + hdr_size + length, f"Tag_{tag:04X}")
-            self._record_tag(tag, length, payload, pos, hdr_size, depth=0, parent_path="", dtype=dtype)
-            self._dispatch_decoder(tag, payload, dtype=dtype)
+                if result is None:
+                    self.coverage.mark_unknown(pos, pos + 1, raw_data[pos:pos + 1])
+                    pos += 1
+                    continue
 
-            if self.registry.is_container(tag):
-                self._parse_container(tag, payload, pos + hdr_size, depth=1, parent_path=self._get_tag_path(tag, ""))
+                tag, length, hdr_size, payload, dtype = result
+                self.coverage.mark_classified(pos, pos + hdr_size + length, f"Tag_{tag:04X}")
+                self._record_tag(tag, length, payload, pos, hdr_size, depth=0, parent_path="", dtype=dtype)
+                self._dispatch_decoder(tag, payload, dtype=dtype)
 
-            pos += hdr_size + length
+                if self.registry.is_container(tag):
+                    self._parse_container(tag, payload, pos + hdr_size, depth=1, parent_path=self._get_tag_path(tag, ""))
+
+                pos += hdr_size + length
+
+        if not is_vu:
+            refined = self._refine_card_generation()
+            if refined != self.generation:
+                self.generation = refined
+                self.results["metadata"]["generation"] = self._gen_full_label(refined)
 
         # Collect unknown ranges and add to raw_tags
         for s, e, data in self.coverage.unknown_ranges:
@@ -204,6 +222,142 @@ class DeterministicParser:
         elif gen == "G1":
             return "G1 (Digital)"
         return "Unknown"
+
+    def _refine_card_generation(self) -> str:
+        """Refine the generation label for card files after parsing.
+
+        Card files carry no 0x76 header, so header sniffing always yields G1.
+        The Gen2 EF copies are marked by appendix dtype 0x02/0x03, and the
+        Gen2v2-only EFs (0x0525-0x052A) mark a G2.2 card.
+        """
+        if self.generation not in ("G1", "Unknown"):
+            return self.generation
+        G22_CARD_TAGS = {0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x052A}
+        has_g2 = False
+        for occs in self.results.get("raw_tags", {}).values():
+            for occ in occs:
+                if occ.get("data_type") in ("0x02", "0x03"):
+                    has_g2 = True
+                    try:
+                        tid = int(occ.get("tag_id", "0x0"), 16)
+                    except (ValueError, TypeError):
+                        continue
+                    if tid in G22_CARD_TAGS:
+                        return "G2.2"
+        return "G2" if has_g2 else self.generation
+
+    def _parse_vu_stream(self, raw_data: bytes):
+        """Structural pass for Gen2/2.2 VU downloads.
+
+        Classifies coverage along the section/RecordArray boundaries produced
+        by :func:`core.vu_record_dispatcher.iter_vu_sections` (the same walk
+        used for semantic decoding and signature verification). Bytes outside
+        any section/record are classified as padding or unknown.
+        """
+        from .vu_record_dispatcher import iter_vu_sections, RECORD_TYPES, TREP_SECTIONS
+
+        data = bytes(raw_data)
+        for sec in iter_vu_sections(data):
+            trep = sec["trep"]
+            sec_name = TREP_SECTIONS.get(trep, f"TREP_0x{trep:02X}")
+            marker_pos = sec["marker"]
+            sec_key = f"76{trep:02X}_VU_{sec_name}"
+            self.coverage.mark_classified(marker_pos, marker_pos + 2, f"Tag_76{trep:02X}")
+            self.results.setdefault("raw_tags", {}).setdefault(sec_key, []).append({
+                "offset": f"0x{marker_pos:08X}", "tag_id": f"0x76{trep:02X}",
+                "tag_name": f"VU_{sec_name}", "data_type": "SID/TREP",
+                "length": 2, "depth": 0, "is_spec_verified": True,
+                "annex_ref": "Annex 1C Appendix 7", "generation": self.generation,
+                "data_hex": data[marker_pos:marker_pos + 2].hex(),
+            })
+            for (pos, rt, rs, nr, end) in sec["records"]:
+                name, confidence = RECORD_TYPES.get(rt, (f"Unknown_0x{rt:02X}", "low"))
+                self.coverage.mark_classified(pos, end, f"Tag_76{trep:02X} > RecordType_{rt:02X}")
+                payload = data[pos + 5:end]
+                key = f"{sec_key} > {rt:02X}_{name}"
+                self.results["raw_tags"].setdefault(key, []).append({
+                    "offset": f"0x{pos:08X}", "tag_id": f"0x{rt:04X}",
+                    "tag_name": name, "data_type": "RecordArray",
+                    "length": end - pos - 5, "depth": 1,
+                    "record_size": rs, "no_of_records": nr,
+                    "is_spec_verified": confidence in ("high", "medium"),
+                    "annex_ref": "Annex 1C Appendix 7", "generation": self.generation,
+                    "data_hex": payload.hex() if len(payload) <= 128 else f"{payload[:128].hex()}..."
+                })
+
+        self._classify_gaps(data)
+
+    def _classify_gaps(self, data: bytes):
+        """Classify bytes not covered by the structural walk as padding or
+        unknown (compute the gap list first: marking mutates the ranges)."""
+        from core.coverage_utils import is_padding_block
+
+        # Some download tools append a short 0x76 0x00 trailer after the last
+        # section (not a normative TREP) — classify it instead of leaving
+        # unknown bytes at EOF.
+        for s, e in self.coverage.get_uncovered_ranges():
+            if (e == len(data) and 2 <= e - s <= 8
+                    and data[s] == 0x76 and data[s + 1] == 0x00):
+                self.coverage.mark_classified(s, e, "Tag_7600")
+                self.results.setdefault("raw_tags", {}).setdefault("7600_DownloadTrailer", []).append({
+                    "offset": f"0x{s:08X}", "tag_id": "0x7600",
+                    "tag_name": "DownloadTrailer", "data_type": "RAW",
+                    "length": e - s, "depth": 0, "is_spec_verified": False,
+                    "annex_ref": "", "generation": self.generation,
+                    "data_hex": data[s:e].hex(),
+                })
+        gaps = self.coverage.get_uncovered_ranges()
+        for s, e in gaps:
+            chunk = data[s:e]
+            pad = is_padding_block(chunk)
+            if pad is not None:
+                self.coverage.mark_padding(s, e, pad)
+                self.results.setdefault("raw_tags", {}).setdefault("Padding", []).append({
+                    "offset": f"0x{s:08X}", "tag_id": "0xPAD", "tag_name": "Padding",
+                    "data_type": "RAW", "length": e - s, "depth": 0,
+                    "data_hex": chunk[:128].hex() + ("..." if e - s > 128 else "")
+                })
+            else:
+                self.coverage.mark_unknown(s, e, chunk)
+
+    def _parse_g1_vu_stream(self, raw_data) -> bool:
+        """Structural pass for G1 VU downloads via the deterministic TREP walk
+        (Annex 1B §2.2.6). Returns False when the stream does not validate so
+        the caller can fall back to the generic TLV walk."""
+        from .g1_vu_walker import iter_g1_vu_messages, TREP_NAMES
+
+        data = bytes(raw_data)
+        messages = list(iter_g1_vu_messages(data))
+        if not messages:
+            return False
+
+        for msg in messages:
+            trep = msg["trep"]
+            name = f"G1_VU_{TREP_NAMES[trep]}"
+            key = f"76{trep:02X}_{name}"
+            body = data[msg["body_start"]:msg["body_end"]]
+            self.coverage.mark_classified(msg["pos"], msg["body_end"], f"Tag_76{trep:02X}")
+            self.results.setdefault("raw_tags", {}).setdefault(key, []).append({
+                "offset": f"0x{msg['pos']:08X}", "tag_id": f"0x76{trep:02X}",
+                "tag_name": name, "data_type": "SID/TREP",
+                "length": len(body), "depth": 0, "is_spec_verified": True,
+                "annex_ref": "Annex 1B §2.2.6", "generation": "G1",
+                "data_hex": body.hex() if len(body) <= 128 else f"{body[:128].hex()}..."
+            })
+            if msg["sig_len"]:
+                sig = data[msg["body_end"]:msg["end"]]
+                self.coverage.mark_classified(
+                    msg["body_end"], msg["end"], f"Tag_76{trep:02X} > Signature")
+                self.results["raw_tags"].setdefault(f"{key} > Signature", []).append({
+                    "offset": f"0x{msg['body_end']:08X}", "tag_id": "0xSIG",
+                    "tag_name": "RSA Signature", "data_type": "RSA",
+                    "length": msg["sig_len"], "depth": 1, "is_spec_verified": True,
+                    "annex_ref": "Annex 1B Appendix 11", "generation": "G1",
+                    "data_hex": sig.hex(),
+                })
+
+        self._classify_gaps(data)
+        return True
 
     def _get_tag_path(self, tag: int, parent_path: str) -> str:
         dec = self.registry.get_decoder(tag)
@@ -327,9 +481,13 @@ class DeterministicParser:
     def _dispatch_decoder(self, tag: int, payload: bytes, dtype: Optional[int] = None):
         if dtype in (1, 3, 11, 15):
             return
-            
+
         dec = self.registry.get_decoder(tag)
         if dec and dec.decoder_fn:
+            # Context filter: card-only decoders must not run on VU files
+            # (and vice versa) — same FID values can collide across contexts.
+            if (dec.card_only and self.is_vu) or (dec.vu_only and not self.is_vu):
+                return
             try:
                 sig = inspect.signature(dec.decoder_fn)
                 n_params = len([p for p in sig.parameters.values()

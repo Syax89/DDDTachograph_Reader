@@ -129,7 +129,7 @@ def main():
     print(f"{'=' * 80}")
 
     all_unparsed = []
-    for fname, occs in global_unparsed_patterns.items():
+    for occs in global_unparsed_patterns.values():
         for occ in occs:
             all_unparsed.append(occ)
     cross_patterns = group_unparsed_by_pattern(all_unparsed)

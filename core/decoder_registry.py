@@ -202,15 +202,15 @@ class DecoderRegistry:
                        annex_ref="Annex 1B §2.27", generation="G1", card_only=True,
                        min_length=8),
 
-            TagDecoder(0x0523, "G2_VehiclesUsed",
-                       decoders.parse_g1_vehicles_used,
-                       annex_ref="Annex 1C §2.19", generation="G2", card_only=True,
-                       min_length=4, record_size=35),
+            TagDecoder(0x0523, "G2_VehicleUnitsUsed",
+                       decoders.parse_card_vehicle_units,
+                       annex_ref="Annex 1C §2.39", generation="G2", card_only=True,
+                       min_length=12, record_size=10),
 
-            TagDecoder(0x0524, "G2_DriverActivityData",
-                       decoders.parse_cyclic_buffer_activities,
-                       annex_ref="Annex 1C §2.32", generation="G2", card_only=True,
-                       min_length=16),
+            TagDecoder(0x0524, "G2_GNSSPlaces",
+                       decoders.parse_card_gnss_places,
+                       annex_ref="Annex 1C §2.78", generation="G2", card_only=True,
+                       min_length=20, record_size=18),
 
             TagDecoder(0x0206, "VU_ActivityDailyRecord",
                        decoders.parse_cyclic_buffer_activities,

@@ -26,7 +26,7 @@
 - Tree structure for data exploration
 
 ### Export
-- JSON, Excel, CSV export
+- PDF, Excel, CSV, JSON export
 - Interactive GUI with tree navigation
 
 ---
@@ -68,29 +68,30 @@ ddd-tachograph-reader/
 ├── main.py                      # Minimal CLI entry point
 ├── ddd_parser.py                # Core parser entry point
 ├── signature_validator.py       # Certificate chain validation
-├── export_manager.py            # Comprehensive Excel/CSV/JSON export
+├── export_manager.py            # PDF/Excel/CSV/JSON export
 ├── core/
-│   ├── tag_navigator.py         # Recursive BER-TLV / STAP navigation
 │   ├── decoders.py              # Tag decoders (G1, G2, G2.2)
 │   ├── g2_decoders.py           # G2/G2.2 VU RecordArray decoders
 │   ├── decoder_registry.py      # Centralized tag→decoder registry
-│   ├── deterministic_parser.py  # Schema-driven two-pass parser
+│   ├── deterministic_parser.py  # Schema-driven deterministic parser
+│   ├── g1_vu_walker.py          # Deterministic G1 VU TREP walker (Annex 1B)
 │   ├── record_array.py          # RecordArray parser (Annex 1C)
 │   ├── vu_record_dispatcher.py  # VU RecordArray stream dispatcher
 │   ├── vu_signature_verifier.py # ECDSA + CVC certificate verification
+│   ├── report_format.py         # Shared export formatting
 │   ├── models.py                # Data models (TachoResult)
 │   ├── tag_definitions.py       # Tag ID → name mappings
 │   ├── coverage_utils.py        # Shared interval merge + padding detection
 │   ├── encoding.py              # Shared BytesEncoder for JSON
-│   ├── event_fault_codes.py     # 28 event + 17 fault descriptions (EU Reg.)
+│   ├── event_fault_codes.py     # Event/fault/condition descriptions (EU Reg.)
+│   ├── version.py               # Single version source
 │   ├── constants.py             # Shared constants
 │   └── logger.py                # Centralized logging (thread-safe)
-├── src/                         # Domain/infrastructure layer
 ├── certs/                       # ERCA root certificates
-├── tests/                       # Test suite (118 tests)
+├── tests/                       # Test suite
 ├── specs/                       # Specifications and audits
 ├── docs/                        # Documentation
-└── .github/workflows/           # CI/CD (Windows/macOS builds)
+└── .github/workflows/           # CI/CD (lint, tests, Windows/macOS builds)
 ```
 
 ---

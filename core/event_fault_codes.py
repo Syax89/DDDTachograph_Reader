@@ -84,15 +84,39 @@ FAULT_TYPES: dict[int, str] = {
     0x40: "Card fault, no further details",
 }
 
-# ── Specific condition types (Annex 1B §2.27 / Annex 1C §2.152) ────────────
+# ── Specific condition types (Annex 1B / Annex 1C §2.154) ──────────────────
+#
+# Value assignment (Reg. 2016/799 §2.154):
+#   '00'H RFU
+#   '01'H Out of scope — Begin
+#   '02'H Out of scope — End
+#   '03'H Ferry / Train crossing (G2: — Begin)
+#   '04'H Ferry / Train crossing — End (G2 only)
+#   '05'H..'FF'H RFU
 
 SPECIFIC_CONDITION_TYPES: dict[int, str] = {
-    0x00: "Ferry / Train crossing",
-    0x01: "Ferry / Train crossing",
-    0x02: "Out of scope",
-    0x03: "Begin of GNSS blackout area",
-    0x04: "End of GNSS blackout area",
+    0x00: "RFU",
+    0x01: "Out of scope — Begin",
+    0x02: "Out of scope — End",
+    0x03: "Ferry / Train crossing — Begin",
+    0x04: "Ferry / Train crossing — End",
 }
+
+# Compact labels used as the machine-friendly ``condition`` field in results.
+SPECIFIC_CONDITION_LABELS: dict[int, str] = {
+    0x00: "RFU",
+    0x01: "OutOfScope Begin",
+    0x02: "OutOfScope End",
+    0x03: "Ferry/Train Begin",
+    0x04: "Ferry/Train End",
+}
+
+
+def specific_condition_label(code) -> str:
+    """Compact label for a SpecificConditionType code (Annex 1C §2.154)."""
+    if code is None:
+        return "Unknown"
+    return SPECIFIC_CONDITION_LABELS.get(code, f"0x{code:02X}")
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 

@@ -11,6 +11,7 @@ import logging
 from datetime import datetime
 
 from core.encoding import BytesEncoder
+from core.version import __version__
 
 
 def main():
@@ -21,7 +22,7 @@ def main():
 Examples:
   tacho-cli file.ddd                     # JSON output to screen
   tacho-cli file.ddd --json report.json  # Save JSON
-  tacho-cli file.ddd --pdf report.pdf    # Generate PDF
+  tacho-cli file.ddd --pdf report.pdf    # Generate PDF report
   tacho-cli file.ddd --excel report.xlsx # Generate Excel
   tacho-cli file.ddd --all output_dir/   # Generate all formats
   tacho-cli file.ddd --summary           # Text summary only
@@ -33,7 +34,8 @@ Examples:
     parser.add_argument("--excel", nargs="?", const="auto", metavar="FILE", help="Generate Excel report (optional: file path)")
     parser.add_argument("--all", nargs="?", const="auto", metavar="DIR", help="Generate all formats in a directory")
     parser.add_argument("--summary", action="store_true", help="Show compact text summary")
-    parser.add_argument("--legacy", action="store_true", help="Use legacy (non-deterministic) parser for backward compatibility")
+    parser.add_argument("--version", action="version",
+                        version=f"%(prog)s {__version__}")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose debug output")
     parser.add_argument("-q", "--quiet", action="store_true", help="No screen output (files only)")
 
@@ -51,7 +53,7 @@ Examples:
     # Parse
     try:
         from ddd_parser import TachoParser
-        ddd = TachoParser(args.file, use_deterministic=not args.legacy)
+        ddd = TachoParser(args.file)
         result = ddd.parse()
     except Exception as e:
         print(f"❌ Parsing error: {e}", file=sys.stderr)
@@ -91,8 +93,18 @@ Examples:
 
     # PDF output
     if args.pdf:
-        print("ERROR: PDF export is not implemented.", file=sys.stderr)
-        sys.exit(1)
+        pdf_path = resolve_path(args.pdf, "pdf")
+        try:
+            from export_manager import ExportManager
+            ExportManager.export_to_pdf(result, pdf_path)
+            generated.append(("PDF", pdf_path))
+        except ImportError as e:
+            print(f"⚠️ PDF export requires reportlab (pip install reportlab): {e}", file=sys.stderr)
+        except Exception as e:
+            print(f"⚠️ PDF generation error: {e}", file=sys.stderr)
+            if args.verbose:
+                import traceback
+                traceback.print_exc()
 
     # Excel output
     if args.excel:
@@ -165,22 +177,23 @@ def print_summary(data):
         drive_min = 0
         work_min = 0
         rest_min = 0
+        avail_min = 0
         dates = set()
         for day_block in activities:
             if not isinstance(day_block, dict):
                 continue
-            date_val = day_block.get("data", day_block.get("date", ""))
+            date_val = day_block.get("date", "")
             if date_val:
                 dates.add(date_val)
-            events = day_block.get("eventi", day_block.get("changes", []))
+            events = day_block.get("changes", [])
             for i, ev in enumerate(events):
                 if not isinstance(ev, dict):
                     continue
-                tipo = ev.get("tipo", ev.get("type", ""))
-                start_time = ev.get("ora", ev.get("time", ""))
+                tipo = ev.get("activity", ev.get("type", ""))
+                start_time = ev.get("time", "")
                 if i < len(events) - 1:
                     next_ev = events[i + 1]
-                    end_time = next_ev.get("ora", next_ev.get("time", ""))
+                    end_time = next_ev.get("time", "")
                 else:
                     end_time = "24:00"
                 try:
@@ -194,17 +207,17 @@ def print_summary(data):
                     drive_min += dur
                 elif tipo_upper in ("LAVORO", "WORK"):
                     work_min += dur
-                elif tipo_upper in ("RIPOSO", "REST", "DISPONIBILITA", "AVAILABILITY", "AVAILABLE", "BREAK"):
+                elif tipo_upper in ("DISPONIBILITA", "AVAILABILITY", "AVAILABLE"):
+                    avail_min += dur
+                elif tipo_upper in ("RIPOSO", "REST", "BREAK"):
                     rest_min += dur
         days = len(dates)
-        total_drive = drive_min
-        total_work = work_min
-        total_rest = rest_min
 
         print(f"\n📊 Activity ({len(activities)} daily blocks, {days} days):")
-        print(f"   🟦 Drive:  {total_drive // 60}h {total_drive % 60}m")
-        print(f"   🟨 Work:   {total_work // 60}h {total_work % 60}m")
-        print(f"   🟩 Rest:   {total_rest // 60}h {total_rest % 60}m")
+        print(f"   🟦 Drive:     {drive_min // 60}h {drive_min % 60}m")
+        print(f"   🟨 Work:      {work_min // 60}h {work_min % 60}m")
+        print(f"   🟧 Available: {avail_min // 60}h {avail_min % 60}m")
+        print(f"   🟩 Rest:      {rest_min // 60}h {rest_min % 60}m")
 
     # Infractions
     if infractions:

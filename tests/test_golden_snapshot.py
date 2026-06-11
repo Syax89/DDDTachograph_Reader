@@ -28,8 +28,9 @@ GOLDEN_DIR = os.path.join(os.path.dirname(__file__), "golden")
 EXCLUDED_KEYS = {"raw_tags", "coverage", "sections"}
 # Volatile / verbose metadata fields excluded from the snapshot.
 # parsed_at is a timestamp; decoder_failures is a verbose message list whose
-# count is kept (decoder_failure_count) but whose text would churn the snapshot.
-VOLATILE_METADATA = {"parsed_at", "decoder_failures"}
+# count is kept (decoder_failure_count) but whose text would churn the snapshot;
+# app_version changes on every release.
+VOLATILE_METADATA = {"parsed_at", "decoder_failures", "app_version"}
 
 
 def _normalize(value):

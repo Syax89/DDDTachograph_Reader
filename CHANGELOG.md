@@ -1,5 +1,50 @@
 # Changelog
 
+## [Unreleased]
+
+## [1.9.5] - 2026-06-11
+### Distribution & hygiene
+- **Single version source** (`core/version.py`): shown in the GUI title, `tacho-cli --version` / `main.py --version`, parse metadata (`app_version`), PDF footer, export summary and the macOS bundle (`CFBundleShortVersionString`); the release workflow refuses tags that don't match it (replaces the stale "Version 5.1" docstring)
+- **Legacy parser removed**: the deprecated non-deterministic path (`core/tag_navigator.py`, `use_deterministic=False`, `--legacy`, `validate()`, `specs/compare_parsers.py`) returned empty results on real files and was dead code; `TachoParser(use_deterministic=False)` now warns and uses the deterministic parser
+- **Dead `src/` domain-layer skeleton removed** (never wired to the application)
+- **Release workflow unified on `build.spec`**: the inline PyInstaller commands duplicated (and contradicted) the spec — they bundled `src/`, double-packed `core/` as datas and missed the new modules; the spec is now the single bundle definition (verified: local build produces `TachoReader.app` with the right version)
+- **Windows build no longer opens a console window** (`console=False` in the spec, matching the old `--noconsole` release flag)
+- **CI lint job**: ruff with correctness rules (`ruff.toml`: pyflakes, pycodestyle errors, bugbear) — all findings fixed (unused imports/variables, mutable `hashes.SHA256()` argument defaults)
+- pandas dependency dropped (no longer used); reportlab added
+### Added
+- **PDF export** (GUI menu, `tacho-cli --pdf`, included in `--all`): landscape report with summary page (file/driver/vehicle/integrity/signatures) and one styled table per data section, page footer and truncation notes (reportlab)
+- **Deterministic G1 VU walker** (`core/g1_vu_walker.py`): TREP message lengths computed from the Annex 1B §2.2.6 structures (count-prefixed sections) + 128-byte RSA signatures; the walk is self-checking (each message must land on the next `0x76 TREP` marker or EOF). Replaces both the junk STAP coverage walk and the O(n²) byte-scan semantic heuristic on G1 VU files (kept as fallback for non-validating files)
+- `ActivityChangeInfo` card-status bit (p) decoded: activity entries now carry `card_inserted`
+- Shared export formatting module (`core/report_format.py`): humanised column names, readable timestamps, nested structures (card numbers, GNSS, registrations) rendered as text, internal keys hidden — used by Excel, CSV and PDF
+- 100% decoded byte coverage on every real file in `DDD/` (was 95.4% on G1 VU); non-normative `0x76 0x00` download-tool trailers classified explicitly
+### Changed
+- **Excel export** rewritten on openpyxl: styled frozen headers, autofilter, sized columns, striped rows, summary sheet with driver/vehicle; no more raw JSON dumps in cells (pandas dependency dropped)
+- **CSV export** rewritten as readable section blocks (title + per-section header + formatted rows)
+### Fixed
+- G1 VU days with the card not inserted (18-byte TREP 02 bodies) were dropped by the heuristic wrapper's 50-byte minimum — real G1 VU now reports all 42 downloaded days instead of 22
+- **Bug**: `SpecificConditionType` decoded against an invented table (0=Ferry, 1=Train, 2=OutOfScope, 3/4=GNSS blackout) in 4 places — the normative assignment (Annex 1C §2.154) is 0x01/0x02 = Out of scope Begin/End, 0x03/0x04 = Ferry/Train crossing Begin/End, 0x00 = RFU; real out-of-scope periods were reported as train crossings. Single canonical map in `event_fault_codes`
+- **Bug**: EF Vehicles_Used decoded the G2 EF copy with an invented 35-byte layout (4-byte odometers) — the normative G2 `CardVehicleRecord` is 48 bytes (G1 fields + VIN, Annex 1C §2.37); the misaligned walk produced ghost sessions (real card: 203 → 200) and the VIN was lost; G1/G2 copies now deduplicated and VIN-enriched, layout chosen by validation scoring
+- **Bug**: tag 0x0523 decoded as "G2 VehiclesUsed" — it is EF VehicleUnits_Used (Annex 1C §2.39, 10-byte records: timestamp + manufacturerCode + deviceID + vuSoftwareVersion); now decoded into `vehicle_units` (confirmed on real card: software version "4072", count matches `noOfCardVehicleUnitRecords`)
+- **Bug**: tag 0x0524 decoded as a G2 activity cyclic buffer — it is EF GNSS_Places (Annex 1C §2.78, 18-byte `GNSSAccumulatedDrivingRecord`: ts + GNSSPlaceRecord + odometer); real card now yields 336 GNSS positions with odometer (was 0)
+- **Bug**: `tacho-cli --all` generated only the JSON and exited with an error — it auto-enabled the unimplemented PDF export whose branch called `sys.exit(1)` before Excel; `--pdf` now warns and continues
+- **Bug**: card files always labelled "G1 (Digital)" — generation is now refined after parsing from the EF appendix dtypes (0x02/0x03 = Gen2 copies) and the Gen2v2-only EFs (0x0525-0x052A)
+- **Bug**: the deterministic structural pass walked Gen2/2.2 VU downloads as BER-TLV, misreading 0x76 as a 1-byte tag and classifying garbage tags (`Tag_003E`, `Tag_0062`, …) — VU files are now classified along the RecordArray stream (`7621_VU_Overview > 04_MemberStateCertificate`, …); decoded byte coverage on real G2/G2.2 VU files is now 100%
+- **Bug**: `iter_vu_sections` resynced 5 bytes at a time on an invalid RecordArray header (could skip a valid array start after junk) and accepted any 0x76 byte as a section marker — resync is now 1 byte and markers require a valid TREP byte
+- **Bug**: VU download signature read assumed 64-byte ECDSA signatures — now uses the SignatureRecord size (96/128 bytes for P-384/P-512 curves)
+- **Bug**: G2.2 sensor records (0x0532/0x0533) declared 20/24-byte sizes but the decoders required 28 bytes, silently dropping every record — shorter variants now decoded (serial-first/date-last) with `confidence: low`
+- **Bug**: `decode_name` (VU dispatcher) dropped bytes ≥ 0x7F — accented characters in workshop/holder names and addresses were silently removed; now decodes via the declared code page
+- **Bug**: deterministic decoder dispatch ignored the registry `card_only`/`vu_only` context flags — card decoders ran on VU files and vice versa (the legacy navigator already filtered)
+- **Bug**: bare G2 VU records without a RecordArray header landed under generic `g2_XXXX` result keys invisible to GUI/export — now use the same named keys as the array path
+- **Bug**: `parse_g1_vehicles_used` rejected the valid special nation codes 0xFD/0xFE/0xFF (EC/EUR/WLD)
+- **Bug**: `TachoResult.to_dict` omitted the declared `signed_daily_records` field; `validate()` compared the never-populated `locations` key instead of `places`; `decode_g2_daily_record` caller fallback record size 113 vs decoder 112
+- **CLI**: summary now reports Availability separately instead of folding it into Rest
+- `vehicle_units` section (EF VehicleUnits_Used) in GUI and Excel export
+- Card EF GNSS_Places (G2 18-byte / G2.2 19-byte records with authentication flag) merged into `gnss_ad_records` with dedup
+- **Test**: mock G1 card now uses the normative appendix dtypes (0x00 data / 0x01 signature); mock G2/G2.2 cards are flat STAP streams (no VU wrapper) with correct EF usage (0x0504 activities, 0x0505 vehicles, 0x0523 vehicle units, 0x0524 GNSS places)
+
+- **Bug**: `test_vu_dispatcher` and `test_export` checked for the old Italian keys (`eventi`, `data`, `km`, `tipo`) — updated to the English production keys (`changes`, `date`, `odometer_km`, `activity`); golden snapshots regenerated
+- **Bug**: G1 VU deterministic walker did not handle TREP 06 (Card Download via VU) — missing from `TREP_NAMES`, body-length table and dispatch dict, causing a fallback to heuristic parsing; TREP 06 body extends to the next `0x76 TREP` marker or EOF
+
 ## [1.9.0] - 2026-06-11
 ### Fixed
 - **Bug**: event/fault description tables did not follow the normative `EventFaultType` encoding (Annex 1B §2.70 / 1C §2.86: events 0x00-0x2F, equipment faults 0x30-0x3F, card faults 0x40-0x4F) — real codes 0x12/0x15/0x21/0x40 were "Unknown", faults were never matched; range-based group fallbacks added

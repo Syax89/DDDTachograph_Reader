@@ -103,7 +103,8 @@ class TachoResult:
             "trailer_registrations": self.trailer_registrations,
             "gnss_places": self.gnss_places,
             "load_sensor_data": self.load_sensor_data,
-            "border_crossings": self.border_crossings
+            "border_crossings": self.border_crossings,
+            "signed_daily_records": self.signed_daily_records
         }
         if tags:
             result["generations"] = build_generations_tree(result, tags)
@@ -276,9 +277,14 @@ def build_generations_tree(results: Dict[str, Any], tags: Dict[int, str]) -> Dic
             "preferred_language": driver.get("preferred_language", "N/A"),
         }
 
-    # ── Tag 0x0523: G2 VehiclesUsed ──
+    # ── EF Vehicles_Used, G2 copy (FID 0x0505, Gen2 appendix) ──
     if vehicle_sessions:
-        gen2[_clean_tag_name(tags.get(0x0523, "VehiclesUsed"))] = vehicle_sessions
+        gen2["VehiclesUsed"] = vehicle_sessions
+
+    # ── Tag 0x0523: G2 VehicleUnits_Used ──
+    vehicle_units = results.get("vehicle_units", [])
+    if vehicle_units:
+        gen2[_clean_tag_name(tags.get(0x0523, "VehicleUnitsUsed"))] = vehicle_units
 
     # ── G2.2 tags ──
     gnss_ad = results.get("gnss_ad_records", [])

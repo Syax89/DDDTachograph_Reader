@@ -175,7 +175,7 @@ def decode_vu_certificates(raw_data):
     seen = set()
     try:
         for sec in iter_vu_sections(data):
-            for (pos, rt, rs, nr, end) in sec["records"]:
+            for (pos, rt, rs, nr, _end) in sec["records"]:
                 if rt not in _CERT_ROLES or nr == 0:
                     continue
                 cert = data[pos + 5:pos + 5 + rs]
@@ -225,7 +225,7 @@ def verify_vu_download(raw_data, erca_keys=None):
         # Collect the MSCA (0x04) and VU (0x0F) certificates from the Overview.
         msca_raw = vu_raw = None
         for sec in sections:
-            for (pos, rt, rs, nr, end) in sec["records"]:
+            for (pos, rt, rs, nr, _end) in sec["records"]:
                 if rt == 0x04 and nr > 0 and msca_raw is None:
                     msca_raw = data[pos + 5:pos + 5 + rs]
                 elif rt == 0x0F and nr > 0 and vu_raw is None:
@@ -259,13 +259,14 @@ def verify_vu_download(raw_data, erca_keys=None):
             sig_recs = [r for r in recs if r[1] == _SIGNATURE_RECORD]
             if not sig_recs:
                 continue
-            sig_pos = sig_recs[0][0]
-            sig = data[sig_pos + 5:sig_pos + 5 + 64]
+            sig_pos, _, sig_size, _, _ = sig_recs[0]
+            # Signature size follows the curve: 64 (P-256), 96 (P-384), 128 (P-512).
+            sig = data[sig_pos + 5:sig_pos + 5 + sig_size]
             # Signed region: data records up to the signature, excluding the
             # leading embedded certificates (the Overview carries the MSCA/VU
             # certs, which self-authenticate and are not part of the signed data).
             start = sec["marker"] + 2
-            for (pos, rt, rs, nr, end) in recs:
+            for (pos, rt, _rs, _nr, end) in recs:
                 if rt in _CERT_RECORD_TYPES and pos == start:
                     start = end  # advance past a leading certificate record
                 else:

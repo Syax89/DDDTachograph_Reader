@@ -7,12 +7,14 @@ import sys
 import logging
 from ddd_parser import TachoParser
 from core.encoding import BytesEncoder
+from core.version import __version__
 
 
 def main():
     parser = argparse.ArgumentParser(description="DDD Tachograph File Reader - Structural TLV Parser")
     parser.add_argument("file", help="Path to .ddd file to read")
     parser.add_argument("-o", "--output", help="Path to output JSON file")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()

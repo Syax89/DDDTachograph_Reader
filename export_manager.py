@@ -1,227 +1,227 @@
-import json
+"""Export of parsed tachograph data to Excel, CSV and PDF.
 
+All exports share the formatting in :mod:`core.report_format` (readable
+timestamps, humanised column names, nested structures rendered as text), so
+the three formats present the same content consistently.
+"""
+import logging
 
-def _get_pandas():
-    import pandas as pd
-    return pd
+from core.i18n import tr
+from core.report_format import records_to_table, section_tables, summary_rows
 
-
-def _flatten_dict(d, parent_key="", sep="_"):
-    items = {}
-    for k, v in d.items():
-        new_key = f"{parent_key}{sep}{k}" if parent_key else k
-        if isinstance(v, dict):
-            items.update(_flatten_dict(v, new_key, sep))
-        elif isinstance(v, list):
-            items[new_key] = json.dumps(v, default=str)[:2000]
-        elif isinstance(v, bytes):
-            items[new_key] = v.hex()
-        else:
-            items[new_key] = v
-    return items
-
-
-def _flatten_records(records):
-    if not records:
-        return [], []
-    flat = []
-    all_keys = set()
-    for rec in records:
-        if isinstance(rec, dict):
-            f = _flatten_dict(rec)
-            all_keys.update(f.keys())
-            flat.append(f)
-    cols = sorted(all_keys)
-    rows = [{c: d.get(c, "") for c in cols} for d in flat]
-    return cols, rows
-
+_log = logging.getLogger("export")
 
 _EXCEL_MAX_ROWS = 50000
+_PDF_MAX_ROWS = 1500
 
 
 class ExportManager:
+
+    # ── Excel ────────────────────────────────────────────────────────────
+
     @staticmethod
     def export_to_excel(data, filepath):
-        pd = _get_pandas()
-        meta = data.get("metadata", {})
-        driver = data.get("driver", {})
-        vehicle = data.get("vehicle", {})
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Font, PatternFill
+        from openpyxl.utils import get_column_letter
 
-        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
-            metadata_rows = [
-                {"Field": "Filename", "Value": meta.get("filename", "N/A")},
-                {"Field": "Generation", "Value": meta.get("generation", "N/A")},
-                {"Field": "File Size (bytes)", "Value": meta.get("file_size_bytes", 0)},
-                {"Field": "Coverage (%)", "Value": meta.get("coverage_pct", 0)},
-                {"Field": "Integrity", "Value": meta.get("integrity_check", "N/A")},
-                {"Field": "Parsed At", "Value": meta.get("parsed_at", "")},
-                {"Field": "Source", "Value": "Vehicle Unit (VU)" if meta.get("is_vu") else "Driver Card"},
-                {"Field": "Decoder Failures", "Value": meta.get("decoder_failure_count", 0)},
-            ]
-            pd.DataFrame(metadata_rows).to_excel(writer, sheet_name="Summary", index=False)
+        HEADER_FONT = Font(bold=True, color="FFFFFF")
+        HEADER_FILL = PatternFill("solid", fgColor="1F4E79")
+        TITLE_FONT = Font(bold=True, size=14, color="1F4E79")
+        STRIPE_FILL = PatternFill("solid", fgColor="EFF4FA")
 
-            driver_rows = [{"Field": k, "Value": v} for k, v in driver.items()]
-            pd.DataFrame(driver_rows).to_excel(writer, sheet_name="Driver", index=False)
+        wb = Workbook()
 
-            vehicle_rows = [{"Field": k, "Value": v} for k, v in vehicle.items()]
-            pd.DataFrame(vehicle_rows).to_excel(writer, sheet_name="Vehicle", index=False)
+        def _autosize(ws, headers, rows):
+            for idx, header in enumerate(headers, start=1):
+                width = len(str(header))
+                for row in rows[:200]:
+                    if idx <= len(row):
+                        width = max(width, len(str(row[idx - 1])))
+                ws.column_dimensions[get_column_letter(idx)].width = min(max(width + 2, 9), 55)
 
-            if data.get("signature_verification"):
-                sv = data["signature_verification"]
-                treps = sv.get("treps") or []
-                sig_rows = [
-                    {"Field": "Available", "Value": sv.get("available")},
-                    {"Field": "MSCA to VU chain", "Value": sv.get("msca_to_vu")},
-                    {"Field": "Root Anchored", "Value": sv.get("root_anchored")},
-                    {"Field": "All TREPs valid", "Value": sv.get("all_treps_valid")},
-                    {"Field": "Summary", "Value": sv.get("summary", "")},
-                    {"Field": "TREPs verified", "Value": len(treps)},
-                ]
-                pd.DataFrame(sig_rows).to_excel(writer, sheet_name="Signatures", index=False)
-                if treps:
-                    cols, rows = _flatten_records(treps)
-                    if rows:
-                        pd.DataFrame(rows, columns=cols).to_excel(
-                            writer, sheet_name="TREP Signatures", index=False)
+        def _write_table(ws, headers, rows, start_row=1):
+            for c, header in enumerate(headers, start=1):
+                cell = ws.cell(row=start_row, column=c, value=header)
+                cell.font = HEADER_FONT
+                cell.fill = HEADER_FILL
+                cell.alignment = Alignment(vertical="center")
+            for r, row in enumerate(rows, start=start_row + 1):
+                for c, value in enumerate(row, start=1):
+                    cell = ws.cell(row=r, column=c, value=value)
+                    if (r - start_row) % 2 == 0:
+                        cell.fill = STRIPE_FILL
+            ws.freeze_panes = ws.cell(row=start_row + 1, column=1)
+            if rows:
+                last_col = get_column_letter(len(headers))
+                ws.auto_filter.ref = f"A{start_row}:{last_col}{start_row + len(rows)}"
+            _autosize(ws, headers, rows)
 
-            if data.get("vu_certificates"):
-                cols, rows = _flatten_records(data["vu_certificates"])
-                if rows:
-                    pd.DataFrame(rows, columns=cols).to_excel(
-                        writer, sheet_name="VU Certificates", index=False)
+        # Summary sheet
+        ws = wb.active
+        ws.title = "Summary"
+        ws.cell(row=1, column=1, value="DDD Tachograph Report").font = TITLE_FONT
+        row = 3
+        for field, value in summary_rows(data):
+            if field or value:
+                ws.cell(row=row, column=1, value=field).font = Font(bold=True)
+                ws.cell(row=row, column=2, value=value)
+            row += 1
+        ws.column_dimensions["A"].width = 26
+        ws.column_dimensions["B"].width = 70
 
-            _SECTIONS = [
-                ("activities", "Daily Activities"),
-                ("events", "Events"),
-                ("faults", "Faults"),
-                ("places", "Places"),
-                ("calibrations", "Calibrations"),
-                ("vehicle_sessions", "Vehicle Sessions"),
-                ("locations", "GPS Locations"),
-                ("gnss_ad_records", "GNSS Accumulated Driving"),
-                ("gnss_places", "GNSS Places"),
-                ("border_crossings", "Border Crossings"),
-                ("load_unload_records", "Load Unload"),
-                ("load_sensor_data", "Load Sensor Data"),
-                ("trailer_registrations", "Trailer Registrations"),
-                ("overspeeding_events", "Overspeeding Events"),
-                ("overspeeding_control", "Overspeeding Control"),
-                ("power_interruptions", "Power Interruptions"),
-                ("company_locks", "Company Locks"),
-                ("control_activities", "Control Activities"),
-                ("specific_conditions", "Specific Conditions"),
-                ("vu_identifications", "VU Identifications"),
-                ("sensor_pairings", "Sensor Pairings"),
-                ("card_iw_records", "Card Insertion Withdrawal"),
-                ("time_adjustments", "Time Adjustments"),
-                ("its_consents", "ITS Consents"),
-                ("download_activities", "Download Activities"),
-                ("card_downloads", "Card Downloads"),
-                ("workshops", "Calibration Workshops"),
-                ("inserted_drivers", "Inserted Drivers"),
-                ("signed_daily_records", "Signed Daily Records"),
-            ]
+        # Signature details (VU)
+        sv = data.get("signature_verification") or {}
+        treps = sv.get("treps") or []
+        if treps:
+            headers, rows = records_to_table(treps)
+            wsx = wb.create_sheet("TREP Signatures"[:31])
+            _write_table(wsx, headers, rows)
+        certs = data.get("vu_certificates") or []
+        if certs:
+            headers, rows = records_to_table(certs)
+            wsx = wb.create_sheet("VU Certificates"[:31])
+            _write_table(wsx, headers, rows)
 
-            for key, label in _SECTIONS:
-                items = data.get(key) or []
-                if not items:
-                    continue
-                if not isinstance(items, list):
-                    items = [items]
-                if key == "activities":
-                    rows = ExportManager._expand_activities(items)
-                    if rows:
-                        pd.DataFrame(rows).to_excel(
-                            writer, sheet_name=label[:31], index=False)
-                else:
-                    if len(items) > _EXCEL_MAX_ROWS:
-                        import logging
-                        logging.getLogger("export").warning(
-                            "Truncating '%s' from %d to %d rows (Excel limit)", label, len(items), _EXCEL_MAX_ROWS)
-                    cols, rows = _flatten_records(items[: _EXCEL_MAX_ROWS])
-                    if rows:
-                        pd.DataFrame(rows, columns=cols).to_excel(
-                            writer, sheet_name=label[:31], index=False)
+        # Data sections
+        for label, headers, rows, truncated in section_tables(data, max_rows=_EXCEL_MAX_ROWS):
+            if truncated:
+                _log.warning("Truncating '%s' to %d rows (Excel limit)", label, _EXCEL_MAX_ROWS)
+            wsx = wb.create_sheet(label[:31])
+            _write_table(wsx, headers, rows)
 
-    @staticmethod
-    def _expand_activities(activities):
-        rows = []
-        for day in activities:
-            if not isinstance(day, dict):
-                continue
-            date_str = day.get("data", day.get("timestamp", "N/A"))
-            km = day.get("km", 0)
-            events = day.get("eventi", day.get("changes", []))
-            if not isinstance(events, list) or not events:
-                rows.append({
-                    "Date": date_str, "Time": "", "Activity Type": "",
-                    "km": km, "Source": day.get("source", ""),
-                })
-                continue
-            for ev in events:
-                if not isinstance(ev, dict):
-                    continue
-                rows.append({
-                    "Date": date_str,
-                    "Time": ev.get("ora", ev.get("time", ev.get("minute", ""))),
-                    "Activity Type": ev.get("tipo", ev.get("type", ev.get("activity", ""))),
-                    "km": km,
-                    "Slot": ev.get("slot", ""),
-                    "Crew": ev.get("crew", ""),
-                    "Source": day.get("source", ev.get("source", "")),
-                })
-        return rows
+        wb.save(filepath)
+
+    # ── CSV ──────────────────────────────────────────────────────────────
 
     @staticmethod
     def export_to_csv(data, filepath):
-        pd = _get_pandas()
-        all_rows = []
+        """Section-block CSV: every section gets a title row, its own header
+        and rows, separated by a blank line — readable in any spreadsheet."""
+        import csv
 
-        activities = data.get("activities", [])
-        for row in ExportManager._expand_activities(activities):
-            row["Section"] = "Activities"
-            all_rows.append(row)
+        with open(filepath, "w", newline="", encoding="utf-8-sig") as handle:
+            writer = csv.writer(handle, delimiter=";")
 
-        _EXTRA_SECTIONS = [
-            ("events", "Events"),
-            ("faults", "Faults"),
-            ("places", "Places"),
-            ("calibrations", "Calibrations"),
-            ("vehicle_sessions", "Vehicle Sessions"),
-            ("locations", "GPS Locations"),
-            ("gnss_ad_records", "GNSS Accumulated Driving"),
-            ("gnss_places", "GNSS Places"),
-            ("border_crossings", "Border Crossings"),
-            ("overspeeding_events", "Overspeeding Events"),
-            ("specific_conditions", "Specific Conditions"),
-            ("card_downloads", "Card Downloads"),
-        ]
-        for key, label in _EXTRA_SECTIONS:
-            items = data.get(key) or []
-            if not isinstance(items, list):
-                items = [items]
-            for item in items:
-                if isinstance(item, dict):
-                    flat = {k: (v.hex() if isinstance(v, bytes) else str(v)) for k, v in item.items()}
-                    flat["Section"] = label
-                    all_rows.append(flat)
+            writer.writerow(["DDD TACHOGRAPH REPORT"])
+            for field, value in summary_rows(data):
+                if field or value:
+                    writer.writerow([field, value])
+            writer.writerow([])
 
-        if not all_rows:
-            pd.DataFrame([{"Info": "No data found"}]).to_csv(
-                filepath, index=False, sep=";", encoding="utf-8-sig")
-            return
+            wrote_any = False
+            for label, headers, rows, truncated in section_tables(data):
+                writer.writerow([f"=== {label.upper()} ==="])
+                writer.writerow(headers)
+                writer.writerows(rows)
+                if truncated:
+                    writer.writerow(["… (truncated)"])
+                writer.writerow([])
+                wrote_any = True
 
-        driver = data.get("driver", {})
-        vehicle = data.get("vehicle", {})
-        driver_name = (
-            f"{(driver.get('surname') or '')} {(driver.get('firstname') or '')}".strip()
+            if not wrote_any:
+                writer.writerow(["No data found"])
+
+    # ── PDF ──────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def export_to_pdf(data, filepath):
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4, landscape
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.units import mm
+        from reportlab.platypus import (
+            LongTable, PageBreak, Paragraph, SimpleDocTemplate, Spacer, TableStyle,
         )
-        card = driver.get("card_number") or "N/A"
-        plate = vehicle.get("plate") or "N/A"
 
-        for r in all_rows:
-            r.setdefault("Driver", driver_name)
-            r.setdefault("Card Number", card)
-            r.setdefault("Vehicle Plate", plate)
+        PRIMARY = colors.HexColor("#1F4E79")
+        STRIPE = colors.HexColor("#EFF4FA")
+        GRID = colors.HexColor("#B8C7D9")
 
-        pd.DataFrame(all_rows).to_csv(filepath, index=False, sep=";", encoding="utf-8-sig")
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle("TachoTitle", parent=styles["Title"],
+                                     textColor=PRIMARY, spaceAfter=6)
+        section_style = ParagraphStyle("TachoSection", parent=styles["Heading2"],
+                                       textColor=PRIMARY, spaceBefore=14, spaceAfter=4)
+        cell_style = ParagraphStyle("TachoCell", parent=styles["BodyText"],
+                                    fontSize=6.5, leading=8)
+        head_style = ParagraphStyle("TachoHead", parent=cell_style,
+                                    textColor=colors.white, fontName="Helvetica-Bold")
+        note_style = ParagraphStyle("TachoNote", parent=styles["BodyText"],
+                                    fontSize=7, textColor=colors.grey)
+
+        page_size = landscape(A4)
+        doc = SimpleDocTemplate(
+            filepath, pagesize=page_size,
+            leftMargin=12 * mm, rightMargin=12 * mm,
+            topMargin=12 * mm, bottomMargin=12 * mm,
+            title="DDD Tachograph Report",
+        )
+        avail_width = page_size[0] - doc.leftMargin - doc.rightMargin
+
+        def _table(headers, rows):
+            ncols = len(headers)
+            col_width = avail_width / ncols
+            table_data = [[Paragraph(str(h), head_style) for h in headers]]
+            for row in rows:
+                table_data.append([Paragraph(str(v), cell_style) if v != "" else ""
+                                   for v in row])
+            t = LongTable(table_data, colWidths=[col_width] * ncols, repeatRows=1)
+            t.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), PRIMARY),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, STRIPE]),
+                ("GRID", (0, 0), (-1, -1), 0.4, GRID),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 3),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+                ("TOPPADDING", (0, 0), (-1, -1), 2),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+            ]))
+            return t
+
+        story = [Paragraph("DDD Tachograph Report", title_style)]
+
+        # Summary block as a 2-column table
+        sum_rows = [(f, v) for f, v in summary_rows(data) if f or v]
+        if sum_rows:
+            story.append(_table(["Field", "Value"], sum_rows))
+
+        sv = data.get("signature_verification") or {}
+        treps = sv.get("treps") or []
+        if treps:
+            story.append(Paragraph("TREP Signatures", section_style))
+            headers, rows = records_to_table(treps)
+            story.append(_table(headers, rows))
+        certs = data.get("vu_certificates") or []
+        if certs:
+            story.append(Paragraph("VU Certificates", section_style))
+            headers, rows = records_to_table(certs)
+            story.append(_table(headers, rows))
+
+        first_section = True
+        for label, headers, rows, truncated in section_tables(data, max_rows=_PDF_MAX_ROWS):
+            if first_section:
+                story.append(PageBreak())
+                first_section = False
+            story.append(Paragraph(f"{label} ({len(rows)}{'+' if truncated else ''})",
+                                   section_style))
+            story.append(_table(headers, rows))
+            if truncated:
+                story.append(Paragraph(
+                    f"Section truncated to {_PDF_MAX_ROWS} rows — use the Excel "
+                    f"or JSON export for the complete data.", note_style))
+            story.append(Spacer(1, 4 * mm))
+
+        def _footer(canvas, document):
+            canvas.saveState()
+            canvas.setFont("Helvetica", 7)
+            canvas.setFillColor(colors.grey)
+            meta = data.get("metadata", {})
+            from core.version import APP_NAME, __version__
+            canvas.drawString(doc.leftMargin, 7 * mm,
+                              f"{meta.get('filename', '')} — {APP_NAME} v{__version__}")
+            canvas.drawRightString(page_size[0] - doc.rightMargin, 7 * mm,
+                                   f"Page {document.page}")
+            canvas.restoreState()
+
+        doc.build(story, onFirstPage=_footer, onLaterPages=_footer)

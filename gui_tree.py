@@ -15,6 +15,8 @@ import os
 import sys
 import re
 import json
+import queue
+import threading
 import traceback
 import logging
 
@@ -48,6 +50,9 @@ from tkinter import ttk, filedialog, messagebox  # noqa: E402
 from ddd_parser import TachoParser  # noqa: E402
 from core.encoding import BytesEncoder  # noqa: E402
 from core.models import _clean_tag_name  # noqa: E402
+from core.version import __version__  # noqa: E402
+from core.i18n import tr  # noqa: E402
+from core.report_format import humanize_key  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
 
@@ -55,10 +60,6 @@ try:
     from export_manager import ExportManager
 except ImportError:
     ExportManager = None
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
 
 
 # ── Palette ────────────────────────────────────────────────────────────────
@@ -78,7 +79,7 @@ HEADER_BG = "#e3e9f2"
 # (e.g. "_key" dedup markers) are always hidden — see _columns_for.
 HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence"}
 # Descriptive columns pushed to table start.
-LEADING_KEYS = ["descrizione"]
+LEADING_KEYS = ["description"]
 # Technical columns pushed to table end.
 TRAILING_KEYS = ["record_type"]
 
@@ -100,6 +101,7 @@ GROUPS = [
 LIST_SECTIONS = [
     # "activities" handled separately (day hierarchy) — see _populate_activities
     ("vehicle_sessions", "Vehicles Used", "activity", None),
+    ("vehicle_units", "Vehicle Units Used", "activity", None),
     ("events", "Events", "activity", None),
     ("overspeeding_events", "Overspeeding Events", "activity", None),
     ("faults", "Faults", "activity", None),
@@ -140,36 +142,36 @@ LIST_SECTIONS = [
 
 
 def _row_activities(rec):
-    """Expands each day into single event rows (Rest, Drive, etc.)."""
-    events = rec.get("eventi", rec.get("changes", []))
+    """Expands each day into single activity-change rows (Rest, Drive, etc.)."""
+    changes = rec.get("changes", [])
     driver = rec.get("driver", "")
     daily_counter = rec.get("daily_counter", "")
 
     base = {
-        "Date": rec.get("data", rec.get("timestamp", "?")),
-        "km": rec.get("km", 0),
-        "Driver": fmt_val(driver) if driver else "",
+        tr("Date"): rec.get("date", rec.get("timestamp", "?")),
+        tr("Odometer km"): rec.get("odometer_km", 0),
+        tr("Driver"): fmt_val(driver) if driver else "",
         "Day #": str(daily_counter) if daily_counter != "" else "",
     }
+    empty = {**base, tr("Time"): "\u2014", tr("Activity"): tr("(no event)"),
+             tr("Slot"): "", tr("Crew"): ""}
 
-    if not isinstance(events, list) or not events:
-            return {**base, "Time": "\u2014", "Type": "(no event)", "Slot": "", "Crew": ""}
+    if not isinstance(changes, list) or not changes:
+        return empty
 
     rows = []
-    for ev in events:
+    for ev in changes:
         if isinstance(ev, dict):
             slot = ev.get("slot", "")
             if isinstance(slot, int):
                 slot = f"Slot {slot}"
             rows.append({**base,
-                "Time": ev.get("ora", ev.get("time", "?")),
-                "Type": ev.get("tipo", ev.get("type", "?")),
-                "Slot": fmt_val(slot) if slot else "",
-                "Crew": fmt_val(ev.get("crew", ev.get("team", ""))),
+                tr("Time"): ev.get("time", "?"),
+                tr("Activity"): ev.get("activity", "?"),
+                tr("Slot"): fmt_val(slot) if slot else "",
+                tr("Crew"): fmt_val(ev.get("crew", "")),
             })
-    return rows if rows else {**base,
-        "Time": "\u2014", "Type": "(no event)", "Slot": "", "Crew": "",
-    }
+    return rows if rows else empty
 
 
 TRANSFORMERS = {
@@ -290,12 +292,17 @@ def _rows_for(records, transformer):
                 rows.append([fmt_val(item.get(c)) for c in cols])
             else:
                 rows.append([fmt_val(item)])
-    return cols, rows
+    # Transformer output keys are already display labels; raw record keys are
+    # humanised + translated for display (rows above keep the raw key order).
+    headers = cols if transformer else [humanize_key(c) for c in cols]
+    return headers, rows
 
 
 def _kv_rows(d):
-    """Convert a dict to (Field, Value) rows."""
-    return ["Field", "Value"], [[str(k), fmt_val(v)] for k, v in d.items()]
+    """Convert a dict to (Field, Value) rows with humanised field labels."""
+    return ([tr("Field"), tr("Value")],
+            [[humanize_key(k) if isinstance(k, str) else str(k), fmt_val(v)]
+             for k, v in d.items()])
 
 
 def _clean_tag_name_display(name):
@@ -423,7 +430,7 @@ class DataTable(ttk.Frame):
 class TachoExplorer(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Tacho Explorer")
+        self.title(f"Tacho Explorer v{__version__}")
         self.geometry("1280x760")
         self.minsize(900, 560)
 
@@ -451,6 +458,8 @@ class TachoExplorer(tk.Tk):
         self.current_file = None
         self._payloads = {}  # iid -> (title, columns, rows, meta)
         self._destroyed = False
+        self._parsing = False
+        self._parse_queue = queue.Queue()
 
         self._build_ui()
         try:
@@ -463,11 +472,13 @@ class TachoExplorer(tk.Tk):
     def _build_ui(self):
         top = ttk.Frame(self, padding=(10, 8))
         top.pack(fill=tk.X)
-        ttk.Button(top, text="\U0001f4c2  Open DDD file", command=self._open_file).pack(
-            side=tk.LEFT, padx=(0, 8))
+        self.btn_open = ttk.Button(top, text="\U0001f4c2  Open DDD file",
+                                   command=self._open_file)
+        self.btn_open.pack(side=tk.LEFT, padx=(0, 8))
         self.btn_export = ttk.Menubutton(top, text="\U0001f4e4  Export",
                                          state=tk.DISABLED)
         export_menu = tk.Menu(self.btn_export, tearoff=0)
+        export_menu.add_command(label="PDF (.pdf)", command=self._export_pdf)
         export_menu.add_command(label="Excel (.xlsx)", command=self._export_excel)
         export_menu.add_command(label="CSV (.csv)", command=self._export_csv)
         export_menu.add_command(label="JSON (.json)", command=self._export_json)
@@ -502,26 +513,72 @@ class TachoExplorer(tk.Tk):
         self.table = DataTable(right)
         self.table.pack(fill=tk.BOTH, expand=True)
 
-        self.status = ttk.Label(self, text="Ready \u2014 open a .ddd file",
-                                relief=tk.SUNKEN, anchor=tk.W, padding=(6, 2))
-        self.status.pack(side=tk.BOTTOM, fill=tk.X)
+        status_bar = ttk.Frame(self, relief=tk.SUNKEN)
+        status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.status = ttk.Label(status_bar, text="Ready \u2014 open a .ddd file",
+                                anchor=tk.W, padding=(6, 2))
+        self.status.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.progress = ttk.Progressbar(status_bar, mode="indeterminate", length=160)
+        # packed only while a parse is running \u2014 see _start_parse/_finish_parse
 
     # ── File open ──────────────────────────────────────────
 
     def _open_file(self):
+        if self._parsing:
+            return
         path = filedialog.askopenfilename(
             filetypes=[("DDD Files", "*.ddd *.DDD"), ("All Files", "*.*")])
         if not path:
             return
-        self.status.config(text="Parsing\u2026")
-        self.update_idletasks()
+        self._start_parse(path)
+
+    def _start_parse(self, path):
+        """Run the parse on a worker thread so the UI stays responsive;
+        results are marshalled back via a queue polled on the main loop."""
+        self._parsing = True
+        self.btn_open.config(state=tk.DISABLED)
+        self.btn_export.config(state=tk.DISABLED)
+        self.status.config(text=f"Parsing {os.path.basename(path)}\u2026")
+        self.progress.pack(side=tk.RIGHT, padx=6, pady=1)
+        self.progress.start(12)
+
+        worker = threading.Thread(target=self._parse_worker, args=(path,), daemon=True)
+        worker.start()
+        self.after(50, self._poll_parse_queue)
+
+    def _parse_worker(self, path):
         try:
             data = TachoParser(path).parse()
+            self._parse_queue.put((path, data, None))
         except Exception as e:
-            self._parse_error(str(e))
+            _log.error("Parse failed: %s\n%s", e, traceback.format_exc())
+            self._parse_queue.put((path, None, str(e)))
+
+    def _poll_parse_queue(self):
+        if self._destroyed:
             return
-        if not self._destroyed:
+        try:
+            path, data, error = self._parse_queue.get_nowait()
+        except queue.Empty:
+            self.after(50, self._poll_parse_queue)
+            return
+        self._finish_parse()
+        if error is not None:
+            self._parse_error(error)
+        else:
             self._parse_done(data, path)
+
+    def _finish_parse(self):
+        self._parsing = False
+        try:
+            self.progress.stop()
+            self.progress.pack_forget()
+        except Exception:
+            pass
+        self.btn_open.config(state=tk.NORMAL)
+        if self.current_data:
+            # A failed re-open keeps the previously loaded file exportable.
+            self.btn_export.config(state=tk.NORMAL)
 
     def _parse_error(self, msg):
         try:
@@ -532,53 +589,48 @@ class TachoExplorer(tk.Tk):
 
     # ── Export ────────────────────────────────────────────
 
-    def _export_excel(self):
+    def _run_export(self, kind, extension, filetypes, export_fn, requirement=""):
+        """Shared export flow: pick the destination, run, report the outcome."""
         if not self.current_data:
             return
-        if ExportManager is None or pd is None:
+        if ExportManager is None:
             messagebox.showwarning("Export Unavailable",
-                                   "Excel export requires pandas and openpyxl.\n"
-                                   "pip install pandas openpyxl")
+                                   f"{kind} export is unavailable. {requirement}".strip())
             return
         path = filedialog.asksaveasfilename(
-            defaultextension=".xlsx",
-            filetypes=[("Excel Workbook", "*.xlsx"), ("All Files", "*.*")],
-            initialfile=os.path.splitext(os.path.basename(self.current_file))[0] + "_export.xlsx")
+            defaultextension=extension,
+            filetypes=filetypes + [("All Files", "*.*")],
+            initialfile=os.path.splitext(os.path.basename(self.current_file))[0]
+            + "_export" + extension)
         if not path:
             return
         try:
-            self.status.config(text="Exporting to Excel\u2026")
+            self.status.config(text=f"Exporting to {kind}\u2026")
             self.update_idletasks()
-            ExportManager.export_to_excel(self.current_data, path)
+            export_fn(self.current_data, path)
             self.status.config(text=f"Exported: {os.path.basename(path)}")
-            messagebox.showinfo("Export Complete", f"Excel saved to:\n{path}")
+            messagebox.showinfo("Export Complete", f"{kind} saved to:\n{path}")
+        except ImportError as e:
+            self.status.config(text="Export failed")
+            messagebox.showwarning("Export Unavailable",
+                                   f"{kind} export requires an extra package:\n{e}\n{requirement}")
         except Exception as e:
             self.status.config(text="Export failed")
             messagebox.showerror("Export Error", str(e))
 
+    def _export_pdf(self):
+        self._run_export("PDF", ".pdf", [("PDF Document", "*.pdf")],
+                         lambda d, p: ExportManager.export_to_pdf(d, p),
+                         requirement="pip install reportlab")
+
+    def _export_excel(self):
+        self._run_export("Excel", ".xlsx", [("Excel Workbook", "*.xlsx")],
+                         lambda d, p: ExportManager.export_to_excel(d, p),
+                         requirement="pip install openpyxl")
+
     def _export_csv(self):
-        if not self.current_data:
-            return
-        if ExportManager is None or pd is None:
-            messagebox.showwarning("Export Unavailable",
-                                   "CSV export requires pandas.\n"
-                                   "pip install pandas")
-            return
-        path = filedialog.asksaveasfilename(
-            defaultextension=".csv",
-            filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")],
-            initialfile=os.path.splitext(os.path.basename(self.current_file))[0] + "_export.csv")
-        if not path:
-            return
-        try:
-            self.status.config(text="Exporting to CSV\u2026")
-            self.update_idletasks()
-            ExportManager.export_to_csv(self.current_data, path)
-            self.status.config(text=f"Exported: {os.path.basename(path)}")
-            messagebox.showinfo("Export Complete", f"CSV saved to:\n{path}")
-        except Exception as e:
-            self.status.config(text="Export failed")
-            messagebox.showerror("Export Error", str(e))
+        self._run_export("CSV", ".csv", [("CSV Files", "*.csv")],
+                         lambda d, p: ExportManager.export_to_csv(d, p))
 
     def _export_json(self):
         if not self.current_data:
@@ -655,11 +707,10 @@ class TachoExplorer(tk.Tk):
             "Origin": "Vehicle Unit (VU)" if is_vu else "Driver Card",
             "Generation": meta.get("generation", "?"),
             "Coverage": f"{meta.get('coverage_pct', 0)}%",
-            "Bytes Parsed": f"{meta.get('raw_bytes_parsed', 0):,}".replace(",", " "),
-            "Bytes Covered": f"{meta.get('total_bytes_covered', 0):,}".replace(",", " "),
             "Integrity": meta.get("integrity_check", "N/A"),
             "Decoder failures": meta.get("decoder_failure_count", 0),
             "Parsed at": meta.get("parsed_at", ""),
+            "App version": meta.get("app_version", ""),
         }
         cols, rows = _kv_rows(info)
         self._add_section("", "\U0001f4c4  File Info", cols, rows)
@@ -710,7 +761,7 @@ class TachoExplorer(tk.Tk):
             dv = data.get(dk) or {}
             if isinstance(dv, dict) and dv:
                 cols, rows = _kv_rows(dv)
-                sections_by_group.setdefault(dg, []).append((dl, cols, rows))
+                sections_by_group.setdefault(dg, []).append((tr(dl), cols, rows))
 
         for key, label, group, tname in LIST_SECTIONS:
             records = data.get(key) or []
@@ -722,7 +773,7 @@ class TachoExplorer(tk.Tk):
             else:
                 transformer = TRANSFORMERS.get(tname) if tname else None
                 cols, rows = _rows_for(records, transformer)
-            sections_by_group.setdefault(group, []).append((label, cols, rows))
+            sections_by_group.setdefault(group, []).append((tr(label), cols, rows))
 
         # ── Skip VU group for driver cards ──
         actual_is_vu = meta.get("is_vu", False)
@@ -770,34 +821,34 @@ class TachoExplorer(tk.Tk):
 
     def _populate_activities(self, parent, activities):
         """Create an expandable 'Activities' node with days as children."""
-        act_node = self.tree.insert(parent, tk.END, text="Daily Activities")
+        act_node = self.tree.insert(parent, tk.END, text=tr("Daily Activities"))
         for day in reversed(activities):
             if not isinstance(day, dict):
                 continue
-            events = day.get("eventi", day.get("changes", []))
-            date_str = day.get("data", day.get("timestamp", "?"))
-            km = day.get("km", 0)
+            changes = day.get("changes", [])
+            date_str = day.get("date", day.get("timestamp", "?"))
+            km = day.get("odometer_km", 0)
             driver = day.get("driver", "")
             daily_counter = day.get("daily_counter", "")
 
-            if isinstance(events, list) and events:
+            if isinstance(changes, list) and changes:
                 rows = []
-                for ev in events:
+                for ev in changes:
                     if isinstance(ev, dict):
                         slot = ev.get("slot", "")
                         if isinstance(slot, int):
                             slot = f"Slot {slot}"
                         rows.append([
-                            fmt_val(ev.get("ora", ev.get("time", "?"))),
-                            fmt_val(ev.get("tipo", ev.get("type", "?"))),
+                            fmt_val(ev.get("time", "?")),
+                            fmt_val(ev.get("activity", "?")),
                             fmt_val(slot) if slot else "",
-                            fmt_val(ev.get("crew", ev.get("team", ""))),
+                            fmt_val(ev.get("crew", "")),
                             fmt_val(km),
                         ])
-                cols = ["Time", "Type", "Slot", "Crew", "km"]
+                cols = [tr("Time"), tr("Activity"), tr("Slot"), tr("Crew"), tr("Odometer km")]
             else:
-                cols = ["Time", "Type"]
-                rows = [[fmt_val("\u2014"), fmt_val("(no event)")]]
+                cols = [tr("Time"), tr("Activity")]
+                rows = [[fmt_val("\u2014"), tr("(no event)")]]
 
             label = date_str
             extras = []

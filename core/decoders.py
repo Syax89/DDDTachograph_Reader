@@ -105,18 +105,21 @@ def decode_datef(data):
     return "N/A"
 
 def decode_activity_val(val):
-    """Decode 2-byte activityChangeInfo."""
+    """Decode 2-byte ActivityChangeInfo (Annex 1B §2.1): 'scpaattttttttttt' —
+    s=slot, c=crew status, p=card status (1 = card not inserted), aa=activity,
+    t=minutes since midnight."""
     slot = (val >> 15) & 1
     driving_status = (val >> 14) & 1 # 0=Single, 1=Crew
+    card_not_inserted = (val >> 13) & 1
     act_code = (val >> 11) & 3
     mins = val & 0x07FF
     acts = {0: "REST", 1: "AVAILABLE", 2: "WORK", 3: "DRIVE"}
     return {
-        "tipo": acts.get(act_code, "UNKNOWN"),
         "activity": acts.get(act_code, "UNKNOWN"),
-        "ora": f"{mins // 60:02d}:{mins % 60:02d}",
+        "time": f"{mins // 60:02d}:{mins % 60:02d}",
         "slot": "Second" if slot else "First",
-        "team": bool(driving_status),
+        "crew": bool(driving_status),
+        "card_inserted": not card_not_inserted,
     }
 
 def get_cyclic_data(data, start, length, base_offset=4):
@@ -168,7 +171,7 @@ def parse_cyclic_buffer_activities(val, results):
                     counters_data = get_cyclic_data(val, ptr+8, 4)
                     pres, dist = struct.unpack(">HH", counters_data)
 
-                    daily = {"data": date_str, "km": int(dist), "eventi": []}
+                    daily = {"date": date_str, "odometer_km": int(dist), "changes": []}
 
                     act_len = rec_len - 12
                     if act_len > 0:
@@ -178,9 +181,9 @@ def parse_cyclic_buffer_activities(val, results):
                                 break
                             ev_val = struct.unpack(">H", act_data[i:i+2])[0]
                             if ev_val != 0xFFFF: # Fix Midnight Bug (allow 0)
-                                daily["eventi"].append(decode_activity_val(ev_val))
+                                daily["changes"].append(decode_activity_val(ev_val))
 
-                    if daily["eventi"]:
+                    if daily["changes"]:
                         results["activities"].append(daily)
 
             if prev_len == 0 or prev_len > buf_size:
@@ -210,39 +213,41 @@ def parse_g2_vu_record(val, results, tag):
 
         name, decode_fn, default_size = decoders_map[tag]
 
+        key_map = {
+            0x0509: "card_records",
+            0x050A: "card_iw_records",
+            0x050B: "downloadable_periods",
+            0x050D: "time_adjustments",
+            0x050F: "company_locks",
+            0x0510: "sensor_paired",
+            0x0511: "sensor_gnss_coupled",
+            0x0512: "its_consents",
+            0x052B: "vu_controller",
+            0x052C: "detailed_speed",
+            0x052D: "overspeeding_events",
+            0x052E: "overspeeding_control",
+            0x052F: "time_adj_gnss",
+            0x0530: "power_interruptions",
+            0x0531: "sensor_faults",
+            0x0532: "sensor_gnss_coupled_g22",
+            0x0533: "sensor_paired_g22",
+        }
+        result_key = key_map.get(tag, f"g2_{tag:04X}")
+
         hdr = _RAP.parse_header(val, 0)
         if hdr and hdr["record_size"] > 0 and hdr["no_of_records"] > 0:
             records = []
-            for idx, rec, _ in _RAP.iter_records(val, 0):
+            for _idx, rec, _ in _RAP.iter_records(val, 0):
                 decoded = decode_fn(rec, 0)
                 if decoded:
                     records.append(decoded)
             if records:
-                key_map = {
-                    0x0509: "card_records",
-                    0x050A: "card_iw_records",
-                    0x050B: "downloadable_periods",
-                    0x050D: "time_adjustments",
-                    0x050F: "company_locks",
-                    0x0510: "sensor_paired",
-                    0x0511: "sensor_gnss_coupled",
-                    0x0512: "its_consents",
-                    0x052B: "vu_controller",
-                    0x052C: "detailed_speed",
-                    0x052D: "overspeeding_events",
-                    0x052E: "overspeeding_control",
-                    0x052F: "time_adj_gnss",
-                    0x0530: "power_interruptions",
-                    0x0531: "sensor_faults",
-                    0x0532: "sensor_gnss_coupled_g22",
-                    0x0533: "sensor_paired_g22",
-                }
-                result_key = key_map.get(tag, f"g2_{tag:04X}")
                 results.setdefault(result_key, []).extend(records)
         else:
+            # Bare record without a RecordArray header: same destination key,
+            # so consumers (GUI/export) see the data regardless of wrapping.
             decoded = decode_fn(val, 0)
             if decoded:
-                result_key = f"g2_{tag:04X}"
                 results.setdefault(result_key, []).append(decoded)
     except (struct.error, IndexError, ValueError, KeyError, AttributeError) as exc:
         _log.debug("G2 VU record parse failed for tag 0x%04X: %s", tag, exc)
@@ -281,123 +286,146 @@ def parse_g1_driving_licence(val, results):
     results["driver"]["licence_issuing_nation"] = get_nation(val[36])
     results["driver"]["licence_number"] = decode_string(val[37:53], is_id=True)
 
-def parse_g1_vehicles_used(val, results):
+def _vehicles_used_layouts(rec_data):
+    """Candidate CardVehicleRecord layouts for EF Vehicles_Used.
+
+    Returns (size, kind) candidates whose record size divides the data:
+      31  G1   (Annex 1B): odoBegin(3) odoEnd(3) firstUse(4) lastUse(4)
+                           registration(15) vuDataBlockCounter(2)
+      48  G2   (Annex 1C): the G1 fields + vehicleIdentificationNumber(17)
+      35  legacy non-standard variant observed in some files:
+                           odoBegin(4) odoEnd(4) firstUse(4) lastUse(4)
+                           nation(1) plate(14) + 4 tail bytes
     """
-    EF_Vehicles_Used (0x0505). 
-    In G1: Fixed 31-byte records.
-    In G2: Fixed 35-byte records (Annex 1C).
+    return [(size, kind) for size, kind in ((31, "g1"), (48, "g2"), (35, "legacy"))
+            if len(rec_data) >= size and len(rec_data) % size == 0]
+
+
+def _decode_vehicle_record(chunk, kind):
+    """Decode one CardVehicleRecord chunk. Returns the raw field tuple
+    (odo_begin, odo_end, first_use_ts, last_use_ts, nation_code, plate, vin)."""
+    vin = None
+    if kind == "legacy":
+        odo_begin = struct.unpack(">I", chunk[0:4])[0]
+        odo_end = struct.unpack(">I", chunk[4:8])[0]
+        first_use_ts = struct.unpack(">I", chunk[8:12])[0]
+        last_use_ts = struct.unpack(">I", chunk[12:16])[0]
+        nation_code = chunk[16]
+        plate = decode_string(chunk[17:31], is_id=True)
+    else:
+        # G1 and G2 share the 31-byte prefix (Annex 1B/1C §2.37).
+        odo_begin = int.from_bytes(chunk[0:3], byteorder='big')
+        odo_end = int.from_bytes(chunk[3:6], byteorder='big')
+        first_use_ts = struct.unpack(">I", chunk[6:10])[0]
+        last_use_ts = struct.unpack(">I", chunk[10:14])[0]
+        nation_code = chunk[14]
+        plate = decode_string(chunk[15:29], is_id=True)
+        if kind == "g2":
+            vin = decode_string(chunk[31:48], is_id=True) or None
+    return odo_begin, odo_end, first_use_ts, last_use_ts, nation_code, plate, vin
+
+
+def _vehicle_record_valid(odo_begin, odo_end, first_use_ts, nation_code, plate):
+    """Garbage filter for a decoded vehicle record."""
+    stripped = plate.strip().rstrip('\x00')
+    if not stripped or len(stripped) < 2 or len(stripped) >= 14:
+        return False
+    if not all(0x20 <= ord(c) < 0x7F for c in stripped):
+        return False
+    alpha_ratio = sum(1 for c in stripped if c.isalnum()) / len(stripped)
+    if alpha_ratio < 0.5:
+        return False
+    # NationNumeric: known codes top out below 0x60; 0xFD-0xFF are the
+    # special EC/EUR/WLD values (Annex 1B §2.101).
+    if nation_code > 0x60 and nation_code not in (0xFD, 0xFE, 0xFF):
+        return False
+    if odo_begin not in (0xFFFFFF, 0xFFFFFFFF) and odo_begin > MAX_ODO_DISTANCE_KM * 100:
+        return False
+    if odo_end not in (0xFFFFFF, 0xFFFFFFFF) and odo_end > MAX_ODO_DISTANCE_KM * 100:
+        return False
+    if first_use_ts < 946684800 or first_use_ts > 2000000000:
+        return False
+    return True
+
+
+def parse_g1_vehicles_used(val, results):
+    """EF Vehicles_Used (tags 0x0505/0x0523) — Annex 1B/1C §2.37.
+
+    Layout: vehiclePointerNewestRecord(2) + N × CardVehicleRecord.
+    Record size is detected among the candidates in
+    :func:`_vehicles_used_layouts` by scoring how many records validate.
+    Records are deduplicated across the G1/G2 EF copies on
+    (plate, start, odometer_begin).
     """
     if len(val) < 4:
         return
-    
-    # Determine record size: 31 (G1) or 35 (G2)
-    # The first 2 bytes are an index/pointer
-    rec_data = val[2:]
-    divisible_31 = len(rec_data) % 31 == 0
-    divisible_35 = len(rec_data) % 35 == 0
-    rec_size = 31
-    if divisible_35 and not divisible_31:
-        rec_size = 35
-    elif divisible_35 and divisible_31:
-        # Both sizes fit — try to validate the first record with G2 size first,
-        # fall back to G1 if the timestamp is out of range
-        if len(rec_data) >= 35:
-            candidate = struct.unpack(">I", rec_data[8:12])[0]
-            if 946684800 <= candidate <= 2000000000:
-                rec_size = 35
-    
-    consecutive_garbage = 0
-    for i in range(len(rec_data) // rec_size):
-        chunk = rec_data[i*rec_size:(i+1)*rec_size]
-        if len(chunk) < rec_size:
-            break
 
+    rec_data = val[2:]  # skip vehiclePointerNewestRecord
+    candidates = _vehicles_used_layouts(rec_data)
+    if not candidates:
+        return
+
+    # Score each layout by the number of records passing validation and keep
+    # the best one (a misaligned stride yields almost no valid records).
+    best_kind, best_size, best_count = None, 0, -1
+    for size, kind in candidates:
+        count = 0
+        for i in range(len(rec_data) // size):
+            chunk = rec_data[i * size:(i + 1) * size]
+            try:
+                ob, oe, fu, lu, nc, plate, _ = _decode_vehicle_record(chunk, kind)
+            except (struct.error, IndexError):
+                continue
+            if _vehicle_record_valid(ob, oe, fu, nc, plate):
+                count += 1
+        if count > best_count:
+            best_kind, best_size, best_count = kind, size, count
+    if best_count <= 0:
+        return
+
+    sessions = results["vehicle_sessions"]
+    seen = {(s.get("vehicle_plate"), s.get("start"), s.get("odometer_begin"))
+            for s in sessions if isinstance(s, dict)}
+
+    for i in range(len(rec_data) // best_size):
+        chunk = rec_data[i * best_size:(i + 1) * best_size]
         try:
-            if rec_size == 31:
-                # Annex 1B (G1) - Correct field order: odo_begin(3), odo_end(3), first_use(4), last_use(4), nation(1), plate(14)
-                odo_begin = int.from_bytes(chunk[0:3], byteorder='big')
-                odo_end = int.from_bytes(chunk[3:6], byteorder='big')
-                first_use_ts = struct.unpack(">I", chunk[6:10])[0]
-                last_use_ts = struct.unpack(">I", chunk[10:14])[0]
-                nation_code = chunk[14]
-                plate = decode_string(chunk[15:29], is_id=True)
-            else:
-                # Annex 1C (G2) - Correct field order: odo_begin(4), odo_end(4), first_use(4), last_use(4), nation(1), plate(14)
-                odo_begin = struct.unpack(">I", chunk[0:4])[0]
-                odo_end = struct.unpack(">I", chunk[4:8])[0]
-                first_use_ts = struct.unpack(">I", chunk[8:12])[0]
-                last_use_ts = struct.unpack(">I", chunk[12:16])[0]
-                nation_code = chunk[16]
-                plate = decode_string(chunk[17:31], is_id=True)
+            odo_begin, odo_end, first_use_ts, last_use_ts, nation_code, plate, vin = \
+                _decode_vehicle_record(chunk, best_kind)
 
-            # Strict plate validation: reject records with garbage plates.
-            stripped = plate.strip().rstrip('\x00')
-            if not stripped or len(stripped) < 2:
-                consecutive_garbage += 1
-                if consecutive_garbage >= 3:
-                    break
-                continue
-            if not all(0x20 <= ord(c) < 0x7F for c in stripped):
-                consecutive_garbage += 1
-                if consecutive_garbage >= 3:
-                    break
-                continue
-            alpha_ratio = sum(1 for c in stripped if c.isalnum()) / len(stripped) if stripped else 0
-            if alpha_ratio < 0.5:
-                consecutive_garbage += 1
-                if consecutive_garbage >= 3:
-                    break
+            if not _vehicle_record_valid(odo_begin, odo_end, first_use_ts, nation_code, plate):
                 continue
 
-            # Reject VIN-length strings (14+ chars) — real plates are shorter
-            if len(stripped) >= 14:
-                consecutive_garbage += 1
-                if consecutive_garbage >= 3:
-                    break
-                continue
-
-            if nation_code > 0x50:
-                consecutive_garbage += 1
-                if consecutive_garbage >= 3:
-                    break
-                continue
-
-            if odo_begin is not None and odo_begin > MAX_ODO_DISTANCE_KM * 100:
-                consecutive_garbage += 1
-                if consecutive_garbage >= 3:
-                    break
-                continue
-            if odo_end is not None and odo_end > MAX_ODO_DISTANCE_KM * 100:
-                consecutive_garbage += 1
-                if consecutive_garbage >= 3:
-                    break
-                continue
-
-            # Sanitization
-            if first_use_ts < 946684800 or first_use_ts > 2000000000:
-                consecutive_garbage += 1
-                if consecutive_garbage >= 3:
-                    break
-                continue
-
-            if odo_begin == 0xFFFFFF or odo_begin == 0xFFFFFFFF:
+            if odo_begin in (0xFFFFFF, 0xFFFFFFFF):
                 odo_begin = None
-            if odo_end == 0xFFFFFF or odo_end == 0xFFFFFFFF:
+            if odo_end in (0xFFFFFF, 0xFFFFFFFF):
                 odo_end = None
 
             start_date = datetime.fromtimestamp(first_use_ts, tz=timezone.utc).isoformat()
             end_date = "Open Session"
             if last_use_ts != 0xFFFFFFFF and last_use_ts > 946684800:
-                 try:
-                     end_date = datetime.fromtimestamp(last_use_ts, tz=timezone.utc).isoformat()
-                 except (OSError, ValueError, OverflowError):
-                     pass
+                try:
+                    end_date = datetime.fromtimestamp(last_use_ts, tz=timezone.utc).isoformat()
+                except (OSError, ValueError, OverflowError):
+                    pass
 
             distance = (odo_end - odo_begin) if (odo_begin is not None and odo_end is not None) else 0
             if distance is not None and (distance < 0 or distance > 1000000):
                 distance = None  # odo reset or anomaly, don't report
 
-            results["vehicle_sessions"].append({
+            key = (plate, start_date, odo_begin)
+            if key in seen:
+                # The G2 EF copy repeats the G1 records (adding the VIN):
+                # enrich the existing session instead of duplicating it.
+                if vin:
+                    for s in sessions:
+                        if (s.get("vehicle_plate"), s.get("start"), s.get("odometer_begin")) == key:
+                            s.setdefault("vin", vin)
+                            break
+                continue
+            seen.add(key)
+
+            session = {
                 "vehicle_plate": plate,
                 "vehicle_nation": get_nation(nation_code),
                 "start": start_date,
@@ -405,8 +433,10 @@ def parse_g1_vehicles_used(val, results):
                 "odometer_begin": odo_begin,
                 "odometer_end": odo_end,
                 "distance": distance
-            })
-            consecutive_garbage = 0
+            }
+            if vin:
+                session["vin"] = vin
+            sessions.append(session)
         except (struct.error, IndexError, ValueError, KeyError) as exc:
             _log.debug("Vehicle used record parse failed: %s", exc)
             continue
@@ -843,7 +873,7 @@ def parse_g1_events_data(val, results):
                 continue
             seen.add((ev_type, begin, end))
             results["events"].append({
-                "descrizione": describe_event(ev_type),
+                "description": describe_event(ev_type),
                 "event_type_code": ev_type,
                 "begin": begin,
                 "end": end,
@@ -886,7 +916,7 @@ def parse_g1_faults_data(val, results):
                 continue
             seen.add((fault_type, begin, end))
             results["faults"].append({
-                "descrizione": describe_fault(fault_type),
+                "description": describe_fault(fault_type),
                 "fault_type_code": fault_type,
                 "begin": begin,
                 "end": end,
@@ -991,6 +1021,100 @@ def parse_g1_places(val, results):
                 existing[key] = rec
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Places parse failed: %s", exc)
+
+def parse_card_vehicle_units(val, results):
+    """Parse EF VehicleUnits_Used (tag 0x0523) — Annex 1C §2.39, G2 driver card.
+
+    Layout: vehicleUnitPointerNewestRecord(2) + N × CardVehicleUnitRecord(10):
+      timeStamp           4  TimeReal
+      manufacturerCode    1  ManufacturerCode (Annex 1C §2.93)
+      deviceID            1  UInt8
+      vuSoftwareVersion   4  IA5String
+    Confirmed against real G2 card downloads (record count matches
+    noOfCardVehicleUnitRecords in ApplicationIdentification).
+    """
+    if len(val) < 12:
+        return
+    try:
+        rec_size = 10
+        data = val[2:]  # skip vehicleUnitPointerNewestRecord
+        if len(data) % rec_size != 0:
+            return
+        units = results.setdefault("vehicle_units", [])
+        seen = {(u.get("timestamp"), u.get("manufacturer_code"))
+                for u in units if isinstance(u, dict)}
+        for i in range(0, len(data), rec_size):
+            chunk = data[i:i + rec_size]
+            ts = struct.unpack(">I", chunk[0:4])[0]
+            if ts < 946684800 or ts > 4102444800:
+                continue
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+            mfr = chunk[4]
+            if (dt, mfr) in seen:
+                continue
+            seen.add((dt, mfr))
+            units.append({
+                "timestamp": dt,
+                "manufacturer_code": mfr,
+                "device_id": chunk[5],
+                "vu_software_version": decode_string(chunk[6:10], is_id=True),
+            })
+    except (struct.error, IndexError, ValueError) as exc:
+        _log.debug("Vehicle units used parse failed: %s", exc)
+
+
+def parse_card_gnss_places(val, results):
+    """Parse EF GNSS_Places (tag 0x0524) — Annex 1C §2.78, G2 driver card.
+
+    Layout: gnssADPointerNewestRecord(2) + N × GNSSAccumulatedDrivingRecord:
+      timeStamp              4  TimeReal
+      gnssPlaceRecord       11  timeStamp(4) + gnssAccuracy(1) + geoCoordinates(6)
+      vehicleOdometerValue   3  OdometerShort
+    Record size 18 (G2); the G2.2 variant carries a GNSSPlaceAuthRecord (12)
+    → 19 bytes. Confirmed against real G2 card downloads.
+    """
+    if len(val) < 20:
+        return
+    try:
+        data = val[2:]  # skip gnssADPointerNewestRecord
+        if len(data) % 18 == 0:
+            rec_size = 18
+        elif len(data) % 19 == 0:
+            rec_size = 19
+        else:
+            return
+        records = results.setdefault("gnss_ad_records", [])
+        seen = {(r.get("timestamp"), r.get("latitude"), r.get("longitude"))
+                for r in records if isinstance(r, dict)}
+        for i in range(0, len(data), rec_size):
+            chunk = data[i:i + rec_size]
+            ts = struct.unpack(">I", chunk[0:4])[0]
+            if ts < 946684800 or ts > 4102444800:
+                continue
+            lat = _decode_gnss_coord(chunk, 9)
+            lon = _decode_gnss_coord(chunk, 12)
+            if lat is None or lon is None:
+                continue
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+            if (dt, lat, lon) in seen:
+                continue
+            seen.add((dt, lat, lon))
+            rec = {
+                "timestamp": dt,
+                "gnss_accuracy": chunk[8],
+                "latitude": lat,
+                "longitude": lon,
+            }
+            odo_off = 15 if rec_size == 18 else 16
+            if rec_size == 19:
+                rec["gnss_authenticated"] = chunk[15] == 1
+            odo = int.from_bytes(chunk[odo_off:odo_off + 3], 'big')
+            if odo != 0xFFFFFF and odo < 10000000:
+                rec["odometer_km"] = odo
+            records.append(rec)
+    except (struct.error, IndexError, ValueError) as exc:
+        _log.debug("Card GNSS places parse failed: %s", exc)
+
 
 def parse_g2_card_icc_identification(val, results):
     """Parse CardIccIdentification (tag 0x0101) — Annex 1C §2.23.
@@ -1281,17 +1405,18 @@ def parse_card_download(val, results):
         _log.debug("Card download parse failed: %s", exc)
 
 def parse_specific_conditions(val, results):
-    """Parse SpecificConditions (tag 0x0522) — ferry/train/out-of-scope (Annex 1B §2.27 / Annex 1C §2.152).
+    """Parse SpecificConditions (tag 0x0522) — out-of-scope / ferry-train (Annex 1C §2.154).
 
-    Annex 1B §2.154 SpecificConditionRecord = entryTime(4) + specificConditionType(1) = 5 bytes.
+    SpecificConditionRecord = entryTime(4) + specificConditionType(1) = 5 bytes.
     The G1 EF has no header (records only, len % 5 == 0); the G2 EF prefixes a
     2-byte conditionPointerNewestRecord. Detected by alignment; records are
     deduplicated across the G1/G2 EF copies.
     """
+    from core.event_fault_codes import specific_condition_label
     if len(val) < 5:
         return
     try:
-        rec_size = 5  # entryTime(4) + specificConditionType(1) per Annex 1B §2.154
+        rec_size = 5  # entryTime(4) + specificConditionType(1) per Annex 1C §2.154
         off = 0 if len(val) % rec_size == 0 else 2
         conditions = results.setdefault("specific_conditions", [])
         seen = {(c.get("timestamp"), c.get("type_code"))
@@ -1303,17 +1428,16 @@ def parse_specific_conditions(val, results):
                 off += rec_size
                 continue
             cond_type = chunk[4]
-            if cond_type not in (0x00, 0x01, 0x02, 0x03, 0x04):
+            # 0x00 is RFU and 0x05+ undefined (Annex 1C §2.154) — skip as garbage.
+            if cond_type not in (0x01, 0x02, 0x03, 0x04):
                 off += rec_size
                 continue
-            types = {0x00: "Ferry", 0x01: "Train", 0x02: "OutOfScope",
-                     0x03: "BeginAreaNoGNSS", 0x04: "EndAreaNoGNSS"}
             dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
             if (dt, cond_type) not in seen:
                 seen.add((dt, cond_type))
                 conditions.append({
                     "timestamp": dt,
-                    "condition": types[cond_type],
+                    "condition": specific_condition_label(cond_type),
                     "type_code": cond_type,
                 })
             off += rec_size
@@ -1981,20 +2105,20 @@ def _parse_trep_02_activities(data, results):
                     break
 
             if changes_list:
-                type_map_it = {"drive": "DRIVE", "rest": "REST", "work": "WORK", "available": "AVAILABLE", "break_rest": "REST"}
-                eventi = [
-                    {"tipo": type_map_it.get(c.get("activity", "work"), "WORK"),
-                     "ora": f"{c['minute'] // 60:02d}:{c['minute'] % 60:02d}"}
+                type_map = {"drive": "DRIVE", "rest": "REST", "work": "WORK",
+                            "available": "AVAILABLE", "break_rest": "REST"}
+                changes = [
+                    {"activity": type_map.get(c.get("activity", "work"), "WORK"),
+                     "time": f"{c['minute'] // 60:02d}:{c['minute'] % 60:02d}"}
                     for c in changes_list[:50]
                 ]
                 activity_list.append({
                     "timestamp": header_dt.isoformat(),
-                    "data": header_dt.strftime("%d/%m/%Y"),
+                    "date": header_dt.strftime("%d/%m/%Y"),
                     "odometer_midnight": odo,
                     "card_inserted": bool(card_inserted),
                     "changes_count": no_changes,
-                    "changes": changes_list[:50],
-                    "eventi": eventi,
+                    "changes": changes,
                     "driver": f"{surname_s} {firstname_s}".strip(),
                 })
                 skip_to = min((b for b in daily_boundaries if b > scan), default=-1)
@@ -2104,16 +2228,16 @@ def _parse_trep_02_g1_structured(data, results):
         pos += 2
         if n_sc > 1000 or pos + n_sc * 5 > len(data):
             return False
-        sc_types = {0x00: "Ferry", 0x01: "Train", 0x02: "OutOfScope",
-                    0x03: "BeginAreaNoGNSS", 0x04: "EndAreaNoGNSS"}
+        from core.event_fault_codes import specific_condition_label
         conditions = []
         for _ in range(n_sc):
             rec = data[pos:pos + 5]
             ts = struct.unpack(">I", rec[0:4])[0]
-            if 946684800 <= ts <= 4102444800 and rec[4] in sc_types:
+            # Valid SpecificConditionType codes are 0x01-0x04 (Annex 1C §2.154).
+            if 946684800 <= ts <= 4102444800 and rec[4] in (0x01, 0x02, 0x03, 0x04):
                 conditions.append({
                     "timestamp": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
-                    "condition": sc_types[rec[4]],
+                    "condition": specific_condition_label(rec[4]),
                     "type_code": rec[4],
                 })
             pos += 5
@@ -2141,12 +2265,12 @@ def _parse_trep_02_g1_structured(data, results):
         date_str = datetime.fromtimestamp(date_ts, tz=timezone.utc).strftime('%d/%m/%Y')
         if changes:
             activities = results.setdefault("activities", [])
-            if not any(a.get("data") == date_str and a.get("source") == "vu_trep02"
+            if not any(a.get("date") == date_str and a.get("source") == "vu_trep02"
                        for a in activities if isinstance(a, dict)):
                 activities.append({
-                    "data": date_str,
-                    "km": odo_midnight,
-                    "eventi": changes,
+                    "date": date_str,
+                    "odometer_km": odo_midnight,
+                    "changes": changes,
                     "changes_count": n_ch,
                     "source": "vu_trep02",
                 })
@@ -2200,7 +2324,7 @@ def _parse_vu_fault_record(data, offset):
     if begin_ts < 946684800 or begin_ts > 4102444800:
         return None
     return {
-        "descrizione": describe_fault(fault_type),
+        "description": describe_fault(fault_type),
         "fault_type": fault_type,
         "fault_purpose": fault_purpose,
         "begin_time": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
@@ -2224,7 +2348,7 @@ def _parse_vu_event_record(data, offset):
     if begin_ts < 946684800 or begin_ts > 4102444800:
         return None
     return {
-        "descrizione": describe_event(evt_type),
+        "description": describe_event(evt_type),
         "event_type": evt_type,
         "event_purpose": evt_purpose,
         "begin_time": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
@@ -2306,7 +2430,7 @@ def _parse_trep_03_structured(data, results):
             end_ts = struct.unpack(">I", rec[6:10])[0]
             if 946684800 <= begin_ts <= 4102444800:
                 overspeed.append({
-                    "descrizione": describe_event(rec[0]),
+                    "description": describe_event(rec[0]),
                     "event_type": rec[0],
                     "record_purpose": rec[1],
                     "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
@@ -2359,7 +2483,7 @@ def _parse_trep_03_structured(data, results):
             if key not in seen:
                 seen.add(key)
                 existing_events.append({
-                    "descrizione": describe_event(evt["event_type"]),
+                    "description": describe_event(evt["event_type"]),
                     "type_code": evt["event_type"],
                     "record_purpose": evt["event_purpose"],
                     "begin_time": evt["begin_time"],
@@ -2444,7 +2568,7 @@ def _parse_trep_03_events_faults_heuristic(data, results):
                 evt = _parse_vu_event_record(data, pos)
                 if evt is not None:
                     results.setdefault("events", []).append({
-                        "descrizione": describe_event(evt["event_type"]),
+                        "description": describe_event(evt["event_type"]),
                         "type_code": evt["event_type"],
                         "begin_time": evt["begin_time"],
                         "end_time": evt["end_time"],
@@ -2476,7 +2600,7 @@ def _parse_trep_03_events_faults_heuristic(data, results):
                         dt1 = datetime.fromtimestamp(ts1, tz=timezone.utc).isoformat()
                         dt2 = datetime.fromtimestamp(ts2, tz=timezone.utc).isoformat()
                         results.setdefault("events", []).append({
-                            "descrizione": describe_event(ev_type),
+                            "description": describe_event(ev_type),
                             "type_code": ev_type,
                             "begin_time": dt1,
                             "end_time": dt2,

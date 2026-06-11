@@ -3,6 +3,8 @@ import os
 import sys
 
 base_path = os.path.abspath(".")
+sys.path.insert(0, base_path)
+from core.version import __version__  # noqa: E402 — single version source
 
 # Certificati ERCA (necessari per signature validation)
 certs_path = os.path.join(base_path, "certs")
@@ -12,7 +14,7 @@ if os.path.exists(certs_path):
 
 # NOTA: core/ e src/ NON vanno in datas — PyInstaller li raccoglie automaticamente
 # dagli hiddenimports. Metterli in datas duplica ogni modulo nella build dist.
-# reportlab NON e' usato (PDF export disabilitato: "non disponibile").
+# reportlab serve per l'export PDF (import lazy in export_manager).
 # requests NON e' importato da nessun modulo applicativo.
 
 # Configurazione PyInstaller
@@ -20,7 +22,7 @@ block_cipher = None
 
 a = Analysis(
     ['gui_tree.py'],
-    pathex=[base_path, os.path.join(base_path, 'core'), os.path.join(base_path, 'src')],
+    pathex=[base_path, os.path.join(base_path, 'core')],
     binaries=[],
     datas=added_files,
     hiddenimports=[
@@ -28,7 +30,6 @@ a = Analysis(
         'cryptography',
         'signature_validator',
         'core',
-        'core.tag_navigator',
         'core.decoders',
         'core.models',
         'core.g2_decoders',
@@ -40,24 +41,19 @@ a = Analysis(
         'core.tag_definitions',
         'core.vu_record_dispatcher',
         'core.vu_signature_verifier',
+        'core.g1_vu_walker',
+        'core.report_format',
+        'core.version',
+        'core.ber_tlv',
+        'core.curve_oids',
         'core.coverage_utils',
         'core.encoding',
         'core.constants',
         'export_manager',
-        'src',
-        'src.domain',
-        'src.domain.models',
-        'src.domain.models.entities',
-        'src.domain.models.value_objects',
-        'src.domain.repositories',
-        'src.domain.repositories.tachograph_repository',
-        'src.infrastructure',
-        'src.infrastructure.repositories',
-        'src.infrastructure.repositories.file_tacho_repository',
-        'src.infrastructure.parsers',
-        'src.infrastructure.parsers.tag_definitions',
-        'src.infrastructure.mappers',
-        'src.infrastructure.mappers.tacho_mapper',
+        'openpyxl',
+        'reportlab',
+        'reportlab.lib',
+        'reportlab.platypus',
     ],
     hookspath=[],
     hooksconfig={},
@@ -88,7 +84,8 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=True,
     upx=True,
-    console=True,
+    # GUI app: no console window on Windows.
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
@@ -114,4 +111,5 @@ app = BUNDLE(
     name='TachoReader.app',
     icon=None, # Decommenta se aggiungi un'icona .icns
     bundle_identifier='com.ddd.tachoreader',
+    version=__version__,
 )

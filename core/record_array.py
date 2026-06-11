@@ -195,7 +195,7 @@ def decode_g2_daily_record(data: bytes, offset: int = 0):
             c = struct.unpack(">H", counters_data[i * 2:i * 2 + 2])[0]
             counters.append(c)
 
-    activity_map = {0: "rest", 1: "available", 2: "work", 3: "drive", 4: "break_rest"}
+    activity_map = {0: "REST", 1: "AVAILABLE", 2: "WORK", 3: "DRIVE"}
 
     changes = []
     for i in range(3, len(counters)):
@@ -209,9 +209,9 @@ def decode_g2_daily_record(data: bytes, offset: int = 0):
         if minute > 1439:
             continue
         changes.append({
-            "minute": minute,
+            "time": f"{minute // 60:02d}:{minute % 60:02d}",
             "activity": activity_map.get(activity, f"type_{activity}"),
-            "slot": slot + 1,
+            "slot": "Second" if slot else "First",
             "crew": bool(crew),
         })
 
@@ -311,12 +311,12 @@ def parse_g2_trep02_activities(data: bytes, results: dict):
                 "sig_len": daily.get("sig_len", 64),
             })
 
-            rec_size = daily.get("record_size", 113)
+            rec_size = daily.get("record_size", 112)
             pos += rec_size
 
     def _date_key(entry):
         try:
-            day, month, year = entry.get("data", "").split("/")
+            day, month, year = entry.get("date", "").split("/")
             return (int(year), int(month), int(day))
         except (ValueError, AttributeError):
             return (0, 0, 0)

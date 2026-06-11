@@ -294,7 +294,7 @@ def parse_g22_sensor_fault(data: bytes, offset: int = 0):
         payload_preview += "..."
 
     return {
-        "descrizione": describe_fault(evt_type),
+        "description": describe_fault(evt_type),
         "event_type": evt_type,
         "event_purpose": evt_purpose,
         "fault_type_hint": fault_type_hint,
@@ -439,6 +439,8 @@ G2_VU_RECORD_DECODERS = {
     0x052F: ("TimeAdjGNSS", parse_g22_time_adj_gnss, 8),
     0x0530: ("PowerInterruption", parse_g22_power_interruption, 87),
     0x0531: ("SensorFault", parse_g22_sensor_fault, 90),
-    0x0532: ("SensorGNSS", parse_g2_sensor_gnss_coupled, 20),
-    0x0533: ("SensorPaired", parse_g2_sensor_paired, 24),
+    # G2.2 sensor arrays have been observed with 20/24-byte records; the
+    # decoders fall back to a serial-first/date-last layout below 28 bytes.
+    0x0532: ("SensorGNSS", parse_g2_sensor_gnss_coupled, 28),
+    0x0533: ("SensorPaired", parse_g2_sensor_paired, 28),
 }
