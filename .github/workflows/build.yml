@@ -68,6 +68,23 @@ jobs:
         }
         Get-Content smoke.log
 
+    - name: Diagnose bundle startup (console build, Windows)
+      if: failure() && runner.os == 'Windows'
+      shell: pwsh
+      timeout-minutes: 10
+      env:
+        TACHO_CONSOLE: '1'
+        TACHO_SMOKE_LOG: smoke-console.log
+      # The windowed bundle has no stdout: rebuild as a console app so the
+      # bootloader and Python errors are visible in the job log.
+      run: |
+        pyinstaller build.spec --noconfirm --distpath dist-console --workpath build-console
+        & dist-console\TachoReader\TachoReader.exe --version
+        Write-Host "version exit: $LASTEXITCODE"
+        & dist-console\TachoReader\TachoReader.exe --smoke tests\mock_data\mock_g2_card.ddd
+        Write-Host "smoke exit: $LASTEXITCODE"
+        if (Test-Path smoke-console.log) { Get-Content smoke-console.log }
+
     - name: Upload Artifacts
       uses: actions/upload-artifact@v7
       with:

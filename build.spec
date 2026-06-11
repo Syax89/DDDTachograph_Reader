@@ -28,6 +28,10 @@ if os.path.exists(window_png):
 # PyInstaller configuration
 block_cipher = None
 
+# TACHO_CONSOLE=1 builds a console variant (used by CI to diagnose
+# windowed-bundle startup failures, which have no stdout/stderr).
+console_build = os.environ.get("TACHO_CONSOLE") == "1"
+
 a = Analysis(
     ['app_main.py'],
     pathex=[base_path, os.path.join(base_path, 'core')],
@@ -92,8 +96,8 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=True,
     upx=True,
-    # GUI app: no console window on Windows.
-    console=False,
+    # GUI app: no console window on Windows (unless TACHO_CONSOLE=1).
+    console=console_build,
     # Never show the modal traceback dialog: on headless CI it blocks the
     # smoke test forever; errors must surface as a nonzero exit code.
     disable_windowed_traceback=True,
