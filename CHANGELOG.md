@@ -1,8 +1,12 @@
 # Changelog
 
 ## [Unreleased]
+
+## [2.0.0] - 2026-06-11
 ### Added
 - **Application icon**: Windows executable (.ico), macOS bundle (.icns) and the Tk window now use the AppIcons artwork
+### Fixed (distribution)
+- **Windows builds were broken since 1.9.5**: `strip=True` in `build.spec` ran MinGW `strip` on the bundled PE DLLs on the CI runner, corrupting `python311.dll` — the app hung on a modal "Failed to load Python DLL" error at startup. Stripping is now disabled on Windows; the new CI smoke test launches every bundle before publishing to prevent regressions
 ### Changed
 - **English-only project**: the optional Italian translation layer (`core/i18n.py`, `TACHO_LANG`) has been removed; all UI labels and exports are English
 - **G1 EF signature verification tightened**: RSASSA-PKCS1-v1_5 with SHA-1 is now the primary, strictly-checked path (confirmed against real cards); the ISO 9796-2 recovery path enforces the exact block layout (`0x6A‖M1‖SHA1‖0xBC`, M1 == data prefix) instead of scanning for the hash at any offset
