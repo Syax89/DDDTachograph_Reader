@@ -94,7 +94,9 @@ exe = EXE(
     upx=True,
     # GUI app: no console window on Windows.
     console=False,
-    disable_windowed_traceback=False,
+    # Never show the modal traceback dialog: on headless CI it blocks the
+    # smoke test forever; errors must surface as a nonzero exit code.
+    disable_windowed_traceback=True,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,

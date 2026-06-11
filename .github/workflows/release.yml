@@ -48,13 +48,28 @@ jobs:
 
     - name: Smoke test bundle
       shell: pwsh
-      # Windowed exe (console=False): exit code via Start-Process, no stdout.
+      timeout-minutes: 5
+      env:
+        TACHO_SMOKE_LOG: smoke.log
+      # Windowed exe (console=False): no stdout — results go to TACHO_SMOKE_LOG,
+      # exit code via WaitForExit with an explicit timeout (never hang CI).
       run: |
         $exe = "dist\TachoReader\TachoReader.exe"
         foreach ($cmd in @(,@('--version')) + @(,@('--smoke', 'tests\mock_data\mock_g2_card.ddd'))) {
-          $p = Start-Process -FilePath $exe -ArgumentList $cmd -Wait -PassThru -NoNewWindow
-          if ($p.ExitCode -ne 0) { Write-Error "Smoke test failed: $cmd (exit $($p.ExitCode))"; exit 1 }
+          $p = Start-Process -FilePath $exe -ArgumentList $cmd -PassThru
+          if (-not $p.WaitForExit(120000)) {
+            $p.Kill()
+            Write-Error "Smoke test timed out: $cmd"
+            if (Test-Path smoke.log) { Get-Content smoke.log }
+            exit 1
+          }
+          if ($p.ExitCode -ne 0) {
+            Write-Error "Smoke test failed: $cmd (exit $($p.ExitCode))"
+            if (Test-Path smoke.log) { Get-Content smoke.log }
+            exit 1
+          }
         }
+        Get-Content smoke.log
 
     - name: Package as zip
       shell: pwsh

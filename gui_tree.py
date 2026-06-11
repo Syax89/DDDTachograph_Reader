@@ -1044,24 +1044,39 @@ class TachoExplorer(tk.Tk):
                             ["Sub-section"], rows)
 
 
+def _emit(line):
+    """Report a smoke/version line. The Windows bundle is windowed
+    (``console=False``): ``print`` is a silent no-op there, so the line is
+    also appended to the file named by ``TACHO_SMOKE_LOG`` for CI to read."""
+    print(line)
+    log = os.environ.get("TACHO_SMOKE_LOG")
+    if log:
+        try:
+            with open(log, "a", encoding="utf-8") as fh:
+                fh.write(line + "\n")
+        except OSError:
+            pass
+
+
 def _smoke_check(path):
     """Headless self-check used by CI on the frozen bundle: parse *path*
     end-to-end (decoders, certificates, signature verification) without
     opening a window. Returns a process exit code."""
-    from ddd_parser import TachoParser
+    _emit(f"SMOKE START: v{__version__} file={path}")
     try:
+        from ddd_parser import TachoParser
         result = TachoParser(path).parse()
-    except Exception as exc:
-        print(f"SMOKE FAIL: parse raised {exc!r}", file=sys.stderr)
+    except Exception:
+        _emit(f"SMOKE FAIL: parse raised\n{traceback.format_exc()}")
         return 1
     meta = result.get("metadata") or {}
     if meta.get("parse_error"):
-        print(f"SMOKE FAIL: parse error {meta['parse_error']}", file=sys.stderr)
+        _emit(f"SMOKE FAIL: parse error {meta['parse_error']}")
         return 1
     if not result.get("raw_tags"):
-        print("SMOKE FAIL: no structures decoded", file=sys.stderr)
+        _emit("SMOKE FAIL: no structures decoded")
         return 1
-    print(f"SMOKE OK: v{__version__} gen={meta.get('generation')} "
+    _emit(f"SMOKE OK: v{__version__} gen={meta.get('generation')} "
           f"sections={len(result.get('raw_tags') or {})}")
     return 0
 
@@ -1070,7 +1085,7 @@ def main():
     # Minimal CLI surface so CI can exercise the frozen GUI bundle headless.
     args = sys.argv[1:]
     if args[:1] == ["--version"]:
-        print(f"TachoReader {__version__}")
+        _emit(f"TachoReader {__version__}")
         sys.exit(0)
     if args[:1] == ["--smoke"] and len(args) == 2:
         sys.exit(_smoke_check(args[1]))
