@@ -94,7 +94,10 @@ exe = EXE(
     name='TachoReader',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=True,
+    # Never strip on Windows: binutils strip (present on CI runners via the
+    # Git/MinGW toolchain) corrupts PE DLLs — python311.dll became unloadable
+    # and the windowed bootloader hung on a modal error dialog.
+    strip=(sys.platform != "win32"),
     upx=True,
     # GUI app: no console window on Windows (unless TACHO_CONSOLE=1).
     console=console_build,
@@ -113,7 +116,10 @@ coll = COLLECT(
     a.binaries,
     a.zipfiles,
     a.datas,
-    strip=True,
+    # Never strip on Windows: binutils strip (present on CI runners via the
+    # Git/MinGW toolchain) corrupts PE DLLs — python311.dll became unloadable
+    # and the windowed bootloader hung on a modal error dialog.
+    strip=(sys.platform != "win32"),
     upx=True,
     upx_exclude=[],
     name='TachoReader',
