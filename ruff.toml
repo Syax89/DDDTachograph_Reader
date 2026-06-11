@@ -1,6 +1,6 @@
 # Lint configuration — kept to correctness rules (pyflakes + pycodestyle
 # errors): the goal is catching real bugs in CI, not style churn.
-target-version = "py39"
+target-version = "py310"
 line-length = 120
 
 [lint]

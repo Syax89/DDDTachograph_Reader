@@ -13,23 +13,23 @@ build/
 dist/
 
 # ─────────────────────────────────────────────────────────────
-# Dati personali — NON committare (repo pubblico).
-# I file DDD reali e i golden snapshot contengono nomi conducenti,
-# numeri carta e VIN.
+# Personal data — do NOT commit (public repo).
+# Real DDD files and golden snapshots contain driver names,
+# card numbers and VINs.
 # ─────────────────────────────────────────────────────────────
 *.ddd
 *.DDD
 *.bin
 DDD/
 tests/golden/
-# Regolamento UE (documento esterno, non sorgente)
+# EU regulation (external document, not source)
 *.xhtml
 
-# File mock/test generati a runtime
+# Mock/test files generated at runtime
 tests/mock_data/
 tests/certs/
 
-# Output generati
+# Generated outputs
 *.pdf
 *.csv
 specs/*_report.json

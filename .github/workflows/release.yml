@@ -43,15 +43,39 @@ jobs:
       # (hidden imports, datas, windowed mode, app version).
       run: pyinstaller build.spec
 
+    - name: Generate mock data for smoke test
+      run: python tests/generate_mock_ddd.py
+
+    - name: Smoke test bundle
+      shell: pwsh
+      # Windowed exe (console=False): exit code via Start-Process, no stdout.
+      run: |
+        $exe = "dist\TachoReader\TachoReader.exe"
+        foreach ($cmd in @(,@('--version')) + @(,@('--smoke', 'tests\mock_data\mock_g2_card.ddd'))) {
+          $p = Start-Process -FilePath $exe -ArgumentList $cmd -Wait -PassThru -NoNewWindow
+          if ($p.ExitCode -ne 0) { Write-Error "Smoke test failed: $cmd (exit $($p.ExitCode))"; exit 1 }
+        }
+
     - name: Package as zip
       shell: pwsh
       run: |
         Compress-Archive -Path dist/TachoReader/* -DestinationPath TachoReader-${{ github.ref_name }}-windows-x64.zip
 
+    - name: Extract release notes from CHANGELOG
+      shell: bash
+      run: |
+        VERSION="${GITHUB_REF_NAME#v}"
+        awk -v ver="$VERSION" '
+          $0 ~ "^## \\[" ver "\\]" {flag=1; next}
+          /^## \[/ {flag=0}
+          flag' CHANGELOG.md > release_notes.md
+        test -s release_notes.md || echo "Release $GITHUB_REF_NAME" > release_notes.md
+
     - name: Upload to release
       uses: softprops/action-gh-release@v3
       with:
         files: TachoReader-${{ github.ref_name }}-windows-x64.zip
+        body_path: release_notes.md
 
   build-macos:
     runs-on: macos-latest
@@ -72,11 +96,29 @@ jobs:
     - name: Build macOS app
       run: pyinstaller build.spec
 
+    - name: Generate mock data for smoke test
+      run: python tests/generate_mock_ddd.py
+
+    - name: Smoke test bundle
+      run: |
+        ./dist/TachoReader.app/Contents/MacOS/TachoReader --version
+        ./dist/TachoReader.app/Contents/MacOS/TachoReader --smoke tests/mock_data/mock_g2_card.ddd
+
     - name: Create DMG
       run: |
         hdiutil create -volname "TachoReader" -srcfolder dist/TachoReader.app -ov -format UDZO TachoReader-${{ github.ref_name }}-macos.dmg
+
+    - name: Extract release notes from CHANGELOG
+      run: |
+        VERSION="${GITHUB_REF_NAME#v}"
+        awk -v ver="$VERSION" '
+          $0 ~ "^## \\[" ver "\\]" {flag=1; next}
+          /^## \[/ {flag=0}
+          flag' CHANGELOG.md > release_notes.md
+        test -s release_notes.md || echo "Release $GITHUB_REF_NAME" > release_notes.md
 
     - name: Upload to release
       uses: softprops/action-gh-release@v3
       with:
         files: TachoReader-${{ github.ref_name }}-macos.dmg
+        body_path: release_notes.md

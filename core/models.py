@@ -1,6 +1,6 @@
 """Data models for tachograph parsing results. Defines TachoResult and related utilities used throughout the pipeline."""
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 def _clean_tag_name(name: str) -> str:
@@ -65,7 +65,7 @@ class TachoResult:
     border_crossings: List[Dict[str, Any]] = field(default_factory=list)
     signed_daily_records: List[Dict[str, Any]] = field(default_factory=list)
 
-    def to_dict(self, tags: Dict[int, str] = None) -> Dict[str, Any]:
+    def to_dict(self, tags: Optional[Dict[int, str]] = None) -> Dict[str, Any]:
         """Convert the result to a dictionary, with optional hierarchical generations tree."""
         result = {
             "metadata": self.metadata,
@@ -299,7 +299,8 @@ def build_generations_tree(results: Dict[str, Any], tags: Dict[int, str]) -> Dic
         }
 
     # ── Raw tags organized by generation ──
-    raw_by_gen = {"Generation 1": {}, "Generation 2": {}, "Generation 2.2": {}}
+    raw_by_gen: Dict[str, Dict[str, Any]] = {
+        "Generation 1": {}, "Generation 2": {}, "Generation 2.2": {}}
     for key, occs in raw_tags.items():
         parts = key.split(" > ")
         leaf = parts[-1]

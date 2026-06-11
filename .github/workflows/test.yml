@@ -19,13 +19,18 @@ jobs:
       run: |
         pip install ruff
         ruff check .
+    - name: Mypy (see mypy.ini)
+      run: |
+        pip install mypy
+        mypy .
 
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.11', '3.12']
+        # 3.9 dropped: EOL Oct 2025 and pytest 9 requires >= 3.10.
+        python-version: ['3.10', '3.12', '3.13']
 
     steps:
     - uses: actions/checkout@v6
@@ -42,8 +47,8 @@ jobs:
         pip install pytest
 
     - name: Generate synthetic mock data
-      # I file DDD reali non sono versionati (dati personali); i test che li
-      # richiedono skippano da soli. I mock sintetici esercitano i decoder.
+      # Real DDD files are not versioned (personal data); tests that need
+      # them skip on their own. Synthetic mocks exercise the decoders.
       run: python tests/generate_mock_ddd.py
 
     - name: Run test suite

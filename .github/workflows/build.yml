@@ -30,7 +30,27 @@ jobs:
     - name: Build with PyInstaller
       run: |
         pyinstaller build.spec
-        
+
+    - name: Generate mock data for smoke test
+      run: python tests/generate_mock_ddd.py
+
+    - name: Smoke test bundle (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        ./dist/TachoReader.app/Contents/MacOS/TachoReader --version
+        ./dist/TachoReader.app/Contents/MacOS/TachoReader --smoke tests/mock_data/mock_g2_card.ddd
+
+    - name: Smoke test bundle (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      # Windowed exe (console=False): exit code via Start-Process, no stdout.
+      run: |
+        $exe = "dist\TachoReader\TachoReader.exe"
+        foreach ($cmd in @(,@('--version')) + @(,@('--smoke', 'tests\mock_data\mock_g2_card.ddd'))) {
+          $p = Start-Process -FilePath $exe -ArgumentList $cmd -Wait -PassThru -NoNewWindow
+          if ($p.ExitCode -ne 0) { Write-Error "Smoke test failed: $cmd (exit $($p.ExitCode))"; exit 1 }
+        }
+
     - name: Upload Artifacts
       uses: actions/upload-artifact@v7
       with:

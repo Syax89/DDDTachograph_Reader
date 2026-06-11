@@ -6,18 +6,18 @@ base_path = os.path.abspath(".")
 sys.path.insert(0, base_path)
 from core.version import __version__  # noqa: E402 — single version source
 
-# Certificati ERCA (necessari per signature validation)
+# ERCA certificates (needed for signature validation)
 certs_path = os.path.join(base_path, "certs")
 added_files = []
 if os.path.exists(certs_path):
     added_files.append((certs_path, "certs"))
 
-# NOTA: core/ e src/ NON vanno in datas — PyInstaller li raccoglie automaticamente
-# dagli hiddenimports. Metterli in datas duplica ogni modulo nella build dist.
-# reportlab serve per l'export PDF (import lazy in export_manager).
-# requests NON e' importato da nessun modulo applicativo.
+# NOTE: core/ must NOT go in datas — PyInstaller collects it automatically
+# from hiddenimports; listing it in datas duplicates every module in the
+# dist build. reportlab is needed for the PDF export (lazy import in
+# export_manager).
 
-# Configurazione PyInstaller
+# PyInstaller configuration
 block_cipher = None
 
 a = Analysis(
@@ -59,10 +59,10 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=[
-        # Solo librerie di terze parti pesanti che l'app NON usa.
-        # NB: non escludere moduli stdlib (email, html, urllib3, http, ...):
-        # cryptography e requests li importano e la loro assenza fa crashare
-        # l'eseguibile all'avvio.
+        # Only heavy third-party libraries the app does NOT use.
+        # NB: never exclude stdlib modules (email, html, urllib3, http, ...):
+        # cryptography imports them and their absence crashes the frozen
+        # executable at startup.
         'scipy', 'sklearn', 'matplotlib', 'cv2',
         'numpy.testing', 'numpy.distutils',
     ],
@@ -91,7 +91,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    # icon='icon.ico', # Decommenta se aggiungi un'icona
+    # icon='icon.ico',  # uncomment when an icon is added
 )
 
 coll = COLLECT(
@@ -109,7 +109,7 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name='TachoReader.app',
-    icon=None, # Decommenta se aggiungi un'icona .icns
+    icon=None,  # set to an .icns path when an icon is added
     bundle_identifier='com.ddd.tachoreader',
     version=__version__,
 )

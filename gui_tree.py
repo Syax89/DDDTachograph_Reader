@@ -51,7 +51,6 @@ from ddd_parser import TachoParser  # noqa: E402
 from core.encoding import BytesEncoder  # noqa: E402
 from core.models import _clean_tag_name  # noqa: E402
 from core.version import __version__  # noqa: E402
-from core.i18n import tr  # noqa: E402
 from core.report_format import humanize_key  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
@@ -59,7 +58,7 @@ _log = logging.getLogger("tacho_gui")
 try:
     from export_manager import ExportManager
 except ImportError:
-    ExportManager = None
+    ExportManager = None  # type: ignore[assignment,misc]
 
 
 # ── Palette ────────────────────────────────────────────────────────────────
@@ -148,13 +147,13 @@ def _row_activities(rec):
     daily_counter = rec.get("daily_counter", "")
 
     base = {
-        tr("Date"): rec.get("date", rec.get("timestamp", "?")),
-        tr("Odometer km"): rec.get("odometer_km", 0),
-        tr("Driver"): fmt_val(driver) if driver else "",
+        "Date": rec.get("date", rec.get("timestamp", "?")),
+        "Odometer km": rec.get("odometer_km", 0),
+        "Driver": fmt_val(driver) if driver else "",
         "Day #": str(daily_counter) if daily_counter != "" else "",
     }
-    empty = {**base, tr("Time"): "\u2014", tr("Activity"): tr("(no event)"),
-             tr("Slot"): "", tr("Crew"): ""}
+    empty = {**base, "Time": "\u2014", "Activity": "(no event)",
+             "Slot": "", "Crew": ""}
 
     if not isinstance(changes, list) or not changes:
         return empty
@@ -166,10 +165,10 @@ def _row_activities(rec):
             if isinstance(slot, int):
                 slot = f"Slot {slot}"
             rows.append({**base,
-                tr("Time"): ev.get("time", "?"),
-                tr("Activity"): ev.get("activity", "?"),
-                tr("Slot"): fmt_val(slot) if slot else "",
-                tr("Crew"): fmt_val(ev.get("crew", "")),
+                "Time": ev.get("time", "?"),
+                "Activity": ev.get("activity", "?"),
+                "Slot": fmt_val(slot) if slot else "",
+                "Crew": fmt_val(ev.get("crew", "")),
             })
     return rows if rows else empty
 
@@ -300,7 +299,7 @@ def _rows_for(records, transformer):
 
 def _kv_rows(d):
     """Convert a dict to (Field, Value) rows with humanised field labels."""
-    return ([tr("Field"), tr("Value")],
+    return (["Field", "Value"],
             [[humanize_key(k) if isinstance(k, str) else str(k), fmt_val(v)]
              for k, v in d.items()])
 
@@ -813,7 +812,7 @@ class TachoExplorer(tk.Tk):
             dv = data.get(dk) or {}
             if isinstance(dv, dict) and dv:
                 cols, rows = _kv_rows(dv)
-                sections_by_group.setdefault(dg, []).append((tr(dl), cols, rows))
+                sections_by_group.setdefault(dg, []).append((dl, cols, rows))
 
         for key, label, group, tname in LIST_SECTIONS:
             records = data.get(key) or []
@@ -825,7 +824,7 @@ class TachoExplorer(tk.Tk):
             else:
                 transformer = TRANSFORMERS.get(tname) if tname else None
                 cols, rows = _rows_for(records, transformer)
-            sections_by_group.setdefault(group, []).append((tr(label), cols, rows))
+            sections_by_group.setdefault(group, []).append((label, cols, rows))
 
         # ── Skip VU group for driver cards ──
         actual_is_vu = meta.get("is_vu", False)
@@ -877,7 +876,7 @@ class TachoExplorer(tk.Tk):
 
     def _populate_activities(self, parent, activities):
         """Create an expandable 'Activities' node with days as children."""
-        act_node = self.tree.insert(parent, tk.END, text=tr("Daily Activities"))
+        act_node = self.tree.insert(parent, tk.END, text="Daily Activities")
         for day in reversed(activities):
             if not isinstance(day, dict):
                 continue
@@ -901,10 +900,10 @@ class TachoExplorer(tk.Tk):
                             fmt_val(ev.get("crew", "")),
                             fmt_val(km),
                         ])
-                cols = [tr("Time"), tr("Activity"), tr("Slot"), tr("Crew"), tr("Odometer km")]
+                cols = ["Time", "Activity", "Slot", "Crew", "Odometer km"]
             else:
-                cols = [tr("Time"), tr("Activity")]
-                rows = [[fmt_val("\u2014"), tr("(no event)")]]
+                cols = ["Time", "Activity"]
+                rows = [[fmt_val("\u2014"), "(no event)"]]
 
             label = date_str
             extras = []
@@ -1029,7 +1028,36 @@ class TachoExplorer(tk.Tk):
                             ["Sub-section"], rows)
 
 
+def _smoke_check(path):
+    """Headless self-check used by CI on the frozen bundle: parse *path*
+    end-to-end (decoders, certificates, signature verification) without
+    opening a window. Returns a process exit code."""
+    from ddd_parser import TachoParser
+    try:
+        result = TachoParser(path).parse()
+    except Exception as exc:
+        print(f"SMOKE FAIL: parse raised {exc!r}", file=sys.stderr)
+        return 1
+    meta = result.get("metadata") or {}
+    if meta.get("parse_error"):
+        print(f"SMOKE FAIL: parse error {meta['parse_error']}", file=sys.stderr)
+        return 1
+    if not result.get("raw_tags"):
+        print("SMOKE FAIL: no structures decoded", file=sys.stderr)
+        return 1
+    print(f"SMOKE OK: v{__version__} gen={meta.get('generation')} "
+          f"sections={len(result.get('raw_tags') or {})}")
+    return 0
+
+
 def main():
+    # Minimal CLI surface so CI can exercise the frozen GUI bundle headless.
+    args = sys.argv[1:]
+    if args[:1] == ["--version"]:
+        print(f"TachoReader {__version__}")
+        sys.exit(0)
+    if args[:1] == ["--smoke"] and len(args) == 2:
+        sys.exit(_smoke_check(args[1]))
     TachoExplorer().mainloop()
 
 

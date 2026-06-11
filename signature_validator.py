@@ -138,15 +138,15 @@ class SignatureValidator:
                                     len(raw), filename)
                                 continue
 
-                        # Prova a caricare come X.509
+                        # Try to load as X.509
                         try:
                             cert = x509.load_pem_x509_certificate(cert_data)
                             key = cert.subject.rfc4514_string()
                             self.root_certificates[key] = cert
                             self.logger.info(f"Loaded Root Certificate (X509): {key}")
                         except Exception:
-                            # Se non è X.509, potrebbe essere una chiave pubblica RSA nuda (G1 ERCA)
-                            # In Tacho G1, le ERCA Keys sono spesso file binari o PEM di chiavi pubbliche.
+                            # Not X.509 — may be a bare RSA public key (G1
+                            # ERCA keys are often raw binary or PEM public keys).
                             pub_key = serialization.load_pem_public_key(cert_data)
                             self.root_certificates[filename] = pub_key
                             self.logger.info(f"Loaded Root Public Key: {filename}")
@@ -225,7 +225,7 @@ class SignatureValidator:
             if check_expiry and not self._certificate_is_valid_now(child_cert):
                 return False
 
-            # Se parent_cert è una PublicKey (G1)
+            # parent_cert may already be a bare PublicKey (G1)
             if isinstance(parent_cert, (rsa.RSAPublicKey, ec.EllipticCurvePublicKey)):
                 parent_pubkey = parent_cert
             else:
@@ -529,12 +529,16 @@ class SignatureValidator:
             return False
 
     def verify_g1_data_signature(self, public_key, signature, data):
-        """Verify a G1 Annex 1B EF data signature (ISO 9796-2 Scheme 1, SHA-1).
+        """Verify a G1 Annex 1B EF data signature (128-byte RSA, SHA-1).
 
-        The 128-byte RSA signature is decrypted with the card's public key
-        and the recovered block must contain the SHA-1 hash of *data*.
-        Falls back to RSA PKCS#1 v1.5 with SHA-1 if the ISO 9796-2
-        trailer is not found.
+        Real driver cards sign EF data with standard RSASSA-PKCS1-v1_5
+        (EMSA block ``00 01 FF..FF 00 || DigestInfo(SHA-1) || H``, verified
+        strictly by ``cryptography``). The ISO/IEC 9796-2 scheme-1 layout
+        used by the Appendix 11 certificate chain is also accepted, with the
+        exact block structure enforced:
+        ``0x6A || M1(106) || SHA1(data)(20) || 0xBC`` and ``M1 == data[:106]``
+        (for messages shorter than the recoverable capacity, M1 must end
+        with the full message).
         """
         import hashlib
         if not isinstance(public_key, rsa.RSAPublicKey):
@@ -542,28 +546,30 @@ class SignatureValidator:
         if len(signature) != 128:
             return False
 
-        # Try ISO 9796-2 recovery (Annex 1B Appendix 11, same as cert chain).
-        try:
-            n = public_key.public_numbers().n
-            e = public_key.public_numbers().e
-            c = int.from_bytes(signature, 'big')
-            m = pow(c, e, n)
-            recovered = m.to_bytes(128, 'big')
-
-            if recovered[0] == 0x6A and recovered[127] == 0xBC:
-                data_hash = hashlib.sha1(data).digest()
-                # The SHA-1 hash sits before the 0xBC trailer; the exact
-                # offset depends on the ISO 9796-2 padding of the message.
-                for off in range(1, 108):
-                    if recovered[off:off + 20] == data_hash:
-                        return True
-        except Exception:
-            pass
-
-        # Fallback: PKCS#1 v1.5 with SHA-1.
+        # Primary: RSASSA-PKCS1-v1_5 with SHA-1 (what real cards use).
         try:
             public_key.verify(signature, data, padding.PKCS1v15(), hashes.SHA1())
             return True
+        except InvalidSignature:
+            pass
+        except Exception:
+            return False
+
+        # Secondary: exact ISO 9796-2 scheme 1 with message recovery.
+        try:
+            n = public_key.public_numbers().n
+            e = public_key.public_numbers().e
+            m = pow(int.from_bytes(signature, 'big'), e, n)
+            recovered = m.to_bytes(128, 'big')
+
+            if recovered[0] not in (0x4A, 0x6A) or recovered[127] != 0xBC:
+                return False
+            if recovered[107:127] != hashlib.sha1(data).digest():
+                return False
+            m1 = recovered[1:107]
+            if len(data) >= 106:
+                return m1 == data[:106]
+            return m1.endswith(data)
         except Exception:
             return False
 

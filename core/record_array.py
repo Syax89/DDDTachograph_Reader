@@ -1,4 +1,5 @@
 import struct
+from typing import Optional
 
 from .decoders import get_nation
 
@@ -33,7 +34,7 @@ class RecordArrayParser:
         }
 
     @staticmethod
-    def iter_records(data: bytes, offset: int = 0, max_records: int = None):
+    def iter_records(data: bytes, offset: int = 0, max_records: Optional[int] = None):
         """Iterate over records in a RecordArray. Yields (index, record_bytes, next_offset)."""
         hdr = RecordArrayParser.parse_header(data, offset)
         if hdr is None:

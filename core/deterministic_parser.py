@@ -117,10 +117,11 @@ class DeterministicParser:
     """
 
 
-    def __init__(self, parser=None, registry: DecoderRegistry = None):
+    def __init__(self, parser=None, registry: Optional[DecoderRegistry] = None):
         self.parser = parser
         self.registry = registry or DecoderRegistry.instance()
-        self.coverage: Optional[CoverageTracker] = None
+        # Re-created with the real size at the start of parse().
+        self.coverage: CoverageTracker = CoverageTracker(0)
         self.results: Dict[str, Any] = {}
         self.is_vu: bool = False
         self.generation: str = "Unknown"
@@ -419,7 +420,7 @@ class DeterministicParser:
             })
         return pos
 
-    def _try_read_stap(self, raw_data: bytes, pos: int, end: int) -> Optional[Tuple[int, int, int, bytes, int]]:
+    def _try_read_stap(self, raw_data: bytes, pos: int, end: int) -> Optional[Tuple[int, int, int, bytes, Optional[int]]]:
         if pos + 5 > end:
             return None
         hdr = raw_data[pos:pos + 5]

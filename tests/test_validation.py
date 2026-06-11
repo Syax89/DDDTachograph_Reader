@@ -16,7 +16,7 @@ class TestSignatureValidation(unittest.TestCase):
     def setUpClass(cls):
         cls.test_dir = os.path.dirname(__file__)
         cls.project_dir = os.path.abspath(os.path.join(cls.test_dir, '..'))
-        # Cert mock in una directory temporanea: non devono sporcare il repo.
+        # Mock certs in a temporary directory: they must not pollute the repo.
         cls._tmp_dir = tempfile.TemporaryDirectory()
         cls.mock_data = setup_mock_certs(cls._tmp_dir.name)
         cls.validator = SignatureValidator(certs_dir=os.path.join(cls._tmp_dir.name, "certs"))

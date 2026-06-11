@@ -8,8 +8,6 @@ humanised (``vehicle_plate`` → ``Vehicle Plate``).
 """
 import re
 
-from core.i18n import tr
-
 # Tachograph "data not available" sentinels.
 _NOT_AVAILABLE_INTS = {0xFFFFFF, 0xFFFFFFFF}
 _ISO_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2})?")
@@ -72,15 +70,14 @@ def fmt_iso(s):
 
 
 def humanize_key(key):
-    """'vehicle_plate' → 'Vehicle Plate', 'gnss_accuracy' → 'GNSS Accuracy'.
-    The result goes through the i18n layer (see :mod:`core.i18n`)."""
+    """'vehicle_plate' → 'Vehicle Plate', 'gnss_accuracy' → 'GNSS Accuracy'."""
     words = str(key).split("_")
     out = []
     for w in words:
         if not w:
             continue
         out.append(w.upper() if w.lower() in _ACRONYMS else w.capitalize())
-    return tr(" ".join(out)) if out else str(key)
+    return " ".join(out) if out else str(key)
 
 
 def _fmt_coords(lat, lon):
@@ -178,7 +175,7 @@ def records_to_table(records):
 def expand_activities(activities):
     """Flatten daily activity blocks into one row per activity change."""
     rows = []
-    H = {k: tr(k) for k in ("Date", "Time", "Activity", "Odometer km",
+    H = {k: k for k in ("Date", "Time", "Activity", "Odometer km",
                             "Slot", "Crew", "Card", "Driver")}
     for day in activities:
         if not isinstance(day, dict):
@@ -189,7 +186,7 @@ def expand_activities(activities):
         changes = day.get("changes", [])
         if not isinstance(changes, list) or not changes:
             rows.append({H["Date"]: date_str, H["Time"]: "",
-                         H["Activity"]: tr("(no event)"),
+                         H["Activity"]: "(no event)",
                          H["Odometer km"]: fmt_value(km), H["Slot"]: "",
                          H["Crew"]: "", H["Card"]: "", H["Driver"]: driver})
             continue
@@ -208,7 +205,7 @@ def expand_activities(activities):
                 H["Odometer km"]: fmt_value(km),
                 H["Slot"]: fmt_value(ev.get("slot", "")),
                 H["Crew"]: fmt_value(ev.get("crew", "")),
-                H["Card"]: "" if card is None else tr("Inserted" if card else "Not inserted"),
+                H["Card"]: "" if card is None else ("Inserted" if card else "Not inserted"),
                 H["Driver"]: driver,
             })
     return rows
@@ -223,24 +220,24 @@ def summary_rows(data):
     efv = data.get("ef_signature_verification") or {}
 
     rows = [
-        (tr("File"), meta.get("filename", "N/A")),
-        (tr("Generation"), meta.get("generation", "N/A")),
-        (tr("Source"), tr("Vehicle Unit (VU)") if meta.get("is_vu") else tr("Driver Card")),
-        (tr("File size"), f"{meta.get('file_size_bytes', 0):,} bytes".replace(",", " ")),
-        (tr("Coverage"), f"{meta.get('coverage_pct', 0)}%"),
-        (tr("Integrity"), meta.get("integrity_check", "N/A")),
-        (tr("Parsed at"), fmt_value(meta.get("parsed_at", ""))),
+        ("File", meta.get("filename", "N/A")),
+        ("Generation", meta.get("generation", "N/A")),
+        ("Source", "Vehicle Unit (VU)" if meta.get("is_vu") else "Driver Card"),
+        ("File size", f"{meta.get('file_size_bytes', 0):,} bytes".replace(",", " ")),
+        ("Coverage", f"{meta.get('coverage_pct', 0)}%"),
+        ("Integrity", meta.get("integrity_check", "N/A")),
+        ("Parsed at", fmt_value(meta.get("parsed_at", ""))),
     ]
     if meta.get("app_version"):
-        rows.append((tr("Reader version"), meta["app_version"]))
+        rows.append(("Reader version", meta["app_version"]))
     if sv.get("summary"):
-        rows.append((tr("Signature verification"), sv["summary"]))
+        rows.append(("Signature verification", sv["summary"]))
     if efv.get("summary"):
-        rows.append((tr("EF card data signatures"), efv["summary"]))
+        rows.append(("EF card data signatures", efv["summary"]))
 
     if driver.get("surname", "N/A") != "N/A" or driver.get("card_number", "N/A") != "N/A":
         rows.append(("", ""))
-        rows.append((tr("Driver"), f"{driver.get('firstname', '')} {driver.get('surname', '')}".strip()))
+        rows.append(("Driver", f"{driver.get('firstname', '')} {driver.get('surname', '')}".strip()))
         for key in ("card_number", "issuing_nation", "expiry_date", "birth_date",
                     "licence_number", "preferred_language"):
             val = driver.get(key, "N/A")
@@ -252,7 +249,7 @@ def summary_rows(data):
         for key in ("plate", "vin", "registration_nation"):
             val = vehicle.get(key, "N/A")
             if val and val != "N/A":
-                rows.append((tr(f"Vehicle {humanize_key(key)}"), fmt_value(val)))
+                rows.append((f"Vehicle {humanize_key(key)}", fmt_value(val)))
     return rows
 
 
@@ -279,7 +276,7 @@ def section_tables(data, max_rows=None):
             if not isinstance(items, list):
                 items = [items]
             if all(not isinstance(x, dict) for x in items):
-                headers, rows = [tr("Value")], [[fmt_value(x)] for x in items]
+                headers, rows = ["Value"], [[fmt_value(x)] for x in items]
             else:
                 headers, rows = records_to_table(items)
         if not rows:
@@ -288,4 +285,4 @@ def section_tables(data, max_rows=None):
         if max_rows is not None and len(rows) > max_rows:
             rows = rows[:max_rows]
             truncated = True
-        yield tr(label), headers, rows, truncated
+        yield label, headers, rows, truncated

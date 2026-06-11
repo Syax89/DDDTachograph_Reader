@@ -1,6 +1,13 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- **English-only project**: the optional Italian translation layer (`core/i18n.py`, `TACHO_LANG`) has been removed; all UI labels and exports are English
+- **G1 EF signature verification tightened**: RSASSA-PKCS1-v1_5 with SHA-1 is now the primary, strictly-checked path (confirmed against real cards); the ISO 9796-2 recovery path enforces the exact block layout (`0x6A‖M1‖SHA1‖0xBC`, M1 == data prefix) instead of scanning for the hash at any offset
+- Dependencies pinned with compatible-release ranges in `requirements.txt`; Dependabot enabled for pip and GitHub Actions
+- CI: Python test matrix moved to 3.10/3.12/3.13 (3.9 is EOL and pytest 9 requires ≥ 3.10); mypy added to the lint job
+- CI: PyInstaller bundles are now smoke-tested on both platforms (`--version` and a headless `--smoke` parse of a mock card) before upload
+- Release workflow: GitHub release notes are extracted from the matching CHANGELOG section
 ### Fixed
 - **ControlType decoded as a bit mask** ('cvds'B, Annex 1B §2.53 / Annex 1C req. 126): real records (0x40, 0xC0, 0xE0…) now render as "Card downloaded, VU downloaded, Printing…" — the previous enum (0x01=Roadside check…) matched no real value and every label fell back to raw hex
 - **CalibrationPurpose labels aligned to the regulation** (Annex 1B §2.8): 0x03 is "installation (current vehicle)" and 0x04 "periodic inspection"; the invented 0x05/0x06/0x0A entries removed
