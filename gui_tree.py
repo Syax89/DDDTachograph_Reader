@@ -74,7 +74,8 @@ ROW_EVEN = "#ffffff"
 ROW_ODD = "#f2f6fb"
 HEADER_BG = "#e3e9f2"
 
-# Internal keys to hide from columns (service noise).
+# Internal keys to hide from columns (service noise). Keys starting with "_"
+# (e.g. "_key" dedup markers) are always hidden — see _columns_for.
 HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence"}
 # Descriptive columns pushed to table start.
 LEADING_KEYS = ["descrizione"]
@@ -106,9 +107,11 @@ LIST_SECTIONS = [
     ("specific_conditions", "Specific Conditions", "activity", None),
     ("calibrations", "Calibrations", "activity", None),
     ("card_downloads", "Card Downloads", "activity", None),
+    # Control activities exist on both driver cards (EF 0x0508) and VUs —
+    # kept in the activity group so they stay visible for card files too.
+    ("control_activities", "Control Activities", "activity", None),
     ("workshops", "Calibration Workshops", "activity", None),
     ("previous_vehicle", "Previous Vehicle", "activity", None),
-    ("card_issuer", "Card Issuer", "activity", None),
     ("company_holders", "Company Holders", "activity", None),
 
     ("gnss_ad_records", "GNSS — Accumulated Driving", "g22", None),
@@ -120,6 +123,7 @@ LIST_SECTIONS = [
 
     ("vu_identifications", "VU Identification", "vu", None),
     ("sensor_pairings", "Sensor Pairing", "vu", None),
+    ("sensor_gnss_couplings", "Sensor GNSS Coupling", "vu", None),
     ("card_iw_records", "Card Insertion / Withdrawal", "vu", None),
     ("card_records", "Card Records", "vu", None),
     ("time_adjustments", "Time Adjustments", "vu", None),
@@ -127,7 +131,6 @@ LIST_SECTIONS = [
     ("download_activities", "Downloads", "vu", None),
     ("power_interruptions", "Power Supply Interruptions", "vu", None),
     ("overspeeding_control", "Overspeeding Control", "vu", None),
-    ("control_activities", "Control Activities", "vu", None),
     ("its_consents", "ITS Consents", "vu", None),
     ("signed_daily_records", "Signed Daily Records", "vu", None),
     ("inserted_drivers", "Inserted Drivers", "vu", None),
@@ -261,7 +264,8 @@ def _columns_for(records, transformer):
         if not isinstance(rec, dict):
             return ["Value"]
         for k in rec:
-            if k in HIDDEN_KEYS or k in LEADING_KEYS or k in TRAILING_KEYS or k in cols:
+            if (k in HIDDEN_KEYS or k in LEADING_KEYS or k in TRAILING_KEYS
+                    or k in cols or str(k).startswith("_")):
                 continue
             cols.append(k)
     # Leading keys at the front (if present)
@@ -391,14 +395,20 @@ class DataTable(ttk.Frame):
     def _sort_by(self, col):
         idx = self._cols.index(col)
         descending = self._sort_state.get(col, False)
+        date_re = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
 
         def key(row):
             v = row[idx] if idx < len(row) else ""
+            s = str(v)
+            m = date_re.match(s)
+            if m:  # dd/mm/yyyy → chronological
+                return (0, int(m.group(3)) * 10000 + int(m.group(2)) * 100 + int(m.group(1)))
             try:
-                num = float(str(v).replace(",", "."))
+                # thousands are rendered with spaces (fmt_val)
+                num = float(s.replace(" ", "").replace(",", "."))
                 return (0, num)
             except (ValueError, TypeError):
-                return (1, str(v).lower())
+                return (1, s.lower())
 
         self._all_rows.sort(key=key, reverse=descending)
         self._sort_state[col] = not descending
@@ -689,16 +699,18 @@ class TachoExplorer(tk.Tk):
         sections_by_group = {}
 
         # Single-record dicts → Field/Value (rendered before list loops)
-        _DICT_SECTIONS = {
-            "vu_info": "VU Manufacturer Info",
-            "card_issuer": "Card Issuer",
-            "card_application": "Card Application Info",
-        }
-        for dk, dl in _DICT_SECTIONS.items():
+        _DICT_SECTIONS = [
+            ("card_issuer", "Card Issuer", "activity"),
+            ("card_application", "Card Application Info", "activity"),
+            ("vu_info", "VU Identification & Sensor", "vu"),
+            ("vu_overview", "VU Overview", "vu"),
+            ("company_info", "Company Info", "vu"),
+        ]
+        for dk, dl, dg in _DICT_SECTIONS:
             dv = data.get(dk) or {}
             if isinstance(dv, dict) and dv:
                 cols, rows = _kv_rows(dv)
-                sections_by_group.setdefault("activity", []).append((dl, cols, rows))
+                sections_by_group.setdefault(dg, []).append((dl, cols, rows))
 
         for key, label, group, tname in LIST_SECTIONS:
             records = data.get(key) or []
