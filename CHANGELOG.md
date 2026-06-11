@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 ### Fixed
+- **ControlType decoded as a bit mask** ('cvds'B, Annex 1B §2.53 / Annex 1C req. 126): real records (0x40, 0xC0, 0xE0…) now render as "Card downloaded, VU downloaded, Printing…" — the previous enum (0x01=Roadside check…) matched no real value and every label fell back to raw hex
+- **CalibrationPurpose labels aligned to the regulation** (Annex 1B §2.8): 0x03 is "installation (current vehicle)" and 0x04 "periodic inspection"; the invented 0x05/0x06/0x0A entries removed
 - VU Places / GNSS Accumulated Driving: the "no card in slot" filler record (cardType 0, empty number, generation 0xFF) was rendered as a raw field dump (`present=Yes, card_type=0, …`) in the Card Driver column — now decoded as "card absent" and shown as "—"
 - GUI: generation/feature groups with no content (e.g. "G2.2 — Smart V2" on a G1 file) are no longer shown as empty folders
 

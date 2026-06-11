@@ -118,42 +118,37 @@ def specific_condition_label(code) -> str:
         return "Unknown"
     return SPECIFIC_CONDITION_LABELS.get(code, f"0x{code:02X}")
 
-# ── Calibration purpose (Annex 1B §2.118) ──────────────────────────────────
+# ── Calibration purpose (Annex 1B §2.8 / Annex 1C req. 120) ────────────────
 #
-# CalibrationPurpose codes assigned during workshop calibrations.
-#   0x01 Activation — first activation of the VU
-#   0x02 FirstInstall — first installation of the VU in this vehicle
-#   0x03 FirstInstallOther — first installation in a different vehicle
-#   0x04 Inspection — periodic inspection (G1: Annex 1B §2.117)
-#   0x05 PeriodicInspection — periodical inspection (G2: Annex 1C §2.168)
-#   0x06 Coupling — coupling of a motion sensor
-#   0x0A EnforcementInspection — enforcement inspection
+# CalibrationPurpose: why a set of calibration parameters was recorded.
+#   0x00 reserved value
+#   0x01 activation — calibration parameters known at VU activation
+#   0x02 first installation — first calibration after activation
+#   0x03 installation — first calibration in the current vehicle
+#   0x04 periodic inspection
 
 CALIBRATION_PURPOSE: dict[int, str] = {
+    0x00: "Reserved",
     0x01: "Activation",
     0x02: "First installation",
-    0x03: "First installation (other vehicle)",
-    0x04: "Inspection",
-    0x05: "Periodic inspection",
-    0x06: "Coupling",
-    0x0A: "Enforcement inspection",
+    0x03: "Installation (current vehicle)",
+    0x04: "Periodic inspection",
 }
 
-# ── Control activity type (Annex 1B §2.15a, Annex 1C §2.99) ──────────────
+# ── Control type (Annex 1B §2.53 / Annex 1C req. 126) ──────────────────────
 #
-# ControlType codes recorded when a controller downloads or inspects
-# the VU/card data.
-#   0x01 Roadside — roadside check by enforcement
-#   0x02 Company — company check
-#   0x03 Workshop — workshop calibration/inspection
-#   0x04 Remote — remote download (G2.2)
+# ControlType is a BIT MASK ('cvds'B), not an enumeration: each bit flags an
+# activity carried out during the control. Real records carry values such as
+# 0x40 (VU downloaded) or 0xE0 (card + VU downloaded + printing).
 
-CONTROL_TYPE: dict[int, str] = {
-    0x01: "Roadside check",
-    0x02: "Company check",
-    0x03: "Workshop check",
-    0x04: "Remote download",
-}
+CONTROL_TYPE_BITS: tuple[tuple[int, str], ...] = (
+    (0x80, "Card downloaded"),
+    (0x40, "VU downloaded"),
+    (0x20, "Printing"),
+    (0x10, "Display"),
+    # Annex 1C (smart tachograph) only — roadside calibration checking.
+    (0x08, "Roadside calibration check"),
+)
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -211,7 +206,12 @@ def describe_calibration_purpose(code) -> str:
 
 
 def describe_control_type(code) -> str:
-    """Return a human-readable label for a ControlType byte."""
+    """Decode a ControlType bit mask ('cvds'B, Annex 1B §2.53) into a
+    comma-separated list of the activities carried out during the control."""
     if code is None:
         return "Unknown"
-    return CONTROL_TYPE.get(code, f"0x{code:02X}")
+    parts = [label for bit, label in CONTROL_TYPE_BITS if code & bit]
+    leftover = code & ~sum(bit for bit, _ in CONTROL_TYPE_BITS)
+    if leftover:
+        parts.append(f"0x{leftover:02X}")
+    return ", ".join(parts) if parts else "None recorded"
