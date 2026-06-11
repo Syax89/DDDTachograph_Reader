@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Fixed
+- VU Places / GNSS Accumulated Driving: the "no card in slot" filler record (cardType 0, empty number, generation 0xFF) was rendered as a raw field dump (`present=Yes, card_type=0, …`) in the Card Driver column — now decoded as "card absent" and shown as "—"
+- GUI: generation/feature groups with no content (e.g. "G2.2 — Smart V2" on a G1 file) are no longer shown as empty folders
 
 ## [1.9.9] - 2026-06-11
 ### Added

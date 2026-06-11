@@ -314,6 +314,9 @@ def decode_full_card_number_gen(data, off):
     nation = decoders.get_nation(rec[1])
     number = "".join(chr(b) if 0x20 <= b < 0x7F else "" for b in rec[2:18]).strip()
     generation = rec[18]
+    if not number:
+        # Zero/partial filler (cardType 0, generation 0xFF): no card in slot.
+        return {"present": False}
     return {
         "present": True,
         "card_type": card_type,

@@ -98,8 +98,9 @@ def _fmt_dict(d):
         return _fmt_coords(geo.get("latitude_deg"), geo.get("longitude_deg"))
     if "latitude_deg" in d or "longitude_deg" in d:
         return _fmt_coords(d.get("latitude_deg"), d.get("longitude_deg"))
-    if d.get("card_number"):
-        return str(d["card_number"])
+    if "card_number" in d:
+        # FullCardNumber — an empty number means no card in the slot.
+        return str(d["card_number"]).strip() or "—"
     if "plate" in d:
         plate = (d.get("plate") or "").strip()
         nation = (d.get("nation") or "").strip()
