@@ -16,6 +16,9 @@ from datetime import datetime
 from .constants import MAX_TLV_LENGTH, MAX_RECURSION_DEPTH
 from .decoder_registry import DecoderRegistry
 from .ber_tlv import read_ber_tlv_header
+from .logger import get_logger
+
+_log = get_logger(__name__)
 
 
 class CoverageTracker:
@@ -116,11 +119,13 @@ class DeterministicParser:
 
     def __init__(self, parser=None, registry: DecoderRegistry = None):
         self.parser = parser
-        self.registry = registry or DecoderRegistry()
+        self.registry = registry or DecoderRegistry.instance()
         self.coverage: Optional[CoverageTracker] = None
         self.results: Dict[str, Any] = {}
         self.is_vu: bool = False
         self.generation: str = "Unknown"
+        self._ef_data: Dict[Tuple[int, int], bytes] = {}
+        self._ef_signatures: Dict[Tuple[int, int], bytes] = {}
 
     def parse(self, raw_data: bytes, is_vu: bool) -> Dict[str, Any]:
         self.coverage = CoverageTracker(len(raw_data))
@@ -183,6 +188,13 @@ class DeterministicParser:
             if refined != self.generation:
                 self.generation = refined
                 self.results["metadata"]["generation"] = self._gen_full_label(refined)
+
+        # Store EF data/signature payloads for card signature verification.
+        if not is_vu and (self._ef_data or self._ef_signatures):
+            self.results["_ef_data"] = [(tag, dtype, payload)
+                                        for (tag, dtype), payload in self._ef_data.items()]
+            self.results["_ef_signatures"] = [(tag, dtype, payload)
+                                              for (tag, dtype), payload in self._ef_signatures.items()]
 
         # Collect unknown ranges and add to raw_tags
         for s, e, data in self.coverage.unknown_ranges:
@@ -366,12 +378,15 @@ class DeterministicParser:
         return f"{parent_path} > {raw_key}" if parent_path else raw_key
 
     def _skip_padding(self, raw_data: bytes, pos: int, end: int) -> int:
-        from core.coverage_utils import is_padding_block
+        from core.coverage_utils import is_padding_block, KNOWN_PADDING_BYTES
         start = pos
         while pos + 1 < end and is_padding_block(bytes([raw_data[pos], raw_data[pos+1]])) is not None:
             pos += 1
         if pos > start:
-            pos += 1
+            pos += 1  # include the last byte of the padding run
+        elif pos + 1 == end and raw_data[pos] in KNOWN_PADDING_BYTES:
+            pos += 1  # lone trailing padding byte at buffer end
+        if pos > start:
             fill_byte = raw_data[start]
             self.coverage.mark_padding(start, pos, fill_byte)
             
@@ -384,12 +399,15 @@ class DeterministicParser:
         return pos
 
     def _skip_padding_inner(self, data: bytes, pos: int, end: int, base_offset: int, depth: int, parent_path: str) -> int:
-        from core.coverage_utils import is_padding_block
+        from core.coverage_utils import is_padding_block, KNOWN_PADDING_BYTES
         start = pos
         while pos + 1 < end and is_padding_block(bytes([data[pos], data[pos+1]])) is not None:
             pos += 1
         if pos > start:
-            pos += 1
+            pos += 1  # include the last byte of the padding run
+        elif pos + 1 == end and data[pos] in KNOWN_PADDING_BYTES:
+            pos += 1  # lone trailing padding byte at buffer end
+        if pos > start:
             self.coverage.mark_padding(base_offset + start, base_offset + pos, data[start])
             
             length = pos - start
@@ -479,6 +497,13 @@ class DeterministicParser:
                     self.parser.card_cert_g1 = payload
 
     def _dispatch_decoder(self, tag: int, payload: bytes, dtype: Optional[int] = None):
+        # Collect EF data/signature pairs for later verification.
+        if self.parser and not self.is_vu and dtype is not None and dtype <= 0x03:
+            if dtype in (0x00, 0x02):
+                self._ef_data[(tag, dtype)] = payload
+            elif dtype in (0x01, 0x03):
+                self._ef_signatures[(tag, dtype)] = payload
+
         if dtype in (1, 3, 11, 15):
             return
 
@@ -498,9 +523,8 @@ class DeterministicParser:
                 else:
                     dec.decoder_fn(payload, self.results)
             except Exception:
-                import logging
-                logging.getLogger("ddd_tacho").debug(
-                    "Decoder dispatch failed for tag 0x%04X", tag, exc_info=True)
+                _log.warning("Decoder 0x%04X (%s) dispatch failed", tag,
+                           dec.name if dec else "unknown", exc_info=True)
 
     def _parse_container(self, tag: int, payload: bytes, container_offset: int, depth: int, parent_path: str):
         if depth > MAX_RECURSION_DEPTH:
@@ -552,29 +576,3 @@ class DeterministicParser:
             pos += hdr_size + inner_length
 
 
-def quick_coverage_check(raw_data: bytes) -> Dict[str, Any]:
-    """Standalone coverage check without full parsing."""
-    parser = DeterministicParser()
-    parser.coverage = CoverageTracker(len(raw_data))
-    pos = 0
-    file_size = len(raw_data)
-
-    while pos < file_size:
-        pos = parser._skip_padding(raw_data, pos, file_size)
-        if pos >= file_size:
-            break
-        result = parser._parse_at_position(raw_data, pos, file_size)
-        if result is None:
-            parser.coverage.mark_unknown(pos, min(pos + 1, file_size), raw_data[pos:pos + 1])
-            pos += 1
-            continue
-        tag, length, hdr_size, payload, _ = result
-        parser.coverage.mark_classified(pos, pos + hdr_size + length, f"Tag_{tag:04X}")
-        pos += hdr_size + length
-
-    return {
-        "total_bytes": file_size,
-        "covered_pct": parser.coverage.get_coverage_pct(),
-        "uncovered_ranges": parser.coverage.get_uncovered_ranges(),
-        "classifications": dict(parser.coverage.classifications),
-    }

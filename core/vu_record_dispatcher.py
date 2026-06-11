@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from core.logger import get_logger
 from core import decoders
 from core.constants import RECORD_ARRAY_MAX_RECORDS, RECORD_ARRAY_MAX_SIZE
-from core.event_fault_codes import describe_event, describe_fault
+from core.event_fault_codes import describe_event, describe_fault, describe_calibration_purpose, describe_control_type
 
 _log = get_logger(__name__)
 
@@ -139,6 +139,7 @@ def decode_control_activity(rec):
     return {
         "confidence": "medium",
         "control_type": rec[0],
+        "control_type_label": describe_control_type(rec[0]),
         "control_time": _iso(struct.unpack(">I", rec[1:5])[0]),
         "control_card": decode_full_card_number_gen(rec, 5),
         "download_period_begin": _iso(struct.unpack(">I", rec[24:28])[0]),
@@ -183,6 +184,7 @@ def decode_calibration(rec):
     return {
         "confidence": "high",
         "calibration_purpose": rec[0],
+        "calibration_purpose_label": describe_calibration_purpose(rec[0]),
         "workshop_name": decode_name(rec, 1),
         "workshop_address": decode_name(rec, 37),
         "workshop_card": {
@@ -702,7 +704,7 @@ def iter_vu_sections(data):
         rt = data[pos]
         rs = struct.unpack(">H", data[pos + 1:pos + 3])[0]
         nr = struct.unpack(">H", data[pos + 3:pos + 5])[0]
-        if rt > 0x60 or rs > RECORD_ARRAY_MAX_SIZE or nr > RECORD_ARRAY_MAX_RECORDS or (rs == 0 and nr > 0):
+        if rt < 0x01 or rt > 0x60 or rs > RECORD_ARRAY_MAX_SIZE or nr > RECORD_ARRAY_MAX_RECORDS or (rs == 0 and nr > 0 and rt != 0x60):
             # Resync one byte at a time: skipping a whole header width here
             # could jump over the start of a valid RecordArray after junk.
             pos += 1

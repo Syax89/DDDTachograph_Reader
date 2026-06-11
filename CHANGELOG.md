@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## [1.9.9] - 2026-06-11
+### Added
+- **EF card data signature verification** (`core/ef_signature_verifier.py`): every card EF data block is verified against its signature copy with the card public key — G1 RSA (ISO 9796-2 with SHA-1, PKCS#1 v1.5 fallback) and G2 ECDSA (raw r‖s, curve-matched hash). Per-EF report in the GUI ("EF Signatures" under Security & Certificates), exports and summary ("EF card data signatures" row); real cards verify all 9–26 EF signatures
+- **ERCA-2 (Gen2) root anchoring**: the EU JRC ERCA Gen2 root certificate (CVC, KID `FD45432001FFFF01`) is bundled in `certs/` and loaded by `SignatureValidator` (CVC-in-PEM wrapping, raw uncompressed EC points 65/97/129/133 bytes for brainpool/NIST 256–521, DER/PEM SPKI). `verify_vu_download` now anchors the MSCA certificate to the root (by CAR, with a try-all fallback for raw keys): real Gen2/2.2 VU downloads report **root-anchored** and "Verified (VU Chain)"
+- **G2 CVC chain validation** (`_validate_g2_cvc_chain`): MSCA→Card link verified via the CVC parser (the old path only handled X.509 DER, which tachograph cards don't use)
+- **G1 VU chain validation**: the MSCA/VU certificates embedded in TREP 01 Overview now feed `validate_tacho_chain` — real G1 VU files report "Verified"
+- **TREP 06 (Card Download)**: activities extracted from the embedded EF 0x0504 cyclic buffer; container 0x7606 registered
+- GUI: signature/integrity **status badge** in the header (and window title) summarising chain, EF and TREP verification at a glance
+- Calibration purpose and control type human-readable labels (`describe_calibration_purpose`, `describe_control_type`, Annex 1B §2.118 / §2.15a) on calibrations and control activities
+### Fixed
+- `decode_g2_daily_record`: a record with `sig_len` 0 was sized 112 bytes instead of 48; explicit None handling for absent signature-length bytes
+- `iter_vu_sections`: recordType 0x00 headers are rejected (resync instead of decoding junk); Terminator (0x60) arrays with recordSize 0 accepted
+- Trailer registrations: unknown coupling codes reported as `UNKNOWN_xx` instead of being folded into "UNCOUPLED"; raw `coupling_code` preserved
+- VU_ActivityDailyRecord (0x0206) no longer mis-decoded as a card cyclic buffer
+- A failed certificate chain is reported as "Invalid Certificate Chain" (it was masked as "Incomplete Certificates")
+- Single trailing padding byte at EOF is classified as padding (was left as unparsed data)
+- Lone padding byte handling no longer desyncs the STAP walk (regression guard: `tests/test_deterministic_padding.py`)
+
 ## [1.9.5] - 2026-06-11
 ### Distribution & hygiene
 - **Single version source** (`core/version.py`): shown in the GUI title, `tacho-cli --version` / `main.py --version`, parse metadata (`app_version`), PDF footer, export summary and the macOS bundle (`CFBundleShortVersionString`); the release workflow refuses tags that don't match it (replaces the stale "Version 5.1" docstring)

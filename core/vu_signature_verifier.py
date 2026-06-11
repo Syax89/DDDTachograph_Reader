@@ -247,10 +247,17 @@ def verify_vu_download(raw_data, erca_keys=None):
             if msca is not None:
                 msca_pub, msca_hash = cvc_public_key(msca)
                 report["msca_to_vu"] = verify_cvc_chain_link(vu, msca_pub, msca_hash)
-                # Optional root anchor: verify the MSCA cert against a supplied ERCA key.
-                if erca_keys and msca.get("car") in erca_keys:
-                    erca_pub, erca_hash = erca_keys[msca["car"]]
-                    report["root_anchored"] = verify_cvc_chain_link(msca, erca_pub, erca_hash)
+                # Optional root anchor: verify the MSCA cert against a supplied
+                # ERCA key. Prefer the key matching the MSCA's CAR, but fall
+                # back to trying every registered root (raw points carry a
+                # synthetic CAR that can never match the real KID).
+                if erca_keys:
+                    matched = erca_keys.get(msca.get("car"))
+                    candidates = [matched] if matched else list(erca_keys.values())
+                    for erca_pub, erca_hash in candidates:
+                        if verify_cvc_chain_link(msca, erca_pub, erca_hash):
+                            report["root_anchored"] = True
+                            break
 
         # Per-TREP data signatures, verified with the VU public key.
         all_valid = True
