@@ -12,6 +12,14 @@ added_files = []
 if os.path.exists(certs_path):
     added_files.append((certs_path, "certs"))
 
+# App icons: .ico/.icns for the executables, one PNG for the Tk window icon.
+icons_path = os.path.join(base_path, "AppIcons")
+win_icon = os.path.join(icons_path, "icon.ico")
+mac_icon = os.path.join(icons_path, "icon.icns")
+window_png = os.path.join(icons_path, "Assets.xcassets", "AppIcon.appiconset", "256.png")
+if os.path.exists(window_png):
+    added_files.append((window_png, "AppIcons"))
+
 # NOTE: core/ must NOT go in datas — PyInstaller collects it automatically
 # from hiddenimports; listing it in datas duplicates every module in the
 # dist build. reportlab is needed for the PDF export (lazy import in
@@ -91,7 +99,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    # icon='icon.ico',  # uncomment when an icon is added
+    icon=win_icon if sys.platform == "win32" and os.path.exists(win_icon) else None,
 )
 
 coll = COLLECT(
@@ -109,7 +117,7 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name='TachoReader.app',
-    icon=None,  # set to an .icns path when an icon is added
+    icon=mac_icon if os.path.exists(mac_icon) else None,
     bundle_identifier='com.ddd.tachoreader',
     version=__version__,
 )
