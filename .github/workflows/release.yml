@@ -12,7 +12,7 @@ jobs:
   check-version:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Tag must match core/version.py
       run: |
         APP_VERSION=$(python3 -c "from core.version import __version__; print(__version__)")
@@ -26,10 +26,10 @@ jobs:
     runs-on: windows-latest
     needs: check-version
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
@@ -49,7 +49,7 @@ jobs:
         Compress-Archive -Path dist/TachoReader/* -DestinationPath TachoReader-${{ github.ref_name }}-windows-x64.zip
 
     - name: Upload to release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: TachoReader-${{ github.ref_name }}-windows-x64.zip
 
@@ -57,10 +57,10 @@ jobs:
     runs-on: macos-latest
     needs: check-version
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
@@ -77,6 +77,6 @@ jobs:
         hdiutil create -volname "TachoReader" -srcfolder dist/TachoReader.app -ov -format UDZO TachoReader-${{ github.ref_name }}-macos.dmg
 
     - name: Upload to release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: TachoReader-${{ github.ref_name }}-macos.dmg
