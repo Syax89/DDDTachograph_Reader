@@ -53,6 +53,8 @@ jobs:
         foreach ($cmd in @(,@('--version')) + @(,@('--smoke', 'tests\mock_data\mock_g2_card.ddd'))) {
           $p = Start-Process -FilePath $exe -ArgumentList $cmd -PassThru
           if (-not $p.WaitForExit(120000)) {
+            Get-Process | Where-Object { $_.MainWindowTitle } |
+              Format-Table Id, ProcessName, MainWindowTitle
             $p.Kill()
             Write-Error "Smoke test timed out: $cmd"
             if (Test-Path smoke.log) { Get-Content smoke.log }

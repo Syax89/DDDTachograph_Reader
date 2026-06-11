@@ -29,7 +29,7 @@ if os.path.exists(window_png):
 block_cipher = None
 
 a = Analysis(
-    ['gui_tree.py'],
+    ['app_main.py'],
     pathex=[base_path, os.path.join(base_path, 'core')],
     binaries=[],
     datas=added_files,
