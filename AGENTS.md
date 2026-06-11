@@ -46,4 +46,4 @@ All tag specifications are in `specs/`:
 - Reg. EU 2021/1228 — G2.2 additional specs
 
 ## Coverage guarantee
-All 8 DDD files in `DDD/` achieve **100% byte coverage** (0 unparsed blocks). The `_fill_coverage_gaps()` method in `ddd_parser.py` ensures any bytes missed by the STAP/BER parser are filled as gap-tracked ranges. Shared interval merging via `core/coverage_utils.merge_intervals()`. Coverage audit: `python3 specs/coverage_audit.py`.
+files in `DDD/`. The `_fill_coverage_gaps()` method in `ddd_parser.py` ensures any bytes missed by the STAP/BER parser are filled as gap-tracked ranges. Shared interval merging via `core/coverage_utils.merge_intervals()`. Coverage audit: `python3 specs/coverage_audit.py`.
