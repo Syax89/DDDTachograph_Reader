@@ -426,12 +426,28 @@ class DataTable(ttk.Frame):
 
 # ── Main application ─────────────────────────────────────────────────────
 
+def _resource_path(rel):
+    """Path of a bundled resource (PyInstaller _MEIPASS or repo root)."""
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, rel)
+
+
 class TachoExplorer(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title(f"Tacho Explorer v{__version__}")
         self.geometry("1280x760")
         self.minsize(900, 560)
+
+        try:
+            icon_png = _resource_path(os.path.join("AppIcons", "256.png"))
+            if not os.path.exists(icon_png):
+                icon_png = _resource_path(os.path.join(
+                    "AppIcons", "Assets.xcassets", "AppIcon.appiconset", "256.png"))
+            if os.path.exists(icon_png):
+                self.iconphoto(True, tk.PhotoImage(file=icon_png))
+        except Exception:
+            _log.debug("window icon not available")
 
         try:
             if sys.platform == "win32":
