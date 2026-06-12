@@ -16,8 +16,9 @@ There is no standard tool to open `.ddd` files on a normal computer. This applic
 |---|---|---|
 | **Source** | Downloaded from the driver's personal tachograph card | Downloaded from the tachograph unit installed in the vehicle |
 | **Contains** | One driver's activities across multiple vehicles | Activities of all drivers who used that vehicle |
-| **Infractions tab** | Visible (compliance is per-driver) | Hidden (multiple drivers on one unit) |
-| **Typical use** | Driver monitoring, compliance checking | Fleet management, vehicle usage analysis |
+| **Typical use** | Driver monitoring | Fleet management, vehicle usage analysis |
+
+The application detects the file type automatically and adapts the section tree accordingly (e.g., VU-specific sections such as sensor pairings, company locks, and detailed speed blocks only appear for VU files).
 
 ---
 
@@ -27,37 +28,35 @@ These are the three generations of digital tachographs:
 
 - **G1 (Generation 1)**: The original digital tachograph standard (Annex 1B of Reg. 3821/85). Uses STAP encoding.
 - **G2 (Generation 2)**: First-generation Smart Tachograph (Annex 1C, Reg. EU 2016/799). Uses BER-TLV encoding. Adds GNSS recording and remote communication.
-- **G2.2 (Generation 2.2)**: Second-generation Smart Tachograph (Reg. EU 2023/980). Adds new fields and enhanced security.
+- **G2.2 (Generation 2.2)**: Second-generation Smart Tachograph (Reg. EU 2023/980). Adds new fields (border crossings, load/unload operations, trailer registrations) and enhanced security.
 
-The application automatically detects which generation a file belongs to based on the first 2 bytes (`0x7631` = G2.2, `0x7621`/`0x7622` = G2, other = G1).
+The application automatically detects which generation a file belongs to from the file header (`0x7631` = G2.2, `0x7621`/`0x7622` = G2, otherwise G1).
 
 ---
 
 ### Why are some GNSS positions missing?
 
-GNSS positions are recorded by the tachograph at specific intervals (typically when the vehicle starts, every 3 hours, and when it stops). Not every minute of driving has a GPS coordinate. Additionally, some older G1 tachographs do not have GNSS capability at all. Gaps in position data are normal and expected.
+GNSS positions are recorded by the tachograph at specific intervals (typically when the vehicle starts, every 3 hours of accumulated driving, and when it stops). Not every minute of driving has a GPS coordinate. Additionally, G1 tachographs do not have GNSS capability at all. Gaps in position data are normal and expected.
 
 ---
 
 ### What does "byte coverage" mean?
 
-Byte coverage is the percentage of the `.ddd` file that the parser can interpret. A value of **100%** means every byte in the file was successfully decoded. If coverage is below 100%, some sections of the file could not be parsed (possibly due to a new or undocumented tag format).
+Byte coverage is the percentage of the `.ddd` file that the parser can interpret. A value of **100%** means every byte in the file was successfully decoded (including recognized padding). If coverage is below 100%, some sections of the file could not be parsed (possibly due to a new or undocumented tag format).
 
 All test files in the project achieve 100% coverage.
 
 ---
 
-### Can I analyze multiple files at once?
+### Does the tool check driving-time rules (EU 561/2006)?
 
-Yes. Use the **Fleet tab** in the GUI: select a folder containing `.ddd` files and click "Analizza". The application processes all files and displays a comparative table with key metrics for each driver/vehicle.
-
-From the command line, directory batch processing is available.
+No. The tool is a **parser and integrity validator**: it decodes the recorded activities and verifies the digital signatures, but it does not currently evaluate driving-time or rest-period rules and does not estimate fines. You can export the activity data to JSON or Excel and run your own compliance analysis on it.
 
 ---
 
 ### Is my data secure?
 
-Yes. All processing is **local** — your `.ddd` files never leave your computer. There is no cloud upload, no telemetry, and no data sharing. The only network requests are optional: downloading ERCA certificates for signature validation and reverse geocoding (if you enable the `--geocode` flag).
+Yes. All processing is **local** — your `.ddd` files never leave your computer. There is no cloud upload, no telemetry, and no data sharing. Signature verification uses the ERCA root certificates bundled with the application in the `certs/` folder.
 
 ---
 
@@ -73,23 +72,15 @@ Open an issue on the [GitHub repository](https://github.com/Syax89/ddd-tachograp
 
 ### What regulations are supported?
 
-- **EU 561/2006**: Driving times, breaks, and rest periods for professional drivers
-- **Italian C.d.S. Art. 174**: Fines estimation for tachograph violations
-- **EU 2016/799 (Annex 1C)**: Smart Tachograph data specification
-- **EU 2023/980**: Smart Tachograph V2 data specification
 - **Reg. 3821/85 (Annex 1B)**: Original digital tachograph specification
+- **EU 2016/799 (Annex 1C)**: Smart Tachograph data specification
+- **EU 2021/1228** and **EU 2023/980**: Smart Tachograph V2 data specification
 
 ---
 
 ### Can the tool edit or modify .ddd files?
 
 No. The application is **read-only**. It parses, analyzes, and exports data from `.ddd` files but never modifies them. This ensures the original file remains forensically intact.
-
----
-
-### Why does the infractions tab not appear?
-
-The infractions tab is only shown when a **driver card** file is loaded. Vehicle unit (VU) files contain data from multiple drivers, so compliance analysis per-driver is not performed on VU files.
 
 ---
 

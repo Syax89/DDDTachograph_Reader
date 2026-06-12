@@ -29,17 +29,17 @@ cd ddd-tachograph-reader
 pip install -r requirements.txt
 ```
 
-### Required Dependencies
+### Dependencies
 
 | Package | Purpose |
 |---------|---------|
 | `cryptography` | Digital signature verification (ERCA/MSCA certificate chain) |
 | `reportlab` | PDF report generation |
-| `pandas` | Data manipulation for fleet analysis |
 | `openpyxl` | Excel file export (.xlsx) |
-| `requests` | Certificate downloads and geocoding API calls |
+| `pytest` | Test suite (development only) |
+| `pyinstaller` | Building the standalone executable (development only) |
 
-The GUI uses Python's built-in `tkinter` — no extra GUI package is required.
+The GUI uses Python's built-in `tkinter` — no extra GUI package is required. Parsing itself has **no third-party dependencies**: `cryptography`, `reportlab`, and `openpyxl` are only needed for signature verification and PDF/Excel export.
 
 **Python 3.9 or later is required.**
 

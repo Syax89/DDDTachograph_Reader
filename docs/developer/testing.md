@@ -5,41 +5,46 @@
 All tests are run with:
 
 ```bash
-/usr/local/bin/python3.9 -m pytest tests/ -v
+python -m pytest tests/ -v
 ```
 
 Run a specific test file:
 
 ```bash
-/usr/local/bin/python3.9 -m pytest tests/test_compliance.py -v
+python -m pytest tests/test_coverage.py -v
 ```
 
 Run tests matching a pattern:
 
 ```bash
-/usr/local/bin/python3.9 -m pytest tests/ -v -k "test_parse"
+python -m pytest tests/ -v -k "test_parse"
 ```
 
 Run with coverage:
 
 ```bash
 pip install pytest-cov
-/usr/local/bin/python3.9 -m pytest tests/ -v --cov=core --cov=ddd_parser --cov=compliance_engine
+python -m pytest tests/ -v --cov=core --cov=ddd_parser
 ```
 
 ## Test Categories
 
 | File | Purpose |
 |---|---|
-| `tests/test_compliance.py` | EU 561/2006 compliance rule checks (driving limits, rest periods, breaks) |
 | `tests/test_coverage.py` | Byte coverage verification against reference DDD files |
+| `tests/test_deterministic_padding.py` | Padding classification in the deterministic parser |
 | `tests/test_export.py` | Export format correctness (Excel, CSV, PDF) |
 | `tests/test_fuzz.py` | Fuzzing with random/malformed byte sequences |
 | `tests/test_gen22.py` | G2.2 specific tag decoders (GNSS, load/unload, border crossings) |
+| `tests/test_golden_snapshot.py` | Golden-file snapshot comparison for real DDD samples |
 | `tests/test_validation.py` | Certificate chain validation (ERCA/MSCA) |
 | `tests/test_semantic_coverage.py` | Semantic field coverage (do decoders populate all expected fields) |
 | `tests/test_real_semantic_coverage.py` | Real-file semantic coverage against DDD/ samples |
 | `tests/test_g22_auth_and_triage.py` | G2.2 authentication data and unparsed pattern triage |
+| `tests/test_vu_dispatcher.py` | VU RecordArray stream dispatcher |
+| `tests/test_vu_signature.py` | VU download ECDSA/CVC signature verification |
+
+Tests that require real `.ddd` samples (the private `DDD/` folder) skip automatically when those files are absent, so the suite passes on a fresh clone.
 
 ## Writing New Tests
 
@@ -143,7 +148,7 @@ The fuzzing test generates random byte sequences to verify parser robustness:
 
 ## Coverage Targets
 
-- **Byte coverage**: 100% on all 8 DDD files in `DDD/` (verified by `specs/coverage_audit.py`)
+- **Byte coverage**: 100% on the reference DDD files in `DDD/` (verified by `specs/coverage_audit.py`)
 - **Semantic coverage**: Decoder functions should populate the expected TachoResult fields
 - **Error path coverage**: Graceful handling of malformed input, truncated files, empty files
 
@@ -160,6 +165,6 @@ This produces a per-file breakdown of:
 
 ## Test Data
 
-- **`DDD/`**: 8 real-world DDD files from various tachograph models (G1, G2, G2.2)
+- **`DDD/`**: Real-world DDD files from various tachograph models (G1, G2, G2.2). **Not committed** — contains personal data; tests depending on it skip when absent.
 - **`tests/mock_data/`**: Static binary test fixtures
 - **`tests/generate_mock_data.py`**: Programmatic test data generation; mock certificates for signature validation are written to a temporary directory at test time

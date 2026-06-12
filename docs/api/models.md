@@ -291,8 +291,7 @@ data = result.to_dict()
 ## See Also
 
 - [TachoParser](tacho_parser.md) — Main parser that produces TachoResult
-- [ComplianceEngine](compliance_engine.md) — Analyzes activities for infractions
-- [ExportManager](export_manager.md) — Exports TachoResult to Excel/CSV
+- [ExportManager](export_manager.md) — Exports TachoResult to Excel/CSV/PDF
 
 ## Common Tasks
 

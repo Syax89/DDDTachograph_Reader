@@ -1,6 +1,6 @@
-# GUI Guide — Aurora DDD Analytics
+# GUI Guide — Tacho Explorer
 
-The Aurora DDD Analytics desktop application provides a modern, tabbed interface for exploring and analyzing digital tachograph data. This guide walks through every tab and feature.
+The desktop application (**Tacho Explorer**, `gui_tree.py`) provides a two-pane explorer for digital tachograph data: a regedit-style section tree on the left and an Excel-style data table on the right.
 
 ---
 
@@ -12,147 +12,71 @@ The Aurora DDD Analytics desktop application provides a modern, tabbed interface
 
 ---
 
-## Sidebar Navigation
-
-The left sidebar contains all navigation controls:
+## Top Bar
 
 | Control | Action |
 |---------|--------|
-| **Carica File .ddd** | Opens a file dialog to select a `.ddd` file |
-| **BENVENUTO** | Welcome tab with driver/vehicle identity card and KPI dashboard |
-| **ESPLORA DATI** | Raw data tree view showing all parsed tags |
-| **ATTIVITÀ** | Daily activity breakdown table |
-| **INFRAZIONI** | Compliance violations table (hidden for VU files) |
-| **FLOTTA** | Multi-file batch analysis |
-| **Esporta JSON** | Save results as JSON |
-| **Esporta Excel** | Save results as Excel workbook |
-| **Esporta CSV** | Save results as CSV |
+| **📂 Open DDD file** | Opens a file dialog to select a `.ddd` file |
+| **📤 Export** | Drop-down menu: PDF (.pdf), Excel (.xlsx), CSV (.csv), JSON (.json) |
+| File label | Name of the currently loaded file |
+| Integrity status | Color-coded signature verification result (see below) |
+| Generation badge | Detected generation (G1, G2, G2.2) and file type (Card / VU) |
+| Coverage badge | Percentage of file bytes successfully decoded |
+
+Parsing runs in a background thread — a progress bar appears in the status bar while a file is loading, and the window stays responsive.
+
+### Integrity Status Colors
+
+- **Green — Verified**: the digital signature chain is valid; the file has not been tampered with.
+- **Yellow — Incomplete / Missing ERCA**: the European root certificates needed to complete the chain are not available. The extracted data is still readable; only the cryptographic proof is incomplete.
+- **Red — Invalid Certificate Chain**: the signature check failed. This may indicate tampering or a corrupted download.
 
 ---
 
-## Welcome Tab (BENVENUTO)
+## Section Tree (Left Pane)
 
-After loading a `.ddd` file, the Welcome tab shows:
+The tree organizes all parsed data into sections. Clicking a section shows its records as a table on the right. Top-level sections:
 
-### Identity Card
-- **Driver files (Carta)**: Driver's full name, card number
-- **Vehicle files (VU)**: Vehicle plate, VIN number
+| Section | Contents |
+|---------|----------|
+| **Overview** | File name, origin (Driver Card / Vehicle Unit), generation, integrity, coverage |
+| **👤 Driver / Cardholder** | Card holder identity (driver card files) |
+| **🚚 Vehicle** | VIN, plate, registration nation (VU files) |
+| **📊 Activity & Usage** | Daily activities (day-by-day hierarchy), vehicles used, events, faults, places, calibrations, control activities, and more |
+| **🛰️ G2.2 — Smart V2** | GNSS accumulated driving, GNSS places, border crossings, load/unload records, load sensor, trailers |
+| **🚚 Vehicle Unit (VU)** | VU identification, sensor pairings, card insertions/withdrawals, time adjustments, company locks, downloads, power interruptions, overspeeding control, ITS consents, detailed speed blocks |
+| **🔐 Security & Certificates** | Certificates and signature verification details |
+| **🧩 Raw Tags** | Every raw tag occurrence, for low-level inspection |
 
-### Legal Status Banner
-A color-coded banner indicates file integrity:
-- **Green**: Certified — digital signature is valid, file has not been tampered with.
-- **Yellow**: Not verifiable — ERCA certificates are missing from the system, but extracted data is still readable.
-- **Red**: Invalid — the signature check indicates possible tampering.
+Sections only appear when the loaded file actually contains that kind of data — a G1 driver card will not show the G2.2 or VU groups.
 
-### KPI Dashboard
-Three key performance indicators:
-- **Total Distance** (KM)
-- **Driving Hours**
-- **Integrity Status**
+### Daily Activities
 
----
-
-## Explore Data Tab (ESPLORA DATI)
-
-This tab displays a hierarchical tree view of every tag parsed from the `.ddd` file, similar to a registry editor.
-
-| Column | Description |
-|--------|-------------|
-| **Offset** | Hexadecimal position in the file |
-| **Tag** | TLV tag identifier (e.g., `F00B`, `F010`) |
-| **Descrizione** | Human-readable tag name |
-| **Lunghezza** | Data length in bytes |
-| **Tipo** | Data type or "Container" for nested structures |
-
-### Tips for Reading the Tree View
-- **Folder icons (📂)** represent container structures that hold child tags underneath.
-- Click the expand arrow to drill down into nested data.
-- Tags marked with **🚫 DATI GREZZI** are unparsed byte ranges (usually empty padding or unknown regions).
-- Tags marked with **💤 PADDING** are filler bytes inserted by the tachograph to align data.
-- The tree is sorted by physical offset in the file, matching the on-disk layout.
+The **Daily Activities** section expands into one node per day. Each day's table lists the individual activity changes: time, activity type (Drive, Work, Available, Rest/Break), card slot, and crew status, together with the date, odometer reading, and daily counter.
 
 ---
 
-## Activities Tab (ATTIVITÀ)
+## Data Table (Right Pane)
 
-A daily summary table showing time breakdowns:
+The right pane shows the selected section as a sortable grid:
 
-| Column | Description |
-|--------|-------------|
-| **Data** | Date (DD/MM/YYYY) |
-| **Guida** | Total driving time (HH:MM) |
-| **Lavoro** | Total work time (HH:MM) |
-| **Pausa/Riposo** | Total rest + availability time (HH:MM) |
-| **Infrazioni** | Number of compliance violations for that day |
+- **Sort**: click any column header to sort; click again to reverse.
+- **Filter**: type in the 🔎 filter box to show only matching rows.
+- **Record count**: shown next to the section title.
 
-Use this tab to quickly spot heavy driving days or days with infractions.
+Values are formatted for readability: timestamps as `YYYY-MM-DD HH:MM`, coordinates with 5 decimals, and the tachograph "not available" sentinel values are shown as empty.
 
 ---
 
-## Infractions Tab (INFRAZIONI)
+## Export
 
-> **Note**: This tab is only visible when analyzing a **driver card** file. It is hidden for vehicle unit (VU) files since infractions are tied to individual drivers.
-
-### Infractions Table
-
-| Column | Description |
-|--------|-------------|
-| **Data** | Date of the violation |
-| **Tipo Infrazione** | Violation type code (e.g., `ECCESSO_GUIDA_CONTINUA`) |
-| **Severità** | Severity level: **MSI**, **SI**, or **MI** |
-| **Descrizione** | Human-readable explanation of the violation |
-
-### Severity Levels
-- **MSI** (Most Serious Infringement): Severe violations (>30 min over continuous driving limit, >2h short on daily rest)
-- **SI** (Serious Infringement): Significant violations (up to 90 min over driving, up to 2h short on rest)
-- **MI** (Minor Infringement): Small excesses (up to 30 min over driving, up to 1h short on rest)
-
-### Fines Estimate
-The red banner above the table shows the estimated fine range based on the Italian Highway Code (Art. 174 C.d.S.). Fines are cumulative across all infractions.
-
-For a deeper explanation, see the [Compliance Guide](compliance_guide.md).
-
----
-
-## Fleet Tab (FLOTTA)
-
-The Fleet tab enables batch analysis of multiple `.ddd` files from a folder.
-
-### Workflow
-1. Click **"Seleziona Cartella"** and choose a folder containing `.ddd` files.
-2. Click **"Analizza"** to process all files in the folder.
-3. Review the results table and KPI summary bar.
-4. Export results with **"Esporta CSV"** or **"Esporta PDF"**.
-
-### Results Table
-
-| Column | Description |
-|--------|-------------|
-| **Conducente** | Driver name |
-| **Carta** | Driver card number |
-| **KM Totali** | Total distance traveled |
-| **Ore Guida** | Total driving hours |
-| **Ultima Attività** | Date of last recorded activity |
-| **Infrazioni** | Number of violations (color-coded) |
-| **Integrità** | Signature verification status |
-| **File** | Source filename |
-
-### KPI Summary Bar
-- Number of drivers processed
-- Total KM across the fleet
-- Total driving hours
-- Total infractions
-
----
-
-## Export (Single File)
-
-Three export buttons in the sidebar save the currently loaded file's data:
+The **Export** menu saves the currently loaded file's data:
 
 | Format | Description |
 |--------|-------------|
+| **PDF** | Formatted report with summary and section tables |
+| **Excel** | Multi-sheet workbook (.xlsx), one sheet per data section |
+| **CSV** | All sections in a single CSV, separated by titled blocks |
 | **JSON** | Full structured output with all parsed fields |
-| **Excel** | Multi-sheet workbook (.xlsx) |
-| **CSV** | Flat CSV with time ranges |
 
-Click any export button, choose a save location, and the file will be written. For details on each format, see the [Export Guide](export_guide.md).
+Click a format, choose a save location, and the file is written. For details on each format, see the [Export Guide](export_guide.md).
