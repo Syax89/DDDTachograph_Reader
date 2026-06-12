@@ -135,6 +135,7 @@ LIST_SECTIONS = [
     ("its_consents", "ITS Consents", "vu", None),
     ("signed_daily_records", "Signed Daily Records", "vu", None),
     ("inserted_drivers", "Inserted Drivers", "vu", None),
+    ("card_numbers", "Card Numbers Seen", "vu", "card_numbers"),
     ("speed_blocks", "Detailed Speed Blocks", "vu", None),
     ("vu_record_arrays", "VU Record Array (raw)", "vu", None),
 ]
@@ -173,8 +174,14 @@ def _row_activities(rec):
     return rows if rows else empty
 
 
+def _row_card_number(num):
+    """Card numbers arrive as plain strings — wrap for a one-column table."""
+    return {"Card Number": num}
+
+
 TRANSFORMERS = {
     "activities": _row_activities,
+    "card_numbers": _row_card_number,
 }
 
 
