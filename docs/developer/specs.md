@@ -124,12 +124,10 @@ This maps directly to `core/g2_decoders.py:11` (`parse_g2_card_record()`).
 | Reg. EU 2016/799 Annex 1C | G2 smart tachograph | 0x0101-0x0201, 0x0509-0x0524, 0x7621-0x7634 |
 | Reg. EU 2023/980 | G2.2 smart tachograph V2 | 0x0525-0x0533, 0x0222-0x0228, 0x7631-0x7634 |
 | Reg. EU 2021/1228 | G2.2 GNSS auth, load/unload | 0x0525, 0x0526, 0x0528 |
-| EU 561/2006 | Driving/rest rules | N/A (compliance, not parsing) |
 
 ## Additional Spec Tools
 
-- **`specs/compare_parsers.py`** — Compares output between legacy and deterministic parsers
+- **`specs/coverage_audit.py`** — Per-file byte coverage breakdown against the reference DDD samples
 - **`specs/semantic_coverage_audit.py`** — Checks whether decoders populate expected semantic fields
 - **`specs/unparsed_pattern_triage.py`** — Analyzes patterns in unparsed byte blocks for potential new tag discovery
-- **`specs/ddd_decoding_attack_plan.md`** — Strategy document for tackling remaining unknown structures
-- **`specs/verify_compliance_fixes.py`** — Regression tests for compliance engine fixes
+- **`specs/test_det.py`** — Quick harness for the deterministic parser

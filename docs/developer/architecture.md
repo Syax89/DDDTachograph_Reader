@@ -5,7 +5,7 @@
 The DDD Tachograph Reader follows a layered pipeline architecture with four main layers:
 
 1. **Parser layer** — reads raw `.ddd` bytes, detects tachograph generation, recursively traverses STAP/BER-TLV structures, and dispatches field-level decoders
-2. **Analysis layer** — runs compliance checks (EU 561/2006), validates certificate chains (ERCA/MSCA), and optionally geocodes GNSS positions
+2. **Analysis layer** — validates certificate chains (ERCA/MSCA → Card/VU) and VU download signatures
 3. **Export layer** — produces output in JSON, Excel (multi-sheet), CSV, and PDF formats
 4. **GUI/CLI layer** — provides a tkinter GUI (`gui_tree.py`) and `tacho_cli.py` command-line interface
 
@@ -18,7 +18,7 @@ The DDD Tachograph Reader follows a layered pipeline architecture with four main
 - BER-TLV recursive parser (G2/G2.2, Annex 1C): same method with `mode='annex1c'` / `mode='ber'`
 - Deterministic two-pass parser: `DeterministicParser` (`core/deterministic_parser.py:105`)
 
-**Pipeline Pattern** — `parse → analyze → export`. The `TachoParser.parse()` method (`ddd_parser.py:120`) orchestrates: byte reading → generation detection → recursive parsing → gap filling → activity dedup → forensic validation → geocoding → generations tree.
+**Pipeline Pattern** — `parse → analyze → export`. The `TachoParser.parse()` method (`ddd_parser.py:120`) orchestrates: byte reading → generation detection → recursive parsing → gap filling → activity dedup → forensic validation → generations tree.
 
 ### Flow Diagram
 
@@ -100,8 +100,7 @@ Entry point class. Constructor accepts file path, records metadata, initializes 
 5. Fills coverage gaps to guarantee 100% byte coverage
 6. Deduplicates and sorts activities
 7. Validates certificate chain (ERCA → MSCA → Card)
-8. Optionally geocodes GNSS positions
-9. Builds hierarchical generations tree via `build_generations_tree()`
+8. Builds hierarchical generations tree via `build_generations_tree()`
 
 ### TagNavigator (`core/tag_navigator.py:8`)
 

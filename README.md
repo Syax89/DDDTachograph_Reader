@@ -113,7 +113,7 @@ pip install pytest
 pytest tests/ -v
 ```
 
-114 tests: multi-generation detection, G1/G2/G2.2 parsing, byte coverage, fuzzing, digital signatures.
+123 tests: multi-generation detection, G1/G2/G2.2 parsing, byte coverage, fuzzing, digital signatures.
 
 ---
 

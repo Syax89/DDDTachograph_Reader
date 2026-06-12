@@ -18,25 +18,29 @@
 
 **Symptom**: A file parses successfully but shows less than 100% byte coverage.
 
-**What this means**: Some bytes in the file could not be interpreted by the parser. These are tracked as gap ranges.
+**What this means**: Some bytes in the file could not be interpreted by the parser. These are tracked as gap ranges and shown in the **Raw Tags** section.
 
 **What to do**:
 - If coverage is above 95%, the missing bytes are likely padding or unused regions and the extracted data is still valid.
-- If coverage is significantly below 100%, the file may use a new or proprietary tag format. Report the file to the project (without sharing sensitive personal data) so support can be added.
+- If coverage is significantly below 100%, the file may use a new or proprietary tag format. Open a GitHub issue (without sharing sensitive personal data) so support can be added.
 
 ---
 
-## "Certificate validation failed" or "Incomplete Certificates"
+## Integrity shows "Incomplete" or "Missing ERCA"
 
-**Symptom**: The integrity status shows "Incomplete Certificates" or "Not Verified" instead of "Verified".
+**Symptom**: The integrity status shows yellow ("Incomplete" / "Missing ERCA") instead of green ("Verified").
 
-**Explanation**:
-- **Incomplete Certificates**: The ERCA (European Root Certificate Authority) certificates needed to validate the digital signature are not installed on your computer. The data is still readable and accurate — only the cryptographic proof of authenticity is unavailable.
-- **Not Verified / Tampered**: The signature check was performed but failed. This could indicate file tampering, but can also happen with older cards using deprecated certificate formats.
+**Explanation**: The ERCA (European Root Certificate Authority) certificate needed to validate that file's signature chain is not available. The data is still readable and accurate — only the cryptographic proof of authenticity is incomplete.
 
-**What to do**:
-- For "Incomplete Certificates": Try running with an internet connection — the application can download the required certificates automatically.
-- For "Not Verified": If you trust the source of the file, the data is likely still valid. If you suspect tampering, contact the driver or download the file again from the card/unit.
+**What to do**: The application ships with the ERCA root certificates in the `certs/` folder. If a certificate generation is missing, you can download it from the EU Joint Research Centre ([dtc.jrc.ec.europa.eu](https://dtc.jrc.ec.europa.eu/)) and place it in `certs/` — see `certs/README.txt` for the expected file names.
+
+## Integrity shows "Invalid Certificate Chain"
+
+**Symptom**: The integrity status is red.
+
+**Explanation**: The signature check was performed but failed. This could indicate file tampering or a corrupted download.
+
+**What to do**: If you trust the source of the file, download it again from the card/unit and re-check. If the failure persists, treat the file's authenticity as unverified.
 
 ---
 
@@ -56,7 +60,7 @@
    python --version
    ```
 
-3. **macOS tkinter issues**: On macOS, the built-in Python may lack tkinter support. Install Python via Homebrew:
+3. **macOS tkinter issues**: On macOS, the built-in Python may lack tkinter support. Install it via Homebrew:
    ```bash
    brew install python-tk
    ```
@@ -73,27 +77,17 @@
 pip install -r requirements.txt
 ```
 
-The full dependency list is:
-
-| Package | pip install command |
-|---------|-------------------|
-| cryptography | `pip install cryptography` |
-| reportlab | `pip install reportlab` |
-| pandas | `pip install pandas` |
-| openpyxl | `pip install openpyxl` |
-| requests | `pip install requests` |
+Note that `reportlab` is only needed for PDF export and `openpyxl` only for Excel export — parsing and JSON output work without them.
 
 ---
 
 ## Performance Tips for Large Files
 
-Large `.ddd` files (90+ days of data, or vehicle unit files with many drivers) may take longer to process. Here are tips for better performance:
+Large `.ddd` files (90+ days of data, or vehicle unit files with detailed speed blocks) may take longer to process:
 
-1. **Use the CLI for batch processing**: The command-line interface is faster than the GUI for processing multiple files. Use `tacho_cli.py` for automated workflows.
-2. **Disable reverse geocoding**: The `--geocode` flag makes a network request for each GNSS position, which adds significant time. Use it only when you need location names.
-3. **Close other applications**: Parsing and compliance analysis are CPU-intensive. Close heavy applications if you notice slowdowns.
-4. **Export to JSON first, then analyze**: Parse the file once with JSON output, then use the JSON for repeated analysis instead of re-parsing the binary `.ddd`.
-5. **For fleet analysis**: The Fleet tab processes files in a background thread so the GUI remains responsive, but large folders (50+ files) may take several minutes. Monitor the progress bar.
+1. **Use the CLI for batch processing**: The command-line interface is faster than the GUI for processing many files in a shell loop.
+2. **Export to JSON first, then analyze**: Parse the file once with JSON output, then use the JSON for repeated analysis instead of re-parsing the binary `.ddd`.
+3. **The GUI stays responsive**: Parsing runs in a background thread; the progress bar in the status bar shows when work is in progress.
 
 ---
 

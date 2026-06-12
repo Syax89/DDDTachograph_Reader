@@ -44,7 +44,7 @@
 
 ## Core Architecture Components
 
-**TachoParser** (`ddd_parser.py:26`) — Entry point class. Manages file loading, generation detection, parser routing, post-processing (gap filling, dedup, geocoding, certificate validation).
+**TachoParser** (`ddd_parser.py:26`) — Entry point class. Manages file loading, generation detection, parser routing, post-processing (gap filling, dedup, certificate validation).
 
 **TachoResult** (`core/models.py:43`) — Main data model dataclass. Contains all parsed data: metadata, driver info, vehicle info, activities, events, faults, locations, raw tags, and G2.2-specific records.
 
@@ -82,21 +82,9 @@
 
 **Border Crossings** — G2.2 tag `0x052A`. Records of international border crossings detected via GNSS, required for cabotage enforcement.
 
-## Regulations & Compliance
+## Regulations
 
-**EU 561/2006** — The main driving and rest time regulation. Sets:
-- Maximum 4.5 hours continuous driving (then 45-minute break)
-- Daily rest: 11 hours (reducible to 9h, max 3x/week)
-- Daily driving: 9 hours (extendable to 10h, max 2x/week)
-- Weekly driving: 56 hours (max 90h bi-weekly)
-- Weekly rest: 45 hours (reducible to 24h with compensation)
-
-**ComplianceEngine** (`compliance_engine.py:19`) — Analyzes driver activities against EU 561/2006. Produces infraction reports with severity levels.
-
-**Infraction Severities**:
-- **MSI** (Most Serious Infringement) — e.g., exceeding daily driving by 50%+
-- **SI** (Serious Infringement) — e.g., exceeding 4.5h continuous driving by 1h+
-- **MI** (Minor Infringement) — e.g., exceeding 4.5h by less than 1h
+**EU 561/2006** — The main driving and rest time regulation (4.5h continuous driving limit, daily/weekly rest minimums). Background context only: this project parses recorded activities but does **not** evaluate driving-time rules.
 
 ## Other Terms
 

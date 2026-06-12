@@ -1,6 +1,6 @@
 # TachoParser
 
-Main parser entry point for `.ddd` digital tachograph files. Handles generation detection (G1/G2/G2.2), deterministic or legacy parsing, post-processing (dedup, geocoding, forensic validation), and coverage gap filling.
+Main parser entry point for `.ddd` digital tachograph files. Handles generation detection (G1/G2/G2.2), deterministic or legacy parsing, post-processing (dedup, forensic validation), and coverage gap filling.
 
 **File:** `ddd_parser.py:26`
 
@@ -62,8 +62,7 @@ Parses the `.ddd` file and returns the complete result dictionary.
 6. **Coverage**: `_fill_coverage_gaps()` guarantees 100% byte coverage (legacy) or reads coverage from deterministic parser
 7. **Post-processing**: Activity deduplication and date-based sorting
 8. **Forensic validation**: Certificate chain validation via `SignatureValidator.validate_tacho_chain()`
-9. **Geocoding**: If `geocoding_engine` is available and locations exist
-10. **Generations tree**: Builds hierarchical view via `build_generations_tree()`
+9. **Generations tree**: Builds hierarchical view via `build_generations_tree()`
 
 ### Method: `get_coverage_report()`
 
