@@ -4,7 +4,7 @@
 
 The DDD Tachograph Reader follows a layered pipeline architecture with four main layers:
 
-1. **Parser layer** — reads raw `.ddd` bytes, detects tachograph generation, recursively traverses STAP/BER-TLV structures, and dispatches field-level decoders
+1. **Parser layer** — reads raw `.ddd` bytes, detects tachograph generation, walks STAP/BER-TLV structures and VU download streams deterministically, and dispatches field-level decoders
 2. **Analysis layer** — validates certificate chains (ERCA/MSCA → Card/VU) and VU download signatures
 3. **Export layer** — produces output in JSON, Excel (multi-sheet), CSV, and PDF formats
 4. **GUI/CLI layer** — provides a tkinter GUI (`gui_tree.py`) and `tacho_cli.py` command-line interface
@@ -13,33 +13,30 @@ The DDD Tachograph Reader follows a layered pipeline architecture with four main
 
 **Registry Pattern** — `DecoderRegistry` (`core/decoder_registry.py:28`) is the single source of truth mapping tag IDs to decoder functions. Each entry carries metadata: container flag, signature block, minimum length, record size, Annex reference, and generation. This enables lookup-by-tag without hardcoded switch statements.
 
-**Strategy Pattern** — Three parsing strategies coexist:
-- STAP recursive parser (G1, Annex 1B T2L2 headers): `TagNavigator.parse_stap_recursive()` (`core/tag_navigator.py:38`)
-- BER-TLV recursive parser (G2/G2.2, Annex 1C): same method with `mode='annex1c'` / `mode='ber'`
-- Deterministic two-pass parser: `DeterministicParser` (`core/deterministic_parser.py:105`)
+**Strategy Pattern** — `DeterministicParser` (`core/deterministic_parser.py`) selects a walk per file kind:
+- Card files: sequential STAP (G1, T2L2 headers) or BER-TLV (G2/G2.2) walk with container recursion
+- G2/G2.2 VU downloads: RecordArray stream walk via `core/vu_record_dispatcher.py` (Annex 1C Appendix 7)
+- G1 VU downloads: SID/TREP message walk via `core/g1_vu_walker.py` (Annex 1B §2.2.6)
 
-**Pipeline Pattern** — `parse → analyze → export`. The `TachoParser.parse()` method (`ddd_parser.py:120`) orchestrates: byte reading → generation detection → recursive parsing → gap filling → activity dedup → forensic validation → generations tree.
+**Pipeline Pattern** — `parse → analyze → export`. `TachoParser.parse()` (`ddd_parser.py`) is a thin orchestrator over named phase methods: `_open_file → _run_structural_parse → _decode_vu_semantics → _dedup_and_sort_activities → _validate_certificate_chain → _verify_ef_signatures → build_generations_tree`.
 
 ### Flow Diagram
 
 ```mermaid
 flowchart TD
     A[".ddd File"] --> B[TachoParser.parse]
-    B --> C{Generation Detection}
-    C -->|"G1 (Annex 1B)"| D["TagNavigator.parse_stap_recursive\n(STAP / T2L2 headers)"]
-    C -->|"G2/G2.2 (Annex 1C)"| E["TagNavigator.parse_stap_recursive\n(BER-TLV mode)"]
-    C -->|"Deterministic mode"| F["DeterministicParser.parse\n(Two-pass)"]
-    D --> G["TagNavigator.record_and_dispatch"]
+    B --> C{Generation + VU/card detection}
+    C -->|"Card"| D["DeterministicParser\nSTAP / BER-TLV walk"]
+    C -->|"G2/G2.2 VU"| E["RecordArray stream walk\n(vu_record_dispatcher)"]
+    C -->|"G1 VU"| F["SID/TREP message walk\n(g1_vu_walker)"]
+    D --> G["DecoderRegistry.get_decoder"]
     E --> G
-    F --> H["DecoderRegistry.get_decoder"]
-    G --> H
-    H --> I["Field-level Decoders\n(decoders.py / g2_decoders.py)"]
-    I --> J[TachoResult]
-    J --> K[SignatureValidator.validate_tacho_chain]
-    D --> N["_fill_coverage_gaps + deep_scan"]
-    N --> G
-    F --> output["JSON via TachoResult.to_dict()"]
-    L --> O
+    F --> G
+    G --> H["Field-level decoders\n(decoders.py facade → themed modules)"]
+    H --> I[TachoResult]
+    I --> J["SignatureValidator\n(ERCA→MSCA→Card/VU)"]
+    J --> K["EF / TREP signature verification"]
+    K --> L["build_generations_tree()\n→ JSON via TachoResult.to_dict()"]
 ```
 
 ## Pipeline Flow (Detailed)
@@ -52,71 +49,49 @@ flowchart TD
         A --> A2["Read first 2 bytes\n(0x7631 → G2.2\n0x762x → G2\nelse → G1)"]
     end
 
-    subgraph "2. Parsing Strategy"
-        A2 --> B1{"use_deterministic?"}
-        B1 -->|"Yes"| B2["DeterministicParser.parse()\nTwo-pass: structural + semantic"]
-        B1 -->|"No"| B3["TagNavigator.parse_stap_recursive()\nRecursive depth-first"]
+    subgraph "2. Structural Parsing (DeterministicParser)"
+        A2 --> B1{"VU or card?"}
+        B1 -->|"G2/G2.2 VU"| B2["_parse_vu_stream()\nRecordArray sections"]
+        B1 -->|"G1 VU"| B3["_parse_g1_vu_stream()\nSID/TREP messages"]
+        B1 -->|"Card"| B4["STAP / BER-TLV walk\n_try_read_stap / _try_read_ber_tlv"]
+        B4 --> B5["_parse_container()\nrecursive, depth-bounded"]
+        B2 --> B6["CoverageTracker\nevery byte classified"]
+        B3 --> B6
+        B5 --> B6
+        B6 --> B7["_classify_gaps()\nPadding / DownloadTrailer / Unknown"]
     end
 
-    subgraph "3. Structural Parsing"
-        B2 --> C1["For each block:\n_try_read_stap() or _try_read_ber_tlv()\n→ tag, length, payload"]
-        B3 --> C2["Depth 0: strict STAP records\n(5-byte T2L2 headers)"]
-        C2 --> C3["Remaining bytes: BER fallback scan"]
-        C3 --> C4["Depth 1+: sliding-window BER-TLV"]
-        C1 --> C5["CoverageTracker.mark_covered()"]
+    subgraph "3. Tag Dispatch"
+        B4 --> C1["DecoderRegistry.get_decoder(tag)"]
+        C1 --> C2["decoder_fn(payload, results[, tag])\ncard/VU scope filter\nsignature dtypes skipped"]
     end
 
-    subgraph "4. Tag Dispatch"
-        C1 --> D1["DecoderRegistry.get_decoder(tag)"]
-        C4 --> D2["record_and_dispatch()\nSpecific tag overrides first\nThen shared / card / VU dispatchers\nThen G2.2-specific dispatchers\nThen certificate decoders"]
-        D1 --> D3["decoder_fn(payload, results)"]
+    subgraph "4. VU Semantic Pass (TachoParser)"
+        B2 --> D1["walk_vu_record_arrays()\n+ ECDSA download verification"]
+        B3 --> D2["walk_g1_vu()\nheuristic fallback if invalid"]
     end
 
-    subgraph "5. Container Recursion"
-        D2 --> E1["dispatch_container_if_needed()"]
-        E1 --> E2{"Is container?\n(0x76xx, 0x7Fxx,\n0x7Dxx, 0xADxx,\nbit 5 in BER,\n0x0525-0x052A)"}
-        E2 -->|"Yes"| E3["Parse inner data\nRecursively"]
-        E2 -->|"No"| E4["count bytes_covered"]
-    end
-
-    subgraph "6. Post-processing"
-        E4 --> F1["_fill_coverage_gaps()\nMerge covered ranges\nFill remaining as GAP_FILLER"]
-        F1 --> F2["deep_scan()\nSliding window over unparsed\nTry STAP + BER at each position"]
-        F2 --> F3["Activity dedup + sort"]
-        F3 --> F4["Certificate chain validation"]
-        F4 --> F5["build_generations_tree()"]
+    subgraph "5. Post-processing"
+        C2 --> E1["Activity dedup + sort"]
+        D1 --> E1
+        D2 --> E1
+        E1 --> E2["Certificate chain validation\n+ EF signature verification"]
+        E2 --> E3["build_generations_tree()"]
     end
 ```
 
 ## Component Descriptions
 
-### TachoParser (`ddd_parser.py:26`)
+### TachoParser (`ddd_parser.py`)
 
-Entry point class. Constructor accepts file path, records metadata, initializes `TagNavigator` and `SignatureValidator`. The `parse()` method:
-1. Opens file via `mmap` for efficient random access
-2. Detects VU vs card by first byte (`0x76` = VU)
-3. Routes to `DeterministicParser` or legacy `TagNavigator.parse_stap_recursive()`
-4. Runs VU download message parsing (TREP) if VU
-5. Fills coverage gaps to guarantee 100% byte coverage
-6. Deduplicates and sorts activities
-7. Validates certificate chain (ERCA → MSCA → Card)
-8. Builds hierarchical generations tree via `build_generations_tree()`
-
-### TagNavigator (`core/tag_navigator.py:8`)
-
-Core recursive parser. Key methods:
-
-- **`parse_stap_recursive()`** (line 38): Hybrid STAP/BER parser. At depth 0, reads strict sequential STAP records with 5-byte T2L2 headers (`2B tag BE + 1B dtype + 2B length BE`). At depth 1+, uses sliding-window BER-TLV with tag filtering by known container prefixes (`0x7F`, `0x5F`, `0xBF`, `0x76`, `0xAD`, `0x7D`, `0xC1`).
-
-- **`read_ber_tlv()`** (line 14): Parses BER-TLV header. Handles multi-byte tags (bit 5 extension), short-form (length < 0x80) and long-form (length ≥ 0x80, up to 3 length bytes) encoding.
-
-- **`record_and_dispatch()`** (line 206): Central dispatch. Applies tag override table, handles VIN detection at fixed offsets (420, 442), routes signature blocks, then dispatches to specific decoders by tag ID.
-
-- **`dispatch_container_if_needed()`** (line 524): Determines if a tag is a container (recursive sub-structure). Container tags: all `0x76xx`, `0x7F21`, `0x7D21`, `0xAD21`, G2.2 activity tags (`0x0525`-`0x052A`), and any BER tag with bit 5 set in the first byte.
-
-- **`deep_scan()`** (line 161): Heuristic recovery. Scans unparsed blocks ≥ 10 bytes using a sliding window, trying STAP and BER-TLV at each position. Re-parses discovered substructures.
-
-- **`record_unparsed()`** (line 137): Records byte ranges as "Unparsed Data" or "Padding" (all identical bytes `0x00`/`0xFF`/`0x55`).
+Entry point class. Constructor accepts the file path, records metadata, initializes `SignatureValidator`. `parse()` orchestrates named phases:
+1. `_open_file()` — mmap + VU/card detection (first byte `0x76` = VU)
+2. `_run_structural_parse()` — `DeterministicParser` walk with full byte coverage
+3. `_decode_vu_semantics()` — VU only: RecordArray dispatch + ECDSA verification (G2/G2.2) or TREP walk (G1)
+4. `_dedup_and_sort_activities()` — drop duplicate daily blocks, newest-first
+5. `_validate_certificate_chain()` — ERCA → MSCA → Card/VU chain
+6. `_verify_ef_signatures()` — per-EF data integrity against the card key
+7. `build_generations_tree()` — hierarchical per-generation view
 
 ### DecoderRegistry (`core/decoder_registry.py:28`)
 

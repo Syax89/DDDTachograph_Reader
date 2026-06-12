@@ -1,8 +1,8 @@
 # TachoParser
 
-Main parser entry point for `.ddd` digital tachograph files. Handles generation detection (G1/G2/G2.2), deterministic or legacy parsing, post-processing (dedup, forensic validation), and coverage gap filling.
+Main parser entry point for `.ddd` digital tachograph files. Orchestrates generation detection (G1/G2/G2.2), the deterministic structural parse, VU semantic decoding, and post-processing (dedup, certificate and EF signature verification).
 
-**File:** `ddd_parser.py:26`
+**File:** `ddd_parser.py`
 
 ## Class: `TachoParser`
 
@@ -20,7 +20,7 @@ def __init__(self, file_path: str, use_deterministic: bool = True)
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `file_path` | `str` | (required) | Path to the `.ddd` file to parse |
-| `use_deterministic` | `bool` | `True` | Use `DeterministicParser` (two-pass) or legacy `TagNavigator` |
+| `use_deterministic` | `bool` | `True` | Deprecated. The legacy parser has been removed; passing `False` emits a `DeprecationWarning` and the deterministic parser is used regardless |
 
 **Instance attributes set on init:**
 
@@ -30,15 +30,12 @@ def __init__(self, file_path: str, use_deterministic: bool = True)
 | `file_size` | `int` | File size in bytes |
 | `raw_data` | `mmap` or `None` | Memory-mapped file data (set during `parse()`) |
 | `validator` | `SignatureValidator` | Certificate chain validator instance |
-| `bytes_covered` | `int` | Running count of bytes assigned to tags |
-| `card_public_key` | `bytes` or `None` | Extracted card public key after validation |
+| `card_public_key` | key object or `None` | Card public key after successful chain validation |
 | `msca_cert_raw` | `bytes` or `None` | Raw MSCA certificate bytes |
 | `card_cert_raw` | `bytes` or `None` | Raw card certificate bytes |
 | `validation_status` | `str` | Certificate chain validation result |
 | `is_vu` | `bool` | True if file starts with `0x76` (vehicle unit data) |
-| `use_deterministic` | `bool` | Parser mode flag |
 | `results` | `dict` | Parsed data (TachoResult.to_dict()) |
-| `navigator` | `TagNavigator` | Legacy recursive parser (used in legacy mode) |
 
 ### Method: `parse()`
 
@@ -50,19 +47,15 @@ Parses the `.ddd` file and returns the complete result dictionary.
 
 **Returns:** `dict` — A `TachoResult.to_dict()` with all parsed fields.
 
-**Pipeline steps (in order):**
+**Pipeline phases (named methods, in order):**
 
-1. **Validation**: Checks file existence and non-zero size
-2. **Memory map**: Opens file with `mmap` for random access
-3. **Generation detection**: Reads first 1-2 bytes to detect VU (0x76) and generation
-4. **Parsing mode**: 
-   - *Deterministic* (`use_deterministic=True`): Delegates to `DeterministicParser.parse()`
-   - *Legacy* (`use_deterministic=False`): Calls `TagNavigator.parse_stap_recursive()` + `deep_scan()`
-5. **VU download messages**: If `is_vu`, parses SID 0x76 + TREP messages via `decoders.parse_vu_download_messages()`
-6. **Coverage**: `_fill_coverage_gaps()` guarantees 100% byte coverage (legacy) or reads coverage from deterministic parser
-7. **Post-processing**: Activity deduplication and date-based sorting
-8. **Forensic validation**: Certificate chain validation via `SignatureValidator.validate_tacho_chain()`
-9. **Generations tree**: Builds hierarchical view via `build_generations_tree()`
+1. `_open_file()` — memory-maps the file and detects VU vs card (first byte `0x76` = VU)
+2. `_run_structural_parse()` — `DeterministicParser.parse()`: STAP/BER-TLV or VU stream walk with full byte coverage
+3. `_decode_vu_semantics()` — VU only: G2/G2.2 RecordArray dispatch + ECDSA download verification, or G1 TREP walk (heuristic fallback if invalid)
+4. `_dedup_and_sort_activities()` — drops duplicate daily blocks, sorts newest-first
+5. `_validate_certificate_chain()` — ERCA → MSCA → Card/VU chain via `SignatureValidator`
+6. `_verify_ef_signatures()` — per-EF data integrity against the card public key
+7. `build_generations_tree()` — hierarchical per-generation view
 
 ### Method: `get_coverage_report()`
 
@@ -76,25 +69,16 @@ Returns the percentage of bytes assigned to identified fields.
 
 ### Properties and Detection Logic
 
-**Generation detection** happens in two paths:
-
-- **Deterministic parser** (`core/deterministic_parser.py:188`): Reads first 2 bytes:
-  - `b'\x76\x31'` → `"G2.2 (Smart V2)"`
-  - `b'\x76\x21'` or `b'\x76\x22'` → `"G2 (Smart)"`
-  - Otherwise → `"G1 (Digital)"`
-
-- **Legacy parser** (`ddd_parser.py:141-147`): Same logic, inline.
+**Generation detection** (`DeterministicParser._detect_generation()`): reads the first 2 bytes:
+- `b'\x76\x31'` → `"G2.2 (Smart V2)"`
+- `b'\x76\x21'` or `b'\x76\x22'` → `"G2 (Smart)"`
+- Otherwise → `"G1 (Digital)"` (card files are refined after parsing via `_refine_card_generation()`)
 
 **VU detection**: First byte == `0x76` → `is_vu = True`.
-
-**Parser selection**: Controlled by `use_deterministic` constructor parameter. The deterministic parser (`core/deterministic_parser.py`) provides 100% coverage by design; the legacy parser (`TagNavigator`) relies on `_fill_coverage_gaps()` to achieve the same.
 
 ## Usage Example
 
 ```python
-# From ddd_parser.py:216
-import sys
-import json
 from ddd_parser import TachoParser
 
 parser = TachoParser("/path/to/file.ddd")
@@ -115,23 +99,11 @@ print(f"Coverage: {pct}%")
 print(parser.validation_status)  # "Verified", "Verified (Local Chain)", or "Invalid Certificate Chain"
 ```
 
-### Using non-deterministic (legacy) mode
-
-```python
-parser = TachoParser("/path/to/file.ddd", use_deterministic=False)
-results = parser.parse()
-```
-
 ## See Also
 
 - [TachoResult](models.md) — Data structure returned by parse()
-- [ExportManager](export_manager.md) — Export results to Excel/CSV
-
-## See Also
-
-- [TachoResult](models.md) — Output data model
-- [DeterministicParser](deterministic_parser.md) — Two-pass parser used by default
-- [TagNavigator](tag_navigator.md) — Legacy recursive parser
+- [DeterministicParser](deterministic_parser.md) — Structural parser
+- [ExportManager](export_manager.md) — Export results to Excel/CSV/PDF
 
 ## Common Tasks
 
@@ -163,7 +135,7 @@ print(f"Vehicle: {vehicle['plate']} (VIN: {vehicle['vin']})")
 parser = TachoParser("my_tacho.ddd")
 data = parser.parse()
 for day in data["activities"][:5]:
-    print(f"Date: {day['data']}, Events: {len(day.get('eventi', []))}")
+    print(f"Date: {day['date']}, Changes: {len(day.get('changes', []))}")
 ```
 
 ### Run coverage audit

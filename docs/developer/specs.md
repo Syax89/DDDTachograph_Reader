@@ -65,10 +65,6 @@ python3 specs/coverage_audit.py
 
 Output includes a JSON report at `specs/coverage_report.json`.
 
-### `specs/architecture_migration_plan.md`
-
-Migration plan for moving from the legacy recursive parser (`TagNavigator`) to the deterministic two-pass parser (`DeterministicParser`).
-
 ### `specs/SPEC_REFERENCE.md`
 
 General reference document linking to EU regulations and technical standards.
@@ -87,11 +83,7 @@ Tags in `specs/g22_verification_status.md` are classified into three confidence 
 | **MEDIUM** | Field list (campologia) is documented in the regulation, but exact byte encoding or field sizes had to be estimated from DDD file analysis. Decoder captures fields correctly but may have edge cases. |
 | **LOW** | No public specification exists for this tag. Structure was reverse-engineered from byte patterns in sample DDD files. Decoder is best-effort and may miss or misparse edge cases. |
 
-The code encodes this in `TagNavigator._get_spec_meta()` (`core/tag_navigator.py:373`) through two hardcoded sets:
-- `SPEC_VERIFIED_TAGS` — confirmed against published specs
-- `HEURISTIC_TAGS` — heuristic/reverse-engineered
-
-When available, `DecoderRegistry` is also consulted for per-tag verification metadata.
+In code, per-tag verification metadata lives in `DecoderRegistry`: each `TagDecoder` entry carries `annex_ref` and `generation`, and `DeterministicParser._record_tag()` marks an occurrence `is_spec_verified` when a registered decoder exists for the tag. The VU RecordArray walk uses the per-recordType confidence levels in `core/vu_record_dispatcher.RECORD_TYPES`.
 
 ## How to Read Annex 1B/1C References
 

@@ -136,34 +136,11 @@ from . import g2_decoders
 # Then reference as g2_decoders.parse_g22_vehicle_authorization
 ```
 
-## Step 4: Add Dispatch in TagNavigator.record_and_dispatch()
+## Step 4: Dispatch Is Automatic
 
-Add a dispatch entry in `core/tag_navigator.py`, in the `record_and_dispatch()` method (around lines 294-346 where other G2.2 dispatchers live):
+`DeterministicParser._dispatch_decoder()` dispatches via `DecoderRegistry.get_decoder(tag).decoder_fn()`, so no manual dispatch entry is needed — registering the decoder in `DecoderRegistry` (Step 3) is enough. The dispatcher inspects the function signature: a decoder with three required parameters automatically receives `(payload, results, tag)`, otherwise `(payload, results)`.
 
-```python
-elif tag == 0x0534:
-    decoders.parse_g22_vehicle_authorization(val, self.parser.results)
-```
-
-If the tag is a container, also add it to the `CONTAINER_TAGS` set in `dispatch_container_if_needed()` (line 525):
-
-```python
-CONTAINER_TAGS = {
-    # ... existing entries ...
-    0x0534,  # Add here if container
-}
-```
-
-### In DeterministicParser
-
-The `DeterministicParser._dispatch_decoder()` method (`core/deterministic_parser.py:351`) automatically dispatches via `DecoderRegistry.get_decoder(tag).decoder_fn()`, so no manual dispatch entry is needed for the deterministic path — as long as the decoder is registered in `DecoderRegistry` with a valid `decoder_fn`.
-
-If the decoder uses the 3-argument signature `(data, results, tag)`, add it to the tag-aware dispatch list in `_dispatch_decoder()`:
-
-```python
-elif tag == 0x0534:
-    dec.decoder_fn(payload, self.results, tag)
-```
+If the tag is a container whose payload must be walked recursively, declare it with `container=True` in its `TagDecoder` entry (any `0x76xx` tag is treated as a container regardless).
 
 ## Step 5: Add Tests
 
@@ -202,7 +179,7 @@ def test_parse_vehicle_authorization():
 Run the tests:
 
 ```bash
-/usr/local/bin/python3.9 -m pytest tests/ -v -k test_parse_vehicle_authorization
+python -m pytest tests/ -v -k test_parse_vehicle_authorization
 ```
 
 ## Step 6: Update Spec Documentation
@@ -222,15 +199,15 @@ Verify that the new decoder doesn't break existing coverage:
 python3 specs/coverage_audit.py
 ```
 
-All 8 DDD files in `DDD/` should maintain **100% byte coverage** (or very near it). If coverage drops, inspect the audit output for new unparsed ranges.
+The reference DDD files in `DDD/` should maintain **100% byte coverage** (or very near it). If coverage drops, inspect the audit output for new unparsed ranges.
 
 ## Summary Checklist
 
 - [ ] Tag identified in spec with byte-level structure
 - [ ] Decoder function implemented with proper signature
 - [ ] Registered in `DecoderRegistry` with annex_ref, generation, record_size
-- [ ] Dispatch added in `TagNavigator.record_and_dispatch()` (and `_dispatch_decoder()` if needed)
-- [ ] Container tag added to `CONTAINER_TAGS` if applicable
+- [ ] Re-exported from the `core/decoders.py` facade
+- [ ] `container=True` set in the `TagDecoder` entry if applicable
 - [ ] Tests written and passing
 - [ ] Spec documentation updated
 - [ ] Coverage audit confirms no regression

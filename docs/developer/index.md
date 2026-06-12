@@ -15,11 +15,10 @@ Cross-platform (Windows/macOS) application for parsing, analyzing and visualizin
 
 ## Quick Links
 
-- **Parsing entry point**: `ddd_parser.py:272` — `TachoParser.parse()`
-- **Tag dispatch**: `core/tag_navigator.py:206` — `TagNavigator.record_and_dispatch()`
-- **Decoder registry**: `core/decoder_registry.py:28` — `DecoderRegistry`
-- **Deterministic parser**: `core/deterministic_parser.py:105` — `DeterministicParser`
-- **Run tests**: `/usr/local/bin/python3.9 -m pytest tests/ -v`
+- **Parsing entry point**: `ddd_parser.py` — `TachoParser.parse()`
+- **Tag dispatch**: `core/deterministic_parser.py` — `DeterministicParser._dispatch_decoder()`
+- **Decoder registry**: `core/decoder_registry.py` — `DecoderRegistry`
+- **Run tests**: `python -m pytest tests/ -v`
 - **Coverage audit**: `python3 specs/coverage_audit.py`
 
 ## Generations Supported
@@ -43,8 +42,7 @@ ddd-tachograph-reader/
 │   ├── vu_trep_decoders.py  # VU overview + TREP walkers
 │   ├── g2_decoders.py       # G2/G2.2 VU record decoders
 │   ├── decoder_registry.py  # Centralized tag -> decoder mapping
-│   ├── tag_navigator.py     # Recursive STAP/BER-TLV parser
-│   ├── deterministic_parser.py  # Schema-driven two-pass parser
+│   ├── deterministic_parser.py  # Deterministic full-coverage parser
 │   ├── models.py            # TachoResult data hierarchy
 │   ├── tag_definitions.py   # Default tag name dictionary
 │   ├── record_array.py      # RecordArray (Appendix 7) format

@@ -44,15 +44,17 @@
 
 ## Core Architecture Components
 
-**TachoParser** (`ddd_parser.py:26`) — Entry point class. Manages file loading, generation detection, parser routing, post-processing (gap filling, dedup, certificate validation).
+**TachoParser** (`ddd_parser.py`) — Entry point class. Orchestrates the parse pipeline in named phases: structural parse, VU semantic decoding, activity dedup, certificate chain and EF signature verification.
 
 **TachoResult** (`core/models.py:43`) — Main data model dataclass. Contains all parsed data: metadata, driver info, vehicle info, activities, events, faults, locations, raw tags, and G2.2-specific records.
 
-**TagNavigator** (`core/tag_navigator.py:8`) — Recursive parser that traverses STAP and BER-TLV structures. Handles tag dispatch, container recursion, deep scan recovery, and coverage tracking.
+**VuRecordDispatcher** (`core/vu_record_dispatcher.py`) — Walks G2/G2.2 VU downloads as RecordArray sections keyed by recordType (Annex 1C Appendix 7), used for both structural coverage and semantic decoding.
+
+**G1VuWalker** (`core/g1_vu_walker.py`) — Deterministic SID/TREP message walk for G1 VU downloads (Annex 1B §2.2.6), including per-message RSA signatures.
 
 **DecoderRegistry** (`core/decoder_registry.py:28`) — Centralized registry mapping tag IDs to decoder functions. Each entry contains metadata: container flag, record size, annex reference, generation, card/VU scope.
 
-**DeterministicParser** (`core/deterministic_parser.py:105`) — Schema-driven two-pass parser (migration target). Guarantees 100% byte coverage through sequential parsing with `CoverageTracker`.
+**DeterministicParser** (`core/deterministic_parser.py`) — The structural parser. Guarantees 100% byte coverage through sequential parsing with `CoverageTracker`; routes VU downloads to the dedicated stream walkers.
 
 **CoverageTracker** (`core/deterministic_parser.py:18`) — Tracks covered byte ranges, classifies them (Tag, Padding, Unknown), and produces coverage reports.
 

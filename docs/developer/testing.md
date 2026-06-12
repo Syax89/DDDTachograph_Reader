@@ -104,7 +104,7 @@ def test_full_parse_g1():
         path = f.name
 
     try:
-        parser = TachoParser(path, use_deterministic=True)
+        parser = TachoParser(path)
         results = parser.parse()
         assert results["metadata"]["integrity_check"] != "Error"
         assert results["metadata"]["coverage_pct"] >= 99.0
