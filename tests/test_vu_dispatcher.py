@@ -76,6 +76,29 @@ class TestBorderCrossingDecode(unittest.TestCase):
 
 
 @requires_real_files
+class TestDetailedSpeedFold(unittest.TestCase):
+    def test_speed_blocks_folded_from_recordarray(self):
+        # Synthetic 0x7634 (Detailed speed) section: one 0x12 RecordArray with
+        # two 64-byte VuDetailedSpeedBlock records (timestamp + 60 speeds) and
+        # one all-0xFF padding block that must be skipped.
+        import struct
+        ts = 1751277600  # 2025-06-30 10:00 UTC
+        block1 = struct.pack(">I", ts) + bytes([50] * 30 + [70] * 30)
+        block2 = b"\xff" * 64
+        stream = b"\x76\x34" + bytes([0x12]) + struct.pack(">HH", 64, 2) + block1 + block2
+
+        results = {}
+        walk_vu_record_arrays(stream, results)
+
+        blocks = results.get("speed_blocks")
+        self.assertIsNotNone(blocks, "0x12 records must fold into speed_blocks")
+        self.assertEqual(len(blocks), 1)  # padding block skipped (begin=None)
+        self.assertEqual(blocks[0]["max_speed_kmh"], 70)
+        self.assertEqual(blocks[0]["min_speed_kmh"], 50)
+        self.assertEqual(blocks[0]["samples"], 60)
+        self.assertTrue(blocks[0]["begin"].startswith("2025-06-30"))
+
+
 class TestRealFileRecovery(unittest.TestCase):
     """These G2.2 files contain data the legacy heuristic dropped."""
 
