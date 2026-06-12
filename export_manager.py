@@ -20,6 +20,9 @@ class ExportManager:
 
     @staticmethod
     def export_to_excel(data, filepath):
+        """Multi-sheet .xlsx: Summary, signature details (VU), one sheet per
+        data section. Styled headers, row stripes, auto-filter, frozen panes;
+        sections are truncated at _EXCEL_MAX_ROWS."""
         from openpyxl import Workbook
         from openpyxl.styles import Alignment, Font, PatternFill
         from openpyxl.utils import get_column_letter
@@ -125,6 +128,8 @@ class ExportManager:
 
     @staticmethod
     def export_to_pdf(data, filepath):
+        """Landscape A4 report (reportlab): summary table, signature details
+        (VU), then one table per data section, truncated at _PDF_MAX_ROWS."""
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import A4, landscape
         from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet

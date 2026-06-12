@@ -224,6 +224,9 @@ def _fmt_dict(d):
 
 
 def fmt_val(v):
+    """Render any parser value for display: booleans as Yes/No, floats
+    trimmed, large ints with thousands spaces, 0xFFFFFF sentinels as N/A,
+    bytes as hex, ISO timestamps shortened, dicts/lists flattened."""
     if v is None:
         return ""
     if isinstance(v, bool):
@@ -280,6 +283,8 @@ def _columns_for(records, transformer):
 
 
 def _rows_for(records, transformer):
+    """Build (headers, rows) for a section: applies the optional record
+    transformer (e.g. day → one row per activity change) and formats cells."""
     cols = _columns_for(records, transformer)
     rows = []
     for rec in records:
@@ -356,6 +361,8 @@ class DataTable(ttk.Frame):
         self._sort_state = {}
 
     def show(self, title, columns, rows, meta=""):
+        """Display a table: sets headers (click to sort), sizes columns,
+        resets the filter and renders all rows."""
         self.title_lbl.config(text=title)
         self.count_lbl.config(
             text=f"{len(rows)} rows \u00b7 {len(columns)} columns"
@@ -390,6 +397,7 @@ class DataTable(ttk.Frame):
             self.tv.insert("", tk.END, values=r, tags=(tag,))
 
     def _apply_filter(self):
+        """Re-render keeping only rows where any cell contains the query."""
         q = self.filter_var.get().strip().lower()
         if not q:
             self._render(self._all_rows)
@@ -399,6 +407,8 @@ class DataTable(ttk.Frame):
         self._render(filtered)
 
     def _sort_by(self, col):
+        """Toggle-sort by column; dd/mm/yyyy dates sort chronologically and
+        numeric strings numerically, everything else alphabetically."""
         idx = self._cols.index(col)
         descending = self._sort_state.get(col, False)
         date_re = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
@@ -541,6 +551,7 @@ class TachoExplorer(tk.Tk):
     # ── File open ──────────────────────────────────────────
 
     def _open_file(self):
+        """File-picker entry point; ignored while a parse is running."""
         if self._parsing:
             return
         path = filedialog.askopenfilename(
@@ -564,6 +575,7 @@ class TachoExplorer(tk.Tk):
         self.after(50, self._poll_parse_queue)
 
     def _parse_worker(self, path):
+        """Worker-thread body: parse and post (path, results, error) to the queue."""
         try:
             data = TachoParser(path).parse()
             self._parse_queue.put((path, data, None))
@@ -572,6 +584,8 @@ class TachoExplorer(tk.Tk):
             self._parse_queue.put((path, None, str(e)))
 
     def _poll_parse_queue(self):
+        """Main-loop poll (50 ms) for the worker result; dispatches to
+        _parse_done or _parse_error when it arrives."""
         if self._destroyed:
             return
         try:
@@ -586,6 +600,7 @@ class TachoExplorer(tk.Tk):
             self._parse_done(data, path)
 
     def _finish_parse(self):
+        """Restore the idle UI state (progress bar, buttons) after a parse."""
         self._parsing = False
         try:
             self.progress.stop()
@@ -675,6 +690,7 @@ class TachoExplorer(tk.Tk):
         self.destroy()
 
     def _parse_done(self, data, path):
+        """Render a successful parse: rebuild the tree, top bar and status."""
         try:
             self.current_data = data
             self.current_file = path
@@ -693,6 +709,7 @@ class TachoExplorer(tk.Tk):
             self.status.config(text="Ready \u2014 open a .ddd file")
 
     def _update_top_bar(self, data):
+        """Refresh filename, generation badge, coverage badge and status badge."""
         meta = data.get("metadata", {})
         gen = meta.get("generation", "Unknown")
         cov = meta.get("coverage_pct", 0)
@@ -704,6 +721,8 @@ class TachoExplorer(tk.Tk):
         self._update_status_badge(data)
 
     def _update_status_badge(self, data):
+        """Compose the colour-coded integrity label from the certificate
+        chain outcome plus EF/TREP signature verification results."""
         integrity = (data.get("metadata") or {}).get("integrity_check", "")
         efv = data.get("ef_signature_verification") or {}
         sv = data.get("signature_verification") or {}
@@ -762,6 +781,9 @@ class TachoExplorer(tk.Tk):
         return iid
 
     def _populate_tree(self, data):
+        """Rebuild the section tree from a results dict: Overview, identity,
+        grouped list sections (only those present in the file), activities
+        day hierarchy, security and raw tags."""
         self.tree.delete(*self.tree.get_children())
         self._payloads.clear()
         meta = data.get("metadata", {})
@@ -933,6 +955,8 @@ class TachoExplorer(tk.Tk):
             self._add_section(act_node, label, cols, rows)
 
     def _populate_security(self, data):
+        """Security group: signature verification summaries (card EF + VU
+        TREP) and decoded VU certificates."""
         sv = data.get("signature_verification")
         efv = data.get("ef_signature_verification")
         certs = data.get("certificates") or []
@@ -1029,6 +1053,7 @@ class TachoExplorer(tk.Tk):
     # ── Selection → table ──────────────────────────────────
 
     def _on_select(self, _event):
+        """Tree selection → show the node's stored payload in the table."""
         sel = self.tree.selection()
         if not sel:
             return
