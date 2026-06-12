@@ -35,7 +35,12 @@ Cross-platform (Windows/macOS) application for parsing, analyzing and visualizin
 ```
 ddd-tachograph-reader/
 ├── core/                    # Core parsing engine
-│   ├── decoders.py          # Field-level decoders (G1/G2/G2.2)
+│   ├── decoders.py          # Facade re-exporting all field decoders
+│   ├── decode_primitives.py # Shared low-level decode helpers
+│   ├── card_decoders.py     # Card EF decoders (G1/G2)
+│   ├── g22_card_decoders.py # Gen 2.2 card decoders
+│   ├── cert_decoders.py     # Certificate / public-key decoders
+│   ├── vu_trep_decoders.py  # VU overview + TREP walkers
 │   ├── g2_decoders.py       # G2/G2.2 VU record decoders
 │   ├── decoder_registry.py  # Centralized tag -> decoder mapping
 │   ├── tag_navigator.py     # Recursive STAP/BER-TLV parser

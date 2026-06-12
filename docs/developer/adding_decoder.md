@@ -24,10 +24,14 @@ Decide where to place the decoder based on generation and card/VU scope:
 
 | Scope | File |
 |---|---|
-| G1 card/VU data | `core/decoders.py` |
+| G1/G2 card EF data | `core/card_decoders.py` |
 | G2/G2.2 VU RecordArray records | `core/g2_decoders.py` |
-| G2.2 card/VU GNSS/Load/Trailer | `core/decoders.py` |
-| Certificate/infrastructure | `core/decoders.py` |
+| G2.2 card GNSS/Load/Trailer | `core/g22_card_decoders.py` |
+| Certificates / public keys | `core/cert_decoders.py` |
+| VU overview / TREP walkers | `core/vu_trep_decoders.py` |
+| Shared low-level helpers | `core/decode_primitives.py` |
+
+Add the new function to the re-export list in `core/decoders.py` (the facade through which the registry and all other modules import decoders).
 
 ### Decoder Function Signature
 
@@ -54,7 +58,7 @@ def parse_new_tag(data: bytes, results: dict, tag: int) -> None:
     results.setdefault("some_list", []).append({...})
 ```
 
-### Helper Utilities (from `core/decoders.py`)
+### Helper Utilities (from `core/decode_primitives.py`)
 
 | Function | Purpose |
 |---|---|

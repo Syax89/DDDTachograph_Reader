@@ -70,7 +70,12 @@ ddd-tachograph-reader/
 ├── signature_validator.py       # Certificate chain validation
 ├── export_manager.py            # PDF/Excel/CSV/JSON export
 ├── core/
-│   ├── decoders.py              # Tag decoders (G1, G2, G2.2)
+│   ├── decoders.py              # Facade re-exporting all field decoders
+│   ├── decode_primitives.py     # Shared low-level decode helpers
+│   ├── card_decoders.py         # Card EF decoders (G1/G2)
+│   ├── g22_card_decoders.py     # Gen 2.2 card decoders
+│   ├── cert_decoders.py         # Certificate / public-key decoders
+│   ├── vu_trep_decoders.py      # VU overview + TREP walkers
 │   ├── g2_decoders.py           # G2/G2.2 VU RecordArray decoders
 │   ├── decoder_registry.py      # Centralized tag→decoder registry
 │   ├── deterministic_parser.py  # Schema-driven deterministic parser
