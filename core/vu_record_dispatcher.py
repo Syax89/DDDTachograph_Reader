@@ -793,6 +793,13 @@ def _emit_section(section, results):
         for r in recs.get(rt, []):
             results.setdefault(key, []).append(r)
 
+    # VuDetailedSpeedBlock (0x12) → speed_blocks (same key the G1 TREP 04
+    # walk uses, so the GUI "Detailed Speed Blocks" section covers both
+    # generations). Padding blocks decode with begin=None and are skipped.
+    for r in recs.get(0x12, []):
+        if r.get("begin"):
+            results.setdefault("speed_blocks", []).append(r)
+
     # VuEventRecord (0x15) → events, VuFaultRecord (0x18) → faults.
     # Only the standard prefix is decoded; flagged confidence: low.
     for rt, key in ((0x15, "events"), (0x18, "faults")):
