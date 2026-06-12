@@ -4,7 +4,7 @@
 Cross-platform (Windows/macOS) application for parsing, analyzing and visualizing data from digital tachograph files (`.ddd` format). EU digital tachographs record driver activity, vehicle data, GNSS positions, and security certificate chains.
 
 ## Key architecture
-- **Core parser**: `ddd_parser.py` → `core/tag_navigator.py` (STAP/BER-TLV recursive) → `core/decoders.py` (field-level decoders)
+- **Core parser**: `ddd_parser.py` → `core/tag_navigator.py` (STAP/BER-TLV recursive) → `core/decoders.py` facade (field-level decoders in core/card_decoders.py, core/vu_trep_decoders.py, etc.)
 - **Coverage**: `_fill_coverage_gaps()` in `ddd_parser.py` — guaranteed 100% byte coverage; shared range-merging via `core/coverage_utils.py`
 - **Decoder registry**: `core/decoder_registry.py` — centralized tag→decoder mapping with spec references (singleton pattern)
 - **Deterministic parser**: `core/deterministic_parser.py` — schema-driven two-pass parser (migration target; now the default)

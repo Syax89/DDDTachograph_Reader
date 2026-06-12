@@ -147,14 +147,17 @@ Schema-driven two-pass parser (migration target). Architecture:
 
 Uses `CoverageTracker` (`core/deterministic_parser.py:18`) to track exact byte ranges covered, with classifications (Tag, Padding, Unknown). Guarantees 100% coverage by construction.
 
-### Decoders (`core/decoders.py`, `core/g2_decoders.py`)
+### Decoders (`core/decoders.py` facade + themed modules)
 
-Field-level byte decoders. `decoders.py` (~1850 lines) handles:
-- G1 card and VU data: ICC, IC, driver identification, events/faults, activities, vehicles, places, calibrations, certificates
-- G2 card data: ICC identification, card identification, driver card holder
-- G2.2 new tags: GNSS accumulated driving, load/unload, trailer registrations, enhanced places, load sensor, border crossings
-- VU download messages (TREP): vehicle identification, overview, activities, workshops, speed data
-- Certificate substructures: certificate profiles, signatures, public keys, authenticated data
+Field-level byte decoders, split by scope. `core/decoders.py` is a facade that re-exports every decoder, so the registry and other modules import from a single place:
+
+| Module | Contents |
+|---|---|
+| `core/decode_primitives.py` | Shared helpers: nations, code-page strings, dates, activity values, cyclic activity buffers |
+| `core/card_decoders.py` | Card EFs: ICC/IC, identification, licence, events/faults, places, vehicles used, calibrations, control activities, company data |
+| `core/g22_card_decoders.py` | G2.2 tags: GNSS accumulated driving, load/unload, trailers, enhanced places, load sensor, border crossings |
+| `core/cert_decoders.py` | Certificates: G1 RSA profiles, signatures, public keys, G2.2 CVC profiles and auth sub-tags |
+| `core/vu_trep_decoders.py` | VU download messages: overview, TREP 02–06 walkers, G2/G2.2 VU RecordArray dispatch |
 
 `g2_decoders.py` (~567 lines) handles G2/G2.2 VU RecordArray records:
 - `parse_g2_card_record()` (0x0509): 29-byte card records

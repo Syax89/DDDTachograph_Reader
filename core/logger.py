@@ -39,11 +39,16 @@ class _CountingHandler(logging.Handler):
 
 
 def get_logger(name: str = "ddd_tacho") -> logging.Logger:
-    """Get or create the project logger."""
+    """Get or create the project logger.
+
+    A single shared logger is returned regardless of *name*: callers pass
+    ``__name__`` only by convention, but using it would label every record
+    with whichever module happened to call first.
+    """
     global _logger, _console_handler, _counter
     with _lock:
         if _logger is None:
-            _logger = logging.getLogger(name)
+            _logger = logging.getLogger("ddd_tacho")
             _counter = _CountingHandler()
             if not _logger.handlers:
                 _console_handler = logging.StreamHandler()

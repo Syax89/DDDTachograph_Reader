@@ -140,7 +140,6 @@ def print_summary(data):
     driver = data.get("driver", {})
     vehicle = data.get("vehicle", {})
     activities = data.get("activities", [])
-    infractions = data.get("infractions") or []
     sig = data.get("signature_verification", {})
 
     print("=" * 60)
@@ -218,15 +217,6 @@ def print_summary(data):
         print(f"   🟨 Work:      {work_min // 60}h {work_min % 60}m")
         print(f"   🟧 Available: {avail_min // 60}h {avail_min % 60}m")
         print(f"   🟩 Rest:      {rest_min // 60}h {rest_min % 60}m")
-
-    # Infractions
-    if infractions:
-        total_fines = sum(i.get("fine_eur", 0) for i in infractions)
-        print(f"\n⚠️ Infringements: {len(infractions)} (Estimated penalties: €{total_fines:,.0f})")
-        for inf in infractions[:5]:
-            print(f"   • {inf.get('description', inf.get('type', 'N/D'))}")
-        if len(infractions) > 5:
-            print(f"   ... and {len(infractions) - 5} more")
 
     print("\n" + "=" * 60)
 

@@ -262,7 +262,7 @@ while pos < end - 4:
     if not found: pos += 1
 ```
 
-## TREP / VU Download Messages (`core/decoders.py`)
+## TREP / VU Download Messages (`core/vu_trep_decoders.py`)
 
 When `is_vu=True`, `parse_vu_download_messages()` handles TREP-encoded VU download data. This includes:
 - Car identification (with SID 0x76 markers)
