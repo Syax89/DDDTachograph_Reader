@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-06-12
+### Fixed
+- **G2/G2.2 VU detailed speed was invisible**: `VuDetailedSpeedBlock` records (recordType 0x12) were decoded by the RecordArray dispatcher but never folded into `speed_blocks`, so the GUI's "Detailed Speed Blocks" section only appeared for G1 VU files. Real G2/G2.2 VU downloads now expose their per-minute speed blocks (timestamp, min/max/avg km/h, sample count) in the GUI and all exports; padding blocks are skipped. Synthetic regression test added
+- Shared logger records are now consistently named `ddd_tacho` — previously the singleton took the name of whichever module called `get_logger` first, producing misleading log origins
+### Added
+- **GUI "Card Numbers Seen" section** (VU group): driver card numbers captured from G1 VU TREP data were only visible in the JSON export; now rendered as a sortable table. With this, every result key the parser populates has a GUI section
+### Changed
+- **`core/decoders.py` (3,061 lines) split into themed modules** behind a re-export facade: `decode_primitives` (shared helpers), `card_decoders` (card EFs), `g22_card_decoders` (Gen 2.2 tags), `cert_decoders` (certificates/keys), `vu_trep_decoders` (VU overview + TREP walkers). All existing imports keep working through the facade
+- **`TachoParser.parse()` refactored from a 246-line block into named phases** (`_open_file`, `_run_structural_parse`, `_decode_vu_semantics`, `_dedup_and_sort_activities`, `_validate_certificate_chain`, `_verify_ef_signatures`); behavior unchanged
+- Function docstring coverage raised from 65% to 77% (deterministic parser internals, GUI lifecycle, export manager); dead `infractions` branch removed from the CLI summary (nothing ever populated it)
+### Documentation
+- **User docs rewritten to describe the real application**: the previous `docs/user` documented features that never existed ("Aurora DDD Analytics" branding, an EU 561/2006 compliance engine with fine estimates, Fleet/Infractions GUI tabs, `--geocode`/`--batch` CLI flags). A new FAQ entry clarifies the tool does not evaluate driving-time rules
+- **GitHub wiki published** from `docs/user` (Home, Installation, GUI/CLI/Export guides, FAQ, Troubleshooting)
+- Developer/API docs purged of the removed legacy parser (`TagNavigator`, `deep_scan`, `use_deterministic`, `_fill_coverage_gaps`): architecture diagrams and `parsing_pipeline.md` rewritten around the deterministic-only flow, `docs/api/tag_navigator.md` deleted, `AGENTS.md` aligned
+
 ## [2.0.0] - 2026-06-11
 ### Added
 - **Application icon**: Windows executable (.ico), macOS bundle (.icns) and the Tk window now use the AppIcons artwork
