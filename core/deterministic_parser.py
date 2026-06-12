@@ -31,29 +31,35 @@ class CoverageTracker:
         self.unknown_ranges: List[Tuple[int, int, bytes]] = []
 
     def mark_covered(self, start: int, end: int):
+        """Record [start, end) as covered, without classifying it."""
         if start < end:
             self.covered_ranges.append((start, end))
 
     def mark_classified(self, start: int, end: int, classification: str):
+        """Cover [start, end) and tally it under *classification* (e.g. Tag_0504)."""
         self.mark_covered(start, end)
         self.classifications[classification] += (end - start)
 
     def mark_padding(self, start: int, end: int, fill_byte: int):
+        """Cover [start, end) as a padding run of *fill_byte*."""
         self.mark_covered(start, end)
         self.classifications[f"Padding(0x{fill_byte:02X})"] += (end - start)
 
     def mark_unknown(self, start: int, end: int, data: bytes):
+        """Cover [start, end) as undecodable; the raw bytes are kept for triage."""
         self.mark_covered(start, end)
         self.classifications["Unknown"] += (end - start)
         self.unknown_ranges.append((start, end, data))
 
     def merge_ranges(self):
+        """Collapse overlapping/adjacent covered ranges in place."""
         if not self.covered_ranges:
             return
         from core.coverage_utils import merge_intervals
         self.covered_ranges = merge_intervals(self.covered_ranges)
 
     def get_coverage_pct(self) -> float:
+        """Covered bytes as a percentage of the file size."""
         if self.total_size == 0:
             return 0.0
         self.merge_ranges()
@@ -61,6 +67,7 @@ class CoverageTracker:
         return coverage_pct(sum(e - s for s, e in self.covered_ranges), self.total_size)
 
     def get_uncovered_ranges(self) -> List[Tuple[int, int]]:
+        """Gaps between covered ranges, as [start, end) pairs in file order."""
         self.merge_ranges()
         gaps = []
         cursor = 0
@@ -129,13 +136,19 @@ class DeterministicParser:
         self._ef_signatures: Dict[Tuple[int, int], bytes] = {}
 
     def parse(self, raw_data: bytes, is_vu: bool) -> Dict[str, Any]:
+        """Structural pass: walk the whole file and account for every byte.
+
+        Routes to the VU stream walkers (RecordArray for G2/G2.2, SID/TREP
+        for G1) or the generic STAP/BER-TLV walk for card files, then
+        attaches the coverage report and per-section breakdown.
+        """
         self.coverage = CoverageTracker(len(raw_data))
-        
+
         from .models import TachoResult
         self.results = TachoResult().to_dict()
         self.results["metadata"]["file_size_bytes"] = len(raw_data)
         self.results["metadata"]["parsed_at"] = self.results["metadata"].get("parsed_at") or datetime.now().isoformat()
-        
+
         self.is_vu = is_vu
         self.generation = self._detect_generation(raw_data)
         self.results["metadata"]["generation"] = self._gen_full_label(self.generation)
@@ -218,6 +231,7 @@ class DeterministicParser:
         return self.results
 
     def _detect_generation(self, raw_data: bytes) -> str:
+        """Sniff generation from the 2-byte header (0x7631=G2.2, 0x762x=G2)."""
         if len(raw_data) < 2:
             return "Unknown"
         header = raw_data[:2]
@@ -228,6 +242,7 @@ class DeterministicParser:
         return "G1"
 
     def _gen_full_label(self, gen: str) -> str:
+        """Expand the short generation code to the user-facing label."""
         if gen == "G2.2":
             return "G2.2 (Smart V2)"
         elif gen == "G2":
@@ -373,12 +388,14 @@ class DeterministicParser:
         return True
 
     def _get_tag_path(self, tag: int, parent_path: str) -> str:
+        """Hierarchical raw_tags key for *tag* under *parent_path*."""
         dec = self.registry.get_decoder(tag)
         tag_name = dec.name if dec else f"BER_{tag:04X}"
         raw_key = f"{tag:04X}_{tag_name}"
         return f"{parent_path} > {raw_key}" if parent_path else raw_key
 
     def _skip_padding(self, raw_data: bytes, pos: int, end: int) -> int:
+        """Advance over a top-level padding run, classifying and recording it."""
         from core.coverage_utils import is_padding_block, KNOWN_PADDING_BYTES
         start = pos
         while pos + 1 < end and is_padding_block(bytes([raw_data[pos], raw_data[pos+1]])) is not None:
@@ -390,7 +407,7 @@ class DeterministicParser:
         if pos > start:
             fill_byte = raw_data[start]
             self.coverage.mark_padding(start, pos, fill_byte)
-            
+
             length = pos - start
             self.results.setdefault("raw_tags", {}).setdefault("Padding", []).append({
                 "offset": f"0x{start:08X}", "tag_id": "0xPAD", "tag_name": "Padding",
@@ -400,6 +417,7 @@ class DeterministicParser:
         return pos
 
     def _skip_padding_inner(self, data: bytes, pos: int, end: int, base_offset: int, depth: int, parent_path: str) -> int:
+        """Same as :meth:`_skip_padding` but inside a container (relative offsets)."""
         from core.coverage_utils import is_padding_block, KNOWN_PADDING_BYTES
         start = pos
         while pos + 1 < end and is_padding_block(bytes([data[pos], data[pos+1]])) is not None:
@@ -410,7 +428,7 @@ class DeterministicParser:
             pos += 1  # lone trailing padding byte at buffer end
         if pos > start:
             self.coverage.mark_padding(base_offset + start, base_offset + pos, data[start])
-            
+
             length = pos - start
             key = f"{parent_path} > Padding" if parent_path else "Padding"
             self.results.setdefault("raw_tags", {}).setdefault(key, []).append({
@@ -421,6 +439,12 @@ class DeterministicParser:
         return pos
 
     def _try_read_stap(self, raw_data: bytes, pos: int, end: int) -> Optional[Tuple[int, int, int, bytes, Optional[int]]]:
+        """Try a STAP record at *pos*: 5-byte T2L2 header with sanity checks.
+
+        Returns ``(tag, length, header_size, payload, dtype)`` or None when
+        the bytes cannot be a valid STAP record (reserved tag, dtype > 0x0F,
+        oversized or truncated length).
+        """
         if pos + 5 > end:
             return None
         hdr = raw_data[pos:pos + 5]
@@ -442,6 +466,7 @@ class DeterministicParser:
         return (tag, length, 5, payload, dtype)
 
     def _try_read_ber_tlv(self, raw_data: bytes, pos: int, end: int) -> Optional[Tuple[int, int, int, bytes, None]]:
+        """Try a BER-TLV record at *pos*; same tuple as :meth:`_try_read_stap`, dtype None."""
         tag_val, length, hdr_size = read_ber_tlv_header(raw_data, pos)
         if tag_val is None:
             return None
@@ -451,6 +476,7 @@ class DeterministicParser:
         return (tag_val, length, hdr_size, payload, None)
 
     def _parse_at_position(self, raw_data: bytes, pos: int, end: int) -> Optional[Tuple[int, int, int, bytes, Any]]:
+        """Read whichever encoding yields a registered tag at *pos* (STAP first)."""
         stap = self._try_read_stap(raw_data, pos, end)
         if stap is not None:
             tag, _, _, _, _ = stap
@@ -466,13 +492,14 @@ class DeterministicParser:
         return stap or ber
 
     def _record_tag(self, tag: int, length: int, payload: bytes, pos: int, hdr_size: int, depth: int = 0, parent_path: str = "", dtype: Optional[int] = None):
+        """Append the tag occurrence to raw_tags and capture certificate payloads."""
         dec = self.registry.get_decoder(tag)
         tag_name = dec.name if dec else f"BER_{tag:04X}"
         raw_key = f"{tag:04X}_{tag_name}"
         full_key = f"{parent_path} > {raw_key}" if parent_path else raw_key
-        
+
         dtype_str = f"0x{dtype:02X}" if dtype is not None else ("BER" if (dec and dec.generation in ('G2', 'G2.2')) else "T2L2")
-        
+
         entry = {
             "offset": f"0x{pos:08X}",
             "tag_id": f"0x{tag:04X}",
@@ -498,6 +525,12 @@ class DeterministicParser:
                     self.parser.card_cert_g1 = payload
 
     def _dispatch_decoder(self, tag: int, payload: bytes, dtype: Optional[int] = None):
+        """Run the registered decoder for *tag*, respecting card/VU scope.
+
+        Signature blocks (dtype 1/3/11/15) are collected for verification but
+        never dispatched. Decoder exceptions are logged, not propagated: a
+        broken field decoder must not abort the structural walk.
+        """
         # Collect EF data/signature pairs for later verification.
         if self.parser and not self.is_vu and dtype is not None and dtype <= 0x03:
             if dtype in (0x00, 0x02):
@@ -528,6 +561,7 @@ class DeterministicParser:
                            dec.name if dec else "unknown", exc_info=True)
 
     def _parse_container(self, tag: int, payload: bytes, container_offset: int, depth: int, parent_path: str):
+        """Recursively walk a container payload (STAP or BER per generation)."""
         if depth > MAX_RECURSION_DEPTH:
             return
         dec = self.registry.get_decoder(tag)
