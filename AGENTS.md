@@ -4,10 +4,10 @@
 Cross-platform (Windows/macOS) application for parsing, analyzing and visualizing data from digital tachograph files (`.ddd` format). EU digital tachographs record driver activity, vehicle data, GNSS positions, and security certificate chains.
 
 ## Key architecture
-- **Core parser**: `ddd_parser.py` → `core/tag_navigator.py` (STAP/BER-TLV recursive) → `core/decoders.py` facade (field-level decoders in core/card_decoders.py, core/vu_trep_decoders.py, etc.)
-- **Coverage**: `_fill_coverage_gaps()` in `ddd_parser.py` — guaranteed 100% byte coverage; shared range-merging via `core/coverage_utils.py`
+- **Core parser**: `ddd_parser.py` → `core/deterministic_parser.py` (STAP/BER-TLV + VU stream walks, full byte coverage) → `core/decoders.py` facade (field-level decoders in core/card_decoders.py, core/vu_trep_decoders.py, etc.)
+- **Coverage**: `CoverageTracker` in `core/deterministic_parser.py` — every byte classified (tag/padding/unknown); shared range-merging via `core/coverage_utils.py`
 - **Decoder registry**: `core/decoder_registry.py` — centralized tag→decoder mapping with spec references (singleton pattern)
-- **Deterministic parser**: `core/deterministic_parser.py` — schema-driven two-pass parser (migration target; now the default)
+- **Deterministic parser**: `core/deterministic_parser.py` — the only parser (the legacy TagNavigator has been removed)
 - **VU RecordArray**: `core/vu_record_dispatcher.py` walks the Annex 1C RecordArray stream by recordType; `core/record_array.py` provides the low-level parser
 - **VU crypto**: `core/vu_signature_verifier.py` — ECDSA TREP signatures + CVC certificate chain verification (Appendix 11)
 - **Event/fault codes**: `core/event_fault_codes.py` — 28 event types + 17 fault types per EU Reg. 2016/799 + 2023/980
@@ -46,4 +46,4 @@ All tag specifications are in `specs/`:
 - Reg. EU 2021/1228 — G2.2 additional specs
 
 ## Coverage guarantee
-files in `DDD/`. The `_fill_coverage_gaps()` method in `ddd_parser.py` ensures any bytes missed by the STAP/BER parser are filled as gap-tracked ranges. Shared interval merging via `core/coverage_utils.merge_intervals()`. Coverage audit: `python3 specs/coverage_audit.py`.
+files in `DDD/`. `DeterministicParser._classify_gaps()` sweeps any bytes missed by the structural walk, classifying them as padding or tracked unknown ranges. Shared interval merging via `core/coverage_utils.merge_intervals()`. Coverage audit: `python3 specs/coverage_audit.py`.

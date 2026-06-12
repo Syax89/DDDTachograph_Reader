@@ -136,36 +136,9 @@ Main entry point. Executes the two-pass deterministic parse.
 
 ---
 
-## Utility: `quick_coverage_check()`
+## Design Notes
 
-```python
-def quick_coverage_check(raw_data: bytes) -> Dict[str, Any]
-```
-
-Standalone coverage check without full parsing. Useful for fast file validation.
-
-**Parameters:**
-- `raw_data` — Raw file bytes
-
-**Returns:** `dict` with keys `"total_bytes"`, `"covered_pct"`, `"uncovered_ranges"`, `"classifications"`.
-
-**Implementation** (`core/deterministic_parser.py:417-442`): Creates a lightweight `DeterministicParser`, skips padding, tries STAP/BER at each position, and tallies coverage without invoking decoders or building full results.
-
----
-
-## How DeterministicParser Differs from Legacy `TagNavigator`
-
-| Aspect | DeterministicParser | Legacy TagNavigator |
-|--------|--------------------|---------------------|
-| **Approach** | Schema-driven, sequential with known structures | Recursive STAP + heuristic BER-TLV scanning |
-| **Coverage** | 100% by design (all unparseable bytes tracked) | 100% via post-parse `_fill_coverage_gaps()` |
-| **Dispatch** | Via `DecoderRegistry._dispatch_decoder()` | Via inline if/elif chain in `record_and_dispatch()` |
-| **Container recursion** | `_parse_container()` — recursive with mode inference | `dispatch_container_if_needed()` — mode-dependent |
-| **Padding detection** | Inline during parse (`_skip_padding`) | Post-parse analysis in `record_unparsed()` |
-| **Unknown bytes** | Tracked per-byte in `CoverageTracker.unknown_ranges` | Tracked per-range via `record_unparsed()` |
-| **Deep scan** | Not needed (sequential coverage) | Separate `deep_scan()` pass for heuristic recovery |
-| **Section report** | `CoverageTracker.get_section_report()` | `TagNavigator.get_section_report()` |
-| **Default** | Yes (since v5.1) | No (opt-in via `use_deterministic=False`) |
+The parser is **deterministic by construction**: it walks the file sequentially with known structures (STAP/BER-TLV for cards, RecordArray or SID/TREP streams for VU downloads) and every byte ends up classified — as a tag, padding, or an explicitly tracked unknown range. There is no heuristic recovery pass: anything that does not validate is surfaced as "Unparsed Data" rather than guessed. (The earlier heuristic recursive parser, `TagNavigator`, has been removed.)
 
 ---
 
@@ -175,7 +148,7 @@ Standalone coverage check without full parsing. Useful for fast file validation.
 # Default usage via TachoParser
 from ddd_parser import TachoParser
 
-parser = TachoParser("file.ddd", use_deterministic=True)  # default
+parser = TachoParser("file.ddd")
 data = parser.parse()
 
 # Inspect deterministic coverage
@@ -201,41 +174,23 @@ results = parser.parse(raw, is_vu=(raw[0] == 0x76))
 print(results["metadata"]["generation"])
 ```
 
-### Quick coverage check
-
-```python
-from core.deterministic_parser import quick_coverage_check
-
-with open("file.ddd", "rb") as f:
-    raw = f.read()
-
-coverage = quick_coverage_check(raw)
-print(f"Coverage: {coverage['covered_pct']}%")
-if coverage["uncovered_ranges"]:
-    for start, end in coverage["uncovered_ranges"]:
-        print(f"  Uncovered: {start} - {end} ({end - start} bytes)")
-```
 
 ## See Also
 
-- [TachoParser](tacho_parser.md) — Main parser that uses DeterministicParser by default
-- [TagNavigator](tag_navigator.md) — Legacy alternative parser
+- [TachoParser](tacho_parser.md) — Main parser that drives DeterministicParser
 - [DecoderRegistry](decoder_registry.md) — Registry used for tag dispatch
 
 ## Common Tasks
 
-### Compare deterministic vs legacy coverage
+### Check coverage of a file
 
 ```python
 from ddd_parser import TachoParser
 
-# Deterministic
-d = TachoParser("file.ddd", use_deterministic=True).parse()
-print(f"Deterministic coverage: {d['metadata']['coverage_pct']}%")
-
-# Legacy
-l = TachoParser("file.ddd", use_deterministic=False).parse()
-print(f"Legacy coverage: {l['metadata']['coverage_pct']}%")
+d = TachoParser("file.ddd").parse()
+print(f"Coverage: {d['metadata']['coverage_pct']}%")
+for start, end, size in d["coverage"]["uncovered_ranges"]:
+    print(f"  Uncovered: {start} - {end} ({size} bytes)")
 ```
 
 ### Check classification breakdown

@@ -290,7 +290,6 @@ print(f"Known tags: {len(all_ids)}")
 
 ## See Also
 
-- [TagNavigator](tag_navigator.md) — Uses DecoderRegistry for tag dispatch in legacy parser
 - [DeterministicParser](deterministic_parser.md) — Uses DecoderRegistry in its two-pass architecture
 - [TachoParser](tacho_parser.md) — Main parser using the registry
 

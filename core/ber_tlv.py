@@ -1,7 +1,4 @@
-"""Shared BER-TLV tag/length header parser.
-
-Used by both the legacy TagNavigator and the DeterministicParser to avoid
-duplicate implementations of the same BER-TLV reading logic.
+"""Shared BER-TLV tag/length header parser, used by the DeterministicParser.
 
 BER-TLV encoding (ISO 7816-4, Annex 1C):
   Tag:   1+ bytes (multi-byte if bits 5-1 of first byte are all 1)
