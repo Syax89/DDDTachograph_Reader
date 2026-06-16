@@ -19,6 +19,7 @@ import queue
 import threading
 import traceback
 import logging
+from dataclasses import dataclass, field
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -55,6 +56,16 @@ from core.report_format import humanize_key  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
 
+
+@dataclass
+class SectionPayload:
+    """Payload stored per treeview node — (label, columns, rows, meta)."""
+    label: str
+    columns: list
+    meta: str = ""
+    rows: list = field(default_factory=list)
+
+
 try:
     from export_manager import ExportManager
 except ImportError:
@@ -76,6 +87,64 @@ HEADER_BG = "#e3e9f2"
 
 # Internal keys to hide from columns (service noise). Keys starting with "_"
 # (e.g. "_key" dedup markers) are always hidden — see _columns_for.
+THEMES = {
+    "light": {
+        "bg": "#f0f0f0",
+        "fg": "#000000",
+        "select_bg": "#0078d7",
+        "select_fg": "#ffffff",
+        "tree_bg": "#ffffff",
+        "tree_fg": "#000000",
+        "header_bg": HEADER_BG,
+        "header_fg": "#000000",
+        "row_even": ROW_EVEN,
+        "row_odd": ROW_ODD,
+        "entry_bg": "#ffffff",
+        "entry_fg": "#000000",
+        "button_bg": "#e1e1e1",
+        "button_fg": "#000000",
+        "frame_bg": "#f0f0f0",
+        "label_fg": "#000000",
+        "status_bg": "#f0f0f0",
+        "progress_bg": "#e1e1e1",
+        "gen_colors": dict(GEN_COLORS),
+        "badge_color_ok": "#2e7d32",
+        "badge_color_warn": "#f57c00",
+        "badge_color_err": "#c62828",
+        "badge_color_muted": "#757575",
+    },
+    "dark": {
+        "bg": "#1e1e1e",
+        "fg": "#d4d4d4",
+        "select_bg": "#264f78",
+        "select_fg": "#ffffff",
+        "tree_bg": "#252526",
+        "tree_fg": "#d4d4d4",
+        "header_bg": "#333333",
+        "header_fg": "#d4d4d4",
+        "row_even": "#2d2d2d",
+        "row_odd": "#252526",
+        "entry_bg": "#3c3c3c",
+        "entry_fg": "#d4d4d4",
+        "button_bg": "#333333",
+        "button_fg": "#d4d4d4",
+        "frame_bg": "#1e1e1e",
+        "label_fg": "#d4d4d4",
+        "status_bg": "#1e1e1e",
+        "progress_bg": "#333333",
+        "gen_colors": {
+            "G1 (Digital)": "#66bb6a",
+            "G2 (Smart)": "#42a5f5",
+            "G2.2 (Smart V2)": "#ce93d8",
+            "Unknown": "#bdbdbd",
+        },
+        "badge_color_ok": "#66bb6a",
+        "badge_color_warn": "#ffa726",
+        "badge_color_err": "#ef5350",
+        "badge_color_muted": "#9e9e9e",
+    },
+}
+
 HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence"}
 # Descriptive columns pushed to table start.
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
@@ -97,6 +166,21 @@ GROUPS = [
 ]
 
 # data_key → (label, group, optional transformer)
+LIST_SECTIONS_G1 = [
+    ("vehicle_sessions", "Vehicles Used", "activity", None),
+    ("vehicle_units", "Vehicle Units Used", "activity", None),
+    ("events", "Events", "activity", None),
+    ("faults", "Faults", "activity", None),
+    ("places", "Places", "activity", None),
+    ("specific_conditions", "Specific Conditions", "activity", None),
+    ("calibrations", "Calibrations", "activity", None),
+    ("card_downloads", "Card Downloads", "activity", None),
+    ("workshops", "Calibration Workshops", "activity", None),
+    ("previous_vehicle", "Previous Vehicle", "activity", None),
+    ("company_holders", "Company Holders", "activity", None),
+    ("control_activities", "Control Activities", "activity", None),
+]
+
 LIST_SECTIONS = [
     # "activities" handled separately (day hierarchy) — see _populate_activities
     ("vehicle_sessions", "Vehicles Used", "activity", None),
@@ -345,6 +429,11 @@ class DataTable(ttk.Frame):
         self.filter_var.trace_add("write", lambda *_: self._apply_filter())
         self.filter_entry = ttk.Entry(filt, textvariable=self.filter_var)
         self.filter_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(4, 0))
+        self.filter_col_var = tk.StringVar(value="All columns")
+        self.filter_col_cb = ttk.Combobox(filt, textvariable=self.filter_col_var,
+                                          values=["All columns"], state="readonly", width=14)
+        self.filter_col_cb.pack(side=tk.LEFT, padx=(4, 0))
+        self.filter_col_cb.bind("<<ComboboxSelected>>", lambda *_: self._apply_filter())
 
         body = ttk.Frame(self)
         body.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
@@ -375,6 +464,8 @@ class DataTable(ttk.Frame):
             text=f"{len(rows)} rows \u00b7 {len(columns)} columns"
             + (f"   \u2014   {meta}" if meta else ""))
         self.filter_var.set("")
+        self.filter_col_cb.configure(values=["All columns"] + list(columns))
+        self.filter_col_var.set("All columns")
 
         self._cols = list(columns)
         self._all_rows = [list(r) for r in rows]
@@ -402,15 +493,23 @@ class DataTable(ttk.Frame):
         for i, r in enumerate(rows):
             tag = "even" if i % 2 == 0 else "odd"
             self.tv.insert("", tk.END, values=r, tags=(tag,))
+            if i > 0 and i % 100 == 0:
+                self.update_idletasks()
 
     def _apply_filter(self):
-        """Re-render keeping only rows where any cell contains the query."""
+        """Re-render keeping only rows where any cell (or a specific column) contains the query."""
         q = self.filter_var.get().strip().lower()
+        col_name = self.filter_col_var.get()
+        col_idx = self._cols.index(col_name) if col_name != "All columns" and col_name in self._cols else -1
         if not q:
             self._render(self._all_rows)
             return
-        filtered = [r for r in self._all_rows
-                    if any(q in str(c).lower() for c in r)]
+        if col_idx >= 0:
+            filtered = [r for r in self._all_rows
+                        if col_idx < len(r) and q in str(r[col_idx]).lower()]
+        else:
+            filtered = [r for r in self._all_rows
+                        if any(q in str(c).lower() for c in r)]
         self._render(filtered)
 
     def _sort_by(self, col):
@@ -437,8 +536,14 @@ class DataTable(ttk.Frame):
         self._sort_state[col] = not descending
         for c in self._cols:
             self.tv.heading(c, text=str(c) + (" \u25be" if c == col and descending
-                                              else " \u25b4" if c == col else ""))
+                                               else " \u25b4" if c == col else ""))
         self._apply_filter()
+
+    def apply_theme(self, theme):
+        self.tv.tag_configure("even", background=theme["row_even"])
+        self.tv.tag_configure("odd", background=theme["row_odd"])
+        self.title_lbl.config(foreground=theme["label_fg"])
+        self.count_lbl.config(foreground=theme.get("badge_color_muted", "#9e9e9e"))
 
 
 # ── Main application ─────────────────────────────────────────────────────
@@ -488,12 +593,16 @@ class TachoExplorer(tk.Tk):
 
         self.current_data = None
         self.current_file = None
-        self._payloads = {}  # iid -> (title, columns, rows, meta)
+        self._payloads = {}  # iid -> SectionPayload
         self._destroyed = False
         self._parsing = False
         self._parse_queue = queue.Queue()
+        self._theme_name = "light"
+        self._theme = dict(THEMES["light"])
 
         self._build_ui()
+        self._apply_theme("light")
+        self._register_hotkeys()
         try:
             self.protocol("WM_DELETE_WINDOW", self._on_close)
         except Exception:
@@ -516,6 +625,9 @@ class TachoExplorer(tk.Tk):
         export_menu.add_command(label="JSON (.json)", command=self._export_json)
         self.btn_export["menu"] = export_menu
         self.btn_export.pack(side=tk.LEFT, padx=(0, 14))
+        self.btn_theme = ttk.Button(top, text="\U0001f319  Dark",
+                                    command=self.toggle_theme, width=8)
+        self.btn_theme.pack(side=tk.LEFT, padx=(0, 8))
         self.lbl_file = ttk.Label(top, text="No file loaded",
                                   font=("", 11, "bold"))
         self.lbl_file.pack(side=tk.LEFT)
@@ -554,6 +666,80 @@ class TachoExplorer(tk.Tk):
         self.status.pack(side=tk.LEFT, fill=tk.X, expand=True)
         self.progress = ttk.Progressbar(status_bar, mode="indeterminate", length=160)
         # packed only while a parse is running \u2014 see _start_parse/_finish_parse
+
+    # ── Theme ──────────────────────────────────────────────
+
+    def _apply_theme(self, name):
+        self._theme_name = name
+        self._theme = dict(THEMES[name])
+        t = self._theme
+        style = ttk.Style()
+
+        self.configure(bg=t["bg"])
+
+        style.configure("Treeview",
+                        background=t["tree_bg"],
+                        foreground=t["tree_fg"],
+                        fieldbackground=t["tree_bg"])
+        style.configure("Treeview.Heading",
+                        background=t["header_bg"],
+                        foreground=t["header_fg"],
+                        font=("", 10, "bold"))
+        style.map("Treeview",
+                  background=[("selected", t["select_bg"])],
+                  foreground=[("selected", t["select_fg"])])
+
+        style.configure("TLabel", background=t["frame_bg"], foreground=t["label_fg"])
+        style.configure("TFrame", background=t["frame_bg"])
+        style.configure("TLabelframe", background=t["frame_bg"])
+        style.configure("TPanedWindow", background=t["frame_bg"])
+
+        style.configure("TButton", background=t["button_bg"], foreground=t["button_fg"])
+        style.configure("TMenubutton", background=t["button_bg"], foreground=t["button_fg"])
+
+        style.configure("TEntry", fieldbackground=t["entry_bg"],
+                        foreground=t["entry_fg"])
+
+        style.configure("Horizontal.TProgressbar", background=t["header_bg"])
+
+        self.btn_theme.config(text="\U0001f319  Dark" if name == "light" else "\u2600\ufe0f  Light")
+
+        self.table.apply_theme(t)
+
+    def toggle_theme(self):
+        new = "dark" if self._theme_name == "light" else "light"
+        self._apply_theme(new)
+        if self.current_data:
+            self._update_top_bar(self.current_data)
+
+    # ── Hotkeys ────────────────────────────────────────────
+
+    def _register_hotkeys(self):
+        self.bind_all("<Control-o>", lambda e: self._open_file())
+        self.bind_all("<Control-O>", lambda e: self._open_file())
+        self.bind_all("<Control-f>", lambda e: self._focus_filter())
+        self.bind_all("<Control-F>", lambda e: self._focus_filter())
+        self.bind_all("<Control-r>", lambda e: self._reparse())
+        self.bind_all("<Control-R>", lambda e: self._reparse())
+        self.bind_all("<Control-e>", lambda e: self._open_export_menu())
+        self.bind_all("<Control-E>", lambda e: self._open_export_menu())
+        self.bind_all("<Control-t>", lambda e: self.toggle_theme())
+        self.bind_all("<Control-T>", lambda e: self.toggle_theme())
+        self.bind_all("<Control-q>", lambda e: self._on_close())
+        self.bind_all("<Control-Q>", lambda e: self._on_close())
+        self.bind_all("<F5>", lambda e: self._reparse())
+
+    def _focus_filter(self):
+        if hasattr(self, "table") and hasattr(self.table, "filter_entry"):
+            self.table.filter_entry.focus_set()
+
+    def _reparse(self):
+        if self.current_file and not self._parsing:
+            self._start_parse(self.current_file)
+
+    def _open_export_menu(self):
+        if self.btn_export.instate(["!disabled"]):
+            self.btn_export.event_generate("<ButtonPress-1>")
 
     # ── File open ──────────────────────────────────────────
 
@@ -720,10 +906,16 @@ class TachoExplorer(tk.Tk):
         meta = data.get("metadata", {})
         gen = meta.get("generation", "Unknown")
         cov = meta.get("coverage_pct", 0)
+        t = self._theme
         self.lbl_file.config(text=os.path.basename(self.current_file))
         self.lbl_gen.config(text=f"\u25cf {gen}",
-                            foreground=GEN_COLORS.get(gen, GEN_COLORS["Unknown"]))
-        cov_color = "#2e7d32" if cov >= 100 else ("#f57c00" if cov >= 80 else "#c62828")
+                            foreground=t["gen_colors"].get(gen, t["gen_colors"]["Unknown"]))
+        if cov >= 100:
+            cov_color = t["badge_color_ok"]
+        elif cov >= 80:
+            cov_color = t["badge_color_warn"]
+        else:
+            cov_color = t["badge_color_err"]
         self.lbl_cov.config(text=f"Coverage: {cov:.0f}%", foreground=cov_color)
         self._update_status_badge(data)
 
@@ -733,6 +925,7 @@ class TachoExplorer(tk.Tk):
         integrity = (data.get("metadata") or {}).get("integrity_check", "")
         efv = data.get("ef_signature_verification") or {}
         sv = data.get("signature_verification") or {}
+        t = self._theme
 
         ef_ok = efv.get("failed", 1) == 0 and efv.get("verified", 0) > 0
         sv_ok = sv.get("all_treps_valid") is True
@@ -740,37 +933,37 @@ class TachoExplorer(tk.Tk):
 
         if chain_ok and ef_ok:
             text = "\u2705  All signatures verified"
-            color = "#2e7d32"
+            color = t["badge_color_ok"]
         elif sv_ok and sv.get("root_anchored"):
             text = "\u2705  VU signatures verified (root anchored)"
-            color = "#2e7d32"
+            color = t["badge_color_ok"]
         elif sv_ok:
             text = f"\u2705  VU TREP sigs ok ({sv.get('trep_count', '')})"
-            color = "#2e7d32"
+            color = t["badge_color_ok"]
         elif chain_ok and efv.get("verified", 0) > 0:
             text = f"\u26a0\ufe0f  EF sigs {efv['verified']}/{efv.get('total', '?')} verified"
-            color = "#e65100"
+            color = t["badge_color_warn"]
         elif ef_ok:
             text = "\u26a0\ufe0f  Partial verification"
-            color = "#e65100"
+            color = t["badge_color_warn"]
         elif integrity.startswith("Verified") or integrity.startswith("Partial"):
             text = "\u26a0\ufe0f  Partial verification"
-            color = "#f57c00"
+            color = t["badge_color_warn"]
         elif integrity == "Invalid Certificate Chain":
             text = "\u274c  Certificate chain invalid"
-            color = "#c62828"
+            color = t["badge_color_err"]
         elif "Missing ERCA" in integrity:
             text = "\u26a0\ufe0f  ERCA root not available"
-            color = "#f57c00"
+            color = t["badge_color_warn"]
         elif "Incomplete" in integrity:
             text = "\u2753  No certificates"
-            color = "#757575"
+            color = t["badge_color_muted"]
         elif "Error" in integrity:
             text = "\u274c  Parse error"
-            color = "#c62828"
+            color = t["badge_color_err"]
         else:
             text = ""
-            color = "#757575"
+            color = t["badge_color_muted"]
 
         self.lbl_status.config(text=text, foreground=color)
         # Also update the window title with a compact status.
@@ -784,7 +977,7 @@ class TachoExplorer(tk.Tk):
         n = len(rows)
         text = f"{label}  ({n})" if columns != ["Field", "Value"] else label
         iid = self.tree.insert(parent, tk.END, text=text)
-        self._payloads[iid] = (label, columns, rows, meta)
+        self._payloads[iid] = SectionPayload(label=label, columns=columns, rows=rows, meta=meta)
         return iid
 
     def _populate_tree(self, data):
@@ -859,7 +1052,10 @@ class TachoExplorer(tk.Tk):
                 cols, rows = _kv_rows(dv)
                 sections_by_group.setdefault(dg, []).append((dl, cols, rows))
 
-        for key, label, group, tname in LIST_SECTIONS:
+        gen_str = (meta.get('generation') or '').strip()
+        use_sections = LIST_SECTIONS_G1 if gen_str.startswith('G1') else LIST_SECTIONS
+
+        for key, label, group, tname in use_sections:
             records = data.get(key) or []
             if not records:
                 continue
@@ -880,12 +1076,15 @@ class TachoExplorer(tk.Tk):
         activities = data.get("activities") or []
         has_activity_group = activities or "activity" in sections_by_group
 
+        is_g1 = gen_str.startswith('G1')
         for group_key, group_label in GROUPS:
             if group_key == "security" or group_key == "raw":
                 continue
             if group_key == "activity" and not has_activity_group:
                 continue
             if group_key == "vu" and not actual_is_vu:
+                continue
+            if is_g1 and group_key == "g22":
                 continue
             entries = sections_by_group.get(group_key, [])
             # Skip groups with nothing to show (e.g. "G2.2 — Smart V2" on a
@@ -1066,8 +1265,7 @@ class TachoExplorer(tk.Tk):
             return
         payload = self._payloads.get(sel[0])
         if payload:
-            label, cols, rows, meta = payload
-            self.table.show(label, cols, rows, meta)
+            self.table.show(payload.label, payload.columns, payload.rows, payload.meta)
         else:
             # group node: show list of sub-sections
             children = self.tree.get_children(sel[0])
