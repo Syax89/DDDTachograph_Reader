@@ -166,21 +166,6 @@ GROUPS = [
 ]
 
 # data_key → (label, group, optional transformer)
-LIST_SECTIONS_G1 = [
-    ("vehicle_sessions", "Vehicles Used", "activity", None),
-    ("vehicle_units", "Vehicle Units Used", "activity", None),
-    ("events", "Events", "activity", None),
-    ("faults", "Faults", "activity", None),
-    ("places", "Places", "activity", None),
-    ("specific_conditions", "Specific Conditions", "activity", None),
-    ("calibrations", "Calibrations", "activity", None),
-    ("card_downloads", "Card Downloads", "activity", None),
-    ("workshops", "Calibration Workshops", "activity", None),
-    ("previous_vehicle", "Previous Vehicle", "activity", None),
-    ("company_holders", "Company Holders", "activity", None),
-    ("control_activities", "Control Activities", "activity", None),
-]
-
 LIST_SECTIONS = [
     # "activities" handled separately (day hierarchy) — see _populate_activities
     ("vehicle_sessions", "Vehicles Used", "activity", None),
@@ -1052,10 +1037,7 @@ class TachoExplorer(tk.Tk):
                 cols, rows = _kv_rows(dv)
                 sections_by_group.setdefault(dg, []).append((dl, cols, rows))
 
-        gen_str = (meta.get('generation') or '').strip()
-        use_sections = LIST_SECTIONS_G1 if gen_str.startswith('G1') else LIST_SECTIONS
-
-        for key, label, group, tname in use_sections:
+        for key, label, group, tname in LIST_SECTIONS:
             records = data.get(key) or []
             if not records:
                 continue
@@ -1076,7 +1058,6 @@ class TachoExplorer(tk.Tk):
         activities = data.get("activities") or []
         has_activity_group = activities or "activity" in sections_by_group
 
-        is_g1 = gen_str.startswith('G1')
         for group_key, group_label in GROUPS:
             if group_key == "security" or group_key == "raw":
                 continue
@@ -1084,11 +1065,8 @@ class TachoExplorer(tk.Tk):
                 continue
             if group_key == "vu" and not actual_is_vu:
                 continue
-            if is_g1 and group_key == "g22":
-                continue
             entries = sections_by_group.get(group_key, [])
-            # Skip groups with nothing to show (e.g. "G2.2 — Smart V2" on a
-            # G1 file): an empty folder is just noise.
+            # Skip groups with nothing to show: an empty folder is just noise.
             if not entries and not (group_key == "activity" and activities):
                 continue
             gnode = self.tree.insert("", tk.END, text=group_label, open=False)
