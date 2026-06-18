@@ -1,7 +1,7 @@
 # Compatible-release pins (~=): patch/minor updates allowed, majors blocked.
 # Dependabot (.github/dependabot.yml) proposes upgrades.
-pytest~=9.0
-pyinstaller~=6.20
-cryptography~=48.0
+pytest~=9.1
+pyinstaller~=6.21
+cryptography~=49.0
 openpyxl~=3.1
-reportlab~=4.5
+reportlab~=5.0
