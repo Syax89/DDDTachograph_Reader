@@ -12,6 +12,7 @@ from core.decoders import (
     parse_g22_gnss_accumulated_driving,
     parse_g22_load_unload_operations,
     parse_g22_trailer_registrations,
+    parse_g22_gnss_enhanced_places,
     parse_g22_load_sensor_data,
     parse_g22_border_crossings,
     parse_g2_vu_record,
@@ -176,13 +177,12 @@ class TestGen22Decoders:
     """Test actual decoding of Gen 2.2 fields."""
 
     def test_gnss_accumulated_driving_decode(self):
-        """Correctly decode a GNSS accumulated driving record (Annex 1C §2.79: 11 bytes)."""
+        """Correctly decode a card-side GNSS accumulated driving record (13 bytes)."""
         ts = 1700000000  # 2023-11-14
         accuracy = 0x03  # 3 meters
-        # Annex 1C §2.76: GeoCoordinates as signed int24 ±DDMM.M ×10
-        lat_raw = 45279   # 45°27.852'N → 4527.85 × 10
-        lon_raw = 9114    # 009°11.4'E → 911.4 × 10
-        record = struct.pack(">IB", ts, accuracy) + lat_raw.to_bytes(3, 'big', signed=True) + lon_raw.to_bytes(3, 'big', signed=True)
+        lat_raw = int(45.465 * 10_000_000)
+        lon_raw = int(9.19 * 10_000_000)
+        record = struct.pack(">IBii", ts, accuracy, lat_raw, lon_raw)
         results = {}
         parse_g22_gnss_accumulated_driving(record, results)
         assert len(results["gnss_ad_records"]) == 1
@@ -190,6 +190,39 @@ class TestGen22Decoders:
         assert abs(r["latitude"] - 45.465) < 0.001
         assert abs(r["longitude"] - 9.19) < 0.001
         assert r["gnss_accuracy"] == 0x03
+
+    def test_gnss_accumulated_record_array_decode(self):
+        ts = 1700000000
+        record = struct.pack(">IBii", ts, 3, int(45.0 * 10_000_000), int(9.0 * 10_000_000))
+        wrapped = b"\x01" + struct.pack(">HH", 13, 2) + record + record
+        results = {}
+
+        parse_g22_gnss_accumulated_driving(wrapped, results)
+
+        assert len(results["gnss_ad_records"]) == 2
+
+    def test_gnss_enhanced_places_decode(self):
+        ts = 1700000000
+        record = struct.pack(">IBiiB", ts, 5, int(45.1 * 10_000_000), int(9.2 * 10_000_000), 1)
+        results = {}
+
+        parse_g22_gnss_enhanced_places(record, results)
+
+        assert results["gnss_places"][0]["authenticated"] is True
+        assert abs(results["gnss_places"][0]["latitude"] - 45.1) < 0.001
+
+    def test_card_load_unload_full_record_decode(self):
+        ts = 1700000000
+        place = struct.pack(">IBiiB", ts + 1, 4, int(45.2 * 10_000_000), int(9.3 * 10_000_000), 1)
+        record = struct.pack(">IB", ts, 1) + place + (123456).to_bytes(3, "big")
+        results = {}
+
+        parse_g22_load_unload_operations(record, results)
+
+        decoded = results["load_unload_records"][0]
+        assert decoded["operation"] == "LOAD"
+        assert decoded["vehicle_odometer_value"] == 123456
+        assert decoded["gnss_authenticated"] is True
 
     def test_load_sensor_data_decode(self):
         """Correctly decode load sensor data."""
@@ -202,13 +235,13 @@ class TestGen22Decoders:
         assert results["load_sensor_data"][0]["weights_kg"] == [5000, 7000, 12000]
 
     def test_border_crossings_decode(self):
-        """Correctly decode border crossing records (annex 1c §2.76: 12 bytes)."""
+        """Correctly decode card-side border crossing records (14 bytes)."""
         ts = 1700000000
         nation_from = 0x1A  # Italy
         nation_to = 0x0D    # Germany
-        lat_raw = 47000  # 47°00.0'N → 4700.0 × 10
-        lon_raw = 11000  # 011°00.0'E → 1100.0 × 10
-        record = struct.pack(">IBB", ts, nation_from, nation_to) + lat_raw.to_bytes(3, 'big', signed=True) + lon_raw.to_bytes(3, 'big', signed=True)
+        lat_raw = int(47.0 * 10_000_000)
+        lon_raw = int(11.0 * 10_000_000)
+        record = struct.pack(">IBBii", ts, nation_from, nation_to, lat_raw, lon_raw)
         results = {}
         parse_g22_border_crossings(record, results)
         assert len(results["border_crossings"]) == 1
@@ -216,6 +249,20 @@ class TestGen22Decoders:
         assert r["nation_from"] == "I"
         assert r["nation_to"] == "D"
         assert abs(r["latitude"] - 47.0) < 0.001
+
+    def test_card_border_crossing_full_record_decode(self):
+        ts = 1700000000
+        place = struct.pack(">IBiiB", ts, 6, int(46.0 * 10_000_000), int(10.0 * 10_000_000), 1)
+        record = bytes([0x1A, 0x0D]) + place + (654321).to_bytes(3, "big")
+        results = {}
+
+        parse_g22_border_crossings(record, results)
+
+        decoded = results["border_crossings"][0]
+        assert decoded["nation_from"] == "I"
+        assert decoded["nation_to"] == "D"
+        assert decoded["vehicle_odometer_value"] == 654321
+        assert decoded["authenticated"] is True
 
     def test_trailer_registrations_decode(self):
         """Correctly decode trailer registration (ASN.1: 20 bytes)."""

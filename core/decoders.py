@@ -58,6 +58,7 @@ from core.cert_decoders import (
     parse_g22_auth_subtag,
     parse_g22_certificate_subtag,
     parse_g1_certificate,
+    parse_certificate,
     parse_certificate_signature,
     EC_CURVE_OIDS,
     parse_public_key_info,
@@ -80,4 +81,5 @@ from core.vu_trep_decoders import (
     _parse_trep_04_speed,
     _parse_trep_05_technical,
     _parse_trep_06_card_download,
+    _parse_sensor_download,
 )

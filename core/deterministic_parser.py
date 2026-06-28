@@ -192,8 +192,9 @@ class DeterministicParser:
                 self._record_tag(tag, length, payload, pos, hdr_size, depth=0, parent_path="", dtype=dtype)
                 self._dispatch_decoder(tag, payload, dtype=dtype)
 
-                if self.registry.is_container(tag):
-                    self._parse_container(tag, payload, pos + hdr_size, depth=1, parent_path=self._get_tag_path(tag, ""))
+                if self.registry.is_container(tag, generation=self.generation, is_vu=self.is_vu, dtype=dtype):
+                    self._parse_container(tag, payload, pos + hdr_size, depth=1,
+                                          parent_path=self._get_tag_path(tag, "", dtype=dtype))
 
                 pos += hdr_size + length
 
@@ -387,9 +388,10 @@ class DeterministicParser:
         self._classify_gaps(data)
         return True
 
-    def _get_tag_path(self, tag: int, parent_path: str) -> str:
+    def _get_tag_path(self, tag: int, parent_path: str, dtype: Optional[int] = None, parent_tag: Optional[int] = None) -> str:
         """Hierarchical raw_tags key for *tag* under *parent_path*."""
-        dec = self.registry.get_decoder(tag)
+        dec = self.registry.get_decoder(tag, generation=self.generation, is_vu=self.is_vu,
+                                       dtype=dtype, parent_tag=parent_tag)
         tag_name = dec.name if dec else f"BER_{tag:04X}"
         raw_key = f"{tag:04X}_{tag_name}"
         return f"{parent_path} > {raw_key}" if parent_path else raw_key
@@ -480,20 +482,21 @@ class DeterministicParser:
         stap = self._try_read_stap(raw_data, pos, end)
         if stap is not None:
             tag, _, _, _, _ = stap
-            if tag in self.registry:
+            if self.registry.get_decoder(tag, generation=self.generation, is_vu=self.is_vu):
                 return stap
 
         ber = self._try_read_ber_tlv(raw_data, pos, end)
         if ber is not None:
             tag, _, _, _, _ = ber
-            if tag in self.registry:
+            if self.registry.get_decoder(tag, generation=self.generation, is_vu=self.is_vu):
                 return ber
 
         return stap or ber
 
-    def _record_tag(self, tag: int, length: int, payload: bytes, pos: int, hdr_size: int, depth: int = 0, parent_path: str = "", dtype: Optional[int] = None):
+    def _record_tag(self, tag: int, length: int, payload: bytes, pos: int, hdr_size: int, depth: int = 0, parent_path: str = "", dtype: Optional[int] = None, parent_tag: Optional[int] = None):
         """Append the tag occurrence to raw_tags and capture certificate payloads."""
-        dec = self.registry.get_decoder(tag)
+        dec = self.registry.get_decoder(tag, generation=self.generation, is_vu=self.is_vu,
+                                       dtype=dtype, parent_tag=parent_tag)
         tag_name = dec.name if dec else f"BER_{tag:04X}"
         raw_key = f"{tag:04X}_{tag_name}"
         full_key = f"{parent_path} > {raw_key}" if parent_path else raw_key
@@ -524,7 +527,7 @@ class DeterministicParser:
                 if length == 194:
                     self.parser.card_cert_g1 = payload
 
-    def _dispatch_decoder(self, tag: int, payload: bytes, dtype: Optional[int] = None):
+    def _dispatch_decoder(self, tag: int, payload: bytes, dtype: Optional[int] = None, parent_tag: Optional[int] = None):
         """Run the registered decoder for *tag*, respecting card/VU scope.
 
         Signature blocks (dtype 1/3/11/15) are collected for verification but
@@ -541,12 +544,9 @@ class DeterministicParser:
         if dtype in (1, 3, 11, 15):
             return
 
-        dec = self.registry.get_decoder(tag)
+        dec = self.registry.get_decoder(tag, generation=self.generation, is_vu=self.is_vu,
+                                       dtype=dtype, parent_tag=parent_tag)
         if dec and dec.decoder_fn:
-            # Context filter: card-only decoders must not run on VU files
-            # (and vice versa) — same FID values can collide across contexts.
-            if (dec.card_only and self.is_vu) or (dec.vu_only and not self.is_vu):
-                return
             try:
                 sig = inspect.signature(dec.decoder_fn)
                 n_params = len([p for p in sig.parameters.values()
@@ -564,7 +564,7 @@ class DeterministicParser:
         """Recursively walk a container payload (STAP or BER per generation)."""
         if depth > MAX_RECURSION_DEPTH:
             return
-        dec = self.registry.get_decoder(tag)
+        dec = self.registry.get_decoder(tag, generation=self.generation, is_vu=self.is_vu)
         mode = 'ber' if dec and dec.generation in ('G2', 'G2.2') else 'stap'
         inner_start = 0
 
@@ -601,13 +601,15 @@ class DeterministicParser:
                 f"{parent_path} > Tag_{inner_tag:04X}"
             )
             self._record_tag(inner_tag, inner_length, inner_payload,
-                             abs_start, hdr_size, depth, parent_path, dtype=inner_dtype)
-            self._dispatch_decoder(inner_tag, inner_payload, dtype=inner_dtype)
+                             abs_start, hdr_size, depth, parent_path,
+                             dtype=inner_dtype, parent_tag=tag)
+            self._dispatch_decoder(inner_tag, inner_payload, dtype=inner_dtype, parent_tag=tag)
 
-            if self.registry.is_container(inner_tag):
-                inner_path = self._get_tag_path(inner_tag, parent_path)
+            if self.registry.is_container(inner_tag, generation=self.generation, is_vu=self.is_vu,
+                                          dtype=inner_dtype, parent_tag=tag):
+                inner_path = self._get_tag_path(inner_tag, parent_path,
+                                                dtype=inner_dtype, parent_tag=tag)
                 self._parse_container(inner_tag, inner_payload, abs_start + hdr_size, depth + 1, inner_path)
 
             pos += hdr_size + inner_length
-
 

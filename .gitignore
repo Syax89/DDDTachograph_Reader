@@ -33,3 +33,4 @@ tests/certs/
 *.pdf
 *.csv
 specs/*_report.json
+tests/golden/

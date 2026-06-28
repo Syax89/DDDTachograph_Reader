@@ -60,6 +60,20 @@ EXPORT_SECTIONS = [
     ("signed_daily_records", "Signed Daily Records"),
     ("locations", "GPS Locations"),
     ("ef_signature_verification", "EF Card Data Signatures"),
+    ("certificates", "Driver Card Certificates"),
+    ("sensor_daily_records", "Sensor Daily Records"),
+]
+
+# Dict-style sections exposed as key/value sheets in Excel/CSV/PDF.
+DICT_SECTIONS = [
+    ("card_issuer", "Card Issuer"),
+    ("card_application", "Card Application"),
+    ("card_chip", "IC Chip"),
+    ("card_icc", "ICC Identification"),
+    ("vu_overview", "VU Overview"),
+    ("vu_info", "VU Information"),
+    ("company_info", "VU Company Info"),
+    ("sensor_info", "Sensor Identification"),
 ]
 
 
@@ -234,6 +248,12 @@ def summary_rows(data):
         rows.append(("Signature verification", sv["summary"]))
     if efv.get("summary"):
         rows.append(("EF card data signatures", efv["summary"]))
+    certs = data.get("certificates") or []
+    if certs:
+        rows.append(("Certificates", f"{len(certs)} decoded ({', '.join(sorted(set(c.get('format', '') for c in certs if c.get('format'))))})"))
+    vu_certs = data.get("vu_certificates") or []
+    if vu_certs:
+        rows.append(("VU Certificates (CVC)", f"{len(vu_certs)} decoded"))
 
     if driver.get("surname", "N/A") != "N/A" or driver.get("card_number", "N/A") != "N/A":
         rows.append(("", ""))
@@ -254,7 +274,7 @@ def summary_rows(data):
 
 
 def section_tables(data, max_rows=None):
-    """Yield (label, headers, rows) for every populated export section."""
+    """Yield (label, headers, rows, truncated) for every populated export section."""
     for key, label in EXPORT_SECTIONS:
         items = data.get(key) or []
         if not items:
@@ -286,3 +306,16 @@ def section_tables(data, max_rows=None):
             rows = rows[:max_rows]
             truncated = True
         yield label, headers, rows, truncated
+
+    for key, label in DICT_SECTIONS:
+        section = data.get(key) or {}
+        if not isinstance(section, dict) or not section:
+            continue
+        rows = []
+        for k, v in section.items():
+            formatted = fmt_value(v)
+            if formatted:
+                rows.append([humanize_key(k), formatted])
+        if not rows:
+            continue
+        yield label, ["Field", "Value"], rows, False

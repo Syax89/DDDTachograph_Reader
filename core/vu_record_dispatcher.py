@@ -149,22 +149,70 @@ def decode_control_activity(rec):
 
 def decode_vu_identification(rec):
     """VuIdentification (126/138): vuManufacturerName(36) + vuManufacturerAddress(36)
-    + vuPartNumber(16) + vuSerialNumber(8) + ... (software/date follow)."""
+    + vuPartNumber(16) + vuSerialNumber(8) + software/date/generation fields."""
     if len(rec) < 96:
         return None
-    return {
+    out = {
         "confidence": "high",
         "manufacturer_name": decode_name(rec, 0),
         "manufacturer_address": decode_name(rec, 36),
         "part_number": _ascii(rec, 72, 16),
         "serial_number": rec[88:96].hex(),
-        "approval_number": _ascii(rec, 108, 16),
-        "raw_tail_hex": rec[96:108].hex() + rec[124:].hex(),
     }
+    if len(rec) >= 108:
+        out.update({
+            "software_version": _ascii(rec, 96, 4),
+            "software_installation_date": _iso(struct.unpack(">I", rec[100:104])[0]),
+            "manufacturing_date": _iso(struct.unpack(">I", rec[104:108])[0]),
+        })
+    if len(rec) >= 124:
+        out["approval_number"] = _ascii(rec, 108, 16)
+    if len(rec) >= 126:
+        out["vu_generation"] = rec[124]
+        out["vu_ability"] = rec[125]
+    if len(rec) >= 138:
+        out["digital_map_version"] = _ascii(rec, 126, 12)
+    return out
 
 
 def _ascii(data, off, length):
     return "".join(chr(b) if 0x20 <= b < 0x7F else "" for b in data[off:off + length]).strip()
+
+
+def _decode_seal_data(data):
+    """SealDataVu: five 11-byte SealRecord entries."""
+    records = []
+    for off in range(0, min(len(data), 55), 11):
+        rec = data[off:off + 11]
+        if len(rec) < 11:
+            break
+        records.append({
+            "equipment_type": rec[0],
+            "extended_seal_identifier": rec[1:11].hex(),
+        })
+    return records
+
+
+def _load_type_label(code):
+    return {0x00: "undefined", 0x01: "goods", 0x02: "passengers"}.get(code, "RFU")
+
+
+def _decode_calibration_extension(rec):
+    """Decode the generation-specific tail after nextCalibrationDate."""
+    if len(rec) >= 252:
+        return {
+            "sensor_serial_number": rec[167:175].hex(),
+            "sensor_gnss_serial_number": rec[175:183].hex(),
+            "rcm_serial_number": rec[183:191].hex(),
+            "seal_data_vu": _decode_seal_data(rec[191:246]),
+            "by_default_load_type": rec[246],
+            "by_default_load_type_label": _load_type_label(rec[246]),
+            "calibration_country": decoders.get_nation(rec[247]),
+            "calibration_country_timestamp": _iso(struct.unpack(">I", rec[248:252])[0]),
+        }
+    if len(rec) >= 222:
+        return {"seal_data_vu": _decode_seal_data(rec[167:222])}
+    return {}
 
 
 def decode_calibration(rec):
@@ -181,7 +229,7 @@ def decode_calibration(rec):
     """
     if len(rec) < 167:
         return None
-    return {
+    out = {
         "confidence": "high",
         "calibration_purpose": rec[0],
         "calibration_purpose_label": describe_calibration_purpose(rec[0]),
@@ -208,8 +256,9 @@ def decode_calibration(rec):
         "old_time": _iso(struct.unpack(">I", rec[155:159])[0]),
         "new_time": _iso(struct.unpack(">I", rec[159:163])[0]),
         "next_calibration_date": _iso(struct.unpack(">I", rec[163:167])[0]),
-        "raw_tail_hex": rec[167:].hex(),
     }
+    out.update(_decode_calibration_extension(rec))
+    return out
 
 
 def decode_card_iw(rec):
@@ -481,10 +530,10 @@ def decode_overspeeding_event(rec):
 
 def decode_power_interruption(rec):
     """VuPowerSupplyInterruptionRecord (87 bytes): eventType(1) + recordPurpose(1)
-    + beginTime(4) + endTime(4) + 4×FullCardNumberAndGen(19) + tail(1)."""
+    + beginTime(4) + endTime(4) + 4×FullCardNumberAndGen(19) + similarEventsNumber(1)."""
     if len(rec) < 86:
         return None
-    return {
+    out = {
         "confidence": "medium",
         "event_type": rec[0],
         "record_purpose": rec[1],
@@ -494,8 +543,10 @@ def decode_power_interruption(rec):
         "card_driver_end": decode_full_card_number_gen(rec, 29),
         "card_codriver_begin": decode_full_card_number_gen(rec, 48),
         "card_codriver_end": decode_full_card_number_gen(rec, 67),
-        "raw_tail_hex": rec[86:].hex(),
     }
+    if len(rec) >= 87:
+        out["similar_events_number"] = rec[86]
+    return out
 
 
 def decode_its_consent(rec):

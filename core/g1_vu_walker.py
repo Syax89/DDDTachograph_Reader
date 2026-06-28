@@ -22,7 +22,10 @@ Body layouts (Annex 1B §2.2.6.1-2.2.6.6):
   TREP 05 TechnicalData: VuIdentification(116) + SensorPaired(20)
                          + noOfCalibrations(1) + 167×N
   TREP 06 CardDownload:  variable-length card data; body extends to next
-                         0x76 TREP marker or EOF
+                          0x76 TREP marker or EOF
+  TREP 11 Sensor/Special: non-standard raw S-section observed in sensor files;
+                          body extends to TREP 14 trailer
+  TREP 14 Trailer:       2-byte raw terminator observed as 0x0000
 
 Confirmed against real G1 VU downloads: the walk lands exactly on every
 subsequent ``0x76 TREP`` marker and on the end of file.
@@ -42,6 +45,8 @@ TREP_NAMES = {
     0x04: "DetailedSpeed",
     0x05: "TechnicalData",
     0x06: "CardDownload",
+    0x11: "SensorSpecialData",
+    0x14: "SensorTrailer",
 }
 
 
@@ -107,20 +112,77 @@ def _trep05_body_len(d, p, n):
 
 
 def _trep06_body_len(d, p, n):
-    return _next_marker(d, p, n) - p
+    return _next_valid_marker(d, p, n) - p
 
 
-_NEXT_MARKER_MASK = b'\x76' + bytes(TREP_NAMES)
-
-
-def _next_marker(d, p, n):
-    """Return position of the next ``0x76 TREP`` marker after *p*, or *n*."""
+def _trep11_body_len(d, p, n):
     pos = p
     while pos < n - 1:
+        if d[pos] == 0x76 and d[pos + 1] == 0x14:
+            return pos - p
+        pos += 1
+    return n - p
+
+
+def _trep14_body_len(d, p, n):
+    return 2 if p + 2 <= n else None
+
+
+def _next_valid_marker(d, p, n):
+    """Return the next marker that starts a valid TREP chain, or EOF.
+
+    TREP 06 CardDownload has no explicit length. Card EF payloads can contain
+    byte pairs such as ``76 01`` that look like message markers, so a raw scan
+    would split the card data in the middle. Accept a candidate boundary only
+    when the remaining bytes form a valid Annex 1B TREP sequence.
+    """
+    pos = p
+    memo = {}
+    while pos < n - 1:
         if d[pos] == 0x76 and d[pos + 1] in TREP_NAMES:
-            return pos
+            # A nested TREP 06 candidate cannot be disambiguated from card EF
+            # payload without a length field; keep it inside the card download.
+            if d[pos + 1] != 0x06 and _valid_chain_from(d, pos, n, memo):
+                return pos
         pos += 1
     return n
+
+
+def _valid_chain_from(d, pos, n, memo):
+    """Return True if bytes from *pos* to EOF form a valid TREP sequence."""
+    if pos == n:
+        return True
+    cached = memo.get(pos)
+    if cached is not None:
+        return cached
+    if not _is_marker(d, pos):
+        memo[pos] = False
+        return False
+
+    trep = d[pos + 1]
+    body_start = pos + 2
+    body_len = _BODY_LEN_FNS[trep](d, body_start, n)
+    if body_len is None:
+        memo[pos] = False
+        return False
+    body_end = body_start + body_len
+    if body_end > n:
+        memo[pos] = False
+        return False
+
+    candidate_ends = []
+    sig_end = body_end + RSA_SIGNATURE_LEN
+    if sig_end == n or _is_marker(d, sig_end):
+        candidate_ends.append(sig_end)
+    if body_end == n or _is_marker(d, body_end):
+        candidate_ends.append(body_end)
+
+    for end in candidate_ends:
+        if end > pos and _valid_chain_from(d, end, n, memo):
+            memo[pos] = True
+            return True
+    memo[pos] = False
+    return False
 
 
 _BODY_LEN_FNS = {
@@ -130,6 +192,8 @@ _BODY_LEN_FNS = {
     0x04: _trep04_body_len,
     0x05: _trep05_body_len,
     0x06: _trep06_body_len,
+    0x11: _trep11_body_len,
+    0x14: _trep14_body_len,
 }
 
 
@@ -201,11 +265,15 @@ def walk_g1_vu(data, results):
         0x04: decoders._parse_trep_04_speed,
         0x05: decoders._parse_trep_05_technical,
         0x06: decoders._parse_trep_06_card_download,
+        0x11: decoders._parse_sensor_download,
     }
     for msg in messages:
         body = data[msg["body_start"]:msg["body_end"]]
+        handler = dispatch.get(msg["trep"])
+        if handler is None:
+            continue
         try:
-            dispatch[msg["trep"]](body, results)
+            handler(body, results)
         except Exception as exc:  # a decoder bug must not break the walk
             _log.debug("G1 VU TREP %02X dispatch failed at 0x%X: %s",
                        msg["trep"], msg["pos"], exc)

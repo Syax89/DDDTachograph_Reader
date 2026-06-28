@@ -29,7 +29,7 @@ class TestRealSemanticCoverage(unittest.TestCase):
         metrics = audit_directory(DDD_DIR)
         comparison = compare_to_baseline(metrics, baseline)
 
-        self.assertTrue(comparison["passed"], comparison["regressions"])
+        self.assertTrue(comparison["passed"], comparison)
 
 
 if __name__ == "__main__":

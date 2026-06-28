@@ -5,6 +5,7 @@ timestamps, humanised column names, nested structures rendered as text), so
 the three formats present the same content consistently.
 """
 import logging
+import re
 
 from core.report_format import records_to_table, section_tables, summary_rows
 
@@ -12,6 +13,8 @@ _log = logging.getLogger("export")
 
 _EXCEL_MAX_ROWS = 50000
 _PDF_MAX_ROWS = 1500
+
+_SHEET_NAME_RE = re.compile(r"[\[\]*?:/\\]")
 
 
 class ExportManager:
@@ -89,7 +92,8 @@ class ExportManager:
         for label, headers, rows, truncated in section_tables(data, max_rows=_EXCEL_MAX_ROWS):
             if truncated:
                 _log.warning("Truncating '%s' to %d rows (Excel limit)", label, _EXCEL_MAX_ROWS)
-            wsx = wb.create_sheet(label[:31])
+            safe_label = _SHEET_NAME_RE.sub("_", label)[:31].strip()
+            wsx = wb.create_sheet(safe_label)
             _write_table(wsx, headers, rows)
 
         wb.save(filepath)

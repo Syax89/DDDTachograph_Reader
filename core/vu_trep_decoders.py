@@ -1338,6 +1338,7 @@ def _parse_trep_06_card_download(data, results):
         pos = 0
         while pos + 5 <= len(data):
             stag, dtype, slen = struct.unpack(">HBH", data[pos:pos + 5])
+            matched = False
             if stag == 0x0504 and dtype <= 0x0F and 16 <= slen <= 0x100000 \
                     and pos + 5 + slen <= len(data):
                 end = pos + 5 + slen
@@ -1345,8 +1346,118 @@ def _parse_trep_06_card_download(data, results):
                     parse_cyclic_buffer_activities(data[pos + 5:end], results)
                 except Exception as exc:
                     _log.debug("TREP 06 embedded 0x0504 parse failed: %s", exc)
-                pos = end  # don't rescan inside the matched EF
-            else:
+                pos = end
+                matched = True
+            if not matched:
                 pos += 1
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 06 card download parse failed: %s", exc)
+
+
+# ── G1 Sensor Download (0x7611) ────────────────────────────────────────────
+
+_SENSOR_ID_SIZE = 168
+
+
+def _parse_sensor_download(body, results):
+    """Parse G1 sensor download payload (TREP 0x11 / 0x7611).
+
+    Annex 1B §4.5.3.2.1 defines the sensor download format. The payload
+    contains a sensor identification block followed by daily timestamp/speed
+    records, then a second copy of the same data.
+
+    Structure (empirically confirmed on real sensor file):
+      0-16   TOC header (17 bytes — layout not fully documented)
+      17..   FF padding
+      N..N+167  Sensor ID block (168 bytes):
+        [0:4]    first_date TimeReal
+        [4:8]    last_date  TimeReal
+        [8:10]   param_a    UInt16
+        [10:12]  param_b    UInt16
+        [12:14]  param_c    UInt16
+        [14:16]  param_d    UInt16
+        [16:28]  reserved   (zeros)
+        [28:100] padding    (FF / zeros)
+        [100]    approval_prefix (0x01)
+        [101]    approval_nation NationNumeric
+        [102:118] approval_number (16 bytes ASCII)
+      N+168..  Daily timestamp records:
+        Each day: midnight_ts(4) + first_event_ts(4) + speed_data(variable)
+        Days are separated by FF padding runs.
+      Midpoint  Second copy (identical structure, for redundancy).
+    """
+    if len(body) < _SENSOR_ID_SIZE + 20:
+        return
+    try:
+        _decode_sensor_block(body, results, offset=0)
+    except Exception as exc:
+        _log.debug("Sensor download parse failed: %s", exc)
+
+
+def _decode_sensor_block(body, results, offset=0):
+    """Decode one copy of the sensor data starting at *offset*."""
+    n = len(body)
+    pos = offset + 17  # skip TOC header
+    while pos < n and body[pos] == 0xFF:
+        pos += 1
+
+    if pos + _SENSOR_ID_SIZE > n:
+        return
+
+    block = body[pos:pos + _SENSOR_ID_SIZE]
+
+    ts_first = struct.unpack(">I", block[0:4])[0]
+    ts_last = struct.unpack(">I", block[4:8])[0]
+
+    serial_bytes = block[98:116]
+    approval_prefix = serial_bytes[0]
+    approval_nation = get_nation(serial_bytes[1]) if len(serial_bytes) > 1 else ""
+    approval_number = ""
+    try:
+        raw = serial_bytes[2:18]
+        end = raw.find(b'\x00')
+        if end >= 0:
+            raw = raw[:end]
+        approval_number = raw.decode("ascii", errors="replace").strip()
+    except Exception:
+        approval_number = ""
+
+    sensor_info = {
+        "sensor_approval": approval_number,
+        "approval_nation": approval_nation,
+        "approval_prefix": f"0x{approval_prefix:02X}",
+        "first_date": datetime.fromtimestamp(ts_first, tz=timezone.utc).strftime("%Y-%m-%d") if 946684800 <= ts_first <= 4102444800 else "N/A",
+        "last_date": datetime.fromtimestamp(ts_last, tz=timezone.utc).strftime("%Y-%m-%d") if 946684800 <= ts_last <= 4102444800 else "N/A",
+        "param_speed_max_kmh": struct.unpack(">H", block[10:12])[0],
+        "param_speed_avg_kmh": struct.unpack(">H", block[12:14])[0],
+        "param_distance_km": struct.unpack(">H", block[14:16])[0],
+    }
+    results.setdefault("sensor_info", {}).update(sensor_info)
+
+    # Daily timestamp records
+    daily_start = pos + _SENSOR_ID_SIZE
+    daily = _extract_sensor_daily_records(body, daily_start, offset, n)
+    if daily:
+        existing = results.get("sensor_daily_records") or []
+        existing.extend(daily)
+        results["sensor_daily_records"] = existing
+
+
+def _extract_sensor_daily_records(body, start, copy_start, copy_end):
+    """Extract unique daily midnight timestamps from sensor body."""
+    seen = set()
+    records = []
+    pos = start
+    end = min(copy_end, len(body))
+    while pos + 4 <= end:
+        ts = struct.unpack(">I", body[pos:pos + 4])[0]
+        if 946684800 <= ts <= 4102444800 and ts % 86400 == 0:
+            date_str = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
+            if date_str not in seen:
+                seen.add(date_str)
+                records.append({
+                    "date": date_str,
+                    "midnight_ts": ts,
+                })
+        pos += 1
+    return records
