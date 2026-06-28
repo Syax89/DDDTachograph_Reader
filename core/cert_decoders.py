@@ -1,6 +1,7 @@
 """Certificate and public-key decoders: G1 RSA certificates, G2/G2.2 CVC profiles, signatures and authentication sub-tags."""
 
 import struct
+from datetime import datetime, timezone
 
 from core.logger import get_logger
 from core.decode_primitives import decode_date, decode_string, get_nation
@@ -57,20 +58,148 @@ def parse_g22_certificate_subtag(val, results, tag):
     except (struct.error, IndexError, ValueError, KeyError) as exc:
         _log.debug("Certificate subtag parse failed: %s", exc)
 
-def parse_g1_certificate(val, results):
-    """Parse G1 certificate (tags 0xC100, 0xC108, 0x0103, 0x0104) — 194 bytes.
+def _is_cvc(data):
+    """True if *data* starts with a BER-TLV 0x7F21 (CVC) tag."""
+    return len(data) >= 3 and data[0] == 0x7F and data[1] >= 0x21
 
-    Structure (Annex 1B §2.29-2.30 / Annex 1C §2.30-2.31, C# config):
-      Signature                 128  HexValue
-      PublicKeyRemainder         58  HexValue (RSA pubkey remainder)
-      Nation                      1  Country
-      NationCode                  3  SimpleString (numeric)
-      SerialNumber                1  UInt8
-      AdditionalInfo              2  UInt16
-      CaIdentifier                1  UInt8
-    Total: 194 bytes
+
+_CVC_CURVE_NAMES = {
+    "2b2403030208010107": "brainpoolP256r1",
+    "2b2403030208010b0d": "brainpoolP384r1",
+    "2b2403030208010d0b": "brainpoolP512r1",
+    "2a8648ce3d030107": "NIST P-256",
+    "2b81040022": "NIST P-384",
+    "2b81040023": "NIST P-521",
+}
+
+
+def _cvc_timestamp(hex_str):
+    if not hex_str or len(hex_str) <= 4:
+        return None
+    try:
+        secs = int(hex_str, 16)
+        if 946684800 <= secs <= 4102444800:
+            return datetime.fromtimestamp(secs, tz=timezone.utc).isoformat()
+    except (ValueError, OverflowError, OSError):
+        pass
+    return None
+
+
+def _tlv(data):
+    """Parse one level of BER-TLV into {tag: value}."""
+    out = {}
+    i, n = 0, len(data)
+    while i < n:
+        tag = data[i]
+        tag_len = 2 if (tag & 0x1F) == 0x1F else 1
+        if tag_len == 2:
+            tag = (tag << 8) | data[i + 1]
+        length = data[i + tag_len]
+        len_len = 1
+        if length & 0x80:
+            nb = length & 0x7F
+            if nb == 0 or i + tag_len + 1 + nb > n:
+                return out
+            length = int.from_bytes(data[i + tag_len + 1:i + tag_len + 1 + nb], "big")
+            len_len = 1 + nb
+        start = i + tag_len + len_len
+        if start + length > n:
+            return out
+        out[tag] = data[start:start + length]
+        i = start + length
+    return out
+
+
+def _parse_cvc_fields(cert_bytes):
+    """Parse a CVC certificate (0x7F21) and return decoded field-level dict."""
+    outer = _tlv(cert_bytes)
+    inner = outer.get(0x7F21)
+    if inner is None:
+        return None
+    body_sig = _tlv(inner)
+    body = body_sig.get(0x7F4E)
+    sig = body_sig.get(0x5F37)
+    if body is None or sig is None:
+        return None
+    fields = _tlv(body)
+    pk_info = _tlv(fields.get(0x7F49, b""))
+
+    car_hex = fields.get(0x42, b"").hex()
+    chr_hex = fields.get(0x5F20, b"").hex()
+    oid = pk_info.get(0x06, b"").hex()
+    point = pk_info.get(0x86)
+    effective_hex = fields.get(0x5F25, b"").hex()
+    expiration_hex = fields.get(0x5F24, b"").hex()
+
+    result = {
+        "format": "CVC",
+        "total_size": len(cert_bytes),
+        "car": car_hex,
+        "chr": chr_hex,
+        "curve_oid": oid,
+        "curve": _CVC_CURVE_NAMES.get(oid, oid),
+        "valid_from": _cvc_timestamp(effective_hex),
+        "valid_to": _cvc_timestamp(expiration_hex),
+    }
+
+    if point:
+        raw = point
+        if raw[:1] == b'\x86' and len(raw) >= 3:
+            inner_len = raw[1]
+            off = 2
+            if inner_len & 0x80:
+                nb = inner_len & 0x7F
+                inner_len = int.from_bytes(raw[off:off + nb], "big")
+                off += nb
+            raw = raw[off:off + inner_len] if off + inner_len <= len(raw) else b''
+        if raw[:1] == b'\x04' and len(raw) >= 65:
+            result["public_key_x"] = raw[1:33].hex().upper()
+            result["public_key_y"] = raw[33:65].hex().upper()
+        elif raw:
+            result["public_key_hex"] = raw.hex().upper()
+
+    if sig:
+        result["signature_hex"] = sig.hex().upper()
+        if len(sig) >= 64:
+            half = len(sig) // 2
+            result["signature_r"] = sig[:half].hex().upper()
+            result["signature_s"] = sig[half:].hex().upper()
+
+    # Try to decode CAR/CHR as readable text
+    try:
+        car_bytes = fields.get(0x42, b"")
+        if len(car_bytes) >= 8:
+            mfg = car_bytes[5:8].hex().upper()
+            result["car_authority"] = car_bytes[:5].hex().upper()
+            result["car_serial"] = mfg
+    except (ValueError, IndexError):
+        pass
+
+    return result
+
+
+def parse_certificate(val, results):
+    """Unified certificate decoder: G1 RSA (194-byte) or G2/G2.2 CVC (BER-TLV).
+
+    Format is auto-detected from the payload header. G1 certificates are a
+    flat 194-byte binary structure (ISO 9796-2). G2 certificates are
+    BER-TLV CVC structures starting with tag 0x7F21.
     """
-    if len(val) < 194:
+    if _is_cvc(val):
+        try:
+            parsed = _parse_cvc_fields(val)
+            if parsed:
+                results.setdefault("certificates", []).append(parsed)
+                return
+        except (struct.error, IndexError, ValueError) as exc:
+            _log.debug("CVC certificate parse failed: %s", exc)
+
+    _parse_g1_certificate_internal(val, results)
+
+
+def _parse_g1_certificate_internal(val, results):
+    """G1 RSA certificate — exactly 194 bytes (Annex 1B §2.29-2.30)."""
+    if len(val) != 194:
         return
     try:
         sig = val[0:128]
@@ -82,6 +211,8 @@ def parse_g1_certificate(val, results):
         ca_id = val[193]
 
         results.setdefault("certificates", []).append({
+            "format": "G1_RSA",
+            "total_size": 194,
             "signature_hex": sig.hex().upper(),
             "signature_length": 128,
             "public_key_remainder_hex": pk_remainder.hex().upper(),
@@ -91,10 +222,13 @@ def parse_g1_certificate(val, results):
             "serial_number": serial,
             "additional_info": f"0x{add_info:04X}",
             "ca_identifier": f"0x{ca_id:02X}",
-            "total_size": 194,
         })
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("G1 certificate parse failed: %s", exc)
+
+
+# Backward-compatible alias for callers outside the registry.
+parse_g1_certificate = parse_certificate
 
 def parse_certificate_signature(val, results):
     """Parse ECDSA certificate signature (tag 0x5F37) — Annex 1C §2.31.

@@ -8,6 +8,7 @@ decoded instead of merely tracked.
 import argparse
 import json
 import os
+import re
 import sys
 from typing import Any, Dict, Iterable, List, Mapping
 
@@ -39,14 +40,72 @@ def sum_occurrence_lengths(result: Mapping[str, Any], name_fragment: str) -> int
     return total
 
 
+RAW_BOOKKEEPING_KEYS = {"raw_tags", "coverage", "sections", "generations", "_ef_data", "_ef_signatures"}
+RAW_HEX_KEYS = {"raw_hex", "payload_hex", "header_hex"}
+HEX_RE = re.compile(r"[0-9a-fA-F]")
+
+
+def _hex_byte_length(value: Any) -> int:
+    if not isinstance(value, str):
+        return 0
+    # Some previews are suffixed with "..."; count only actual hex nibbles.
+    nibbles = len(HEX_RE.findall(value))
+    return nibbles // 2
+
+
+def _raw_field_debts(value: Any, path: str = "") -> Iterable[Dict[str, Any]]:
+    """Yield raw fields that represent semantic debt, excluding byte bookkeeping.
+
+    ``raw_tags`` stores structural byte accounting and would double-count every
+    tag payload, so it is intentionally skipped. Decoder outputs are different:
+    a ``raw_tail_hex`` or ``raw_hex`` field means some bytes were surfaced as
+    opaque data instead of field-decoded protocol structure.
+    """
+    if isinstance(value, Mapping):
+        if "raw_tail_hex" in value:
+            length = _hex_byte_length(value.get("raw_tail_hex"))
+            if length:
+                yield {"path": f"{path}.raw_tail_hex" if path else "raw_tail_hex",
+                       "key": "raw_tail_hex", "length": length}
+        elif "raw_hex" in value:
+            length = _hex_byte_length(value.get("raw_hex"))
+            if length:
+                yield {"path": f"{path}.raw_hex" if path else "raw_hex",
+                       "key": "raw_hex", "length": length}
+        else:
+            for raw_key in ("payload_hex", "header_hex"):
+                if raw_key in value:
+                    length = _hex_byte_length(value.get(raw_key))
+                    if length:
+                        yield {"path": f"{path}.{raw_key}" if path else raw_key,
+                               "key": raw_key, "length": length}
+
+        for key, child in value.items():
+            if key in RAW_BOOKKEEPING_KEYS or key in RAW_HEX_KEYS or key == "raw_tail_hex":
+                continue
+            child_path = f"{path}.{key}" if path else str(key)
+            yield from _raw_field_debts(child, child_path)
+    elif isinstance(value, list):
+        for idx, item in enumerate(value):
+            yield from _raw_field_debts(item, f"{path}[{idx}]")
+
+
 def semantic_metrics(result: Mapping[str, Any]) -> Dict[str, Any]:
     metadata = result.get("metadata", {})
     file_size = int(metadata.get("file_size_bytes", 0) or 0)
-    tracked_coverage = float(metadata.get("coverage_pct", 0) or 0)
+    coverage = result.get("coverage", {}) if isinstance(result.get("coverage"), Mapping) else {}
+    tracked_coverage = float(coverage.get("covered_pct", metadata.get("coverage_pct", 0)) or 0)
     unparsed_bytes = sum_occurrence_lengths(result, "Unparsed Data")
     padding_bytes = sum_occurrence_lengths(result, "Padding")
     decoded_bytes = max(file_size - unparsed_bytes - padding_bytes, 0)
     decoded_coverage = (decoded_bytes / file_size * 100) if file_size else 0.0
+
+    raw_debts = list(_raw_field_debts(result))
+    raw_tail_bytes = sum(item["length"] for item in raw_debts if item["key"] == "raw_tail_hex")
+    raw_blob_bytes = sum(item["length"] for item in raw_debts if item["key"] != "raw_tail_hex")
+    semantic_debt_bytes = unparsed_bytes + raw_tail_bytes + raw_blob_bytes
+    strict_decoded_bytes = max(file_size - padding_bytes - semantic_debt_bytes, 0)
+    strict_decoded_coverage = (strict_decoded_bytes / file_size * 100) if file_size else 0.0
 
     stranded_bytes = 0
     stranded_blocks = 0
@@ -78,6 +137,13 @@ def semantic_metrics(result: Mapping[str, Any]) -> Dict[str, Any]:
         "meaningful_unparsed_bytes": meaningful_unparsed,
         "meaningful_unparsed_blocks": meaningful_blocks,
         "meaningful_byte_coverage": round(meaningful_coverage, 3),
+        "raw_tail_bytes": raw_tail_bytes,
+        "raw_tail_fields": sum(1 for item in raw_debts if item["key"] == "raw_tail_hex"),
+        "raw_blob_bytes": raw_blob_bytes,
+        "raw_blob_fields": sum(1 for item in raw_debts if item["key"] != "raw_tail_hex"),
+        "semantic_debt_bytes": semantic_debt_bytes,
+        "strict_decoded_bytes": strict_decoded_bytes,
+        "strict_decoded_byte_coverage": round(strict_decoded_coverage, 3),
     }
 
 
@@ -109,20 +175,35 @@ def load_baseline(path: str = BASELINE_PATH) -> Dict[str, Any]:
 
 def compare_to_baseline(metrics: Mapping[str, Mapping[str, Any]], baseline: Mapping[str, Mapping[str, Any]]) -> Dict[str, Any]:
     regressions = []
+    missing_baseline = []
     for filename, current in metrics.items():
         expected = baseline.get(filename)
         if not expected:
+            missing_baseline.append(filename)
             continue
         current_unparsed = int(current.get("unparsed_bytes", 0) or 0)
         baseline_unparsed = int(expected.get("unparsed_bytes", 0) or 0)
+        has_debt_metric = "semantic_debt_bytes" in current or "semantic_debt_bytes" in expected
+        current_debt = int(current.get("semantic_debt_bytes", current_unparsed) or 0)
+        baseline_debt = int(expected.get("semantic_debt_bytes", baseline_unparsed) or 0)
         if current_unparsed > baseline_unparsed:
             regressions.append({
                 "filename": filename,
+                "metric": "unparsed_bytes",
                 "baseline_unparsed_bytes": baseline_unparsed,
                 "current_unparsed_bytes": current_unparsed,
                 "increase": current_unparsed - baseline_unparsed,
             })
-    return {"regressions": regressions, "passed": not regressions}
+        if has_debt_metric and current_debt > baseline_debt:
+            regressions.append({
+                "filename": filename,
+                "metric": "semantic_debt_bytes",
+                "baseline_semantic_debt_bytes": baseline_debt,
+                "current_semantic_debt_bytes": current_debt,
+                "increase": current_debt - baseline_debt,
+            })
+    return {"regressions": regressions, "missing_baseline": missing_baseline,
+            "passed": not regressions and not missing_baseline}
 
 
 def audit_directory(directory: str = DDD_DIR) -> Dict[str, Dict[str, Any]]:
@@ -153,7 +234,7 @@ def main() -> int:
         print("Semantic DDD Coverage Audit")
         print(
             f"{'Filename':<52} {'Gen':<16} {'Tracked%':>9} {'Decoded%':>9} "
-            f"{'Mean%':>7} {'Unparsed':>10} {'Stranded':>10} {'MeanB':>8}"
+            f"{'Strict%':>8} {'Debt':>10} {'Unparsed':>10} {'RawTail':>8}"
         )
         print("-" * 122)
         for filename, info in metrics.items():
@@ -161,20 +242,22 @@ def main() -> int:
                 f"{filename:<52} {info['generation']:<16} "
                 f"{info['tracked_byte_coverage']:>8.1f}% "
                 f"{info['decoded_byte_coverage']:>8.1f}% "
-                f"{info['meaningful_byte_coverage']:>6.1f}% "
+                f"{info['strict_decoded_byte_coverage']:>7.1f}% "
+                f"{info['semantic_debt_bytes']:>10,} "
                 f"{info['unparsed_bytes']:>10,} "
-                f"{info['stranded_bytes']:>10,} "
-                f"{info['meaningful_unparsed_bytes']:>8,}"
+                f"{info['raw_tail_bytes']:>8,}"
             )
+        if comparison["missing_baseline"]:
+            print("\nFiles missing from baseline:")
+            for filename in comparison["missing_baseline"]:
+                print(f"- {filename}")
         if comparison["regressions"]:
             print("\nRegressions versus baseline:")
             for item in comparison["regressions"]:
-                print(
-                    f"- {item['filename']}: +{item['increase']} unparsed bytes "
-                    f"({item['baseline_unparsed_bytes']} -> {item['current_unparsed_bytes']})"
-                )
+                metric = item.get("metric", "unparsed_bytes")
+                print(f"- {item['filename']}: +{item['increase']} {metric}")
         else:
-            print("\nNo unparsed-byte regressions versus baseline.")
+            print("\nNo semantic-coverage regressions versus baseline.")
         if args.output:
             print(f"Semantic report written to: {args.output}")
 

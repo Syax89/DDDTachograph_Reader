@@ -5,7 +5,7 @@ All known tag definitions consolidated in one place for deterministic dispatch.
 """
 
 from dataclasses import dataclass
-from typing import Optional, Callable, Dict, List
+from typing import Optional, Callable, Dict, List, Tuple
 import threading
 
 
@@ -24,6 +24,8 @@ class TagDecoder:
     vu_only: bool = False
     signature_block: bool = False
     priority: int = 0
+    dtypes: Optional[Tuple[int, ...]] = None
+    parent_tags: Optional[Tuple[int, ...]] = None
 
 
 class DecoderRegistry:
@@ -34,6 +36,7 @@ class DecoderRegistry:
 
     def __init__(self):
         self._registry: Dict[int, TagDecoder] = {}
+        self._by_tag: Dict[int, List[TagDecoder]] = {}
         self._container_tags: set = set()
         self._signature_tags: set = set()
         self._build()
@@ -401,42 +404,42 @@ class DecoderRegistry:
 
             # ── Certificate Tags ──
             TagDecoder(0xC100, "G1_CardCertificate",
-                       decoders.parse_g1_certificate,
+                       decoders.parse_certificate,
                        annex_ref="Annex 1B §2.29", generation="G1",
                        signature_block=True, record_size=194),
 
             TagDecoder(0xC108, "G1_CA_Certificate",
-                       decoders.parse_g1_certificate,
+                       decoders.parse_certificate,
                        annex_ref="Annex 1B §2.30", generation="G1",
                        signature_block=True, record_size=194),
 
             TagDecoder(0xC101, "G2_CardCertificate",
-                       decoders.parse_g1_certificate,
+                       decoders.parse_certificate,
                        annex_ref="Annex 1C §2.30", generation="G2",
                        signature_block=True),
 
             TagDecoder(0xC109, "G2_CA_Certificate",
-                       decoders.parse_g1_certificate,
+                       decoders.parse_certificate,
                        annex_ref="Annex 1C §2.31", generation="G2",
                        signature_block=True),
 
             TagDecoder(0x0103, "G2_CardCertificate",
-                       decoders.parse_g1_certificate,
+                       decoders.parse_certificate,
                        annex_ref="Annex 1C §2.30", generation="G2",
                        signature_block=True, record_size=194),
 
             TagDecoder(0x0104, "G2_MemberStateCertificate",
-                       decoders.parse_g1_certificate,
+                       decoders.parse_certificate,
                        annex_ref="Annex 1C §2.31", generation="G2",
                        signature_block=True, record_size=194),
 
             TagDecoder(0xC102, "G22_CardCertificate",
-                       decoders.parse_g1_certificate,
+                       decoders.parse_certificate,
                        annex_ref="Reg. EU 2023/980", generation="G2.2",
                        signature_block=True),
 
             TagDecoder(0xC10A, "G22_CA_Certificate",
-                       decoders.parse_g1_certificate,
+                       decoders.parse_certificate,
                        annex_ref="Reg. EU 2023/980", generation="G2.2",
                        signature_block=True),
 
@@ -491,45 +494,136 @@ class DecoderRegistry:
         ]
 
         for d in definitions:
-            self._registry[d.tag] = d
-            if d.container or (d.tag & 0xFF00) == 0x7600:
-                self._container_tags.add(d.tag)
-            if d.signature_block:
-                self._signature_tags.add(d.tag)
+            self.register_decoder(d)
 
-    def get_decoder(self, tag: int) -> Optional[TagDecoder]:
-        return self._registry.get(tag)
+    def register_decoder(self, decoder: TagDecoder) -> None:
+        """Register a decoder, preserving all context-specific variants.
 
-    def is_container(self, tag: int) -> bool:
-        if tag in self._container_tags:
+        ``_registry`` remains the legacy tag-only index for callers that only
+        need one representative definition. ``_by_tag`` stores every variant so
+        context-aware lookup can distinguish card/VU, generation, dtype and
+        parent-container collisions.
+        """
+        self._by_tag.setdefault(decoder.tag, []).append(decoder)
+        current = self._registry.get(decoder.tag)
+        if current is None or decoder.priority > current.priority:
+            self._registry[decoder.tag] = decoder
+        if decoder.container or (decoder.tag & 0xFF00) == 0x7600:
+            self._container_tags.add(decoder.tag)
+        if decoder.signature_block:
+            self._signature_tags.add(decoder.tag)
+
+    def get_decoder(
+        self,
+        tag: int,
+        *,
+        generation: Optional[str] = None,
+        is_vu: Optional[bool] = None,
+        dtype: Optional[int] = None,
+        parent_tag: Optional[int] = None,
+    ) -> Optional[TagDecoder]:
+        """Return the best decoder for *tag* in the supplied context.
+
+        Selection is intentionally permissive for generation: older Gen2 EFs can
+        still appear in Gen2.2 cards, and legacy callers may omit context. Scope,
+        dtype and parent constraints are hard filters when a decoder declares
+        them because those dimensions identify different payload layouts.
+        """
+        candidates = list(self._by_tag.get(tag, ()))
+        if not candidates:
+            return None
+
+        if is_vu is not None:
+            candidates = [d for d in candidates
+                          if not ((d.card_only and is_vu) or (d.vu_only and not is_vu))]
+            if not candidates:
+                return None
+
+        if dtype is not None:
+            dtype_matches = [d for d in candidates if d.dtypes is None or dtype in d.dtypes]
+            if dtype_matches:
+                candidates = dtype_matches
+
+        if parent_tag is not None:
+            parent_matches = [d for d in candidates if d.parent_tags is None or parent_tag in d.parent_tags]
+            if parent_matches:
+                candidates = parent_matches
+
+        return max(candidates, key=lambda d: self._context_score(d, generation, dtype, parent_tag))
+
+    def _context_score(
+        self,
+        decoder: TagDecoder,
+        generation: Optional[str],
+        dtype: Optional[int],
+        parent_tag: Optional[int],
+    ) -> Tuple[int, int, int, int]:
+        gen_score = 0
+        if generation:
+            if decoder.generation == generation:
+                gen_score = 30
+            elif decoder.generation == "all":
+                gen_score = 20
+            elif generation == "G2.2" and decoder.generation == "G2":
+                gen_score = 10
+        dtype_score = 1 if dtype is not None and decoder.dtypes and dtype in decoder.dtypes else 0
+        parent_score = 1 if parent_tag is not None and decoder.parent_tags and parent_tag in decoder.parent_tags else 0
+        return (parent_score, dtype_score, gen_score, decoder.priority)
+
+    def is_container(
+        self,
+        tag: int,
+        *,
+        generation: Optional[str] = None,
+        is_vu: Optional[bool] = None,
+        dtype: Optional[int] = None,
+        parent_tag: Optional[int] = None,
+    ) -> bool:
+        dec = self.get_decoder(tag, generation=generation, is_vu=is_vu,
+                               dtype=dtype, parent_tag=parent_tag)
+        if dec and dec.container:
             return True
         if (tag & 0xFF00) == 0x7600:
             return True
         return False
 
-    def is_signature(self, tag: int) -> bool:
-        return tag in self._signature_tags
+    def is_signature(
+        self,
+        tag: int,
+        *,
+        generation: Optional[str] = None,
+        is_vu: Optional[bool] = None,
+        dtype: Optional[int] = None,
+        parent_tag: Optional[int] = None,
+    ) -> bool:
+        dec = self.get_decoder(tag, generation=generation, is_vu=is_vu,
+                               dtype=dtype, parent_tag=parent_tag)
+        return bool(dec and dec.signature_block)
 
     def get_all_tags(self) -> List[int]:
         return sorted(self._registry.keys())
 
+    def iter_decoders(self) -> List[TagDecoder]:
+        """Return every registered decoder variant in deterministic order."""
+        return [d for tag in sorted(self._by_tag) for d in self._by_tag[tag]]
+
     def get_unhandled_tags(self, seen_tags: set) -> List[TagDecoder]:
         """Return tag decoders in registry that weren't dispatched."""
-        return [self._registry[t] for t in sorted(self._registry) if t not in seen_tags]
+        return [d for t in sorted(self._by_tag) for d in self._by_tag[t] if t not in seen_tags]
 
     def get_spec_ref(self, tag: int) -> str:
         dec = self._registry.get(tag)
         return dec.annex_ref if dec else ""
 
     def get_by_generation(self, generation: str) -> List[TagDecoder]:
-        return [d for d in self._registry.values()
+        return [d for d in self.iter_decoders()
                 if d.generation == generation or d.generation == "all"]
 
     def get_containers(self) -> List[TagDecoder]:
-        return [d for d in self._registry.values() if d.container]
+        return [d for d in self.iter_decoders() if d.container]
 
     def get_prioritized(self) -> List[TagDecoder]:
-        return sorted(self._registry.values(), key=lambda d: (-d.priority, d.tag))
+        return sorted(self.iter_decoders(), key=lambda d: (-d.priority, d.tag))
 
     def __len__(self) -> int:
         return len(self._registry)
