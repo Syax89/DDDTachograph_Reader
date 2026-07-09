@@ -281,6 +281,7 @@ class DataTable(ttk.Frame):
         self._sort_state = {}
         self._fit_after_id = None
         self._filter_after_id = None
+        self._fitted = False
 
         self.tv.bind("<Configure>", lambda e: self._schedule_fit())
 
@@ -303,13 +304,14 @@ class DataTable(ttk.Frame):
         self._cols = list(columns)
         self._all_rows = [list(r) for r in rows]
         self._sort_state = {}
+        self._fitted = False
 
         self.tv["columns"] = self._cols
         for c in self._cols:
             self.tv.heading(c, text=str(c),
                             command=lambda col=c: self._sort_by(col))
             min_w = max(len(str(c)) * 9 + 24, 60)
-            self.tv.column(c, minwidth=min_w, anchor=tk.W, stretch=True)
+            self.tv.column(c, minwidth=min_w, anchor=tk.W, stretch=False)
 
         self._render(self._all_rows)
         self.tv.update_idletasks()
@@ -320,8 +322,14 @@ class DataTable(ttk.Frame):
             self._fit_after_id = None
 
     def _fit_columns(self):
-        """Distribute available width proportionally to content length."""
-        if not self._cols:
+        """Distribute available width proportionally to content length.
+
+        Runs only for the initial layout of a table (until the first
+        successful fit). After that, columns keep whatever width the user
+        set — auto-fit no longer overrides them. Loading a new table resets
+        this via :meth:`show`.
+        """
+        if not self._cols or self._fitted:
             return
         available = self.tv.winfo_width()
         if available < 50:
@@ -336,6 +344,7 @@ class DataTable(ttk.Frame):
         for c, w in zip(self._cols, weights, strict=False):
             min_w = max(len(str(c)) * 9 + 24, 70)
             self.tv.column(c, width=max(int(usable * w / total_weight), min_w))
+        self._fitted = True
 
     def _content_width(self, col):
         idx = self._cols.index(col)
@@ -346,6 +355,8 @@ class DataTable(ttk.Frame):
         return longest * 8
 
     def _schedule_fit(self):
+        if self._fitted:
+            return
         if self._fit_after_id is not None:
             self.tv.after_cancel(self._fit_after_id)
         self._fit_after_id = self.tv.after(300, self._fit_columns)

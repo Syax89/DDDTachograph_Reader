@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [2.3.3] - 2026-07-10
+### Changed
+- **Resizable data-table columns**: columns auto-fit only on the first load of a table, then keep the width the user sets (no more snap-back on window resize)
+- **Horizontal scrolling**: columns can now be widened beyond the window edge; the table scrolls left/right instead of forcing every column to fit the viewport
+
 ## [2.3.2] - 2026-07-10
 ### Changed
 - **Decoders reorganized by type** behind the `core/decoders/__init__.py` facade: `primitives.py`→`common.py`, `card.py`→`card_ef.py`, `g22_card.py`→`card_g22.py`; `vu_trep.py` split into `vu_g1.py` (G1 stream/TREP walkers) and `vu_g2.py` (G2/G2.2 RecordArray dispatch)
