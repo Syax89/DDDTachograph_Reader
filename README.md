@@ -1,5 +1,9 @@
 # DDD Tachograph Reader
 
+<p align="center">
+  <img src="assets/lockup-horizontal.png" alt="TachoReader" width="600">
+</p>
+
 > Open Source  `.ddd` digital tachograph file analyzer — full decoding with tree-structured data exploration.
 
 [![Build and Release](https://github.com/Syax89/ddd-tachograph-reader/actions/workflows/build.yml/badge.svg)](https://github.com/Syax89/ddd-tachograph-reader/actions/workflows/build.yml)
