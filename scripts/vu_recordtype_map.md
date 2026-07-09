@@ -99,7 +99,7 @@ crittografico è del layer `signature_validator`).
 | **0x22** | **55** | **VuBorderCrossingRecord ✓** | **G2.2** | **CONFERMATO su dati reali** |
 | **0x23** | **58** | **VuLoadUnloadRecord** | **G2.2** | size = somma componenti spec |
 | 0x24 | 15 | VehicleRegistrationIdentification | G2/2.2 | nation(1)+14 |
-| 0x29 | 2 | (da identificare, G2.2) | G2.2 | 282 record in un file |
+| 0x29 | 2 | ActivityChangeInfo_Slot2 (co-driver slot) | G2.2 | 282 record in un file, identico a 0x01, validato |
 | 0x40 | 1 | VuDetailedSpeed sample (G1 TREP) | G1 | 15816 campioni |
 | 0x60 | 0 | terminatore/padding | G2.2 | |
 

@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from core.utils.logger import get_logger
 from core.decoders.primitives import decode_date, decode_string, get_nation
 from core.utils.constants import EC_CURVE_OIDS
+from core.utils.ber_tlv import read_ber_tlv_header as _read_ber_tlv
 
 _log = get_logger(__name__)
 
@@ -13,29 +14,48 @@ def parse_g22_auth_subtag(val, results, tag):
     """Parse G2.2 authentication sub-tags inside security container.
 
     Tags handled:
-      0x960F - GNSS authentication data (raw bytes retained for crypto)
-      0x6399 - Load/unload authentication data (raw bytes retained for crypto)
+      0x960F - GNSS authentication data
+      0x6399 - Load/unload authentication data
 
-    Attempts structure detection: header (first 4 bytes) + payload (rest).
+    Attempts recursive BER-TLV walk of the internals. The authenticated
+    payload format is not publicly documented (EU Reg. 2023/980 Appendix 11),
+    so sub-tags are surfaced as hex; algorithm OIDs found are resolved to
+    human-readable curve names.
     """
     try:
         total_len = len(val)
-        header_end = min(4, total_len)
-        header_bytes = val[:header_end]
-        payload_bytes = val[header_end:]
-
-        _log.debug("Auth subtag 0x%04X: total=%d header=%d payload=%d",
-                   tag, total_len, header_end, len(payload_bytes))
 
         entry = {
             "tag": f"0x{tag:04X}",
             "length": total_len,
             "raw_hex": val.hex(),
-            "header_hex": header_bytes.hex(),
-            "payload_hex": payload_bytes.hex(),
-            "header_length": header_end,
-            "payload_length": len(payload_bytes),
         }
+
+        children = []
+        pos = 0
+        depth = 0
+        while pos < total_len and depth < 12:
+            sub_tag, sub_len, hdr_sz = _read_ber_tlv(val, pos)
+            if sub_tag is None or sub_len is None or sub_len == 0:
+                # Remainder as raw tail
+                if pos < total_len:
+                    entry["tail_hex"] = val[pos:].hex()
+                break
+            payload = val[pos + hdr_sz:pos + hdr_sz + sub_len]
+            child = {
+                "tag": f"0x{sub_tag:04X}",
+                "length": sub_len,
+                "hex": payload.hex(),
+            }
+            # Resolve OID tags to curve names
+            if sub_tag == 0x06 and 2 <= sub_len <= 16:
+                child["oid"] = payload.hex()
+                child["curve"] = EC_CURVE_OIDS.get(payload.hex(), "unknown")
+            children.append(child)
+            pos += hdr_sz + sub_len
+            depth += 1
+        if children:
+            entry["children"] = children
 
         dest_key = "gnss_auth" if tag == 0x960F else "load_unload_auth"
         results.setdefault(dest_key, []).append(entry)
