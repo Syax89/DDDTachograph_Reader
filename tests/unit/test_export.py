@@ -100,7 +100,9 @@ class TestExportManager(unittest.TestCase):
 
         # Daily Activities: monthly grouped report with hours columns + monthly totals
         ws = wb["Daily Activities"]
-        headers = [c.value for c in ws[1]]
+        # Description in row 1, headers in row 2
+        self.assertIn("Daily activity", str(ws.cell(row=1, column=1).value))
+        headers = [c.value for c in ws[2]]
         self.assertIn("Date", headers)
         self.assertIn("Drive (h)", headers)
         self.assertIn("Work (h)", headers)
@@ -108,18 +110,19 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("Available (h)", headers)
         self.assertIn("Unknown (h)", headers)
         self.assertIn("Total (h)", headers)
-        rows_read = ws.max_row - 1
-        self.assertGreaterEqual(rows_read, 3)  # description row + 2 days + 1 monthly total
+        rows_read = ws.max_row - 2  # skip desc row and header
+        self.assertGreaterEqual(rows_read, 3)  # 2 days + 1 monthly total
 
         # Events: humanised columns, formatted timestamps, hidden keys dropped
         ws = wb["Events"]
-        headers = [c.value for c in ws[1]]
+        # Row 1 = description, row 2 = headers, row 3+ = data
+        headers = [c.value for c in ws[2]]
         self.assertIn("Description", headers)
         self.assertNotIn("Confidence", headers)
         values = [c.value for c in ws[3]]
         self.assertIn("2026-06-01 10:30", values)
-        # Row 2 is the section description
-        desc = ws.cell(row=2, column=1).value
+        # Description is in a merged cell row 1
+        desc = ws.cell(row=1, column=1).value
         self.assertIsNotNone(desc)
 
     def test_export_to_csv(self):

@@ -253,8 +253,15 @@ def _compute_day_hours(day):
     buckets = {"drive": 0, "work": 0, "rest": 0, "available": 0, "unknown": 0}
     key_map = {"DRIVE": "drive", "WORK": "work", "REST": "rest",
                "AVAIL": "available", "AVAILABLE": "available"}
-    if not isinstance(changes, list) or len(changes) < 2:
+    if not isinstance(changes, list) or not changes:
         return buckets, 0
+    if len(changes) == 1:
+        ch = changes[0]
+        if isinstance(ch, dict):
+            act = str(ch.get("activity", "")).upper()
+            bucket = key_map.get(act, "unknown")
+            buckets[bucket] = 24 * 60
+        return buckets, 24 * 60
     for i in range(len(changes)):
         ch = changes[i]
         if not isinstance(ch, dict):
@@ -408,11 +415,12 @@ def summary_rows(data):
 
 
 def section_tables(data, max_rows=None):
-    """Yield (label, headers, rows, truncated) for every populated export section."""
+    """Yield (label, description, headers, rows, truncated) for every populated export section."""
     for key, label in EXPORT_SECTIONS:
         items = data.get(key) or []
         if not items:
             continue
+        desc = SECTION_DESCRIPTIONS.get(key, "")
         if key == "activities":
             if not isinstance(items, list):
                 items = [items]
@@ -433,16 +441,11 @@ def section_tables(data, max_rows=None):
                 headers, rows = records_to_table(items)
         if not rows:
             continue
-        # Insert section description as first data row
-        desc = SECTION_DESCRIPTIONS.get(key, "")
-        if desc:
-            desc_row = [desc] + [""] * (len(headers) - 1)
-            rows.insert(0, desc_row)
         truncated = False
         if max_rows is not None and len(rows) > max_rows:
             rows = rows[:max_rows]
             truncated = True
-        yield label, headers, rows, truncated
+        yield label, desc, headers, rows, truncated
 
     for key, label in DICT_SECTIONS:
         section = data.get(key) or {}
@@ -456,6 +459,4 @@ def section_tables(data, max_rows=None):
         if not rows:
             continue
         desc = SECTION_DESCRIPTIONS.get(key, "")
-        if desc:
-            rows.insert(0, [desc, ""])
-        yield label, ["Field", "Value"], rows, False
+        yield label, desc, ["Field", "Value"], rows, False

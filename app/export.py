@@ -94,7 +94,7 @@ class ExportManager:
             _write_table(wsx, headers, rows)
 
         # Data sections
-        for label, headers, rows, truncated in section_tables(data, max_rows=_EXCEL_MAX_ROWS):
+        for label, desc, headers, rows, truncated in section_tables(data, max_rows=_EXCEL_MAX_ROWS):
             if truncated:
                 _log.warning("Truncating '%s' to %d rows (Excel limit)", label, _EXCEL_MAX_ROWS)
             safe_label = _SHEET_NAME_RE.sub("_", label)[:31].strip()
@@ -106,7 +106,13 @@ class ExportManager:
                 safe_label = f"{base}_{idx}"[:31]
             used_names.add(safe_label)
             wsx = wb.create_sheet(safe_label)
-            _write_table(wsx, headers, rows)
+            if desc:
+                wsx.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
+                cell = wsx.cell(row=1, column=1, value=desc)
+                cell.font = Font(italic=True, color="666666", size=9)
+                _write_table(wsx, headers, rows, start_row=2)
+            else:
+                _write_table(wsx, headers, rows)
 
         wb.save(filepath)
 
@@ -128,8 +134,10 @@ class ExportManager:
             writer.writerow([])
 
             wrote_any = False
-            for label, headers, rows, truncated in section_tables(data):
+            for label, desc, headers, rows, truncated in section_tables(data):
                 writer.writerow([f"=== {label.upper()} ==="])
+                if desc:
+                    writer.writerow([desc])
                 writer.writerow(headers)
                 writer.writerows(rows)
                 if truncated:
@@ -195,9 +203,6 @@ class ExportManager:
         act_total_style = ParagraphStyle("TachoActTotal", parent=cell_style,
                                          fontName="Helvetica-Bold", fontSize=7,
                                          leading=8)
-        desc_style = ParagraphStyle("TachoDesc", parent=styles["BodyText"],
-                                    fontSize=7, textColor=colors.grey,
-                                    fontName="Helvetica-Oblique", leading=8)
         note_style = ParagraphStyle("TachoNote", parent=styles["BodyText"],
                                     fontSize=7, textColor=colors.grey)
 
@@ -232,14 +237,8 @@ class ExportManager:
         def _is_total_row(row):
             return row and isinstance(row[0], str) and row[0].endswith(" TOTAL")
 
-        def _is_desc_row(row):
-            return (row and isinstance(row[0], str) and len(row[0]) > 10
-                    and all(v == "" or v is None for v in row[1:]))
-
         def _is_month_boundary(rows, idx):
             if idx <= 1:
-                return False
-            if _is_desc_row(rows[idx - 1]) or _is_desc_row(rows[idx]):
                 return False
                 return False
             prev = str(rows[idx - 1][0]) if rows[idx - 1] else ""
@@ -267,15 +266,9 @@ class ExportManager:
 
             for _idx, row in enumerate(rows):
                 cells = []
-                is_desc = _is_desc_row(row)
                 for _c, val in enumerate(row):
                     s = str(val) if val else ""
-                    if is_desc:
-                        st = desc_style
-                    elif _is_total_row(row):
-                        st = t_style
-                    else:
-                        st = c_style
+                    st = t_style if _is_total_row(row) else c_style
                     p = Paragraph(s, st) if s else ""
                     cells.append(p)
                 table_data.append(cells)
@@ -400,7 +393,7 @@ class ExportManager:
 
         # ═══════ DATA SECTIONS ═══════
         first_section = True
-        for label, headers, rows, truncated in section_tables(data, max_rows=_PDF_MAX_ROWS):
+        for label, desc, headers, rows, truncated in section_tables(data, max_rows=_PDF_MAX_ROWS):
             if first_section:
                 story.append(PageBreak())
                 first_section = False
@@ -417,13 +410,12 @@ class ExportManager:
                         current_month = []
                     else:
                         current_month.append(row)
-                if current_month and not _is_desc_row(current_month[0]):
+                if current_month:
                     months.append(current_month)
 
                 for mi, month_rows in enumerate(months):
                     if mi > 0:
                         story.append(PageBreak())
-                    # Extract month name from the TOTAL row (last row)
                     month_name = ""
                     for r in month_rows:
                         if _is_total_row(r):
@@ -432,14 +424,17 @@ class ExportManager:
                     story.append(Paragraph(
                         f"Daily Activities — {month_name} ({len(month_rows)} rows)",
                         act_section_style))
-                    # Prepend header and description for first month
-                    display_headers = headers
-                    display_rows = list(month_rows)
-                    story.append(_table(display_headers, display_rows, is_activity=True))
+                    if mi == 0 and desc:
+                        story.append(Paragraph(desc, note_style))
+                        story.append(Spacer(1, 2 * mm))
+                    story.append(_table(headers, month_rows, is_activity=True))
                     story.append(Spacer(1, 5 * mm))
             else:
                 story.append(Paragraph(
                     f"{label} ({len(rows)}{'+' * truncated})", section_style))
+                if desc:
+                    story.append(Paragraph(desc, note_style))
+                    story.append(Spacer(1, 2 * mm))
                 story.append(_table(headers, rows))
                 if truncated:
                     story.append(Paragraph(
