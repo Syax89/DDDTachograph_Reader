@@ -115,8 +115,11 @@ class TestExportManager(unittest.TestCase):
         headers = [c.value for c in ws[1]]
         self.assertIn("Description", headers)
         self.assertNotIn("Confidence", headers)
-        values = [c.value for c in ws[2]]
+        values = [c.value for c in ws[3]]
         self.assertIn("2026-06-01 10:30", values)
+        # Row 2 is the section description
+        desc = ws.cell(row=2, column=1).value
+        self.assertIsNotNone(desc)
 
     def test_export_to_csv(self):
         ExportManager.export_to_csv(self.mock_data, self.csv_path)
@@ -129,6 +132,8 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("Mario Rossi", text)
         self.assertIn("=== DAILY ACTIVITIES ===", text)
         self.assertIn("=== EVENTS ===", text)
+        # Section description row
+        self.assertIn("Logged events", text)
         # Monthly activity report: Date, Odometer, hours columns + monthly totals
         self.assertIn("Date;Odometer km;Drive (h);Work (h);Rest (h);Available (h);Total (h)", text)
         self.assertIn("01/06/2026", text)

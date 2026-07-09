@@ -195,8 +195,11 @@ class ExportManager:
         act_total_style = ParagraphStyle("TachoActTotal", parent=cell_style,
                                          fontName="Helvetica-Bold", fontSize=7,
                                          leading=8)
+        desc_style = ParagraphStyle("TachoDesc", parent=styles["BodyText"],
+                                    fontSize=7, textColor=colors.grey,
+                                    fontName="Helvetica-Oblique", leading=8)
         note_style = ParagraphStyle("TachoNote", parent=styles["BodyText"],
-                                     fontSize=7, textColor=colors.grey)
+                                    fontSize=7, textColor=colors.grey)
 
         page_w, page_h = landscape(A4)
         doc = SimpleDocTemplate(
@@ -230,10 +233,14 @@ class ExportManager:
             return row and isinstance(row[0], str) and row[0].endswith(" TOTAL")
 
         def _is_desc_row(row):
-            return row and isinstance(row[0], str) and "UTC" in str(row[0])
+            return (row and isinstance(row[0], str) and len(row[0]) > 10
+                    and all(v == "" or v is None for v in row[1:]))
 
         def _is_month_boundary(rows, idx):
-            if idx == 0:
+            if idx <= 1:
+                return False
+            if _is_desc_row(rows[idx - 1]) or _is_desc_row(rows[idx]):
+                return False
                 return False
             prev = str(rows[idx - 1][0]) if rows[idx - 1] else ""
             curr = str(rows[idx][0]) if rows[idx] else ""
@@ -260,9 +267,15 @@ class ExportManager:
 
             for _idx, row in enumerate(rows):
                 cells = []
+                is_desc = _is_desc_row(row)
                 for _c, val in enumerate(row):
                     s = str(val) if val else ""
-                    st = t_style if _is_total_row(row) else c_style
+                    if is_desc:
+                        st = desc_style
+                    elif _is_total_row(row):
+                        st = t_style
+                    else:
+                        st = c_style
                     p = Paragraph(s, st) if s else ""
                     cells.append(p)
                 table_data.append(cells)

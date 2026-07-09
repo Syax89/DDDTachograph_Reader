@@ -79,6 +79,46 @@ DICT_SECTIONS = [
 SECTION_DESCRIPTIONS = {
     "activities": "Daily activity breakdown (times in UTC). "
                   "Drive, Work, Rest, Available hours per day with monthly subtotals.",
+    "vehicle_sessions": "Vehicles used by the driver: odometer range, first/last use dates, "
+                        "registration plate and nation.",
+    "vehicle_units": "Card Vehicle Units — serial numbers of VUs that have read the card.",
+    "events": "Logged events (card insertion, power loss, security breach, motion conflicts, etc.).",
+    "faults": "Logged faults (sensor, card, display, printer, internal VU failures).",
+    "places": "Start and end locations recorded at the beginning and end of each daily work period.",
+    "specific_conditions": "Specific driving conditions: ferry/train crossing, out-of-scope driving.",
+    "calibrations": "Workshop calibration records with purpose, dates, workshop info, and VIN.",
+    "control_activities": "Roadside control activity records (enforcement checks by authorities).",
+    "card_downloads": "Timestamps of card data downloads performed by enforcement or company.",
+    "gnss_ad_records": "GNSS accumulated driving records: position data with odometer heuristics.",
+    "gnss_places": "GNSS-authenticated places visited (enhanced position with authentication status).",
+    "border_crossings": "Border crossing records with country codes, timestamps, and GNSS position.",
+    "load_unload_records": "Load and unload operation records with timestamps and odometer readings.",
+    "load_sensor_data": "Axle load sensor data (weight per axle, if equipped).",
+    "trailer_registrations": "Trailer coupling and decoupling registrations with plate numbers.",
+    "overspeeding_events": "Overspeeding events with begin/end times, max speed, and average speed.",
+    "overspeeding_control": "Last overspeeding control check timestamp and number of events since.",
+    "power_interruptions": "Power supply interruption records (battery disconnections, power loss).",
+    "company_locks": "Company lock-in and lock-out events (fleet operator access control).",
+    "vu_identifications": "Vehicle Unit identification data: manufacturer, serial number, software version.",
+    "sensor_pairings": "Motion sensor pairing records with the VU (sensor approval and serial numbers).",
+    "sensor_gnss_couplings": "External GNSS sensor coupling records (satellite positioning sensor data).",
+    "card_iw_records": "Driver card insertion and withdrawal events from VU memory.",
+    "card_records": "Card record snapshots stored in the VU for each driver card seen.",
+    "time_adjustments": "VU clock adjustment records (manual time changes by workshops or drivers).",
+    "its_consents": "ITS (Intelligent Transport System) consent records for data transmission.",
+    "download_activities": "VU download activity records (company or enforcement data extractions).",
+    "speed_blocks": "Detailed speed data blocks: 60 speed samples per second, 1 block per second.",
+    "workshops": "Calibration workshop records found in VU memory from previous calibrations.",
+    "inserted_drivers": "Driver card information for each card inserted into the VU.",
+    "company_holders": "Company card holder identification data.",
+    "signed_daily_records": "Cryptographically signed daily activity records.",
+    "locations": "GPS coordinates captured during driving activity.",
+    "ef_signature_verification": "Card EF (Elementary File) digital signature verification results.",
+    "previous_vehicle": "Previous vehicle used before the current vehicle assignment.",
+    "calibration_vins": "VINs (Vehicle Identification Numbers) extracted from calibration records.",
+    "card_numbers": "Card numbers observed by the VU from inserted driver and company cards.",
+    "vu_record_arrays": "Raw VU RecordArray data: structural audit of all VU memory sections.",
+    "sensor_daily_records": "Motion sensor daily speed records with min/max/average speeds.",
 }
 
 
@@ -376,10 +416,6 @@ def section_tables(data, max_rows=None):
             headers, rows = build_monthly_activity_report(items)
             if not rows:
                 continue
-            # Insert a description row after the header
-            rows.insert(0, ["Daily activity breakdown (times in UTC). "
-                            "Drive/Work/Rest/Available hours per day with monthly subtotals.",
-                            "", "", "", "", "", ""])
         elif key == "ef_signature_verification" and isinstance(items, dict):
             ef_results = items.get("ef_results") or []
             if not ef_results:
@@ -394,6 +430,11 @@ def section_tables(data, max_rows=None):
                 headers, rows = records_to_table(items)
         if not rows:
             continue
+        # Insert section description as first data row
+        desc = SECTION_DESCRIPTIONS.get(key, "")
+        if desc:
+            desc_row = [desc] + [""] * (len(headers) - 1)
+            rows.insert(0, desc_row)
         truncated = False
         if max_rows is not None and len(rows) > max_rows:
             rows = rows[:max_rows]
@@ -411,4 +452,7 @@ def section_tables(data, max_rows=None):
                 rows.append([humanize_key(k), formatted])
         if not rows:
             continue
+        desc = SECTION_DESCRIPTIONS.get(key, "")
+        if desc:
+            rows.insert(0, [desc, ""])
         yield label, ["Field", "Value"], rows, False
