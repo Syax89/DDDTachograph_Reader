@@ -244,13 +244,13 @@ def _hours_str(minutes):
     return f"{h:02d}:{m:02d}"
 
 
-ACTIVITY_COLS = ["Drive", "Work", "Rest", "Available"]
-ACTIVITY_COL_KEYS = ["drive", "work", "rest", "available"]
+ACTIVITY_COLS = ["Drive", "Work", "Rest", "Available", "Unknown"]
+ACTIVITY_COL_KEYS = ["drive", "work", "rest", "available", "unknown"]
 
 
 def _compute_day_hours(day):
     changes = day.get("changes") or []
-    buckets = {"drive": 0, "work": 0, "rest": 0, "available": 0}
+    buckets = {"drive": 0, "work": 0, "rest": 0, "available": 0, "unknown": 0}
     key_map = {"DRIVE": "drive", "WORK": "work", "REST": "rest",
                "AVAIL": "available", "AVAILABLE": "available"}
     if not isinstance(changes, list) or len(changes) < 2:
@@ -260,9 +260,7 @@ def _compute_day_hours(day):
         if not isinstance(ch, dict):
             continue
         act = str(ch.get("activity", "")).upper()
-        bucket = key_map.get(act)
-        if bucket is None:
-            continue
+        bucket = key_map.get(act, "unknown")
         t1 = _time_to_minutes(str(ch.get("time", "00:00")))
         if i + 1 < len(changes):
             t2 = _time_to_minutes(str(changes[i + 1].get("time", "00:00")))
@@ -285,22 +283,26 @@ def build_monthly_activity_report(activities):
         months.setdefault(month_key, []).append(day)
 
     headers = ["Date", "Odometer km", "Drive (h)", "Work (h)",
-               "Rest (h)", "Available (h)", "Total (h)"]
+               "Rest (h)", "Available (h)", "Unknown (h)", "Total (h)"]
     rows = []
     for month_key in sorted(months.keys()):
         days = sorted(months[month_key], key=lambda d: str(d.get("date", "")))
-        month_totals = {"drive": 0, "work": 0, "rest": 0, "available": 0}
+        month_totals = {"drive": 0, "work": 0, "rest": 0, "available": 0, "unknown": 0}
         month_total = 0
         for day in days:
             date_str = str(day.get("date", ""))
             km = fmt_value(day.get("odometer_km", 0))
             buckets, total = _compute_day_hours(day)
+            unknown_str = _hours_str(buckets["unknown"])
+            if buckets["unknown"] > 0:
+                unknown_str = "\u26a0 " + unknown_str
             rows.append([
                 date_str, km,
                 _hours_str(buckets["drive"]),
                 _hours_str(buckets["work"]),
                 _hours_str(buckets["rest"]),
                 _hours_str(buckets["available"]),
+                unknown_str,
                 _hours_str(total),
             ])
             for k in month_totals:
@@ -312,6 +314,7 @@ def build_monthly_activity_report(activities):
             _hours_str(month_totals["work"]),
             _hours_str(month_totals["rest"]),
             _hours_str(month_totals["available"]),
+            _hours_str(month_totals["unknown"]),
             _hours_str(month_total),
         ])
     return headers, rows

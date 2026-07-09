@@ -106,6 +106,7 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("Work (h)", headers)
         self.assertIn("Rest (h)", headers)
         self.assertIn("Available (h)", headers)
+        self.assertIn("Unknown (h)", headers)
         self.assertIn("Total (h)", headers)
         rows_read = ws.max_row - 1
         self.assertGreaterEqual(rows_read, 3)  # description row + 2 days + 1 monthly total
@@ -135,7 +136,7 @@ class TestExportManager(unittest.TestCase):
         # Section description row
         self.assertIn("Logged events", text)
         # Monthly activity report: Date, Odometer, hours columns + monthly totals
-        self.assertIn("Date;Odometer km;Drive (h);Work (h);Rest (h);Available (h);Total (h)", text)
+        self.assertIn("Date;Odometer km;Drive (h);Work (h);Rest (h);Available (h);Unknown (h);Total (h)", text)
         self.assertIn("01/06/2026", text)
         self.assertIn("04:00", text)
         self.assertIn("06/2026 TOTAL", text)
