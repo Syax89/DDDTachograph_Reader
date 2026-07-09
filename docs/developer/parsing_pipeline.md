@@ -1,6 +1,6 @@
 # Parsing Pipeline
 
-Deep dive into the DDD tachograph parsing formats and pipeline stages. All parsing is done by `DeterministicParser` (`core/deterministic_parser.py`); the legacy recursive parser (`TagNavigator`) has been removed.
+Deep dive into the DDD tachograph parsing formats and pipeline stages. All parsing is done by `DeterministicParser` (`core/parser/deterministic.py`); the legacy recursive parser (`TagNavigator`) has been removed.
 
 ## Generation Detection
 
@@ -83,7 +83,7 @@ Else:
 
 ### Implementation
 
-The shared header reader is `read_ber_tlv_header()` (`core/ber_tlv.py`), called by `DeterministicParser._try_read_ber_tlv()`:
+The shared header reader is `read_ber_tlv_header()` (`core/utils/ber_tlv.py`), called by `DeterministicParser._try_read_ber_tlv()`:
 
 ```python
 b0 = data[pos]
@@ -133,7 +133,7 @@ else:
     dec.decoder_fn(payload, self.results)
 ```
 
-Individual record parsers live in `core/g2_decoders.py`.
+Individual record parsers live in `core/decoders/g2_dispatch.py`.
 
 ## Container Recursion
 
@@ -146,7 +146,7 @@ Containers are tags whose payload contains nested sub-structures that must be re
 
 ## Coverage Tracking
 
-### CoverageTracker (`core/deterministic_parser.py`)
+### CoverageTracker (`core/parser/deterministic.py`)
 
 Every byte of the file ends up in exactly one bucket. The tracker records:
 - `covered_ranges`: list of `(start, end)` byte intervals
@@ -167,7 +167,7 @@ After the walk, `_classify_gaps()` sweeps the uncovered ranges: runs of `0x00`/`
 
 ## Padding Handling
 
-Three padding byte values are recognized: `0x00`, `0xFF`, `0x55` (see `core/coverage_utils.py`). Consecutive identical padding bytes are aggregated into a single `Padding` raw_tag entry, both at the top level (`_skip_padding`) and inside containers (`_skip_padding_inner`).
+Three padding byte values are recognized: `0x00`, `0xFF`, `0x55` (see `core/utils/coverage.py`). Consecutive identical padding bytes are aggregated into a single `Padding` raw_tag entry, both at the top level (`_skip_padding`) and inside containers (`_skip_padding_inner`).
 
 ## Data Type (DType) Values
 

@@ -2,11 +2,11 @@
 
 ## Overview
 
-The `specs/` directory contains the authoritative reference for tachograph tag structures, byte-level encoding, and verification status. All decoders and the deterministic parser are built against these specifications.
+The `scripts/` directory contains the authoritative reference for tachograph tag structures, byte-level encoding, and verification status. All decoders and the deterministic parser are built against these specifications.
 
 ## Key Documents
 
-### `specs/g1_complete_structures.md`
+### `scripts/g1_complete_structures.md`
 
 Comprehensive reference for **Generation 1** tags (Annex 1B, Reg. 3821/85). Contains:
 - Tag ID, name, and description for every G1 tag
@@ -20,7 +20,7 @@ Example entry:
 | 0x0520 | G1_Identification | 143 bytes | Annex 1B §2.15+§2.17 | VERIFIED |
 ```
 
-### `specs/g2_g22_complete_structures.md`
+### `scripts/g2_g22_complete_structures.md`
 
 Comprehensive reference for **Generation 2 and Generation 2.2** tags (Annex 1C, Reg. EU 2016/799, Reg. EU 2023/980). Contains:
 - Tag ID, name, and description for every G2/G2.2 tag
@@ -30,7 +30,7 @@ Comprehensive reference for **Generation 2 and Generation 2.2** tags (Annex 1C, 
 - Distinction between G2 and G2.2 tags
 - Container vs leaf classification
 
-### `specs/g22_verification_status.md`
+### `scripts/g22_verification_status.md`
 
 Verification status report for all G2.2 tags, grouped by confidence level:
 
@@ -43,7 +43,7 @@ Verification status report for all G2.2 tags, grouped by confidence level:
 **LOW confidence** — Pure reverse-engineering, no published specification:
 - 7 tags where both field names and sizes are heuristic deductions from byte patterns in DDD files (e.g., `0x0529` LoadSensorData, `0x0531` VuSensorFaultData)
 
-### `specs/tachograph.asn`
+### `scripts/tachograph.asn`
 
 Formal **ASN.1 schema** defining the complete tachograph data model. Used as the reference for:
 - Data type definitions (CHOICE, SEQUENCE, OCTET STRING constraints)
@@ -51,7 +51,7 @@ Formal **ASN.1 schema** defining the complete tachograph data model. Used as the
 - Mandatory vs optional fields
 - Size constraints
 
-### `specs/coverage_audit.py`
+### `scripts/coverage_audit.py`
 
 Byte coverage analysis tool. Parses all DDD files in `DDD/` and reports:
 - Total bytes, covered bytes, coverage percentage per file
@@ -60,22 +60,22 @@ Byte coverage analysis tool. Parses all DDD files in `DDD/` and reports:
 
 Usage:
 ```bash
-python3 specs/coverage_audit.py
+python3 scripts/coverage_audit.py
 ```
 
-Output includes a JSON report at `specs/coverage_report.json`.
+Output includes a JSON report at `scripts/coverage_report.json`.
 
-### `specs/SPEC_REFERENCE.md`
+### `scripts/SPEC_REFERENCE.md`
 
 General reference document linking to EU regulations and technical standards.
 
-### `specs/tag_decoding_matrix.md`
+### `scripts/tag_decoding_matrix.md`
 
 Matrix mapping tag IDs to decoder functions and their verification status.
 
 ## How Verification Status Is Determined
 
-Tags in `specs/g22_verification_status.md` are classified into three confidence levels:
+Tags in `scripts/g22_verification_status.md` are classified into three confidence levels:
 
 | Level | Criteria |
 |---|---|
@@ -87,14 +87,14 @@ In code, per-tag verification metadata lives in `DecoderRegistry`: each `TagDeco
 
 ## How to Read Annex 1B/1C References
 
-The decoder registry (`core/decoder_registry.py`) and spec documents use consistent reference notation:
+The decoder registry (`core/registry/registry.py`) and spec documents use consistent reference notation:
 
 - **Annex 1B §X.Y** — EU Reg. 3821/85, Annex 1B, section X.Y
 - **Annex 1C §X.Y** — EU Reg. 2016/799, Annex 1C, section X.Y
 - **Annex 1C §4.5.3.2.N** — VU download data structure definitions
 - **Reg. EU 2023/980** — G2.2 smart tachograph V2 update
 - **Reg. EU 2021/1228** — Additional G2.2 specifications (GNSS authentication, load/unload)
-- **ASN.1: TypeName** — Type definition from `specs/tachograph.asn`
+- **ASN.1: TypeName** — Type definition from `scripts/tachograph.asn`
 
 ### Example: Decoding an Annex 1C Reference
 
@@ -106,7 +106,7 @@ Annex 1C §4.5.3.2.8 → VuCardRecord
                  cardApprovalNumber(4B)
 ```
 
-This maps directly to `core/g2_decoders.py:11` (`parse_g2_card_record()`).
+This maps directly to `core/decoders/g2_dispatch.py:11` (`parse_g2_card_record()`).
 
 ## Key EU Regulations
 
@@ -119,7 +119,7 @@ This maps directly to `core/g2_decoders.py:11` (`parse_g2_card_record()`).
 
 ## Additional Spec Tools
 
-- **`specs/coverage_audit.py`** — Per-file byte coverage breakdown against the reference DDD samples
-- **`specs/semantic_coverage_audit.py`** — Checks whether decoders populate expected semantic fields
-- **`specs/unparsed_pattern_triage.py`** — Analyzes patterns in unparsed byte blocks for potential new tag discovery
-- **`specs/test_det.py`** — Quick harness for the deterministic parser
+- **`scripts/coverage_audit.py`** — Per-file byte coverage breakdown against the reference DDD samples
+- **`scripts/semantic_coverage_audit.py`** — Checks whether decoders populate expected semantic fields
+- **`scripts/unparsed_pattern_triage.py`** — Analyzes patterns in unparsed byte blocks for potential new tag discovery
+- **`scripts/test_det.py`** — Quick harness for the deterministic parser

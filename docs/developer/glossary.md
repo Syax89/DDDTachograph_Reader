@@ -8,7 +8,7 @@
 
 **BER-TLV** (Basic Encoding Rules — Tag Length Value) — G2/G2.2 encoding format. Variable-length tags and lengths per ASN.1 BER. Tags can span multiple bytes (bit 5 extension), lengths use short form (< 128) or long form (1-3 subsequent bytes). Used in Annex 1C tachographs.
 
-**ASN.1** (Abstract Syntax Notation One) — Formal interface description language used to define the tachograph data model. The schema is in `specs/tachograph.asn`.
+**ASN.1** (Abstract Syntax Notation One) — Formal interface description language used to define the tachograph data model. The schema is in `scripts/tachograph.asn`.
 
 **T2L2** — The 5-byte STAP header format: Tag (2 bytes), Type (1 byte, formerly "L/T"), Length (2 bytes). Sometimes referred to as "T1L2" in older documentation.
 
@@ -40,23 +40,23 @@
 
 **MSCA** (Member State Certificate Authority) — National-level CA that issues card and VU certificates. Each EU member state operates its own MSCA. MSCA certificates are signed by ERCA.
 
-**Certificate Chain** — The hierarchy: ERCA (root) → MSCA (intermediate) → Card/VU (leaf). Validated by `SignatureValidator.validate_tacho_chain()` (`signature_validator.py:187`).
+**Certificate Chain** — The hierarchy: ERCA (root) → MSCA (intermediate) → Card/VU (leaf). Validated by `SignatureValidator.validate_tacho_chain()` (`core/crypto/signature.py:187`).
 
 ## Core Architecture Components
 
-**TachoParser** (`ddd_parser.py`) — Entry point class. Orchestrates the parse pipeline in named phases: structural parse, VU semantic decoding, activity dedup, certificate chain and EF signature verification.
+**TachoParser** (`app/engine.py`) — Entry point class. Orchestrates the parse pipeline in named phases: structural parse, VU semantic decoding, activity dedup, certificate chain and EF signature verification.
 
-**TachoResult** (`core/models.py:43`) — Main data model dataclass. Contains all parsed data: metadata, driver info, vehicle info, activities, events, faults, locations, raw tags, and G2.2-specific records.
+**TachoResult** (`core/registry/models.py:43`) — Main data model dataclass. Contains all parsed data: metadata, driver info, vehicle info, activities, events, faults, locations, raw tags, and G2.2-specific records.
 
-**VuRecordDispatcher** (`core/vu_record_dispatcher.py`) — Walks G2/G2.2 VU downloads as RecordArray sections keyed by recordType (Annex 1C Appendix 7), used for both structural coverage and semantic decoding.
+**VuRecordDispatcher** (`core/parser/vu_dispatcher.py`) — Walks G2/G2.2 VU downloads as RecordArray sections keyed by recordType (Annex 1C Appendix 7), used for both structural coverage and semantic decoding.
 
-**G1VuWalker** (`core/g1_vu_walker.py`) — Deterministic SID/TREP message walk for G1 VU downloads (Annex 1B §2.2.6), including per-message RSA signatures.
+**G1VuWalker** (`core/parser/g1_walker.py`) — Deterministic SID/TREP message walk for G1 VU downloads (Annex 1B §2.2.6), including per-message RSA signatures.
 
-**DecoderRegistry** (`core/decoder_registry.py:28`) — Centralized registry mapping tag IDs to decoder functions. Each entry contains metadata: container flag, record size, annex reference, generation, card/VU scope.
+**DecoderRegistry** (`core/registry/registry.py:28`) — Centralized registry mapping tag IDs to decoder functions. Each entry contains metadata: container flag, record size, annex reference, generation, card/VU scope.
 
-**DeterministicParser** (`core/deterministic_parser.py`) — The structural parser. Guarantees 100% byte coverage through sequential parsing with `CoverageTracker`; routes VU downloads to the dedicated stream walkers.
+**DeterministicParser** (`core/parser/deterministic.py`) — The structural parser. Guarantees 100% byte coverage through sequential parsing with `CoverageTracker`; routes VU downloads to the dedicated stream walkers.
 
-**CoverageTracker** (`core/deterministic_parser.py:18`) — Tracks covered byte ranges, classifies them (Tag, Padding, Unknown), and produces coverage reports.
+**CoverageTracker** (`core/parser/deterministic.py:18`) — Tracks covered byte ranges, classifies them (Tag, Padding, Unknown), and produces coverage reports.
 
 ## Data Fields & Records
 
@@ -98,7 +98,7 @@
 
 **SID** (Service Identifier) — Byte marker used in VU download message format. `0x76` = VU download data.
 
-**TACHO_TAGS** — Default tag name dictionary loaded from `core/tag_definitions.py`. Maps tag IDs to human-readable names. Can be extended via `all_tacho_tags.json`.
+**TACHO_TAGS** — Default tag name dictionary loaded from `core/utils/tag_defs.py`. Maps tag IDs to human-readable names. Can be extended via `all_tacho_tags.json`.
 
 **DType** — Data type byte in STAP headers. Values: 0=raw, 1=certificate/signature, 3=encrypted, 6=G2 daily activity, 11/15=signature blocks.
 

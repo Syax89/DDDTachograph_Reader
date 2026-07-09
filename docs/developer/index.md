@@ -15,11 +15,11 @@ Cross-platform (Windows/macOS) application for parsing, analyzing and visualizin
 
 ## Quick Links
 
-- **Parsing entry point**: `ddd_parser.py` — `TachoParser.parse()`
-- **Tag dispatch**: `core/deterministic_parser.py` — `DeterministicParser._dispatch_decoder()`
-- **Decoder registry**: `core/decoder_registry.py` — `DecoderRegistry`
+- **Parsing entry point**: `app/engine.py` — `TachoParser.parse()`
+- **Tag dispatch**: `core/parser/deterministic.py` — `DeterministicParser._dispatch_decoder()`
+- **Decoder registry**: `core/registry/registry.py` — `DecoderRegistry`
 - **Run tests**: `python -m pytest tests/ -v`
-- **Coverage audit**: `python3 specs/coverage_audit.py`
+- **Coverage audit**: `python3 scripts/coverage_audit.py`
 
 ## Generations Supported
 
@@ -50,13 +50,13 @@ ddd-tachograph-reader/
 │   ├── vu_signature_verifier.py # VU ECDSA verification
 │   ├── constants.py         # Shared constant definitions
 │   └── logger.py            # Shared logging
-├── ddd_parser.py            # Main TachoParser entry point
-├── signature_validator.py   # Certificate chain validation
-├── export_manager.py        # Excel/CSV export
-├── gui_tree.py              # Desktop GUI (tkinter: tree + Excel-style table)
-├── tacho_cli.py             # CLI interface
-├── main.py                  # Legacy CLI
-├── specs/                   # Specification documentation
+├── app/engine.py            # Main TachoParser entry point
+├── core/crypto/signature.py   # Certificate chain validation
+├── app/export.py        # Excel/CSV export
+├── app/gui.py              # Desktop GUI (tkinter: tree + Excel-style table)
+├── app/cli.py             # CLI interface
+├── app/main.py                  # Legacy CLI
+├── scripts/                   # Specification documentation
 ├── tests/                   # Test suite (>150 tests)
 └── DDD/                     # Sample DDD files
 ```

@@ -967,4 +967,4 @@ Il container 0x7601 contiene record sequenziali (NON STAP, NON BER-TLV) in ordin
 
 4. **Ambiguità 0x050C (CalibrationData)**: La struttura esatta dipende dalla versione VU. Il config C# di riferimento mostra 105 byte con workshop info inclusi, ma il decoder attuale usa un layout diverso (apparentemente derivato da reverse-engineering di file reali).
 
-5. **Signature validation**: La catena di validazione firme (CardCert → MSCA → ERCA) è implementata in `signature_validator.py` (non analizzato in questo documento). I certificati (C100, C108, etc.) non hanno decoder strutturati ma vengono usati dal signature validator.
+5. **Signature validation**: La catena di validazione firme (CardCert → MSCA → ERCA) è implementata in `core/crypto/signature.py` (non analizzato in questo documento). I certificati (C100, C108, etc.) non hanno decoder strutturati ma vengono usati dal signature validator.

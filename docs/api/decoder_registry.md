@@ -2,7 +2,7 @@
 
 Centralized decoder registry with tag → decoder mapping, priorities, and validation rules. The single source of truth for all known tag definitions in a schema-driven architecture.
 
-**File:** `core/decoder_registry.py`
+**File:** `core/registry/registry.py`
 
 ---
 
@@ -59,7 +59,7 @@ def __init__(self)
 
 Builds the full registry of ~80+ tag decoders via `_build()`. Each decoder is registered by tag ID and classified as container/signature as appropriate.
 
-**Registered tag categories** (from `core/decoder_registry.py:40-471`):
+**Registered tag categories** (from `core/registry/registry.py:40-471`):
 
 | Category | Tag Range | Count | Description |
 |----------|-----------|-------|-------------|
@@ -255,7 +255,7 @@ def my_decoder(payload: bytes, results: dict, tag: int):
 ## Usage Example
 
 ```python
-from core.decoder_registry import DecoderRegistry, TagDecoder
+from core.registry.registry import DecoderRegistry, TagDecoder
 
 # Create registry (built on init)
 reg = DecoderRegistry()

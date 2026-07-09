@@ -2,7 +2,7 @@
 
 Deterministic parser that guarantees 100% byte coverage through a schema-driven two-pass architecture. The default parser since TachoParser v5.1.
 
-**File:** `core/deterministic_parser.py`
+**File:** `core/parser/deterministic.py`
 
 ---
 
@@ -146,7 +146,7 @@ The parser is **deterministic by construction**: it walks the file sequentially 
 
 ```python
 # Default usage via TachoParser
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 
 parser = TachoParser("file.ddd")
 data = parser.parse()
@@ -185,7 +185,7 @@ print(results["metadata"]["generation"])
 ### Check coverage of a file
 
 ```python
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 
 d = TachoParser("file.ddd").parse()
 print(f"Coverage: {d['metadata']['coverage_pct']}%")

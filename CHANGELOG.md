@@ -7,7 +7,7 @@
 - **Certificate CVC/ECC field-level decoder**: unified `parse_certificate()` with auto-detect (G1 RSA 194-byte vs G2/G2.2 CVC BER-TLV). CAR, CHR, curve OID, public key (x,y), validity dates, signature r/s exposed in `certificates[]`
 - **G1 Sensor download decoder** (TREP 0x11 / 0x7611): sensor identification (approval number, nation), date range, 66 daily timestamp records exposed in GUI and export
 - **Context-aware `DecoderRegistry`**: `get_decoder(tag, generation=, is_vu=, dtype=, parent_tag=)` with multi-variant support — same FID can have different decoders for card vs VU, generation-specific payloads
-- **Tag/FID decoding matrix generator** (`specs/tag_decoding_matrix.py`): full matrix from `DecoderRegistry.iter_decoders()` with Markdown/JSON output; gate tests ensure every variant has an Annex reference
+- **Tag/FID decoding matrix generator** (`scripts/tag_decoding_matrix.py`): full matrix from `DecoderRegistry.iter_decoders()` with Markdown/JSON output; gate tests ensure every variant has an Annex reference
 - **Golden field-level assertions** (`tests/test_golden_fields.py`): 95 tests verifying decoded values (card number, driver name, plate, VIN, activity/event counts, certificates, signature status) across all 19 real files
 - **GUI file integrity warning**: popup on file open when coverage < 100%, unknown bytes present, decoder failures, certificate chain issues, EF/TREP signature failures
 - **Rich Vehicle summary**: calibration status with expiry warning (❌/⚠️/✅), VU manufacturer/part/software info, active company lock, sensor pairing data
@@ -37,7 +37,7 @@
 ### Added
 - **GUI "Card Numbers Seen" section** (VU group): driver card numbers captured from G1 VU TREP data were only visible in the JSON export; now rendered as a sortable table. With this, every result key the parser populates has a GUI section
 ### Changed
-- **`core/decoders.py` (3,061 lines) split into themed modules** behind a re-export facade: `decode_primitives` (shared helpers), `card_decoders` (card EFs), `g22_card_decoders` (Gen 2.2 tags), `cert_decoders` (certificates/keys), `vu_trep_decoders` (VU overview + TREP walkers). All existing imports keep working through the facade
+- **`core/decoders/__init__.py` (3,061 lines) split into themed modules** behind a re-export facade: `decode_primitives` (shared helpers), `card_decoders` (card EFs), `g22_card_decoders` (Gen 2.2 tags), `cert_decoders` (certificates/keys), `vu_trep_decoders` (VU overview + TREP walkers). All existing imports keep working through the facade
 - **`TachoParser.parse()` refactored from a 246-line block into named phases** (`_open_file`, `_run_structural_parse`, `_decode_vu_semantics`, `_dedup_and_sort_activities`, `_validate_certificate_chain`, `_verify_ef_signatures`); behavior unchanged
 - Function docstring coverage raised from 65% to 77% (deterministic parser internals, GUI lifecycle, export manager); dead `infractions` branch removed from the CLI summary (nothing ever populated it)
 ### Documentation
@@ -65,7 +65,7 @@
 
 ## [1.9.9] - 2026-06-11
 ### Added
-- **EF card data signature verification** (`core/ef_signature_verifier.py`): every card EF data block is verified against its signature copy with the card public key — G1 RSA (ISO 9796-2 with SHA-1, PKCS#1 v1.5 fallback) and G2 ECDSA (raw r‖s, curve-matched hash). Per-EF report in the GUI ("EF Signatures" under Security & Certificates), exports and summary ("EF card data signatures" row); real cards verify all 9–26 EF signatures
+- **EF card data signature verification** (`core/crypto/ef_signature.py`): every card EF data block is verified against its signature copy with the card public key — G1 RSA (ISO 9796-2 with SHA-1, PKCS#1 v1.5 fallback) and G2 ECDSA (raw r‖s, curve-matched hash). Per-EF report in the GUI ("EF Signatures" under Security & Certificates), exports and summary ("EF card data signatures" row); real cards verify all 9–26 EF signatures
 - **ERCA-2 (Gen2) root anchoring**: the EU JRC ERCA Gen2 root certificate (CVC, KID `FD45432001FFFF01`) is bundled in `certs/` and loaded by `SignatureValidator` (CVC-in-PEM wrapping, raw uncompressed EC points 65/97/129/133 bytes for brainpool/NIST 256–521, DER/PEM SPKI). `verify_vu_download` now anchors the MSCA certificate to the root (by CAR, with a try-all fallback for raw keys): real Gen2/2.2 VU downloads report **root-anchored** and "Verified (VU Chain)"
 - **G2 CVC chain validation** (`_validate_g2_cvc_chain`): MSCA→Card link verified via the CVC parser (the old path only handled X.509 DER, which tachograph cards don't use)
 - **G1 VU chain validation**: the MSCA/VU certificates embedded in TREP 01 Overview now feed `validate_tacho_chain` — real G1 VU files report "Verified"
@@ -83,8 +83,8 @@
 
 ## [1.9.5] - 2026-06-11
 ### Distribution & hygiene
-- **Single version source** (`core/version.py`): shown in the GUI title, `tacho-cli --version` / `main.py --version`, parse metadata (`app_version`), PDF footer, export summary and the macOS bundle (`CFBundleShortVersionString`); the release workflow refuses tags that don't match it (replaces the stale "Version 5.1" docstring)
-- **Legacy parser removed**: the deprecated non-deterministic path (`core/tag_navigator.py`, `use_deterministic=False`, `--legacy`, `validate()`, `specs/compare_parsers.py`) returned empty results on real files and was dead code; `TachoParser(use_deterministic=False)` now warns and uses the deterministic parser
+- **Single version source** (`core/utils/version.py`): shown in the GUI title, `tacho-cli --version` / `app/main.py --version`, parse metadata (`app_version`), PDF footer, export summary and the macOS bundle (`CFBundleShortVersionString`); the release workflow refuses tags that don't match it (replaces the stale "Version 5.1" docstring)
+- **Legacy parser removed**: the deprecated non-deterministic path (`core/tag_navigator.py`, `use_deterministic=False`, `--legacy`, `validate()`, `scripts/compare_parsers.py`) returned empty results on real files and was dead code; `TachoParser(use_deterministic=False)` now warns and uses the deterministic parser
 - **Dead `src/` domain-layer skeleton removed** (never wired to the application)
 - **Release workflow unified on `build.spec`**: the inline PyInstaller commands duplicated (and contradicted) the spec — they bundled `src/`, double-packed `core/` as datas and missed the new modules; the spec is now the single bundle definition (verified: local build produces `TachoReader.app` with the right version)
 - **Windows build no longer opens a console window** (`console=False` in the spec, matching the old `--noconsole` release flag)
@@ -92,9 +92,9 @@
 - pandas dependency dropped (no longer used); reportlab added
 ### Added
 - **PDF export** (GUI menu, `tacho-cli --pdf`, included in `--all`): landscape report with summary page (file/driver/vehicle/integrity/signatures) and one styled table per data section, page footer and truncation notes (reportlab)
-- **Deterministic G1 VU walker** (`core/g1_vu_walker.py`): TREP message lengths computed from the Annex 1B §2.2.6 structures (count-prefixed sections) + 128-byte RSA signatures; the walk is self-checking (each message must land on the next `0x76 TREP` marker or EOF). Replaces both the junk STAP coverage walk and the O(n²) byte-scan semantic heuristic on G1 VU files (kept as fallback for non-validating files)
+- **Deterministic G1 VU walker** (`core/parser/g1_walker.py`): TREP message lengths computed from the Annex 1B §2.2.6 structures (count-prefixed sections) + 128-byte RSA signatures; the walk is self-checking (each message must land on the next `0x76 TREP` marker or EOF). Replaces both the junk STAP coverage walk and the O(n²) byte-scan semantic heuristic on G1 VU files (kept as fallback for non-validating files)
 - `ActivityChangeInfo` card-status bit (p) decoded: activity entries now carry `card_inserted`
-- Shared export formatting module (`core/report_format.py`): humanised column names, readable timestamps, nested structures (card numbers, GNSS, registrations) rendered as text, internal keys hidden — used by Excel, CSV and PDF
+- Shared export formatting module (`core/utils/report_format.py`): humanised column names, readable timestamps, nested structures (card numbers, GNSS, registrations) rendered as text, internal keys hidden — used by Excel, CSV and PDF
 - 100% decoded byte coverage on every real file in `DDD/` (was 95.4% on G1 VU); non-normative `0x76 0x00` download-tool trailers classified explicitly
 ### Changed
 - **Excel export** rewritten on openpyxl: styled frozen headers, autofilter, sized columns, striped rows, summary sheet with driver/vehicle; no more raw JSON dumps in cells (pandas dependency dropped)
@@ -166,10 +166,10 @@
 ## [1.7.0] - 2025-06-09
 ### Added
 - GUI Export button with Excel (.xlsx), CSV (.csv), JSON (.json) formats
-- `core/coverage_utils.py` — shared `merge_intervals()`, `coverage_pct()`, `is_padding_block()`
-- `core/encoding.py` — shared `BytesEncoder` (moved from tacho_cli.py, also used by gui_tree.py and main.py)
+- `core/utils/coverage.py` — shared `merge_intervals()`, `coverage_pct()`, `is_padding_block()`
+- `core/utils/encoding.py` — shared `BytesEncoder` (moved from app/cli.py, also used by app/gui.py and app/main.py)
 - `tests/conftest.py` — `autouse` fixture resetting DecoderRegistry singleton between tests
-- Thread-safety lock in `core/logger.py` for concurrent parser instances
+- Thread-safety lock in `core/utils/logger.py` for concurrent parser instances
 - Iteration cap in `deep_scan()` (max 10000 iterations) preventing infinite loops
 - Idempotent `parse()` — state fully reset on each call
 
@@ -186,18 +186,18 @@
 - **Bug**: Duplicate range-merging logic in 3 places → single `merge_intervals()` in coverage_utils
 - **Bug**: Duplicate padding detection in 2 places → single `is_padding_block()` in coverage_utils
 - **Bug**: Italian docstrings in `vu_signature_verifier.py` → translated to English
-- **Bug**: `signature_validator.py` crash on cryptography >= 43 (missing `tbs_certificate_bytes`) → safe accessor
+- **Bug**: `core/crypto/signature.py` crash on cryptography >= 43 (missing `tbs_certificate_bytes`) → safe accessor
 - **Test**: Export assertions updated for new comprehensive multi-sheet format
 - **Test**: Mock G1 VU coverage minimum raised to 30%, generation test fixed
 
 ### Changed
 - ExportManager rewritten for full-content export (all sections from TachoResult)
 - GUI button labels simplified: "Open DDD file", "Export" (menu: Excel, CSV, JSON)
-- `tacho_cli.py` reused shared `BytesEncoder` from `core/encoding.py`
-- `main.py` reused shared `BytesEncoder`, removed dead code
+- `app/cli.py` reused shared `BytesEncoder` from `core/utils/encoding.py`
+- `app/main.py` reused shared `BytesEncoder`, removed dead code
 - Requirements.txt includes `pytest` as explicit dependency
 ### Added
-- `core/event_fault_codes.py` — 28 event types + 17 fault types per EU Reg. 2016/799 + 2023/980
+- `core/utils/event_codes.py` — 28 event types + 17 fault types per EU Reg. 2016/799 + 2023/980
 - `descrizione` field in all event/fault entries with human-readable descriptions
 - Missing GUI sections: Company Locks, Overspeeding Events, Control Activities
 - Chip IC/ICC info in Security & Certificates section
@@ -232,7 +232,7 @@
 - Related tests and documentation
 
 ### Fixed
-- P0: Non-existent method calls in `tacho_cli.py` (validate_file, reverse)
+- P0: Non-existent method calls in `app/cli.py` (validate_file, reverse)
 - P0: Activity sorting crash on `"N/A"` date strings
 - P1: Decoder dispatch fragility in deterministic parser — uses inspect.signature
 - P1: Record size ambiguity G1(31) vs G2(35) — validates timestamp
@@ -242,13 +242,13 @@
 - P2: G1 VU container detection tightened to exact tags
 - P2: Negative odometer distance now returns None not 0
 - P2: Time format robustness in export_manager
-- P2: Centralized magic number constants in core/constants.py
+- P2: Centralized magic number constants in core/utils/constants.py
 - P2: Logger failure detection made more precise
 - P2: Coverage report fallback in deterministic mode
 - P2: Redundant hasattr check removed, duplicate main block fixed
 
 ### Added
-- `core/constants.py` — shared constant definitions
+- `core/utils/constants.py` — shared constant definitions
 - Robust decoder dispatch via `inspect.signature` in deterministic parser
 
 ## [1.0.0] - 2025

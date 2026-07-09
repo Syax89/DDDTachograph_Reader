@@ -5,9 +5,9 @@ This guide walks through adding support for a new tachograph tag, from spec rese
 ## Step 1: Identify the Tag in Specifications
 
 Locate the tag in one of:
-- `specs/g1_complete_structures.md` — G1 tags (Annex 1B)
-- `specs/g2_g22_complete_structures.md` — G2/G2.2 tags (Annex 1C)
-- `specs/tachograph.asn` — Formal ASN.1 schema
+- `scripts/g1_complete_structures.md` — G1 tags (Annex 1B)
+- `scripts/g2_g22_complete_structures.md` — G2/G2.2 tags (Annex 1C)
+- `scripts/tachograph.asn` — Formal ASN.1 schema
 - The relevant EU regulation: Annex 1B (Reg. 3821/85), Annex 1C (Reg. EU 2016/799), Reg. EU 2023/980 (G2.2)
 
 Determine:
@@ -24,14 +24,14 @@ Decide where to place the decoder based on generation and card/VU scope:
 
 | Scope | File |
 |---|---|
-| G1/G2 card EF data | `core/card_decoders.py` |
-| G2/G2.2 VU RecordArray records | `core/g2_decoders.py` |
-| G2.2 card GNSS/Load/Trailer | `core/g22_card_decoders.py` |
-| Certificates / public keys | `core/cert_decoders.py` |
-| VU overview / TREP walkers | `core/vu_trep_decoders.py` |
-| Shared low-level helpers | `core/decode_primitives.py` |
+| G1/G2 card EF data | `core/decoders/card.py` |
+| G2/G2.2 VU RecordArray records | `core/decoders/g2_dispatch.py` |
+| G2.2 card GNSS/Load/Trailer | `core/decoders/g22_card.py` |
+| Certificates / public keys | `core/decoders/cert.py` |
+| VU overview / TREP walkers | `core/decoders/vu_trep.py` |
+| Shared low-level helpers | `core/decoders/primitives.py` |
 
-Add the new function to the re-export list in `core/decoders.py` (the facade through which the registry and all other modules import decoders).
+Add the new function to the re-export list in `core/decoders/__init__.py` (the facade through which the registry and all other modules import decoders).
 
 ### Decoder Function Signature
 
@@ -58,7 +58,7 @@ def parse_new_tag(data: bytes, results: dict, tag: int) -> None:
     results.setdefault("some_list", []).append({...})
 ```
 
-### Helper Utilities (from `core/decode_primitives.py`)
+### Helper Utilities (from `core/decoders/primitives.py`)
 
 | Function | Purpose |
 |---|---|
@@ -69,7 +69,7 @@ def parse_new_tag(data: bytes, results: dict, tag: int) -> None:
 ### Example: Hypothetical `VuVehicleAuthorizationRecord` (0x0534)
 
 ```python
-# In core/g2_decoders.py
+# In core/decoders/g2_dispatch.py
 
 def parse_g22_vehicle_authorization(data: bytes, offset: int = 0):
     """Decode a G2.2 VuVehicleAuthorizationRecord (tag 0x0534).
@@ -111,7 +111,7 @@ def parse_g22_vehicle_authorization(data: bytes, offset: int = 0):
 
 ## Step 3: Register in DecoderRegistry
 
-Add a `TagDecoder` entry in `core/decoder_registry.py`, inside the `_build()` method (within the `definitions` list):
+Add a `TagDecoder` entry in `core/registry/registry.py`, inside the `_build()` method (within the `definitions` list):
 
 ```python
 TagDecoder(0x0534, "VuVehicleAuthorizationRecord",
@@ -128,7 +128,7 @@ Key fields:
 
 ### Import the decoder
 
-If the decoder lives in `core/g2_decoders.py`, make sure to import it at the top of the `_build()` method:
+If the decoder lives in `core/decoders/g2_dispatch.py`, make sure to import it at the top of the `_build()` method:
 
 ```python
 from . import g2_decoders
@@ -186,17 +186,17 @@ python -m pytest tests/ -v -k test_parse_vehicle_authorization
 
 Add the tag to the appropriate spec file:
 
-1. **`specs/g2_g22_complete_structures.md`** — Add a new entry in the tag table with:
+1. **`scripts/g2_g22_complete_structures.md`** — Add a new entry in the tag table with:
    - Tag ID, name, record size, fields, offsets, Annex reference, verification confidence level
 
-2. **`specs/g22_verification_status.md`** — Add to the appropriate confidence section (HIGH/MEDIUM/LOW) based on how well the structure is confirmed by public specifications
+2. **`scripts/g22_verification_status.md`** — Add to the appropriate confidence section (HIGH/MEDIUM/LOW) based on how well the structure is confirmed by public specifications
 
 ## Step 7: Run Coverage Audit
 
 Verify that the new decoder doesn't break existing coverage:
 
 ```bash
-python3 specs/coverage_audit.py
+python3 scripts/coverage_audit.py
 ```
 
 The reference DDD files in `DDD/` should maintain **100% byte coverage** (or very near it). If coverage drops, inspect the audit output for new unparsed ranges.
@@ -206,7 +206,7 @@ The reference DDD files in `DDD/` should maintain **100% byte coverage** (or ver
 - [ ] Tag identified in spec with byte-level structure
 - [ ] Decoder function implemented with proper signature
 - [ ] Registered in `DecoderRegistry` with annex_ref, generation, record_size
-- [ ] Re-exported from the `core/decoders.py` facade
+- [ ] Re-exported from the `core/decoders/__init__.py` facade
 - [ ] `container=True` set in the `TagDecoder` entry if applicable
 - [ ] Tests written and passing
 - [ ] Spec documentation updated

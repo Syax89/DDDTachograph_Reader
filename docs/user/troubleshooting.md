@@ -46,7 +46,7 @@
 
 ## GUI Won't Start
 
-**Symptom**: Running `python gui_tree.py` produces an error or the window doesn't appear.
+**Symptom**: Running `python app/gui.py` produces an error or the window doesn't appear.
 
 **Common fixes**:
 
@@ -97,7 +97,7 @@ If none of the above resolves your problem:
 
 1. Run with verbose logging to capture detailed error information:
    ```bash
-   python tacho_cli.py file.ddd --verbose --summary
+   python app/cli.py file.ddd --verbose --summary
    ```
 2. Check the [FAQ](faq.md) for other common questions.
 3. Open a [GitHub issue](https://github.com/Syax89/ddd-tachograph-reader/issues) with the verbose output and a description of your environment (OS, Python version, file generation).

@@ -2,7 +2,7 @@
 
 Excel and CSV export for tachograph parsed data. Produces multi-sheet Excel workbooks and flat CSV files using pandas and openpyxl.
 
-**File:** `export_manager.py`
+**File:** `app/export.py`
 
 ---
 
@@ -40,7 +40,7 @@ Exports parsed tachograph data to a multi-sheet Excel file.
 | `Attivita Giornaliere` | `daily_summaries` | Daily activity totals (if available) |
 | `Posizioni GPS` | `locations` or `gps_positions` | GNSS position data (if available) |
 
-**Implementation** (`export_manager.py:7-55`): Uses `pd.ExcelWriter` with `openpyxl` engine.
+**Implementation** (`app/export.py:7-55`): Uses `pd.ExcelWriter` with `openpyxl` engine.
 
 **Dependencies:** `pandas`, `openpyxl`
 
@@ -49,7 +49,7 @@ Exports parsed tachograph data to a multi-sheet Excel file.
 ## Usage Example
 
 ```python
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 from export_manager import ExportManager
 
 parser = TachoParser("file.ddd")
@@ -66,7 +66,7 @@ ExportManager.export_to_csv(data, "activities.csv")
 
 ```python
 import os
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 from export_manager import ExportManager
 
 for filename in os.listdir("DDD/"):

@@ -9,9 +9,9 @@
 > - Soprattutto: i dati VU Gen2/2.2 **non** passano per i tag `0x05xx` (presenti solo
 >   nei file carta G1). Nei file VU sono **RecordArray indicizzati per `recordType`**.
 >   La premessa "tag → decoder" di questo documento non si applica ai file VU.
-> - La decodifica VU corretta è ora in `core/vu_record_dispatcher.py` (dispatcher per
+> - La decodifica VU corretta è ora in `core/parser/vu_dispatcher.py` (dispatcher per
 >   recordType, section-aware). Mappa `recordType→size` empirica e verità di terreno
->   in `specs/vu_recordtype_map.md`. Bug confermato e risolto: VuBorderCrossingRecord
+>   in `scripts/vu_recordtype_map.md`. Bug confermato e risolto: VuBorderCrossingRecord
 >   (recordType 0x22, 55 byte) e le attività VU venivano persi e ora sono recuperati
 >   (test in `tests/test_vu_dispatcher.py`).
 > Le tabelle sottostanti restano utili solo come riferimento storico sulla campologia.
@@ -98,13 +98,13 @@ Questi 7 tag hanno dimensioni puramente stimate dal codice euristico, senza conf
 - **Fix**: `elif tag == 0x0528: decoders.parse_g22_gnss_enhanced_places(...)` e aggiungere `elif tag == 0x0525 or tag == 0x0225: decoders.parse_g22_gnss_accumulated_driving(...)`.
 
 ### Bug #2 — Tag 0x052C-0x0533 non in G2_VU_RECORD_DECODERS
-- **File**: `core/g2_decoders.py:309-318`
+- **File**: `core/decoders/g2_dispatch.py:309-318`
 - **Problema**: `G2_VU_RECORD_DECODERS` non include entries per i tag 0x052C-0x0533.
 - **Conseguenza**: `parse_g2_vu_record` in `decoders.py:167` fa `return` immediato per questi tag.
 - **Fix**: Aggiungere le entries mancanti con i decoder appropriati.
 
 ### Bug #3 — Discrepanza size VuCardIWRecord
-- **File**: `core/g2_decoders.py:49-94`
+- **File**: `core/decoders/g2_dispatch.py:49-94`
 - **Problema**: Il decoder si aspetta 28 byte e poi legge `renew_idx` a offset 28 opzionalmente (linea 81: `rec[28] if len(rec) > 28 else 0`). Ma la dimensione dichiarata e' 28, quindi `len(rec)` sara' sempre 28 e `renew_idx` sara' sempre 0 (non letto).
 - **Impatto**: Minore — `cardRenewalIndex` non viene mai popolato correttamente.
 - **Fix**: Dichiarare la dimensione record a 29 byte o rimuovere il campo.

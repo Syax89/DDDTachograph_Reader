@@ -91,7 +91,7 @@ def test_vehicles_used_parsing():
 ### Test Pattern: Full Pipeline Test
 
 ```python
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 import tempfile, os
 
 def test_full_parse_g1():
@@ -148,14 +148,14 @@ The fuzzing test generates random byte sequences to verify parser robustness:
 
 ## Coverage Targets
 
-- **Byte coverage**: 100% on the reference DDD files in `DDD/` (verified by `specs/coverage_audit.py`)
+- **Byte coverage**: 100% on the reference DDD files in `DDD/` (verified by `scripts/coverage_audit.py`)
 - **Semantic coverage**: Decoder functions should populate the expected TachoResult fields
 - **Error path coverage**: Graceful handling of malformed input, truncated files, empty files
 
 Run the coverage audit:
 
 ```bash
-python3 specs/coverage_audit.py
+python3 scripts/coverage_audit.py
 ```
 
 This produces a per-file breakdown of:

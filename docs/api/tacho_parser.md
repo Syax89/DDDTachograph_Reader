@@ -2,7 +2,7 @@
 
 Main parser entry point for `.ddd` digital tachograph files. Orchestrates generation detection (G1/G2/G2.2), the deterministic structural parse, VU semantic decoding, and post-processing (dedup, certificate and EF signature verification).
 
-**File:** `ddd_parser.py`
+**File:** `app/engine.py`
 
 ## Class: `TachoParser`
 
@@ -79,7 +79,7 @@ Returns the percentage of bytes assigned to identified fields.
 ## Usage Example
 
 ```python
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 
 parser = TachoParser("/path/to/file.ddd")
 results = parser.parse()
@@ -110,7 +110,7 @@ print(parser.validation_status)  # "Verified", "Verified (Local Chain)", or "Inv
 ### Parse a single file and check integrity
 
 ```python
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 
 parser = TachoParser("my_tacho.ddd")
 data = parser.parse()

@@ -47,10 +47,10 @@ The GUI uses Python's built-in `tkinter` — no extra GUI package is required. P
 
 ```bash
 # GUI
-python gui_tree.py
+python app/gui.py
 
 # CLI
-python main.py file.ddd
+python app/main.py file.ddd
 ```
 
 ## Verification
@@ -58,13 +58,13 @@ python main.py file.ddd
 After installation, verify everything works:
 
 ```bash
-python main.py --help
+python app/main.py --help
 ```
 
 Or with the advanced CLI:
 
 ```bash
-python tacho_cli.py --help
+python app/cli.py --help
 ```
 
 The help text should display the available options and example commands without errors.

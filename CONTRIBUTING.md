@@ -9,17 +9,17 @@ python3 -m pytest tests/ -v
 
 ## Project Structure
 - `core/` — Parser engine (navigator, decoders, registry, models)
-- `ddd_parser.py` — Main entry point
-- `gui_tree.py` — Desktop application (tkinter: tree view + Excel-style table)
+- `app/engine.py` — Main entry point
+- `app/gui.py` — Desktop application (tkinter: tree view + Excel-style table)
 - `tests/` — Test suite (150+ tests)
-- `specs/` — Tag specifications and verification docs
+- `scripts/` — Tag specifications and verification docs
 
 ## How to Add a New Decoder
-1. Add decoder function in `core/decoders.py` or `core/g2_decoders.py`
-2. Register it in `core/decoder_registry.py` with tag number, name, and metadata
+1. Add decoder function in `core/decoders/__init__.py` or `core/decoders/g2_dispatch.py`
+2. Register it in `core/registry/registry.py` with tag number, name, and metadata
 3. Add dispatch in `core/tag_navigator.py` `record_and_dispatch()` method
 4. Add tests in `tests/`
-5. Update spec documentation in `specs/`
+5. Update spec documentation in `scripts/`
 
 ## Code Conventions
 - Google-style docstrings on all public functions/classes
@@ -34,5 +34,5 @@ python3 -m pytest tests/ -v
 
 ## Coverage Audit
 ```bash
-python3 specs/coverage_audit.py
+python3 scripts/coverage_audit.py
 ```

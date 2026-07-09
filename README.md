@@ -51,10 +51,10 @@ cd ddd-tachograph-reader
 pip install -r requirements.txt
 
 # GUI
-python gui_tree.py
+python app/gui.py
 
 # CLI
-python tacho_cli.py path/to/file.ddd
+python app/cli.py path/to/file.ddd
 ```
 
 ---
@@ -63,12 +63,12 @@ python tacho_cli.py path/to/file.ddd
 
 ```
 ddd-tachograph-reader/
-├── gui_tree.py                  # GUI (tree + table, tkinter)
-├── tacho_cli.py                 # Main CLI
-├── main.py                      # Minimal CLI entry point
-├── ddd_parser.py                # Core parser entry point
-├── signature_validator.py       # Certificate chain validation
-├── export_manager.py            # PDF/Excel/CSV/JSON export
+├── app/gui.py                  # GUI (tree + table, tkinter)
+├── app/cli.py                 # Main CLI
+├── app/main.py                      # Minimal CLI entry point
+├── app/engine.py                # Core parser entry point
+├── core/crypto/signature.py       # Certificate chain validation
+├── app/export.py            # PDF/Excel/CSV/JSON export
 ├── core/
 │   ├── decoders.py              # Facade re-exporting all field decoders
 │   ├── decode_primitives.py     # Shared low-level decode helpers
@@ -94,7 +94,7 @@ ddd-tachograph-reader/
 │   └── logger.py                # Centralized logging (thread-safe)
 ├── certs/                       # ERCA root certificates
 ├── tests/                       # Test suite
-├── specs/                       # Specifications and audits
+├── scripts/                       # Specifications and audits
 ├── docs/                        # Documentation
 └── .github/workflows/           # CI/CD (lint, tests, Windows/macOS builds)
 ```

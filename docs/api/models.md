@@ -2,7 +2,7 @@
 
 Data models for tachograph parsing results. Defines `TachoResult`, `DriverInfo`, `VehicleInfo`, and related dataclasses used throughout the pipeline.
 
-**File:** `core/models.py`
+**File:** `core/registry/models.py`
 
 ---
 
@@ -194,7 +194,7 @@ Builds a hierarchical view of decoded data grouped by generation and clean tag n
 
 **Returns:** `dict` — Tree with top-level keys `"Generation 1"`, `"Generation 2"`, `"Generation 2.2"`, each containing decoded data and `_RawTags` sub-tree.
 
-**Implementation** (`core/models.py:113-341`): Maps result fields to their corresponding tag IDs (e.g., `driver` → `0x0520 Identification`, `activities` → `0x0504 DriverActivityData`, etc.) and organizes raw tags by generation prefix.
+**Implementation** (`core/registry/models.py:113-341`): Maps result fields to their corresponding tag IDs (e.g., `driver` → `0x0520 Identification`, `activities` → `0x0504 DriverActivityData`, etc.) and organizes raw tags by generation prefix.
 
 ### Output structure
 
@@ -237,9 +237,9 @@ Builds a hierarchical view of decoded data grouped by generation and clean tag n
 ## Usage Example
 
 ```python
-# From core/models.py usage pattern (seen in ddd_parser.py:203)
-from ddd_parser import TachoParser
-from core.models import build_generations_tree, TachoResult
+# From core/registry/models.py usage pattern (seen in app/engine.py:203)
+from app.engine import TachoParser
+from core.registry.models import build_generations_tree, TachoResult
 
 parser = TachoParser("my_tacho.ddd")
 data = parser.parse()

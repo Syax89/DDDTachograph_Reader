@@ -86,4 +86,4 @@ No. The application is **read-only**. It parses, analyzes, and exports data from
 
 ### Does the tool work on Linux?
 
-The application is developed and tested on Windows and macOS. If you are comfortable running Python scripts, you can use the from-source installation on Linux by running `python gui_tree.py` or the CLI tools. However, Linux is not an officially supported platform for the pre-built executables.
+The application is developed and tested on Windows and macOS. If you are comfortable running Python scripts, you can use the from-source installation on Linux by running `python app/gui.py` or the CLI tools. However, Linux is not an officially supported platform for the pre-built executables.

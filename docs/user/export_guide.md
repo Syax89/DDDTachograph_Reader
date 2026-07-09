@@ -16,7 +16,7 @@ The DDD Tachograph Reader supports four export formats. All exports share the sa
 
 **How to export**:
 - GUI: **Export → JSON (.json)**
-- CLI: `python tacho_cli.py file.ddd --json output.json`
+- CLI: `python app/cli.py file.ddd --json output.json`
 
 **Example structure** (abridged):
 ```json
@@ -61,7 +61,7 @@ Sheets have styled headers, alternating row stripes, auto-filters, and frozen he
 
 **How to export**:
 - GUI: **Export → Excel (.xlsx)**
-- CLI: `python tacho_cli.py file.ddd --excel report.xlsx`
+- CLI: `python app/cli.py file.ddd --excel report.xlsx`
 
 ---
 
@@ -90,7 +90,7 @@ Sheets have styled headers, alternating row stripes, auto-filters, and frozen he
 
 **How to export**:
 - GUI: **Export → PDF (.pdf)**
-- CLI: `python tacho_cli.py file.ddd --pdf report.pdf` (requires `reportlab`)
+- CLI: `python app/cli.py file.ddd --pdf report.pdf` (requires `reportlab`)
 
 ---
 

@@ -7,18 +7,18 @@ The DDD Tachograph Reader follows a layered pipeline architecture with four main
 1. **Parser layer** — reads raw `.ddd` bytes, detects tachograph generation, walks STAP/BER-TLV structures and VU download streams deterministically, and dispatches field-level decoders
 2. **Analysis layer** — validates certificate chains (ERCA/MSCA → Card/VU) and VU download signatures
 3. **Export layer** — produces output in JSON, Excel (multi-sheet), CSV, and PDF formats
-4. **GUI/CLI layer** — provides a tkinter GUI (`gui_tree.py`) and `tacho_cli.py` command-line interface
+4. **GUI/CLI layer** — provides a tkinter GUI (`app/gui.py`) and `app/cli.py` command-line interface
 
 ### Key Design Patterns
 
-**Registry Pattern** — `DecoderRegistry` (`core/decoder_registry.py:28`) is the single source of truth mapping tag IDs to decoder functions. Each entry carries metadata: container flag, signature block, minimum length, record size, Annex reference, and generation. This enables lookup-by-tag without hardcoded switch statements.
+**Registry Pattern** — `DecoderRegistry` (`core/registry/registry.py:28`) is the single source of truth mapping tag IDs to decoder functions. Each entry carries metadata: container flag, signature block, minimum length, record size, Annex reference, and generation. This enables lookup-by-tag without hardcoded switch statements.
 
-**Strategy Pattern** — `DeterministicParser` (`core/deterministic_parser.py`) selects a walk per file kind:
+**Strategy Pattern** — `DeterministicParser` (`core/parser/deterministic.py`) selects a walk per file kind:
 - Card files: sequential STAP (G1, T2L2 headers) or BER-TLV (G2/G2.2) walk with container recursion
-- G2/G2.2 VU downloads: RecordArray stream walk via `core/vu_record_dispatcher.py` (Annex 1C Appendix 7)
-- G1 VU downloads: SID/TREP message walk via `core/g1_vu_walker.py` (Annex 1B §2.2.6)
+- G2/G2.2 VU downloads: RecordArray stream walk via `core/parser/vu_dispatcher.py` (Annex 1C Appendix 7)
+- G1 VU downloads: SID/TREP message walk via `core/parser/g1_walker.py` (Annex 1B §2.2.6)
 
-**Pipeline Pattern** — `parse → analyze → export`. `TachoParser.parse()` (`ddd_parser.py`) is a thin orchestrator over named phase methods: `_open_file → _run_structural_parse → _decode_vu_semantics → _dedup_and_sort_activities → _validate_certificate_chain → _verify_ef_signatures → build_generations_tree`.
+**Pipeline Pattern** — `parse → analyze → export`. `TachoParser.parse()` (`app/engine.py`) is a thin orchestrator over named phase methods: `_open_file → _run_structural_parse → _decode_vu_semantics → _dedup_and_sort_activities → _validate_certificate_chain → _verify_ef_signatures → build_generations_tree`.
 
 ### Flow Diagram
 
@@ -82,7 +82,7 @@ flowchart TD
 
 ## Component Descriptions
 
-### TachoParser (`ddd_parser.py`)
+### TachoParser (`app/engine.py`)
 
 Entry point class. Constructor accepts the file path, records metadata, initializes `SignatureValidator`. `parse()` orchestrates named phases:
 1. `_open_file()` — mmap + VU/card detection (first byte `0x76` = VU)
@@ -93,7 +93,7 @@ Entry point class. Constructor accepts the file path, records metadata, initiali
 6. `_verify_ef_signatures()` — per-EF data integrity against the card key
 7. `build_generations_tree()` — hierarchical per-generation view
 
-### DecoderRegistry (`core/decoder_registry.py:28`)
+### DecoderRegistry (`core/registry/registry.py:28`)
 
 Centralized tag → decoder mapping. Holds a `Dict[int, TagDecoder]` with entries for all known tags. Each `TagDecoder` dataclass contains:
 
@@ -114,32 +114,32 @@ Centralized tag → decoder mapping. Holds a `Dict[int, TagDecoder]` with entrie
 
 Key methods: `get_decoder(tag)`, `is_container(tag)`, `is_signature(tag)`, `get_by_generation(gen)`, `get_unhandled_tags(seen_tags)`.
 
-### DeterministicParser (`core/deterministic_parser.py:105`)
+### DeterministicParser (`core/parser/deterministic.py:105`)
 
 Schema-driven two-pass parser (migration target). Architecture:
 1. **Structural pass**: Sequentially parses the file using `_try_read_stap()` or `_try_read_ber_tlv()`, dispatching through `DecoderRegistry.get_decoder()` and recursing into containers
 2. **Semantic pass**: (reserved for future) Validates record sizes, checksums, and field ranges
 
-Uses `CoverageTracker` (`core/deterministic_parser.py:18`) to track exact byte ranges covered, with classifications (Tag, Padding, Unknown). Guarantees 100% coverage by construction.
+Uses `CoverageTracker` (`core/parser/deterministic.py:18`) to track exact byte ranges covered, with classifications (Tag, Padding, Unknown). Guarantees 100% coverage by construction.
 
-### Decoders (`core/decoders.py` facade + themed modules)
+### Decoders (`core/decoders/__init__.py` facade + themed modules)
 
-Field-level byte decoders, split by scope. `core/decoders.py` is a facade that re-exports every decoder, so the registry and other modules import from a single place:
+Field-level byte decoders, split by scope. `core/decoders/__init__.py` is a facade that re-exports every decoder, so the registry and other modules import from a single place:
 
 | Module | Contents |
 |---|---|
-| `core/decode_primitives.py` | Shared helpers: nations, code-page strings, dates, activity values, cyclic activity buffers |
-| `core/card_decoders.py` | Card EFs: ICC/IC, identification, licence, events/faults, places, vehicles used, calibrations, control activities, company data |
-| `core/g22_card_decoders.py` | G2.2 tags: GNSS accumulated driving, load/unload, trailers, enhanced places, load sensor, border crossings |
-| `core/cert_decoders.py` | Certificates: G1 RSA profiles, signatures, public keys, G2.2 CVC profiles and auth sub-tags |
-| `core/vu_trep_decoders.py` | VU download messages: overview, TREP 02–06 walkers, G2/G2.2 VU RecordArray dispatch |
+| `core/decoders/primitives.py` | Shared helpers: nations, code-page strings, dates, activity values, cyclic activity buffers |
+| `core/decoders/card.py` | Card EFs: ICC/IC, identification, licence, events/faults, places, vehicles used, calibrations, control activities, company data |
+| `core/decoders/g22_card.py` | G2.2 tags: GNSS accumulated driving, load/unload, trailers, enhanced places, load sensor, border crossings |
+| `core/decoders/cert.py` | Certificates: G1 RSA profiles, signatures, public keys, G2.2 CVC profiles and auth sub-tags |
+| `core/decoders/vu_trep.py` | VU download messages: overview, TREP 02–06 walkers, G2/G2.2 VU RecordArray dispatch |
 
 `g2_decoders.py` (~567 lines) handles G2/G2.2 VU RecordArray records:
 - `parse_g2_card_record()` (0x0509): 29-byte card records
 - `parse_g2_card_iw_record()` (0x050A): 29-byte insertion/withdrawal records
 - `parse_g2_vu_record()`: Generic dispatcher for all G2/G2.2 VU record types using RecordArray format
 
-### Models (`core/models.py`)
+### Models (`core/registry/models.py`)
 
 `TachoResult` dataclass hierarchy:
 
@@ -168,7 +168,7 @@ TachoResult
 
 `build_generations_tree()` (line 113) organizes results into a hierarchical view: `{Generation 1: {...}, Generation 2: {...}, Generation 2.2: {...}}`.
 
-### SignatureValidator (`signature_validator.py:10`)
+### SignatureValidator (`core/crypto/signature.py:10`)
 
 Validates digital certificate chains. Supports RSA (G1/G2) and ECDSA (G2). Hierarchy:
 - **ERCA** (European Root Certificate Authority) — root certificates in `certs/`
@@ -177,9 +177,9 @@ Validates digital certificate chains. Supports RSA (G1/G2) and ECDSA (G2). Hiera
 
 ### Export Layer
 
-- **ExportManager** (`export_manager.py:5`): Multi-sheet Excel (Riepilogo, Attività Giornaliere) and CSV export
+- **ExportManager** (`app/export.py:5`): Multi-sheet Excel (Riepilogo, Attività Giornaliere) and CSV export
 
 ### GUI Layer
 
-- **gui_tree.py**: Desktop application (tkinter/ttk). Regedit-style section tree on the left, Excel-style data table on the right (sortable columns, text filter). Data-driven: sections are derived from the parser output.
-- **tacho_cli.py** (`tacho_cli.py:14`): CLI with `--json`, `--excel`, `--all`, `--summary` flags
+- **app/gui.py**: Desktop application (tkinter/ttk). Regedit-style section tree on the left, Excel-style data table on the right (sortable columns, text filter). Data-driven: sections are derived from the parser output.
+- **app/cli.py** (`app/cli.py:14`): CLI with `--json`, `--excel`, `--all`, `--summary` flags

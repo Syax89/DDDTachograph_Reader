@@ -1,6 +1,6 @@
 # GUI Guide — Tacho Explorer
 
-The desktop application (**Tacho Explorer**, `gui_tree.py`) provides a two-pane explorer for digital tachograph data: a regedit-style section tree on the left and an Excel-style data table on the right.
+The desktop application (**Tacho Explorer**, `app/gui.py`) provides a two-pane explorer for digital tachograph data: a regedit-style section tree on the left and an Excel-style data table on the right.
 
 ---
 
@@ -8,7 +8,7 @@ The desktop application (**Tacho Explorer**, `gui_tree.py`) provides a two-pane 
 
 - **Windows**: Double-click `TachoReader.exe`.
 - **macOS**: Right-click `TachoReader` → Open.
-- **From source**: `python gui_tree.py`.
+- **From source**: `python app/gui.py`.
 
 ---
 

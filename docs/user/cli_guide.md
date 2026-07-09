@@ -1,15 +1,15 @@
 # Command-Line Interface (CLI) Guide
 
-The DDD Tachograph Reader provides two command-line entry points: a simple parser (`main.py`) and an advanced CLI (`tacho_cli.py`) with export and reporting options.
+The DDD Tachograph Reader provides two command-line entry points: a simple parser (`app/main.py`) and an advanced CLI (`app/cli.py`) with export and reporting options.
 
 ---
 
-## Basic Usage — main.py
+## Basic Usage — app/main.py
 
 The simplest invocation parses a file and prints JSON to standard output:
 
 ```bash
-python main.py file.ddd
+python app/main.py file.ddd
 ```
 
 **Options**:
@@ -23,19 +23,19 @@ python main.py file.ddd
 Example with output file:
 
 ```bash
-python main.py file.ddd -o result.json -v
+python app/main.py file.ddd -o result.json -v
 ```
 
 ---
 
-## Advanced CLI — tacho_cli.py
+## Advanced CLI — app/cli.py
 
-The advanced CLI (`tacho_cli.py`) adds export formats and an on-screen summary.
+The advanced CLI (`app/cli.py`) adds export formats and an on-screen summary.
 
 ### Parse and Display Summary
 
 ```bash
-python tacho_cli.py file.ddd --summary
+python app/cli.py file.ddd --summary
 ```
 
 The summary shows file metadata (type and generation), signature verification status, driver and vehicle identity, and per-activity totals (drive / work / available / rest) computed from the daily activity records.
@@ -45,13 +45,13 @@ The summary shows file metadata (type and generation), signature verification st
 Save results as a structured JSON file:
 
 ```bash
-python tacho_cli.py file.ddd --json output.json
+python app/cli.py file.ddd --json output.json
 ```
 
 If no filename is given, an auto-named file is created:
 
 ```bash
-python tacho_cli.py file.ddd --json
+python app/cli.py file.ddd --json
 # Creates: file_20260612_143022.json
 ```
 
@@ -62,19 +62,19 @@ With no flags at all, the JSON is printed to standard output.
 **Excel** (multi-sheet workbook):
 
 ```bash
-python tacho_cli.py file.ddd --excel report.xlsx
+python app/cli.py file.ddd --excel report.xlsx
 ```
 
 **PDF** (formatted report):
 
 ```bash
-python tacho_cli.py file.ddd --pdf report.pdf
+python app/cli.py file.ddd --pdf report.pdf
 ```
 
 **All formats at once** (JSON, PDF, Excel into a directory):
 
 ```bash
-python tacho_cli.py file.ddd --all output_dir/
+python app/cli.py file.ddd --all output_dir/
 ```
 
 ### Verbose Output
@@ -82,7 +82,7 @@ python tacho_cli.py file.ddd --all output_dir/
 Use `-v` or `--verbose` for detailed debug logs and full Python tracebacks on errors:
 
 ```bash
-python tacho_cli.py file.ddd --verbose --summary
+python app/cli.py file.ddd --verbose --summary
 ```
 
 ---
@@ -108,7 +108,7 @@ The CLI processes one file per invocation. To process a directory, loop in the s
 
 ```bash
 for f in DDD/*.ddd; do
-  python tacho_cli.py "$f" --json --quiet
+  python app/cli.py "$f" --json --quiet
 done
 ```
 
@@ -116,15 +116,15 @@ done
 
 ## Integrating with Scripts
 
-Since `main.py` outputs pure JSON, it integrates easily with other tools:
+Since `app/main.py` outputs pure JSON, it integrates easily with other tools:
 
 ```bash
 # Pipe to jq for filtering
-python main.py file.ddd | jq '.driver'
+python app/main.py file.ddd | jq '.driver'
 
 # Check the signature verification result
-python main.py file.ddd | jq '.metadata.integrity_check'
+python app/main.py file.ddd | jq '.metadata.integrity_check'
 
 # Extract all activity dates
-python main.py file.ddd | jq '.activities[].date'
+python app/main.py file.ddd | jq '.activities[].date'
 ```
