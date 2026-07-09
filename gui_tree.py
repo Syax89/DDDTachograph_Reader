@@ -420,7 +420,7 @@ class DataTable(ttk.Frame):
             return
         # Leave room for scrollbar
         usable = max(available - 20, 100)
-        for c, w in zip(self._cols, weights):
+        for c, w in zip(self._cols, weights, strict=False):
             self.tv.column(c, width=max(int(usable * w / total_weight), 60))
 
     def _content_width(self, col):
