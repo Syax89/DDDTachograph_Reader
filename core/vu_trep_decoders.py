@@ -1444,20 +1444,52 @@ def _decode_sensor_block(body, results, offset=0):
 
 
 def _extract_sensor_daily_records(body, start, copy_start, copy_end):
-    """Extract unique daily midnight timestamps from sensor body."""
+    """Extract daily timestamp + speed records from sensor body.
+
+    Each daily block:
+      [0:4]   midnight_ts   TimeReal (seconds, divisible by 86400)
+      [4:8]   first_event   TimeReal  
+      [8:10]  speed_count   UInt16 BE (number of 1-byte speed samples)
+      [10:]   speed_samples UInt8[count] (km/h, 0-255; values > 200 are RFU)
+    Blocks are separated by FF padding.
+    """
     seen = set()
     records = []
     pos = start
     end = min(copy_end, len(body))
-    while pos + 4 <= end:
-        ts = struct.unpack(">I", body[pos:pos + 4])[0]
-        if 946684800 <= ts <= 4102444800 and ts % 86400 == 0:
-            date_str = datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
-            if date_str not in seen:
-                seen.add(date_str)
-                records.append({
-                    "date": date_str,
-                    "midnight_ts": ts,
-                })
-        pos += 1
+    while pos + 10 <= end:
+        while pos + 10 <= end and body[pos] == 0xFF:
+            pos += 1
+        if pos + 10 > end:
+            break
+        ts_midnight = struct.unpack(">I", body[pos:pos + 4])[0]
+        ts_event = struct.unpack(">I", body[pos + 4:pos + 8])[0]
+        if not (946684800 <= ts_midnight <= 4102444800):
+            pos += 1
+            continue
+        if ts_midnight % 86400 != 0:
+            pos += 4
+            continue
+        count = struct.unpack(">H", body[pos + 8:pos + 10])[0]
+        if count > 1500:  # max 25 hours at 1/min
+            pos += 8
+            continue
+        speed_end = pos + 10 + count
+        if speed_end > end:
+            break
+        speeds = list(body[pos + 10:speed_end])
+        valid = [s for s in speeds if s <= 200]
+        date_str = datetime.fromtimestamp(ts_midnight, tz=timezone.utc).strftime("%Y-%m-%d")
+        if date_str not in seen:
+            seen.add(date_str)
+            records.append({
+                "date": date_str,
+                "first_event": datetime.fromtimestamp(ts_event, tz=timezone.utc).isoformat(),
+                "speed_samples": count,
+                "speed_min": min(valid) if valid else None,
+                "speed_max": max(valid) if valid else None,
+                "speed_avg": round(sum(valid) / len(valid), 1) if valid else None,
+                "speed_valid_count": len(valid),
+            })
+        pos = speed_end
     return records
