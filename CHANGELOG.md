@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+## [2.2.2] - 2026-07-09
+### Added
+- **Certificate CVC/ECC field-level decoder**: unified `parse_certificate()` with auto-detect (G1 RSA 194-byte vs G2/G2.2 CVC BER-TLV). CAR, CHR, curve OID, public key (x,y), validity dates, signature r/s exposed in `certificates[]`
+- **G1 Sensor download decoder** (TREP 0x11 / 0x7611): sensor identification (approval number, nation), date range, 66 daily timestamp records exposed in GUI and export
+- **Context-aware `DecoderRegistry`**: `get_decoder(tag, generation=, is_vu=, dtype=, parent_tag=)` with multi-variant support — same FID can have different decoders for card vs VU, generation-specific payloads
+- **Tag/FID decoding matrix generator** (`specs/tag_decoding_matrix.py`): full matrix from `DecoderRegistry.iter_decoders()` with Markdown/JSON output; gate tests ensure every variant has an Annex reference
+- **Golden field-level assertions** (`tests/test_golden_fields.py`): 95 tests verifying decoded values (card number, driver name, plate, VIN, activity/event counts, certificates, signature status) across all 19 real files
+- **GUI file integrity warning**: popup on file open when coverage < 100%, unknown bytes present, decoder failures, certificate chain issues, EF/TREP signature failures
+- **Rich Vehicle summary**: calibration status with expiry warning (❌/⚠️/✅), VU manufacturer/part/software info, active company lock, sensor pairing data
+- **Rich Driver summary**: cardholder name, card details, licence, activity statistics, EF verification status
+- **Rich Sensor summary**: sensor identification, associated vehicle, date range with actual days, speed/distance parameters
+- **Export coverage**: certificates, sensor daily records, dict-style sections (VU Overview, Card Issuer, IC Chip, etc.) in Excel/CSV/PDF
+### Changed
+- **GUI tree reorganized by generation**: top-level folders "Generation 1 — Annex 1B", "Generation 2 — Annex 1C", "Generation 2.2 — Smart V2"; VU sections filtered for card files; empty folders hidden
+- **Column auto-fit**: table columns proportionally resize with window width
+- **Nested dict flattening**: Field/Value tables now expand sub-dicts as `Parent › Child` rows instead of compact strings
+- **`locations`** (GPS) section added to GUI tree (was missing)
+- **G2.2 card EF decoders rewritten**: ASN.1 32-bit signed coordinates (1/10 micro-degree), `CardLoadUnloadRecord` (22 bytes) and `CardBorderCrossingRecord` (19 bytes) with nested `GNSSPlaceAuthRecord`
+- **Status bar consistency**: integrity label now matches between File Info panel and top bar via shared `_integrity_label()` method
+### Fixed
+- **G2/G2.2 CVC certificates** (204-205 bytes) were incorrectly decoded as G1 RSA (194 bytes), producing garbage fields
+- **Right panel stale data**: table now clears when switching files
+- **`locations`** section missing from GUI tree
+- **Sheet name sanitization**: `/`, `:`, `[` etc. replaced with `_` in Excel sheet names
+- **Calibration date parsing**: handles both ISO format (G2) and dd/mm/yyyy format (G1)
+- **Double separator line** after SENSOR section in vehicle panel
+- CLI file argument now correctly loads file on startup
+
 ## [2.1.0] - 2026-06-12
 ### Fixed
 - **G2/G2.2 VU detailed speed was invisible**: `VuDetailedSpeedBlock` records (recordType 0x12) were decoded by the RecordArray dispatcher but never folded into `speed_blocks`, so the GUI's "Detailed Speed Blocks" section only appeared for G1 VU files. Real G2/G2.2 VU downloads now expose their per-minute speed blocks (timestamp, min/max/avg km/h, sample count) in the GUI and all exports; padding blocks are skipped. Synthetic regression test added
