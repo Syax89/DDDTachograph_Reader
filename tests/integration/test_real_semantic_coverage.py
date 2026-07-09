@@ -6,19 +6,20 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from scripts.semantic_coverage_audit import audit_directory, compare_to_baseline
+from tests.unit.real_data import real_ddd_files
 
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DDD_DIR = os.path.join(ROOT_DIR, "DDD")
-BASELINE_PATH = os.path.join(ROOT_DIR, "specs", "semantic_coverage_report.json")
+BASELINE_PATH = os.path.join(ROOT_DIR, "scripts", "semantic_coverage_report.json")
 
 
 class TestRealSemanticCoverage(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        if not os.path.isdir(DDD_DIR):
-            raise unittest.SkipTest("DDD directory not found")
+        if not real_ddd_files():
+            raise unittest.SkipTest("No private DDD fixtures found")
         if not os.path.exists(BASELINE_PATH):
             raise unittest.SkipTest("Semantic coverage baseline not found")
 

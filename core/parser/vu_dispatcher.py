@@ -671,7 +671,11 @@ def _decode_record(record_type, rec):
             out["raw_hex"] = rec[:48].hex()
         return out
     if record_type == 0x01 and len(rec) >= 2:
-        out["activity"] = decoders.decode_activity_val(struct.unpack(">H", rec[0:2])[0])
+        activity = decoders.decode_activity_val(struct.unpack(">H", rec[0:2])[0])
+        if activity is not None:
+            out["activity"] = activity
+        else:
+            out["raw_hex"] = rec[:2].hex()
         return out
     if record_type == 0x29 and len(rec) >= 2:
         val = struct.unpack(">H", rec[0:2])[0]
@@ -679,14 +683,11 @@ def _decode_record(record_type, rec):
         # 0x29 is strongly suspected to be the co-driver slot's
         # ActivityChangeInfo on VU models that partition by slot (observed on
         # Stoneridge V6006 G2.2).  The bit layout is identical to 0x01.
-        if activity:
-            mins = activity.get("minutes")
-            act = activity.get("activity")
-            if mins is not None and 0 <= mins <= 1439 and act in ("Rest", "Drive", "Work", "Available"):
-                out["activity"] = activity
-                out["confidence"] = "medium"
-                out["note"] = "probable co-driver slot (ActivityChangeInfo, recordType 0x29)"
-                return out
+        if activity is not None:
+            out["activity"] = activity
+            out["confidence"] = "medium"
+            out["note"] = "probable co-driver slot (ActivityChangeInfo, recordType 0x29)"
+            return out
         out["raw_hex"] = rec[:2].hex()
         return out
     if record_type in (0x03, 0x06) and len(rec) >= 4:

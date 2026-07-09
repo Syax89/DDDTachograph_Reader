@@ -51,7 +51,7 @@ from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 
 from core.utils.version import __version__  # noqa: E402
-from core.utils.report_format import humanize_key, _NOT_AVAILABLE_INTS, _ISO_RE  # noqa: E402
+from core.utils.report_format import humanize_key, _NOT_AVAILABLE_INTS, _ISO_RE, code_label  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
 
@@ -83,110 +83,9 @@ LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_pur
 TRAILING_KEYS = ["record_type"]
 
 
-# ── Section definitions (data-driven) ─────────────────────────────────────
-#
-# Each parser dict list entry becomes a table. Groups give the tree its
-# regedit-style folder structure.
-
-GROUPS = [
-    ("g1", "\U0001f4e6  Generation 1 \u2014 Annex 1B"),
-    ("g2", "\U0001f4e6  Generation 2 \u2014 Annex 1C"),
-    ("g22", "\U0001f4e6  Generation 2.2 \u2014 Smart V2"),
-]
-
-# data_key → (label, group, optional transformer)
-LIST_SECTIONS = [
-    # "activities" handled separately (day hierarchy) — see _populate_activities
-
-    # ── Generation 1 (Annex 1B) ──
-    ("vehicle_sessions", "Vehicles Used", "g1", None),
-    ("events", "Events", "g1", None),
-    ("overspeeding_events", "Overspeeding Events", "g1", None),
-    ("faults", "Faults", "g1", None),
-    ("places", "Places", "g1", None),
-    ("locations", "GPS Locations", "g1", None),
-    ("specific_conditions", "Specific Conditions", "g1", None),
-    ("calibrations", "Calibrations", "g1", None),
-    ("card_downloads", "Card Downloads", "g1", None),
-    ("control_activities", "Control Activities", "g1", None),
-    ("workshops", "Calibration Workshops", "g1", None),
-    ("previous_vehicle", "Previous Vehicle", "g1", None),
-    ("company_holders", "Company Holders", "g1", None),
-    ("calibration_vins", "Calibration VINs", "g1", None),
-
-    ("vu_identifications", "VU Identification", "g1", None),
-    ("sensor_pairings", "Sensor Pairing", "g1", None),
-    ("sensor_gnss_couplings", "Sensor GNSS Coupling", "g1", None),
-    ("card_iw_records", "Card Insertion / Withdrawal", "g1", None),
-    ("card_records", "Card Records", "g1", None),
-    ("time_adjustments", "Time Adjustments", "g1", None),
-    ("company_locks", "Company Locks", "g1", None),
-    ("download_activities", "Downloads", "g1", None),
-    ("power_interruptions", "Power Supply Interruptions", "g1", None),
-    ("overspeeding_control", "Overspeeding Control", "g1", None),
-    ("its_consents", "ITS Consents", "g1", None),
-    ("signed_daily_records", "Signed Daily Records", "g1", None),
-    ("inserted_drivers", "Inserted Drivers", "g1", None),
-    ("card_numbers", "Card Numbers Seen", "g1", "card_numbers"),
-    ("speed_blocks", "Detailed Speed Blocks", "g1", None),
-    ("vu_record_arrays", "VU Record Array (raw)", "g1", None),
-    ("sensor_daily_records", "Sensor Daily Records", "g1", None),
-
-    # ── Generation 2 (Annex 1C) ──
-    ("vehicle_units", "Vehicle Units Used", "g2", None),
-
-    # ── Generation 2.2 (Smart V2) ──
-    ("gnss_ad_records", "GNSS \u2014 Accumulated Driving", "g22", None),
-    ("gnss_places", "GNSS \u2014 Places", "g22", None),
-    ("border_crossings", "Border Crossings", "g22", None),
-    ("load_unload_records", "Load / Unload", "g22", None),
-    ("load_sensor_data", "Load Sensor", "g22", None),
-    ("trailer_registrations", "Trailers", "g22", None),
-]
-
-
-def _row_activities(rec):
-    """Expands each day into single activity-change rows (Rest, Drive, etc.)."""
-    changes = rec.get("changes", [])
-    driver = rec.get("driver", "")
-    daily_counter = rec.get("daily_counter", "")
-
-    base = {
-        "Date": rec.get("date", rec.get("timestamp", "?")),
-        "Odometer km": rec.get("odometer_km", 0),
-        "Driver": fmt_val(driver) if driver else "",
-        "Day #": str(daily_counter) if daily_counter != "" else "",
-    }
-    empty = {**base, "Time": "\u2014", "Activity": "(no event)",
-             "Slot": "", "Crew": ""}
-
-    if not isinstance(changes, list) or not changes:
-        return empty
-
-    rows = []
-    for ev in changes:
-        if isinstance(ev, dict):
-            slot = ev.get("slot", "")
-            if isinstance(slot, int):
-                slot = f"Slot {slot}"
-            rows.append({**base,
-                "Time": ev.get("time", "?"),
-                "Activity": ev.get("activity", "?"),
-                "Slot": fmt_val(slot) if slot else "",
-                "Crew": fmt_val(ev.get("crew", "")),
-            })
-    return rows if rows else empty
-
-
-def _row_card_number(num):
-    """Card numbers arrive as plain strings — wrap for a one-column table."""
-    return {"Card Number": num}
-
-
-TRANSFORMERS = {
-    "activities": _row_activities,
-    "card_numbers": _row_card_number,
-}
+# ── Section definitions ──
+# The tree is now driven directly by :func:`build_generations_tree` output.
+# See ``_populate_tree`` and ``core/registry/models.py``.
 
 
 # ── Value formatting ───────────────────────────────────────────────────────
@@ -231,7 +130,11 @@ def _fmt_dict(d):
     return items if len(items) <= 120 else items[:120] + "\u2026"
 
 
-def fmt_val(v):
+# Columns whose values may carry a human-readable code label.
+_CODE_KEYS = {"trep", "tag_id", "data_type"}
+
+
+def fmt_val(v, key=None):
     """Render any parser value for display: booleans as Yes/No, floats
     trimmed, large ints with thousands spaces, 0xFFFFFF sentinels as N/A,
     bytes as hex, ISO timestamps shortened, dicts/lists flattened."""
@@ -245,9 +148,9 @@ def fmt_val(v):
     if isinstance(v, int):
         if v in _NOT_AVAILABLE_INTS:
             return "N/A"
-        # Thousands separator (space, not '.', to avoid confusion with decimals)
-        # only for large values: small integers / coefficients stay raw.
-        return f"{v:,}".replace(",", " ") if abs(v) >= 10000 else str(v)
+        label = code_label(v, key=key) if key in _CODE_KEYS else ""
+        suffix = f"  ({label})" if label else ""
+        return (f"{v:,}".replace(",", " ") if abs(v) >= 10000 else str(v)) + suffix
     if isinstance(v, (bytes, bytearray)):
         h = v.hex()
         return h if len(h) <= 64 else h[:64] + "\u2026"
@@ -260,7 +163,9 @@ def fmt_val(v):
             return ", ".join(fmt_val(x) for x in v)
         return f"[{len(v)} items]"
     if isinstance(v, str):
-        return _fmt_iso(v)
+        label = code_label(v, key=key) if key in _CODE_KEYS else ""
+        text = _fmt_iso(v)
+        return f"{text}  ({label})" if label else text
     return str(v)
 
 
@@ -301,7 +206,7 @@ def _rows_for(records, transformer):
         items = rec if isinstance(rec, list) else [rec]
         for item in items:
             if isinstance(item, dict):
-                rows.append([fmt_val(item.get(c)) for c in cols])
+                rows.append([fmt_val(item.get(c), key=c) for c in cols])
             else:
                 rows.append([fmt_val(item)])
     # Transformer output keys are already display labels; raw record keys are
@@ -318,9 +223,9 @@ def _kv_rows(d):
         if isinstance(v, dict) and v:
             for sk, sv in v.items():
                 subfield = f"{field} \u203a {humanize_key(sk) if isinstance(sk, str) else str(sk)}"
-                rows.append([subfield, fmt_val(sv)])
+                rows.append([subfield, fmt_val(sv, key=sk)])
         else:
-            rows.append([field, fmt_val(v)])
+            rows.append([field, fmt_val(v, key=k)])
     return (["Field", "Value"], rows)
 
 
@@ -377,9 +282,17 @@ class DataTable(ttk.Frame):
         self._fit_after_id = None
         self._filter_after_id = None
 
+        self.tv.bind("<Configure>", lambda e: self._schedule_fit())
+
     def show(self, title, columns, rows, meta=""):
         """Display a table: sets headers (click to sort), sizes columns,
         resets the filter and renders all rows."""
+        if self._fit_after_id is not None:
+            self.tv.after_cancel(self._fit_after_id)
+            self._fit_after_id = None
+        if self._filter_after_id is not None:
+            self.tv.after_cancel(self._filter_after_id)
+            self._filter_after_id = None
         self.filt_bar.pack(fill=tk.X, padx=8, pady=(0, 4), before=self.tv.master)
         self.title_lbl.config(text=title)
         self.count_lbl.config(
@@ -395,12 +308,16 @@ class DataTable(ttk.Frame):
         for c in self._cols:
             self.tv.heading(c, text=str(c),
                             command=lambda col=c: self._sort_by(col))
-            self.tv.column(c, minwidth=60, anchor=tk.W, stretch=True)
-
-        self._fit_columns()
-        self.tv.bind("<Configure>", lambda e: self._schedule_fit())
+            min_w = max(len(str(c)) * 9 + 24, 60)
+            self.tv.column(c, minwidth=min_w, anchor=tk.W, stretch=True)
 
         self._render(self._all_rows)
+        self.tv.update_idletasks()
+        self._fit_columns()
+        self.tv.update()
+        if self._fit_after_id is not None:
+            self.tv.after_cancel(self._fit_after_id)
+            self._fit_after_id = None
 
     def _fit_columns(self):
         """Distribute available width proportionally to content length."""
@@ -408,16 +325,17 @@ class DataTable(ttk.Frame):
             return
         available = self.tv.winfo_width()
         if available < 50:
-            self.tv.after(200, self._fit_columns)
+            self._fit_after_id = self.tv.after(200, self._fit_columns)
             return
-        weights = [max(self._content_width(c) + 24, 70) for c in self._cols]
+        weights = [max(max(self._content_width(c), len(str(c)) * 9) + 24, 70) for c in self._cols]
         total_weight = sum(weights)
         if total_weight == 0:
             return
         # Leave room for scrollbar
         usable = max(available - 20, 100)
         for c, w in zip(self._cols, weights, strict=False):
-            self.tv.column(c, width=max(int(usable * w / total_weight), 60))
+            min_w = max(len(str(c)) * 9 + 24, 70)
+            self.tv.column(c, width=max(int(usable * w / total_weight), min_w))
 
     def _content_width(self, col):
         idx = self._cols.index(col)
@@ -546,6 +464,7 @@ class TachoExplorer(tk.Tk):
         self._destroyed = False
         self._parsing = False
         self._parse_queue = queue.Queue()
+        self._export_queue = queue.Queue()
 
         self._build_ui()
         try:
@@ -577,8 +496,6 @@ class TachoExplorer(tk.Tk):
         self.lbl_status.pack(side=tk.LEFT, padx=(6, 0))
         self.lbl_gen = ttk.Label(top, text="")
         self.lbl_gen.pack(side=tk.RIGHT, padx=8)
-        self.lbl_cov = ttk.Label(top, text="")
-        self.lbl_cov.pack(side=tk.RIGHT, padx=8)
 
         pw = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
         pw.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
@@ -588,20 +505,19 @@ class TachoExplorer(tk.Tk):
         pw.add(left, weight=1)
         scroll = ttk.Scrollbar(left, orient=tk.VERTICAL)
         self.tree = ttk.Treeview(left, show="tree", yscrollcommand=scroll.set,
-                                 selectmode="browse")
+                                  selectmode="browse")
         scroll.config(command=self.tree.yview)
         scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.tree.pack(fill=tk.BOTH, expand=True)
         self.tree.column("#0", width=340, minwidth=200)
         self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
-
         # Right: table
         right = ttk.Frame(pw)
         pw.add(right, weight=3)
         self.table = DataTable(right)
         self.table.pack(fill=tk.BOTH, expand=True)
 
-        self.bind_all("<Control-f>", lambda e: self.table.filter_entry.focus_set())
+        self.bind("<Control-f>", lambda e: self.table.filter_entry.focus_set())
 
         status_bar = ttk.Frame(self, relief=tk.SUNKEN)
         status_bar.pack(side=tk.BOTTOM, fill=tk.X)
@@ -659,7 +575,6 @@ class TachoExplorer(tk.Tk):
         except queue.Empty:
             self.after(50, self._poll_parse_queue)
             return
-        self._finish_parse()
         if error is not None:
             self._parse_error(error)
         else:
@@ -679,6 +594,7 @@ class TachoExplorer(tk.Tk):
             self.btn_export.config(state=tk.NORMAL)
 
     def _parse_error(self, msg):
+        self._finish_parse()
         try:
             messagebox.showerror("Parsing Error", str(msg))
         except Exception:
@@ -708,36 +624,40 @@ class TachoExplorer(tk.Tk):
         self.update_idletasks()
 
         import threading
-        error_container = []
 
         def _worker():
             try:
                 export_fn(self.current_data, path)
+                self._export_queue.put((kind, requirement, None, path))
             except Exception as exc:
-                error_container.append((kind, requirement, exc))
+                self._export_queue.put((kind, requirement, exc, path))
 
         worker = threading.Thread(target=_worker, daemon=True)
         worker.start()
 
-        while worker.is_alive():
-            self.update()
-            worker.join(timeout=0.1)
-
-        self.progress.stop()
-        self.progress.pack_forget()
-
-        if error_container:
-            kind_err, req, exc = error_container[0]
-            if isinstance(exc, ImportError):
-                self.status.config(text="Export failed")
-                messagebox.showwarning("Export Unavailable",
-                                       f"{kind_err} export requires an extra package:\n{exc}\n{req}")
+        def _poll():
+            if self._destroyed:
+                return
+            try:
+                kind_err, req, exc, export_path = self._export_queue.get_nowait()
+            except queue.Empty:
+                self.after(50, _poll)
+                return
+            self.progress.stop()
+            self.progress.pack_forget()
+            if exc is not None:
+                if isinstance(exc, ImportError):
+                    self.status.config(text="Export failed")
+                    messagebox.showwarning("Export Unavailable",
+                                           f"{kind_err} export requires an extra package:\n{exc}\n{req}")
+                else:
+                    self.status.config(text="Export failed")
+                    messagebox.showerror("Export Error", str(exc))
             else:
-                self.status.config(text="Export failed")
-                messagebox.showerror("Export Error", str(exc))
-        else:
-            self.status.config(text=f"Exported: {os.path.basename(path)}")
-            messagebox.showinfo("Export Complete", f"{kind} saved to:\n{path}")
+                self.status.config(text=f"Exported: {os.path.basename(export_path)}")
+                messagebox.showinfo("Export Complete", f"{kind_err} saved to:\n{export_path}")
+
+        self.after(50, _poll)
 
     def _export_pdf(self):
         self._run_export("PDF", ".pdf", [("PDF Document", "*.pdf")],
@@ -780,6 +700,7 @@ class TachoExplorer(tk.Tk):
 
     def _parse_done(self, data, path):
         """Render a successful parse: rebuild the tree, top bar and status."""
+        self._finish_parse()
         try:
             self.current_data = data
             self.current_file = path
@@ -793,8 +714,7 @@ class TachoExplorer(tk.Tk):
             meta = data.get("metadata", {})
             self.status.config(
                 text=f"Loaded: {os.path.basename(path)}  |  "
-                     f"{meta.get('generation', '?')}  |  "
-                     f"Coverage: {meta.get('coverage_pct', 0)}%")
+                     f"{meta.get('generation', '?')}")
             self._check_integrity(data, path)
         except Exception:
             _log.error("GUI render failed: %s", traceback.format_exc())
@@ -857,15 +777,12 @@ class TachoExplorer(tk.Tk):
                                    header + "\n".join(warnings))
 
     def _update_top_bar(self, data):
-        """Refresh filename, generation badge, coverage badge and status badge."""
+        """Refresh filename, generation badge and status badge."""
         meta = data.get("metadata", {})
         gen = meta.get("generation", "Unknown")
-        cov = meta.get("coverage_pct", 0)
         self.lbl_file.config(text=os.path.basename(self.current_file))
         self.lbl_gen.config(text=f"\u25cf {gen}",
                             foreground=GEN_COLORS.get(gen, GEN_COLORS["Unknown"]))
-        cov_color = "#2e7d32" if cov >= 100 else ("#f57c00" if cov >= 80 else "#c62828")
-        self.lbl_cov.config(text=f"Coverage: {cov:.0f}%", foreground=cov_color)
         self._update_status_badge(data)
 
     def _integrity_label(self, data):
@@ -956,16 +873,15 @@ class TachoExplorer(tk.Tk):
     # ── Tree construction ───────────────────────────────────
 
     def _add_section(self, parent, label, columns, rows, meta="", summary=False):
-        n = len(rows)
-        text = f"{label}  ({n})" if columns != ["Field", "Value"] else label
+        text = label
         iid = self.tree.insert(parent, tk.END, text=text)
         self._payloads[iid] = (label, columns, rows, meta, summary)
         return iid
 
     def _populate_tree(self, data):
-        """Rebuild the section tree from a results dict: Overview, identity,
-        grouped list sections (only those present in the file), activities
-        day hierarchy, security and raw tags."""
+        """Rebuild the section tree from the generations dict produced by
+        :func:`build_generations_tree`.  File info, driver/vehicle summary,
+        security and activities (day hierarchy) are handled separately."""
         self.tree.delete(*self.tree.get_children())
         self._payloads.clear()
         meta = data.get("metadata", {})
@@ -977,7 +893,6 @@ class TachoExplorer(tk.Tk):
             "Size": f"{meta.get('file_size_bytes', 0):,} bytes".replace(",", " "),
             "Origin": "Vehicle Unit (VU)" if is_vu else "Driver Card",
             "Generation": meta.get("generation", "?"),
-            "Coverage": f"{meta.get('coverage_pct', 0)}%",
             "Integrity": self._integrity_label(data),
             "Decoder failures": meta.get("decoder_failure_count", 0),
             "Parsed at": meta.get("parsed_at", ""),
@@ -1011,87 +926,61 @@ class TachoExplorer(tk.Tk):
             except Exception:
                 _log.debug("Vehicle section render failed: %s", traceback.format_exc())
 
-        # ── List groups ──
-        sections_by_group = {}
-
-        # Single-record dicts → Field/Value
-        _DICT_SECTIONS = [
-            ("card_issuer", "Card Issuer", "g1"),
-            ("card_application", "Card Application Info", "g1"),
-            ("sensor_info", "Sensor Identification", "g1"),
-            ("vu_info", "VU Identification & Sensor", "g1"),
-            ("vu_overview", "VU Overview", "g1"),
-            ("company_info", "Company Info", "g1"),
-        ]
-        for dk, dl, dg in _DICT_SECTIONS:
-            dv = data.get(dk) or {}
-            if isinstance(dv, dict) and dv:
-                cols, rows = _kv_rows(dv)
-                sections_by_group.setdefault(dg, []).append((dl, cols, rows))
-
-        # Convert calibration_vins set → list of {VIN: ...} for table display
-        cv = data.get("calibration_vins")
-        if isinstance(cv, set) and cv:
-            data["calibration_vins"] = [{"VIN": v} for v in sorted(cv)]
-
-        for key, label, group, tname in LIST_SECTIONS:
-            records = data.get(key) or []
-            if not records:
+        # ── Generations tree (single source of truth) ──
+        generations = data.get("generations", {})
+        for gen_name, gen_items in generations.items():
+            if gen_name == "Security":
+                continue  # handled by _populate_security
+            if not isinstance(gen_items, dict) or not gen_items:
                 continue
-            # Single-record dicts (like vu_identifications) → Field/Value
-            if key == "vu_identifications" and isinstance(records, list) and len(records) == 1:
-                cols, rows = _kv_rows(records[0])
-            else:
-                transformer = TRANSFORMERS.get(tname) if tname else None
-                cols, rows = _rows_for(records, transformer)
-            sections_by_group.setdefault(group, []).append((label, cols, rows))
 
-        # ── Filter VU-only sections for card files ──
-        actual_is_vu = meta.get("is_vu", False)
-        if not actual_is_vu:
-            for group_key in sections_by_group:
-                sections_by_group[group_key] = [
-                    (label, cols, rows)
-                    for label, cols, rows in sections_by_group[group_key]
-                    if label not in {
-                        "VU Identification & Sensor", "VU Overview", "Company Info",
-                        "VU Identification", "Sensor Pairing", "Sensor GNSS Coupling",
-                        "Card Insertion / Withdrawal", "Card Records",
-                        "Time Adjustments", "Company Locks", "Downloads",
-                        "Power Supply Interruptions", "Overspeeding Control",
-                        "ITS Consents", "Signed Daily Records", "Detailed Speed Blocks",
-                        "VU Record Array (raw)",
-                    }
-                ]
+            annex_map = {
+                "Generation 1": "Annex 1B",
+                "Generation 2": "Annex 1C",
+                "Generation 2.2": "Annex 1C \u00b7 2023/980",
+            }
+            annex = annex_map.get(gen_name, "")
+            annex_suffix = f"  [{annex}]" if annex else ""
+            gnode = self.tree.insert("", tk.END, text=f"\U0001f4e6  {gen_name}{annex_suffix}")
+            activities = None
 
-        # ── Activities: day hierarchy (G1 section) ──
-        activities = data.get("activities") or []
+            for item_name, item_data in gen_items.items():
+                if item_name == "_RawTags":
+                    continue
+                if item_name in ("DriverActivityData", "Daily Activities") and isinstance(item_data, list):
+                    activities = item_data
+                    continue
 
-        for group_key, group_label in GROUPS:
-            entries = sections_by_group.get(group_key, [])
-            # Add activities under G1
-            if group_key == "g1" and activities:
-                entries = list(entries)
-            # Skip empty groups
-            if not entries and not (group_key == "g1" and activities):
-                continue
-            gnode = self.tree.insert("", tk.END, text=group_label, open=False)
-            if group_key == "g1" and activities:
+                # Convert item to (cols, rows)
+                if isinstance(item_data, list) and item_data:
+                    if isinstance(item_data[0], dict):
+                        cols, rows = _rows_for(item_data, None)
+                    else:
+                        cols, rows = (["Value"], [[fmt_val(v)] for v in item_data])
+                elif isinstance(item_data, dict) and item_data:
+                    if item_name == "ECDSA Signature Verification":
+                        # certificate_temporal_validity has its own section
+                        item_data = {k: v for k, v in item_data.items()
+                                     if k != "certificate_temporal_validity"}
+                    cols, rows = _kv_rows(item_data)
+                else:
+                    continue
+
+                self._add_section(gnode, item_name, cols, rows)
+
+            if activities and gen_name == "Generation 1":
                 self._populate_activities(gnode, activities)
-            for label, cols, rows in entries:
-                self._add_section(gnode, label, cols, rows)
 
         # ── Security ──
         self._populate_security(data)
 
-
-        # ── Detected generations ──
-        gens = data.get("generations", {})
-        if gens:
-            flat = {g: ", ".join(v.keys()) if isinstance(v, dict) else str(v)
-                    for g, v in gens.items()}
-            cols, rows = _kv_rows(flat)
-            self._add_section("", "\U0001f4e6  Detected Generations", cols, rows)
+        # Security section from generations tree (EF verification)
+        sec = generations.get("Security") or {}
+        if isinstance(sec, dict):
+            for item_name, item_data in sec.items():
+                if isinstance(item_data, dict) and item_data:
+                    cols, rows = _kv_rows(item_data)
+                    self._add_section("", f"\U0001f510  {item_name}", cols, rows)
 
     def _populate_activities(self, parent, activities):
         """Create an expandable 'Activities' node with days as children."""
@@ -1146,9 +1035,7 @@ class TachoExplorer(tk.Tk):
         icc = data.get("card_icc") or {}
         if not sv and not efv and not certs and not cvc and not chip and not icc:
             return
-        gnode = self.tree.insert("", tk.END,
-                                 text="\U0001f510  Security & Certificates",
-                                 open=False)
+        gnode = self.tree.insert("", tk.END, text="\U0001f510  Security & Certificates")
         if efv:
             ef_summary = {
                 "Summary": efv.get("summary", ""),
@@ -1222,6 +1109,12 @@ class TachoExplorer(tk.Tk):
 
     def _show_summary(self, title, cols, rows, meta):
         """Render a rich info panel with section headers instead of a data table."""
+        if self.table._fit_after_id is not None:
+            self.table.tv.after_cancel(self.table._fit_after_id)
+            self.table._fit_after_id = None
+        if self.table._filter_after_id is not None:
+            self.table.tv.after_cancel(self.table._filter_after_id)
+            self.table._filter_after_id = None
         self.table.title_lbl.config(text=title)
         self.table.count_lbl.config(
             text=meta if meta else "")
@@ -1576,8 +1469,11 @@ def _smoke_check(path):
         _emit(f"SMOKE FAIL: parse raised\n{traceback.format_exc()}")
         return 1
     meta = result.get("metadata") or {}
-    if meta.get("parse_error"):
-        _emit(f"SMOKE FAIL: parse error {meta['parse_error']}")
+    parse_error = meta.get("parse_error")
+    if parse_error:
+        message = (parse_error.get("message", "Unknown parse error")
+                   if isinstance(parse_error, dict) else str(parse_error))
+        _emit(f"SMOKE FAIL: parse error {message}")
         return 1
     if not result.get("raw_tags"):
         _emit("SMOKE FAIL: no structures decoded")

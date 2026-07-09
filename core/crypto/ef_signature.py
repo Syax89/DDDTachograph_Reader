@@ -8,8 +8,9 @@ verified with the card public key extracted from the certificate chain.
 - G1: RSA PKCS#1 v1.5 with SHA-256 (128-byte signature)
 - G2: ECDSA with SHA-256 (64-byte signature for P-256)
 
-This module is called *after* the certificate chain has been validated, so the
-card public key is known and trusted.
+This module is called after certificate processing. A G2 CVC public key may be
+used for data-integrity verification even when that certificate chain could not
+be verified; the report keeps that trust limitation explicit.
 """
 import logging
 from typing import Any, Dict, List, Optional, Tuple
@@ -108,7 +109,7 @@ def verify_ef_pairs(pairs: List[Dict[str, Any]],
     *card_ec_public_key* is the G2 ECDSA public key (from CVC).
     *card_ec_hash* is the hash algorithm associated with the CVC curve.
     """
-    if card_public_key is None:
+    if card_public_key is None and card_ec_public_key is None:
         return {"summary": "No card public key available", "ef_results": [],
                 "verified": 0, "failed": 0, "total": 0}
 
@@ -120,6 +121,7 @@ def verify_ef_pairs(pairs: List[Dict[str, Any]],
     verified = 0
     failed = 0
     skipped = 0
+    used_cvc_key = False
 
     for pair in pairs:
         tag = pair["tag"]
@@ -139,19 +141,32 @@ def verify_ef_pairs(pairs: List[Dict[str, Any]],
             })
             continue
 
-        # G2 ECDSA verification requires an EC public key.
-        if algo == "ECDSA" and key_type == "RSA":
-            if card_ec_public_key is None:
+        # G2 ECDSA verification can fall back to a public key extracted from a
+        # raw CVC even if no RSA/G1 certificate-chain key was recovered.
+        if algo == "ECDSA":
+            if key_type == "EC":
+                verify_key = card_public_key
+            elif card_ec_public_key is not None:
+                verify_key = card_ec_public_key
+                used_cvc_key = True
+            else:
                 skipped += 1
                 results.append({
                     "tag": f"0x{tag:04X}", "gen": pair["gen"], "algo": algo,
                     "status": "skipped",
-                    "reason": "G2 EC key not available (G1 chain only, no CVC key)",
+                    "reason": "G2 EC key not available",
                     "data_size": len(data), "sig_size": len(sig),
                 })
                 continue
-            verify_key = card_ec_public_key
         else:
+            if card_public_key is None:
+                skipped += 1
+                results.append({
+                    "tag": f"0x{tag:04X}", "gen": pair["gen"], "algo": algo,
+                    "status": "skipped", "reason": "G1 RSA key not available",
+                    "data_size": len(data), "sig_size": len(sig),
+                })
+                continue
             verify_key = card_public_key
 
         # Verify using the appropriate algorithm.
@@ -197,6 +212,14 @@ def verify_ef_pairs(pairs: List[Dict[str, Any]],
     else:
         summary = f"{verified}/{total} EF signature(s) verified, {failed} FAILED"
 
+    key_trust = None
+    if used_cvc_key:
+        key_trust = (
+            "CVC public key extracted for G2 EF verification; EF signature "
+            "verification does not establish CVC certificate-chain trust"
+        )
+        summary = f"{summary}; {key_trust}"
+
     return {
         "summary": summary,
         "ef_results": results,
@@ -204,4 +227,5 @@ def verify_ef_pairs(pairs: List[Dict[str, Any]],
         "failed": failed,
         "skipped": skipped,
         "total": total,
+        "key_trust": key_trust,
     }

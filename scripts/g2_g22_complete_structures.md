@@ -220,111 +220,102 @@ Bit 5 del primo byte di tag = 1 indica tag costruito (CONSTRUCTED / container).
 
 ---
 
-## 6. G2.2 VU RecordArray Tags (0x0525-0x0533)
+## 6. G2.2 card EF tags and VU RecordArrays (0x0525-0x0533)
 
 ### ENCODING NOTE
-I tag **0x0525-0x052A** sono CONTAINER (il loro valore e' codificato BER-TLV, non RecordArray).
-I tag **0x052B-0x0533** sono RECORDARRAY (il loro valore inizia con header RecordArray a 5 byte).
+I tag card **0x0525-0x052A** sono payload EF, non container BER-TLV. Il parser
+non deve tentare una passeggiata TLV annidata sui loro valori. I tag 0x0525,
+0x0526 e 0x052A hanno un puntatore iniziale di due byte; 0x0527 usa il wrapper
+RecordArray e 0x0528 e' una sequenza piatta di record. `GeoCoordinates` e'
+un `Int24` firmato: latitudine e longitudine sono rispettivamente `+/-DDMM.M x10` e
+`+/-DDDMM.M x10`; `7FFFFF` indica una posizione sconosciuta.
+
+`VehicleRegistrationIdentificationRecordArray` usa invece il wrapper RecordArray
+verificato: `recordType(0x24) + recordSize(0x000F) + noOfRecords + records`.
+I tag VU **0x052B-0x0533** sono RecordArray nel flusso VU.
 
 ---
 
-### Tag 0x0525 — G22_GNSSAccumulatedDriving (CONTAINER)
+### Tag 0x0525 — G22_GNSSAccumulatedDriving
 - **Nome**: GNSSAccumulatedDriving
 - **Annex reference**: Annex 1C (amended 2021/1228) §§2.79, 2.79a, 2.79b
-- **Encoding**: BER-TLV container
-- **Contiene sub-record**: GNSSAccumulatedDrivingRecord
-- **Decoder**: `parse_g22_gnss_accumulated_driving` in `decoders.py:351`
-- **Stato**: ⚠️ EURISTICO (dimensione record: 16 byte — best estimate)
+- **Encoding**: `gnssADPointerNewestRecord(2) + N x 19-byte record`
+- **Decoder**: `parse_g22_gnss_accumulated_driving`
 
-**Struttura stimata del record interno** (GNSSAccumulatedDrivingRecord):
+**Struttura del record interno**:
 
 | Offset | Size | Nome | Tipo | Note |
 |--------|------|------|------|------|
 | 0 | 4 | timeStamp | TimeReal | |
-| 4 | 4 | latitude | Int32 | unit: 1/10 micro-degree (÷ 10^7) |
-| 8 | 4 | longitude | Int32 | unit: 1/10 micro-degree (÷ 10^7) |
-| 12 | 2 | speed | UInt16 | km/h |
-| 14 | 2 | heading | UInt16 | degrees |
-| **Totale** | **16** | | | |
+| 4 | 12 | gnssPlaceAuthRecord | timestamp + accuracy + GeoCoordinates(6) + auth | |
+| 16 | 3 | vehicleOdometerValue | OdometerShort | |
+| **Totale** | **19** | | | |
 
-**Certezza**: MEDIUM — ricostruito da codice euristivo + riferimenti normativi. La specifica 2021/1228 definisce GNSSAuthStatusADRecord con timeStamp(4) + authenticationStatus(1), e GNSSAccumulatedDrivingRecord con timeStamp(4) + gnssAccuracy(1) + geoCoordinates(8). I campi speed/heading sono aggiunte del codice.
+La vecchia descrizione `Int32 + Int32` e speed/heading era errata: Annex 1C §2.76
+definisce GeoCoordinates come due Int24, non micro-gradi Int32.
 
 ---
 
-### Tag 0x0526 — G22_LoadUnloadOperations (CONTAINER)
+### Tag 0x0526 — G22_LoadUnloadOperations
 - **Nome**: LoadUnloadOperations
-- **Annex reference**: Annex 1C (amended 2021/1228) §§2.208a, 2.208b
-- **Encoding**: BER-TLV container
-- **Contiene sub-record**: VuLoadUnloadRecord
-- **Decoder**: `parse_g22_load_unload_operations` in `decoders.py:378`
-- **Stato**: ⚠️ EURISTICO (dimensione record: 9 o 13 byte — best estimate)
+- **Annex reference**: Annex 1C (amended 2021/1228) §§2.24c, 2.24d
+- **Encoding**: `loadUnloadPointerNewestRecord(2) + N x 20-byte CardLoadUnloadRecord`
+- **Decoder**: `parse_g22_load_unload_operations`
 
-**Struttura stimata del record interno** (VuLoadUnloadRecord):
+**Struttura del record interno**:
 
 | Offset | Size | Nome | Tipo | Note |
 |--------|------|------|------|------|
 | 0 | 4 | timeStamp | TimeReal | |
-| 4 | 1 | operationType | UInt8 | 0=LOAD, 1=UNLOAD |
-| 5 | 4 | latitude | Int32 | Opzionale (solo se rec_size >= 13) |
-| 9 | 4 | longitude | Int32 | Opzionale (solo se rec_size >= 13) |
-| **Totale (min)** | **5** | | | |
-| **Totale (con GNSS)** | **13** | | | |
-
-**Certezza**: LOW — dimensioni stimate da pattern nel codice; la specifica 2021/1228 menziona VuLoadUnloadRecord/Array ma senza dimensioni esplicite.
-
----
-
-### Tag 0x0527 — G22_TrailerRegistrations (CONTAINER)
-- **Nome**: TrailerRegistrations — VehicleRegistrationIdentificationRecordArray
-- **Annex reference**: Annex 1C (amended 2021/1228) §2.166a
-- **Encoding**: BER-TLV container
-- **Contiene sub-record**: VehicleRegistrationIdentificationRecord
-- **Decoder**: `parse_g22_trailer_registrations` in `decoders.py:407`
-- **Stato**: ⚠️ EURISTICO (dimensione record: 20 o 24 byte — best estimate)
-
-**Struttura stimata del record interno**:
-
-| Offset | Size | Nome | Tipo | Note |
-|--------|------|------|------|------|
-| 0 | 4 | timeStamp | TimeReal | |
-| 4 | 1 | nation | NationNumeric | |
-| 5 | 14 | trailerRegistrationNumber | String(14) | Targa rimorchio |
-| 19 | 1 | couplingStatus | UInt8 | 0=Coupled, 1=Uncoupled |
+| 4 | 1 | operationType | UInt8 | 1=LOAD, 2=UNLOAD, 3=SIMULTANEOUS |
+| 5 | 12 | gnssPlaceAuthRecord | §2.79c | |
+| 17 | 3 | vehicleOdometerValue | OdometerShort | |
 | **Totale** | **20** | | | |
 
-**Certezza**: LOW — dimensione stimata dal codice euristivo. La specifica 2021/1228 inserisce VehicleRegistrationIdentificationRecordArray ma senza campi espliciti.
+Formato verificato dalla composizione dei campi normativi: `TimeReal(4) + operationType(1) + GNSSPlaceAuthRecord(12) + OdometerShort(3)`.
 
 ---
 
-### Tag 0x0528 — G22_GNSSEnhancedPlaces (CONTAINER)
+### Tag 0x0527 — G22_TrailerRegistrations
+- **Nome**: TrailerRegistrations — VehicleRegistrationIdentificationRecordArray
+- **Annex reference**: Annex 1C (amended 2021/1228) §2.166a
+- **Encoding**: RecordArray `0x24 + 0x000F + count + N x 15-byte record`
+- **Decoder**: `parse_g22_trailer_registrations`
+
+**Struttura del record interno**:
+
+| Offset | Size | Nome | Tipo | Note |
+|--------|------|------|------|------|
+| 0 | 1 | vehicleRegistrationNation | NationNumeric | |
+| 1 | 14 | vehicleRegistrationNumber | InternationalString{13} | |
+| **Totale** | **15** | | | |
+
+Il wrapper e la dimensione sono verificati: Annex 1C §2.166a definisce `recordType`, `recordSize`, `noOfRecords` e una serie di `VehicleRegistrationIdentification` (§2.166, 15 byte).
+
+---
+
+### Tag 0x0528 — G22_GNSSEnhancedPlaces
 - **Nome**: GNSSEnhancedPlaces / GNSSPlaceAuthRecord
 - **Annex reference**: Annex 1C (amended 2021/1228) §2.79c (GNSSPlaceAuthRecord)
-- **Encoding**: BER-TLV container
-- **Contiene sub-record**: GNSSPlaceAuthRecord
-- **Decoder**: `parse_g22_gnss_enhanced_places` in `decoders.py:434`
-- **Stato**: ⚠️ EURISTICO (dimensione record: 12, 14 o 16 byte — best estimate)
+- **Encoding**: `N x 12-byte GNSSPlaceAuthRecord`
+- **Decoder**: `parse_g22_gnss_enhanced_places`
 
-**Struttura stimata del record interno** (GNSSPlaceAuthRecord per specifica 2021/1228):
+**Struttura del record interno** (GNSSPlaceAuthRecord):
 
 | Offset | Size | Nome | Tipo | Note |
 |--------|------|------|------|------|
 | 0 | 4 | timeStamp | TimeReal | |
 | 4 | 1 | gnssAccuracy | UInt8 | |
-| 5 | 4 | latitude | Int32 | 1/10 micro-degree |
-| 9 | 4 | longitude | Int32 | 1/10 micro-degree |
-| 13 | 1 | authenticationStatus | UInt8 | |
-| **Totale** | **14** | | | Da specifica GNSSPlaceAuthRecord |
-
-Il codice aggiunge opzionalmente `place_type` e `nation` per un totale di 16 byte.
-
-**Certezza**: MEDIUM — la specifica 2021/1228 definisce GNSSPlaceAuthRecord con timeStamp(4) + gnssAccuracy(1) + geoCoordinates(8) + authenticationStatus(1) = 14 byte.
+| 5 | 6 | geoCoordinates | latitude Int24 + longitude Int24 | §2.76 |
+| 11 | 1 | authenticationStatus | UInt8 | |
+| **Totale** | **12** | | | |
 
 ---
 
-### Tag 0x0529 — G22_LoadSensorData (CONTAINER)
+### Tag 0x0529 — G22_LoadSensorData
 - **Nome**: LoadSensorData
 - **Annex reference**: Annex 1C (amended 2023/980) — LoadType, axle weights
-- **Encoding**: BER-TLV container
+- **Encoding**: payload EF piatto
 - **Contiene**: timestamp + pesi per asse (2 byte ciascuno)
 - **Decoder**: `parse_g22_load_sensor_data` in `decoders.py:463`
 - **Stato**: ⚠️ EURISTICO (struttura parzialmente nota)
@@ -339,27 +330,23 @@ Il codice aggiunge opzionalmente `place_type` e `nation` per un totale di 16 byt
 
 ---
 
-### Tag 0x052A — G22_BorderCrossings (CONTAINER)
-- **Nome**: BorderCrossings / VuBorderCrossingRecordArray
-- **Annex reference**: Annex 1C (amended 2021/1228) §§2.203a, 2.203b
-- **Encoding**: BER-TLV container
-- **Contiene sub-record**: VuBorderCrossingRecord
-- **Decoder**: `parse_g22_border_crossings` in `decoders.py:485`
-- **Stato**: ⚠️ EURISTICO (dimensione record: 10 o 14 byte — best estimate)
+### Tag 0x052A — G22_BorderCrossings
+- **Nome**: BorderCrossings / CardBorderCrossingRecord
+- **Annex reference**: Annex 1C (amended 2021/1228) §§2.11a, 2.11b
+- **Encoding**: `borderCrossingPointerNewestRecord(2) + N x 17-byte CardBorderCrossingRecord`
+- **Decoder**: `parse_g22_border_crossings`
 
-**Struttura stimata del record interno**:
+**Struttura del record interno**:
 
 | Offset | Size | Nome | Tipo | Note |
 |--------|------|------|------|------|
-| 0 | 4 | timeStamp | TimeReal | |
-| 4 | 1 | nationFrom | NationNumeric | |
-| 5 | 1 | nationTo | NationNumeric | |
-| 6 | 4 | latitude | Int32 | Opzionale |
-| 10 | 4 | longitude | Int32 | Opzionale |
-| **Totale (min)** | **6** | | | |
-| **Totale (con GNSS)** | **14** | | | |
+| 0 | 1 | countryLeft | NationNumeric | |
+| 1 | 1 | countryEntered | NationNumeric | |
+| 2 | 12 | gnssPlaceAuthRecord | §2.79c | |
+| 14 | 3 | vehicleOdometerValue | OdometerShort | |
+| **Totale** | **17** | | | |
 
-**Certezza**: LOW — dimensioni stimate dal codice euristivo. La specifica 2021/1228 inserisce VuBorderCrossingRecord/Array ma senza struttura esplicita.
+Formato verificato dalla composizione dei campi normativi: due `NationNumeric`, `GNSSPlaceAuthRecord(12)` e `OdometerShort(3)`.
 
 ---
 
@@ -589,12 +576,12 @@ Questi tag (0x0225-0x0228) rappresentano EF interni alla VU e sono anch'essi CON
 
 | Tag | Nome | Dimensione Record | Certezza | Decoder | Stato |
 |-----|------|-------------------|----------|---------|-------|
-| 0x0525 | GNSSAccumulatedDriving | 16 (stima) | MEDIUM | `parse_g22_gnss_accumulated_driving` | ⚠️ Euristico |
-| 0x0526 | LoadUnloadOperations | 9-13 (stima) | LOW | `parse_g22_load_unload_operations` | ⚠️ Euristico |
-| 0x0527 | TrailerRegistrations | 20-24 (stima) | LOW | `parse_g22_trailer_registrations` | ⚠️ Euristico |
-| 0x0528 | GNSSEnhancedPlaces | 14 (da spec) | MEDIUM | `parse_g22_gnss_enhanced_places` | ⚠️ Euristico |
+| 0x0525 | GNSSAccumulatedDriving | pointer(2) + 19 | HIGH | `parse_g22_gnss_accumulated_driving` | ✅ |
+| 0x0526 | LoadUnloadOperations | 20 | HIGH | `parse_g22_load_unload_operations` | ✅ |
+| 0x0527 | TrailerRegistrations | RecordArray, 15 | HIGH | `parse_g22_trailer_registrations` | ✅ |
+| 0x0528 | GNSSEnhancedPlaces | 12 | HIGH | `parse_g22_gnss_enhanced_places` | ✅ |
 | 0x0529 | LoadSensorData | Variabile | LOW | `parse_g22_load_sensor_data` | ⚠️ Euristico |
-| 0x052A | BorderCrossings | 10-14 (stima) | LOW | `parse_g22_border_crossings` | ⚠️ Euristico |
+| 0x052A | BorderCrossings | 17 | HIGH | `parse_g22_border_crossings` | ✅ |
 | 0x052B | VuControllerIdentification | Variabile | MEDIUM | `parse_g22_controller_identification` | ⚠️ Parziale |
 | 0x052C | VuDetailedSpeedData | 64 | HIGH | Nessuno | ❌ Assente |
 | 0x052D | VuOverSpeedingEventData | 33 (stima) | MEDIUM | Nessuno | ❌ Assente |

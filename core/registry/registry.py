@@ -5,7 +5,7 @@ All known tag definitions consolidated in one place for deterministic dispatch.
 """
 
 from dataclasses import dataclass
-from typing import Optional, Callable, Dict, List, Tuple
+from typing import Optional, Callable, Dict, List, Tuple, Union
 import threading
 
 
@@ -17,7 +17,8 @@ class TagDecoder:
     container: bool = False
     min_length: int = 0
     max_length: int = 0x100000
-    record_size: Optional[int] = None
+    record_size: Optional[Union[int, Tuple[int, ...]]] = None
+    record_layout: str = "flexible"
     annex_ref: str = ""
     generation: str = "all"
     card_only: bool = False
@@ -211,45 +212,45 @@ class DecoderRegistry:
                        min_length=12, record_size=10),
 
             TagDecoder(0x0524, "G2_GNSSPlaces",
-                       decoders.parse_card_gnss_places,
-                       annex_ref="Annex 1C §2.78", generation="G2", card_only=True,
-                       min_length=20, record_size=18),
+                        decoders.parse_card_gnss_places,
+                        annex_ref="Annex 1C §2.78", generation="G2", card_only=True,
+                        min_length=20, record_size=(18, 19)),
 
             TagDecoder(0x0206, "VU_ActivityDailyRecord",
                         decoders.parse_cyclic_buffer_activities,
                         annex_ref="Annex 1C", generation="G2",
                         min_length=100),
 
-            # ── G2.2 GNSS / Load / Trailer tags ──
+            # ── G2.2 card EF payloads (flat records, not BER containers) ──
             TagDecoder(0x0525, "G22_GNSSAccumulatedDriving",
-                       decoders.parse_g22_gnss_accumulated_driving,
-                       annex_ref="Reg. EU 2021/1228", generation="G2.2",
-                       min_length=12, container=True),
+                        decoders.parse_g22_gnss_accumulated_driving,
+                        annex_ref="Reg. EU 2021/1228", generation="G2.2",
+                        card_only=True, min_length=21, record_size=19, record_layout="pointer"),
 
             TagDecoder(0x0526, "G22_LoadUnloadOperations",
-                        decoders.parse_g22_load_unload_operations,
-                        annex_ref="Annex 1C §2.208a", generation="G2.2",
-                        min_length=13, container=True),
+                          decoders.parse_g22_load_unload_operations,
+                          annex_ref="Annex 1C §§2.24c-2.24d", generation="G2.2",
+                          card_only=True, min_length=22, record_size=20, record_layout="pointer"),
 
             TagDecoder(0x0527, "G22_TrailerRegistrations",
-                        decoders.parse_g22_trailer_registrations,
-                        annex_ref="Annex 1C §2.166a", generation="G2.2",
-                        min_length=20, container=True),
+                         decoders.parse_g22_trailer_registrations,
+                         annex_ref="Annex 1C §2.166a", generation="G2.2",
+                         card_only=True, min_length=5, record_size=15, record_layout="record_array"),
 
             TagDecoder(0x0528, "G22_GNSSEnhancedPlaces",
-                       decoders.parse_g22_gnss_enhanced_places,
-                       annex_ref="Annex 1C §2.79c", generation="G2.2",
-                       min_length=14, container=True),
+                        decoders.parse_g22_gnss_enhanced_places,
+                        annex_ref="Annex 1C §2.79c", generation="G2.2",
+                        card_only=True, min_length=12, record_size=12, record_layout="flat"),
 
             TagDecoder(0x0529, "G22_LoadSensorData",
-                       decoders.parse_g22_load_sensor_data,
-                       annex_ref="Reg. EU 2023/980", generation="G2.2",
-                       min_length=8, container=True),
+                        decoders.parse_g22_load_sensor_data,
+                        annex_ref="Reg. EU 2023/980", generation="G2.2",
+                        card_only=True, min_length=8),
 
             TagDecoder(0x052A, "G22_BorderCrossings",
-                       decoders.parse_g22_border_crossings,
-                        annex_ref="Annex 1C §2.203a", generation="G2.2",
-                       min_length=14, container=True),
+                        decoders.parse_g22_border_crossings,
+                          annex_ref="Annex 1C §§2.11a-2.11b", generation="G2.2",
+                         card_only=True, min_length=19, record_size=17, record_layout="pointer"),
 
             TagDecoder(0x0225, "G22_VU_GNSSADRecord",
                        decoders.parse_g22_gnss_accumulated_driving,

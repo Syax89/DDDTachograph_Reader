@@ -22,6 +22,7 @@ Empirically confirmed on the real files in ``DDD/``:
 from cryptography.hazmat.primitives.asymmetric import ec, utils
 from cryptography.hazmat.primitives import hashes
 from cryptography.exceptions import InvalidSignature
+import datetime
 
 from core.utils.logger import get_logger
 from core.parser.vu_dispatcher import iter_vu_sections, TREP_SECTIONS
@@ -46,58 +47,114 @@ _CERT_RECORD_TYPES = (0x04, 0x0F)
 _SIGNATURE_RECORD = 0x08
 
 
-def _tlv(data):
-    """Parse one BER-TLV level into {tag: value}. Handles 1–2 byte tags and
-    multi-byte lengths."""
-    out = {}
-    i = 0
-    n = len(data)
-    while i < n:
-        tag = data[i]
-        tag_len = 2 if (tag & 0x1F) == 0x1F else 1
-        if tag_len == 2:
-            tag = (data[i] << 8) | data[i + 1]
-        length = data[i + tag_len]
-        len_len = 1
-        if length & 0x80:
-            nb = length & 0x7F
-            if nb == 0:
-                return out
-            length = int.from_bytes(data[i + tag_len + 1:i + tag_len + 1 + nb], "big")
-            len_len = 1 + nb
-        start = i + tag_len + len_len
-        out[tag] = data[start:start + length]
-        i = start + length
-    return out
+def _parse_tlvs(data):
+    """Parse one definite-length BER-TLV level with encoded element offsets.
+
+    ``None`` denotes malformed or truncated input. CVC signatures cover encoded
+    elements, so callers need the original element boundaries rather than only
+    the decoded values.
+    """
+    elements = []
+    offset = 0
+    length = len(data)
+    while offset < length:
+        element_start = offset
+        first_tag_byte = data[offset]
+        offset += 1
+        if first_tag_byte & 0x1F == 0x1F:
+            while True:
+                if offset >= length:
+                    return None
+                tag_byte = data[offset]
+                offset += 1
+                if not tag_byte & 0x80:
+                    break
+
+        tag_end = offset
+        if offset >= length:
+            return None
+        first_length_byte = data[offset]
+        offset += 1
+        if first_length_byte & 0x80:
+            length_size = first_length_byte & 0x7F
+            if length_size == 0 or offset + length_size > length:
+                return None
+            value_length = int.from_bytes(data[offset:offset + length_size], "big")
+            offset += length_size
+        else:
+            value_length = first_length_byte
+
+        value_start = offset
+        value_end = value_start + value_length
+        if value_end > length:
+            return None
+        elements.append({
+            "tag": int.from_bytes(data[element_start:tag_end], "big"),
+            "value": data[value_start:value_end],
+            "element_start": element_start,
+            "element_end": value_end,
+        })
+        offset = value_end
+    return elements
+
+
+def _tlv_value(elements, tag):
+    """Return the value of the first parsed element with ``tag``."""
+    if elements is None:
+        return None
+    for element in elements:
+        if element["tag"] == tag:
+            return element["value"]
+    return None
+
+
+def _tlv_element(elements, tag):
+    """Return the first parsed element with ``tag``."""
+    if elements is None:
+        return None
+    for element in elements:
+        if element["tag"] == tag:
+            return element
+    return None
 
 
 def parse_cvc(cert_bytes):
     """Parse a CVC certificate (0x7F21). Returns a dict with car, chr, curve_oid,
     public_point, signature, body_tlv (the 0x7F4E TLV that the signature covers)."""
-    outer = _tlv(cert_bytes)
-    inner = outer.get(0x7F21)
-    if inner is None:
+    try:
+        cert_data = bytes(cert_bytes)
+    except (TypeError, ValueError):
         return None
-    body_and_sig = _tlv(inner)
-    body = body_and_sig.get(0x7F4E)
-    sig = body_and_sig.get(0x5F37)
-    if body is None or sig is None:
+
+    outer = _parse_tlvs(cert_data)
+    outer_cert = _tlv_element(outer, 0x7F21)
+    if outer_cert is None:
         return None
-    fields = _tlv(body)
-    pk = _tlv(fields.get(0x7F49, b""))
-    # The signature input is the encoded body TLV (tag+len+value), i.e. the slice
-    # of ``inner`` from the 0x7F4E tag up to the 0x5F37 signature tag.
-    bstart = inner.find(b"\x7f\x4e")
-    sstart = inner.find(b"\x5f\x37", bstart)
-    body_tlv = inner[bstart:sstart] if bstart >= 0 and sstart > bstart else None
+    inner = outer_cert["value"]
+    body_and_signature = _parse_tlvs(inner)
+    body_element = _tlv_element(body_and_signature, 0x7F4E)
+    signature_element = _tlv_element(body_and_signature, 0x5F37)
+    if body_element is None or signature_element is None or \
+            signature_element["element_start"] <= body_element["element_start"]:
+        return None
+
+    fields = _parse_tlvs(body_element["value"])
+    public_key_template = _tlv_value(fields, 0x7F49)
+    public_key_fields = _parse_tlvs(public_key_template) if public_key_template is not None else []
+    if fields is None or public_key_fields is None:
+        return None
+
+    # The signature covers the encoded 0x7F4E body and any elements before the
+    # 0x5F37 signature. Parsed offsets avoid mistaking marker-like key bytes for tags.
+    body_tlv = inner[body_element["element_start"]:signature_element["element_start"]]
     return {
-        "car": fields.get(0x42, b"").hex(),
-        "chr": fields.get(0x5F20, b"").hex(),
-        "curve_oid": pk.get(0x06, b"").hex(),
-        "public_point": pk.get(0x86),
-        "effective_date": fields.get(0x5F25, b"").hex(),
-        "expiration_date": fields.get(0x5F24, b"").hex(),
-        "signature": sig,
+        "car": (_tlv_value(fields, 0x42) or b"").hex(),
+        "chr": (_tlv_value(fields, 0x5F20) or b"").hex(),
+        "curve_oid": (_tlv_value(public_key_fields, 0x06) or b"").hex(),
+        "public_point": _tlv_value(public_key_fields, 0x86),
+        "effective_date": (_tlv_value(fields, 0x5F25) or b"").hex(),
+        "expiration_date": (_tlv_value(fields, 0x5F24) or b"").hex(),
+        "signature": signature_element["value"],
         "body_tlv": body_tlv,
     }
 
@@ -148,15 +205,49 @@ def _cvc_date(hex_str):
     Returns ISO 'YYYY-MM-DD' or '' if unparseable."""
     if not hex_str:
         return ""
+    date = _cvc_datetime(hex_str)
+    return date.strftime("%Y-%m-%d") if date else ""
+
+
+def _cvc_datetime(hex_str):
+    """Decode a CVC TimeReal value to an aware UTC datetime."""
+    if not hex_str:
+        return None
     try:
-        import datetime
         secs = int(hex_str, 16)
         if not (0 < secs < 0xFFFFFFFF):
-            return ""
-        return datetime.datetime.fromtimestamp(
-            secs, datetime.timezone.utc).strftime("%Y-%m-%d")
+            return None
+        return datetime.datetime.fromtimestamp(secs, datetime.timezone.utc)
     except (ValueError, OverflowError, OSError):
-        return ""
+        return None
+
+
+def cvc_temporal_status(parsed, verification_time=None):
+    """Describe CVC validity at an explicit time without affecting its signature.
+
+    No time means ``not_checked`` rather than the machine's current time, so an
+    expired certificate remains useful evidence for a historical download.
+    """
+    valid_from = _cvc_datetime((parsed or {}).get("effective_date"))
+    valid_to = _cvc_datetime((parsed or {}).get("expiration_date"))
+    result = {
+        "status": "not_checked" if valid_from and valid_to else "unavailable",
+        "valid_from": valid_from.isoformat() if valid_from else "",
+        "valid_to": valid_to.isoformat() if valid_to else "",
+    }
+    if verification_time is None or not valid_from or not valid_to:
+        return result
+    if verification_time.tzinfo is None:
+        verification_time = verification_time.replace(tzinfo=datetime.timezone.utc)
+    else:
+        verification_time = verification_time.astimezone(datetime.timezone.utc)
+    if verification_time < valid_from:
+        result["status"] = "not_yet_valid"
+    elif verification_time > valid_to:
+        result["status"] = "expired"
+    else:
+        result["status"] = "valid"
+    return result
 
 
 def decode_vu_certificates(raw_data):
@@ -193,7 +284,7 @@ def decode_vu_certificates(raw_data):
     return out
 
 
-def verify_vu_download(raw_data, erca_keys=None):
+def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
     """Verify the cryptographic integrity of a Gen2/Gen2.2 VU download.
 
     Returns a report dict:
@@ -201,14 +292,19 @@ def verify_vu_download(raw_data, erca_keys=None):
         "available": bool,
         "msca_to_vu": bool,          # VU cert signed by MSCA
         "root_anchored": bool,       # MSCA cert verified against an ERCA root key
-        "treps": [{"trep", "section", "signature_valid"}],
-        "all_treps_valid": bool,
-        "summary": str,
-      }
+         "treps": [{"trep", "section", "signature_valid"}],
+         "all_treps_valid": bool,
+         "certificate_temporal_validity": {"msca": ..., "vu": ...},
+         "summary": str,
+       }
+
+    Certificate dates are reported at ``verification_time`` when supplied;
+    they never alter the cryptographic chain-link or TREP signature results.
     """
     data = bytes(raw_data)
     report = {"available": False, "msca_to_vu": False, "root_anchored": False,
-              "treps": [], "all_treps_valid": False, "summary": ""}
+               "treps": [], "all_treps_valid": False, "summary": "",
+               "certificate_temporal_validity": {}}
     try:
         sections = list(iter_vu_sections(data))
         if not sections:
@@ -232,12 +328,16 @@ def verify_vu_download(raw_data, erca_keys=None):
         if vu is None:
             report["summary"] = "VU certificate (0x0F) parsing failed"
             return report
+        report["certificate_temporal_validity"]["vu"] = cvc_temporal_status(
+            vu, verification_time)
         vu_pub, vu_hash = cvc_public_key(vu)
 
         # MSCA → VU chain link.
         if msca_raw:
             msca = parse_cvc(msca_raw)
             if msca is not None:
+                report["certificate_temporal_validity"]["msca"] = cvc_temporal_status(
+                    msca, verification_time)
                 msca_pub, msca_hash = cvc_public_key(msca)
                 report["msca_to_vu"] = verify_cvc_chain_link(vu, msca_pub, msca_hash)
                 # Optional root anchor: verify the MSCA cert against a supplied

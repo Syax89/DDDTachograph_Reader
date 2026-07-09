@@ -24,11 +24,17 @@ def _g2_vu_files():
             yield name, data
 
 
+def _require_g2_vu_files():
+    files = list(_g2_vu_files())
+    if not files:
+        raise unittest.SkipTest("No private Gen2/Gen2.2 VU fixture available")
+    return files
+
+
 @requires_real_files
 class TestVuSignatures(unittest.TestCase):
     def test_real_files_fully_verified(self):
-        files = list(_g2_vu_files())
-        self.assertTrue(files, "expected at least one Gen2 VU file")
+        files = _require_g2_vu_files()
         for name, data in files:
             with self.subTest(file=name):
                 rep = verify_vu_download(data)
@@ -40,7 +46,7 @@ class TestVuSignatures(unittest.TestCase):
 
     def test_tampering_is_detected(self):
         from core.parser.vu_dispatcher import iter_vu_sections
-        name, data = next(_g2_vu_files())
+        name, data = _require_g2_vu_files()[0]
 
         # Flip a byte inside the payload of the first signed data record, so it
         # falls squarely within a signature's covered region.
@@ -60,7 +66,7 @@ class TestVuSignatures(unittest.TestCase):
                          "a flipped data byte must invalidate at least one signature")
 
     def test_parser_exposes_verification(self):
-        name, _ = next(_g2_vu_files())
+        name, _ = _require_g2_vu_files()[0]
         r = TachoParser(os.path.join(DDD_DIR, name)).parse()
         sv = r.get("signature_verification")
         self.assertIsNotNone(sv)
@@ -68,13 +74,13 @@ class TestVuSignatures(unittest.TestCase):
         self.assertTrue(sv["all_treps_valid"])
 
     def test_cvc_parser_extracts_fields(self):
-        _, data = next(_g2_vu_files())
+        _, data = _require_g2_vu_files()[0]
         # The Overview's VU certificate (0x0F) must parse into a CVC structure.
         rep = verify_vu_download(data)
         self.assertTrue(rep["available"])
 
     def test_cvc_certificates_decoded(self):
-        for name, data in _g2_vu_files():
+        for name, data in _require_g2_vu_files():
             with self.subTest(file=name):
                 certs = decode_vu_certificates(data)
                 self.assertTrue(certs, "expected at least one decoded CVC cert")

@@ -106,12 +106,14 @@ def decode_datef(data):
 def decode_activity_val(val):
     """Decode 2-byte ActivityChangeInfo (Annex 1B §2.1): 'scpaattttttttttt' —
     s=slot, c=crew status, p=card status (1 = card not inserted), aa=activity,
-    t=minutes since midnight."""
+    t=minutes since midnight. Returns None for an invalid minute value."""
     slot = (val >> 15) & 1
     driving_status = (val >> 14) & 1 # 0=Single, 1=Crew
     card_not_inserted = (val >> 13) & 1
     act_code = (val >> 11) & 3
     mins = val & 0x07FF
+    if mins > 1439:
+        return None
     acts = {0: "REST", 1: "AVAILABLE", 2: "WORK", 3: "DRIVE"}
     return {
         "activity": acts.get(act_code, "UNKNOWN"),
@@ -180,7 +182,9 @@ def parse_cyclic_buffer_activities(val, results):
                                 break
                             ev_val = struct.unpack(">H", act_data[i:i+2])[0]
                             if ev_val != 0xFFFF: # Fix Midnight Bug (allow 0)
-                                daily["changes"].append(decode_activity_val(ev_val))
+                                activity = decode_activity_val(ev_val)
+                                if activity is not None:
+                                    daily["changes"].append(activity)
 
                     if daily["changes"]:
                         results["activities"].append(daily)

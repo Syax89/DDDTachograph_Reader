@@ -3,7 +3,7 @@
 ## Windows
 
 1. Go to the [GitHub Releases page](https://github.com/Syax89/ddd-tachograph-reader/releases/latest).
-2. Download **`TachoReader-Windows.zip`**.
+2. Download **`TachoReader-v<version>-windows-x64.zip`**.
 3. Extract the ZIP file to a folder of your choice.
 4. Double-click **`TachoReader.exe`** to launch.
 
@@ -12,8 +12,8 @@
 ## macOS
 
 1. Go to the [GitHub Releases page](https://github.com/Syax89/ddd-tachograph-reader/releases/latest).
-2. Download **`TachoReader-Mac.zip`**.
-3. Extract the ZIP file.
+2. Download **`TachoReader-v<version>-macos.dmg`**.
+3. Open the disk image and drag `TachoReader.app` to Applications.
 4. **Right-click** the `TachoReader` app and select **Open** (this bypasses Gatekeeper on first run).
 5. If prompted, confirm you want to open the application.
 
@@ -41,7 +41,7 @@ pip install -r requirements.txt
 
 The GUI uses Python's built-in `tkinter` — no extra GUI package is required. Parsing itself has **no third-party dependencies**: `cryptography`, `reportlab`, and `openpyxl` are only needed for signature verification and PDF/Excel export.
 
-**Python 3.9 or later is required.**
+**Python 3.10 or later is required.**
 
 ### Launching
 

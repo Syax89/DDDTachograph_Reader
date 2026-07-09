@@ -63,6 +63,13 @@ Examples:
             traceback.print_exc()
         sys.exit(1)
 
+    parse_error = (result.get("metadata") or {}).get("parse_error")
+    if parse_error:
+        message = (parse_error.get("message", "Unknown parse error")
+                   if isinstance(parse_error, dict) else str(parse_error))
+        print(f"❌ Parsing error: {message}", file=sys.stderr)
+        sys.exit(1)
+
     # Auto-generate output basename
     basename = os.path.splitext(os.path.basename(args.file))[0]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -148,7 +155,6 @@ Examples:
         for fmt, path in generated:
             size = os.path.getsize(path)
             print(f"   {fmt}: {path} ({format_size(size)})")
-
 
 def print_summary(data):
     """Prints a compact summary to screen."""

@@ -133,7 +133,7 @@ else:
     dec.decoder_fn(payload, self.results)
 ```
 
-Individual record parsers live in `core/decoders/g2_dispatch.py`.
+Individual record parsers live in `core/parser/vu_dispatcher.py`, dispatched through `core/decoders/vu_g2.py`.
 
 ## Container Recursion
 

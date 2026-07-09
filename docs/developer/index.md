@@ -33,30 +33,31 @@ Cross-platform (Windows/macOS) application for parsing, analyzing and visualizin
 
 ```
 ddd-tachograph-reader/
-├── core/                    # Core parsing engine
-│   ├── decoders.py          # Facade re-exporting all field decoders
-│   ├── decode_primitives.py # Shared low-level decode helpers
-│   ├── card_decoders.py     # Card EF decoders (G1/G2)
-│   ├── g22_card_decoders.py # Gen 2.2 card decoders
-│   ├── cert_decoders.py     # Certificate / public-key decoders
-│   ├── vu_trep_decoders.py  # VU overview + TREP walkers
-│   ├── g2_decoders.py       # G2/G2.2 VU record decoders
-│   ├── decoder_registry.py  # Centralized tag -> decoder mapping
-│   ├── deterministic_parser.py  # Deterministic full-coverage parser
-│   ├── models.py            # TachoResult data hierarchy
-│   ├── tag_definitions.py   # Default tag name dictionary
-│   ├── record_array.py      # RecordArray (Appendix 7) format
-│   ├── vu_record_dispatcher.py # VU stream dispatcher
-│   ├── vu_signature_verifier.py # VU ECDSA verification
-│   ├── constants.py         # Shared constant definitions
-│   └── logger.py            # Shared logging
-├── app/engine.py            # Main TachoParser entry point
-├── core/crypto/signature.py   # Certificate chain validation
-├── app/export.py        # Excel/CSV export
-├── app/gui.py              # Desktop GUI (tkinter: tree + Excel-style table)
-├── app/cli.py             # CLI interface
-├── app/main.py                  # Legacy CLI
-├── scripts/                   # Specification documentation
-├── tests/                   # Test suite (>150 tests)
-└── DDD/                     # Sample DDD files
+├── core/                        # Core parsing engine
+│   ├── decoders/                # Field-level decoders (facade + type-split modules)
+│   │   ├── __init__.py          # Facade re-exporting the public decoder API
+│   │   ├── common.py            # Shared low-level decode helpers
+│   │   ├── card_ef.py           # Card EF decoders (multi-generation)
+│   │   ├── card_g22.py          # Gen 2.2 card decoders
+│   │   ├── cert.py              # Certificate / public-key decoders
+│   │   ├── vu_g1.py             # G1 VU overview + TREP walkers
+│   │   └── vu_g2.py             # G2/G2.2 VU RecordArray dispatch
+│   ├── parser/                  # Structural walkers
+│   │   ├── deterministic.py     # Deterministic full-coverage parser
+│   │   ├── record_array.py      # RecordArray (Appendix 7) format
+│   │   ├── g1_walker.py         # G1 VU stream walker
+│   │   └── vu_dispatcher.py     # G2/G2.2 VU record decoders
+│   ├── registry/                # Tag → decoder mapping + models
+│   │   ├── registry.py          # Centralized DecoderRegistry
+│   │   └── models.py            # TachoResult data hierarchy
+│   ├── crypto/                  # Signature / certificate-chain validation
+│   └── utils/                   # Constants, logging, BER-TLV, coverage, tag defs
+├── app/engine.py                # Main TachoParser entry point
+├── app/export.py                # Excel/CSV/PDF export
+├── app/gui.py                   # Desktop GUI (tkinter: tree + Excel-style table)
+├── app/cli.py                   # CLI interface
+├── app/main.py                  # Compatibility CLI entry point
+├── scripts/                     # Specification documentation + audits
+├── tests/                       # Test suite
+└── DDD/                         # Optional private sample DDD files (not committed)
 ```

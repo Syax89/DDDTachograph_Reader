@@ -91,238 +91,342 @@ class TachoResult:
         return result
 
 
-def build_generations_tree(results: Dict[str, Any], tags: Dict[int, str]) -> Dict[str, Any]:
-    """Build hierarchical view of decoded data grouped by generation and clean tag name."""
-    gen1 = {}   # Generation 1
-    gen2 = {}   # Generation 2
-    gen22 = {}  # Generation 2.2
+def _tag_name(tag_id: int, tags: Dict[int, str], fallback: str) -> str:
+    """Look up a clean display name for *tag_id*, falling back to *fallback*."""
+    return _clean_tag_name(tags.get(tag_id, fallback))
 
-    driver = results.get("driver", {})
-    vehicle = results.get("vehicle", {})
-    events = results.get("events", [])
-    faults = results.get("faults", [])
-    activities = results.get("activities", [])
-    vehicle_sessions = results.get("vehicle_sessions", [])
-    places = results.get("places", [])
-    calibrations = results.get("calibrations", [])
-    card_icc = results.get("card_icc", {})
-    raw_tags = results.get("raw_tags", {})
 
-    # ── Tag 0x0501: DriverCardApplicationIdentification ──
-    card_app = results.get("card_application", {})
-    if card_app:
-        gen1[_clean_tag_name(tags.get(0x0501, "ApplicationIdentification"))] = card_app
+def _driver_card_id(driver: Dict[str, Any]) -> Dict[str, Any]:
+    """G1 Identification (0x0520) fields from driver dict."""
+    return {
+        "issuing_nation": driver.get("issuing_nation", "N/A"),
+        "card_number": driver.get("card_number", "N/A"),
+        "expiry_date": driver.get("expiry_date", "N/A"),
+        "surname": driver.get("surname", "N/A"),
+        "firstname": driver.get("firstname", "N/A"),
+        "birth_date": driver.get("birth_date", "N/A"),
+        "preferred_language": driver.get("preferred_language", "N/A"),
+    }
 
-    # ── Tag 0x0502: EventsData ──
-    if events:
-        gen1[_clean_tag_name(tags.get(0x0502, "EventsData"))] = events
 
-    # ── Tag 0x0503: FaultsData ──
-    if faults:
-        gen1[_clean_tag_name(tags.get(0x0503, "FaultsData"))] = faults
+def _driver_licence(driver: Dict[str, Any]) -> Dict[str, Any]:
+    """G1 DrivingLicenceInfo (0x0521) fields from driver dict."""
+    return {
+        "licence_number": driver.get("licence_number", "N/A"),
+        "licence_issuing_nation": driver.get("licence_issuing_nation", "N/A"),
+    }
 
-    # ── Tag 0x0504: DriverActivityData ──
-    if activities:
-        gen1[_clean_tag_name(tags.get(0x0504, "DriverActivityData"))] = activities
 
-    # ── Tag 0x0505: VehiclesUsed (G1) ──
-    if vehicle_sessions:
-        gen1[_clean_tag_name(tags.get(0x0505, "VehiclesUsed"))] = vehicle_sessions
+def _g2_card_id(driver: Dict[str, Any]) -> Dict[str, Any]:
+    """G2 CardIdentification (0x0102) fields from driver dict."""
+    return {
+        "card_number": driver.get("card_number", "N/A"),
+        "issuing_nation": driver.get("issuing_nation", "N/A"),
+        "expiry_date": driver.get("expiry_date", "N/A"),
+    }
 
-    # ── Tag 0x0506: Places ──
-    if places:
-        gen1[_clean_tag_name(tags.get(0x0506, "Places"))] = places
 
-    # ── Tag 0x0507: CurrentUsage ──
-    plate = vehicle.get("plate", "N/A")
-    if plate != "N/A":
-        gen1[_clean_tag_name(tags.get(0x0507, "CurrentUsage"))] = [{
-            "plate": plate,
-            "registration_nation": vehicle.get("registration_nation", "N/A"),
-        }]
+def _g2_driver_holder(driver: Dict[str, Any]) -> Dict[str, Any]:
+    """G2 DriverCardHolderIdentification (0x0201) fields from driver dict."""
+    return {
+        "surname": driver.get("surname", "N/A"),
+        "firstname": driver.get("firstname", "N/A"),
+        "birth_date": driver.get("birth_date", "N/A"),
+        "preferred_language": driver.get("preferred_language", "N/A"),
+    }
 
-    # ── Tag 0x050C: CalibrationData ──
-    if calibrations:
-        gen1[_clean_tag_name(tags.get(0x050C, "CalibrationData"))] = calibrations
 
-    # ── Tag 0x0520: Identification ──
-    card_number = driver.get("card_number", "N/A")
-    if card_number != "N/A":
-        gen1[_clean_tag_name(tags.get(0x0520, "Identification"))] = {
-            "issuing_nation": driver.get("issuing_nation", "N/A"),
-            "card_number": card_number,
-            "expiry_date": driver.get("expiry_date", "N/A"),
-            "surname": driver.get("surname", "N/A"),
-            "firstname": driver.get("firstname", "N/A"),
-            "birth_date": driver.get("birth_date", "N/A"),
-            "preferred_language": driver.get("preferred_language", "N/A"),
-        }
+def _vehicle_id(vehicle: Dict[str, Any]) -> Dict[str, Any]:
+    """VehicleIdentification (0x0001) fields."""
+    return {
+        "vin": vehicle.get("vin", "N/A"),
+        "plate": vehicle.get("plate", "N/A"),
+        "registration_nation": vehicle.get("registration_nation", "N/A"),
+    }
 
-    # ── Tag 0x0521: DrivingLicenceInfo ──
-    lic_num = driver.get("licence_number", "N/A")
-    if lic_num != "N/A":
-        gen1[_clean_tag_name(tags.get(0x0521, "DrivingLicenceInfo"))] = {
-            "licence_number": lic_num,
-            "licence_issuing_nation": driver.get("licence_issuing_nation", "N/A"),
-        }
 
-    # ── Tag 0x0002/0x0005: EF_ICC/EF_IC (Card chip) ──
-    chip = results.get("card_chip", {})
-    if chip:
-        gen1["ICC_ChipIdentification"] = chip
+def _current_usage(vehicle: Dict[str, Any]) -> list:
+    """CurrentUsage (0x0507) as a single-entry list for table rendering."""
+    return [{
+        "plate": vehicle.get("plate", "N/A"),
+        "registration_nation": vehicle.get("registration_nation", "N/A"),
+    }]
 
-    # ── Tag 0x050E: CardDownload ──
-    downloads = results.get("card_downloads", [])
-    if downloads:
-        gen1[_clean_tag_name(tags.get(0x050E, "CardDownload"))] = downloads
 
-    # ── Tag 0x0508: ControlActivityData ──
-    controls = results.get("control_activities", [])
-    if controls:
-        gen1[_clean_tag_name(tags.get(0x0508, "ControlActivityData"))] = controls
+def _clean_drivers(drivers: list) -> list:
+    """Strip internal `_` keys from inserted driver records."""
+    return [{k: v for k, v in d.items() if not k.startswith("_")} for d in drivers]
 
-    # ── Tag 0x0100: CardIssuerIdentification ──
-    issuer = results.get("card_issuer", {})
-    if issuer:
-        gen2[_clean_tag_name(tags.get(0x0100, "CardIssuerIdentification"))] = issuer
 
-    # ── Tag 0x2020: CompanyHolderData ──
-    companies = results.get("company_holders", [])
-    if companies:
-        gen2[_clean_tag_name(tags.get(0x2020, "CompanyHolderData"))] = companies
+def _non_empty(val) -> bool:
+    """True when *val* is a non-empty dict or non-empty list."""
+    if isinstance(val, dict):
+        return len(val) > 0
+    if isinstance(val, (list, tuple, set)):
+        return len(val) > 0
+    return bool(val)
 
-    # ── G1 VU Overview: CompanyInfo ──
-    company_info = results.get("company_info", {})
-    if company_info:
-        gen1["CompanyInfo"] = company_info
 
-    # ── G1 VU Overview: CardNumbers ──
-    card_numbers = results.get("card_numbers", [])
-    if card_numbers:
-        gen1["InsertedCardNumbers"] = card_numbers
+def _is_valid(vehicle: Dict[str, Any], field: str) -> bool:
+    """True when *vehicle*[*field*] is present and not the 'N/A' sentinel."""
+    return vehicle.get(field, "N/A") != "N/A"
 
-    # ── VU Download: VU Info (manufacturer) ──
-    vu_info = results.get("vu_info", {})
-    if vu_info:
-        gen1["VU_TechnicalInfo"] = vu_info
 
-    # ── VU Download: Inserted Drivers ──
-    drivers = results.get("inserted_drivers", [])
-    if drivers:
-        gen1["InsertedDrivers"] = [{k: v for k, v in d.items() if not k.startswith("_")} for d in drivers]
+def _build_gen1(results: Dict[str, Any], driver: Dict[str, Any],
+                vehicle: Dict[str, Any], tags: Dict[int, str]) -> Dict[str, Any]:
+    """Generation 1 (Annex 1B) — legacy EFs present in all tachograph files."""
+    g: Dict[str, Any] = {}
 
-    # ── VU Download: Workshops ──
-    workshops = results.get("workshops", [])
+    def _add(tag_id: int, fallback: str, value):
+        if _non_empty(value):
+            g[_tag_name(tag_id, tags, fallback)] = value
+
+    _add(0x0501, "ApplicationIdentification", results.get("card_application"))
+    _add(0x0502, "EventsData",               results.get("events"))
+    _add(0x0503, "FaultsData",               results.get("faults"))
+    _add(0x0504, "DriverActivityData",       results.get("activities"))
+    _add(0x0505, "VehiclesUsed",             results.get("vehicle_sessions"))
+    _add(0x0506, "Places",                   results.get("places"))
+    _add(0x0508, "ControlActivityData",      results.get("control_activities"))
+    _add(0x050C, "CalibrationData",          results.get("calibrations"))
+    _add(0x050E, "CardDownload",             results.get("card_downloads"))
+
+    if _is_valid(driver, "card_number"):
+        _add(0x0520, "Identification", _driver_card_id(driver))
+    if _is_valid(driver, "licence_number"):
+        _add(0x0521, "DrivingLicenceInfo", _driver_licence(driver))
+    if _is_valid(vehicle, "plate"):
+        _add(0x0507, "CurrentUsage", _current_usage(vehicle))
+    if _is_valid(vehicle, "vin") or _is_valid(vehicle, "plate"):
+        _add(0x0001, "VehicleIdentification", _vehicle_id(vehicle))
+
+    _add(0x0000, "ICC_ChipIdentification", results.get("card_chip"))
+
+    # VU Overview fields
+    for src_key, display_name in [
+        ("company_info",         "CompanyInfo"),
+        ("vu_info",              "VU_TechnicalInfo"),
+        ("card_numbers",         "InsertedCardNumbers"),
+        ("card_iw_records",      "CardIWRecords"),
+        ("company_locks",        "CompanyLocks"),
+        ("overspeeding_events",  "OverspeedingEvents"),
+        ("overspeeding_control", "OverspeedingControl"),
+        ("specific_conditions",  "SpecificConditions"),
+        ("time_adjustments",     "TimeAdjustments"),
+        ("sensor_daily_records", "SensorDailyRecords"),
+        ("sensor_info",          "SensorInfo"),
+        ("previous_vehicle",     "PreviousVehicle"),
+    ]:
+        _add(0x0000, display_name, results.get(src_key))
+
+    # Inserted drivers (strip internal keys)
+    inserted = results.get("inserted_drivers")
+    if inserted:
+        g["InsertedDrivers"] = _clean_drivers(inserted)
+
+    # Calibration workshops
+    workshops = results.get("workshops")
     if workshops:
-        gen1["CalibrationWorkshops"] = workshops
+        g["CalibrationWorkshops"] = workshops
 
-    # ── VU Download: Calibration VINs ──
+    # Calibration VINs (sorted set)
     cal_vins = sorted(results.get("calibration_vins", set()))
     if cal_vins:
-        gen1["CalibrationVINs"] = cal_vins
+        g["CalibrationVINs"] = cal_vins
 
-    # ── VU Download: Speed blocks ──
-    speed_blocks = results.get("speed_blocks", [])
-    if speed_blocks:
-        gen1["DetailedSpeed"] = speed_blocks
+    # Speed blocks (detailed speed from VU TREP 04 / RecordArray)
+    _add(0x0000, "DetailedSpeed", results.get("speed_blocks"))
 
-    # ── VU Download: Card downloads ──
-    card_downloads = results.get("card_downloads", [])
-    if card_downloads:
-        gen1["CardDownloadRecords"] = card_downloads
+    # Signed daily records (G1 TREP 02 daily records + signatures)
+    _add(0x0000, "SignedDailyRecords", results.get("signed_daily_records"))
 
-    signed_records = results.get("signed_daily_records", [])
-    if signed_records:
-        gen1["SignedDailyRecords"] = signed_records
+    # Card download records from VU side
+    card_dls = results.get("card_downloads")
+    if card_dls:
+        g["CardDownloadRecords"] = card_dls
 
-    # ── G2 CardIccIdentification (0x0101) ──
-    if card_icc:
-        gen2[_clean_tag_name(tags.get(0x0101, "CardIccIdentification"))] = card_icc
+    # Decoded certificates
+    _add(0x0000, "Certificates", results.get("certificates"))
 
-    # ── G2 CardIdentification (0x0102) ──
-    if card_number != "N/A":
-        gen2[_clean_tag_name(tags.get(0x0102, "CardIdentification"))] = {
-            "card_number": card_number,
-            "issuing_nation": driver.get("issuing_nation", "N/A"),
-            "expiry_date": driver.get("expiry_date", "N/A"),
+    return g
+
+
+def _build_gen2(results: Dict[str, Any], driver: Dict[str, Any],
+                vehicle: Dict[str, Any], tags: Dict[int, str]) -> Dict[str, Any]:
+    """Generation 2 (Annex 1C) — Smart Tacho V1 fields (G2 and G2.2 files)."""
+    g: Dict[str, Any] = {}
+
+    def _add(tag_id: int, fallback: str, value):
+        if _non_empty(value):
+            g[_tag_name(tag_id, tags, fallback)] = value
+
+    # ── G2 card-side EFs ──
+    _add(0x0100, "CardIssuerIdentification",       results.get("card_issuer"))
+    _add(0x0101, "CardIccIdentification",           results.get("card_icc"))
+    _add(0x0201, "DriverCardHolderIdentification",  _g2_driver_holder(driver)
+         if _is_valid(driver, "surname") else None)
+    _add(0x0102, "CardIdentification",              _g2_card_id(driver)
+         if _is_valid(driver, "card_number") else None)
+    _add(0x2020, "CompanyHolderData",               results.get("company_holders"))
+    _add(0x0523, "VehicleUnitsUsed",                results.get("vehicle_units"))
+
+    # VehiclesUsed duplicate (G2 appendix copy)
+    _add(0x0505, "VehiclesUsed", results.get("vehicle_sessions"))
+
+    # ── G2 VU-specific records ──
+    for src_key, display_name in [
+        ("vu_certificates",             "VU Certificates (CVC)"),
+        ("vu_identifications",          "VU Identifications"),
+        ("card_records",                "Card Records"),
+        ("download_activities",         "Download Activities"),
+        ("downloadable_periods",        "Downloadable Periods"),
+        ("its_consents",                "ITS Consents"),
+        ("power_interruptions",         "Power Interruptions"),
+        ("signature_verification",      "ECDSA Signature Verification"),
+    ]:
+        _add(0x0000, display_name, results.get(src_key))
+
+    # Certificate temporal validity (nested inside signature_verification)
+    sv = results.get("signature_verification") or {}
+    ctv = sv.get("certificate_temporal_validity")
+    if isinstance(ctv, dict) and ctv:
+        _STATUS_LABELS = {
+            "not_checked": "Not checked",
+            "valid": "Valid",
+            "expired": "Expired",
+            "not_yet_valid": "Not yet valid",
+            "unavailable": "Unavailable",
         }
+        flat = {}
+        for cert_name, cert_info in ctv.items():
+            prefix = cert_name.upper()
+            for field, value in cert_info.items():
+                label = _STATUS_LABELS.get(str(value), str(value)) if field == "status" else str(value)
+                flat[f"{prefix} {field}"] = label
+        g["Certificate Temporal Validity"] = flat
 
-    # ── G2 DriverCardHolderIdentification (0x0201) ──
-    surname = driver.get("surname", "N/A")
-    if surname != "N/A":
-        gen2[_clean_tag_name(tags.get(0x0201, "DriverCardHolderIdentification"))] = {
-            "surname": surname,
-            "firstname": driver.get("firstname", "N/A"),
-            "birth_date": driver.get("birth_date", "N/A"),
-            "preferred_language": driver.get("preferred_language", "N/A"),
-        }
+    # Sensor pairings (two possible keys)
+    for key in ("sensor_pairings", "sensor_paired"):
+        val = results.get(key)
+        if _non_empty(val):
+            g["Sensor Pairings"] = val
+            break
 
-    # ── EF Vehicles_Used, G2 copy (FID 0x0505, Gen2 appendix) ──
-    if vehicle_sessions:
-        gen2["VehiclesUsed"] = vehicle_sessions
+    # GNSS sensor couplings (two possible keys)
+    for key in ("sensor_gnss_couplings", "sensor_gnss_coupled"):
+        val = results.get(key)
+        if _non_empty(val):
+            g["GNSS Sensor Couplings"] = val
+            break
 
-    # ── Tag 0x0523: G2 VehicleUnits_Used ──
-    vehicle_units = results.get("vehicle_units", [])
-    if vehicle_units:
-        gen2[_clean_tag_name(tags.get(0x0523, "VehicleUnitsUsed"))] = vehicle_units
+    # VU RecordArray structural summary
+    _add(0x0000, "VU RecordArray Summary", results.get("vu_record_arrays"))
 
-    # ── G2.2 tags ──
-    gnss_ad = results.get("gnss_ad_records", [])
-    load_unload = results.get("load_unload_records", [])
-    trailers = results.get("trailer_registrations", [])
-    gnss_places = results.get("gnss_places", [])
-    load_sensor = results.get("load_sensor_data", [])
-    borders = results.get("border_crossings", [])
+    # GNSS Accumulated Driving (can come from G2 card EF 0x0524 or G2.2 EF 0x0525)
+    _add(0x0525, "GNSSAccumulatedDriving", results.get("gnss_ad_records"))
 
-    if gnss_ad:
-        gen22[_clean_tag_name(tags.get(0x0525, "GNSSAccumulatedDriving"))] = gnss_ad
-    if load_unload:
-        gen22[_clean_tag_name(tags.get(0x0526, "LoadUnloadOperations"))] = load_unload
-    if trailers:
-        gen22[_clean_tag_name(tags.get(0x0527, "TrailerRegistrations"))] = trailers
-    if gnss_places:
-        gen22[_clean_tag_name(tags.get(0x0528, "GNSSEnhancedPlaces"))] = gnss_places
-    if load_sensor:
-        gen22[_clean_tag_name(tags.get(0x0529, "LoadSensorData"))] = load_sensor
-    if borders:
-        gen22[_clean_tag_name(tags.get(0x052A, "BorderCrossings"))] = borders
+    # Places duplicated here — G2 extends with GNSS coordinates
+    _add(0x0506, "Places", results.get("places"))
 
-    # ── VU VehicleIdentification (0x0001) ──
-    vin = vehicle.get("vin", "N/A")
-    if vin != "N/A" or plate != "N/A":
-        gen1[_clean_tag_name(tags.get(0x0001, "VehicleIdentification"))] = {
-            "vin": vin,
-            "plate": plate,
-            "registration_nation": vehicle.get("registration_nation", "N/A"),
-        }
+    # Events / Faults / Activities — same structure, G2 context
+    _add(0x0502, "EventsData",         results.get("events"))
+    _add(0x0503, "FaultsData",         results.get("faults"))
+    _add(0x0504, "DriverActivityData", results.get("activities"))
+    _add(0x050C, "CalibrationData",    results.get("calibrations"))
+    _add(0x0508, "ControlActivityData", results.get("control_activities"))
 
-    # ── Raw tags organized by generation ──
-    raw_by_gen: Dict[str, Dict[str, Any]] = {
+    # Speed blocks (G2 VU RecordArray / TREP 04)
+    _add(0x0000, "DetailedSpeed", results.get("speed_blocks"))
+
+    return g
+
+
+def _build_gen22(results: Dict[str, Any], driver: Dict[str, Any],
+                 vehicle: Dict[str, Any], tags: Dict[int, str]) -> Dict[str, Any]:
+    """Generation 2.2 (Reg. 2023/980) — Smart Tacho V2 fields only."""
+    g: Dict[str, Any] = {}
+
+    def _add(tag_id: int, fallback: str, value):
+        if _non_empty(value):
+            g[_tag_name(tag_id, tags, fallback)] = value
+
+    _add(0x0525, "GNSSAccumulatedDriving",  results.get("gnss_ad_records"))
+    _add(0x0526, "LoadUnloadOperations",    results.get("load_unload_records"))
+    _add(0x0527, "TrailerRegistrations",    results.get("trailer_registrations"))
+    _add(0x0528, "GNSSEnhancedPlaces",      results.get("gnss_places"))
+    _add(0x0529, "LoadSensorData",          results.get("load_sensor_data"))
+    _add(0x052A, "BorderCrossings",         results.get("border_crossings"))
+
+    # G2.2-specific additional decoded keys
+    for src_key, display_name in [
+        ("detailed_speed",        "Detailed Speed (0x052C)"),
+        ("gnss_auth",             "GNSS Authentication"),
+        ("load_unload_auth",      "Load/Unload Authentication"),
+        ("sensor_faults",         "Sensor Faults"),
+        ("vu_controller",         "VU Controller"),
+        ("signed_daily_records",  "Signed Daily Records"),
+    ]:
+        _add(0x0000, display_name, results.get(src_key))
+
+    # G2.2 sensor pairings variant
+    for key in ("sensor_paired_g22",):
+        val = results.get(key)
+        if _non_empty(val):
+            g["Sensor Pairings (G2.2)"] = val
+            break
+
+    # G2.2 GNSS sensor couplings variant
+    for key in ("sensor_gnss_coupled_g22",):
+        val = results.get(key)
+        if _non_empty(val):
+            g["GNSS Sensor Couplings (G2.2)"] = val
+            break
+
+    return g
+
+
+def _split_raw_tags(raw_tags: Dict[str, Any],
+                    tags: Dict[int, str]) -> Dict[str, Dict[str, Any]]:
+    """Partition raw_tags occurrences into per-generation buckets."""
+    buckets: Dict[str, Dict[str, Any]] = {
         "Generation 1": {}, "Generation 2": {}, "Generation 2.2": {}}
     for key, occs in raw_tags.items():
         parts = key.split(" > ")
         leaf = parts[-1]
-        if "_" in leaf:
-            leaf_tag_id = leaf.split("_", 1)[0]
-            try:
-                tag_id_int = int(leaf_tag_id, 16)
-                gen_name = _tag_generation(tags.get(tag_id_int, leaf))
-            except ValueError:
-                gen_name = "Generation 1"
-        else:
-            gen_name = "Generation 1"
-        clean_name = _clean_tag_name(leaf)
-        raw_by_gen[gen_name].setdefault(clean_name, []).extend(occs)
+        gen = _tag_generation(leaf)
+        clean = _clean_tag_name(leaf)
+        buckets[gen].setdefault(clean, []).extend(occs)
+    return {k: v for k, v in buckets.items() if v}
 
-    for gen_key in list(raw_by_gen.keys()):
-        if not raw_by_gen[gen_key]:
-            del raw_by_gen[gen_key]
 
-    tree = {}
+def build_generations_tree(results: Dict[str, Any], tags: Dict[int, str]) -> Dict[str, Any]:
+    """Build hierarchical view of decoded data grouped by generation.
+
+    Each generation section contains every decoded data key applicable to
+    that generation.  Shared legacy keys (activities, events, places …) appear
+    in Gen1 and are repeated in Gen2/Gen2.2 where the regulation extends or
+    reuses them.
+    """
+    driver = results.get("driver", {})
+    vehicle = results.get("vehicle", {})
+
+    gen1  = _build_gen1(results, driver, vehicle, tags)
+    gen2  = _build_gen2(results, driver, vehicle, tags)
+    gen22 = _build_gen22(results, driver, vehicle, tags)
+
+    raw_by_gen = _split_raw_tags(results.get("raw_tags", {}), tags)
+
+    tree: Dict[str, Any] = {}
     if gen1:
         tree["Generation 1"] = {**gen1, "_RawTags": raw_by_gen.get("Generation 1", {})}
     if gen2:
         tree["Generation 2"] = {**gen2, "_RawTags": raw_by_gen.get("Generation 2", {})}
     if gen22:
         tree["Generation 2.2"] = {**gen22, "_RawTags": raw_by_gen.get("Generation 2.2", {})}
+
+    # ── Security section (EF data-integrity verification) ──
+    efv = results.get("ef_signature_verification")
+    if isinstance(efv, dict) and efv:
+        tree["Security"] = {"EF Signature Verification": efv}
+
     return tree

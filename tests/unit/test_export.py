@@ -1,11 +1,15 @@
+import csv
 import os
 import sys
 import tempfile
 import unittest
+from copy import deepcopy
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.export import ExportManager
+from core.utils.report_format import build_monthly_activity_report
 
 
 MOCK_DATA = {
@@ -156,6 +160,91 @@ class TestExportManager(unittest.TestCase):
             head = handle.read(5)
         self.assertEqual(head, b"%PDF-")
         self.assertGreater(os.path.getsize(self.pdf_path), 1000)
+
+    def test_spreadsheet_exports_neutralize_formula_text(self):
+        data = deepcopy(self.mock_data)
+        formulas = ["=SUM(1,1)", "+SUM(1,1)", "-SUM(1,1)", "@SUM(1,1)"]
+        data["metadata"]["filename"] = formulas[0]
+        data["events"] = [
+            {"description": formula, "begin": "2026-06-01T10:30:00+00:00"}
+            for formula in formulas
+        ]
+        data["events"][0]["=untrusted_header"] = "value"
+        data["events"][0]["negative_number"] = -42
+
+        ExportManager.export_to_csv(data, self.csv_path)
+        with open(self.csv_path, newline="", encoding="utf-8-sig") as handle:
+            csv_values = [value for row in csv.reader(handle, delimiter=";") for value in row]
+
+        for formula in formulas:
+            self.assertIn("'" + formula, csv_values)
+        self.assertIn("'=untrusted Header", csv_values)
+        self.assertIn("-42", csv_values)
+        self.assertNotIn("'-42", csv_values)
+        self.assertIn("2026-06-01 10:30", csv_values)
+
+        ExportManager.export_to_excel(data, self.excel_path)
+        from openpyxl import load_workbook
+        wb = load_workbook(self.excel_path)
+        excel_values = [
+            cell.value for sheet in wb.worksheets for row in sheet.iter_rows() for cell in row
+            if cell.value is not None
+        ]
+
+        for formula in formulas:
+            self.assertIn("'" + formula, excel_values)
+        self.assertIn("'=untrusted Header", excel_values)
+        self.assertIn("-42", excel_values)
+        self.assertNotIn("'-42", excel_values)
+        self.assertIn("2026-06-01 10:30", excel_values)
+
+    def test_pdf_escapes_dynamic_paragraph_text(self):
+        data = deepcopy(self.mock_data)
+        data["metadata"]["filename"] = "file & <alter> >.ddd"
+        data["metadata"]["generation"] = "G2 <untrusted>"
+        data["driver"]["surname"] = "<b>Rossi</b> & Co"
+        data["events"][0]["description"] = "Text & <b>must not be markup</b> >"
+
+        from reportlab.platypus import Paragraph as ReportLabParagraph
+
+        paragraph_text = []
+
+        def capture_paragraph(text, *args, **kwargs):
+            paragraph_text.append(text)
+            return ReportLabParagraph(text, *args, **kwargs)
+
+        with patch("reportlab.platypus.Paragraph", side_effect=capture_paragraph):
+            ExportManager.export_to_pdf(data, self.pdf_path)
+
+        self.assertIn("Text &amp; &lt;b&gt;must not be markup&lt;/b&gt; &gt;", paragraph_text)
+        self.assertIn(
+            "file &amp; &lt;alter&gt; &gt;.ddd  ·  G2 &lt;untrusted&gt;  ·  Driver Card",
+            paragraph_text,
+        )
+        self.assertIn("Mario &lt;b&gt;Rossi&lt;/b&gt; &amp; Co", paragraph_text)
+
+    def test_pdf_handles_malformed_activity_times_without_changing_valid_totals(self):
+        _, valid_rows = build_monthly_activity_report(self.mock_data["activities"])
+        self.assertEqual(valid_rows[0][2], "04:00")
+        self.assertEqual(valid_rows[0][4], "12:00")
+        self.assertEqual(valid_rows[0][-1], "16:00")
+
+        malformed_activities = [{
+            "date": "03/06/2026",
+            "changes": [
+                {"activity": "DRIVE", "time": "not-a-time"},
+                {"activity": "REST", "time": "12:00"},
+            ],
+        }]
+        _, malformed_rows = build_monthly_activity_report(malformed_activities)
+        self.assertEqual(malformed_rows[0][2], "00:00")
+        self.assertEqual(malformed_rows[0][4], "12:00")
+        self.assertEqual(malformed_rows[0][-1], "12:00")
+
+        data = deepcopy(self.mock_data)
+        data["activities"] = malformed_activities
+        ExportManager.export_to_pdf(data, self.pdf_path)
+        self.assertTrue(os.path.exists(self.pdf_path))
 
 
 if __name__ == "__main__":

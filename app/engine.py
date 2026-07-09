@@ -118,9 +118,17 @@ class TachoParser:
         """
         if not os.path.exists(self.file_path):
             self.results["metadata"]["integrity_check"] = "File Not Found"
+            self.results["metadata"]["parse_error"] = {
+                "code": "file_not_found",
+                "message": "File not found",
+            }
             return self.results
         if self.file_size == 0:
             self.results["metadata"]["integrity_check"] = "Empty File"
+            self.results["metadata"]["parse_error"] = {
+                "code": "empty_file",
+                "message": "File is empty",
+            }
             return self.results
 
         reset_decoder_failures()
@@ -147,6 +155,11 @@ class TachoParser:
         except Exception as e:
             logger.error("Parse failed for %s: %s", self.file_path, e, exc_info=True)
             self.results["metadata"]["integrity_check"] = f"Error: {str(e)}"
+            self.results["metadata"]["parse_error"] = {
+                "code": "parse_exception",
+                "message": str(e) or type(e).__name__,
+                "exception_type": type(e).__name__,
+            }
         finally:
             self._close_file()
 
@@ -274,8 +287,8 @@ class TachoParser:
         """Drop duplicate daily activity blocks and sort newest-first.
 
         The same day can be emitted twice when a region is reached both by
-        the EF walk and a container re-scan; the dedup key combines date,
-        change count, driver and daily counter.
+        the EF walk and a container re-scan. Only complete, structurally
+        identical records are duplicates.
         """
         def _safe_parse_date(val):
             try:
@@ -283,16 +296,27 @@ class TachoParser:
             except (ValueError, TypeError):
                 return datetime.min
 
-        seen = {}
+        def _canonical(value):
+            """Build a deterministic, hashable representation of decoded data."""
+            if isinstance(value, dict):
+                items = ((_canonical(key), _canonical(item)) for key, item in value.items())
+                return ("dict", tuple(sorted(items, key=repr)))
+            if isinstance(value, list):
+                return ("list", tuple(_canonical(item) for item in value))
+            if isinstance(value, tuple):
+                return ("tuple", tuple(_canonical(item) for item in value))
+            if isinstance(value, set):
+                return ("set", tuple(sorted((_canonical(item) for item in value), key=repr)))
+            if isinstance(value, bytes):
+                return ("bytes", value.hex())
+            return (type(value).__module__, type(value).__qualname__, repr(value))
+
+        seen = set()
         unique = []
         for act in self.results["activities"]:
-            key = f"{act.get('date', 'N/A') or 'N/A'}_{len(act.get('changes', []))}"
-            if act.get("driver"):
-                key += f"_{act['driver']}"
-            if act.get("daily_counter"):
-                key += f"_{act['daily_counter']}"
+            key = _canonical(act)
             if key not in seen:
-                seen[key] = True
+                seen.add(key)
                 unique.append(act)
         unique.sort(key=lambda x: _safe_parse_date(x.get("date")) or datetime.min, reverse=True)
         self.results["activities"] = unique
@@ -332,6 +356,10 @@ class TachoParser:
                 self.card_cert_g1, self.msca_cert_g1)
         else:
             status, pubkey = False, None
+
+        if self.validator.last_chain_temporal_validity:
+            self.results["certificate_temporal_validity"] = \
+                self.validator.last_chain_temporal_validity
 
         if status is True:
             self.validation_status = "Verified"
@@ -379,11 +407,11 @@ class TachoParser:
         pairs = pair_ef_records(ef_data_map, ef_sig_map)
         key_type = "RSA" if isinstance(self.card_public_key, _rsa.RSAPublicKey) else (
             "EC" if self.card_public_key is not None else None)
-        # When the G2 chain failed, try to extract the EC public key
-        # from the G2 CVC certificate for G2 EF ECDSA verification.
+        # Extract a G2 CVC key whenever one is available. It is a data-integrity
+        # fallback for ECDSA EF pairs, not evidence that the CVC chain verified.
         card_ec_key = None
         card_ec_hash = None
-        if key_type == "RSA" and self.card_cert_raw:
+        if self.card_cert_raw:
             try:
                 from core.crypto.vu_signature import parse_cvc, cvc_public_key
                 cvc = parse_cvc(self.card_cert_raw)

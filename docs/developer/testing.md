@@ -8,10 +8,17 @@ All tests are run with:
 python -m pytest tests/ -v
 ```
 
+Generate the synthetic fixtures first to run the mock coverage tests, as CI does:
+
+```bash
+python tests/integration/generate_mock_ddd.py
+python -m pytest tests/ -v
+```
+
 Run a specific test file:
 
 ```bash
-python -m pytest tests/test_coverage.py -v
+python -m pytest tests/unit/test_coverage.py -v
 ```
 
 Run tests matching a pattern:
@@ -24,27 +31,41 @@ Run with coverage:
 
 ```bash
 pip install pytest-cov
-python -m pytest tests/ -v --cov=core --cov=ddd_parser
+python -m pytest tests/ -v --cov=app --cov=core
 ```
 
 ## Test Categories
 
 | File | Purpose |
 |---|---|
-| `tests/test_coverage.py` | Byte coverage verification against reference DDD files |
-| `tests/test_deterministic_padding.py` | Padding classification in the deterministic parser |
-| `tests/test_export.py` | Export format correctness (Excel, CSV, PDF) |
-| `tests/test_fuzz.py` | Fuzzing with random/malformed byte sequences |
-| `tests/test_gen22.py` | G2.2 specific tag decoders (GNSS, load/unload, border crossings) |
+| `tests/unit/test_coverage.py` | Byte coverage verification against mock and private DDD files |
+| `tests/unit/test_deterministic_padding.py` | Padding classification in the deterministic parser |
+| `tests/unit/test_export.py` | Export format correctness (Excel, CSV, PDF) |
+| `tests/integration/test_fuzz.py` | Fuzzing with random/malformed byte sequences |
+| `tests/unit/test_gen22.py` | G2.2 specific tag decoders (GNSS, load/unload, border crossings) |
 | `tests/test_golden_snapshot.py` | Golden-file snapshot comparison for real DDD samples |
-| `tests/test_validation.py` | Certificate chain validation (ERCA/MSCA) |
-| `tests/test_semantic_coverage.py` | Semantic field coverage (do decoders populate all expected fields) |
-| `tests/test_real_semantic_coverage.py` | Real-file semantic coverage against DDD/ samples |
-| `tests/test_g22_auth_and_triage.py` | G2.2 authentication data and unparsed pattern triage |
-| `tests/test_vu_dispatcher.py` | VU RecordArray stream dispatcher |
-| `tests/test_vu_signature.py` | VU download ECDSA/CVC signature verification |
+| `tests/unit/test_validation.py` | Certificate chain validation (ERCA/MSCA) |
+| `tests/integration/test_semantic_coverage.py` | Semantic field coverage (do decoders populate all expected fields) |
+| `tests/integration/test_real_semantic_coverage.py` | Real-file semantic coverage against DDD/ samples |
+| `tests/unit/test_g22_auth_and_triage.py` | G2.2 authentication data and unparsed pattern triage |
+| `tests/integration/test_vu_dispatcher.py` | VU RecordArray stream dispatcher |
+| `tests/integration/test_vu_signature.py` | VU download ECDSA/CVC signature verification |
 
 Tests that require real `.ddd` samples (the private `DDD/` folder) skip automatically when those files are absent, so the suite passes on a fresh clone.
+
+### Private Semantic Baseline
+
+`tests/integration/test_real_semantic_coverage.py` also requires the local
+`scripts/semantic_coverage_report.json` baseline for the same private corpus.
+It is intentionally git-ignored because it contains private fixture filenames.
+Regenerate it locally after intentionally accepting a semantic-coverage change:
+
+```bash
+python scripts/semantic_coverage_audit.py --output scripts/semantic_coverage_report.json
+```
+
+Without a versioned, non-private corpus, this regression baseline cannot run in
+public CI and the real-file test skips when either prerequisite is unavailable.
 
 ## Writing New Tests
 
@@ -55,7 +76,7 @@ Tests that require real `.ddd` samples (the private `DDD/` folder) skip automati
 - Import decoders directly from `core.decoders` or `core.g2_decoders`
 - For full pipeline tests, instantiate `TachoParser` with a test file or mock byte data
 - Use `tests/mock_data/` for static test fixtures
-- Use `tests/generate_mock_ddd.py` to programmatically build DDD byte sequences
+- Use `tests/integration/generate_mock_ddd.py` to programmatically build DDD byte sequences
 
 ### Test Pattern: Direct Decoder Test
 
@@ -95,12 +116,10 @@ from app.engine import TachoParser
 import tempfile, os
 
 def test_full_parse_g1():
-    from tests.generate_mock_ddd import generate_mock_g1_ddd
+    from tests.integration.generate_mock_ddd import generate_g1_card
 
     with tempfile.NamedTemporaryFile(suffix='.ddd', delete=False) as f:
-        data = generate_mock_g1_ddd()
-        f.write(data)
-        f.flush()
+        generate_g1_card(f.name)
         path = f.name
 
     try:
@@ -112,7 +131,7 @@ def test_full_parse_g1():
         os.unlink(path)
 ```
 
-## Mock DDD File Generation (`tests/generate_mock_ddd.py`)
+## Mock DDD File Generation (`tests/integration/generate_mock_ddd.py`)
 
 The `generate_mock_ddd.py` script builds synthetic DDD files for all three generations:
 
@@ -135,9 +154,10 @@ def datef(y, m, d):
     return bytes([((y//100)//10<<4)|((y//100)%10), ...])
 ```
 
-Building blocks include: `build_ef_icc()`, `build_ef_ic()`, `build_driver_id()`, `build_vehicle_id()`, `make_cyclic()`, and generation-specific container builders.
+Building blocks include: `build_ef_icc()`, `build_ef_ic()`, `build_g1_id()`,
+`build_g1_vehicles()`, `make_cyclic()`, and generation-specific container builders.
 
-## Fuzzing (`tests/test_fuzz.py`)
+## Fuzzing (`tests/integration/test_fuzz.py`)
 
 The fuzzing test generates random byte sequences to verify parser robustness:
 
@@ -166,5 +186,5 @@ This produces a per-file breakdown of:
 ## Test Data
 
 - **`DDD/`**: Real-world DDD files from various tachograph models (G1, G2, G2.2). **Not committed** — contains personal data; tests depending on it skip when absent.
-- **`tests/mock_data/`**: Static binary test fixtures
-- **`tests/generate_mock_data.py`**: Programmatic test data generation; mock certificates for signature validation are written to a temporary directory at test time
+- **`tests/mock_data/`**: Generated synthetic fixtures (run `python tests/integration/generate_mock_ddd.py`)
+- **`tests/integration/generate_mock_data.py`**: Programmatic test data generation; mock certificates for signature validation are written to a temporary directory at test time

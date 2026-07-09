@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
 from core.utils.constants import MAX_ODO_DISTANCE_KM
-from core.decoders.primitives import _decode_gnss_coord, decode_date, decode_string, get_nation
+from core.decoders.common import _decode_gnss_coord, decode_date, decode_string, get_nation
 from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault
 
 _log = get_logger(__name__)
@@ -768,24 +768,6 @@ def parse_ef_ic(val, results):
             _log.debug("EF IC: partially decoded (%.1f%%, total=%d bytes)", decoded_pct, len(val))
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("EF IC parse failed: %s", exc)
-
-def parse_previous_vehicle_info(val, results):
-    """Extract PreviousVehicleInfo from tag 0x0507 or 0x0520."""
-    if len(val) < 19:
-        return
-    try:
-        nation = get_nation(val[0])
-        plate = decode_string(val[1:15], is_id=True)
-        ts = struct.unpack(">I", val[15:19])[0]
-        if ts == 0 or ts == 0xFFFFFFFF:
-            return
-        dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat() if ts < 4102444800 else "N/A"
-        prev = {"plate": plate, "nation": nation, "withdrawal_time": dt}
-        if len(val) >= 20:
-            prev["vu_generation"] = val[19]
-        results.setdefault("previous_vehicle", []).append(prev)
-    except (struct.error, IndexError, ValueError) as exc:
-        _log.debug("Previous vehicle info parse failed: %s", exc)
 
 def parse_control_activity_data(val, results):
     """Parse ControlActivityData (tag 0x0508) — Annex 1B §2.23, inspection records.

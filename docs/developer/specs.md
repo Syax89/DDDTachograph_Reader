@@ -106,7 +106,7 @@ Annex 1C §4.5.3.2.8 → VuCardRecord
                  cardApprovalNumber(4B)
 ```
 
-This maps directly to `core/decoders/g2_dispatch.py:11` (`parse_g2_card_record()`).
+This maps directly to `decode_vu_card_record()` in `core/parser/vu_dispatcher.py` (dispatched via `core/decoders/vu_g2.py`).
 
 ## Key EU Regulations
 

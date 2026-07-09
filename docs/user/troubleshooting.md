@@ -55,7 +55,7 @@
    pip install -r requirements.txt
    ```
 
-2. **Wrong Python version**: The GUI requires Python 3.9 or later. Check your version:
+2. **Wrong Python version**: The GUI requires Python 3.10 or later. Check your version:
    ```bash
    python --version
    ```

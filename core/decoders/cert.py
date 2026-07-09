@@ -4,7 +4,7 @@ import struct
 from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
-from core.decoders.primitives import decode_date, decode_string, get_nation
+from core.decoders.common import decode_date, decode_string, get_nation
 from core.utils.constants import EC_CURVE_OIDS
 from core.utils.ber_tlv import read_ber_tlv_header as _read_ber_tlv
 

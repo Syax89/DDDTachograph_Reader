@@ -86,16 +86,16 @@ Note: G2 cards may contain mixed G1 and G2 segments. Detection is per-segment vi
 | 0x0532 | G22_SensorExternalGNSSCoupled | 20 | Annex 1C §2.242 | ✅ SPEC | — |
 | 0x0533 | G22_SensorPairedData | 24 | Annex 1C §2.243 | ✅ SPEC | — |
 
-## G2.2 Container Tags (BER-TLV)
+## G2.2 Card EF Payloads (STAP Encapsulation)
 
 | Tag | Name | Inner Format | Annex Ref | Status |
 |-----|------|-------------|-----------|--------|
-| 0x0525 | GNSSAccumulatedDriving | 13B flat records | Annex 1C §2.79 | ✅ SPEC |
-| 0x0526 | LoadUnloadOperations | 13B flat records | Annex 1C §2.208a | ✅ SPEC |
-| 0x0527 | TrailerRegistrations | 20B flat records | Annex 1C §2.166a | ✅ SPEC |
-| 0x0528 | GNSSEnhancedPlaces | 14B flat records | Annex 1C §2.79c | ✅ SPEC |
+| 0x0525 | GNSSAccumulatedDriving | pointer(2) + 19B flat records | Annex 1C §§2.76, 2.79 | ✅ SPEC |
+| 0x0526 | LoadUnloadOperations | pointer(2) + 20B records | Annex 1C §§2.24c-2.24d, 2.76 | ✅ SPEC |
+| 0x0527 | TrailerRegistrations | RecordArray: type 0x24, 15B records | Annex 1C §2.166a | ✅ SPEC |
+| 0x0528 | GNSSEnhancedPlaces | 12B flat records | Annex 1C §§2.76, 2.79c | ✅ SPEC |
 | 0x0529 | LoadSensorData | var single record | — | ❌ NONE |
-| 0x052A | BorderCrossings | 14B flat records | Annex 1C §2.203a | ✅ SPEC |
+| 0x052A | BorderCrossings | pointer(2) + 17B records | Annex 1C §§2.11a-2.11b, 2.76 | ✅ SPEC |
 
 ## G2.2 EF Tags (VU internal)
 

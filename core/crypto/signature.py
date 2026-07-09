@@ -41,30 +41,17 @@ class SignatureValidator:
         self.certs_dir = certs_dir or os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "certs")
         self.root_certificates = {} # Map of KeyID -> Certificate
         self.msca_certificates = {} # Cache for MSCA certs found in the file
+        self.last_chain_temporal_validity = {}
         
-        self._ensure_certs_dir()
         self._load_root_certificates()
-
-    def _ensure_certs_dir(self):
-        if not os.path.exists(self.certs_dir):
-            os.makedirs(self.certs_dir)
-            self.logger.warning(
-                "ERCA certificates directory '%s' does not exist and has been created. "
-                "Without ERCA root certificates all chain validations will report "
-                "'Cannot Verify (Missing ERCA Root)'. Place root certificates "
-                "(.pem / .cer / .bin) in this directory.", self.certs_dir)
-            with open(os.path.join(self.certs_dir, "README.txt"), "w") as f:
-                f.write(
-                    "Place European Root Certificates (ERCA) here.\n\n"
-                    "G1 (Annex 1B, RSA): EC_PK.bin / EC_PK.pem "
-                    "(raw KID(8) + n(128) + e(8)).\n"
-                    "G2 (Annex 1C, ECDSA): raw uncompressed EC point (.bin), "
-                    "DER/PEM SubjectPublicKeyInfo, or CVC root certificate.\n\n"
-                    "Published by the EU JRC: https://dtc.jrc.ec.europa.eu/\n")
 
     def _load_root_certificates(self):
         """Loads ERCA certificates from the certs directory."""
-        if not os.path.exists(self.certs_dir):
+        if not os.path.isdir(self.certs_dir):
+            self.logger.warning(
+                "ERCA certificates directory '%s' is unavailable; using an empty "
+                "root store. Chain validations requiring an ERCA root cannot be "
+                "verified.", self.certs_dir)
             return
         for filename in os.listdir(self.certs_dir):
             if not os.path.isfile(os.path.join(self.certs_dir, filename)):
@@ -192,9 +179,8 @@ class SignatureValidator:
             self.logger.error(f"G1 Unwrapping failed: {e}")
             return None
 
-    def _certificate_is_valid_now(self, cert):
-        """True if ``cert`` (an x509.Certificate) is within its validity period.
-        Returns True for non-X.509 inputs (raw G1 public keys carry no dates)."""
+    def certificate_temporal_status(self, cert, verification_time=None):
+        """Describe X.509 validity at ``verification_time`` without checking a signature."""
         not_after = getattr(cert, "not_valid_after_utc", None)
         not_before = getattr(cert, "not_valid_before_utc", None)
         if not_after is None or not_before is None:
@@ -202,28 +188,49 @@ class SignatureValidator:
             na = getattr(cert, "not_valid_after", None)
             nb = getattr(cert, "not_valid_before", None)
             if na is None or nb is None:
-                return True  # not an X.509 cert (e.g. raw RSA key)
+                return {"status": "unavailable", "valid_from": "", "valid_to": ""}
             not_after = na.replace(tzinfo=datetime.timezone.utc)
             not_before = nb.replace(tzinfo=datetime.timezone.utc)
-        now = datetime.datetime.now(datetime.timezone.utc)
-        if now > not_after:
-            self.logger.warning("Certificate expired on %s", not_after.isoformat())
-            return False
-        if now < not_before:
-            self.logger.warning("Certificate not yet valid (valid from %s)", not_before.isoformat())
-            return False
-        return True
+        result = {
+            "status": "not_checked",
+            "valid_from": not_before.isoformat(),
+            "valid_to": not_after.isoformat(),
+        }
+        if verification_time is None:
+            return result
+        if verification_time.tzinfo is None:
+            verification_time = verification_time.replace(tzinfo=datetime.timezone.utc)
+        else:
+            verification_time = verification_time.astimezone(datetime.timezone.utc)
+        if verification_time > not_after:
+            result["status"] = "expired"
+        elif verification_time < not_before:
+            result["status"] = "not_yet_valid"
+        else:
+            result["status"] = "valid"
+        return result
 
-    def verify_certificate_chain(self, child_cert, parent_cert, check_expiry=True):
-        """Verifies if child_cert is signed by parent_cert.
+    def _certificate_is_valid_now(self, cert):
+        """Compatibility helper for callers requiring a wall-clock decision."""
+        return self.certificate_temporal_status(
+            cert, datetime.datetime.now(datetime.timezone.utc))["status"] == "valid"
 
-        When ``check_expiry`` is True, the child certificate's validity period is
-        enforced: an expired or not-yet-valid certificate fails verification even
-        if its signature is cryptographically correct.
+    def verify_certificate_chain(self, child_cert, parent_cert, check_expiry=True,
+                                 verification_time=None):
+        """Verify a certificate signature, optionally enforcing temporal validity.
+
+        ``check_expiry`` retains its legacy wall-clock default for direct
+        callers. DDD chain parsing explicitly disables it unless a meaningful
+        ``verification_time`` is supplied. When enabled, the child's dates are
+        evaluated at that time (or at the wall clock if it is omitted).
         """
         try:
-            if check_expiry and not self._certificate_is_valid_now(child_cert):
-                return False
+            if check_expiry:
+                when = verification_time or datetime.datetime.now(datetime.timezone.utc)
+                temporal = self.certificate_temporal_status(child_cert, when)
+                if temporal["status"] in ("expired", "not_yet_valid"):
+                    self.logger.warning("Certificate temporal status: %s", temporal["status"])
+                    return False
 
             # parent_cert may already be a bare PublicKey (G1)
             if isinstance(parent_cert, (rsa.RSAPublicKey, ec.EllipticCurvePublicKey)):
@@ -260,20 +267,27 @@ class SignatureValidator:
                               getattr(child_cert, "subject", "?"), e)
             return False
 
-    def validate_tacho_chain(self, card_cert_raw, msca_cert_raw, erca_key_id=None):
+    def validate_tacho_chain(self, card_cert_raw, msca_cert_raw, erca_key_id=None,
+                             verification_time=None):
         """
         Validates the full chain: ERCA -> MSCA -> Card.
         Returns (is_valid, card_public_key)
         """
-        # G1 certs: raw RSA field concatenations (Annex 1B), typical 128 or 194 bytes.
-        # G2 certs: X.509 DER (starts with ASN.1 SEQUENCE 0x30) or CVC (starts 0x7F).
-        is_likely_g2 = card_cert_raw[0] in (0x30, 0x7F)
-        is_known_g1_size = len(card_cert_raw) in (128, 194)
+        self.last_chain_temporal_validity = {}
+        if not card_cert_raw or not msca_cert_raw:
+            self.logger.warning("Certificate chain is missing a card or MSCA certificate")
+            return False, None
 
-        if is_likely_g2 and not is_known_g1_size:
-            return self._validate_g2_chain(card_cert_raw, msca_cert_raw)
-        else:
-            return self._validate_g1_chain(card_cert_raw, msca_cert_raw)
+        # G2 certs: X.509 DER (starts with ASN.1 SEQUENCE 0x30) or CVC (starts 0x7F).
+        # The encoding marker takes precedence because valid G2 certificates may be
+        # 194 bytes, which is also a common G1 encoded-certificate length.
+        is_likely_g2 = card_cert_raw[0] in (0x30, 0x7F)
+
+        if is_likely_g2:
+            if verification_time is None:
+                return self._validate_g2_chain(card_cert_raw, msca_cert_raw)
+            return self._validate_g2_chain(card_cert_raw, msca_cert_raw, verification_time)
+        return self._validate_g1_chain(card_cert_raw, msca_cert_raw)
 
     def _g1_erca_key(self):
         """Return the G1 ERCA root RSA public key from the loaded root material.
@@ -431,7 +445,7 @@ class SignatureValidator:
             self.logger.error("G1 Chain validation failed: %s", e)
             return False, None
 
-    def _validate_g2_chain(self, card_cert_raw, msca_cert_raw):
+    def _validate_g2_chain(self, card_cert_raw, msca_cert_raw, verification_time=None):
         """G2 ECDSA-based chain validation (X.509 DER or CVC).
 
         When the certificates are CVC-encoded (starting with ``0x7F``), the
@@ -441,14 +455,20 @@ class SignatureValidator:
         """
         # CVC path (0x7F21 containers — ISO 7816-8).
         if card_cert_raw[0] == 0x7F and msca_cert_raw[0] == 0x7F:
-            return self._validate_g2_cvc_chain(card_cert_raw, msca_cert_raw)
+            return self._validate_g2_cvc_chain(card_cert_raw, msca_cert_raw, verification_time)
 
         # Standard X.509 DER path.
         try:
             card_cert = x509.load_der_x509_certificate(card_cert_raw)
             msca_cert = x509.load_der_x509_certificate(msca_cert_raw)
+            self.last_chain_temporal_validity = {
+                "card": self.certificate_temporal_status(card_cert, verification_time),
+                "msca": self.certificate_temporal_status(msca_cert, verification_time),
+            }
+            check_temporal = verification_time is not None
 
-            if not self.verify_certificate_chain(card_cert, msca_cert):
+            if not self.verify_certificate_chain(
+                    card_cert, msca_cert, check_temporal, verification_time):
                 return False, None
 
             msca_issuer = msca_cert.issuer.rfc4514_string()
@@ -457,7 +477,13 @@ class SignatureValidator:
             if not erca_cert:
                 return "Incomplete (Missing ERCA)", card_cert.public_key()
 
-            if not self.verify_certificate_chain(msca_cert, erca_cert):
+            self.last_chain_temporal_validity["erca"] = self.certificate_temporal_status(
+                erca_cert, verification_time)
+            if not self.verify_certificate_chain(
+                    msca_cert, erca_cert, check_temporal, verification_time):
+                return False, None
+            if check_temporal and self.last_chain_temporal_validity["erca"]["status"] in (
+                    "expired", "not_yet_valid"):
                 return False, None
 
             return True, card_cert.public_key()
@@ -466,14 +492,15 @@ class SignatureValidator:
             self.logger.warning("G2 certificate is not standard X.509 DER")
             return False, None
 
-    def _validate_g2_cvc_chain(self, card_cert_raw, msca_cert_raw):
+    def _validate_g2_cvc_chain(self, card_cert_raw, msca_cert_raw, verification_time=None):
         """Validate a G2 CVC certificate chain (MSCA→Card link).
 
         Returns ``(status, ec_public_key)``.  *status* is one of:
           ``"Partial — MSCA→Card verified (no ERCA root)"``,
           ``"Partial — MSCA→Card FAILED"``, or ``False``.
         """
-        from core.crypto.vu_signature import parse_cvc, cvc_public_key, verify_cvc_chain_link
+        from core.crypto.vu_signature import (
+            cvc_public_key, cvc_temporal_status, parse_cvc, verify_cvc_chain_link)
 
         try:
             card_cvc = parse_cvc(card_cert_raw)
@@ -486,6 +513,11 @@ class SignatureValidator:
             self.logger.warning("G2 CVC: missing card or MSCA certificate")
             return False, None
 
+        self.last_chain_temporal_validity = {
+            "card": cvc_temporal_status(card_cvc, verification_time),
+            "msca": cvc_temporal_status(msca_cvc, verification_time),
+        }
+
         msca_pub, msca_hash = cvc_public_key(msca_cvc)
         card_pub, _ = cvc_public_key(card_cvc)
 
@@ -496,6 +528,12 @@ class SignatureValidator:
         if not verify_cvc_chain_link(card_cvc, msca_pub, msca_hash):
             self.logger.warning("G2 CVC MSCA→Card link FAILED")
             return "Partial — MSCA→Card FAILED", None
+
+        if verification_time is not None and any(
+                value["status"] in ("expired", "not_yet_valid")
+                for value in self.last_chain_temporal_validity.values()):
+            self.logger.warning("G2 CVC chain has temporally invalid certificates")
+            return False, None
 
         self.logger.info("G2 CVC MSCA→Card link VERIFIED")
         return "Partial — MSCA→Card verified (no ERCA root)", card_pub

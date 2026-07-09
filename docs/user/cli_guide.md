@@ -1,36 +1,21 @@
 # Command-Line Interface (CLI) Guide
 
-The DDD Tachograph Reader provides two command-line entry points: a simple parser (`app/main.py`) and an advanced CLI (`app/cli.py`) with export and reporting options.
+The DDD Tachograph Reader provides `app/cli.py` for command-line parsing, export,
+and reporting. `app/main.py` is a compatibility entry point that delegates to the
+same CLI.
 
 ---
 
-## Basic Usage — app/main.py
+## Basic Usage
 
 The simplest invocation parses a file and prints JSON to standard output:
 
 ```bash
-python app/main.py file.ddd
+python app/cli.py file.ddd
 ```
 
-**Options**:
-
-| Flag | Description |
-|------|-------------|
-| `-o FILE`, `--output FILE` | Save JSON output to a file instead of printing to screen |
-| `-v`, `--verbose` | Enable debug logging |
-| `--version` | Print the program version |
-
-Example with output file:
-
-```bash
-python app/main.py file.ddd -o result.json -v
-```
-
----
-
-## Advanced CLI — app/cli.py
-
-The advanced CLI (`app/cli.py`) adds export formats and an on-screen summary.
+Use `python app/main.py` in the examples below if a compatibility entry point is
+needed; it accepts the same options.
 
 ### Parse and Display Summary
 
@@ -71,7 +56,7 @@ python app/cli.py file.ddd --excel report.xlsx
 python app/cli.py file.ddd --pdf report.pdf
 ```
 
-**All formats at once** (JSON, PDF, Excel into a directory):
+**All formats at once** (JSON, PDF, Excel, CSV into a directory):
 
 ```bash
 python app/cli.py file.ddd --all output_dir/
@@ -94,6 +79,7 @@ python app/cli.py file.ddd --verbose --summary
 | `--json` | `[FILE]` | Generate JSON output (optional output path) |
 | `--pdf` | `[FILE]` | Generate PDF report (optional output path) |
 | `--excel` | `[FILE]` | Generate Excel report (optional output path) |
+| `--csv` | `[FILE]` | Generate CSV report (optional output path) |
 | `--all` | `[DIR]` | Generate all formats into a directory |
 | `--summary` | — | Show compact text summary on screen |
 | `--version` | — | Print the program version |

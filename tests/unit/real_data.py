@@ -20,6 +20,14 @@ def real_ddd_files():
             if n.lower().endswith(".ddd")]
 
 
+def require_real_file(name):
+    """Return a named private fixture or skip only tests that require it."""
+    path = os.path.join(DDD_DIR, name)
+    if not os.path.isfile(path):
+        raise unittest.SkipTest(f"Private DDD fixture not available: {name}")
+    return path
+
+
 HAS_REAL_FILES = bool(real_ddd_files())
 
 requires_real_files = unittest.skipUnless(

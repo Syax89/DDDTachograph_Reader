@@ -9,7 +9,7 @@
 [![Build and Release](https://github.com/Syax89/ddd-tachograph-reader/actions/workflows/build.yml/badge.svg)](https://github.com/Syax89/ddd-tachograph-reader/actions/workflows/build.yml)
 [![Latest Release](https://img.shields.io/github/v/release/Syax89/ddd-tachograph-reader)](https://github.com/Syax89/ddd-tachograph-reader/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 
 ---
 
@@ -42,10 +42,11 @@ Download from the **[Releases](https://github.com/Syax89/ddd-tachograph-reader/r
 
 | Platform | File |
 |----------|------|
-| Windows | `TachoReader-Windows.zip` |
-| macOS | `TachoReader-Mac.zip` |
+| Windows | `TachoReader-v<version>-windows-x64.zip` |
+| macOS | `TachoReader-v<version>-macos.dmg` |
 
-Extract and run `TachoReader` — no installation required.
+Extract the Windows archive and run `TachoReader.exe`. Open the macOS disk image
+and drag `TachoReader.app` to Applications.
 
 ### From Source (developers)
 
@@ -67,38 +68,21 @@ python app/cli.py path/to/file.ddd
 
 ```
 ddd-tachograph-reader/
-├── app/gui.py                  # GUI (tree + table, tkinter)
-├── app/cli.py                 # Main CLI
-├── app/main.py                      # Minimal CLI entry point
-├── app/engine.py                # Core parser entry point
-├── core/crypto/signature.py       # Certificate chain validation
-├── app/export.py            # PDF/Excel/CSV/JSON export
+├── app/
+│   ├── cli.py                  # Command-line interface
+│   ├── main.py                 # CLI compatibility entry point
+│   ├── gui.py                  # GUI (tree + table, tkinter)
+│   ├── engine.py               # TachoParser entry point
+│   └── export.py               # PDF/Excel/CSV/JSON export
 ├── core/
-│   ├── decoders.py              # Facade re-exporting all field decoders
-│   ├── decode_primitives.py     # Shared low-level decode helpers
-│   ├── card_decoders.py         # Card EF decoders (G1/G2)
-│   ├── g22_card_decoders.py     # Gen 2.2 card decoders
-│   ├── cert_decoders.py         # Certificate / public-key decoders
-│   ├── vu_trep_decoders.py      # VU overview + TREP walkers
-│   ├── g2_decoders.py           # G2/G2.2 VU RecordArray decoders
-│   ├── decoder_registry.py      # Centralized tag→decoder registry
-│   ├── deterministic_parser.py  # Schema-driven deterministic parser
-│   ├── g1_vu_walker.py          # Deterministic G1 VU TREP walker (Annex 1B)
-│   ├── record_array.py          # RecordArray parser (Annex 1C)
-│   ├── vu_record_dispatcher.py  # VU RecordArray stream dispatcher
-│   ├── vu_signature_verifier.py # ECDSA + CVC certificate verification
-│   ├── report_format.py         # Shared export formatting
-│   ├── models.py                # Data models (TachoResult)
-│   ├── tag_definitions.py       # Tag ID → name mappings
-│   ├── coverage_utils.py        # Shared interval merge + padding detection
-│   ├── encoding.py              # Shared BytesEncoder for JSON
-│   ├── event_fault_codes.py     # Event/fault/condition descriptions (EU Reg.)
-│   ├── version.py               # Single version source
-│   ├── constants.py             # Shared constants
-│   └── logger.py                # Centralized logging (thread-safe)
+│   ├── decoders/                # Field-level decoders and primitives
+│   ├── parser/                  # Deterministic, G1, and VU parsers
+│   ├── registry/                # Decoder registry and result models
+│   ├── crypto/                  # Certificate and signature validation
+│   └── utils/                   # Shared helpers, constants, and version
 ├── certs/                       # ERCA root certificates
 ├── tests/                       # Test suite
-├── scripts/                       # Specifications and audits
+├── scripts/                     # Specifications and audits
 ├── docs/                        # Documentation
 └── .github/workflows/           # CI/CD (lint, tests, Windows/macOS builds)
 ```
@@ -118,11 +102,13 @@ ddd-tachograph-reader/
 ## Testing
 
 ```bash
-pip install pytest
-pytest tests/ -v
+pip install -r requirements.txt
+python -m pytest tests/ -v
 ```
 
-123 tests: multi-generation detection, G1/G2/G2.2 parsing, byte coverage, fuzzing, digital signatures.
+The suite covers multi-generation detection, G1/G2/G2.2 parsing, byte coverage,
+fuzzing, and digital signatures. Tests requiring private DDD samples skip when
+those fixtures are unavailable.
 
 ---
 

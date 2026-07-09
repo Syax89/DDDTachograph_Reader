@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from core.decoders import parse_g22_auth_subtag
 from scripts.unparsed_pattern_triage import triage_directory
+from tests.unit.real_data import real_ddd_files
 
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -43,8 +44,8 @@ class TestUnparsedPatternTriage(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        if not os.path.isdir(DDD_DIR):
-            raise unittest.SkipTest("DDD directory not found")
+        if not real_ddd_files():
+            raise unittest.SkipTest("No private DDD fixtures found")
 
     def test_triage_runs_and_returns_top_patterns(self):
         # An empty report means every byte of every real file is classified

@@ -7,8 +7,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from app.engine import TachoParser
 
-MOCK_DIR = os.path.join(os.path.dirname(__file__), "mock_data")
-REAL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "DDD")
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+MOCK_DIR = os.path.join(ROOT_DIR, "tests", "mock_data")
+REAL_DIR = os.path.join(ROOT_DIR, "DDD")
 
 
 def _should_skip_mock():
@@ -23,7 +24,10 @@ class TestMockDDDCoverage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if _should_skip_mock():
-            raise unittest.SkipTest("Mock DDD files not generated. Run tests/generate_mock_ddd.py first.")
+            raise unittest.SkipTest(
+                "Mock DDD files not generated. "
+                "Run tests/integration/generate_mock_ddd.py first."
+            )
 
     def _parse_and_check(self, filename, min_pct=95):
         path = os.path.join(MOCK_DIR, filename)

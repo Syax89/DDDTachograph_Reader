@@ -15,14 +15,14 @@ from core.parser.vu_dispatcher import (
     decode_specific_condition,
     walk_vu_record_arrays,
 )
-from tests.unit.real_data import requires_real_files
+from tests.unit.real_data import real_ddd_files, require_real_file, requires_real_files
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DDD_DIR = os.path.join(ROOT_DIR, "DDD")
 
 
 def _path(name):
-    return os.path.join(DDD_DIR, name)
+    return require_real_file(name)
 
 
 class TestBorderCrossingDecode(unittest.TestCase):
@@ -112,10 +112,14 @@ class TestRealFileRecovery(unittest.TestCase):
         self.assertEqual(bc[0]["country_entered"], "F")
 
     def test_g2_vu_files_recover_activities(self):
-        for name in (
+        names = (
             "V600625842504021733_1740873600-1743465600.ddd",
             "V_20250710_1206_EUROCARGO_GB000AL.ddd",
-        ):
+        )
+        available = [name for name in names if os.path.isfile(os.path.join(DDD_DIR, name))]
+        if not available:
+            self.skipTest("No private VU activity-recovery fixture available")
+        for name in available:
             with self.subTest(file=name):
                 r = TachoParser(_path(name)).parse()
                 events = sum(len(a.get("changes", [])) for a in r.get("activities", []))
@@ -146,12 +150,18 @@ class TestFullDecodeCoverage(unittest.TestCase):
         import struct
         from core.parser.vu_dispatcher import _decode_record
 
-        for name in os.listdir(DDD_DIR):
+        candidates = []
+        for path in real_ddd_files():
+            name = os.path.basename(path)
             if not name.lower().endswith(".ddd"):
                 continue
-            data = open(_path(name), "rb").read()
+            data = open(path, "rb").read()
             if not data.startswith(b"\x76") or data[1] in (0x06, 0x26, 0x36):
                 continue  # card file or TREP card download, not a VU RecordArray stream
+            candidates.append((name, data))
+        if not candidates:
+            self.skipTest("No private VU RecordArray fixture available")
+        for name, data in candidates:
             with self.subTest(file=name):
                 raw = 0
                 total = 0

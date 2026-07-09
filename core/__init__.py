@@ -3,7 +3,6 @@
 # ruff: noqa: F401
 
 from core.decoders import (
-    _CODEPAGE_ENCODINGS,
     get_nation,
     decode_string,
     decode_date,
@@ -11,9 +10,6 @@ from core.decoders import (
     decode_activity_val,
     get_cyclic_data,
     parse_cyclic_buffer_activities,
-    _decode_gnss_coord,
-    _decode_vehicle_record,
-    _vehicle_record_valid,
     parse_card_download,
     parse_control_activity_data,
     parse_g1_vu_overview,

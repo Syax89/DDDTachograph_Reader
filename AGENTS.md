@@ -4,16 +4,15 @@
 Cross-platform (Windows/macOS) application for parsing, analyzing and visualizing data from digital tachograph files (`.ddd` format). EU digital tachographs record driver activity, vehicle data, GNSS positions, and security certificate chains.
 
 ## Key architecture
-- **Entry point**: `app/app/main.py` (CLI) → `app/engine.py` (TachoParser) → `core/parser/deterministic.py` (STAP/BER-TLV + VU stream walks, full byte coverage)
-- **Decoders**: `core/decoders/` — field-level decoders (card, g22_card, cert, vu_trep, g2_dispatch) + `primitives.py` shared helpers
+- **Entry point**: `app/main.py` (CLI compatibility entry point) → `app/cli.py` / `app/engine.py` (TachoParser) → `core/parser/deterministic.py` (STAP/BER-TLV + VU stream walks, full byte coverage)
+- **Decoders**: `core/decoders/` — type-split field decoders: `common.py` (shared helpers), `card_ef.py` (card EFs, multi-gen), `card_g22.py` (G2.2 card tags), `cert.py` (certificates), `vu_g1.py` (G1 VU stream), `vu_g2.py` (G2/G2.2 VU RecordArray dispatch); re-exported via the `__init__.py` facade
 - **Parser engine**: `core/parser/` — deterministic.py, record_array.py, vu_dispatcher.py (RecordArray walker), g1_walker.py
 - **Registry**: `core/registry/` — decoder_registry.py (tag→decoder mapping), models.py (TachoResult)
 - **Crypto**: `core/crypto/` — signature.py (root validator), vu_signature.py (ECDSA TREP + CVC chain), ef_signature.py (card data integrity)
 - **Utils**: `core/utils/` — ber_tlv, coverage, encoding, constants, logger, version, report_format, event_codes, tag_defs
 - **GUI**: `app/gui.py` — regedit-style tree + table viewer with Excel/CSV/JSON export
-- **CLI**: `app/cli.py` — full-featured CLI; `app/app/main.py` — minimal CLI
+- **CLI**: `app/cli.py` — full-featured CLI; `app/main.py` — compatibility entry point
 - **Export**: `app/export.py` — multi-sheet Excel + CSV + PDF
-- **Export**: `app/export.py` — comprehensive multi-sheet Excel + flat CSV export
 
 ## Running tests
 ```bash

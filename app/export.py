@@ -6,6 +6,7 @@ the three formats present the same content consistently.
 """
 import logging
 import re
+from xml.sax.saxutils import escape
 
 from core.utils.report_format import records_to_table, section_tables, summary_rows
 
@@ -15,6 +16,17 @@ _EXCEL_MAX_ROWS = 50000
 _PDF_MAX_ROWS = 1500
 
 _SHEET_NAME_RE = re.compile(r"[\[\]*?:/\\]")
+_NUMBER_TEXT_RE = re.compile(
+    r"^[+-]?(?:\d{1,3}(?: \d{3})+|\d+)(?:\.\d+)?(?:[eE][+-]?\d+)?$"
+)
+
+
+def _spreadsheet_value(value):
+    """Prevent text from being interpreted as a spreadsheet formula."""
+    if (isinstance(value, str) and value.startswith(("=", "+", "-", "@"))
+            and not _NUMBER_TEXT_RE.fullmatch(value)):
+        return "'" + value
+    return value
 
 
 class ExportManager:
@@ -47,13 +59,13 @@ class ExportManager:
 
         def _write_table(ws, headers, rows, start_row=1):
             for c, header in enumerate(headers, start=1):
-                cell = ws.cell(row=start_row, column=c, value=header)
+                cell = ws.cell(row=start_row, column=c, value=_spreadsheet_value(header))
                 cell.font = HEADER_FONT
                 cell.fill = HEADER_FILL
                 cell.alignment = Alignment(vertical="center")
             for r, row in enumerate(rows, start=start_row + 1):
                 for c, value in enumerate(row, start=1):
-                    cell = ws.cell(row=r, column=c, value=value)
+                    cell = ws.cell(row=r, column=c, value=_spreadsheet_value(value))
                     if (r - start_row) % 2 == 0:
                         cell.fill = STRIPE_FILL
             ws.freeze_panes = ws.cell(row=start_row + 1, column=1)
@@ -69,8 +81,8 @@ class ExportManager:
         row = 3
         for field, value in summary_rows(data):
             if field or value:
-                ws.cell(row=row, column=1, value=field).font = Font(bold=True)
-                ws.cell(row=row, column=2, value=value)
+                ws.cell(row=row, column=1, value=_spreadsheet_value(field)).font = Font(bold=True)
+                ws.cell(row=row, column=2, value=_spreadsheet_value(value))
             row += 1
         ws.column_dimensions["A"].width = 26
         ws.column_dimensions["B"].width = 70
@@ -108,7 +120,7 @@ class ExportManager:
             wsx = wb.create_sheet(safe_label)
             if desc:
                 wsx.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
-                cell = wsx.cell(row=1, column=1, value=desc)
+                cell = wsx.cell(row=1, column=1, value=_spreadsheet_value(desc))
                 cell.font = Font(italic=True, color="666666", size=9)
                 _write_table(wsx, headers, rows, start_row=2)
             else:
@@ -127,26 +139,30 @@ class ExportManager:
         with open(filepath, "w", newline="", encoding="utf-8-sig") as handle:
             writer = csv.writer(handle, delimiter=";")
 
-            writer.writerow(["DDD TACHOGRAPH REPORT"])
+            def _write_row(row):
+                writer.writerow([_spreadsheet_value(value) for value in row])
+
+            _write_row(["DDD TACHOGRAPH REPORT"])
             for field, value in summary_rows(data):
                 if field or value:
-                    writer.writerow([field, value])
-            writer.writerow([])
+                    _write_row([field, value])
+            _write_row([])
 
             wrote_any = False
             for label, desc, headers, rows, truncated in section_tables(data):
-                writer.writerow([f"=== {label.upper()} ==="])
+                _write_row([f"=== {label.upper()} ==="])
                 if desc:
-                    writer.writerow([desc])
-                writer.writerow(headers)
-                writer.writerows(rows)
+                    _write_row([desc])
+                _write_row(headers)
+                for row in rows:
+                    _write_row(row)
                 if truncated:
-                    writer.writerow(["… (truncated)"])
-                writer.writerow([])
+                    _write_row(["… (truncated)"])
+                _write_row([])
                 wrote_any = True
 
             if not wrote_any:
-                writer.writerow(["No data found"])
+                _write_row(["No data found"])
 
     # ── PDF ──────────────────────────────────────────────────────────────
 
@@ -167,9 +183,18 @@ class ExportManager:
 
         def _t2m(ts):
             parts = str(ts).split(":")
-            if len(parts) == 2:
-                return int(parts[0]) * 60 + int(parts[1])
-            return 0
+            if len(parts) != 2:
+                return None
+            try:
+                hours, minutes = (int(part) for part in parts)
+            except ValueError:
+                return None
+            if not 0 <= hours <= 24 or not 0 <= minutes < 60 or (hours == 24 and minutes):
+                return None
+            return hours * 60 + minutes
+
+        def _pdf_text(value):
+            return escape(str(value))
 
         PRIMARY = colors.HexColor("#1F4E79")
         STRIPE = colors.HexColor("#EFF4FA")
@@ -259,7 +284,7 @@ class ExportManager:
             t_style = act_total_style if is_activity else total_style
             pad = 2 if is_activity else 4
 
-            table_data = [[Paragraph(str(h), h_style) for h in headers]]
+            table_data = [[Paragraph(_pdf_text(h), h_style) for h in headers]]
             alignments = []
             if is_activity:
                 alignments = [TA_LEFT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT]
@@ -269,7 +294,7 @@ class ExportManager:
                 for _c, val in enumerate(row):
                     s = str(val) if val else ""
                     st = t_style if _is_total_row(row) else c_style
-                    p = Paragraph(s, st) if s else ""
+                    p = Paragraph(_pdf_text(s), st) if s else ""
                     cells.append(p)
                 table_data.append(cells)
 
@@ -315,8 +340,9 @@ class ExportManager:
 
         story.append(Paragraph("Tachograph Report", title_style))
         story.append(Paragraph(
-            f"{meta.get('filename', '')}  ·  {meta.get('generation', '')}  ·  "
-            f"{'Vehicle Unit' if meta.get('is_vu') else 'Driver Card'}",
+            _pdf_text(
+                f"{meta.get('filename', '')}  ·  {meta.get('generation', '')}  ·  "
+                f"{'Vehicle Unit' if meta.get('is_vu') else 'Driver Card'}"),
             subtitle_style))
         story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY,
                                 spaceBefore=4, spaceAfter=8))
@@ -343,6 +369,8 @@ class ExportManager:
                 act = str(ch.get("activity", "")).upper()
                 t1 = _t2m(str(ch.get("time", "00:00")))
                 t2 = _t2m(str(changes[i + 1].get("time", "00:00"))) if i + 1 < len(changes) else 1440
+                if t1 is None or t2 is None:
+                    continue
                 if t2 < t1:
                     t2 += 1440
                 if act == "DRIVE":
@@ -372,7 +400,7 @@ class ExportManager:
         # Driver info
         if driver.get("surname"):
             story.append(Paragraph(
-                f"{driver.get('firstname', '')} {driver.get('surname', '')}".strip(),
+                _pdf_text(f"{driver.get('firstname', '')} {driver.get('surname', '')}".strip()),
                 subtitle_style))
             story.append(Spacer(1, 2 * mm))
 
@@ -422,18 +450,18 @@ class ExportManager:
                             month_name = str(r[0]).replace(" TOTAL", "")
                             break
                     story.append(Paragraph(
-                        f"Daily Activities — {month_name} ({len(month_rows)} rows)",
+                        _pdf_text(f"Daily Activities — {month_name} ({len(month_rows)} rows)"),
                         act_section_style))
                     if mi == 0 and desc:
-                        story.append(Paragraph(desc, note_style))
+                        story.append(Paragraph(_pdf_text(desc), note_style))
                         story.append(Spacer(1, 2 * mm))
                     story.append(_table(headers, month_rows, is_activity=True))
                     story.append(Spacer(1, 5 * mm))
             else:
                 story.append(Paragraph(
-                    f"{label} ({len(rows)}{'+' * truncated})", section_style))
+                    _pdf_text(f"{label} ({len(rows)}{'+' * truncated})"), section_style))
                 if desc:
-                    story.append(Paragraph(desc, note_style))
+                    story.append(Paragraph(_pdf_text(desc), note_style))
                     story.append(Spacer(1, 2 * mm))
                 story.append(_table(headers, rows))
                 if truncated:

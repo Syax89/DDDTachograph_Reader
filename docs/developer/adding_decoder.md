@@ -24,12 +24,12 @@ Decide where to place the decoder based on generation and card/VU scope:
 
 | Scope | File |
 |---|---|
-| G1/G2 card EF data | `core/decoders/card.py` |
-| G2/G2.2 VU RecordArray records | `core/decoders/g2_dispatch.py` |
-| G2.2 card GNSS/Load/Trailer | `core/decoders/g22_card.py` |
+| G1/G2 card EF data | `core/decoders/card_ef.py` |
+| G2/G2.2 VU RecordArray records | `core/parser/vu_dispatcher.py` (dispatched via `core/decoders/vu_g2.py`) |
+| G2.2 card GNSS/Load/Trailer | `core/decoders/card_g22.py` |
 | Certificates / public keys | `core/decoders/cert.py` |
-| VU overview / TREP walkers | `core/decoders/vu_trep.py` |
-| Shared low-level helpers | `core/decoders/primitives.py` |
+| G1 VU overview / TREP walkers | `core/decoders/vu_g1.py` |
+| Shared low-level helpers | `core/decoders/common.py` |
 
 Add the new function to the re-export list in `core/decoders/__init__.py` (the facade through which the registry and all other modules import decoders).
 
@@ -69,7 +69,7 @@ def parse_new_tag(data: bytes, results: dict, tag: int) -> None:
 ### Example: Hypothetical `VuVehicleAuthorizationRecord` (0x0534)
 
 ```python
-# In core/decoders/g2_dispatch.py
+# In core/decoders/card_g22.py
 
 def parse_g22_vehicle_authorization(data: bytes, offset: int = 0):
     """Decode a G2.2 VuVehicleAuthorizationRecord (tag 0x0534).
@@ -115,7 +115,7 @@ Add a `TagDecoder` entry in `core/registry/registry.py`, inside the `_build()` m
 
 ```python
 TagDecoder(0x0534, "VuVehicleAuthorizationRecord",
-           decoders.parse_g22_vehicle_authorization,  # or g2_decoders.
+           decoders.parse_g22_vehicle_authorization,
            annex_ref="Reg. EU 2023/980", generation="G2.2",
            vu_only=True, record_size=18),
 ```
@@ -128,13 +128,7 @@ Key fields:
 
 ### Import the decoder
 
-If the decoder lives in `core/decoders/g2_dispatch.py`, make sure to import it at the top of the `_build()` method:
-
-```python
-from . import g2_decoders
-
-# Then reference as g2_decoders.parse_g22_vehicle_authorization
-```
+The registry imports decoders through the `core.decoders` facade, so make sure the new function is re-exported from `core/decoders/__init__.py`. It is then reachable as `decoders.parse_g22_vehicle_authorization` inside `_build()`.
 
 ## Step 4: Dispatch Is Automatic
 

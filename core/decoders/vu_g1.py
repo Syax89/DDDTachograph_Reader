@@ -1,70 +1,14 @@
-"""Vehicle-unit download decoders: VU overview, TREP 02-06 walkers (Annex 1B) and the G2/G2.2 VU RecordArray dispatcher."""
+"""Vehicle-unit G1 download decoders: VU overview and TREP 02-06 stream walkers (Annex 1B)."""
 
 import struct
 from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
-from core.decoders.primitives import decode_activity_val, decode_date, decode_string, get_nation, parse_cyclic_buffer_activities
+from core.decoders.common import decode_activity_val, decode_date, decode_string, get_nation, parse_cyclic_buffer_activities
 from core.decoders.cert import parse_g1_certificate
 from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault
 
 _log = get_logger(__name__)
-
-def parse_g2_vu_record(val, results, tag):
-    """Dispatch G2/G2.2 VU records to appropriate decoders.
-
-    Handles tags 0x0509-0x0512 (G2 VU records) and 0x052B-0x0533 (G2.2 VU records).
-    The raw value may be a RecordArray or a single record.
-    """
-    # Lazy imports to break circular dependency (g2_decoders -> decoders -> g2_decoders)
-    from core.decoders import g2_dispatch as _g2
-    from core.parser.record_array import RecordArrayParser as _RAP
-
-    try:
-        decoders_map = _g2.G2_VU_RECORD_DECODERS
-        if tag not in decoders_map:
-            return
-
-        name, decode_fn, default_size = decoders_map[tag]
-
-        key_map = {
-            0x0509: "card_records",
-            0x050A: "card_iw_records",
-            0x050B: "downloadable_periods",
-            0x050D: "time_adjustments",
-            0x050F: "company_locks",
-            0x0510: "sensor_paired",
-            0x0511: "sensor_gnss_coupled",
-            0x0512: "its_consents",
-            0x052B: "vu_controller",
-            0x052C: "detailed_speed",
-            0x052D: "overspeeding_events",
-            0x052E: "overspeeding_control",
-            0x052F: "time_adj_gnss",
-            0x0530: "power_interruptions",
-            0x0531: "sensor_faults",
-            0x0532: "sensor_gnss_coupled_g22",
-            0x0533: "sensor_paired_g22",
-        }
-        result_key = key_map.get(tag, f"g2_{tag:04X}")
-
-        hdr = _RAP.parse_header(val, 0)
-        if hdr and hdr["record_size"] > 0 and hdr["no_of_records"] > 0:
-            records = []
-            for _idx, rec, _ in _RAP.iter_records(val, 0):
-                decoded = decode_fn(rec)
-                if decoded:
-                    records.append(decoded)
-            if records:
-                results.setdefault(result_key, []).extend(records)
-        else:
-            # Bare record without a RecordArray header: same destination key,
-            # so consumers (GUI/export) see the data regardless of wrapping.
-            decoded = decode_fn(val)
-            if decoded:
-                results.setdefault(result_key, []).append(decoded)
-    except (struct.error, IndexError, ValueError, KeyError, AttributeError) as exc:
-        _log.debug("G2 VU record parse failed for tag 0x%04X: %s", tag, exc)
 
 def parse_vu_vehicle_identification(val, results):
     """Parse VU_VehicleIdentification (tag 0x0001 in VU context)."""
@@ -596,7 +540,9 @@ def _parse_trep_02_g1_structured(data, results):
         changes = []
         for i in range(n_ch):
             v = struct.unpack(">H", data[pos + i * 2:pos + i * 2 + 2])[0]
-            changes.append(decode_activity_val(v))
+            activity = decode_activity_val(v)
+            if activity is not None:
+                changes.append(activity)
         pos += n_ch * 2
 
         n_pl = data[pos]

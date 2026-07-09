@@ -20,7 +20,7 @@ Ottenuta incrociando l'ordine osservato dei RecordArray con l'ordine imposto dal
 normativa per ogni TREP (Appendix 7, DDP_029..033), poi confermato per size.
 Implementata in `core/parser/vu_dispatcher.py` (`RECORD_TYPES`). Stato decodifica:
 **100% dei record VU field-decoded** (high+medium) sui file reali in `DDD/` —
-nessun record lasciato raw. Invariante blindata da `tests/test_vu_dispatcher.py`
+nessun record lasciato raw. Invariante blindata da `tests/integration/test_vu_dispatcher.py`
 (`test_no_raw_records_in_real_files`). Le firme ECC (0x08) e i certificati
 (0x04/0x0F) sono "decodificati" come blob opachi/raw per design (il parsing
 crittografico è del layer `signature_validator`).

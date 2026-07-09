@@ -128,15 +128,17 @@ Field-level byte decoders, split by scope. `core/decoders/__init__.py` is a faca
 
 | Module | Contents |
 |---|---|
-| `core/decoders/primitives.py` | Shared helpers: nations, code-page strings, dates, activity values, cyclic activity buffers |
-| `core/decoders/card.py` | Card EFs: ICC/IC, identification, licence, events/faults, places, vehicles used, calibrations, control activities, company data |
-| `core/decoders/g22_card.py` | G2.2 tags: GNSS accumulated driving, load/unload, trailers, enhanced places, load sensor, border crossings |
+| `core/decoders/common.py` | Shared helpers: nations, code-page strings, dates, activity values, cyclic activity buffers |
+| `core/decoders/card_ef.py` | Card EFs (multi-generation): ICC/IC, identification, licence, events/faults, places, vehicles used, calibrations, control activities, company data |
+| `core/decoders/card_g22.py` | G2.2 card tags: GNSS accumulated driving, load/unload, trailers, enhanced places, load sensor, border crossings |
 | `core/decoders/cert.py` | Certificates: G1 RSA profiles, signatures, public keys, G2.2 CVC profiles and auth sub-tags |
-| `core/decoders/vu_trep.py` | VU download messages: overview, TREP 02–06 walkers, G2/G2.2 VU RecordArray dispatch |
+| `core/decoders/vu_g1.py` | G1 VU download messages: overview + TREP 02–06 stream walkers |
+| `core/decoders/vu_g2.py` | G2/G2.2 VU RecordArray dispatch (`parse_g2_vu_record`) |
 
-`g2_decoders.py` (~567 lines) handles G2/G2.2 VU RecordArray records:
-- `parse_g2_card_record()` (0x0509): 29-byte card records
-- `parse_g2_card_iw_record()` (0x050A): 29-byte insertion/withdrawal records
+`core/decoders/vu_g2.py` dispatches G2/G2.2 VU RecordArray records to the
+record-type decoders in `core/parser/vu_dispatcher.py`:
+- `decode_vu_card_record()` (0x0509): card records
+- `decode_card_iw()` (0x050A): insertion/withdrawal records
 - `parse_g2_vu_record()`: Generic dispatcher for all G2/G2.2 VU record types using RecordArray format
 
 ### Models (`core/registry/models.py`)

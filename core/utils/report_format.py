@@ -232,10 +232,16 @@ def records_to_table(records):
 
 
 def _time_to_minutes(time_str):
-    parts = time_str.split(":")
-    if len(parts) == 2:
-        return int(parts[0]) * 60 + int(parts[1])
-    return 0
+    parts = str(time_str).split(":")
+    if len(parts) != 2:
+        return None
+    try:
+        hours, minutes = (int(part) for part in parts)
+    except ValueError:
+        return None
+    if not 0 <= hours <= 24 or not 0 <= minutes < 60 or (hours == 24 and minutes):
+        return None
+    return hours * 60 + minutes
 
 
 def _hours_str(minutes):
@@ -273,6 +279,8 @@ def _compute_day_hours(day):
             t2 = _time_to_minutes(str(changes[i + 1].get("time", "00:00")))
         else:
             t2 = 24 * 60
+        if t1 is None or t2 is None:
+            continue
         if t2 < t1:
             t2 += 24 * 60
         buckets[bucket] += t2 - t1
@@ -460,3 +468,92 @@ def section_tables(data, max_rows=None):
             continue
         desc = SECTION_DESCRIPTIONS.get(key, "")
         yield label, desc, ["Field", "Value"], rows, False
+
+
+# ── Code-name mappings (shared across GUI + exports) ─────────────────────────
+
+# TREP markers (second byte after 0x76).  The same marker set appears in
+# G1 (0x01–0x06), G2 (0x21–0x26) and G2.2 (0x31–0x36) generations.
+_TREP_MAP = {
+    0x01: "TREP 01",   0x21: "TREP 21",   0x31: "TREP 31",
+    0x02: "TREP 02",   0x22: "TREP 22",   0x32: "TREP 32",
+    0x03: "TREP 03",   0x23: "TREP 23",   0x33: "TREP 33",
+    0x04: "TREP 04",   0x24: "TREP 24",   0x34: "TREP 34",
+    0x05: "TREP 05",   0x25: "TREP 25",   0x35: "TREP 35",
+    0x06: "TREP 06",   0x11: "TREP 11",
+    0x14: "TREP 14",
+}
+
+# G2/G2.2 VU RecordArray record types (Annex 1C Appendix 7).
+_RECORD_TYPE_MAP = {
+    0x01: "ActivityChangeInfo",
+    0x02: "CardSlotsStatus",
+    0x03: "CurrentDateTime",
+    0x04: "MemberStateCertificate",
+    0x05: "OdometerValueMidnight",
+    0x06: "DateOfDayDownloaded",
+    0x08: "SignatureRecord",
+    0x09: "VuSpecificConditionRecord",
+    0x0A: "VehicleIdentificationNumber",
+    0x0B: "VehicleRegistrationNumber",
+    0x0C: "VuCalibrationRecord",
+    0x0D: "VuCardIWRecord",
+    0x0E: "VuCardRecord",
+    0x0F: "VUCertificate",
+    0x10: "VuCompanyLocksRecord",
+    0x11: "VuControlActivityRecord",
+    0x12: "VuDetailedSpeedBlock",
+    0x13: "VuDownloadablePeriod",
+    0x14: "VuDownloadActivityData",
+    0x15: "VuEventRecord",
+    0x16: "VuGNSSADRecord",
+    0x17: "VuITSConsentRecord",
+    0x18: "VuFaultRecord",
+    0x19: "VuIdentification",
+    0x1A: "VuOverSpeedingControlData",
+    0x1B: "VuOverSpeedingEventRecord",
+    0x1C: "VuPlaceDailyWorkPeriodRecord",
+    0x1E: "VuTimeAdjustmentRecord",
+    0x1F: "VuPowerSupplyInterruptionRecord",
+    0x20: "VuSensorPairedRecord",
+    0x21: "VuSensorExternalGNSSCoupledRecord",
+    0x22: "VuBorderCrossingRecord",
+    0x23: "VuLoadUnloadRecord",
+    0x24: "VehicleRegistrationIdentification",
+    0x29: "ActivityChangeInfo_Slot2",
+    0x40: "VuDetailedSpeedSample",
+    0x60: "Terminator",
+}
+
+# Consolidated lookup: every known numeric code → human label(s).
+_KNOWN_CODES: dict[int, str] = {}
+for _src_map in (_RECORD_TYPE_MAP, _TREP_MAP):
+    for k, v in _src_map.items():
+        if k in _KNOWN_CODES and _KNOWN_CODES[k] != v:
+            _KNOWN_CODES[k] = f"{v} / {_KNOWN_CODES[k]}"
+        else:
+            _KNOWN_CODES[k] = v
+
+
+def code_label(value, key=None) -> str:
+    """Return a human-readable label for a tachograph hex code, or ``""``."""
+    if isinstance(value, int):
+        v = value
+    elif isinstance(value, str):
+        try:
+            v = int(value, 16)
+        except (ValueError, TypeError):
+            return ""
+    else:
+        return ""
+
+    trep_name = _TREP_MAP.get(v)
+    rec_name  = _RECORD_TYPE_MAP.get(v)
+
+    if key == "trep":
+        return trep_name or ""
+    if key == "record_type":
+        return rec_name or ""
+    if trep_name and rec_name and trep_name != rec_name:
+        return f"{trep_name} / {rec_name}"
+    return trep_name or rec_name or ""

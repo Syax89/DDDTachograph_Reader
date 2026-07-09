@@ -9,6 +9,7 @@ Strategy:
 
 import struct
 import inspect
+import heapq
 from typing import Dict, Any, List, Optional, Tuple
 from collections import defaultdict
 from datetime import datetime
@@ -28,28 +29,37 @@ class CoverageTracker:
         self.total_size = total_size
         self.covered_ranges: List[Tuple[int, int]] = []
         self.classifications: Dict[str, int] = defaultdict(int)
+        self.classification_ranges: List[Tuple[int, int, str]] = []
         self.unknown_ranges: List[Tuple[int, int, bytes]] = []
 
     def mark_covered(self, start: int, end: int):
         """Record [start, end) as covered, without classifying it."""
+        start, end = self._bounded_range(start, end)
         if start < end:
             self.covered_ranges.append((start, end))
 
     def mark_classified(self, start: int, end: int, classification: str):
         """Cover [start, end) and tally it under *classification* (e.g. Tag_0504)."""
+        start, end = self._bounded_range(start, end)
         self.mark_covered(start, end)
-        self.classifications[classification] += (end - start)
+        if start < end:
+            self.classifications[classification] += end - start
+            self.classification_ranges.append((start, end, classification))
 
     def mark_padding(self, start: int, end: int, fill_byte: int):
         """Cover [start, end) as a padding run of *fill_byte*."""
-        self.mark_covered(start, end)
-        self.classifications[f"Padding(0x{fill_byte:02X})"] += (end - start)
+        self.mark_classified(start, end, f"Padding(0x{fill_byte:02X})")
 
     def mark_unknown(self, start: int, end: int, data: bytes):
         """Cover [start, end) as undecodable; the raw bytes are kept for triage."""
-        self.mark_covered(start, end)
-        self.classifications["Unknown"] += (end - start)
-        self.unknown_ranges.append((start, end, data))
+        start, end = self._bounded_range(start, end)
+        self.mark_classified(start, end, "Unknown")
+        if start < end:
+            self.unknown_ranges.append((start, end, data[:end - start]))
+
+    def _bounded_range(self, start: int, end: int) -> Tuple[int, int]:
+        """Clamp an external byte interval to this tracker's file bounds."""
+        return max(0, start), min(self.total_size, end)
 
     def merge_ranges(self):
         """Collapse overlapping/adjacent covered ranges in place."""
@@ -79,25 +89,57 @@ class CoverageTracker:
             gaps.append((cursor, self.total_size))
         return gaps
 
+    def get_non_overlapping_classifications(self) -> Dict[str, int]:
+        """Return classification totals without counting nested ranges twice.
+
+        Parent containers are classified before their children. The most recent
+        range owns overlaps, leaving parents with only their header and bytes
+        that were not structurally classified more specifically.
+        """
+        events: Dict[int, List[Tuple[int, int, str]]] = defaultdict(list)
+        boundaries: set[int] = set()
+        for order, (start, end, classification) in enumerate(self.classification_ranges):
+            events[start].append((order, end, classification))
+            boundaries.update((start, end))
+        for start, end in self.covered_ranges:
+            boundaries.update((start, end))
+        if not boundaries:
+            return {}
+
+        totals: Dict[str, int] = defaultdict(int)
+        active: List[Tuple[int, int, str]] = []
+        points = sorted(boundaries)
+        for index, start in enumerate(points[:-1]):
+            for order, end, classification in events[start]:
+                heapq.heappush(active, (-order, end, classification))
+            end = points[index + 1]
+            while active and active[0][1] <= start:
+                heapq.heappop(active)
+            if active:
+                totals[active[0][2]] += end - start
+            elif any(range_start <= start < range_end for range_start, range_end in self.covered_ranges):
+                totals["Unclassified"] += end - start
+        return dict(totals)
+
     def get_section_report(self, file_size: int) -> Dict[str, Any]:
         """Generate a coverage report broken down by file section."""
+        file_size = max(0, file_size)
+        header_end = min(256, file_size)
+        driver_end = max(header_end, min(file_size // 2, file_size))
+        vehicle_end = max(driver_end, min(3 * file_size // 4, file_size))
+        tail_start = max(vehicle_end, file_size - 512)
         sections = {
-            "Header": (0, min(256, file_size)),
-            "Driver Data": (256, min(file_size // 2, file_size)),
-            "Vehicle Data": (file_size // 2, max(file_size // 2, min(3 * file_size // 4, file_size))),
-            "Certificates": (3 * file_size // 4, max(3 * file_size // 4, file_size - 512)),
-            "Signature/Tail": (max(0, file_size - 512), file_size),
+            "Header": (0, header_end),
+            "Driver Data": (header_end, driver_end),
+            "Vehicle Data": (driver_end, vehicle_end),
+            "Certificates": (vehicle_end, tail_start),
+            "Signature/Tail": (tail_start, file_size),
         }
-        # Remove Signature/Tail overlap from Certificates
-        tail_start = max(0, file_size - 512)
-        cert_start, cert_end = sections["Certificates"]
-        if cert_end > tail_start:
-            sections["Certificates"] = (cert_start, tail_start)
 
         self.merge_ranges()
         report = {}
         for section_name, (sec_start, sec_end) in sections.items():
-            if sec_start >= file_size:
+            if sec_start >= sec_end:
                 continue
             covered = sum(
                 max(0, min(e, sec_end) - max(s, sec_start))
@@ -190,7 +232,7 @@ class DeterministicParser:
                 tag, length, hdr_size, payload, dtype = result
                 self.coverage.mark_classified(pos, pos + hdr_size + length, f"Tag_{tag:04X}")
                 self._record_tag(tag, length, payload, pos, hdr_size, depth=0, parent_path="", dtype=dtype)
-                self._dispatch_decoder(tag, payload, dtype=dtype)
+                self._dispatch_decoder(tag, payload, dtype=dtype, offset=pos)
 
                 if self.registry.is_container(tag, generation=self.generation, is_vu=self.is_vu, dtype=dtype):
                     self._parse_container(tag, payload, pos + hdr_size, depth=1,
@@ -223,7 +265,7 @@ class DeterministicParser:
         self.results["coverage"] = {
             "total_bytes": file_size,
             "covered_pct": self.coverage.get_coverage_pct(),
-            "classifications": dict(self.coverage.classifications),
+            "classifications": self.coverage.get_non_overlapping_classifications(),
             "uncovered_ranges": [(f"0x{s:06X}", f"0x{e:06X}", e - s)
                                  for s, e in self.coverage.get_uncovered_ranges()],
         }
@@ -527,7 +569,14 @@ class DeterministicParser:
                 if length == 194:
                     self.parser.card_cert_g1 = payload
 
-    def _dispatch_decoder(self, tag: int, payload: bytes, dtype: Optional[int] = None, parent_tag: Optional[int] = None):
+    def _dispatch_decoder(
+        self,
+        tag: int,
+        payload: bytes,
+        dtype: Optional[int] = None,
+        parent_tag: Optional[int] = None,
+        offset: Optional[int] = None,
+    ):
         """Run the registered decoder for *tag*, respecting card/VU scope.
 
         Signature blocks (dtype 1/3/11/15) are collected for verification but
@@ -547,6 +596,12 @@ class DeterministicParser:
         dec = self.registry.get_decoder(tag, generation=self.generation, is_vu=self.is_vu,
                                        dtype=dtype, parent_tag=parent_tag)
         if dec and dec.decoder_fn:
+            validation_warning = self._validate_decoder_payload(dec, payload, tag, offset)
+            if validation_warning:
+                self.results["metadata"].setdefault("decoder_validation_warnings", []).append(
+                    validation_warning
+                )
+                return
             try:
                 sig = inspect.signature(dec.decoder_fn)
                 n_params = len([p for p in sig.parameters.values()
@@ -559,6 +614,63 @@ class DeterministicParser:
             except Exception:
                 _log.warning("Decoder 0x%04X (%s) dispatch failed", tag,
                            dec.name if dec else "unknown", exc_info=True)
+
+    @staticmethod
+    def _validate_decoder_payload(dec, payload: bytes, tag: int, offset: Optional[int]) -> Optional[Dict[str, Any]]:
+        """Validate registered payload constraints before semantic dispatch.
+
+        Record decoders accept the documented bare-record layout, a two-byte EF
+        pointer prefix, or a five-byte RecordArray envelope. Structural parsing
+        and nested-container walking continue even when semantic dispatch is
+        skipped for an invalid payload.
+        """
+        length = len(payload)
+        issue = None
+        expected = None
+        if length < dec.min_length:
+            issue = "min_length"
+            expected = dec.min_length
+        elif length > dec.max_length:
+            issue = "max_length"
+            expected = dec.max_length
+        elif dec.record_size is not None:
+            record_sizes = dec.record_size if isinstance(dec.record_size, tuple) else (dec.record_size,)
+            valid = False
+            for record_size in record_sizes:
+                is_record_array = (
+                    length >= 5
+                    and int.from_bytes(payload[1:3], "big") == record_size
+                    and 5 + record_size * int.from_bytes(payload[3:5], "big") == length
+                )
+                is_bare_records = length >= record_size and length % record_size == 0
+                is_pointer_prefixed = length >= 2 + record_size and (length - 2) % record_size == 0
+                is_documented_partial = dec.min_length < record_size and dec.min_length <= length < record_size
+                layouts = {
+                    "flat": is_bare_records,
+                    "pointer": is_pointer_prefixed,
+                    "record_array": is_record_array,
+                    "flexible": (
+                        is_record_array or is_bare_records or is_pointer_prefixed or is_documented_partial
+                    ),
+                }
+                if layouts.get(dec.record_layout, layouts["flexible"]):
+                    valid = True
+                    break
+            if not valid:
+                issue = "record_size"
+                expected = list(record_sizes) if len(record_sizes) > 1 else record_sizes[0]
+
+        if issue is None:
+            return None
+        return {
+            "severity": "warning",
+            "code": f"decoder_{issue}_violation",
+            "tag_id": f"0x{tag:04X}",
+            "tag_name": dec.name,
+            "offset": f"0x{offset:08X}" if offset is not None else None,
+            "length": length,
+            "expected": expected,
+        }
 
     def _parse_container(self, tag: int, payload: bytes, container_offset: int, depth: int, parent_path: str):
         """Recursively walk a container payload (STAP or BER per generation)."""
@@ -603,7 +715,8 @@ class DeterministicParser:
             self._record_tag(inner_tag, inner_length, inner_payload,
                              abs_start, hdr_size, depth, parent_path,
                              dtype=inner_dtype, parent_tag=tag)
-            self._dispatch_decoder(inner_tag, inner_payload, dtype=inner_dtype, parent_tag=tag)
+            self._dispatch_decoder(inner_tag, inner_payload, dtype=inner_dtype,
+                                   parent_tag=tag, offset=abs_start)
 
             if self.registry.is_container(inner_tag, generation=self.generation, is_vu=self.is_vu,
                                           dtype=inner_dtype, parent_tag=tag):
@@ -612,4 +725,3 @@ class DeterministicParser:
                 self._parse_container(inner_tag, inner_payload, abs_start + hdr_size, depth + 1, inner_path)
 
             pos += hdr_size + inner_length
-

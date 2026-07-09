@@ -2,6 +2,7 @@ import unittest
 import os
 import sys
 import tempfile
+from unittest.mock import patch
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
@@ -53,6 +54,35 @@ class TestSignatureValidation(unittest.TestCase):
         is_valid, pub_key = self.validator.validate_tacho_chain(card_der, msca_der)
         self.assertTrue(is_valid)
         self.assertIsNotNone(pub_key)
+
+    def test_194_byte_der_and_cvc_certificates_use_g2_validation(self):
+        """G2 encoding markers must override the ambiguous 194-byte G1 length."""
+        for encoding_byte in (0x30, 0x7F):
+            card_cert = bytes([encoding_byte]) + b"x" * 193
+            msca_cert = bytes([encoding_byte]) + b"y" * 193
+            with patch.object(
+                self.validator, "_validate_g2_chain", return_value=(False, None)
+            ) as validate_g2, patch.object(self.validator, "_validate_g1_chain") as validate_g1:
+                self.validator.validate_tacho_chain(card_cert, msca_cert)
+
+            validate_g2.assert_called_once_with(card_cert, msca_cert)
+            validate_g1.assert_not_called()
+
+    def test_missing_certificates_directory_is_not_created(self):
+        """A missing trust store is read-only empty state, not setup work."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            certs_dir = os.path.join(temp_dir, "missing-certs")
+            with self.assertLogs("SignatureValidator", level="WARNING") as logs:
+                validator = SignatureValidator(certs_dir=certs_dir)
+
+            self.assertFalse(os.path.exists(certs_dir))
+            self.assertEqual(validator.root_certificates, {})
+            self.assertTrue(any("empty root store" in message for message in logs.output))
+
+    def test_empty_certificate_input_is_rejected(self):
+        """Missing certificate data must not be indexed during dispatch."""
+        self.assertEqual(self.validator.validate_tacho_chain(b"", b"certificate"), (False, None))
+        self.assertEqual(self.validator.validate_tacho_chain(b"certificate", b""), (False, None))
 
     def test_tampered_data_validation(self):
         """Test if tampering with data is detected."""

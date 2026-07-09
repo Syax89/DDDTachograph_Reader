@@ -13,7 +13,7 @@
 >   recordType, section-aware). Mappa `recordType→size` empirica e verità di terreno
 >   in `scripts/vu_recordtype_map.md`. Bug confermato e risolto: VuBorderCrossingRecord
 >   (recordType 0x22, 55 byte) e le attività VU venivano persi e ora sono recuperati
->   (test in `tests/test_vu_dispatcher.py`).
+>   (test in `tests/integration/test_vu_dispatcher.py`).
 > Le tabelle sottostanti restano utili solo come riferimento storico sulla campologia.
 
 ---

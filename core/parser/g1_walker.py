@@ -33,10 +33,21 @@ subsequent ``0x76 TREP`` marker and on the end of file.
 import struct
 
 from core.utils.logger import get_logger
+from core.decoders.vu_g1 import (
+    parse_g1_vu_overview,
+    _parse_trep_02_activities,
+    _parse_trep_02_g1_structured,
+    _parse_trep_03_events_faults,
+    _parse_trep_04_speed,
+    _parse_trep_05_technical,
+    _parse_trep_06_card_download,
+    _parse_sensor_download,
+)
 
 _log = get_logger(__name__)
 
 RSA_SIGNATURE_LEN = 128
+MAX_CHAIN_VALIDATION_DEPTH = 64
 
 TREP_NAMES = {
     0x01: "Overview",
@@ -128,7 +139,7 @@ def _trep14_body_len(d, p, n):
     return 2 if p + 2 <= n else None
 
 
-def _next_valid_marker(d, p, n):
+def _next_valid_marker(d, p, n, validation_depth=0):
     """Return the next marker that starts a valid TREP chain, or EOF.
 
     TREP 06 CardDownload has no explicit length. Card EF payloads can contain
@@ -142,47 +153,78 @@ def _next_valid_marker(d, p, n):
         if d[pos] == 0x76 and d[pos + 1] in TREP_NAMES:
             # A nested TREP 06 candidate cannot be disambiguated from card EF
             # payload without a length field; keep it inside the card download.
-            if d[pos + 1] != 0x06 and _valid_chain_from(d, pos, n, memo):
+            if d[pos + 1] != 0x06 and _valid_chain_from(d, pos, n, memo, validation_depth + 1):
                 return pos
         pos += 1
     return n
 
 
-def _valid_chain_from(d, pos, n, memo):
-    """Return True if bytes from *pos* to EOF form a valid TREP sequence."""
+def _valid_chain_from(d, pos, n, memo, validation_depth=0):
+    """Return True if bytes from *pos* to EOF form a valid TREP sequence.
+
+    This uses explicit DFS frames rather than Python recursion: a card-download
+    marker can be followed by thousands of valid short TREP messages. Nested
+    variable-length card-download checks are capped separately.
+    """
+    if validation_depth > MAX_CHAIN_VALIDATION_DEPTH:
+        _log.debug("G1 TREP chain validation depth exceeded at 0x%X", pos)
+        return False
     if pos == n:
         return True
-    cached = memo.get(pos)
-    if cached is not None:
-        return cached
-    if not _is_marker(d, pos):
-        memo[pos] = False
-        return False
+    if pos in memo:
+        return memo[pos]
 
-    trep = d[pos + 1]
-    body_start = pos + 2
-    body_len = _BODY_LEN_FNS[trep](d, body_start, n)
-    if body_len is None:
-        memo[pos] = False
-        return False
-    body_end = body_start + body_len
-    if body_end > n:
-        memo[pos] = False
-        return False
+    stack = [(pos, None)]
+    while stack:
+        current, candidate_ends = stack[-1]
+        if current == n:
+            memo[current] = True
+            stack.pop()
+            continue
+        if current in memo:
+            stack.pop()
+            continue
 
-    candidate_ends = []
-    sig_end = body_end + RSA_SIGNATURE_LEN
-    if sig_end == n or _is_marker(d, sig_end):
-        candidate_ends.append(sig_end)
-    if body_end == n or _is_marker(d, body_end):
-        candidate_ends.append(body_end)
+        if candidate_ends is None:
+            if not _is_marker(d, current):
+                memo[current] = False
+                stack.pop()
+                continue
+            trep = d[current + 1]
+            body_start = current + 2
+            if trep == 0x06:
+                body_len = _next_valid_marker(d, body_start, n, validation_depth + 1) - body_start
+            else:
+                body_len = _BODY_LEN_FNS[trep](d, body_start, n)
+            if body_len is None:
+                memo[current] = False
+                stack.pop()
+                continue
+            body_end = body_start + body_len
+            if body_end > n:
+                memo[current] = False
+                stack.pop()
+                continue
+            candidate_ends = []
+            sig_end = body_end + RSA_SIGNATURE_LEN
+            if sig_end == n or _is_marker(d, sig_end):
+                candidate_ends.append(sig_end)
+            if body_end == n or _is_marker(d, body_end):
+                candidate_ends.append(body_end)
+            stack[-1] = (current, candidate_ends)
 
-    for end in candidate_ends:
-        if end > pos and _valid_chain_from(d, end, n, memo):
-            memo[pos] = True
-            return True
-    memo[pos] = False
-    return False
+        if any(end == n or memo.get(end) is True for end in candidate_ends):
+            memo[current] = True
+            stack.pop()
+            continue
+        pending = next((end for end in candidate_ends if end not in memo), None)
+        if pending is not None:
+            stack.append((pending, None))
+            continue
+        memo[current] = False
+        stack.pop()
+
+    return memo.get(pos, False)
 
 
 _BODY_LEN_FNS = {
@@ -245,8 +287,6 @@ def walk_g1_vu(data, results):
     Returns ``(messages, complete)`` where *complete* is True when the walk
     covered the whole file.
     """
-    from core import decoders
-
     data = bytes(data)
     messages = list(iter_g1_vu_messages(data))
     complete = bool(messages) and messages[-1]["end"] == len(data)
@@ -255,17 +295,17 @@ def walk_g1_vu(data, results):
         # The walk yields exact bodies, so try the deterministic layout first:
         # the heuristic wrapper rejects short bodies (< 50 bytes) that are
         # legitimate card-not-inserted days (18-byte TREP 02 messages).
-        if not decoders._parse_trep_02_g1_structured(body, res):
-            decoders._parse_trep_02_activities(body, res)
+        if not _parse_trep_02_g1_structured(body, res):
+            _parse_trep_02_activities(body, res)
 
     dispatch = {
-        0x01: decoders.parse_g1_vu_overview,
+        0x01: parse_g1_vu_overview,
         0x02: _dispatch_trep02,
-        0x03: decoders._parse_trep_03_events_faults,
-        0x04: decoders._parse_trep_04_speed,
-        0x05: decoders._parse_trep_05_technical,
-        0x06: decoders._parse_trep_06_card_download,
-        0x11: decoders._parse_sensor_download,
+        0x03: _parse_trep_03_events_faults,
+        0x04: _parse_trep_04_speed,
+        0x05: _parse_trep_05_technical,
+        0x06: _parse_trep_06_card_download,
+        0x11: _parse_sensor_download,
     }
     for msg in messages:
         body = data[msg["body_start"]:msg["body_end"]]

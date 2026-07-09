@@ -8,6 +8,8 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from app.engine import TachoParser
+from core.parser.deterministic import DeterministicParser
+from core.registry.registry import DecoderRegistry
 from core.decoders import (
     parse_g22_gnss_accumulated_driving,
     parse_g22_load_unload_operations,
@@ -17,15 +19,15 @@ from core.decoders import (
     parse_g22_border_crossings,
     parse_g2_vu_record,
 )
-from core.decoders.g2_dispatch import (
-    parse_g22_detailed_speed,
-    parse_g2_sensor_gnss_coupled,
-    parse_g2_sensor_paired,
-    parse_g22_overspeeding_event,
-    parse_g22_overspeeding_control,
-    parse_g22_time_adj_gnss,
-    parse_g22_power_interruption,
-    parse_g22_sensor_fault,
+from core.parser.vu_dispatcher import (
+    decode_detailed_speed,
+    decode_sensor_gnss_coupled,
+    decode_sensor_paired,
+    decode_overspeeding_event,
+    decode_overspeeding_control,
+    decode_time_adj_gnss,
+    decode_power_interruption,
+    decode_sensor_fault,
 )
 
 
@@ -155,69 +157,69 @@ class TestGen22GracefulFallback:
         assert results.get("load_sensor_data") is None
 
     def test_short_detailed_speed(self):
-        assert parse_g22_detailed_speed(b'\x00' * 10) is None
+        assert decode_detailed_speed(b'\x00' * 10) is None
 
     def test_short_overspeeding_event(self):
-        assert parse_g22_overspeeding_event(b'\x00' * 10) is None
+        assert decode_overspeeding_event(b'\x00' * 10) is None
 
     def test_short_overspeeding_control(self):
-        assert parse_g22_overspeeding_control(b'\x00' * 3) is None
+        assert decode_overspeeding_control(b'\x00' * 3) is None
 
     def test_short_time_adj_gnss(self):
-        assert parse_g22_time_adj_gnss(b'\x00' * 3) is None
+        assert decode_time_adj_gnss(b'\x00' * 3) is None
 
     def test_short_power_interruption(self):
-        assert parse_g22_power_interruption(b'\x00' * 10) is None
+        assert decode_power_interruption(b'\x00' * 10) is None
 
     def test_short_sensor_fault(self):
-        assert parse_g22_sensor_fault(b'\x00' * 10) is None
+        assert decode_sensor_fault(b'\x00' * 10) is None
 
 
 class TestGen22Decoders:
     """Test actual decoding of Gen 2.2 fields."""
 
+    @staticmethod
+    def _coordinate(value):
+        return value.to_bytes(3, "big", signed=True)
+
+    def _gnss_place(self, timestamp=1700000000, latitude=45279, longitude=9114):
+        return (
+            struct.pack(">IB", timestamp, 5)
+            + self._coordinate(latitude)
+            + self._coordinate(longitude)
+            + b"\x01"
+        )
+
     def test_gnss_accumulated_driving_decode(self):
-        """Correctly decode a card-side GNSS accumulated driving record (13 bytes)."""
+        """Decode the pointer-prefixed 19-byte G2.2 card record."""
         ts = 1700000000  # 2023-11-14
-        accuracy = 0x03  # 3 meters
-        lat_raw = int(45.465 * 10_000_000)
-        lon_raw = int(9.19 * 10_000_000)
-        record = struct.pack(">IBii", ts, accuracy, lat_raw, lon_raw)
+        record = struct.pack(">I", ts) + self._gnss_place(ts + 1) + (123456).to_bytes(3, "big")
         results = {}
-        parse_g22_gnss_accumulated_driving(record, results)
+        parse_g22_gnss_accumulated_driving(b"\x00\x00" + record, results)
         assert len(results["gnss_ad_records"]) == 1
         r = results["gnss_ad_records"][0]
         assert abs(r["latitude"] - 45.465) < 0.001
         assert abs(r["longitude"] - 9.19) < 0.001
-        assert r["gnss_accuracy"] == 0x03
-
-    def test_gnss_accumulated_record_array_decode(self):
-        ts = 1700000000
-        record = struct.pack(">IBii", ts, 3, int(45.0 * 10_000_000), int(9.0 * 10_000_000))
-        wrapped = b"\x01" + struct.pack(">HH", 13, 2) + record + record
-        results = {}
-
-        parse_g22_gnss_accumulated_driving(wrapped, results)
-
-        assert len(results["gnss_ad_records"]) == 2
+        assert r["gnss_accuracy"] == 5
+        assert r["vehicle_odometer_value"] == 123456
 
     def test_gnss_enhanced_places_decode(self):
         ts = 1700000000
-        record = struct.pack(">IBiiB", ts, 5, int(45.1 * 10_000_000), int(9.2 * 10_000_000), 1)
+        record = self._gnss_place(ts)
         results = {}
 
         parse_g22_gnss_enhanced_places(record, results)
 
         assert results["gnss_places"][0]["authenticated"] is True
-        assert abs(results["gnss_places"][0]["latitude"] - 45.1) < 0.001
+        assert abs(results["gnss_places"][0]["latitude"] - 45.465) < 0.001
 
     def test_card_load_unload_full_record_decode(self):
         ts = 1700000000
-        place = struct.pack(">IBiiB", ts + 1, 4, int(45.2 * 10_000_000), int(9.3 * 10_000_000), 1)
+        place = self._gnss_place(ts + 1)
         record = struct.pack(">IB", ts, 1) + place + (123456).to_bytes(3, "big")
         results = {}
 
-        parse_g22_load_unload_operations(record, results)
+        parse_g22_load_unload_operations(b"\x00\x00" + record, results)
 
         decoded = results["load_unload_records"][0]
         assert decoded["operation"] == "LOAD"
@@ -235,28 +237,13 @@ class TestGen22Decoders:
         assert results["load_sensor_data"][0]["weights_kg"] == [5000, 7000, 12000]
 
     def test_border_crossings_decode(self):
-        """Correctly decode card-side border crossing records (14 bytes)."""
+        """Decode the 17-byte CardBorderCrossingRecord layout."""
         ts = 1700000000
-        nation_from = 0x1A  # Italy
-        nation_to = 0x0D    # Germany
-        lat_raw = int(47.0 * 10_000_000)
-        lon_raw = int(11.0 * 10_000_000)
-        record = struct.pack(">IBBii", ts, nation_from, nation_to, lat_raw, lon_raw)
-        results = {}
-        parse_g22_border_crossings(record, results)
-        assert len(results["border_crossings"]) == 1
-        r = results["border_crossings"][0]
-        assert r["nation_from"] == "I"
-        assert r["nation_to"] == "D"
-        assert abs(r["latitude"] - 47.0) < 0.001
-
-    def test_card_border_crossing_full_record_decode(self):
-        ts = 1700000000
-        place = struct.pack(">IBiiB", ts, 6, int(46.0 * 10_000_000), int(10.0 * 10_000_000), 1)
+        place = self._gnss_place(ts)
         record = bytes([0x1A, 0x0D]) + place + (654321).to_bytes(3, "big")
         results = {}
 
-        parse_g22_border_crossings(record, results)
+        parse_g22_border_crossings(b"\x00\x00" + record, results)
 
         decoded = results["border_crossings"][0]
         assert decoded["nation_from"] == "I"
@@ -265,24 +252,123 @@ class TestGen22Decoders:
         assert decoded["authenticated"] is True
 
     def test_trailer_registrations_decode(self):
-        """Correctly decode trailer registration (ASN.1: 20 bytes)."""
-        ts = 1700000000
+        """Decode the verified 0x24 VehicleRegistrationIdentification RecordArray."""
         nation = 0x1A  # Italy
-        plate = b'AB12345CD     '  # 14 bytes
-        coupling = 0  # coupled
-        record = struct.pack(">IB", ts, nation) + plate + bytes([coupling])
+        plate = b'\x01TEST000000001'  # InternationalString{13}
+        record = bytes([nation]) + plate
+        wrapped = b"\x24" + struct.pack(">HH", 15, 1) + record
         results = {}
-        parse_g22_trailer_registrations(record, results)
+        parse_g22_trailer_registrations(wrapped, results)
         assert len(results["trailer_registrations"]) == 1
-        assert results["trailer_registrations"][0]["event"] == "COUPLED"
-        assert "AB12345CD" in results["trailer_registrations"][0]["trailer_plate"]
+        assert results["trailer_registrations"][0]["nation"] == "I"
+        assert results["trailer_registrations"][0]["trailer_plate"] == "TEST000000001"
+
+    def test_trailer_record_array_wrapper_dispatches_without_nested_tlv_parsing(self):
+        record = bytes([0x1A]) + b"\x01TEST000000001"
+        payload = b"\x24" + struct.pack(">HH", 15, 1) + record
+        raw = struct.pack(">HBH", 0x0527, 0x02, len(payload)) + payload
+
+        result = DeterministicParser().parse(raw, is_vu=False)
+
+        assert DecoderRegistry.instance().is_container(0x0527, generation="G2.2", is_vu=False) is False
+        assert result["metadata"].get("decoder_validation_warnings") is None
+        assert len(result["trailer_registrations"]) == 1
+
+    def test_card_payload_is_not_recursively_parsed_as_ber_container(self):
+        payload = self._gnss_place()
+        raw = struct.pack(">HBH", 0x0528, 0x02, len(payload)) + payload
+        result = DeterministicParser().parse(raw, is_vu=False)
+
+        assert DecoderRegistry.instance().is_container(0x0528, generation="G2.2", is_vu=False) is False
+        assert len(result["gnss_places"]) == 1
+        assert result["coverage"]["uncovered_ranges"] == []
+
+    def test_wrong_gnss_accumulated_layout_produces_a_validation_warning(self):
+        payload = b"\x00" * 38  # Two bare records are invalid: the EF requires a 2-byte pointer.
+        raw = struct.pack(">HBH", 0x0525, 0x02, len(payload)) + payload
+        result = DeterministicParser().parse(raw, is_vu=False)
+
+        warnings = result["metadata"]["decoder_validation_warnings"]
+        assert warnings[0]["tag_id"] == "0x0525"
+        assert warnings[0]["code"] == "decoder_record_size_violation"
+
+    @pytest.mark.parametrize(
+        ("tag", "payload"),
+        [
+            (0x0526, lambda self: struct.pack(
+                ">IB", 1700000000, 1
+            ) + self._gnss_place(1700000001) + (123456).to_bytes(3, "big")),
+            (0x052A, lambda self: bytes([0x1A, 0x0D]) + self._gnss_place(1700000000)
+             + (654321).to_bytes(3, "big")),
+        ],
+    )
+    def test_pointer_prefixed_card_payloads_do_not_lose_semantic_dispatch(self, tag, payload):
+        record = payload(self)
+        raw = struct.pack(">HBH", tag, 0x02, len(record) + 2) + b"\x00\x00" + record
+
+        result = DeterministicParser().parse(raw, is_vu=False)
+
+        assert result["metadata"].get("decoder_validation_warnings") is None
+        key = "load_unload_records" if tag == 0x0526 else "border_crossings"
+        assert len(result[key]) == 1
+
+    def test_malformed_timestamp_and_coordinates_are_rejected(self):
+        results = {}
+        invalid_time = self._gnss_place(0)
+        invalid_latitude = self._gnss_place(latitude=90600)
+        invalid_longitude = self._gnss_place(longitude=180001)
+
+        parse_g22_gnss_enhanced_places(invalid_time, results)
+        parse_g22_gnss_enhanced_places(invalid_latitude, results)
+        parse_g22_gnss_enhanced_places(invalid_longitude, results)
+
+        assert results.get("gnss_places") is None
+
+    @pytest.mark.parametrize("timestamp", [0, 0xFFFFFFFF, 946684799, 4102444801])
+    def test_all_gnss_card_records_reject_invalid_timestamps(self, timestamp):
+        place = self._gnss_place(timestamp)
+        results = {}
+
+        parse_g22_gnss_enhanced_places(place, results)
+        parse_g22_gnss_accumulated_driving(
+            b"\x00\x00" + struct.pack(">I", timestamp) + place + (1).to_bytes(3, "big"), results
+        )
+        parse_g22_load_unload_operations(
+            b"\x00\x00" + struct.pack(">IB", timestamp, 1) + place + (1).to_bytes(3, "big"), results
+        )
+        parse_g22_border_crossings(b"\x00\x00" + bytes([0x1A, 0x0D]) + place + (1).to_bytes(3, "big"), results)
+
+        assert results.get("gnss_places") is None
+        assert results.get("gnss_ad_records") is None
+        assert results.get("load_unload_records") is None
+        assert results.get("border_crossings") is None
+
+    def test_gnss_records_reject_coordinate_sentinels_and_out_of_range_values(self):
+        results = {}
+        invalid_latitude = self._gnss_place(latitude=0x7FFFFF)
+        invalid_longitude = self._gnss_place(longitude=180600)
+
+        parse_g22_gnss_enhanced_places(invalid_latitude, results)
+        parse_g22_load_unload_operations(
+            b"\x00\x00" + struct.pack(">IB", 1700000000, 1) + invalid_longitude
+            + (1).to_bytes(3, "big"), results
+        )
+
+        assert results.get("gnss_places") is None
+        assert results.get("load_unload_records") is None
+
+    @pytest.mark.parametrize("timestamp", [0, 0xFFFFFFFF, 946684799, 4102444801])
+    def test_load_sensor_rejects_out_of_range_timestamp(self, timestamp):
+        results = {}
+        parse_g22_load_sensor_data(struct.pack(">IHH", timestamp, 5000, 7000), results)
+        assert results.get("load_sensor_data") is None
 
     def test_detailed_speed_decode(self):
         ts = 1700000000
         speed_samples = bytes(range(60))
         record = struct.pack(">I", ts) + speed_samples
 
-        decoded = parse_g22_detailed_speed(record)
+        decoded = decode_detailed_speed(record)
 
         assert decoded["valid_speed_count"] == 60
         assert decoded["max_speed_kmh"] == 59
@@ -293,7 +379,7 @@ class TestGen22Decoders:
         ts = 1700000000
         record = struct.pack(">Q", 0x0102030405060708) + b'e1-0002         ' + struct.pack(">I", ts)
 
-        decoded = parse_g2_sensor_gnss_coupled(record)
+        decoded = decode_sensor_gnss_coupled(record)
 
         assert decoded["sensor_serial"] == "0102030405060708"
         assert decoded["sensor_approval"] == "e1-0002"
@@ -304,7 +390,7 @@ class TestGen22Decoders:
         ts = 1700000000
         record = struct.pack(">Q", 0x0102030405060708) + b'e1-0002         ' + struct.pack(">I", ts)
 
-        decoded = parse_g2_sensor_paired(record)
+        decoded = decode_sensor_paired(record)
 
         assert decoded["sensor_serial"] == "0102030405060708"
         assert decoded["sensor_approval"] == "e1-0002"
@@ -329,7 +415,7 @@ class TestGen22Decoders:
         record += b'DRV12345CARD    '
         record += struct.pack(">B", 0x01)
         record += struct.pack(">B", 0x03)
-        decoded = parse_g22_overspeeding_event(record)
+        decoded = decode_overspeeding_event(record)
         assert decoded is not None
         assert decoded["event_type"] == 0x01
         assert decoded["record_purpose"] == 0x02
@@ -345,7 +431,7 @@ class TestGen22Decoders:
         ts_last = 1700000000
         ts_first = 1699900000
         record = struct.pack(">IIB", ts_last, ts_first, 42)
-        decoded = parse_g22_overspeeding_control(record)
+        decoded = decode_overspeeding_control(record)
         assert decoded is not None
         assert decoded["number_of_overspeed"] == 42
         assert decoded["last_control_time"] != "N/A"
@@ -355,7 +441,7 @@ class TestGen22Decoders:
         ts_old = 1700000000
         ts_new = 1700003600
         record = struct.pack(">II", ts_old, ts_new)
-        decoded = parse_g22_time_adj_gnss(record)
+        decoded = decode_time_adj_gnss(record)
         assert decoded is not None
         assert decoded["old_time"] != "N/A"
         assert decoded["new_time"] != "N/A"
@@ -369,7 +455,7 @@ class TestGen22Decoders:
             record += b'DRV12345CARD    '
             record += struct.pack(">B", 0x01)
         record += b'\x00'
-        decoded = parse_g22_power_interruption(record)
+        decoded = decode_power_interruption(record)
         assert decoded is not None
         assert decoded["event_type"] == 0x01
         assert decoded["record_purpose"] == 0x02
@@ -389,7 +475,7 @@ class TestGen22Decoders:
             record += b'DRV12345CARD    '
             record += struct.pack(">B", 0x01)
         record += b'\x00' * (90 - len(record))  # pad to 90 bytes
-        decoded = parse_g22_sensor_fault(record)
+        decoded = decode_sensor_fault(record)
         assert decoded is not None
         assert decoded["event_type"] == 0x01
         assert decoded["event_purpose"] == 0x02

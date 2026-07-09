@@ -11,6 +11,17 @@ ENV/
 # PyInstaller
 build/
 dist/
+build-validation-dist/
+build-validation-work/
+
+# Tool caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.claude/
+
+# Reference documents (regulations, specs — external, not source)
+reference/
 
 # ─────────────────────────────────────────────────────────────
 # Personal data — do NOT commit (public repo).
@@ -33,5 +44,4 @@ tests/certs/
 *.pdf
 *.csv
 specs/*_report.json
-tests/golden/
 scripts/*_report.json
