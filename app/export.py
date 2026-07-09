@@ -394,14 +394,47 @@ class ExportManager:
                 story.append(PageBreak())
                 first_section = False
             is_act = (label == "Daily Activities")
-            story.append(Paragraph(
-                f"{label} ({len(rows)}{'+' * truncated})", section_style))
-            story.append(_table(headers, rows, is_activity=is_act))
-            if truncated:
+
+            if is_act:
+                # Split by month: each month gets its own table + page break.
+                months = []
+                current_month = []
+                for row in rows:
+                    if _is_total_row(row):
+                        current_month.append(row)
+                        months.append(current_month)
+                        current_month = []
+                    else:
+                        current_month.append(row)
+                if current_month and not _is_desc_row(current_month[0]):
+                    months.append(current_month)
+
+                for mi, month_rows in enumerate(months):
+                    if mi > 0:
+                        story.append(PageBreak())
+                    # Extract month name from the TOTAL row (last row)
+                    month_name = ""
+                    for r in month_rows:
+                        if _is_total_row(r):
+                            month_name = str(r[0]).replace(" TOTAL", "")
+                            break
+                    story.append(Paragraph(
+                        f"Daily Activities — {month_name} ({len(month_rows)} rows)",
+                        section_style))
+                    # Prepend header and description for first month
+                    display_headers = headers
+                    display_rows = list(month_rows)
+                    story.append(_table(display_headers, display_rows, is_activity=True))
+                    story.append(Spacer(1, 5 * mm))
+            else:
                 story.append(Paragraph(
-                    f"Truncated to {_PDF_MAX_ROWS} rows — use Excel/JSON for full data.",
-                    note_style))
-            story.append(Spacer(1, 5 * mm))
+                    f"{label} ({len(rows)}{'+' * truncated})", section_style))
+                story.append(_table(headers, rows))
+                if truncated:
+                    story.append(Paragraph(
+                        f"Truncated to {_PDF_MAX_ROWS} rows — use Excel/JSON for full data.",
+                        note_style))
+                story.append(Spacer(1, 5 * mm))
 
         def _footer(canvas, document):
             canvas.saveState()
