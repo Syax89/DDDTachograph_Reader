@@ -76,16 +76,21 @@ class ExportManager:
         ws.column_dimensions["B"].width = 70
 
         # Signature details (VU)
+        used_names = {"Summary"}
         sv = data.get("signature_verification") or {}
         treps = sv.get("treps") or []
         if treps:
             headers, rows = records_to_table(treps)
-            wsx = wb.create_sheet("TREP Signatures"[:31])
+            trep_sheet = "TREP Signatures"[:31]
+            wsx = wb.create_sheet(trep_sheet)
+            used_names.add(trep_sheet)
             _write_table(wsx, headers, rows)
         certs = data.get("vu_certificates") or []
         if certs:
             headers, rows = records_to_table(certs)
-            wsx = wb.create_sheet("VU Certificates"[:31])
+            cert_sheet = "VU Certificates"[:31]
+            wsx = wb.create_sheet(cert_sheet)
+            used_names.add(cert_sheet)
             _write_table(wsx, headers, rows)
 
         # Data sections
@@ -93,6 +98,13 @@ class ExportManager:
             if truncated:
                 _log.warning("Truncating '%s' to %d rows (Excel limit)", label, _EXCEL_MAX_ROWS)
             safe_label = _SHEET_NAME_RE.sub("_", label)[:31].strip()
+            if safe_label in used_names:
+                idx = 2
+                base = safe_label[:28].rstrip("_")
+                while f"{base}_{idx}" in used_names:
+                    idx += 1
+                safe_label = f"{base}_{idx}"[:31]
+            used_names.add(safe_label)
             wsx = wb.create_sheet(safe_label)
             _write_table(wsx, headers, rows)
 

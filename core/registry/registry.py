@@ -216,8 +216,9 @@ class DecoderRegistry:
                        min_length=20, record_size=18),
 
             TagDecoder(0x0206, "VU_ActivityDailyRecord",
-                       annex_ref="Annex 1C", generation="G2",
-                       min_length=100),
+                        decoders.parse_cyclic_buffer_activities,
+                        annex_ref="Annex 1C", generation="G2",
+                        min_length=100),
 
             # ── G2.2 GNSS / Load / Trailer tags ──
             TagDecoder(0x0525, "G22_GNSSAccumulatedDriving",
@@ -226,14 +227,14 @@ class DecoderRegistry:
                        min_length=12, container=True),
 
             TagDecoder(0x0526, "G22_LoadUnloadOperations",
-                       decoders.parse_g22_load_unload_operations,
-                       annex_ref="ASN.1: LoadUnloadRecord", generation="G2.2",
-                       min_length=13, container=True),
+                        decoders.parse_g22_load_unload_operations,
+                        annex_ref="Annex 1C §2.208a", generation="G2.2",
+                        min_length=13, container=True),
 
             TagDecoder(0x0527, "G22_TrailerRegistrations",
-                       decoders.parse_g22_trailer_registrations,
-                       annex_ref="ASN.1: TrailerRegistrationRecord", generation="G2.2",
-                       min_length=20, container=True),
+                        decoders.parse_g22_trailer_registrations,
+                        annex_ref="Annex 1C §2.166a", generation="G2.2",
+                        min_length=20, container=True),
 
             TagDecoder(0x0528, "G22_GNSSEnhancedPlaces",
                        decoders.parse_g22_gnss_enhanced_places,
@@ -247,7 +248,7 @@ class DecoderRegistry:
 
             TagDecoder(0x052A, "G22_BorderCrossings",
                        decoders.parse_g22_border_crossings,
-                       annex_ref="ASN.1: BorderCrossingRecord", generation="G2.2",
+                        annex_ref="Annex 1C §2.203a", generation="G2.2",
                        min_length=14, container=True),
 
             TagDecoder(0x0225, "G22_VU_GNSSADRecord",

@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
 from core.decoders.primitives import decode_date, decode_string, get_nation
+from core.utils.constants import EC_CURVE_OIDS
 
 _log = get_logger(__name__)
 
@@ -250,10 +251,6 @@ def parse_certificate_signature(val, results):
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Certificate signature parse failed: %s", exc)
 
-EC_CURVE_OIDS = {
-    "2b2403030208010107": "brainpoolP256r1",
-    "2a8648ce3d030107": "secp256r1 (NIST P-256)",
-}
 
 def parse_public_key_info(val, results):
     """Parse public key info (tag 0x7F49) — EC curve OID + public key point."""

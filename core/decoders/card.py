@@ -19,8 +19,12 @@ def parse_g1_identification(val, results):
     off += 1
     results["driver"]["card_number"] = decode_string(val[off:off+16], is_id=True)
     off += 16
-    off += 36 # cardIssuingAuthorityName
-    off += 4 + 4 # cardIssueDate, cardValidityBegin
+    results["driver"]["issuing_authority"] = decode_string(val[off:off+36])
+    off += 36
+    results["driver"]["issue_date"] = decode_date(val[off:off+4], prefer_datef=True)
+    off += 4
+    results["driver"]["validity_begin"] = decode_date(val[off:off+4], prefer_datef=True)
+    off += 4
     results["driver"]["expiry_date"] = decode_date(val[off:off+4])
     off += 4
     

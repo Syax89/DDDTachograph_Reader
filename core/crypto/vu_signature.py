@@ -25,11 +25,13 @@ from cryptography.exceptions import InvalidSignature
 
 from core.utils.logger import get_logger
 from core.parser.vu_dispatcher import iter_vu_sections
+from core.utils.constants import EC_CURVE_OIDS
 
 _log = get_logger(__name__)
 
-# Curve OID (inside 0x7F49 → 0x06) → (curve, hash). Tacho Gen2 uses these.
-# See core/cert_decoders.EC_CURVE_OIDS for canonical OID strings.
+# OID → label map for display. Canonical source: core.utils.constants.EC_CURVE_OIDS
+_CURVE_OID_LABELS = EC_CURVE_OIDS
+
 _CURVES = {
     "2b2403030208010107": (ec.BrainpoolP256R1(), hashes.SHA256),  # brainpoolP256r1
     "2b2403030208010b0d": (ec.BrainpoolP384R1(), hashes.SHA384),  # brainpoolP384r1
@@ -138,15 +140,6 @@ def verify_cvc_chain_link(child, parent_pub, parent_hash):
     return _verify_ecdsa(parent_pub, parent_hash, child["signature"], child["body_tlv"])
 
 
-_CURVE_NAMES = {
-    "2b2403030208010107": "brainpoolP256r1",
-    "2b2403030208010b0d": "brainpoolP384r1",
-    "2b2403030208010d0b": "brainpoolP512r1",
-    "2a8648ce3d030107": "NIST P-256",
-    "2b81040022": "NIST P-384",
-    "2b81040023": "NIST P-521",
-}
-
 _CERT_ROLES = {0x04: "MemberState (MSCA)", 0x0F: "Vehicle Unit (VU)"}
 
 
@@ -190,8 +183,8 @@ def decode_vu_certificates(raw_data):
                     "role": _CERT_ROLES[rt],
                     "car": parsed.get("car", ""),
                     "chr": parsed.get("chr", ""),
-                    "curve": _CURVE_NAMES.get(parsed.get("curve_oid"),
-                                              parsed.get("curve_oid", "")),
+                    "curve": _CURVE_OID_LABELS.get(parsed.get("curve_oid"),
+                                                    parsed.get("curve_oid", "")),
                     "valid_from": _cvc_date(parsed.get("effective_date")),
                     "valid_to": _cvc_date(parsed.get("expiration_date")),
                 })
