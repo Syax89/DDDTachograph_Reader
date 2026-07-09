@@ -24,7 +24,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.exceptions import InvalidSignature
 
 from core.utils.logger import get_logger
-from core.parser.vu_dispatcher import iter_vu_sections
+from core.parser.vu_dispatcher import iter_vu_sections, TREP_SECTIONS
 from core.utils.constants import EC_CURVE_OIDS
 
 _log = get_logger(__name__)
@@ -277,6 +277,7 @@ def verify_vu_download(raw_data, erca_keys=None):
             all_valid = all_valid and valid
             report["treps"].append({
                 "trep": f"0x{sec['trep']:02X}",
+                "section": TREP_SECTIONS.get(sec["trep"], f"TREP 0x{sec['trep']:02X}"),
                 "signature_valid": valid,
             })
 
