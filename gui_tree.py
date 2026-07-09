@@ -955,7 +955,6 @@ class TachoExplorer(tk.Tk):
         self._add_section("", "\U0001f4c4  File Info", cols, rows)
 
         drv = data.get("driver", {})
-        veh = data.get("vehicle", {})
 
         # Driver card: show holder summary.
         if not is_vu and any(drv.values()):
@@ -1006,12 +1005,6 @@ class TachoExplorer(tk.Tk):
 
         # ── Filter VU-only sections for card files ──
         actual_is_vu = meta.get("is_vu", False)
-        VU_ONLY_KEYS = {"vu_identifications", "sensor_pairings", "sensor_gnss_couplings",
-                         "card_iw_records", "card_records", "time_adjustments",
-                         "company_locks", "download_activities", "power_interruptions",
-                         "overspeeding_control", "its_consents", "signed_daily_records",
-                         "speed_blocks", "vu_record_arrays",
-                         "vu_info", "vu_overview", "company_info"}
         if not actual_is_vu:
             for group_key in sections_by_group:
                 sections_by_group[group_key] = [
@@ -1249,7 +1242,6 @@ class TachoExplorer(tk.Tk):
         veh = data.get("vehicle", {})
         calibrations = data.get("calibrations") or []
         sensors = data.get("sensor_pairings") or []
-        meta = data.get("metadata", {})
         vu_info = data.get("vu_info") or {}
 
         plate = veh.get("plate", "N/A")
