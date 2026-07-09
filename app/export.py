@@ -175,17 +175,26 @@ class ExportManager:
                                      leading=26)
         subtitle_style = ParagraphStyle("TachoSubtitle", parent=styles["Normal"],
                                         fontSize=9, textColor=LIGHT_GRAY,
-                                        spaceAfter=10)
+                                         spaceAfter=10)
         section_style = ParagraphStyle("TachoSection", parent=styles["Heading2"],
                                        textColor=PRIMARY, fontSize=13,
                                        spaceBefore=16, spaceAfter=6, leading=16)
+        act_section_style = ParagraphStyle("TachoActSection", parent=section_style,
+                                           spaceBefore=6, spaceAfter=3)
         cell_style = ParagraphStyle("TachoCell", parent=styles["BodyText"],
                                     fontSize=8, leading=10)
+        act_cell_style = ParagraphStyle("TachoActCell", parent=styles["BodyText"],
+                                        fontSize=7, leading=8)
         head_style = ParagraphStyle("TachoHead", parent=cell_style,
                                     textColor=colors.white, fontName="Helvetica-Bold",
                                     fontSize=8, leading=10)
+        act_head_style = ParagraphStyle("TachoActHead", parent=head_style,
+                                        fontSize=7, leading=8)
         total_style = ParagraphStyle("TachoTotal", parent=cell_style,
                                      fontName="Helvetica-Bold", fontSize=8)
+        act_total_style = ParagraphStyle("TachoActTotal", parent=cell_style,
+                                         fontName="Helvetica-Bold", fontSize=7,
+                                         leading=8)
         note_style = ParagraphStyle("TachoNote", parent=styles["BodyText"],
                                      fontSize=7, textColor=colors.grey)
 
@@ -239,7 +248,12 @@ class ExportManager:
                 return Spacer(1, 2)
 
             # Build table data with per-cell styles
-            table_data = [[Paragraph(str(h), head_style) for h in headers]]
+            h_style = act_head_style if is_activity else head_style
+            c_style = act_cell_style if is_activity else cell_style
+            t_style = act_total_style if is_activity else total_style
+            pad = 2 if is_activity else 4
+
+            table_data = [[Paragraph(str(h), h_style) for h in headers]]
             alignments = []
             if is_activity:
                 alignments = [TA_LEFT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT]
@@ -248,7 +262,7 @@ class ExportManager:
                 cells = []
                 for _c, val in enumerate(row):
                     s = str(val) if val else ""
-                    st = total_style if _is_total_row(row) else cell_style
+                    st = t_style if _is_total_row(row) else c_style
                     p = Paragraph(s, st) if s else ""
                     cells.append(p)
                 table_data.append(cells)
@@ -259,10 +273,10 @@ class ExportManager:
                 ("BACKGROUND", (0, 0), (-1, 0), PRIMARY),
                 ("GRID", (0, 0), (-1, -1), 0.3, GRID),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 4),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 4),
-                ("TOPPADDING", (0, 0), (-1, -1), 3),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), pad),
+                ("RIGHTPADDING", (0, 0), (-1, -1), pad),
+                ("TOPPADDING", (0, 0), (-1, -1), pad),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), pad),
             ]
             # Zebra striping for data rows
             for i in range(1, len(table_data)):
@@ -299,9 +313,15 @@ class ExportManager:
             f"{'Vehicle Unit' if meta.get('is_vu') else 'Driver Card'}",
             subtitle_style))
         story.append(HRFlowable(width="100%", thickness=1, color=PRIMARY,
-                                spaceBefore=4, spaceAfter=10))
+                                spaceBefore=4, spaceAfter=8))
 
-        # Stats cards (driving hours, days, events)
+        # Summary table (2 cols: Field → Value)
+        sum_rows = [(f, v) for f, v in summary_rows(data) if f or v]
+        if sum_rows:
+            story.append(_table(["Field", "Value"], sum_rows))
+            story.append(Spacer(1, 6 * mm))
+
+        # Compact stats bar (hours totals)
         total_drive = 0
         total_work = 0
         total_rest = 0
@@ -315,62 +335,40 @@ class ExportManager:
                 if not isinstance(ch, dict):
                     continue
                 act = str(ch.get("activity", "")).upper()
+                t1 = _t2m(str(ch.get("time", "00:00")))
+                t2 = _t2m(str(changes[i + 1].get("time", "00:00"))) if i + 1 < len(changes) else 1440
+                if t2 < t1:
+                    t2 += 1440
                 if act == "DRIVE":
-                    t1 = _t2m(str(ch.get("time", "00:00")))
-                    t2 = _t2m(str(changes[i + 1].get("time", "00:00"))) if i + 1 < len(changes) else 1440
-                    if t2 < t1:
-                        t2 += 1440
                     total_drive += t2 - t1
                 elif act == "WORK":
-                    t1 = _t2m(str(ch.get("time", "00:00")))
-                    t2 = _t2m(str(changes[i + 1].get("time", "00:00"))) if i + 1 < len(changes) else 1440
-                    if t2 < t1:
-                        t2 += 1440
                     total_work += t2 - t1
                 elif act == "REST":
-                    t1 = _t2m(str(ch.get("time", "00:00")))
-                    t2 = _t2m(str(changes[i + 1].get("time", "00:00"))) if i + 1 < len(changes) else 1440
-                    if t2 < t1:
-                        t2 += 1440
                     total_rest += t2 - t1
 
-        stats_data = [
-            ["Drive", "Work", "Rest", "Active days", "Events"],
-            [f"{total_drive // 60}h {total_drive % 60}m",
-             f"{total_work // 60}h {total_work % 60}m",
-             f"{total_rest // 60}h {total_rest % 60}m",
-             str(len([d for d in activities if isinstance(d, dict) and d.get("changes")])),
-             str(len(events)),
-            ],
-        ]
-        stat_table = LongTable(stats_data, colWidths=[avail_width / 5] * 5)
-        stat_table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), PRIMARY),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 7.5),
-            ("FONTNAME", (0, 1), (-1, 1), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 1), (-1, 1), 12),
-            ("TEXTCOLOR", (0, 1), (-1, 1), PRIMARY),
-            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("TOPPADDING", (0, 0), (-1, -1), 6),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-            ("GRID", (0, 0), (-1, -1), 0.3, GRID),
-        ]))
-        story.append(stat_table)
-        story.append(Spacer(1, 8 * mm))
+        drive_h = f"{total_drive // 60}h {total_drive % 60}m"
+        work_h = f"{total_work // 60}h {total_work % 60}m"
+        rest_h = f"{total_rest // 60}h {total_rest % 60}m"
+        total_h = f"{(total_drive + total_work + total_rest) // 60}h {(total_drive + total_work + total_rest) % 60}m"
+
+        stats_style = ParagraphStyle("StatsBar", parent=styles["Normal"],
+                                     fontSize=9, textColor=PRIMARY,
+                                     fontName="Helvetica-Bold", leading=13)
+        if total_drive + total_work + total_rest > 0:
+            story.append(Paragraph(
+                f"Drive: {drive_h}  ·  Work: {work_h}  ·  Rest: {rest_h}  ·  "
+                f"Total: {total_h}  ·  Active days: "
+                f"{len([d for d in activities if isinstance(d, dict) and d.get('changes')])}  ·  "
+                f"Events: {len(events)}",
+                stats_style))
+            story.append(Spacer(1, 4 * mm))
 
         # Driver info
         if driver.get("surname"):
-            name = f"{driver.get('firstname', '')} {driver.get('surname', '')}".strip()
-            driver_info = [
-                f"Driver: {name}",
-                f"Card: {driver.get('card_number', 'N/A')}",
-                f"Expiry: {driver.get('expiry_date', 'N/A')}",
-            ]
-            story.append(Paragraph("  ·  ".join(driver_info), note_style))
-            story.append(Spacer(1, 6 * mm))
+            story.append(Paragraph(
+                f"{driver.get('firstname', '')} {driver.get('surname', '')}".strip(),
+                subtitle_style))
+            story.append(Spacer(1, 2 * mm))
 
         story.append(PageBreak())
 
@@ -420,7 +418,7 @@ class ExportManager:
                             break
                     story.append(Paragraph(
                         f"Daily Activities — {month_name} ({len(month_rows)} rows)",
-                        section_style))
+                        act_section_style))
                     # Prepend header and description for first month
                     display_headers = headers
                     display_rows = list(month_rows)
