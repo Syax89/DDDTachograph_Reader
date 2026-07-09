@@ -57,7 +57,6 @@ a = Analysis(
         'core.report_format',
         'core.version',
         'core.ber_tlv',
-        'core.curve_oids',
         'core.coverage_utils',
         'core.encoding',
         'core.constants',

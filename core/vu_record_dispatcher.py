@@ -887,3 +887,142 @@ def _emit_section(section, results):
             results.setdefault("activities", []).append(
                 {"date": date_str, "odometer_km": int(km), "changes": changes,
                  "source": "vu_recordarray"})
+
+
+# ── Additional G2.2 record decoders (moved from g2_decoders) ──────────────
+
+
+def decode_downloadable_period(rec):
+    """VuDownloadablePeriod (8 bytes): minDownloadableTime(4) + maxDownloadableTime(4)."""
+    if len(rec) < 8:
+        return None
+    min_ts = struct.unpack(">I", rec[0:4])[0]
+    max_ts = struct.unpack(">I", rec[4:8])[0]
+    return {
+        "min_downloadable": _iso(min_ts) or "N/A",
+        "max_downloadable": _iso(max_ts) or "N/A",
+    }
+
+
+def decode_time_adj_gnss(rec):
+    """VuTimeAdjustmentGNSSRecord (8 bytes): oldTimeValue(4) + newTimeValue(4)."""
+    if len(rec) < 8:
+        return None
+    old_ts = struct.unpack(">I", rec[0:4])[0]
+    new_ts = struct.unpack(">I", rec[4:8])[0]
+    return {
+        "old_time": _iso(old_ts) or "N/A",
+        "new_time": _iso(new_ts) or "N/A",
+    }
+
+
+def decode_sensor_fault(rec):
+    """VuSensorFaultData (90 bytes): event header + sensor-specific payload."""
+    if len(rec) < 90:
+        return None
+    evt_type = rec[0]
+    evt_purpose = rec[1]
+    begin_ts = struct.unpack(">I", rec[2:6])[0]
+    end_ts = struct.unpack(">I", rec[6:10])[0]
+    fault_hint = {
+        0x01: "communication_error", 0x02: "data_integrity",
+        0x03: "sensor_timeout", 0x04: "power_supply",
+        0x05: "signal_error", 0x0B: "generic_sensor_fault",
+        0x0C: "internal_vu_fault",
+    }.get(evt_type, "unknown")
+    payload = rec[10:]
+    non_zero = []
+    run_start = None
+    for i, b in enumerate(payload):
+        if b not in (0x00, 0xFF):
+            if run_start is None:
+                run_start = i
+        elif run_start is not None:
+            non_zero.append((run_start, i))
+            run_start = None
+    if run_start is not None:
+        non_zero.append((run_start, len(payload)))
+    return {
+        "description": describe_fault(evt_type),
+        "event_type": evt_type,
+        "event_purpose": evt_purpose,
+        "fault_type_hint": fault_hint,
+        "begin_time": _iso(begin_ts) or "N/A",
+        "end_time": _iso(end_ts) or "N/A",
+        "card_driver_begin": decode_full_card_number_gen(rec, 10),
+        "card_driver_end": decode_full_card_number_gen(rec, 29),
+        "card_codriver_begin": decode_full_card_number_gen(rec, 48),
+        "card_codriver_end": decode_full_card_number_gen(rec, 67),
+        "payload_bytes": len(payload),
+        "payload_hex": payload[:32].hex() + ("..." if len(payload) > 32 else ""),
+        "non_zero_regions": non_zero,
+        "confidence": "low",
+    }
+
+
+def decode_detailed_speed(rec):
+    """VuDetailedSpeedData (64 bytes): timestamp(4) + 60 x speed UInt8 km/h."""
+    if len(rec) < 64:
+        return None
+    timestamp = struct.unpack(">I", rec[0:4])[0]
+    speeds = list(rec[4:64])
+    valid = [s for s in speeds if s != 0xFF]
+    return {
+        "timestamp": _iso(timestamp) or "N/A",
+        "speeds_kmh": speeds,
+        "valid_speed_count": len(valid),
+        "max_speed_kmh": max(valid) if valid else None,
+        "avg_speed_kmh": round(sum(valid) / len(valid), 2) if valid else None,
+        "confidence": "medium",
+    }
+
+
+def _read_coded_string(data, off):
+    """Read codePage(1) + size(1) + text(size) from binary data."""
+    if off + 2 > len(data):
+        return "", off
+    code_page = data[off]
+    size = data[off + 1]
+    off += 2
+    if off + size > len(data):
+        return "", min(off, len(data))
+    enc = {0x01: "iso-8859-1", 0x02: "iso-8859-2", 0x03: "iso-8859-3",
+           0x04: "iso-8859-4", 0x05: "iso-8859-5", 0x06: "iso-8859-6",
+           0x07: "iso-8859-7", 0x08: "iso-8859-8", 0x09: "iso-8859-9",
+           0x0A: "iso-8859-10", 0x0B: "iso-8859-11",
+           0x0D: "iso-8859-13", 0x0E: "iso-8859-14",
+           0x0F: "iso-8859-15", 0x10: "iso-8859-16"}.get(code_page, "latin-1")
+    text = data[off:off + size].decode(enc, errors="replace").strip()
+    return text, off + size
+
+
+def decode_controller_identification(rec):
+    """VuControllerIdentification: manufacturer + HW/SW versions + approval + serial."""
+    if len(rec) < 2:
+        return None
+    try:
+        pos = 0
+        mfg_code = rec[pos]
+        pos += 1
+        mfg_name, pos = _read_coded_string(rec, pos)
+        hw_ver, pos = _read_coded_string(rec, pos)
+        sw_ver, pos = _read_coded_string(rec, pos)
+        if pos + 18 > len(rec):
+            return None
+        approval = struct.unpack(">Q", rec[pos:pos + 8])[0]
+        pos += 8
+        serial = struct.unpack(">Q", rec[pos:pos + 8])[0]
+        pos += 8
+        mfg_year = rec[pos] if pos < len(rec) else 0
+        return {
+            "manufacturer_code": mfg_code,
+            "manufacturer_name": mfg_name,
+            "hardware_version": hw_ver,
+            "software_version": sw_ver,
+            "approval_number": f"0x{approval:016X}",
+            "serial_number": f"0x{serial:016X}",
+            "manufacturing_year": mfg_year + 2000 if mfg_year else "N/A",
+            "confidence": "medium",
+        }
+    except (struct.error, IndexError):
+        return None

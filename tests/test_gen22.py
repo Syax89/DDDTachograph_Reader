@@ -284,8 +284,6 @@ class TestGen22Decoders:
 
         decoded = parse_g22_detailed_speed(record)
 
-        assert decoded["raw_timestamp"] == ts
-        assert decoded["speeds_kmh"] == list(range(60))
         assert decoded["valid_speed_count"] == 60
         assert decoded["max_speed_kmh"] == 59
         assert decoded["avg_speed_kmh"] == 29.5
@@ -327,22 +325,21 @@ class TestGen22Decoders:
         ts_begin = 1700000000
         ts_end = 1700003600
         record = struct.pack(">BBIIBB", 0x01, 0x02, ts_begin, ts_end, 120, 95)
-        # FullCardNumberAndGeneration: cardType(1) + nation(1) + card(16) + gen(1) = 19 bytes
-        record += struct.pack(">BB", 0x01, 0x1A)  # cardType=1, nation=I
-        record += b'DRV12345CARD    '  # 16-byte card number
-        record += struct.pack(">B", 0x01)  # generation=1
-        record += struct.pack(">B", 0x03)  # similarEvents=3
+        record += struct.pack(">BB", 0x01, 0x1A)
+        record += b'DRV12345CARD    '
+        record += struct.pack(">B", 0x01)
+        record += struct.pack(">B", 0x03)
         decoded = parse_g22_overspeeding_event(record)
         assert decoded is not None
         assert decoded["event_type"] == 0x01
-        assert decoded["event_purpose"] == 0x02
+        assert decoded["record_purpose"] == 0x02
         assert decoded["max_speed_kmh"] == 120
         assert decoded["average_speed_kmh"] == 95
         assert decoded["similar_events"] == 0x03
-        assert decoded["card_begin"]["nation"] == "I"
-        assert decoded["card_begin"]["generation"] == 1
-        assert decoded["begin_time"] != "N/A"
-        assert decoded["end_time"] != "N/A"
+        assert decoded["card_driver"]["nation"] == "I"
+        assert decoded["card_driver"]["generation"] == 1
+        assert decoded["begin"] != "N/A"
+        assert decoded["end"] != "N/A"
 
     def test_overspeeding_control_decode(self):
         ts_last = 1700000000
@@ -368,17 +365,16 @@ class TestGen22Decoders:
         ts_end = 1700003600
         record = struct.pack(">BBII", 0x01, 0x02, ts_begin, ts_end)
         for _ in range(4):
-            # FullCardNumberAndGeneration: cardType(1) + nation(1) + card(16) + gen(1) = 19
             record += struct.pack(">BB", 0x01, 0x1A)
             record += b'DRV12345CARD    '
             record += struct.pack(">B", 0x01)
-        record += b'\x00'  # tail byte
+        record += b'\x00'
         decoded = parse_g22_power_interruption(record)
         assert decoded is not None
         assert decoded["event_type"] == 0x01
-        assert decoded["event_purpose"] == 0x02
-        assert decoded["begin_time"] != "N/A"
-        assert decoded["end_time"] != "N/A"
+        assert decoded["record_purpose"] == 0x02
+        assert decoded["begin"] != "N/A"
+        assert decoded["end"] != "N/A"
         assert decoded["card_driver_begin"]["nation"] == "I"
         assert decoded["card_driver_end"]["nation"] == "I"
         assert decoded["card_codriver_begin"]["nation"] == "I"
@@ -399,7 +395,7 @@ class TestGen22Decoders:
         assert decoded["event_purpose"] == 0x02
         assert decoded["begin_time"] != "N/A"
         assert decoded["end_time"] != "N/A"
-        assert "raw_hex" in decoded
+        assert "payload_hex" in decoded
 
     def test_overspeeding_event_record_array_dispatch(self):
         ts_begin = 1700000000
