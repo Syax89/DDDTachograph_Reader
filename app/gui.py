@@ -112,6 +112,7 @@ LIST_SECTIONS = [
     ("workshops", "Calibration Workshops", "g1", None),
     ("previous_vehicle", "Previous Vehicle", "g1", None),
     ("company_holders", "Company Holders", "g1", None),
+    ("calibration_vins", "Calibration VINs", "g1", None),
 
     ("vu_identifications", "VU Identification", "g1", None),
     ("sensor_pairings", "Sensor Pairing", "g1", None),
@@ -989,6 +990,39 @@ class TachoExplorer(tk.Tk):
         cols, rows = _kv_rows(info)
         self._add_section("", "\U0001f4c4  File Info", cols, rows)
 
+        # ── Decoder failures detail ──
+        failures = meta.get("decoder_failures") or []
+        if failures:
+            cols, rows = _rows_for(failures)
+            self._add_section("", "\u26a0\ufe0f  Decoder Failures", cols, rows)
+
+        # ── Coverage detail ──
+        cov = data.get("coverage") or {}
+        if cov:
+            cls_rows = [{"Category": k, "Bytes": v} for k, v in cov.get("classifications", {}).items()]
+            if cls_rows:
+                self._add_section("", "\U0001f4ca  Coverage \u2014 Classifications",
+                                  ["Category", "Bytes"], cls_rows)
+            uncovered = cov.get("uncovered_ranges") or []
+            if uncovered:
+                ur_cols, ur_rows = _rows_for(uncovered)
+                self._add_section("", "\U0001f50d  Coverage \u2014 Uncovered Ranges",
+                                  ur_cols, ur_rows)
+
+        # ── Sections coverage ──
+        sections = data.get("sections") or {}
+        if sections:
+            sec_rows = []
+            for k, v in sections.items():
+                if isinstance(v, dict):
+                    pct = v.get("covered_pct", 0)
+                    sec_rows.append({"Section": k, "Coverage": f"{pct:.1f}%"})
+                else:
+                    sec_rows.append({"Section": k, "Value": str(v)})
+            sec_cols, sec_rows2 = _rows_for(sec_rows)
+            self._add_section("", "\U0001f4ca  Coverage \u2014 Per Section",
+                              sec_cols, sec_rows2)
+
         drv = data.get("driver", {})
 
         # Driver card: show holder summary.
@@ -1025,6 +1059,11 @@ class TachoExplorer(tk.Tk):
             if isinstance(dv, dict) and dv:
                 cols, rows = _kv_rows(dv)
                 sections_by_group.setdefault(dg, []).append((dl, cols, rows))
+
+        # Convert calibration_vins set → list of {VIN: ...} for table display
+        cv = data.get("calibration_vins")
+        if isinstance(cv, set) and cv:
+            data["calibration_vins"] = [{"VIN": v} for v in sorted(cv)]
 
         for key, label, group, tname in LIST_SECTIONS:
             records = data.get(key) or []

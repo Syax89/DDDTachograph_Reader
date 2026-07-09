@@ -55,7 +55,6 @@ class TachoResult:
     places: List[Dict[str, Any]] = field(default_factory=list)
     calibrations: List[Dict[str, Any]] = field(default_factory=list)
     raw_tags: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)
-    signatures: List[Dict[str, Any]] = field(default_factory=list)
     # Gen 2.2 specific
     gnss_ad_records: List[Dict[str, Any]] = field(default_factory=list)
     load_unload_records: List[Dict[str, Any]] = field(default_factory=list)
@@ -79,7 +78,6 @@ class TachoResult:
             "places": self.places,
             "calibrations": self.calibrations,
             "raw_tags": self.raw_tags,
-            "signatures": self.signatures,
             "gnss_ad_records": self.gnss_ad_records,
             "load_unload_records": self.load_unload_records,
             "trailer_registrations": self.trailer_registrations,

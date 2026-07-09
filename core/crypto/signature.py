@@ -184,7 +184,7 @@ class SignatureValidator:
             # (the remaining 58 bytes of C' travel in clear after the signature)
 
             if recovered[0] != 0x6A or recovered[127] != 0xBC:
-                self.logger.warning("G1 ISO 9796-2 trailer check failed")
+                self.logger.debug("G1 ISO 9796-2 trailer check failed")
                 return None
             
             return recovered
@@ -416,7 +416,7 @@ class SignatureValidator:
 
             msca_pub, _ = self._g1_recover_key(msca_cert_raw, erca_pub)
             if msca_pub is None:
-                self.logger.warning("G1 MSCA certificate unwrap FAILED under ERCA root")
+                self.logger.debug("G1 MSCA certificate unwrap FAILED under ERCA root")
                 return False, None
 
             card_pub, _ = self._g1_recover_key(card_cert_raw, msca_pub)
