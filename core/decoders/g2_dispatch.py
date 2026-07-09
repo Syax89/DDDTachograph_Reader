@@ -1,61 +1,73 @@
 """G2/G2.2 Vehicle Unit record dispatch table (tag-keyed, 0x05xx).
 
 Real G2/G2.2 VU downloads are recordType-keyed RecordArray streams handled by
-:mod:`core.vu_record_dispatcher`. This module maps TLV tags (0x0509-0x0533)
+:mod:`core.parser.vu_dispatcher`. This module maps TLV tags (0x0509-0x0533)
 to their canonical decoders — every wrapper below delegates to the dispatcher,
 so there is a single byte-level definition per record type.
 """
-import struct
+from core.parser.vu_dispatcher import (
+    decode_vu_card_record,
+    decode_card_iw,
+    decode_downloadable_period,
+    decode_time_adjustment,
+    decode_company_lock,
+    decode_sensor_paired,
+    decode_sensor_gnss_coupled,
+    decode_its_consent,
+    decode_overspeeding_event,
+    decode_overspeeding_control,
+    decode_time_adj_gnss,
+    decode_power_interruption,
+    decode_sensor_fault,
+    decode_detailed_speed,
+    decode_controller_identification,
+)
 
-from core.parser import vu_dispatcher as _vrd
-
-
-# Thin wrappers — the canonical implementation is in vu_record_dispatcher.
 
 def parse_g2_card_record(data, offset=0):
-    return _vrd.decode_vu_card_record(data[offset:])
+    return decode_vu_card_record(data[offset:])
 
 def parse_g2_card_iw_record(data, offset=0):
-    return _vrd.decode_card_iw(data[offset:])
+    return decode_card_iw(data[offset:])
 
 def parse_g2_downloadable_period(data, offset=0):
-    return _vrd.decode_downloadable_period(data[offset:])
+    return decode_downloadable_period(data[offset:])
 
 def parse_g2_time_adjustment(data, offset=0):
-    return _vrd.decode_time_adjustment(data[offset:])
+    return decode_time_adjustment(data[offset:])
 
 def parse_g2_company_locks(data, offset=0):
-    return _vrd.decode_company_lock(data[offset:])
+    return decode_company_lock(data[offset:])
 
 def parse_g2_sensor_paired(data, offset=0):
-    return _vrd.decode_sensor_paired(data[offset:])
+    return decode_sensor_paired(data[offset:])
 
 def parse_g2_sensor_gnss_coupled(data, offset=0):
-    return _vrd.decode_sensor_gnss_coupled(data[offset:])
+    return decode_sensor_gnss_coupled(data[offset:])
 
 def parse_g2_its_consent(data, offset=0):
-    return _vrd.decode_its_consent(data[offset:])
+    return decode_its_consent(data[offset:])
 
 def parse_g22_overspeeding_event(data, offset=0):
-    return _vrd.decode_overspeeding_event(data[offset:])
+    return decode_overspeeding_event(data[offset:])
 
 def parse_g22_overspeeding_control(data, offset=0):
-    return _vrd.decode_overspeeding_control(data[offset:])
+    return decode_overspeeding_control(data[offset:])
 
 def parse_g22_time_adj_gnss(data, offset=0):
-    return _vrd.decode_time_adj_gnss(data[offset:])
+    return decode_time_adj_gnss(data[offset:])
 
 def parse_g22_power_interruption(data, offset=0):
-    return _vrd.decode_power_interruption(data[offset:])
+    return decode_power_interruption(data[offset:])
 
 def parse_g22_sensor_fault(data, offset=0):
-    return _vrd.decode_sensor_fault(data[offset:])
+    return decode_sensor_fault(data[offset:])
 
 def parse_g22_detailed_speed(data, offset=0):
-    return _vrd.decode_detailed_speed(data[offset:])
+    return decode_detailed_speed(data[offset:])
 
 def parse_g22_controller_identification(data, offset=0):
-    return _vrd.decode_controller_identification(data[offset:])
+    return decode_controller_identification(data[offset:])
 
 
 G2_VU_RECORD_DECODERS = {

@@ -4,7 +4,7 @@ import sys
 
 base_path = os.path.abspath(".")
 sys.path.insert(0, base_path)
-from core.version import __version__  # noqa: E402 — single version source
+from core.utils.version import __version__  # noqa: E402 — single version source
 
 # ERCA certificates (needed for signature validation)
 certs_path = os.path.join(base_path, "certs")
