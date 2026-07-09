@@ -101,6 +101,8 @@ def _s24(b):
 
 
 def _iso(ts):
+    if ts == 0:
+        return "\u2014"
     return (datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
             if 946684800 <= ts <= 4102444800 else None)
 
