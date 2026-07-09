@@ -4,5 +4,5 @@ Bump together with the CHANGELOG entry when cutting a release
 (the release tag is ``v{__version__}``).
 """
 
-__version__ = "2.3.0"
+__version__ = "2.3.1"
 APP_NAME = "DDD Tachograph Reader"

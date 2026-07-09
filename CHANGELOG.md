@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-07-09
+### Added
+- **Monthly activity report in export**: activities grouped by month, daily columns for Drive/Work/Rest/Available/Unknown hours (HH:MM), daily totals, monthly subtotals
+- **Unknown activity column**: ⚠️ warning icon when activity type is not among the standard four codes
+- **Section descriptions**: subtitle below every section title in PDF/Excel/CSV explaining what data the section contains (38 descriptions in English)
+- **PDF cover page**: stats bar with total Drive/Work/Rest hours, active days, event count
+### Changed
+- **PDF redesign**: font increased to 8pt (from 6.5), smart column widths, bold monthly total rows, month separator lines, right-aligned numbers, professional styling
+- **Each month on its own PDF page** with page breaks between months
+- **Compact activity tables** (7pt font, 2px padding) to fit 31 days + totals on one landscape page
+- **Section descriptions** moved from inside table to subtitle paragraph under section title
+### Fixed
+- **Single-change days** (e.g. rest day with card not inserted): now show 24h of that activity instead of 00:00
+- **Release workflow**: `core.version` → `core.utils.version` import path
+
 ## [2.3.0] - 2026-07-09
 ### Added
 - **Monthly activity report in export**: activities grouped by month, daily columns for Drive/Work/Rest/Available hours (HH:MM), daily totals, monthly subtotals, UTC timezone note, description row per section
