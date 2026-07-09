@@ -14,6 +14,9 @@ from ddd_parser import TachoParser
 
 DDD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "DDD")
 
+_HAS_DDD = os.path.isdir(DDD_DIR)
+_skip_if_no_ddd = pytest.mark.skipif(not _HAS_DDD, reason="DDD/ directory not available on CI")
+
 # ── Helpers ────────────────────────────────────────────────────────────────
 
 def _parse(name):
@@ -60,6 +63,7 @@ def _raw_tag_keys(r):
 
 # ── G1 Driver Card files (D6xxxxx) ─────────────────────────────────────────
 
+@_skip_if_no_ddd
 class TestG1DriverCards:
     """D6xxx series — G1 digital tachograph driver card downloads."""
 
@@ -119,6 +123,7 @@ class TestG1DriverCards:
 
 # ── G1 VU TREP06 CardDownload files (D200xxx) ──────────────────────────────
 
+@_skip_if_no_ddd
 class TestG1D200Trep06:
     """D200xxx — G1 VU TREP06 card download section, parsed as VU."""
 
@@ -153,6 +158,7 @@ class TestG1D200Trep06:
 
 # ── G2 Card file ────────────────────────────────────────────────────────────
 
+@_skip_if_no_ddd
 class TestG2Card:
     """G2 smart tachograph driver card with G1+G2 appendix copies."""
 
@@ -177,6 +183,7 @@ class TestG2Card:
 
 # ── G2 / G2.2 VU downloads ─────────────────────────────────────────────────
 
+@_skip_if_no_ddd
 class TestG2G22VU:
     """Gen2/Gen2.2 Vehicle Unit downloads with RecordArray ECDSA signatures."""
 
@@ -244,6 +251,7 @@ class TestG2G22VU:
 
 # ── G1 VU / Mass Memory ─────────────────────────────────────────────────────
 
+@_skip_if_no_ddd
 class TestG1VUMassMemory:
     """G1 digital tachograph Vehicle Unit and Mass Memory downloads."""
 
@@ -278,6 +286,7 @@ class TestG1VUMassMemory:
 
 # ── G1 Sensor file ──────────────────────────────────────────────────────────
 
+@_skip_if_no_ddd
 class TestG1Sensor:
     """G1 digital tachograph sensor download (0x7611 opaque section)."""
 
@@ -297,11 +306,14 @@ class TestG1Sensor:
 
 # ── Cross-file invariants ───────────────────────────────────────────────────
 
+@_skip_if_no_ddd
 class TestGlobalInvariants:
     """Properties that must hold for every real file in the dataset."""
 
-    _ALL_FILES = sorted(
-        [f for f in os.listdir(DDD_DIR) if f.endswith(('.ddd', '.DDD')) and f != '.DS_Store'])
+    _ALL_FILES = (
+        sorted([f for f in os.listdir(DDD_DIR)
+                if f.endswith(('.ddd', '.DDD')) and f != '.DS_Store'])
+        if _HAS_DDD else [])
 
     @pytest.mark.parametrize("name", _ALL_FILES)
     def test_every_file_decoded_without_errors(self, name):
