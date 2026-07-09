@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [2.3.2] - 2026-07-10
+### Changed
+- **Decoders reorganized by type** behind the `core/decoders/__init__.py` facade: `primitives.py`→`common.py`, `card.py`→`card_ef.py`, `g22_card.py`→`card_g22.py`; `vu_trep.py` split into `vu_g1.py` (G1 stream/TREP walkers) and `vu_g2.py` (G2/G2.2 RecordArray dispatch)
+- **`g2_dispatch.py` removed**: its dispatch table folded into `vu_g2.py` with a lazy-loaded cache; backward-compat aliases dropped
+- **Facade exposes only the public decoder API**; `g1_walker` imports the G1 TREP parsers directly from `vu_g1`
+- **Developer docs realigned** (AGENTS.md, CONTRIBUTING.md, `docs/developer/*`) to the new module layout
+### Removed
+- **GUI coverage indicators**: top-bar badge, status-line coverage and File Info coverage field (always 100%, no added signal)
+- **Dead decoder** `parse_previous_vehicle_info` (registered and called nowhere)
+### Housekeeping
+- Repo cleanup: build/dist/cache artifacts and reference PDFs moved out of the tree; `.gitignore` tidied
+
 ## [2.3.1] - 2026-07-09
 ### Added
 - **Monthly activity report in export**: activities grouped by month, daily columns for Drive/Work/Rest/Available/Unknown hours (HH:MM), daily totals, monthly subtotals
