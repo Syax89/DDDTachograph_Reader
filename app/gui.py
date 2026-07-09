@@ -1204,6 +1204,13 @@ class TachoExplorer(tk.Tk):
         if icc:
             cols, rows = _kv_rows(icc)
             self._add_section(gnode, "ICC Identification", cols, rows)
+        for auth_key, auth_label in [("gnss_auth", "GNSS Authentication (0x960F)"),
+                                      ("load_unload_auth", "Load/Unload Authentication (0x6399)")]:
+            auth_data = data.get(auth_key) or []
+            if auth_data:
+                cols, rows = _rows_for(auth_data, None)
+                self._add_section(gnode, auth_label, cols, rows,
+                                  meta="BER-TLV walk \u00b7 spec Appendix 11 not public")
 
     def _populate_raw_tags(self, raw):
         """Summary table of tags traversed by BER-TLV parser but not decoded.
