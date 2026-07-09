@@ -52,7 +52,7 @@ def parse_g2_vu_record(val, results, tag):
         if hdr and hdr["record_size"] > 0 and hdr["no_of_records"] > 0:
             records = []
             for _idx, rec, _ in _RAP.iter_records(val, 0):
-                decoded = decode_fn(rec, 0)
+                decoded = decode_fn(rec)
                 if decoded:
                     records.append(decoded)
             if records:
@@ -60,7 +60,7 @@ def parse_g2_vu_record(val, results, tag):
         else:
             # Bare record without a RecordArray header: same destination key,
             # so consumers (GUI/export) see the data regardless of wrapping.
-            decoded = decode_fn(val, 0)
+            decoded = decode_fn(val)
             if decoded:
                 results.setdefault(result_key, []).append(decoded)
     except (struct.error, IndexError, ValueError, KeyError, AttributeError) as exc:

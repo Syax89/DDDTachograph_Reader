@@ -18,8 +18,6 @@ _log = logging.getLogger("ddd_tacho")
 
 
 # Shared epoch bounds for data size sanity checks.
-_UNIX_EPOCH_2000 = 946684800
-_UNIX_EPOCH_2100 = 4102444800
 
 # Minimum lengths for known EF types (used to reject obviously-corrupt data).
 # Names follow the decoder registry (core/decoder_registry.py).

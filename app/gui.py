@@ -51,7 +51,7 @@ from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 from core.registry.models import _clean_tag_name  # noqa: E402
 from core.utils.version import __version__  # noqa: E402
-from core.utils.report_format import humanize_key  # noqa: E402
+from core.utils.report_format import humanize_key, _NOT_AVAILABLE_INTS, _ISO_RE  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
 
@@ -190,9 +190,6 @@ TRANSFORMERS = {
 
 # ── Value formatting ───────────────────────────────────────────────────────
 
-# Tachograph "data not available" sentinel (0xFFFFFF on 3 bytes).
-_NOT_AVAILABLE_INTS = {0xFFFFFF, 0xFFFFFFFF}
-_ISO_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2})?")
 
 
 def _fmt_iso(s):
@@ -353,7 +350,7 @@ class DataTable(ttk.Frame):
         filt.pack(fill=tk.X, padx=8, pady=(0, 4))
         ttk.Label(filt, text="\U0001f50e").pack(side=tk.LEFT)
         self.filter_var = tk.StringVar()
-        self.filter_var.trace_add("write", lambda *_: self._apply_filter())
+        self.filter_var.trace_add("write", lambda *_: self._schedule_filter())
         self.filter_entry = ttk.Entry(filt, textvariable=self.filter_var)
         self.filter_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(4, 0))
 
@@ -380,6 +377,8 @@ class DataTable(ttk.Frame):
         self._cols = []
         self._all_rows = []
         self._sort_state = {}
+        self._fit_after_id = None
+        self._filter_after_id = None
 
     def show(self, title, columns, rows, meta=""):
         """Display a table: sets headers (click to sort), sizes columns,
@@ -402,7 +401,7 @@ class DataTable(ttk.Frame):
             self.tv.column(c, minwidth=60, anchor=tk.W, stretch=True)
 
         self._fit_columns()
-        self.tv.bind("<Configure>", lambda e: self._fit_columns())
+        self.tv.bind("<Configure>", lambda e: self._schedule_fit())
 
         self._render(self._all_rows)
 
@@ -431,6 +430,11 @@ class DataTable(ttk.Frame):
                 longest = max(longest, len(str(r[idx])))
         return longest * 8
 
+    def _schedule_fit(self):
+        if self._fit_after_id is not None:
+            self.tv.after_cancel(self._fit_after_id)
+        self._fit_after_id = self.tv.after(300, self._fit_columns)
+
     def _col_width(self, col, rows):
         idx = self._cols.index(col)
         longest = len(str(col))
@@ -449,6 +453,11 @@ class DataTable(ttk.Frame):
                 tag = "even" if i % 2 == 0 else "odd"
                 vals = list(r)
             self.tv.insert("", tk.END, values=vals, tags=(tag,))
+
+    def _schedule_filter(self):
+        if self._filter_after_id is not None:
+            self.tv.after_cancel(self._filter_after_id)
+        self._filter_after_id = self.tv.after(300, self._apply_filter)
 
     def _apply_filter(self):
         """Re-render keeping only rows where any cell contains the query."""
@@ -595,6 +604,8 @@ class TachoExplorer(tk.Tk):
         self.table = DataTable(right)
         self.table.pack(fill=tk.BOTH, expand=True)
 
+        self.bind_all("<Control-f>", lambda e: self.table.filter_entry.focus_set())
+
         status_bar = ttk.Frame(self, relief=tk.SUNKEN)
         status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         self.status = ttk.Label(status_bar, text="Ready \u2014 open a .ddd file",
@@ -694,19 +705,43 @@ class TachoExplorer(tk.Tk):
             + "_export" + extension)
         if not path:
             return
+        import threading
+        self.status.config(text=f"Exporting to {kind}\u2026")
+        self.progress.pack(side=tk.RIGHT)
+        self.progress.start(12)
+
+        def _worker():
+            try:
+                export_fn(self.current_data, path)
+                self.after(0, lambda: self._export_done(kind, path))
+            except Exception as exc:
+                self.after(0, lambda e=exc: self._export_error(kind, requirement, e))
+
+        worker = threading.Thread(target=_worker, daemon=True)
+        worker.start()
+
+    def _export_done(self, kind, path):
         try:
-            self.status.config(text=f"Exporting to {kind}\u2026")
-            self.update_idletasks()
-            export_fn(self.current_data, path)
-            self.status.config(text=f"Exported: {os.path.basename(path)}")
-            messagebox.showinfo("Export Complete", f"{kind} saved to:\n{path}")
-        except ImportError as e:
+            self.progress.stop()
+            self.progress.pack_forget()
+        except Exception:
+            pass
+        self.status.config(text=f"Exported: {os.path.basename(path)}")
+        messagebox.showinfo("Export Complete", f"{kind} saved to:\n{path}")
+
+    def _export_error(self, kind, requirement, exc):
+        try:
+            self.progress.stop()
+            self.progress.pack_forget()
+        except Exception:
+            pass
+        if isinstance(exc, ImportError):
             self.status.config(text="Export failed")
             messagebox.showwarning("Export Unavailable",
-                                   f"{kind} export requires an extra package:\n{e}\n{requirement}")
-        except Exception as e:
+                                   f"{kind} export requires an extra package:\n{exc}\n{requirement}")
+        else:
             self.status.config(text="Export failed")
-            messagebox.showerror("Export Error", str(e))
+            messagebox.showerror("Export Error", str(exc))
 
     def _export_pdf(self):
         self._run_export("PDF", ".pdf", [("PDF Document", "*.pdf")],
@@ -770,6 +805,7 @@ class TachoExplorer(tk.Tk):
             messagebox.showerror("Rendering Error",
                                   f"Failed to display file:\n{traceback.format_exc()}")
             self.status.config(text="Ready \u2014 open a .ddd file")
+            self._finish_parse()
 
     def _check_integrity(self, data, path):
         """Warn the user when a file shows signs of corruption or data loss."""
@@ -1507,6 +1543,15 @@ class TachoExplorer(tk.Tk):
         nation = driver.get("issuing_nation", "")
         if nation:
             rows.append(("  Issuing nation", nation, False))
+        authority = driver.get("issuing_authority", "")
+        if authority and authority != "N/A":
+            rows.append(("  Issuing authority", authority, False))
+        issue_date = driver.get("issue_date", "")
+        if issue_date:
+            rows.append(("  Issue date", issue_date, False))
+        validity_begin = driver.get("validity_begin", "")
+        if validity_begin:
+            rows.append(("  Valid from", validity_begin, False))
         expiry = driver.get("expiry_date", "")
         if expiry:
             rows.append(("  Expiry date", expiry, False))

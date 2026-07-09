@@ -6,3 +6,13 @@ MAX_RECURSION_DEPTH = 12
 RECORD_ARRAY_MAX_RECORDS = 20000
 RECORD_ARRAY_MAX_SIZE = 4096
 MAX_ODO_DISTANCE_KM = 1000000
+
+# EC curve OID (hex string) → human-readable name.
+EC_CURVE_OIDS = {
+    "2b2403030208010107": "brainpoolP256r1",
+    "2b2403030208010b0d": "brainpoolP384r1",
+    "2b2403030208010d0b": "brainpoolP512r1",
+    "2a8648ce3d030107": "NIST P-256",
+    "2b81040022": "NIST P-384",
+    "2b81040023": "NIST P-521",
+}

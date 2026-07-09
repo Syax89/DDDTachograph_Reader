@@ -91,11 +91,11 @@ Note: G2 cards may contain mixed G1 and G2 segments. Detection is per-segment vi
 | Tag | Name | Inner Format | Annex Ref | Status |
 |-----|------|-------------|-----------|--------|
 | 0x0525 | GNSSAccumulatedDriving | 13B flat records | Annex 1C §2.79 | ✅ SPEC |
-| 0x0526 | LoadUnloadOperations | 13B flat records | ASN.1 LoadUnloadRecord | ✅ SPEC |
-| 0x0527 | TrailerRegistrations | 20B flat records | ASN.1 TrailerRegistrationRecord | ✅ SPEC |
+| 0x0526 | LoadUnloadOperations | 13B flat records | Annex 1C §2.208a | ✅ SPEC |
+| 0x0527 | TrailerRegistrations | 20B flat records | Annex 1C §2.166a | ✅ SPEC |
 | 0x0528 | GNSSEnhancedPlaces | 14B flat records | Annex 1C §2.79c | ✅ SPEC |
 | 0x0529 | LoadSensorData | var single record | — | ❌ NONE |
-| 0x052A | BorderCrossings | 14B flat records | ASN.1 BorderCrossingRecord | ✅ SPEC |
+| 0x052A | BorderCrossings | 14B flat records | Annex 1C §2.203a | ✅ SPEC |
 
 ## G2.2 EF Tags (VU internal)
 
@@ -104,9 +104,9 @@ Note: G2 cards may contain mixed G1 and G2 segments. Detection is per-segment vi
 | 0x0222 | EF_GNSS_Places | Annex 1C GNSS | ✅ SPEC |
 | 0x0223 | EF_GNSS_Accumulated_Position | Annex 1C GNSS | ✅ SPEC |
 | 0x0225 | G22_VU_GNSSADRecord | Annex 1C §2.79 | ✅ SPEC |
-| 0x0226 | G22_VU_LoadUnloadRecord | ASN.1 LoadUnloadRecord | ✅ SPEC |
-| 0x0227 | G22_VU_TrailerRecord | ASN.1 TrailerRegistrationRecord | ✅ SPEC |
-| 0x0228 | G22_VU_BorderCrossingRecord | ASN.1 BorderCrossingRecord | ✅ SPEC |
+| 0x0226 | G22_VU_LoadUnloadRecord | Annex 1C §2.208a | ✅ SPEC |
+| 0x0227 | G22_VU_TrailerRecord | Annex 1C §2.166a | ✅ SPEC |
+| 0x0228 | G22_VU_BorderCrossingRecord | Annex 1C §2.203a | ✅ SPEC |
 
 ## RecordType Codes (§2.120)
 

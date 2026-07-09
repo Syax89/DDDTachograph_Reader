@@ -32,6 +32,7 @@ Examples:
     parser.add_argument("--json", nargs="?", const="auto", metavar="FILE", help="Generate JSON output (optional: file path)")
     parser.add_argument("--pdf", nargs="?", const="auto", metavar="FILE", help="Generate PDF report (optional: file path)")
     parser.add_argument("--excel", nargs="?", const="auto", metavar="FILE", help="Generate Excel report (optional: file path)")
+    parser.add_argument("--csv", nargs="?", const="auto", metavar="FILE", help="Generate CSV report (optional: file path)")
     parser.add_argument("--all", nargs="?", const="auto", metavar="DIR", help="Generate all formats in a directory")
     parser.add_argument("--summary", action="store_true", help="Show compact text summary")
     parser.add_argument("--version", action="version",
@@ -81,6 +82,8 @@ Examples:
             args.pdf = resolve_path("auto", "pdf", out_dir)
         if args.excel is None:
             args.excel = resolve_path("auto", "xlsx", out_dir)
+        if args.csv is None:
+            args.csv = resolve_path("auto", "csv", out_dir)
 
     generated = []
 
@@ -119,12 +122,25 @@ Examples:
                 import traceback
                 traceback.print_exc()
 
+    # CSV output
+    if args.csv:
+        csv_path = resolve_path(args.csv, "csv")
+        try:
+            from app.export import ExportManager
+            ExportManager.export_to_csv(result, csv_path)
+            generated.append(("CSV", csv_path))
+        except Exception as e:
+            print(f"⚠️ CSV generation error: {e}", file=sys.stderr)
+            if args.verbose:
+                import traceback
+                traceback.print_exc()
+
     # Summary
-    if args.summary or (not args.json and not args.pdf and not args.excel and not args.quiet):
+    if args.summary or (not args.json and not args.pdf and not args.excel and not args.csv and not args.quiet):
         print_summary(result)
 
     # Default: print JSON to stdout if no output flags
-    if not args.json and not args.pdf and not args.excel and not args.summary and not args.quiet:
+    if not args.json and not args.pdf and not args.excel and not args.csv and not args.summary and not args.quiet:
         print(json.dumps(result, indent=2, ensure_ascii=False, cls=BytesEncoder))
 
     if not args.quiet and generated:
