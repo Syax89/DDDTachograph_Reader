@@ -263,7 +263,7 @@ class ExportManager:
             table_data = [[Paragraph(str(h), h_style) for h in headers]]
             alignments = []
             if is_activity:
-                alignments = [TA_LEFT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT]
+                alignments = [TA_LEFT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT, TA_RIGHT]
 
             for _idx, row in enumerate(rows):
                 cells = []
