@@ -33,7 +33,7 @@ block_cipher = None
 console_build = os.environ.get("TACHO_CONSOLE") == "1"
 
 a = Analysis(
-    ['app_main.py'],
+    ['app/frozen.py'],
     pathex=[base_path, os.path.join(base_path, 'core')],
     binaries=[],
     datas=added_files,

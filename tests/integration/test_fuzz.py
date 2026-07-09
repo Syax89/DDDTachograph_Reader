@@ -12,7 +12,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 
 
 def _make_temp_file(data):

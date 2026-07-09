@@ -4,7 +4,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from specs.semantic_coverage_audit import compare_to_baseline, semantic_metrics
+from scripts.semantic_coverage_audit import compare_to_baseline, semantic_metrics
 
 
 class TestSemanticCoverageMetrics(unittest.TestCase):

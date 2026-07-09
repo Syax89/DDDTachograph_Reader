@@ -24,17 +24,17 @@ def main():
     if sys.argv[1:2] in (["--version"], ["--smoke"]):
         _trace("BOOT: entry point reached")
         try:
-            import gui_tree
+            from app.gui import main as gui_main
             _trace("IMPORTS OK")
-            gui_tree.main()
+            gui_main()
         except SystemExit:
             raise
         except BaseException:
             _trace("FATAL during startup:\n" + traceback.format_exc())
             sys.exit(1)
     else:
-        import gui_tree
-        gui_tree.main()
+        from app.gui import main as gui_main
+        gui_main()
 
 
 main()

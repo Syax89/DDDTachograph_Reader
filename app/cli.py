@@ -52,7 +52,7 @@ Examples:
 
     # Parse
     try:
-        from ddd_parser import TachoParser
+        from app.engine import TachoParser
         ddd = TachoParser(args.file)
         result = ddd.parse()
     except Exception as e:
@@ -95,7 +95,7 @@ Examples:
     if args.pdf:
         pdf_path = resolve_path(args.pdf, "pdf")
         try:
-            from export_manager import ExportManager
+            from app.export import ExportManager
             ExportManager.export_to_pdf(result, pdf_path)
             generated.append(("PDF", pdf_path))
         except ImportError as e:
@@ -110,7 +110,7 @@ Examples:
     if args.excel:
         excel_path = resolve_path(args.excel, "xlsx")
         try:
-            from export_manager import ExportManager
+            from app.export import ExportManager
             ExportManager.export_to_excel(result, excel_path)
             generated.append(("Excel", excel_path))
         except Exception as e:

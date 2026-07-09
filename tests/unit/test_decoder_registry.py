@@ -2,7 +2,7 @@ import struct
 
 from core.registry.registry import DecoderRegistry, TagDecoder
 from core.parser.deterministic import DeterministicParser
-from specs.tag_decoding_matrix import rows
+from scripts.tag_decoding_matrix import rows
 
 
 def test_registry_selects_card_or_vu_decoder_for_same_tag():

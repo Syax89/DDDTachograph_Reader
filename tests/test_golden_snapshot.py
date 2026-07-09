@@ -17,7 +17,7 @@ import json
 import os
 import unittest
 
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 from tests.unit.real_data import requires_real_files
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

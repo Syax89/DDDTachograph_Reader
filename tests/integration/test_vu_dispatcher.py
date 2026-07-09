@@ -7,7 +7,7 @@ keyed by recordType in RecordArrays, not by the 0x05xx tags.
 import os
 import unittest
 
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 from core.parser.vu_dispatcher import (
     decode_border_crossing,
     decode_full_card_number_gen,

@@ -6,7 +6,7 @@ on real files, and that tampering with the data is detected.
 import os
 import unittest
 
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 from core.crypto.vu_signature import (
     verify_vu_download, decode_vu_certificates)
 from tests.unit.real_data import requires_real_files

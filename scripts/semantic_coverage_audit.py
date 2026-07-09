@@ -14,7 +14,7 @@ from typing import Any, Dict, Iterable, List, Mapping
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

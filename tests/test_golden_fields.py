@@ -10,7 +10,7 @@ copying the assertions from a passing test run.
 """
 import os
 import pytest
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 
 DDD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "DDD")
 

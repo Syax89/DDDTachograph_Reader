@@ -5,7 +5,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from specs.semantic_coverage_audit import audit_directory, compare_to_baseline
+from scripts.semantic_coverage_audit import audit_directory, compare_to_baseline
 
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

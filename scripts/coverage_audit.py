@@ -7,7 +7,7 @@ from collections import defaultdict
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 
 DDD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "DDD")
 

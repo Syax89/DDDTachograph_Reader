@@ -7,7 +7,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from ddd_parser import TachoParser
+from app.engine import TachoParser
 from core.decoders import (
     parse_g22_gnss_accumulated_driving,
     parse_g22_load_unload_operations,

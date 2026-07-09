@@ -5,7 +5,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from core.decoders import parse_g22_auth_subtag
-from specs.unparsed_pattern_triage import triage_directory
+from scripts.unparsed_pattern_triage import triage_directory
 
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

@@ -1,7 +1,7 @@
 """Triage of Unparsed Data patterns across real DDD files.
 
 Groups unparsed occurrences by leading 2-byte signature and surfaces the
-biggest hot-spots. This complements `specs/semantic_coverage_audit.py` by
+biggest hot-spots. This complements `scripts/semantic_coverage_audit.py` by
 directing the next decoding investments.
 """
 import argparse
@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Mapping
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from specs.semantic_coverage_audit import DDD_DIR, audit_file
+from scripts.semantic_coverage_audit import DDD_DIR, audit_file
 
 
 def _snippet_hex(data_hex: str, head: int = 16) -> str:
@@ -46,7 +46,7 @@ def triage_directory(directory: str = DDD_DIR, top_n: int = 20) -> List[Dict[str
             continue
         metrics = audit_file(os.path.join(directory, path))
         # Re-parse to get the raw occurrences, since audit_file only returns metrics.
-        from ddd_parser import TachoParser
+        from app.engine import TachoParser
         result = TachoParser(os.path.join(directory, path)).parse()
         for tag_name, occurrences in result.get("raw_tags", {}).items():
             if "Unparsed Data" not in tag_name:

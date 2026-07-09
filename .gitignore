@@ -34,3 +34,4 @@ tests/certs/
 *.csv
 specs/*_report.json
 tests/golden/
+scripts/*_report.json

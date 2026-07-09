@@ -47,7 +47,7 @@ if sys.platform == "win32":
 import tkinter as tk  # noqa: E402
 from tkinter import ttk, filedialog, messagebox  # noqa: E402
 
-from ddd_parser import TachoParser  # noqa: E402
+from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 from core.registry.models import _clean_tag_name  # noqa: E402
 from core.utils.version import __version__  # noqa: E402
@@ -56,7 +56,7 @@ from core.utils.report_format import humanize_key  # noqa: E402
 _log = logging.getLogger("tacho_gui")
 
 try:
-    from export_manager import ExportManager
+    from app.export import ExportManager
 except ImportError:
     ExportManager = None  # type: ignore[assignment,misc]
 
@@ -1559,7 +1559,7 @@ def _smoke_check(path):
     opening a window. Returns a process exit code."""
     _emit(f"SMOKE START: v{__version__} file={path}")
     try:
-        from ddd_parser import TachoParser
+        from app.engine import TachoParser
         result = TachoParser(path).parse()
     except Exception:
         _emit(f"SMOKE FAIL: parse raised\n{traceback.format_exc()}")

@@ -5,7 +5,7 @@ import unittest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from export_manager import ExportManager
+from app.export import ExportManager
 
 
 MOCK_DATA = {
