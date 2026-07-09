@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="160" viewBox="0 0 640 160">
+  <g>
+    <circle cx="80" cy="80" r="60" fill="#06233d"></circle>
+    <circle cx="80" cy="80" r="44" fill="none" stroke="#fb9d59" stroke-width="10" stroke-linecap="round" stroke-dasharray="103 320" transform="rotate(-125 80 80)"></circle>
+    <line x1="80" y1="80" x2="103" y2="57" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round"></line>
+    <circle cx="80" cy="80" r="6.5" fill="#ffffff"></circle>
+  </g>
+  <text x="168" y="88" font-family="Helvetica, Arial, sans-serif" font-size="42" font-weight="800" fill="#141b24" letter-spacing="-0.5">Tacho<tspan fill="#aa5910">Reader</tspan></text>
+  <text x="168" y="114" font-family="Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#69737d" letter-spacing="2.2">DDD FILE ANALYZER</text>
+</svg>
