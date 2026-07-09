@@ -4,20 +4,15 @@
 Cross-platform (Windows/macOS) application for parsing, analyzing and visualizing data from digital tachograph files (`.ddd` format). EU digital tachographs record driver activity, vehicle data, GNSS positions, and security certificate chains.
 
 ## Key architecture
-- **Core parser**: `ddd_parser.py` → `core/deterministic_parser.py` (STAP/BER-TLV + VU stream walks, full byte coverage) → `core/decoders.py` facade (field-level decoders in core/card_decoders.py, core/vu_trep_decoders.py, etc.)
-- **Coverage**: `CoverageTracker` in `core/deterministic_parser.py` — every byte classified (tag/padding/unknown); shared range-merging via `core/coverage_utils.py`
-- **Decoder registry**: `core/decoder_registry.py` — centralized tag→decoder mapping with spec references (singleton pattern)
-- **Deterministic parser**: `core/deterministic_parser.py` — the only parser (the legacy TagNavigator has been removed)
-- **VU RecordArray**: `core/vu_record_dispatcher.py` walks the Annex 1C RecordArray stream by recordType; `core/record_array.py` provides the low-level parser
-- **VU crypto**: `core/vu_signature_verifier.py` — ECDSA TREP signatures + CVC certificate chain verification (Appendix 11)
-- **Event/fault codes**: `core/event_fault_codes.py` — 28 event types + 17 fault types per EU Reg. 2016/799 + 2023/980
-- **Shared utils**: `core/coverage_utils.py` (interval merging, padding detection), `core/encoding.py` (BytesEncoder for JSON), `core/constants.py` (epochs, MAX_TLV_LENGTH)
-- **Logger**: `core/logger.py` — centralized logging with _CountingHandler for decoder failure metrics; thread-safe via lock
-- **Three generations**: G1 (Annex 1B, STAP encoding), G2 (Annex 1C, BER-TLV), G2.2 (Annex 1C update, BER-TLV)
-- **Detection**: First 2 bytes of file: `0x7631`=G2.2, `0x7621`/`0x7622`=G2, else G1
-- **Output models**: `core/models.py` (TachoResult hierarchy)
-- **GUI**: `gui_tree.py` — regedit-style tree + table viewer with Excel/CSV/JSON export
-- **CLI**: `tacho_cli.py` — full-featured CLI; `main.py` — minimal CLI
+- **Entry point**: `app/main.py` (CLI) → `app/engine.py` (TachoParser) → `core/parser/deterministic.py` (STAP/BER-TLV + VU stream walks, full byte coverage)
+- **Decoders**: `core/decoders/` — field-level decoders (card, g22_card, cert, vu_trep, g2_dispatch) + `primitives.py` shared helpers
+- **Parser engine**: `core/parser/` — deterministic.py, record_array.py, vu_dispatcher.py (RecordArray walker), g1_walker.py
+- **Registry**: `core/registry/` — decoder_registry.py (tag→decoder mapping), models.py (TachoResult)
+- **Crypto**: `core/crypto/` — signature.py (root validator), vu_signature.py (ECDSA TREP + CVC chain), ef_signature.py (card data integrity)
+- **Utils**: `core/utils/` — ber_tlv, coverage, encoding, constants, logger, version, report_format, event_codes, tag_defs
+- **GUI**: `app/gui.py` — regedit-style tree + table viewer with Excel/CSV/JSON export
+- **CLI**: `app/cli.py` — full-featured CLI; `app/main.py` — minimal CLI
+- **Export**: `app/export.py` — multi-sheet Excel + CSV + PDF
 - **Export**: `export_manager.py` — comprehensive multi-sheet Excel + flat CSV export
 
 ## Running tests
