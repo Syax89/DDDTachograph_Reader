@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-07-09
+### Added
+- **Auth blob BER-TLV walk**: 0x960F (GNSS auth) and 0x6399 (Load/Unload auth) now walk nested TLV structure; OID sub-tags resolved to curve names
+- **Record type 0x29 decode**: co-driver slot ActivityChangeInfo from G2.2 VU arrays (Stoneridge V6006)
+- **TREP section names in signature table**: "Section Signatures (TREP)" now shows human-readable names like "Activities" instead of just "0x31"
+- **GUI sections**: Calibration VINs in G1 group, Auth blobs (GNSS + Load/Unload) in Security group, Decoder Failures detail
+- **`__init__.py` facades**: all 7 packages (`core/`, `core/parser/`, `core/registry/`, `core/crypto/`, `core/utils/`, `app/`) with public API re-exports
+- **`--csv` CLI flag**: CSV export exposed alongside JSON/PDF/Excel
+- **Sheet name dedup**: collision suffix `_2`, `_3` when two sections produce the same 31-char Excel name
+### Changed
+- **Export runs on separate thread** with progress bar (no more UI freeze)
+- **GUI filter + resize debounce**: 300ms throttle on keystrokes and column resize events
+- **`Ctrl+F`**: keyboard shortcut jumps to search bar
+- **EC curve OID map**: deduplicated in `constants.py`, covers all 6 curves (brainpool + NIST)
+- **Constant dedup**: `_ISO_RE`, `_NOT_AVAILABLE_INTS`, `UNIX_EPOCH_*` moved to shared modules
+- **`g2_dispatch.py`**: thin wrappers eliminated, `G2_VU_RECORD_DECODERS` references `vu_dispatcher` directly
+- **Timestamp display**: `0` → em-dash (—) for "not available" sentinel
+### Fixed
+- **`_finish_parse()`**: Open button no longer stays disabled after render errors
+- **EC_CURVE_OIDS**: now contains all 6 curves (was missing 4)
+- **Tag 0x0206**: `parse_cyclic_buffer_activities` wired as decoder
+- **8 registry tags**: corrected from G2.2 → G2 (0x052C-0x0533 are Annex 1C 2016/799, not G2.2)
+- **Annex refs**: 3 tags changed from "ASN.1:" → "Annex 1C §..."
+- **`parse_g1_identification`**: 44 skipped bytes (issuingAuthorityName, issueDate, validityBegin) now decoded
+- **G1 cert warnings**: demoted to DEBUG (expected fallback for G2 files)
+- **Dead code**: removed `signatures` key from `TachoResult`, removed `export_manager` from `build.spec`
+- **CI**: pip caching on all jobs, removed redundant `pip install pytest`/`pyinstaller`
+- **`_iso(0)`**: returns "—" instead of `None` for "never" state (overspeeding control, etc.)
+- **GUI Raw Tags section**: removed (confusing — data already in generation groups)
+
 ## [2.2.2] - 2026-07-09
 ### Added
 - **Certificate CVC/ECC field-level decoder**: unified `parse_certificate()` with auto-detect (G1 RSA 194-byte vs G2/G2.2 CVC BER-TLV). CAR, CHR, curve OID, public key (x,y), validity dates, signature r/s exposed in `certificates[]`
