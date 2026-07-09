@@ -32,7 +32,7 @@ jobs:
         pyinstaller build.spec
 
     - name: Generate mock data for smoke test
-      run: python tests/generate_mock_ddd.py
+      run: python tests/integration/generate_mock_ddd.py
 
     - name: Smoke test bundle (macOS)
       if: runner.os == 'macOS'

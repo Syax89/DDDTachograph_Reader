@@ -49,7 +49,7 @@ jobs:
     - name: Generate synthetic mock data
       # Real DDD files are not versioned (personal data); tests that need
       # them skip on their own. Synthetic mocks exercise the decoders.
-      run: python tests/generate_mock_ddd.py
+      run: python tests/integration/generate_mock_ddd.py
 
     - name: Run test suite
       run: pytest -q
