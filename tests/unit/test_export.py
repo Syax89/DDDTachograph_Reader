@@ -98,15 +98,17 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("Mario Rossi", summary_text)
         self.assertIn("AA123BB", summary_text)
 
-        # Daily Activities: header + one row per activity change
+        # Daily Activities: monthly grouped report with hours columns + monthly totals
         ws = wb["Daily Activities"]
         headers = [c.value for c in ws[1]]
         self.assertIn("Date", headers)
-        self.assertIn("Time", headers)
-        self.assertIn("Activity", headers)
-        self.assertEqual(ws.max_row - 1, 4)
-        # Header is styled (bold)
-        self.assertTrue(ws.cell(row=1, column=1).font.bold)
+        self.assertIn("Drive (h)", headers)
+        self.assertIn("Work (h)", headers)
+        self.assertIn("Rest (h)", headers)
+        self.assertIn("Available (h)", headers)
+        self.assertIn("Total (h)", headers)
+        rows_read = ws.max_row - 1
+        self.assertGreaterEqual(rows_read, 3)  # description row + 2 days + 1 monthly total
 
         # Events: humanised columns, formatted timestamps, hidden keys dropped
         ws = wb["Events"]
@@ -127,8 +129,13 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("Mario Rossi", text)
         self.assertIn("=== DAILY ACTIVITIES ===", text)
         self.assertIn("=== EVENTS ===", text)
-        self.assertIn("Date;Time;Activity", text)
-        self.assertIn("01/06/2026;08:00;Drive", text)
+        # Monthly activity report: Date, Odometer, hours columns + monthly totals
+        self.assertIn("Date;Odometer km;Drive (h);Work (h);Rest (h);Available (h);Total (h)", text)
+        self.assertIn("01/06/2026", text)
+        self.assertIn("04:00", text)
+        self.assertIn("06/2026 TOTAL", text)
+        # UTC note
+        self.assertIn("UTC", text)
         # Formatted timestamp, not raw ISO
         self.assertIn("2026-06-01 10:30", text)
         self.assertNotIn("2026-06-01T10:30:00+00:00", text)

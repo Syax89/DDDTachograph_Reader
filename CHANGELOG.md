@@ -4,6 +4,7 @@
 
 ## [2.3.0] - 2026-07-09
 ### Added
+- **Monthly activity report in export**: activities grouped by month, daily columns for Drive/Work/Rest/Available hours (HH:MM), daily totals, monthly subtotals, UTC timezone note, description row per section
 - **Auth blob BER-TLV walk**: 0x960F (GNSS auth) and 0x6399 (Load/Unload auth) now walk nested TLV structure; OID sub-tags resolved to curve names
 - **Record type 0x29 decode**: co-driver slot ActivityChangeInfo from G2.2 VU arrays (Stoneridge V6006)
 - **TREP section names in signature table**: "Section Signatures (TREP)" now shows human-readable names like "Activities" instead of just "0x31"

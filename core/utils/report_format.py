@@ -76,6 +76,11 @@ DICT_SECTIONS = [
     ("sensor_info", "Sensor Identification"),
 ]
 
+SECTION_DESCRIPTIONS = {
+    "activities": "Daily activity breakdown (times in UTC). "
+                  "Drive, Work, Rest, Available hours per day with monthly subtotals.",
+}
+
 
 def fmt_iso(s):
     """ISO timestamp (2025-04-23T08:37:00+00:00) → '2025-04-23 08:37'."""
@@ -186,6 +191,92 @@ def records_to_table(records):
     return headers, rows
 
 
+def _time_to_minutes(time_str):
+    parts = time_str.split(":")
+    if len(parts) == 2:
+        return int(parts[0]) * 60 + int(parts[1])
+    return 0
+
+
+def _hours_str(minutes):
+    h = minutes // 60
+    m = minutes % 60
+    return f"{h:02d}:{m:02d}"
+
+
+ACTIVITY_COLS = ["Drive", "Work", "Rest", "Available"]
+ACTIVITY_COL_KEYS = ["drive", "work", "rest", "available"]
+
+
+def _compute_day_hours(day):
+    changes = day.get("changes") or []
+    buckets = {"drive": 0, "work": 0, "rest": 0, "available": 0}
+    key_map = {"DRIVE": "drive", "WORK": "work", "REST": "rest",
+               "AVAIL": "available", "AVAILABLE": "available"}
+    if not isinstance(changes, list) or len(changes) < 2:
+        return buckets, 0
+    for i in range(len(changes)):
+        ch = changes[i]
+        if not isinstance(ch, dict):
+            continue
+        act = str(ch.get("activity", "")).upper()
+        bucket = key_map.get(act)
+        if bucket is None:
+            continue
+        t1 = _time_to_minutes(str(ch.get("time", "00:00")))
+        if i + 1 < len(changes):
+            t2 = _time_to_minutes(str(changes[i + 1].get("time", "00:00")))
+        else:
+            t2 = 24 * 60
+        if t2 < t1:
+            t2 += 24 * 60
+        buckets[bucket] += t2 - t1
+    total = sum(buckets.values())
+    return buckets, total
+
+
+def build_monthly_activity_report(activities):
+    months = {}
+    for day in activities:
+        if not isinstance(day, dict):
+            continue
+        date_str = str(day.get("date", ""))
+        month_key = date_str[-7:] if len(date_str) >= 7 else date_str
+        months.setdefault(month_key, []).append(day)
+
+    headers = ["Date", "Odometer km", "Drive (h)", "Work (h)",
+               "Rest (h)", "Available (h)", "Total (h)"]
+    rows = []
+    for month_key in sorted(months.keys()):
+        days = sorted(months[month_key], key=lambda d: str(d.get("date", "")))
+        month_totals = {"drive": 0, "work": 0, "rest": 0, "available": 0}
+        month_total = 0
+        for day in days:
+            date_str = str(day.get("date", ""))
+            km = fmt_value(day.get("odometer_km", 0))
+            buckets, total = _compute_day_hours(day)
+            rows.append([
+                date_str, km,
+                _hours_str(buckets["drive"]),
+                _hours_str(buckets["work"]),
+                _hours_str(buckets["rest"]),
+                _hours_str(buckets["available"]),
+                _hours_str(total),
+            ])
+            for k in month_totals:
+                month_totals[k] += buckets[k]
+            month_total += total
+        rows.append([
+            f"{month_key} TOTAL", "",
+            _hours_str(month_totals["drive"]),
+            _hours_str(month_totals["work"]),
+            _hours_str(month_totals["rest"]),
+            _hours_str(month_totals["available"]),
+            _hours_str(month_total),
+        ])
+    return headers, rows
+
+
 def expand_activities(activities):
     """Flatten daily activity blocks into one row per activity change."""
     rows = []
@@ -282,11 +373,13 @@ def section_tables(data, max_rows=None):
         if key == "activities":
             if not isinstance(items, list):
                 items = [items]
-            recs = expand_activities(items)
-            if not recs:
+            headers, rows = build_monthly_activity_report(items)
+            if not rows:
                 continue
-            headers = list(recs[0].keys())
-            rows = [[r.get(h, "") for h in headers] for r in recs]
+            # Insert a description row after the header
+            rows.insert(0, ["Daily activity breakdown (times in UTC). "
+                            "Drive/Work/Rest/Available hours per day with monthly subtotals.",
+                            "", "", "", "", "", ""])
         elif key == "ef_signature_verification" and isinstance(items, dict):
             ef_results = items.get("ef_results") or []
             if not ef_results:
