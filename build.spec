@@ -64,7 +64,6 @@ a = Analysis(
         'core.utils.coverage',
         'core.utils.encoding',
         'core.utils.constants',
-        'export_manager',
         'openpyxl',
         'reportlab',
         'reportlab.lib',
