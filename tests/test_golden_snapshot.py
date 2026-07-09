@@ -18,7 +18,7 @@ import os
 import unittest
 
 from ddd_parser import TachoParser
-from tests.real_data import requires_real_files
+from tests.unit.real_data import requires_real_files
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DDD_DIR = os.path.join(ROOT_DIR, "DDD")

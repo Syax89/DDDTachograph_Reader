@@ -7,7 +7,7 @@ the three formats present the same content consistently.
 import logging
 import re
 
-from core.report_format import records_to_table, section_tables, summary_rows
+from core.utils.report_format import records_to_table, section_tables, summary_rows
 
 _log = logging.getLogger("export")
 
@@ -225,7 +225,7 @@ class ExportManager:
             canvas.setFont("Helvetica", 7)
             canvas.setFillColor(colors.grey)
             meta = data.get("metadata", {})
-            from core.version import APP_NAME, __version__
+            from core.utils.version import APP_NAME, __version__
             canvas.drawString(doc.leftMargin, 7 * mm,
                               f"{meta.get('filename', '')} — {APP_NAME} v{__version__}")
             canvas.drawRightString(page_size[0] - doc.rightMargin, 7 * mm,

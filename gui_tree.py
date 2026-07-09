@@ -48,10 +48,10 @@ import tkinter as tk  # noqa: E402
 from tkinter import ttk, filedialog, messagebox  # noqa: E402
 
 from ddd_parser import TachoParser  # noqa: E402
-from core.encoding import BytesEncoder  # noqa: E402
-from core.models import _clean_tag_name  # noqa: E402
-from core.version import __version__  # noqa: E402
-from core.report_format import humanize_key  # noqa: E402
+from core.utils.encoding import BytesEncoder  # noqa: E402
+from core.registry.models import _clean_tag_name  # noqa: E402
+from core.utils.version import __version__  # noqa: E402
+from core.utils.report_format import humanize_key  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
 

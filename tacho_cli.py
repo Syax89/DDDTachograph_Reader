@@ -10,8 +10,8 @@ import os
 import logging
 from datetime import datetime
 
-from core.encoding import BytesEncoder
-from core.version import __version__
+from core.utils.encoding import BytesEncoder
+from core.utils.version import __version__
 
 
 def main():

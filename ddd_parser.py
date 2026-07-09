@@ -6,12 +6,12 @@ import warnings
 import logging
 from datetime import datetime
 
-from signature_validator import SignatureValidator
-from core.models import TachoResult, build_generations_tree
-from core.version import __version__
+from core.crypto.signature import SignatureValidator
+from core.registry.models import TachoResult, build_generations_tree
+from core.utils.version import __version__
 from core import decoders
-from core.tag_definitions import TACHO_TAGS
-from core.logger import decoder_failure_count, decoder_failures, reset_decoder_failures
+from core.utils.tag_defs import TACHO_TAGS
+from core.utils.logger import decoder_failure_count, decoder_failures, reset_decoder_failures
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +192,7 @@ class TachoParser:
 
     def _run_structural_parse(self):
         """Structural pass: deterministic STAP/BER-TLV parse with byte coverage."""
-        from core.deterministic_parser import DeterministicParser
+        from core.parser.deterministic import DeterministicParser
         dp = DeterministicParser(parser=self)
         self.results = dp.parse(self.raw_data, is_vu=self.is_vu)
         # dp.parse() returns a fresh results dict — restore file metadata.
@@ -203,7 +203,7 @@ class TachoParser:
         """Debug aid: report registered tags that never appeared in the file."""
         if not logger.isEnabledFor(logging.DEBUG):
             return
-        from core.decoder_registry import DecoderRegistry
+        from core.registry.registry import DecoderRegistry
         reg = DecoderRegistry.instance()
         registered = {t for t in reg.get_all_tags()
                       if reg.get_decoder(t) and reg.get_decoder(t).decoder_fn}
@@ -236,7 +236,7 @@ class TachoParser:
             # legacy regex/timestamp heuristics (which recover almost
             # nothing for these files).
             try:
-                from core.vu_record_dispatcher import walk_vu_record_arrays
+                from core.parser.vu_dispatcher import walk_vu_record_arrays
                 walker_success = walk_vu_record_arrays(self.raw_data, self.results)
                 # Only fall back to heuristic if the walker produced NO results
                 if not walker_success or not self.results.get("vu_record_arrays"):
@@ -248,7 +248,7 @@ class TachoParser:
             # Cryptographic integrity: verify the ECDSA download signatures
             # and the MSCA→VU certificate chain (Annex 1C Appendix 11).
             try:
-                from core.vu_signature_verifier import (
+                from core.crypto.vu_signature import (
                     verify_vu_download, decode_vu_certificates)
                 erca_keys = self.validator._g2_erca_keys() or None
                 self.results["signature_verification"] = verify_vu_download(
@@ -262,7 +262,7 @@ class TachoParser:
             # the byte-scan heuristic as fallback for files the walk
             # cannot validate (truncated/non-standard downloads).
             try:
-                from core.g1_vu_walker import walk_g1_vu
+                from core.parser.g1_walker import walk_g1_vu
                 _messages, complete = walk_g1_vu(self.raw_data, self.results)
             except Exception as exc:
                 logger.debug("G1 VU walk failed: %s", exc, exc_info=False)
@@ -372,7 +372,7 @@ class TachoParser:
         ef_sig_raw = self.results.pop("_ef_signatures", None)
         if ef_data_raw is None or ef_sig_raw is None:
             return
-        from core.ef_signature_verifier import pair_ef_records, verify_ef_pairs
+        from core.crypto.ef_signature import pair_ef_records, verify_ef_pairs
         from cryptography.hazmat.primitives.asymmetric import rsa as _rsa
         ef_data_map = {(tag, dtype): payload for tag, dtype, payload in ef_data_raw}
         ef_sig_map = {(tag, dtype): payload for tag, dtype, payload in ef_sig_raw}
@@ -385,7 +385,7 @@ class TachoParser:
         card_ec_hash = None
         if key_type == "RSA" and self.card_cert_raw:
             try:
-                from core.vu_signature_verifier import parse_cvc, cvc_public_key
+                from core.crypto.vu_signature import parse_cvc, cvc_public_key
                 cvc = parse_cvc(self.card_cert_raw)
                 if cvc and cvc.get("public_point"):
                     card_ec_key, card_ec_hash = cvc_public_key(cvc)
@@ -399,7 +399,7 @@ class TachoParser:
 
 if __name__ == "__main__":
     import sys
-    from core.encoding import BytesEncoder
+    from core.utils.encoding import BytesEncoder
 
     if len(sys.argv) > 1:
         print(json.dumps(TachoParser(sys.argv[1]).parse(), indent=2, cls=BytesEncoder))
