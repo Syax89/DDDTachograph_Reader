@@ -49,7 +49,7 @@ from tkinter import ttk, filedialog, messagebox  # noqa: E402
 
 from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
-from core.registry.models import _clean_tag_name  # noqa: E402
+
 from core.utils.version import __version__  # noqa: E402
 from core.utils.report_format import humanize_key, _NOT_AVAILABLE_INTS, _ISO_RE  # noqa: E402
 
@@ -324,11 +324,7 @@ def _kv_rows(d):
     return (["Field", "Value"], rows)
 
 
-def _clean_tag_name_display(name):
-    """Readable raw tag name for GUI display (wraps core _clean_tag_name)."""
-    if not name or name.startswith("BER_") or "_BER_" in name:
-        return "(uninterpreted)"
-    return _clean_tag_name(name)
+
 
 
 # ── Excel-style data table ─────────────────────────────────────────────────
@@ -1088,15 +1084,6 @@ class TachoExplorer(tk.Tk):
         # ── Security ──
         self._populate_security(data)
 
-        # ── Raw tags ──
-        # In VU files the BER-TLV walk is an artifact: it walks inside records,
-        # certificates and signatures already decoded (100% coverage), inventing
-        # tags from cryptographic bytes. Show raw tags only for cards, where
-        # they are the actual EF/structural identifiers.
-        raw = data.get("raw_tags", {})
-        is_vu_raw = bool(data.get("vu_record_arrays"))
-        if raw and not is_vu_raw:
-            self._populate_raw_tags(raw)
 
         # ── Detected generations ──
         gens = data.get("generations", {})
@@ -1211,45 +1198,6 @@ class TachoExplorer(tk.Tk):
                 cols, rows = _rows_for(auth_data, None)
                 self._add_section(gnode, auth_label, cols, rows,
                                   meta="BER-TLV walk \u00b7 spec Appendix 11 not public")
-
-    def _populate_raw_tags(self, raw):
-        """Summary table of tags traversed by BER-TLV parser but not decoded.
-        Aggregated per tag (one record per tag), so thousands of repeated
-        occurrences are not listed individually."""
-        agg = {}
-        for occs in raw.values():
-            for o in occs if isinstance(occs, list) else [occs]:
-                if not isinstance(o, dict):
-                    continue
-                tid = o.get("tag_id", "")
-                a = agg.get(tid)
-                if a is None:
-                    a = {"tid": tid, "name": _clean_tag_name_display(o.get("tag_name", "")),
-                         "count": 0, "bytes": 0, "offset": o.get("offset", ""),
-                         "gen": o.get("generation", ""), "hex": o.get("data_hex", "")}
-                    agg[tid] = a
-                a["count"] += 1
-                try:
-                    a["bytes"] += int(o.get("length", 0) or 0)
-                except (TypeError, ValueError):
-                    pass
-        if not agg:
-            return
-
-        cols = ["Tag", "Name", "Occurrences", "Total Bytes", "1st Offset",
-                "Gen", "Hex (1st occ.)"]
-        rows = []
-        for a in sorted(agg.values(), key=lambda r: r["tid"]):
-            h = a["hex"]
-            rows.append([
-                a["tid"], a["name"], fmt_val(a["count"]), fmt_val(a["bytes"]),
-                a["offset"], a["gen"],
-                h[:48] + "\u2026" if len(h) > 48 else h,
-            ])
-        self._add_section(
-            "", "\U0001f9e9  Raw Tags", cols, rows,
-            meta="tags traversed by BER-TLV parser but not decoded \u00b7 "
-                 "\"(uninterpreted)\" = no known structure associated")
 
     # ── Selection → table ──────────────────────────────────
 
