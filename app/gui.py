@@ -705,43 +705,42 @@ class TachoExplorer(tk.Tk):
             + "_export" + extension)
         if not path:
             return
-        import threading
         self.status.config(text=f"Exporting to {kind}\u2026")
         self.progress.pack(side=tk.RIGHT)
         self.progress.start(12)
+        self.update_idletasks()
+
+        import threading
+        error_container = []
 
         def _worker():
             try:
                 export_fn(self.current_data, path)
-                self.after(0, lambda: self._export_done(kind, path))
             except Exception as exc:
-                self.after(0, lambda e=exc: self._export_error(kind, requirement, e))
+                error_container.append((kind, requirement, exc))
 
         worker = threading.Thread(target=_worker, daemon=True)
         worker.start()
 
-    def _export_done(self, kind, path):
-        try:
-            self.progress.stop()
-            self.progress.pack_forget()
-        except Exception:
-            pass
-        self.status.config(text=f"Exported: {os.path.basename(path)}")
-        messagebox.showinfo("Export Complete", f"{kind} saved to:\n{path}")
+        while worker.is_alive():
+            self.update()
+            worker.join(timeout=0.1)
 
-    def _export_error(self, kind, requirement, exc):
-        try:
-            self.progress.stop()
-            self.progress.pack_forget()
-        except Exception:
-            pass
-        if isinstance(exc, ImportError):
-            self.status.config(text="Export failed")
-            messagebox.showwarning("Export Unavailable",
-                                   f"{kind} export requires an extra package:\n{exc}\n{requirement}")
+        self.progress.stop()
+        self.progress.pack_forget()
+
+        if error_container:
+            kind_err, req, exc = error_container[0]
+            if isinstance(exc, ImportError):
+                self.status.config(text="Export failed")
+                messagebox.showwarning("Export Unavailable",
+                                       f"{kind_err} export requires an extra package:\n{exc}\n{req}")
+            else:
+                self.status.config(text="Export failed")
+                messagebox.showerror("Export Error", str(exc))
         else:
-            self.status.config(text="Export failed")
-            messagebox.showerror("Export Error", str(exc))
+            self.status.config(text=f"Exported: {os.path.basename(path)}")
+            messagebox.showinfo("Export Complete", f"{kind} saved to:\n{path}")
 
     def _export_pdf(self):
         self._run_export("PDF", ".pdf", [("PDF Document", "*.pdf")],
