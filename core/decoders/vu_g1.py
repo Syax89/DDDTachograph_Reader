@@ -1521,6 +1521,18 @@ def _decode_sensor_block(body, results, offset=0):
         "param_speed_avg_kmh": struct.unpack(">H", block[12:14])[0],
         "param_distance_km": struct.unpack(">H", block[14:16])[0],
     }
+    # Gate on plausibility: a false 0x76 0x11 marker inside another section's
+    # payload would otherwise publish garbage (e.g. 25284 km/h, non-printable
+    # approval text). Drop the whole block when it fails the sanity check.
+    from core.decoders.validators import is_plausible_sensor_info
+    if not is_plausible_sensor_info(sensor_info):
+        _log.debug("Sensor block at offset %d dropped: implausible values %s",
+                   offset, sensor_info)
+        results.setdefault("_suspect_sections", set())
+        if isinstance(results["_suspect_sections"], set):
+            results["_suspect_sections"].add(0x11)
+        return
+
     results.setdefault("sensor_info", {}).update(sensor_info)
 
     # Daily timestamp records

@@ -2174,6 +2174,10 @@ class TachoExplorer(tk.Tk):
                         "", "\U0001f69a  Vehicle", cols, rows, summary=True)
             except Exception:
                 _log.debug("Vehicle section render failed: %s", traceback.format_exc())
+            trep_report = meta.get("trep_report")
+            if trep_report:
+                cols, rows = self._build_trep_summary(trep_report)
+                self._add_section("", "\U0001f4e6  TACHOGRAPH DOWNLOAD", cols, rows, summary=True)
 
         # ── Generations tree (single source of truth) ──
         generations = data.get("generations", {})
@@ -2975,6 +2979,19 @@ class TachoExplorer(tk.Tk):
                     pass
             icon = "\u274c " if cal_expired else ("\u26a0\ufe0f " if cal_soon else "")
             rows.append(("\U0001f527  " + icon + "TACHOGRAPH", "", True))
+            # Tachograph device identity (from VuIdentification, fallback vu_info).
+            vu_id = (data.get("vu_identifications") or [{}])[0] if data.get("vu_identifications") else {}
+            tacho_make = (vu_id.get("manufacturer_name") or vu_info.get("manufacturer")
+                          or vu_info.get("manufacturer_name") or "")
+            tacho_sw = vu_id.get("software_version") or vu_info.get("software_version") or ""
+            tacho_serial = (vu_id.get("serial_number") or vu_info.get("serial_number")
+                            or vu_info.get("sensor_serial_number") or "")
+            if tacho_make:
+                rows.append(("  Make", tacho_make, False))
+            if tacho_sw:
+                rows.append(("  Software version", tacho_sw, False))
+            if tacho_serial:
+                rows.append(("  Serial number", tacho_serial, False))
             if next_date:
                 date_str = fmt_val(next_date)
                 if cal_expired:
@@ -3093,6 +3110,31 @@ class TachoExplorer(tk.Tk):
             rows.append(("  Days with activities", str(activities), False))
             rows.append(("  Events", str(events), False))
             rows.append(("  Faults", str(faults), False))
+
+        cols = ["Field", "Value"]
+        return cols, rows
+
+    def _build_trep_summary(self, trep_report):
+        rows = []
+        sep = ("\u2500" * 40, "", True)
+
+        rows.append(("\U0001f4e6  TACHOGRAPH DOWNLOAD", "", True))
+
+        completeness = f"{trep_report['mandatory_ok']}/{trep_report['mandatory_total']} mandatory sections ({trep_report['completeness_pct']}%)"
+        rows.append(("  Completeness", completeness, False))
+
+        missing = trep_report.get("mandatory_missing") or []
+        if missing:
+            rows.append(("  Missing sections", ", ".join(t["name"] for t in missing), False))
+
+        suspect = trep_report.get("decoded_suspect") or []
+        if suspect:
+            rows.append(("  Suspect sections \u26a0\ufe0f", ", ".join(t["name"] for t in suspect), False))
+
+        if trep_report.get("is_partial"):
+            rows.append(("  Status", "\u26a0\ufe0f  Partial download", False))
+        else:
+            rows.append(("  Status", "\u2705  Complete download", False))
 
         cols = ["Field", "Value"]
         return cols, rows

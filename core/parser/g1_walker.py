@@ -127,12 +127,19 @@ def _trep06_body_len(d, p, n):
 
 
 def _trep11_body_len(d, p, n):
+    # A genuine G1 sensor download (TREP 0x11) is always closed by a
+    # ``76 14`` trailer. Without that trailer the ``76 11`` we are looking at
+    # is a false marker inside another section's payload (typically a byte pair
+    # in TREP 06 card-download data), so this is NOT a valid TREP 11 body.
+    # Returning None makes the chain validation reject the candidate boundary,
+    # letting the unbounded CardDownload extend to its real end instead of
+    # being split mid-record and fed to the sensor decoder as garbage.
     pos = p
     while pos < n - 1:
         if d[pos] == 0x76 and d[pos + 1] == 0x14:
             return pos - p
         pos += 1
-    return n - p
+    return None
 
 
 def _trep14_body_len(d, p, n):
