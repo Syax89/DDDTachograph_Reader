@@ -10,6 +10,13 @@ from core.utils.event_codes import describe_calibration_purpose, describe_contro
 
 _log = get_logger(__name__)
 
+def _mark_heuristic(results, section, fields):
+    """Thin wrapper over :func:`core.decoders.common.mark_heuristic` kept for
+    call-site brevity within this module."""
+    from core.decoders.common import mark_heuristic
+    mark_heuristic(results, section, fields)
+
+
 def parse_vu_vehicle_identification(val, results):
     """Parse VU_VehicleIdentification (tag 0x0001 in VU context)."""
     if len(val) < 32:
@@ -227,46 +234,52 @@ def parse_g1_vu_overview(val, results):
 
         _log.debug("VU overview fixed-offset fields: %s", sorted(fixed_fields_parsed))
 
-        # Fallback: regex-based extraction for company info and card numbers
-        if not results["vehicle"].get("vin"):
-            _log.warning("VU overview: VIN not parsed via fixed-offset, trying regex")
-            for m in re.finditer(rb'[A-Z0-9]{17}', val[:500]):
-                vin = m.group().decode()
-                if len(vin) == 17:
-                    results["vehicle"]["vin"] = vin
-                    regex_fields_parsed.add("vin")
-                    break
+        # Emergency heuristic fallback: regex-based extraction, run ONLY when the
+        # deterministic fixed-offset parse could not validate the body OR left a
+        # specific field empty. Every value recovered this way is flagged as
+        # low-confidence in metadata so the UI/exports can mark it as inferred
+        # (Annex 1B §4.5.3.2.2 defines the fixed layout; regex is a last resort
+        # for non-standard/corrupt downloads only).
+        if not body_validated:
+            if not results["vehicle"].get("vin"):
+                _log.warning("VU overview: VIN not parsed via fixed-offset, trying regex")
+                for m in re.finditer(rb'[A-Z0-9]{17}', val[:500]):
+                    vin = m.group().decode()
+                    if len(vin) == 17:
+                        results["vehicle"]["vin"] = vin
+                        regex_fields_parsed.add("vin")
+                        break
 
-        if not results["vehicle"].get("plate"):
-            _log.warning("VU overview: plate not parsed via fixed-offset, trying regex")
-            plate_match = re.search(rb'[\x01-\x1F]?([A-Z0-9]{3,14})\s{3,}', val[150:450])
-            if plate_match:
-                plate_raw = plate_match.group(1).decode('latin-1').strip()
-                if 3 <= len(plate_raw) <= 14:
-                    results["vehicle"]["plate"] = plate_raw
-                    regex_fields_parsed.add("plate")
+            if not results["vehicle"].get("plate"):
+                _log.warning("VU overview: plate not parsed via fixed-offset, trying regex")
+                plate_match = re.search(rb'[\x01-\x1F]?([A-Z0-9]{3,14})\s{3,}', val[150:450])
+                if plate_match:
+                    plate_raw = plate_match.group(1).decode('latin-1').strip()
+                    if 3 <= len(plate_raw) <= 14:
+                        results["vehicle"]["plate"] = plate_raw
+                        regex_fields_parsed.add("plate")
 
-        for m in re.finditer(rb'[A-Z][A-Z .&\-]{5,35}\s{2,}', val):
-            text = m.group().decode('latin-1').strip()
-            if text and len(text) > 5 and not text.startswith('VU'):
-                results.setdefault("company_info", {}).setdefault("name", text)
-                regex_fields_parsed.add("company_name")
-                break
+            if not (results.get("company_info") or {}).get("name"):
+                for m in re.finditer(rb'[A-Z][A-Z .&\-]{5,35}\s{2,}', val):
+                    text = m.group().decode('latin-1').strip()
+                    if text and len(text) > 5 and not text.startswith('VU'):
+                        results.setdefault("company_info", {})["name"] = text
+                        regex_fields_parsed.add("company_name")
+                        break
 
-        for m in re.finditer(rb'[A-Z][-]?\d{13,20}', val):
-            cn = m.group().decode()
-            if len(cn) >= 14:
-                # A previous call may already have converted the set to a list.
-                card_numbers = set(results.get("card_numbers") or ())
-                card_numbers.add(cn)
-                results["card_numbers"] = card_numbers
-                regex_fields_parsed.add("card_numbers")
-
-        if "card_numbers" in results:
-            results["card_numbers"] = sorted(results["card_numbers"])
+            if not results.get("card_numbers"):
+                found = set()
+                for m in re.finditer(rb'[A-Z][-]?\d{13,20}', val):
+                    cn = m.group().decode()
+                    if len(cn) >= 14:
+                        found.add(cn)
+                if found:
+                    results["card_numbers"] = sorted(found)
+                    regex_fields_parsed.add("card_numbers")
 
         if regex_fields_parsed:
             _log.debug("VU overview regex-heuristic fields: %s", sorted(regex_fields_parsed))
+            _mark_heuristic(results, "vu_overview_TREP01", sorted(regex_fields_parsed))
     except (ValueError, TypeError, IndexError) as exc:
         _log.debug("VU overview heuristic parse failed: %s", exc)
 
@@ -345,6 +358,16 @@ def _parse_trep_02_activities(data, results):
         if len(data) < 110:
             _log.debug("TREP 02: data too short for G1 parsing (len=%d)", len(data))
             return
+
+        # Emergency heuristic path: the deterministic count-prefixed layout
+        # (Annex 1B §2.2.6.2) did not validate. Timestamp-scan is a last resort
+        # for non-standard/corrupt downloads; flag its output as inferred.
+        # Emergency heuristic path: the deterministic count-prefixed layout
+        # (Annex 1B §2.2.6.2) did not validate. Timestamp-scan is a last resort
+        # for non-standard/corrupt downloads; flag its output as inferred only
+        # if it actually recovers records (measured by delta below).
+        _heur_before = (len(results.get("activities") or []),
+                        len(results.get("inserted_drivers") or []))
 
         # Validate binary header timestamp
         header_ts = struct.unpack(">I", data[0:4])[0]
@@ -475,6 +498,15 @@ def _parse_trep_02_activities(data, results):
             _log.debug("TREP 02: boundary-aligned parse: %d/%d records (%d%%)", daily_count, len(daily_boundaries), boundary_pct)
         elif daily_count > 0:
             _log.debug("TREP 02: timestamp-scan heuristic found %d daily records", daily_count)
+
+        # Flag as heuristic only the field kinds that actually gained records.
+        _heur_after = (len(results.get("activities") or []),
+                       len(results.get("inserted_drivers") or []))
+        _gained = [name for name, before, after in
+                   zip(("activities", "inserted_drivers"), _heur_before, _heur_after)
+                   if after > before]
+        if _gained:
+            _mark_heuristic(results, "vu_activities_TREP02", _gained)
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 02 activities parse failed: %s", exc)
 
@@ -713,7 +745,13 @@ def _parse_trep_03_events_faults(data, results):
     count-prefixed structure does not validate.
     """
     if not _parse_trep_03_structured(data, results):
+        before = (len(results.get("events") or []), len(results.get("faults") or []))
         _parse_trep_03_events_faults_heuristic(data, results)
+        after = (len(results.get("events") or []), len(results.get("faults") or []))
+        gained = [name for name, b, a in
+                  zip(("events", "faults"), before, after) if a > b]
+        if gained:
+            _mark_heuristic(results, "vu_events_faults_TREP03", gained)
 
 def _parse_trep_03_structured(data, results):
     """Count-prefixed TREP 03 walk. Returns True when the structure validates."""
@@ -1246,18 +1284,42 @@ def _parse_trep_05_technical(data, results):
         _log.debug("TREP 05 technical parse failed: %s", exc)
 
 def _parse_trep_06_card_download(data, results):
-    """Parse TREP 06 (Card Download) message — data downloaded from inserted cards."""
+    """Parse TREP 06 (Card Download) — a full driver-card image embedded in the
+    VU download (Annex 1B §2.2.6.6).
+
+    Primary path is deterministic: the body is a STAP stream of the card's
+    Elementary Files (0x0501 App Id, 0x0502 Events, 0x0503 Faults, 0x0504
+    activities, 0x0520 Identification …), walked by the card parser so every EF
+    is decoded through its registered decoder. Regex/timestamp scanning runs
+    ONLY as an emergency fallback when the structural walk recovers nothing.
+    """
     import re
     try:
         if len(data) < 20:
             return
+
+        # ── Primary: deterministic walk of the embedded card image ──
+        before_keys = {k: len(results.get(k) or []) for k in
+                       ("events", "faults", "activities", "inserted_drivers")}
+        driver_before = dict(results.get("driver") or {})
+        _decode_embedded_card_image(data, results)
+        recovered = (
+            any(len(results.get(k) or []) > before_keys[k] for k in before_keys)
+            or (results.get("driver") or {}) != driver_before
+        )
+        if recovered:
+            return
+
+        # ── Emergency fallback: heuristic scan (non-standard/corrupt images) ──
         downloads = results.setdefault("card_downloads", [])
-        
+        _dl_before = len(downloads)
+        _drv_before = len(results.get("inserted_drivers") or [])
+
         # Find card numbers
         card_nums = []
         for m in re.finditer(rb'[\x01\x02][\x1a-\x1e]([A-Z]\d{14,20})', data):
             card_nums.append(m.group(1).decode())
-        
+
         # Find download timestamps
         timestamps = []
         pos = 0
@@ -1266,13 +1328,13 @@ def _parse_trep_06_card_download(data, results):
             if 946684800 <= ts <= 4102444800:
                 timestamps.append(datetime.fromtimestamp(ts, tz=timezone.utc).isoformat())
             pos += 1
-        
+
         if timestamps or card_nums:
             downloads.append({
                 "timestamps": timestamps[:10],
                 "card_numbers": card_nums,
             })
-        
+
         # Also extract driver names if present
         card_match = re.search(rb'([A-Z][A-Z ]{8,35})\s{2,}([\x01][A-Z][A-Z ]{8,35})', data)
         if card_match:
@@ -1283,28 +1345,99 @@ def _parse_trep_06_card_download(data, results):
                 dk = f"{s}|{f}|card_dl"
                 if not any(d.get("_key") == dk for d in drivers):
                     drivers.append({"surname": s, "firstname": f, "card_number": "", "_key": dk})
-        
-        # Card download data contains the card's Elementary Files including
-        # the cyclic buffer of daily activities (tag 0x0504, Annex 1B §2.32).
-        # This EF is the same for both G1 and G2 driver cards.
-        # Embedded as STAP records: tag(2BE) + dtype(1) + length(2BE) + payload.
-        pos = 0
-        while pos + 5 <= len(data):
-            stag, dtype, slen = struct.unpack(">HBH", data[pos:pos + 5])
-            matched = False
-            if stag == 0x0504 and dtype <= 0x0F and 16 <= slen <= 0x100000 \
-                    and pos + 5 + slen <= len(data):
-                end = pos + 5 + slen
-                try:
-                    parse_cyclic_buffer_activities(data[pos + 5:end], results)
-                except Exception as exc:
-                    _log.debug("TREP 06 embedded 0x0504 parse failed: %s", exc)
-                pos = end
-                matched = True
-            if not matched:
-                pos += 1
+
+        gained = []
+        if len(downloads) > _dl_before:
+            gained.append("card_downloads")
+        if len(results.get("inserted_drivers") or []) > _drv_before:
+            gained.append("inserted_drivers")
+        if gained:
+            _mark_heuristic(results, "vu_card_download_TREP06", gained)
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 06 card download parse failed: %s", exc)
+
+
+def _decode_embedded_card_image(data, results):
+    """Structurally decode a card-EF image embedded in a G1 VU CardDownload.
+
+    Runs the deterministic STAP/BER walk over *data* into a scratch result,
+    then merges the decoded semantic keys into the live *results*. This turns
+    the previously-opaque card download blob into fully decoded EFs.
+    """
+    try:
+        from core.parser.deterministic import DeterministicParser
+    except Exception as exc:
+        _log.debug("Embedded card image: parser unavailable: %s", exc)
+        return
+
+    try:
+        dp = DeterministicParser()
+        sub = dp.parse(bytes(data), is_vu=False)
+    except Exception as exc:
+        _log.debug("Embedded card image walk failed: %s", exc)
+        return
+
+    _merge_card_download(results, sub)
+
+
+# Semantic keys produced by card EF decoders worth merging up from an embedded
+# card image. Lists are extended (deduped); dict/scalar keys fill only when the
+# live result is still empty/N-A so a real VU value is never overwritten.
+_CARD_MERGE_LIST_KEYS = (
+    "activities", "events", "faults", "places", "card_iw_records",
+    "specific_conditions", "card_download_records", "card_downloads",
+    "inserted_drivers", "controls",
+)
+_CARD_MERGE_DICT_KEYS = ("driver", "vehicle")
+
+
+def _merge_card_download(results, sub):
+    """Merge decoded EFs from an embedded card image into the VU results."""
+    for key in _CARD_MERGE_LIST_KEYS:
+        incoming = sub.get(key)
+        if not isinstance(incoming, list) or not incoming:
+            continue
+        target = results.setdefault(key, [])
+        if not isinstance(target, list):
+            continue
+        existing = {repr(item) for item in target}
+        for item in incoming:
+            if repr(item) not in existing:
+                target.append(item)
+                existing.add(repr(item))
+
+    for key in _CARD_MERGE_DICT_KEYS:
+        incoming = sub.get(key)
+        if not isinstance(incoming, dict):
+            continue
+        target = results.setdefault(key, {})
+        if not isinstance(target, dict):
+            continue
+        for field, value in incoming.items():
+            if value in (None, "", "N/A"):
+                continue
+            if field not in target or target[field] in (None, "", "N/A"):
+                target[field] = value
+
+    # Preserve the embedded card's raw tag occurrences so the Raw/Unparsed and
+    # coverage views account for what the download actually contained. Offsets
+    # in the sub-parse are relative to the CardDownload body, so keep them under
+    # a namespaced key rather than merging into the file-level "Unparsed Data".
+    sub_raw = sub.get("raw_tags")
+    if isinstance(sub_raw, dict) and sub_raw:
+        live_raw = results.setdefault("raw_tags", {})
+        for key, occs in sub_raw.items():
+            if not occs:
+                continue
+            if key in ("Padding",):
+                continue
+            merged_key = (key if key not in live_raw
+                          else f"CardDownload > {key}")
+            for occ in occs:
+                if isinstance(occ, dict):
+                    occ.setdefault("container", "0x7606 CardDownload")
+                    occ["offset_scope"] = "relative to CardDownload body"
+            live_raw.setdefault(merged_key, []).extend(occs)
 
 
 # ── G1 Sensor Download (0x7611) ────────────────────────────────────────────

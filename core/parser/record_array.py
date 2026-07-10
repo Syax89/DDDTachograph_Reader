@@ -278,15 +278,26 @@ def parse_g2_trep02_activities(data: bytes, results: dict):
     signed_records = results.setdefault("signed_daily_records", [])
 
     first_daily_pos = None
-    for scan in range(pos, min(pos + 300, len(data) - 22)):
-        tag = struct.unpack(">H", data[scan:scan + 2])[0]
-        if tag in (0x7622, 0x7632):
-            daily = decode_g2_daily_record(data, scan)
-            if daily and daily["changes_count"] > 0:
-                counter = daily["daily_counter"]
-                if counter > 0 and counter < 10000000:
-                    first_daily_pos = scan
-                    break
+    # The daily section starts right after the 8-byte 0xFF separator. Check that
+    # position first (deterministic); only if it is not a valid daily record
+    # marker fall back to a bounded scan for a nearby marker (vendor padding).
+    def _valid_daily_at(p):
+        if p + 22 > len(data):
+            return False
+        if struct.unpack(">H", data[p:p + 2])[0] not in (0x7622, 0x7632):
+            return False
+        daily = decode_g2_daily_record(data, p)
+        if not daily or daily["changes_count"] <= 0:
+            return False
+        return 0 < daily["daily_counter"] < 10000000
+
+    if _valid_daily_at(pos):
+        first_daily_pos = pos
+    else:
+        for scan in range(pos, min(pos + 300, len(data) - 22)):
+            if _valid_daily_at(scan):
+                first_daily_pos = scan
+                break
 
     if first_daily_pos is not None:
         pos = first_daily_pos
@@ -301,8 +312,12 @@ def parse_g2_trep02_activities(data: bytes, results: dict):
                 break
 
             counter = daily["daily_counter"]
-            if last_counter is not None:
-                if counter <= last_counter or counter > last_counter + 100:
+            # Counters increase monotonically; a decrease marks the end of the
+            # contiguous daily block, except for a genuine 16-bit wrap-around
+            # (…FFFF → 0001) which stays valid.
+            if last_counter is not None and counter <= last_counter:
+                wrapped = last_counter >= 0xFFF0 and counter <= 0x0010
+                if not wrapped:
                     break
             last_counter = counter
 
