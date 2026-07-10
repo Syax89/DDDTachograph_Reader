@@ -279,6 +279,19 @@ def _activity_to_iso(date_str):
         return date_str
 
 
+def _parse_iso(value):
+    """Parse an ISO-8601 timestamp string to a UTC datetime, or None."""
+    if not value or not isinstance(value, str):
+        return None
+    try:
+        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
 def _compute_activity_totals(changes):
     """Return dict {ACTIVITY: total_minutes} from a list of activity changes.
 
@@ -913,9 +926,28 @@ class ActivityTimelineChart(ttk.Frame):
             info_parts.append(f"{changes_count} changes")
         if driver_info:
             info_parts.append(f"\U0001f464 {driver_info}")
+        vehicle_info = vehicle_info or []
+        if not is_vu and vehicle_info:
+            info_parts.append(self._format_vehicles(vehicle_info))
         self._info_parts = info_parts
         self.info_lbl.config(text="  |  ".join(info_parts))
         self._schedule_draw()
+
+    @staticmethod
+    def _format_vehicles(vehicles):
+        """Format the vehicles-driven label for a day.
+
+        One vehicle → just the plate. Multiple → each plate with its
+        start–end time window so the switch-over is visible.
+        """
+        def _hhmm(dt):
+            return dt.strftime("%H:%M") if dt is not None else "?"
+
+        if len(vehicles) == 1:
+            return f"\U0001f69b {vehicles[0]['plate']}"
+        parts = [f"{v['plate']} ({_hhmm(v['start'])}\u2013{_hhmm(v['end'])})"
+                 for v in vehicles]
+        return "\U0001f69b " + ", ".join(parts)
 
     @staticmethod
     def _parse_time(time_str):
@@ -1944,12 +1976,36 @@ class TachoExplorer(tk.Tk):
 
     def _add_activity_day(self, parent, day, is_vu, activities, day_km,
                           changes_count, driver_info, slot_schedule, markers,
-                          oos_events=None):
+                          oos_events=None, vehicle_info=None):
         iid = self.tree.insert(parent, tk.END, text=day)
         self._payloads[iid] = ("__activity_chart__", day, is_vu, activities,
                                day_km, changes_count, driver_info, slot_schedule,
-                               markers, oos_events)
+                               markers, oos_events, vehicle_info)
         return iid
+
+    @staticmethod
+    def _day_vehicles_info(sessions):
+        """Build the vehicles-driven summary for one day (driver cards).
+
+        Merges sessions per plate and returns a list of dicts with the plate,
+        nation and the day's first-start / last-end times. Ordered by first
+        use so a multi-vehicle day reads chronologically.
+        """
+        by_plate = {}
+        for s in sessions:
+            plate = s.get("plate", "")
+            entry = by_plate.setdefault(plate, {
+                "plate": plate, "nation": s.get("nation", ""),
+                "start": s.get("start"), "end": s.get("end")})
+            start = s.get("start")
+            end = s.get("end")
+            if start and (entry["start"] is None or start < entry["start"]):
+                entry["start"] = start
+            if end and (entry["end"] is None or end > entry["end"]):
+                entry["end"] = end
+        result = list(by_plate.values())
+        result.sort(key=lambda e: (e["start"] is None, e["start"]))
+        return result
 
     def _populate_daily_activities(self, parent, data, activity_list):
         """Add per-day activity timeline and raw-record children."""
@@ -1978,6 +2034,27 @@ class TachoExplorer(tk.Tk):
 
         # ── Global slot_labels (default, from inserted_drivers) ──
         global_slots = {}
+        # ── Per-day vehicles driven (driver cards only) ──
+        vehicles_by_date = {}
+        if not is_vu:
+            for sess in (data.get("vehicle_sessions") or []):
+                if not isinstance(sess, dict):
+                    continue
+                plate = (sess.get("vehicle_plate") or "").strip()
+                if not plate:
+                    continue
+                start_dt = _parse_iso(sess.get("start"))
+                end_dt = _parse_iso(sess.get("end"))
+                anchor = start_dt or end_dt
+                if anchor is None:
+                    continue
+                iso = anchor.date().isoformat()
+                vehicles_by_date.setdefault(iso, []).append({
+                    "plate": plate,
+                    "nation": sess.get("vehicle_nation", ""),
+                    "start": start_dt,
+                    "end": end_dt,
+                })
         if is_vu:
             inserted_all = data.get("inserted_drivers") or []
             for idx, d in enumerate(inserted_all[:2]):
@@ -2156,10 +2233,16 @@ class TachoExplorer(tk.Tk):
                 cond = sc.get("condition", "")
                 oos_events.append((sec_of_day, cond, sc_dt.astimezone(timezone.utc)))
 
+            # ── Vehicles driven this day (driver cards only) ──
+            day_vehicles = []
+            if not is_vu:
+                day_vehicles = self._day_vehicles_info(
+                    vehicles_by_date.get(iso_date, []))
+
             day_node = self._add_activity_day(node, date_str, is_vu, changes,
                                               day_km, changes_count, day_di,
                                               day_schedule, day_markers,
-                                              oos_events)
+                                              oos_events, day_vehicles)
             odometer = day_data.get("odometer_km", 0) or 0
             if changes:
                 rows = [[fmt_val(ev.get("time", "?")),
@@ -2949,14 +3032,14 @@ class TachoExplorer(tk.Tk):
 
     def _show_activity_chart(self, day, is_vu, activities, day_km,
                              changes_count, driver_info, slot_schedule, markers,
-                             oos_events=None):
+                             oos_events=None, vehicle_info=None):
         self._cleanup_dashboard()
         self.table.pack_forget()
         self.speed_chart.pack_forget()
         self.activity_chart.pack(fill=tk.BOTH, expand=True)
         self.activity_chart.show(day, is_vu, activities, day_km,
                                  changes_count, driver_info, slot_schedule, markers,
-                                 None, oos_events)
+                                 vehicle_info, oos_events)
 
     def _show_summary(self, title, cols, rows, meta):
         """Render a rich info panel with section headers instead of a data table."""
