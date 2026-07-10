@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
 from core.utils.constants import MAX_ODO_DISTANCE_KM
-from core.decoders.common import _decode_gnss_coord, decode_date, decode_string, get_nation
+from core.decoders.common import _decode_gnss_coord, decode_date, decode_string, get_nation, mark_heuristic
 from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault
 
 _log = get_logger(__name__)
@@ -103,7 +103,7 @@ def _vehicle_record_valid(odo_begin, odo_end, first_use_ts, nation_code, plate):
         return False
     if odo_end not in (0xFFFFFF, 0xFFFFFFFF) and odo_end > MAX_ODO_DISTANCE_KM * 100:
         return False
-    if first_use_ts < 946684800 or first_use_ts > 2000000000:
+    if first_use_ts < 946684800 or first_use_ts > 4102444800:
         return False
     return True
 
@@ -496,7 +496,9 @@ def _decode_place_records(val, off, stride):
             if entry_type not in entry_names:
                 continue
             nation_code = chunk[5]
-            if nation_code > 0xFD:
+            # NationNumeric valid range includes 0xFD (EC), 0xFE (EUR),
+            # 0xFF (WLD). Only reject values above the defined range.
+            if nation_code > 0xFF:
                 continue
 
             dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
@@ -546,8 +548,23 @@ def parse_g1_places(val, results):
     if len(val) < 11:
         return
     try:
-        candidates = [(off, stride)
-                      for off, stride in ((1, 10), (2, 21), (2, 22), (2, 10), (2, 13), (2, 27))
+        # Spec-documented layouts only (Annex 1B/1C §2.27). The undocumented
+        # strides that used to be probed (13/27) are removed: they could win the
+        # scoring on corrupt data and yield garbage. Order the probe by the
+        # file's detected generation so the correct layout is preferred.
+        gen = (results.get("metadata") or {}).get("generation", "")
+        layouts_by_gen = {
+            "G1": [(1, 10)],
+            "G2": [(2, 21), (1, 10)],
+            "G2.2": [(2, 22), (2, 21), (1, 10)],
+        }
+        gen_key = "G2.2" if "2.2" in gen else ("G2" if "G2" in gen else "G1")
+        # A G1 card download also carries the G2 copy, so always allow all
+        # documented layouts, but scored in generation-preferred order.
+        ordered = layouts_by_gen[gen_key] + [
+            lyt for lyt in ((1, 10), (2, 21), (2, 22))
+            if lyt not in layouts_by_gen[gen_key]]
+        candidates = [(off, stride) for off, stride in ordered
                       if (len(val) - off) % stride == 0]
         if not candidates:
             return
@@ -967,12 +984,14 @@ def parse_card_issuer_identification(val, results):
                 issuer_entry["raw_string"] = raw_text
                 _log.debug("Card issuer Italian regex match: card=%s", card_num)
                 structured_parsed = True
+                mark_heuristic(results, "card_issuer_0x0100", ["card_number", "company_name"])
 
         # Attempt 3: Non-Italian format — store decoded string as-is
         if not structured_parsed and raw_text:
             issuer_entry["raw_string"] = raw_text
             issuer_entry["_note"] = "non-Italian format, raw string only"
             _log.debug("Card issuer: non-Italian format, raw string stored (len=%d)", len(raw_text))
+            mark_heuristic(results, "card_issuer_0x0100", ["raw_string"])
     except (ValueError, TypeError, IndexError) as exc:
         _log.debug("Card issuer identification parse failed: %s", exc)
 
@@ -1038,11 +1057,14 @@ def parse_company_holder_data(val, results):
                         entry["company_address"] += " " + post_card
                 structured_parsed = True
                 _log.debug("Company holder: card-number delimiter parse, card=%s", card_num)
+                mark_heuristic(results, "company_holder_0x2020",
+                               ["company_name", "company_address", "card_number"])
 
         # Fallback
         if not structured_parsed and text:
             entry["raw_text"] = text.strip()
             _log.debug("Company holder: raw text fallback (len=%d)", len(text))
+            mark_heuristic(results, "company_holder_0x2020", ["raw_text"])
 
         if entry:
             results.setdefault("company_holders", []).append(entry)

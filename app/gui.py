@@ -1601,9 +1601,13 @@ class TachoExplorer(tk.Tk):
         self.destroy()
 
     def _parse_done(self, data, path):
-        """Render a successful parse: rebuild the tree, top bar and status."""
+        """Render a parse result. Keeps partial data visible: a fatal error
+        (no structural data recovered) shows an error and stops; otherwise the
+        tree is rendered even when late phases failed or signatures are bad."""
         parse_error = (data.get("metadata") or {}).get("parse_error")
-        if parse_error:
+        has_data = bool(data.get("raw_tags") or data.get("generations")
+                        or data.get("activities"))
+        if parse_error and not has_data:
             message = parse_error.get("message", "Unknown parsing error") \
                 if isinstance(parse_error, dict) else str(parse_error)
             self._parse_error(message)
@@ -1639,6 +1643,20 @@ class TachoExplorer(tk.Tk):
         """Warn the user when a file shows signs of corruption or data loss."""
         meta = data.get("metadata", {})
         warnings = []
+
+        for pw in meta.get("parse_warnings") or []:
+            if isinstance(pw, dict):
+                warnings.append(
+                    f"\u2022 Parsing phase '{pw.get('phase', '?')}' failed: "
+                    f"{pw.get('message', 'unknown error')} "
+                    f"(partial data shown)")
+
+        heuristic = meta.get("heuristic_fields") or {}
+        if heuristic:
+            sections = ", ".join(sorted(heuristic.keys()))
+            warnings.append(
+                f"\u2022 Some values were recovered heuristically (low "
+                f"confidence), not by deterministic spec parsing: {sections}")
 
         cov = meta.get("coverage_pct", 0)
         if cov < 100:
@@ -2108,6 +2126,9 @@ class TachoExplorer(tk.Tk):
             cols, rows = _rows_for(failures, None)
             self._add_section("", "\u26a0\ufe0f  Decoder Failures", cols, rows)
 
+        # ── Raw / Unparsed Data (only when bytes could not be decoded) ──
+        self._populate_unparsed(data)
+
         drv = data.get("driver", {})
 
         # Driver card: show holder summary.
@@ -2184,6 +2205,52 @@ class TachoExplorer(tk.Tk):
                 if isinstance(item_data, dict) and item_data:
                     cols, rows = _kv_rows(item_data)
                     self._add_section("", f"\U0001f510  {item_name}", cols, rows)
+
+    def _populate_unparsed(self, data):
+        """Surface bytes the structural walk could not decode.
+
+        Shown only for corrupt/partial/non-standard files. Padding runs are
+        excluded (they are expected filler, not data loss); this lists the
+        "Unparsed Data" byte ranges with their file offset, length and a hex
+        preview so nothing is silently hidden.
+        """
+        unparsed = (data.get("raw_tags") or {}).get("Unparsed Data") or []
+        if not unparsed:
+            return
+        cov = data.get("coverage") or {}
+        unknown_bytes = (cov.get("classifications") or {}).get("Unknown", 0)
+        total = (data.get("metadata") or {}).get("file_size_bytes", 0)
+        has_container = any(isinstance(e, dict) and e.get("container")
+                            for e in unparsed)
+        rows = []
+        for entry in unparsed:
+            if not isinstance(entry, dict):
+                continue
+            row = [
+                entry.get("offset", ""),
+                fmt_val(entry.get("length", 0)),
+                entry.get("data_hex", ""),
+            ]
+            if has_container:
+                row.insert(0, entry.get("container", "file"))
+            rows.append(row)
+        pct = (unknown_bytes / total * 100) if total else 0
+        meta = f"{unknown_bytes:,} bytes undecoded".replace(",", " ")
+        if total:
+            meta += f"  \u00b7  {pct:.2f}% of file"
+        # File-level coverage may report 0 unknown bytes when the undecoded
+        # ranges live inside a decoded container (e.g. a VU CardDownload). Fall
+        # back to the sum of the listed ranges so the count is never misleading.
+        if not unknown_bytes:
+            listed = sum(e.get("length", 0) for e in unparsed
+                         if isinstance(e, dict))
+            meta = f"{listed:,} bytes undecoded".replace(",", " ")
+            if total:
+                meta += f"  \u00b7  {listed / total * 100:.2f}% of file"
+        columns = (["Location", "Offset", "Length", "Hex"] if has_container
+                   else ["Offset", "Length", "Hex"])
+        self._add_section("", "\U0001f9e9  Raw / Unparsed Data",
+                          columns, rows, meta=meta)
 
     def _populate_security(self, data):
         """Security group: signature verification summaries (card EF + VU

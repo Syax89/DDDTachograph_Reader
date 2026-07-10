@@ -136,20 +136,30 @@ class TachoParser:
 
         try:
             self._open_file()
+            # Structural pass: this is the foundation. If it fails there is no
+            # data to show, so it stays a fatal parse_error below.
             self._run_structural_parse()
             self._log_unhandled_tags()
-            self._decode_vu_semantics()
+
+            # Post-structural phases are best-effort: a failure in any one of
+            # them must NOT discard the structural data already recovered. Each
+            # runs in isolation and records a parse_warning on failure so the
+            # UI can still render everything that was decoded.
+            self._run_phase("vu_semantics", self._decode_vu_semantics)
             self.results["metadata"]["coverage_pct"] = \
                 self.results.get("coverage", {}).get("covered_pct", 100.0)
-            self._dedup_and_sort_activities()
-            self._validate_certificate_chain()
-            self._verify_g1_vu_signatures()
-            self._verify_ef_signatures()
+            self._run_phase("activity_dedup", self._dedup_and_sort_activities)
+            self._run_phase("certificate_chain", self._validate_certificate_chain)
+            self._run_phase("g1_vu_signatures", self._verify_g1_vu_signatures)
+            self._run_phase("ef_signatures", self._verify_ef_signatures)
 
             self.results["metadata"]["integrity_check"] = self.validation_status
             self.results["metadata"]["decoder_failure_count"] = decoder_failure_count()
             self.results["metadata"]["decoder_failures"] = decoder_failures()
-            self.results["generations"] = build_generations_tree(self.results, self.TAGS)
+            self._run_phase(
+                "generations_tree",
+                lambda: self.results.__setitem__(
+                    "generations", build_generations_tree(self.results, self.TAGS)))
 
         except KeyboardInterrupt:
             raise
@@ -165,6 +175,27 @@ class TachoParser:
             self._close_file()
 
         return self.results
+
+    def _run_phase(self, phase_name, fn):
+        """Run a best-effort post-structural phase in isolation.
+
+        A failure is recorded in ``metadata["parse_warnings"]`` and logged, but
+        never aborts the parse: structural data already recovered stays intact
+        so partial/corrupt files still surface everything that was decoded.
+        """
+        try:
+            fn()
+        except KeyboardInterrupt:
+            raise
+        except Exception as exc:
+            logger.warning("Parse phase '%s' failed: %s", phase_name, exc,
+                           exc_info=True)
+            self.results["metadata"].setdefault("parse_warnings", []).append({
+                "phase": phase_name,
+                "message": str(exc) or type(exc).__name__,
+                "exception_type": type(exc).__name__,
+            })
+
 
     # ── parse() phases ─────────────────────────────────────────────────
 

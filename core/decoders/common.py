@@ -7,6 +7,24 @@ from core.utils.logger import get_logger
 
 _log = get_logger(__name__)
 
+
+def mark_heuristic(results, section, fields):
+    """Record that *fields* in *section* were recovered by an emergency
+    heuristic rather than the deterministic (spec-offset) path.
+
+    Stored under ``metadata.heuristic_fields`` so the GUI/exports can flag
+    these values as inferred (low confidence). Deterministic parsing is always
+    the primary path; this list stays empty for clean, spec-compliant files.
+    """
+    if not fields:
+        return
+    meta = results.setdefault("metadata", {})
+    bucket = meta.setdefault("heuristic_fields", {})
+    existing = set(bucket.get(section, []))
+    existing.update(fields)
+    bucket[section] = sorted(existing)
+
+
 _CODEPAGE_ENCODINGS = {
     0x01: 'latin-1', 0x02: 'iso-8859-2', 0x03: 'iso-8859-3',
     0x04: 'iso-8859-4', 0x05: 'iso-8859-5', 0x06: 'iso-8859-6',
