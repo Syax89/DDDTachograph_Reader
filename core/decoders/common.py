@@ -48,6 +48,43 @@ def get_nation(code):
     }
     return nations.get(code, f"Unknown({code:02X})")
 
+
+# Short ISO/Common nation code → full English country name (Annex 1B).
+_NATION_FULL_NAMES = {
+    "A": "Austria", "AL": "Albania", "AND": "Andorra", "ARM": "Armenia",
+    "AZ": "Azerbaijan", "B": "Belgium", "BG": "Bulgaria",
+    "BIH": "Bosnia and Herzegovina", "BY": "Belarus", "CH": "Switzerland",
+    "CY": "Cyprus", "CZ": "Czech Republic", "D": "Germany", "DK": "Denmark",
+    "E": "Spain", "EST": "Estonia", "F": "France", "FIN": "Finland",
+    "FL": "Liechtenstein", "FR": "Faroe Islands", "UK": "United Kingdom",
+    "GE": "Georgia", "GR": "Greece", "H": "Hungary", "HR": "Croatia",
+    "I": "Italy", "IRL": "Ireland", "IS": "Iceland", "KZ": "Kazakhstan",
+    "L": "Luxembourg", "LT": "Lithuania", "LV": "Latvia", "M": "Malta",
+    "MC": "Monaco", "MD": "Moldova", "MK": "North Macedonia", "N": "Norway",
+    "NL": "Netherlands", "P": "Portugal", "PL": "Poland", "RO": "Romania",
+    "RSM": "San Marino", "RUS": "Russia", "S": "Sweden", "SK": "Slovakia",
+    "SLO": "Slovenia", "TM": "Turkmenistan", "TR": "Turkey", "UA": "Ukraine",
+    "V": "Vatican City", "YU": "Yugoslavia", "MNE": "Montenegro",
+    "SRB": "Serbia", "EC": "European Community", "EUR": "Europe",
+    "WLD": "World",
+}
+
+
+def nation_full_name(value):
+    """Return the full English country name for a nation value.
+
+    Accepts either a numeric NationNumeric code or a short ISO/Common code
+    string (as returned by :func:`get_nation`). Falls back to the input value
+    when it is unknown, empty or a non-country placeholder.
+    """
+    if value is None:
+        return ""
+    short = get_nation(value) if isinstance(value, int) else str(value).strip()
+    if not short or short in ("N/A", "No information available"):
+        return short
+    return _NATION_FULL_NAMES.get(short, short)
+
+
 def decode_string(data, is_id=False):
     """Decode binary string handling CodePage byte (Annex 1B/1C)."""
     if not data:

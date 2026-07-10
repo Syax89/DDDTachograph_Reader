@@ -71,7 +71,8 @@ from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 
 from core.utils.version import __version__  # noqa: E402
-from core.utils.report_format import humanize_key, _NOT_AVAILABLE_INTS, _ISO_RE, code_label  # noqa: E402
+from core.utils.report_format import humanize_key, _NOT_AVAILABLE_INTS, _ISO_RE, code_label, NATION_COLS  # noqa: E402
+from core.decoders.common import nation_full_name  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
 
@@ -153,14 +154,17 @@ def _fmt_dict(d):
 
 # Columns whose values may carry a human-readable code label.
 _CODE_KEYS = {"trep", "tag_id", "data_type"}
-
+_NATION_COLS = NATION_COLS
 
 def fmt_val(v, key=None):
     """Render any parser value for display: booleans as Yes/No, floats
     trimmed, large ints with thousands spaces, 0xFFFFFF sentinels as N/A,
-    bytes as hex, ISO timestamps shortened, dicts/lists flattened."""
+    bytes as hex, ISO timestamps shortened, dicts/lists flattened. Nation
+    code columns are expanded to the full English country name."""
     if v is None:
         return ""
+    if key in _NATION_COLS and v not in (None, "") and not isinstance(v, (dict, list)):
+        return nation_full_name(v)
     if isinstance(v, bool):
         return "Yes" if v else "No"
     if isinstance(v, float):
@@ -3005,7 +3009,7 @@ class TachoExplorer(tk.Tk):
         rows.append(("  Plate", plate, False))
         rows.append(("  VIN", vin, False))
         if nation and nation not in ("N/A", ""):
-            rows.append(("  Registration", nation, False))
+            rows.append(("  Registration", nation_full_name(nation), False))
         rows.append(sep)
 
         if calibrations:
@@ -3244,7 +3248,7 @@ class TachoExplorer(tk.Tk):
         if approval:
             rows.append(("  Approval", f"{approval}", False))
         if nation:
-            rows.append(("  Nation", nation, False))
+            rows.append(("  Nation", nation_full_name(nation), False))
         prefix = sensor.get("approval_prefix", "")
         if prefix:
             rows.append(("  Prefix", prefix, False))
@@ -3304,7 +3308,7 @@ class TachoExplorer(tk.Tk):
         rows.append(("\U0001faaa  CARD DETAILS", "", True))
         nation = driver.get("issuing_nation", "")
         if nation:
-            rows.append(("  Issuing nation", nation, False))
+            rows.append(("  Issuing nation", nation_full_name(nation), False))
         authority = driver.get("issuing_authority", "")
         if authority and authority != "N/A":
             rows.append(("  Issuing authority", authority, False))
