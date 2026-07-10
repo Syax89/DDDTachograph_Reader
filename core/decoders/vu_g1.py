@@ -4,7 +4,7 @@ import struct
 from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
-from core.decoders.common import decode_activity_val, decode_date, decode_string, get_nation, parse_cyclic_buffer_activities
+from core.decoders.common import decode_activity_val, decode_date, decode_string, get_nation
 from core.decoders.cert import parse_g1_certificate
 from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault, describe_record_purpose
 
@@ -503,7 +503,7 @@ def _parse_trep_02_activities(data, results):
         _heur_after = (len(results.get("activities") or []),
                        len(results.get("inserted_drivers") or []))
         _gained = [name for name, before, after in
-                   zip(("activities", "inserted_drivers"), _heur_before, _heur_after)
+                   zip(("activities", "inserted_drivers"), _heur_before, _heur_after, strict=False)
                    if after > before]
         if _gained:
             _mark_heuristic(results, "vu_activities_TREP02", _gained)
@@ -749,7 +749,7 @@ def _parse_trep_03_events_faults(data, results):
         _parse_trep_03_events_faults_heuristic(data, results)
         after = (len(results.get("events") or []), len(results.get("faults") or []))
         gained = [name for name, b, a in
-                  zip(("events", "faults"), before, after) if a > b]
+                  zip(("events", "faults"), before, after, strict=False) if a > b]
         if gained:
             _mark_heuristic(results, "vu_events_faults_TREP03", gained)
 

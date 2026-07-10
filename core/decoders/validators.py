@@ -101,7 +101,7 @@ def is_plausible_event_record(event: dict) -> bool:
     if not isinstance(event, dict):
         return False
     begin = event.get("begin") or event.get("begin_time")
-    if isinstance(begin, (int, float)) and not is_plausible_timestamp(begin):
+    if isinstance(begin, (int, float)) and not is_plausible_timestamp(int(begin)):
         return False
     plate = event.get("vehicle_plate")
     if plate is not None and not is_printable_text(plate):
