@@ -18,7 +18,22 @@ There is no standard tool to open `.ddd` files on a normal computer. This applic
 | **Contains** | One driver's activities across multiple vehicles | Activities of all drivers who used that vehicle |
 | **Typical use** | Driver monitoring | Fleet management, vehicle usage analysis |
 
-The application detects the file type automatically and adapts the section tree accordingly (e.g., VU-specific sections such as sensor pairings, company locks, and detailed speed blocks only appear for VU files).
+The application detects the file type automatically and adapts the section tree accordingly (e.g., VU-specific sections such as sensor pairings, company locks, and detailed speed blocks only appear for VU files). Detection is content-based, so a driver-card image wrapped inside a VU download is still recognised and shown as a driver card.
+
+---
+
+### What about `.V1B`, `.C1B`, `.TGD`, or `.ESM` files?
+
+These are mostly **the same EU tachograph download with a different file extension**, chosen by a country or by the download software rather than by a different data standard:
+
+- **`.V1B`** — vehicle unit (mass memory), French naming.
+- **`.C1B`** — driver card, French naming.
+- **`.TGD`** — vehicle or driver file, Spanish naming.
+- **`.ESM`** — vehicle or driver file produced by some third-party download tools.
+
+The actual tachograph content is defined by the EU specifications (Annex 1B / Annex 1C), not by the extension. When the file holds the raw binary download, it is the same data as a `.ddd`, and you can open it by choosing **All Files** in the open dialog (or renaming it to `.ddd`).
+
+The main exception is `.ESM`: some tools wrap or compress the payload (for example inside an archive) or emit a non-binary export. In that case the extension alone is not enough — the raw download has to be extracted first. If one of these files does not open, please open an issue with an anonymized sample so support can be confirmed.
 
 ---
 
@@ -42,9 +57,13 @@ GNSS positions are recorded by the tachograph at specific intervals (typically w
 
 ### What does "byte coverage" mean?
 
-Byte coverage is the percentage of the `.ddd` file that the parser can interpret. A value of **100%** means every byte in the file was successfully decoded (including recognized padding). If coverage is below 100%, some sections of the file could not be parsed (possibly due to a new or undocumented tag format).
+Byte coverage is the proportion of the `.ddd` file that the parser can interpret. Full coverage means every byte was accounted for (decoded data plus recognised padding). The reader sweeps any bytes missed by the structural walk and classifies them as padding or tracked unknown ranges, so undecoded regions are never silently dropped. All test files in the project achieve full coverage.
 
-All test files in the project achieve 100% coverage.
+---
+
+### What happens with a corrupted or partial download?
+
+The parser is deterministic-first and resilient: it decodes according to the EU specification wherever possible, and falls back to best-effort recovery only when needed. For VU downloads it reports **TREP completeness** (which mandatory sections are present, missing, or suspect). If a file is genuinely partial or corrupted, the reader shows a **CORRUPTED / PARTIAL FILE** page listing what was recovered and what was discarded. Anything reconstructed by salvage is clearly flagged as low-confidence, so it is never confused with cleanly decoded data. Implausible values (for example an impossible speed) are dropped rather than displayed.
 
 ---
 
@@ -62,7 +81,7 @@ Yes. All processing is **local** — your `.ddd` files never leave your computer
 
 ### How do I report a bug?
 
-Open an issue on the [GitHub repository](https://github.com/Syax89/ddd-tachograph-reader/issues). Please include:
+Open an issue on the [GitHub repository](https://github.com/Syax89/DDDTachograph_Reader/issues). Please include:
 - The operating system you're using
 - The `.ddd` file generation (G1, G2, or G2.2)
 - A description of what happened vs. what you expected

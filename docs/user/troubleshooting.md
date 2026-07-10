@@ -8,39 +8,39 @@
 
 **Possible causes and fixes**:
 
-1. **The file is not a .ddd file**: Verify the file extension is `.ddd`. Files with other extensions (`.esm`, `.tgd`, `.c1b`, `.v1b`) are different formats and cannot be opened.
-2. **File is corrupted**: Try downloading the file again from the tachograph or card reader. A corrupted file will fail at the first bytes of decoding.
-3. **Unsupported generation**: If the file uses a future tachograph standard not yet implemented, the parser will report unparsed blocks. Check the byte coverage percentage — anything below 100% may indicate an unsupported format.
+1. **The file is not a tachograph download**: The reader expects the raw binary download from a card or vehicle unit. Files with other extensions such as `.esm`, `.tgd`, `.c1b`, and `.v1b` are usually the *same* EU download under a different name — open them via **All Files** in the dialog (or rename to `.ddd`). See the [FAQ](faq.md) for the one exception (`.esm` files that wrap or compress the payload).
+2. **File is corrupted or partial**: For VU downloads the reader reports TREP completeness and, when data is genuinely missing, shows a **CORRUPTED / PARTIAL FILE** page with what could be recovered. If the whole file fails at the first bytes, try downloading it again from the tachograph or card reader.
+3. **Unsupported generation**: If the file uses a future tachograph standard not yet implemented, the parser reports unparsed blocks, tracked as gap ranges in the **Raw Tags** section.
 
 ---
 
-## "Coverage below 100%"
+## Unparsed / Unknown Data
 
-**Symptom**: A file parses successfully but shows less than 100% byte coverage.
+**Symptom**: A file parses successfully but some bytes are reported as unknown.
 
-**What this means**: Some bytes in the file could not be interpreted by the parser. These are tracked as gap ranges and shown in the **Raw Tags** section.
+**What this means**: A few regions could not be interpreted by the parser. They are swept up, classified as padding or tracked unknown ranges, and shown in the **Raw Tags** section — never silently dropped.
 
 **What to do**:
-- If coverage is above 95%, the missing bytes are likely padding or unused regions and the extracted data is still valid.
-- If coverage is significantly below 100%, the file may use a new or proprietary tag format. Open a GitHub issue (without sharing sensitive personal data) so support can be added.
+- Small unknown regions are usually padding or unused areas; the extracted data is still valid.
+- If a large portion is unknown, the file may use a new or proprietary tag format. Open a GitHub issue (without sharing sensitive personal data) so support can be added.
 
 ---
 
-## Integrity shows "Incomplete" or "Missing ERCA"
+## Integrity Warning: Partial Chain or "Missing ERCA"
 
-**Symptom**: The integrity status shows yellow ("Incomplete" / "Missing ERCA") instead of green ("Verified").
+**Symptom**: The integrity banner appears with a partial-verification or "Missing ERCA" note instead of staying quiet.
 
-**Explanation**: The ERCA (European Root Certificate Authority) certificate needed to validate that file's signature chain is not available. The data is still readable and accurate — only the cryptographic proof of authenticity is incomplete.
+**Explanation**: The ERCA (European Root Certificate Authority) certificate needed to complete that file's signature chain is not available, so the chain is only partially anchored. The data is still readable and accurate — only the full cryptographic proof of authenticity is incomplete.
 
 **What to do**: The application ships with the ERCA root certificates in the `certs/` folder. If a certificate generation is missing, you can download it from the EU Joint Research Centre ([dtc.jrc.ec.europa.eu](https://dtc.jrc.ec.europa.eu/)) and place it in `certs/` — see `certs/README.txt` for the expected file names.
 
-## Integrity shows "Invalid Certificate Chain"
+## Integrity Warning: "Invalid Certificate Chain"
 
-**Symptom**: The integrity status is red.
+**Symptom**: The integrity banner shows a red failure.
 
 **Explanation**: The signature check was performed but failed. This could indicate file tampering or a corrupted download.
 
-**What to do**: If you trust the source of the file, download it again from the card/unit and re-check. If the failure persists, treat the file's authenticity as unverified.
+**What to do**: If you trust the source of the file, download it again from the card/unit and re-check. If the failure persists, treat the file's authenticity as unverified. Click the integrity banner for the full breakdown (TREP completeness, chain result, EF signatures).
 
 ---
 
@@ -100,4 +100,4 @@ If none of the above resolves your problem:
    python app/cli.py file.ddd --verbose --summary
    ```
 2. Check the [FAQ](faq.md) for other common questions.
-3. Open a [GitHub issue](https://github.com/Syax89/ddd-tachograph-reader/issues) with the verbose output and a description of your environment (OS, Python version, file generation).
+3. Open a [GitHub issue](https://github.com/Syax89/DDDTachograph_Reader/issues) with the verbose output and a description of your environment (OS, Python version, file generation).

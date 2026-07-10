@@ -2,7 +2,7 @@
 
 ## Windows
 
-1. Go to the [GitHub Releases page](https://github.com/Syax89/ddd-tachograph-reader/releases/latest).
+1. Go to the [GitHub Releases page](https://github.com/Syax89/DDDTachograph_Reader/releases/latest).
 2. Download **`TachoReader-v<version>-windows-x64.zip`**.
 3. Extract the ZIP file to a folder of your choice.
 4. Double-click **`TachoReader.exe`** to launch.
@@ -11,7 +11,7 @@
 
 ## macOS
 
-1. Go to the [GitHub Releases page](https://github.com/Syax89/ddd-tachograph-reader/releases/latest).
+1. Go to the [GitHub Releases page](https://github.com/Syax89/DDDTachograph_Reader/releases/latest).
 2. Download **`TachoReader-v<version>-macos.dmg`**.
 3. Open the disk image and drag `TachoReader.app` to Applications.
 4. **Right-click** the `TachoReader` app and select **Open** (this bypasses Gatekeeper on first run).
@@ -24,7 +24,7 @@
 If you prefer to run the tool from Python source:
 
 ```bash
-git clone https://github.com/Syax89/ddd-tachograph-reader.git
+git clone https://github.com/Syax89/DDDTachograph_Reader.git
 cd ddd-tachograph-reader
 pip install -r requirements.txt
 ```

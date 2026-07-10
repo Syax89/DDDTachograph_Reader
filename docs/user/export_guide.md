@@ -1,6 +1,6 @@
 # Export Guide — Formats and Best Practices
 
-The DDD Tachograph Reader supports four export formats. All exports share the same formatting layer (readable timestamps, humanised column names), so the formats present the same content consistently. This guide explains each format, its contents, and when to use it.
+The DDD Tachograph Reader supports four export formats. All exports share the same formatting layer (readable timestamps, humanised column names, full English country names for nations), so the formats present the same content consistently. This guide explains each format, its contents, and when to use it.
 
 ---
 
@@ -76,13 +76,13 @@ Sheets have styled headers, alternating row stripes, auto-filters, and frozen he
 
 **How to export**:
 - GUI: **Export → CSV (.csv)**
-- CLI: not available as a flag; use the GUI or call `ExportManager.export_to_csv()` programmatically
+- CLI: `python app/cli.py file.ddd --csv report.csv`
 
 ---
 
 ## PDF (.pdf)
 
-**What it contains**: A formatted report with the file summary (driver/vehicle identity, generation, signature status) followed by the data section tables. Very large sections are truncated at 1,500 rows to keep the document manageable.
+**What it contains**: A formatted report with a cover page (summary stats — total drive/work/rest hours, active days, event count) followed by the data section tables. Activities are also presented as a **monthly report**: each month on its own page, with daily Drive/Work/Rest/Available/Unknown columns (HH:MM), daily totals, and monthly subtotals. Very large sections are truncated to keep the document manageable.
 
 **Best for**:
 - Reports for audits or record-keeping
@@ -102,4 +102,4 @@ Sheets have styled headers, alternating row stripes, auto-filters, and frozen he
 | "My boss wants a spreadsheet to review" | Excel |
 | "We need a printable report" | PDF |
 | "I'm importing into our ERP system" | CSV |
-| "Send me everything" | `--all` (JSON + PDF + Excel) |
+| "Send me everything" | `--all` (JSON + PDF + Excel + CSV) |

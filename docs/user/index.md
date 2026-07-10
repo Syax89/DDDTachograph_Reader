@@ -1,6 +1,8 @@
 # DDD Tachograph Reader — User Manual
 
-Welcome to **DDD Tachograph Reader**, an open-source tool for reading, exploring, and validating digital tachograph files (`.ddd` format). This manual covers everything you need to get started, whether you are a driver, fleet manager, or analyst.
+Welcome to **DDD Tachograph Reader**, an open-source tool for reading, exploring, and validating digital tachograph files (`.ddd` format). This manual covers everything you need to get started, whether you are a driver, fleet manager, workshop, or analyst.
+
+The current release is **v2.5.0 "Revolution"**, which adds interactive activity timelines, speed graphs, dashboards, and a re-engineered parser that recovers partial or malformed downloads.
 
 ---
 
@@ -36,11 +38,27 @@ The tool supports all three generations of digital tachographs:
 
 ---
 
+## What's New in v2.5
+
+- **Interactive daily activity timeline** — driving / work / availability / rest on a 24-hour chart, with crew (dual-slot) support and out-of-scope markers.
+- **Vehicles driven per day** — for driver-card activity views, the vehicle(s) used each day, with switch-over times on multi-vehicle days.
+- **Detailed speed graph** — the speed curve with overspeeding event markers and a shaded over-speed zone.
+- **Dashboards + monthly summaries** — KPI cards and per-month totals for activities and speed.
+- **Corrupt / partial download recovery** — deterministic-first parsing with best-effort salvage; recovered data is clearly flagged.
+- **TREP completeness inventory** and **origin detection** (driver card vs VU download).
+- **Full country names** everywhere instead of raw nation codes.
+
+A visual product tour is available on the [project README](https://github.com/Syax89/DDDTachograph_Reader#product-tour).
+
+---
+
 ## Quick Start
 
-1. **Download** the executable for your platform from [GitHub Releases](https://github.com/Syax89/ddd-tachograph-reader/releases/latest).
-2. **Launch** the application (double-click on Windows, right-click → Open on macOS).
+1. **Download** the build for your platform from [GitHub Releases](https://github.com/Syax89/DDDTachograph_Reader/releases/latest):
+   - Windows: `TachoReader-v<version>-windows-x64.zip`
+   - macOS: `TachoReader-v<version>-macos.dmg`
+2. **Launch** the application (extract the zip and run `TachoReader.exe` on Windows; open the DMG and drag `TachoReader.app` to Applications on macOS).
 3. **Click "Open DDD file"** and select your `.ddd` file.
-4. **Explore** the parsed data in the section tree, and export to PDF, Excel, CSV, or JSON.
+4. **Explore** the parsed data in the section tree, open the activity or speed charts, and export to PDF, Excel, CSV, or JSON.
 
 For command-line usage, see the [CLI Guide](cli_guide.md).
