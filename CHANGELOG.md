@@ -2,6 +2,81 @@
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-07-10 — "Revolution"
+
+The biggest release yet. TachoReader grows from a decoder into a full visual
+analytics tool: interactive **activity timelines** and **speed graphs**, a
+dashboard with KPI cards and monthly reports, and a completely re-engineered
+parser core that is deterministic-first, resilient to malformed data, and can
+**recover corrupt or partial downloads** instead of failing on them.
+
+### Added
+#### Visual analytics
+- **Daily activity timeline chart**: per-day driving/work/availability/rest
+  bands rendered on a 24h timeline, with crew (dual-slot) support, out-of-scope
+  markers and specific-condition triangles
+- **Detailed speed graph**: per-second/interval speed curve with overspeeding
+  event markers (red dots + hover tooltips) and shaded over-speed zones
+- **Dashboard summary views**: KPI cards + monthly grouping (newest-first, per-
+  month totals and separators) for both Daily Activities and Detailed Speed
+- **Vehicles driven per day**: driver activity chart now shows the vehicle(s)
+  used each day — a single plate, or every plate with its start–end window on
+  multi-vehicle days
+- **# Drivers / # Vehicles columns** with hover tooltips; driver count derived
+  from per-day card insert/withdraw data
+
+#### Parsing & resilience
+- **Corrupt/partial download recovery**: anchor-based salvage that decodes
+  embedded card images structurally from unparsed regions (never invents data),
+  with everything recovered clearly flagged as heuristic
+- **TREP completeness inventory**: mandatory-TREP tables per generation
+  (Annex 1B/1C App.7); a completeness report (present/missing/suspect/partial)
+  surfaced in the CLI summary and a new **TACHOGRAPH DOWNLOAD** GUI panel
+- **Content-based origin detection**: distinguishes a genuine VU download from a
+  driver-card image wrapped in a stand-alone TREP 06 (Annex 1B §2.2.6.6), so
+  valid card dumps are no longer mis-flagged as corrupt
+- **Plausibility gating**: pure validators (speed, timestamp, odometer,
+  printable text, sensor block, event record) drop nonsense values (e.g. a
+  25 284 km/h sensor reading) instead of publishing them
+- **Full nation names**: nation codes (I, D, F, …) expanded to full English
+  country names across the GUI, detail tables and all exports; supranational
+  codes map to European Community / Europe / World
+- **Event & purpose code decoding**: human-readable `event_type_label` /
+  `record_purpose_label` for overspeeding and power-interruption records
+
+### Changed
+- **Deterministic-first parsing**: normative Annex 1B/1C offsets and record
+  layouts are now the primary path for every TREP/EF; regex/scan heuristics run
+  ONLY as a gated fallback and any recovered value is flagged as low-confidence
+- **G1 CardDownload framing**: a `0x76 0x11` byte pair inside card-EF payload is
+  no longer mistaken for a sensor download — recovers ~190 activities + 112
+  places per affected file that were previously truncated
+- **Windows HiDPI scaling** corrected (tk scaling `DPI/72`, design-pixel helper)
+  so the UI is no longer ~25% undersized on high-DPI monitors
+- **Sensor decoder** gated on plausibility; implausible blocks are dropped and
+  the section flagged suspect rather than shown as garbage
+- **VU Identification** rendered as a vertical Field/Value list; **TACHOGRAPH**
+  panel replaces the verbose calibration block (next calibration, tyre size,
+  authorised speed)
+- **Integrity UX**: warning popup + banner shown only on real problems
+
+### Fixed
+- **Crew activity totals** computed per card slot so dual-driver days are no
+  longer flattened into one timeline
+- **Card-file daily km** derived from odometer deltas instead of the absolute
+  odometer value
+- **Summary panel column widths** stay stable across repeated visits (auto-fit
+  no longer overwrites fixed-width summaries)
+- **NationNumeric filter**: accept `0xFE` (EUR) / `0xFF` (WLD); vehicle
+  first-use timestamp cap corrected to 2100
+
+### Housekeeping
+- Test suite consolidated and expanded to **308 passing** (dead/skipped
+  fixture tests removed; +30 new tests: validators, TREP inventory, salvage,
+  origin detection, nation names, false-TREP11 regression)
+- README: recent-features refresh + **Acknowledgments & Support** section
+- Ruff + mypy clean across the codebase
+
 ## [2.3.3] - 2026-07-10
 ### Changed
 - **Resizable data-table columns**: columns auto-fit only on the first load of a table, then keep the width the user sets (no more snap-back on window resize)
