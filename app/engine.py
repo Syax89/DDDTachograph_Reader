@@ -274,6 +274,7 @@ class TachoParser:
         """
         self.results["metadata"]["is_vu"] = self.is_vu
         if not self.is_vu:
+            self.results["metadata"]["origin"] = "driver_card"
             return
         generation = self.results["metadata"].get("generation", "")
         if generation.startswith("G2"):
@@ -327,8 +328,14 @@ class TachoParser:
         ``present_treps`` may be supplied by the G1 walk; for G2 it is derived
         from the decoded RecordArray sections. TREPs flagged during decoding as
         implausible (``_suspect_sections``) are reported as 'suspect'.
+
+        First confirms the file origin from its content: a driver-card image
+        wrapped in a stand-alone TREP 06 Card Download is a valid selective
+        download (Annex 1B §2.2.6.6), not a VU stream, so it is reclassified as
+        a card and no VU completeness report is produced for it.
         """
         from core.parser.trep_inventory import build_trep_report, format_trep_summary
+        from core.parser.origin_detector import detect_origin, ORIGIN_CARD
         if present_treps is None:
             present_treps = []
             for sec in self.results.get("vu_record_arrays") or []:
@@ -336,6 +343,20 @@ class TachoParser:
                     present_treps.append(int(sec.get("trep", "0x0"), 16))
                 except (TypeError, ValueError):
                     continue
+
+        origin, note, is_wrapped = detect_origin(
+            self.is_vu, self.results, present_treps)
+        self.results["metadata"]["origin"] = origin
+        if note:
+            self.results["metadata"]["origin_note"] = note
+        if origin == ORIGIN_CARD:
+            # A card image (possibly VU-wrapped): treat as a card, not a
+            # partial VU download. No TREP completeness report.
+            self.is_vu = False
+            self.results["metadata"]["is_vu"] = False
+            self.results.pop("_suspect_sections", None)
+            return
+
         suspect = self.results.pop("_suspect_sections", None) or set()
         report = build_trep_report(
             generation, present_treps, suspect_treps=suspect,

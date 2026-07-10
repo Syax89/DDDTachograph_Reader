@@ -1668,6 +1668,32 @@ class TachoExplorer(tk.Tk):
         meta = data.get("metadata", {})
         warnings = []
 
+        trep = meta.get("trep_report") or {}
+        if trep and trep.get("is_partial"):
+            warnings.append(
+                f"\u2022 Download completeness: "
+                f"{trep.get('mandatory_ok', 0)}/{trep.get('mandatory_total', 0)} "
+                f"mandatory section(s) read ({trep.get('completeness_pct', 0)}%)")
+            missing = trep.get("mandatory_missing") or []
+            if missing:
+                warnings.append(
+                    "\u2022 Missing mandatory section(s): "
+                    + ", ".join(t["name"] for t in missing))
+            suspect = trep.get("decoded_suspect") or []
+            if suspect:
+                warnings.append(
+                    "\u2022 Corrupted/implausible section(s) (data discarded): "
+                    + ", ".join(t["name"] for t in suspect))
+            if not trep.get("complete_walk", True):
+                warnings.append(
+                    "\u2022 The structural walk did not reach the end of file")
+
+        salvaged = meta.get("salvage_recovered")
+        if salvaged:
+            warnings.append(
+                "\u2022 Data recovered from damaged regions (low confidence): "
+                + ", ".join(salvaged))
+
         for pw in meta.get("parse_warnings") or []:
             if isinstance(pw, dict):
                 warnings.append(
@@ -1682,13 +1708,34 @@ class TachoExplorer(tk.Tk):
                 f"\u2022 Some values were recovered heuristically (low "
                 f"confidence), not by deterministic spec parsing: {sections}")
 
-        cov = meta.get("coverage_pct", 0)
-        if cov < 100:
-            warnings.append(
-                f"\u2022 Structural coverage: {cov:.1f}% \u2014 "
-                f"{100 - cov:.1f}% of bytes could not be parsed")
-
         cov_report = data.get("coverage") or {}
+
+        # Cryptographic validation: how much of the decoded data is signature-
+        # verified vs. not (more meaningful than raw byte coverage).
+        sv = data.get("signature_verification") or {}
+        treps = sv.get("treps") or []
+        if treps:
+            valid = sum(1 for t in treps if t.get("signature_valid") is True)
+            total = len(treps)
+            if valid < total:
+                warnings.append(
+                    f"\u2022 VU sections validated: {valid}/{total} "
+                    f"signature(s) verified; {total - valid} NOT validated")
+        elif sv.get("available") is False:
+            warnings.append(
+                "\u2022 VU sections validated: 0 \u2014 signatures could not be "
+                "verified (VU public key unavailable)")
+
+        efv = data.get("ef_signature_verification") or {}
+        ef_results = efv.get("ef_results") or []
+        if ef_results:
+            ef_ok = sum(1 for e in ef_results if e.get("status") == "verified")
+            ef_total = len(ef_results)
+            if ef_ok < ef_total:
+                warnings.append(
+                    f"\u2022 Card data validated: {ef_ok}/{ef_total} EF "
+                    f"signature(s) verified; {ef_total - ef_ok} NOT validated")
+
         unknown = cov_report.get("classifications", {}).get("Unknown", 0)
         if unknown > 0:
             warnings.append(
@@ -2131,16 +2178,26 @@ class TachoExplorer(tk.Tk):
 
         # ── File Info (key/value) ──
         is_vu = meta.get("is_vu", False)
+        origin = meta.get("origin", "")
+        if origin == "vehicle_unit" or (not origin and is_vu):
+            origin_label = "Vehicle Unit (VU)"
+        elif meta.get("origin_note"):
+            origin_label = "Driver Card (from VU download)"
+        else:
+            origin_label = "Driver Card"
         info = {
             "Filename": os.path.basename(self.current_file),
             "Size": f"{meta.get('file_size_bytes', 0):,} bytes".replace(",", " "),
-            "Origin": "Vehicle Unit (VU)" if is_vu else "Driver Card",
+            "Origin": origin_label,
             "Generation": meta.get("generation", "?"),
             "Integrity": self._integrity_label(data),
-            "Decoder failures": meta.get("decoder_failure_count", 0),
-            "Parsed at": meta.get("parsed_at", ""),
-            "App version": meta.get("app_version", ""),
         }
+        if meta.get("origin_note"):
+            info["Origin details"] = meta["origin_note"]
+        if meta.get("decoder_failure_count", 0) > 0:
+            info["Decoder failures"] = meta["decoder_failure_count"]
+        info["Parsed at"] = meta.get("parsed_at", "")
+        info["App version"] = meta.get("app_version", "")
         cols, rows = _kv_rows(info)
         self._add_section("", "\U0001f4c4  File Info", cols, rows)
 
@@ -2175,9 +2232,11 @@ class TachoExplorer(tk.Tk):
             except Exception:
                 _log.debug("Vehicle section render failed: %s", traceback.format_exc())
             trep_report = meta.get("trep_report")
-            if trep_report:
-                cols, rows = self._build_trep_summary(trep_report)
-                self._add_section("", "\U0001f4e6  TACHOGRAPH DOWNLOAD", cols, rows, summary=True)
+            if trep_report and trep_report.get("is_partial"):
+                cols, rows = self._build_trep_summary(trep_report, meta)
+                self._auto_select_iid = self._add_section(
+                    "", "\u26a0\ufe0f  CORRUPTED / PARTIAL FILE", cols, rows,
+                    summary=True)
 
         # ── Generations tree (single source of truth) ──
         generations = data.get("generations", {})
@@ -3114,27 +3173,55 @@ class TachoExplorer(tk.Tk):
         cols = ["Field", "Value"]
         return cols, rows
 
-    def _build_trep_summary(self, trep_report):
+    def _build_trep_summary(self, trep_report, meta=None):
+        """Warning page shown only for corrupted/partial downloads: explains
+        what is present, what is missing/corrupted, and that only the listed
+        parts of the file could be recovered."""
+        meta = meta or {}
         rows = []
         sep = ("\u2500" * 40, "", True)
 
-        rows.append(("\U0001f4e6  TACHOGRAPH DOWNLOAD", "", True))
+        rows.append(("\u26a0\ufe0f  THIS FILE IS INCOMPLETE OR CORRUPTED", "", True))
+        rows.append(("  Only the sections listed below could be read.", "", False))
+        rows.append(("  Missing or corrupted data is NOT shown.", "", False))
+        rows.append(sep)
 
-        completeness = f"{trep_report['mandatory_ok']}/{trep_report['mandatory_total']} mandatory sections ({trep_report['completeness_pct']}%)"
-        rows.append(("  Completeness", completeness, False))
+        rows.append(("\U0001f4ca  COMPLETENESS", "", True))
+        rows.append((
+            "  Mandatory sections read",
+            f"{trep_report['mandatory_ok']}/{trep_report['mandatory_total']} "
+            f"({trep_report['completeness_pct']}%)", False))
+        if not trep_report.get("complete_walk", True):
+            rows.append(("  File structure", "\u274c  Truncated (did not reach end of file)", False))
+        rows.append(sep)
+
+        present = trep_report.get("present") or []
+        rows.append(("\u2705  SECTIONS PRESENT", "", True))
+        if present:
+            for t in present:
+                rows.append((f"  {t['name']}", t["trep"], False))
+        else:
+            rows.append(("  (none)", "", False))
+        rows.append(sep)
 
         missing = trep_report.get("mandatory_missing") or []
         if missing:
-            rows.append(("  Missing sections", ", ".join(t["name"] for t in missing), False))
+            rows.append(("\u274c  MISSING MANDATORY SECTIONS", "", True))
+            for t in missing:
+                rows.append((f"  {t['name']}", t["trep"], False))
+            rows.append(sep)
 
         suspect = trep_report.get("decoded_suspect") or []
         if suspect:
-            rows.append(("  Suspect sections \u26a0\ufe0f", ", ".join(t["name"] for t in suspect), False))
+            rows.append(("\u26a0\ufe0f  CORRUPTED SECTIONS (data discarded)", "", True))
+            for t in suspect:
+                rows.append((f"  {t['name']}", t["trep"], False))
+            rows.append(sep)
 
-        if trep_report.get("is_partial"):
-            rows.append(("  Status", "\u26a0\ufe0f  Partial download", False))
-        else:
-            rows.append(("  Status", "\u2705  Complete download", False))
+        salvaged = meta.get("salvage_recovered") or []
+        if salvaged:
+            rows.append(("\U0001f6e0\ufe0f  RECOVERED FROM DAMAGED DATA", "", True))
+            rows.append(("  Low-confidence recovery", ", ".join(salvaged), False))
 
         cols = ["Field", "Value"]
         return cols, rows
