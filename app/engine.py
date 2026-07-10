@@ -143,6 +143,7 @@ class TachoParser:
                 self.results.get("coverage", {}).get("covered_pct", 100.0)
             self._dedup_and_sort_activities()
             self._validate_certificate_chain()
+            self._verify_g1_vu_signatures()
             self._verify_ef_signatures()
 
             self.results["metadata"]["integrity_check"] = self.validation_status
@@ -402,9 +403,7 @@ class TachoParser:
             return
         from core.crypto.ef_signature import pair_ef_records, verify_ef_pairs
         from cryptography.hazmat.primitives.asymmetric import rsa as _rsa
-        ef_data_map = {(tag, dtype): payload for tag, dtype, payload in ef_data_raw}
-        ef_sig_map = {(tag, dtype): payload for tag, dtype, payload in ef_sig_raw}
-        pairs = pair_ef_records(ef_data_map, ef_sig_map)
+        pairs = pair_ef_records(ef_data_raw, ef_sig_raw)
         key_type = "RSA" if isinstance(self.card_public_key, _rsa.RSAPublicKey) else (
             "EC" if self.card_public_key is not None else None)
         # Extract a G2 CVC key whenever one is available. It is a data-integrity
@@ -424,6 +423,89 @@ class TachoParser:
                                     self.results["metadata"]["generation"],
                                     key_type, card_ec_key, card_ec_hash)
         self.results["ef_signature_verification"] = ef_report
+
+    def _verify_g1_vu_signatures(self):
+        """Verify every signed G1 VU TREP after recovering the VU public key.
+
+        The certificate chain alone authenticates the VU key, not the downloaded
+        payload. A file without valid TREP signatures must never retain a fully
+        verified integrity status.
+        """
+        generation = self.results["metadata"].get("generation", "")
+        if not self.is_vu or not generation.startswith("G1"):
+            return
+
+        from core.parser.g1_walker import TREP_NAMES, iter_g1_vu_messages
+
+        messages = list(iter_g1_vu_messages(bytes(self.raw_data)))
+        report = {
+            "available": self.card_public_key is not None,
+            "algorithm": "RSA-SHA1",
+            "msca_to_vu": self.card_public_key is not None,
+            "root_anchored": self.validation_status == "Verified",
+            "treps": [],
+            "all_treps_valid": False,
+            "missing_signatures": 0,
+            "summary": "",
+        }
+        if not messages:
+            report["summary"] = "No G1 VU TREP sections found"
+            self.results["signature_verification"] = report
+            return
+        if self.card_public_key is None:
+            report["summary"] = "G1 VU public key unavailable; TREP signatures not verified"
+            self.results["signature_verification"] = report
+            return
+
+        all_valid = True
+        signed_messages = 0
+        for message in messages:
+            entry = {
+                "trep": f"0x{message['trep']:02X}",
+                "section": TREP_NAMES.get(message["trep"], f"TREP 0x{message['trep']:02X}"),
+            }
+            # TREP 11/14 are the sensor-download extension and its raw trailer,
+            # not Annex 1B signed data messages. Their absence of an RSA block
+            # must not invalidate the signed preceding download payload.
+            if message["trep"] in (0x11, 0x14):
+                entry.update({"signature_valid": None, "reason": "signature not applicable"})
+                report["treps"].append(entry)
+                continue
+            signed_messages += 1
+            if not message["sig_len"]:
+                entry.update({"signature_valid": False, "reason": "signature missing"})
+                report["missing_signatures"] += 1
+                all_valid = False
+            else:
+                signature = bytes(self.raw_data[message["body_end"]:message["end"]])
+                payload_start = message["body_start"]
+                if message["trep"] == 0x01:
+                    # The G1 Overview begins with MSCA and VU certificates.
+                    # They authenticate the key but are excluded from the
+                    # download-data signature (Annex 1B Appendix 11).
+                    payload_start += 194 + 194
+                payload = bytes(self.raw_data[payload_start:message["body_end"]])
+                valid = self.validator.verify_g1_data_signature(
+                    self.card_public_key, signature, payload)
+                entry["signature_valid"] = valid
+                if not valid:
+                    all_valid = False
+            report["treps"].append(entry)
+
+        report["all_treps_valid"] = signed_messages > 0 and all_valid
+        valid_count = sum(entry["signature_valid"] is True for entry in report["treps"])
+        report["summary"] = (
+            f"G1 VU TREP signatures: {valid_count}/{signed_messages} valid"
+        )
+        self.results["signature_verification"] = report
+
+        if self.validation_status == "Verified":
+            if all_valid:
+                self.validation_status = "Verified (G1 VU chain and TREP signatures)"
+            elif report["missing_signatures"]:
+                self.validation_status = "Incomplete (G1 VU TREP signatures missing)"
+            else:
+                self.validation_status = "Invalid G1 VU TREP Signature"
 
 if __name__ == "__main__":
     import sys

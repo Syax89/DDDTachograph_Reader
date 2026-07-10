@@ -543,13 +543,15 @@ class DecoderRegistry:
 
         if dtype is not None:
             dtype_matches = [d for d in candidates if d.dtypes is None or dtype in d.dtypes]
-            if dtype_matches:
-                candidates = dtype_matches
+            if not dtype_matches:
+                return None
+            candidates = dtype_matches
 
         if parent_tag is not None:
             parent_matches = [d for d in candidates if d.parent_tags is None or parent_tag in d.parent_tags]
-            if parent_matches:
-                candidates = parent_matches
+            if not parent_matches:
+                return None
+            candidates = parent_matches
 
         return max(candidates, key=lambda d: self._context_score(d, generation, dtype, parent_tag))
 

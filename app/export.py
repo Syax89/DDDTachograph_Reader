@@ -23,8 +23,11 @@ _NUMBER_TEXT_RE = re.compile(
 
 def _spreadsheet_value(value):
     """Prevent text from being interpreted as a spreadsheet formula."""
-    if (isinstance(value, str) and value.startswith(("=", "+", "-", "@"))
-            and not _NUMBER_TEXT_RE.fullmatch(value)):
+    if not isinstance(value, str):
+        return value
+    formula_candidate = value.lstrip(" \t\r\n")
+    if (formula_candidate.startswith(("=", "+", "-", "@"))
+            and not _NUMBER_TEXT_RE.fullmatch(formula_candidate)):
         return "'" + value
     return value
 
@@ -107,6 +110,9 @@ class ExportManager:
 
         # Data sections
         for label, desc, headers, rows, truncated in section_tables(data, max_rows=_EXCEL_MAX_ROWS):
+            if not headers:
+                _log.warning("Skipping '%s': no visible export columns", label)
+                continue
             if truncated:
                 _log.warning("Truncating '%s' to %d rows (Excel limit)", label, _EXCEL_MAX_ROWS)
             safe_label = _SHEET_NAME_RE.sub("_", label)[:31].strip()

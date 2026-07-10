@@ -972,6 +972,7 @@ def _parse_trep_04_speed(data, results):
         run_start_ts = None
         run_minutes = 0
         run_speeds = []
+        run_chart_speeds = []
         prev_ts = None
 
         def _flush():
@@ -987,6 +988,9 @@ def _parse_trep_04_speed(data, results):
                 "average_speed_kmh": round(sum(run_speeds) / len(run_speeds), 1),
                 "max_speed_kmh": max(run_speeds),
                 "speeds_sample": run_speeds[:60],
+                # Retain every second, including unavailable values, for the
+                # GUI's day chart without expanding the regular data table.
+                "_chart_speeds_kmh": run_chart_speeds,
             })
 
         for i in range(n_blocks):
@@ -994,14 +998,17 @@ def _parse_trep_04_speed(data, results):
             ts = struct.unpack(">I", blk[0:4])[0]
             if not (946684800 <= ts <= 4102444800):
                 continue
-            speeds = [s for s in blk[4:64] if s != 0xFF]
+            raw_speeds = [None if s == 0xFF else s for s in blk[4:64]]
+            speeds = [s for s in raw_speeds if s is not None]
             if prev_ts is None or ts - prev_ts != 60:
                 _flush()
                 run_start_ts = ts
                 run_minutes = 0
                 run_speeds = []
+                run_chart_speeds = []
             run_minutes += 1
             run_speeds.extend(speeds)
+            run_chart_speeds.extend(raw_speeds)
             prev_ts = ts
         _flush()
     except (struct.error, IndexError, ValueError) as exc:

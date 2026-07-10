@@ -292,7 +292,7 @@ def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
         "available": bool,
         "msca_to_vu": bool,          # VU cert signed by MSCA
         "root_anchored": bool,       # MSCA cert verified against an ERCA root key
-         "treps": [{"trep", "section", "signature_valid"}],
+         "treps": [{"trep", "section", "signature_valid", "reason"}],
          "all_treps_valid": bool,
          "certificate_temporal_validity": {"msca": ..., "vu": ...},
          "summary": str,
@@ -352,12 +352,30 @@ def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
                             report["root_anchored"] = True
                             break
 
-        # Per-TREP data signatures, verified with the VU public key.
+        # Per-TREP data signatures, verified with the VU public key. Every
+        # section must carry its own signature: accepting a signed subset would
+        # present unsigned payload data as authenticated.
         all_valid = True
         for sec in sections:
             recs = sec["records"]
             sig_recs = [r for r in recs if r[1] == _SIGNATURE_RECORD]
             if not sig_recs:
+                all_valid = False
+                report["treps"].append({
+                    "trep": f"0x{sec['trep']:02X}",
+                    "section": TREP_SECTIONS.get(sec["trep"], f"TREP 0x{sec['trep']:02X}"),
+                    "signature_valid": False,
+                    "reason": "signature record missing",
+                })
+                continue
+            if len(sig_recs) != 1:
+                all_valid = False
+                report["treps"].append({
+                    "trep": f"0x{sec['trep']:02X}",
+                    "section": TREP_SECTIONS.get(sec["trep"], f"TREP 0x{sec['trep']:02X}"),
+                    "signature_valid": False,
+                    "reason": "multiple signature records",
+                })
                 continue
             sig_pos, _, sig_size, _, _ = sig_recs[0]
             # Signature size follows the curve: 64 (P-256), 96 (P-384), 128 (P-512).
@@ -372,6 +390,8 @@ def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
                 else:
                     break
             if start == sig_pos:
+                # A certificate-only Overview has no payload to verify, but it
+                # still had a structurally present SignatureRecord.
                 continue
             valid = _verify_ecdsa(vu_pub, vu_hash, sig, data[start:sig_pos])
             all_valid = all_valid and valid

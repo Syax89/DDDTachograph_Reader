@@ -730,9 +730,12 @@ def _decode_record(record_type, rec):
     if record_type == 0x12 and len(rec) >= 5:
         # VuDetailedSpeedBlock: speedBlockBeginDate(4) + 60×speed(1/sec).
         # Summarised (not expanded) to avoid a 60×N value dump.
-        samples = [s for s in rec[4:] if s != 0xFF]
+        raw_speeds = [None if s == 0xFF else s for s in rec[4:64]]
+        samples = [s for s in raw_speeds if s is not None]
         out["confidence"] = "high"
         out["begin"] = _iso(struct.unpack(">I", rec[0:4])[0])
+        # Internal chart data: excluded from GUI tables and exports.
+        out["_chart_speeds_kmh"] = raw_speeds
         if samples:
             out["max_speed_kmh"] = max(samples)
             out["min_speed_kmh"] = min(samples)
@@ -893,9 +896,13 @@ def _emit_section(section, results):
         date_str = "N/A"
         for r in recs.get(0x06, []):
             t = r.get("time")
-            if t:
+            if not isinstance(t, str) or t == "—":
+                continue
+            try:
                 date_str = datetime.fromisoformat(t).strftime("%d/%m/%Y")
-                break
+            except ValueError:
+                continue
+            break
         km = 0
         for r in recs.get(0x05, []):
             if r.get("odometer_km"):

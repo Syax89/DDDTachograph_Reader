@@ -13,7 +13,8 @@ used for data-integrity verification even when that certificate chain could not
 be verified; the report keeps that trust limitation explicit.
 """
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from collections import defaultdict
+from typing import Any, DefaultDict, Dict, List, Optional, Tuple
 
 _log = logging.getLogger("ddd_tacho")
 
@@ -47,10 +48,10 @@ _EF_MIN_LENGTHS = {
 }
 
 # Schema for data+dtype pairs (one pair per generation).
-_GEN_PAIRS = [
-    {"data_dtype": 0x00, "sig_dtype": 0x01, "gen": "G1", "algo": "RSA"},
-    {"data_dtype": 0x02, "sig_dtype": 0x03, "gen": "G2", "algo": "ECDSA"},
-]
+_GEN_PAIRS: Tuple[Tuple[int, int, str, str], ...] = (
+    (0x00, 0x01, "G1", "RSA"),
+    (0x02, 0x03, "G2", "ECDSA"),
+)
 
 # G2-specific tags that only make sense with ECDSA verification.
 # 0x0520-0x0522 (Identification, DrivingLicenceInfo, SpecificConditions)
@@ -61,36 +62,67 @@ _G2_ONLY_TAGS = {
 }
 
 
-def pair_ef_records(ef_data: Dict[Tuple[int, int], bytes],
-                    ef_signatures: Dict[Tuple[int, int], bytes]) -> List[Dict[str, Any]]:
-    """Match data/signature payloads by tag + generation pair.
+def pair_ef_records(ef_data: List[Tuple[int, int, bytes]],
+                    ef_signatures: List[Tuple[int, int, bytes]]) -> List[Dict[str, Any]]:
+    """Classify EF data/signature occurrences by tag and generation.
 
-    Returns a list of ``{tag, gen, algo, data, signature}`` dictionaries,
-    one for each (data, signature) pair found.
+    One data and one signature record are required for every expected pair.
+    Missing or duplicate records are returned as incomplete entries rather than
+    overwritten, so the integrity report cannot claim complete verification.
     """
-    pairs = []
-    for entry in _GEN_PAIRS:
-        data_dt = entry["data_dtype"]
-        sig_dt = entry["sig_dtype"]
-        gen = entry["gen"]
-        algo = entry["algo"]
+    data_by_key: DefaultDict[Tuple[int, int], List[bytes]] = defaultdict(list)
+    signatures_by_key: DefaultDict[Tuple[int, int], List[bytes]] = defaultdict(list)
+    for tag, dtype, payload in ef_data:
+        data_by_key[(tag, dtype)].append(payload)
+    for tag, dtype, payload in ef_signatures:
+        signatures_by_key[(tag, dtype)].append(payload)
 
-        for (tag, dt), payload in ef_data.items():
-            if dt != data_dt:
-                continue
-            sig_key = (tag, sig_dt)
-            if sig_key not in ef_signatures:
+    pairs = []
+    for data_dt, sig_dt, gen, algo in _GEN_PAIRS:
+
+        tags = {tag for tag, dtype in data_by_key if dtype == data_dt}
+        tags.update(tag for tag, dtype in signatures_by_key if dtype == sig_dt)
+        for tag in sorted(tags):
+            # ICC/IC metadata and certificate blocks share the card record
+            # stream but are not Annex 1B/1C signed EF payloads. Only known
+            # signature-capable EFs participate in this integrity report.
+            if tag not in _EF_MIN_LENGTHS:
                 continue
             # G2-only tags should not be verified with G1 RSA.
             if gen == "G1" and tag in _G2_ONLY_TAGS:
                 continue
-            pairs.append({
+            data_records = data_by_key[(tag, data_dt)]
+            signature_records = signatures_by_key[(tag, sig_dt)]
+            pair = {
                 "tag": tag,
                 "gen": gen,
                 "algo": algo,
-                "data": payload,
-                "signature": ef_signatures[sig_key],
-            })
+            }
+            if len(data_records) != 1 or len(signature_records) != 1:
+                missing = []
+                duplicate = []
+                if not data_records:
+                    missing.append("data")
+                elif len(data_records) > 1:
+                    duplicate.append("data")
+                if not signature_records:
+                    missing.append("signature")
+                elif len(signature_records) > 1:
+                    duplicate.append("signature")
+                problem = "missing " + ", ".join(missing) if missing else "duplicate " + ", ".join(duplicate)
+                pair.update({
+                    "status": "incomplete",
+                    "reason": problem,
+                    "data_size": sum(len(record) for record in data_records),
+                    "sig_size": sum(len(record) for record in signature_records),
+                })
+            else:
+                pair.update({
+                    "status": "paired",
+                    "data": data_records[0],
+                    "signature": signature_records[0],
+                })
+            pairs.append(pair)
     return pairs
 
 
@@ -109,10 +141,6 @@ def verify_ef_pairs(pairs: List[Dict[str, Any]],
     *card_ec_public_key* is the G2 ECDSA public key (from CVC).
     *card_ec_hash* is the hash algorithm associated with the CVC curve.
     """
-    if card_public_key is None and card_ec_public_key is None:
-        return {"summary": "No card public key available", "ef_results": [],
-                "verified": 0, "failed": 0, "total": 0}
-
     if not pairs:
         return {"summary": "No EF signature pairs found", "ef_results": [],
                 "verified": 0, "failed": 0, "total": 0}
@@ -125,9 +153,28 @@ def verify_ef_pairs(pairs: List[Dict[str, Any]],
 
     for pair in pairs:
         tag = pair["tag"]
+        algo = pair["algo"]
+
+        if pair["status"] == "incomplete":
+            failed += 1
+            results.append({
+                "tag": f"0x{tag:04X}", "gen": pair["gen"], "algo": algo,
+                "status": "incomplete", "reason": pair["reason"],
+                "data_size": pair["data_size"], "sig_size": pair["sig_size"],
+            })
+            continue
+
         data = pair["data"]
         sig = pair["signature"]
-        algo = pair["algo"]
+
+        if card_public_key is None and card_ec_public_key is None:
+            skipped += 1
+            results.append({
+                "tag": f"0x{tag:04X}", "gen": pair["gen"], "algo": algo,
+                "status": "skipped", "reason": "card public key not available",
+                "data_size": len(data), "sig_size": len(sig),
+            })
+            continue
 
         # Sanity-checks: reject obviously-corrupt payloads.
         min_len = _EF_MIN_LENGTHS.get(tag, 2)
