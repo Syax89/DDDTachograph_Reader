@@ -25,6 +25,11 @@ from datetime import datetime, timedelta, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # ── Windows High-DPI ────────────────────────────────────────────────────────
+# _WIN_SCALE is the ratio of the display's effective DPI to the 96-DPI baseline
+# (1.0 at 100%, 1.5 at 150%, 2.0 at 200%). Once we opt into Per-Monitor DPI
+# awareness Windows stops auto-scaling the window, so the whole UI — fonts AND
+# fixed pixel sizes — must be scaled by this factor ourselves.
+_WIN_DPI = 96
 _WIN_SCALE = 1.0
 if sys.platform == "win32":
     try:
@@ -40,11 +45,24 @@ if sys.platform == "win32":
     try:
         hdc = windll.user32.GetDC(0)
         if hdc:
-            dpi = windll.gdi32.GetDeviceCaps(hdc, 88) or 96  # LOGPIXELSX
+            _WIN_DPI = windll.gdi32.GetDeviceCaps(hdc, 88) or 96  # LOGPIXELSX
             windll.user32.ReleaseDC(0, hdc)
-            _WIN_SCALE = dpi / 96.0
+            _WIN_SCALE = _WIN_DPI / 96.0
     except Exception:
         _WIN_SCALE = 1.5  # fallback guess for >96 dpi
+        _WIN_DPI = 144
+
+
+def _px(value):
+    """Scale a design pixel value to the current display (Windows HiDPI).
+
+    Design sizes throughout the UI are authored for a 96-DPI (100%) screen;
+    on high-DPI Windows displays they are multiplied by the DPI ratio so the
+    layout keeps its intended physical size instead of shrinking.
+    """
+    if sys.platform == "win32" and _WIN_SCALE > 1.0:
+        return int(round(value * _WIN_SCALE))
+    return int(value)
 
 import tkinter as tk  # noqa: E402
 from tkinter import ttk, filedialog, messagebox  # noqa: E402
@@ -404,7 +422,7 @@ class DataTable(ttk.Frame):
         for c in self._cols:
             self.tv.heading(c, text=str(c),
                             command=lambda col=c: self._sort_by(col))
-            min_w = max(len(str(c)) * 9 + 24, 60)
+            min_w = max(len(str(c)) * _px(9) + _px(24), _px(60))
             self.tv.column(c, minwidth=min_w, anchor=tk.W, stretch=False)
 
         self._render(self._all_rows)
@@ -429,14 +447,14 @@ class DataTable(ttk.Frame):
         if available < 50:
             self._fit_after_id = self.tv.after(200, self._fit_columns)
             return
-        weights = [max(max(self._content_width(c), len(str(c)) * 9) + 24, 70) for c in self._cols]
+        weights = [max(max(self._content_width(c), len(str(c)) * _px(9)) + _px(24), _px(70)) for c in self._cols]
         total_weight = sum(weights)
         if total_weight == 0:
             return
         # Leave room for scrollbar
-        usable = max(available - 20, 100)
+        usable = max(available - _px(20), _px(100))
         for c, w in zip(self._cols, weights, strict=False):
-            min_w = max(len(str(c)) * 9 + 24, 70)
+            min_w = max(len(str(c)) * _px(9) + _px(24), _px(70))
             self.tv.column(c, width=max(int(usable * w / total_weight), min_w))
         self._fitted = True
 
@@ -446,7 +464,7 @@ class DataTable(ttk.Frame):
         for r in self._all_rows[:200]:
             if idx < len(r):
                 longest = max(longest, len(str(r[idx])))
-        return longest * 8
+        return longest * _px(8)
 
     def _schedule_fit(self):
         if self._fitted:
@@ -1193,8 +1211,8 @@ class TachoExplorer(tk.Tk):
         super().__init__()
         self._initial_file = initial_file
         self.title(f"Tacho Explorer v{__version__}")
-        self.geometry("1280x760")
-        self.minsize(900, 560)
+        self.geometry(f"{_px(1280)}x{_px(760)}")
+        self.minsize(_px(900), _px(560))
 
         try:
             icon_png = _resource_path(os.path.join("AppIcons", "256.png"))
@@ -1208,10 +1226,11 @@ class TachoExplorer(tk.Tk):
 
         try:
             if sys.platform == "win32":
-                # Tk is not DPI-aware once we opt into per-monitor awareness,
-                # so compensate with the measured system scale. Never force a
-                # minimum >1.0, or 100%-DPI displays get an oversized UI.
-                self.call("tk", "scaling", max(_WIN_SCALE, 1.0))
+                # Tk sizes fonts in points; "tk scaling" is pixels-per-point.
+                # The correct value is DPI/72 (not DPI/96), otherwise every
+                # point-sized font renders ~25% too small at 100% and worse at
+                # higher DPI. This is what made the UI look tiny on Windows.
+                self.call("tk", "scaling", _WIN_DPI / 72.0)
             elif sys.platform == "darwin":
                 # macOS handles Retina scaling natively; forcing 1.0 avoids
                 # double-scaling of fonts and widgets.
@@ -1319,7 +1338,7 @@ class TachoExplorer(tk.Tk):
         style.configure("Sash", background=APP_BG, bordercolor=BORDER,
                         lightcolor=APP_BG, darkcolor=APP_BG)
         style.configure("TProgressbar", background="#1565c0", troughcolor="#dbe4f0")
-        style.configure("Treeview", rowheight=int(24 * max(_WIN_SCALE, 1.0)) if sys.platform == "win32" else 24)
+        style.configure("Treeview", rowheight=_px(24))
 
         self.current_data = None
         self.current_file = None
@@ -1375,7 +1394,7 @@ class TachoExplorer(tk.Tk):
         scroll.config(command=self.tree.yview)
         scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.tree.pack(fill=tk.BOTH, expand=True)
-        self.tree.column("#0", width=340, minwidth=200)
+        self.tree.column("#0", width=_px(340), minwidth=_px(200))
         self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
         # Right: table
         right = ttk.Frame(pw)
@@ -1398,7 +1417,7 @@ class TachoExplorer(tk.Tk):
         self.integrity_banner.bind(
             "<Button-1>", lambda _e: self._show_integrity_details())
         self._integrity_warnings = []
-        self.progress = ttk.Progressbar(status_bar, mode="indeterminate", length=160)
+        self.progress = ttk.Progressbar(status_bar, mode="indeterminate", length=_px(160))
         # packed only while a parse is running \u2014 see _start_parse/_finish_parse
 
         if self._initial_file and os.path.isfile(self._initial_file):
@@ -2367,7 +2386,7 @@ class TachoExplorer(tk.Tk):
         for c in self.table._cols:
             self.table.tv.heading(c, text=str(c),
                                   command=lambda col=c: self.table._sort_by(col))
-            min_w = max(len(str(c)) * 9 + 20, 60)
+            min_w = max(len(str(c)) * _px(9) + _px(20), _px(60))
             self.table.tv.column(c, minwidth=min_w, anchor=tk.W, stretch=True)
 
         self.table.tv.tag_configure("total",
@@ -2881,8 +2900,8 @@ class TachoExplorer(tk.Tk):
         self.table.tv["columns"] = ["Field", "Value"]
         self.table.tv.heading("Field", text="")
         self.table.tv.heading("Value", text="")
-        self.table.tv.column("Field", width=220, minwidth=140, anchor=tk.W, stretch=False)
-        self.table.tv.column("Value", width=100, minwidth=60, anchor=tk.W, stretch=True)
+        self.table.tv.column("Field", width=_px(220), minwidth=_px(140), anchor=tk.W, stretch=False)
+        self.table.tv.column("Value", width=_px(100), minwidth=_px(60), anchor=tk.W, stretch=True)
         self.table._fitted = True
         self.table._render(self.table._all_rows, summary=True)
         self.table.filt_bar.pack_forget()
