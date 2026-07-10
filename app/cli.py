@@ -255,6 +255,16 @@ def print_summary(data):
         print(f"   🟧 Available: {avail_min // 60}h {avail_min % 60}m")
         print(f"   🟩 Rest:      {rest_min // 60}h {rest_min % 60}m")
 
+    # TREP completeness (VU only)
+    trep_report = meta.get("trep_report")
+    if trep_report:
+        from core.parser.trep_inventory import format_trep_summary
+        summary = format_trep_summary(trep_report)
+        if trep_report.get("is_partial"):
+            print(f"\n\u26a0\ufe0f  {summary}")
+        else:
+            print(f"\n\u2705  {summary}")
+
     print("\n" + "=" * 60)
 
 

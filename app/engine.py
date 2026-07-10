@@ -146,6 +146,7 @@ class TachoParser:
             # runs in isolation and records a parse_warning on failure so the
             # UI can still render everything that was decoded.
             self._run_phase("vu_semantics", self._decode_vu_semantics)
+            self._run_phase("vu_salvage", self._salvage_partial_download)
             self.results["metadata"]["coverage_pct"] = \
                 self.results.get("coverage", {}).get("covered_pct", 100.0)
             self._run_phase("activity_dedup", self._dedup_and_sort_activities)
@@ -290,6 +291,7 @@ class TachoParser:
                 logger.debug("VU RecordArray dispatch failed: %s", exc, exc_info=False)
                 if not self.results.get("vu_record_arrays"):
                     decoders.parse_vu_download_messages(self.raw_data, self.results)
+            self._build_trep_report(generation, complete_walk=True)
             # Cryptographic integrity: verify the ECDSA download signatures
             # and the MSCA→VU certificate chain (Annex 1C Appendix 11).
             try:
@@ -312,8 +314,51 @@ class TachoParser:
             except Exception as exc:
                 logger.debug("G1 VU walk failed: %s", exc, exc_info=False)
                 complete = False
+                _messages = []
             if not complete:
                 decoders.parse_vu_download_messages(self.raw_data, self.results)
+            present = sorted({m["trep"] for m in (_messages or [])})
+            self._build_trep_report(generation, complete_walk=complete,
+                                    present_treps=present)
+
+    def _build_trep_report(self, generation, complete_walk=True, present_treps=None):
+        """Summarise TREP completeness (mandatory read / total) into metadata.
+
+        ``present_treps`` may be supplied by the G1 walk; for G2 it is derived
+        from the decoded RecordArray sections. TREPs flagged during decoding as
+        implausible (``_suspect_sections``) are reported as 'suspect'.
+        """
+        from core.parser.trep_inventory import build_trep_report, format_trep_summary
+        if present_treps is None:
+            present_treps = []
+            for sec in self.results.get("vu_record_arrays") or []:
+                try:
+                    present_treps.append(int(sec.get("trep", "0x0"), 16))
+                except (TypeError, ValueError):
+                    continue
+        suspect = self.results.pop("_suspect_sections", None) or set()
+        report = build_trep_report(
+            generation, present_treps, suspect_treps=suspect,
+            complete_walk=complete_walk)
+        self.results["metadata"]["trep_report"] = report
+        if report.get("is_partial"):
+            logger.info("Partial VU download: %s", format_trep_summary(report))
+
+    def _salvage_partial_download(self):
+        """Anchor-based recovery for partial/corrupt VU downloads.
+
+        Runs only when the TREP report flags the file as partial, scanning any
+        unrecovered byte regions for self-validating card images / event
+        records. Recovered data is flagged heuristic.
+        """
+        if not self.is_vu:
+            return
+        from core.parser.salvage import should_salvage, salvage_vu_download
+        if not should_salvage(self.results):
+            return
+        gained = salvage_vu_download(self.raw_data, self.results)
+        if gained:
+            self.results["metadata"]["salvage_recovered"] = gained
 
     def _dedup_and_sort_activities(self):
         """Drop duplicate daily activity blocks and sort newest-first.
