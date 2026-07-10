@@ -47,9 +47,6 @@
 
 <p align="center"><sub>Activity dashboard · daily activity timeline · speed dashboard · detailed speed graph</sub></p>
 
-The preview uses anonymized test data. GitHub READMEs do not permit the
-JavaScript needed for a manual left/right carousel, so this lightweight GIF
-cycles through the views automatically.
 
 <details>
 <summary>Open the full-resolution screenshots</summary>
