@@ -271,7 +271,6 @@ class ExportManager:
         def _is_month_boundary(rows, idx):
             if idx <= 1:
                 return False
-                return False
             prev = str(rows[idx - 1][0]) if rows[idx - 1] else ""
             curr = str(rows[idx][0]) if rows[idx] else ""
             # Detect month change: e.g. "31/01/2025" → "01/02/2025"

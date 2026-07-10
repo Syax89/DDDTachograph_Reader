@@ -259,22 +259,27 @@ def _activity_to_iso(date_str):
 
 def _compute_activity_totals(changes):
     """Return dict {ACTIVITY: total_minutes} from a list of activity changes.
-    Uses the same pairing logic as ActivityTimelineChart._build_blocks."""
+
+    Changes are grouped per card slot (driver) first, so crew days (two
+    drivers recording simultaneously in slots ``First``/``Second``) are
+    summed independently instead of being flattened into a single timeline.
+    Matches the pairing logic of ActivityTimelineChart._build_blocks.
+    """
     totals = {a: 0 for a in ACTIVITY_COLORS}
-    parsed = []
+    by_slot = {}
     for ch in changes:
         if not isinstance(ch, dict):
             continue
         t = ActivityTimelineChart._parse_time(ch.get("time", ""))
         act = str(ch.get("activity", "")).upper()
         if t is not None and act in ACTIVITY_COLORS:
-            parsed.append((t, act))
-    parsed.sort(key=lambda item: item[0])
-    if not parsed:
-        return totals
-    for i, (start, act) in enumerate(parsed):
-        end = parsed[i + 1][0] if i + 1 < len(parsed) else 86400
-        totals[act] += (end - start) // 60
+            slot = str(ch.get("slot") or "First")
+            by_slot.setdefault(slot, []).append((t, act))
+    for parsed in by_slot.values():
+        parsed.sort(key=lambda item: item[0])
+        for i, (start, act) in enumerate(parsed):
+            end = parsed[i + 1][0] if i + 1 < len(parsed) else 86400
+            totals[act] += (end - start) // 60
     return totals
 
 
@@ -450,14 +455,6 @@ class DataTable(ttk.Frame):
             self.tv.after_cancel(self._fit_after_id)
         self._fit_after_id = self.tv.after(300, self._fit_columns)
 
-    def _col_width(self, col, rows):
-        idx = self._cols.index(col)
-        longest = len(str(col))
-        for r in rows[:200]:
-            if idx < len(r):
-                longest = max(longest, len(str(r[idx])))
-        return min(max(longest * 8 + 24, 70), 460)
-
     def _render(self, rows, summary=False):
         self.tv.delete(*self.tv.get_children())
         for i, r in enumerate(rows):
@@ -547,9 +544,11 @@ class DetailedSpeedChart(ttk.Frame):
         self._draw_after_id = None
         self._overspeeding_events = []
         self._oes_dots = []
+        self._speed_limit = SPEED_LIMIT_KMH
 
-    def show(self, day, samples, overspeeding_events=None):
+    def show(self, day, samples, overspeeding_events=None, speed_limit=None):
         self._day = day
+        self._speed_limit = speed_limit or SPEED_LIMIT_KMH
         self._samples = samples
         self._sample_seconds = [second for second, _ in samples]
         self._view_start, self._view_end = 0, 86400
@@ -559,14 +558,14 @@ class DetailedSpeedChart(ttk.Frame):
         speeds = [speed for _, speed in samples]
         recorded = len(speeds)
         moving = sum(speed > 0 for speed in speeds)
-        above_limit = sum(speed > SPEED_LIMIT_KMH for speed in speeds)
+        above_limit = sum(speed > self._speed_limit for speed in speeds)
         internal_gaps = sum(max(0, second - previous - 1)
                             for (previous, _), (second, _) in zip(samples, samples[1:], strict=False))
         self.title_lbl.config(text=f"Detailed Speed - {day} (UTC)")
         self.summary_lbl.config(
             text=(f"{recorded:,} s recorded | max {max(speeds)} km/h | "
                   f"avg {sum(speeds) / recorded:.1f} km/h | "
-                  f"{above_limit // 60} min above {SPEED_LIMIT_KMH} km/h | "
+                  f"{above_limit // 60} min above {self._speed_limit} km/h | "
                   f"{moving // 60} min moving | {internal_gaps // 60} min internal gaps")
             if speeds else "No valid speed samples")
         self._schedule_draw()
@@ -603,7 +602,7 @@ class DetailedSpeedChart(ttk.Frame):
         last = bisect_left(self._sample_seconds, self._view_end)
         visible_samples = self._samples[first:last]
         speeds = [speed for _, speed in visible_samples]
-        max_speed = max(speeds, default=SPEED_LIMIT_KMH)
+        max_speed = max(speeds, default=self._speed_limit)
         ceiling = max(100, ((max_speed + 19) // 20) * 20)
 
         def y_for(speed):
@@ -612,12 +611,12 @@ class DetailedSpeedChart(ttk.Frame):
         self._plot = (left, right, top, bottom, plot_width, self._view_start, self._view_end)
         self._y_scale = (bottom, ceiling, plot_height)
 
-        for value in (0, SPEED_LIMIT_KMH, ceiling):
+        for value in (0, self._speed_limit, ceiling):
             y = y_for(value)
-            color = "#d32f2f" if value == SPEED_LIMIT_KMH else "#d9e1ea"
-            dash = (4, 3) if value == SPEED_LIMIT_KMH else None
+            color = "#d32f2f" if value == self._speed_limit else "#d9e1ea"
+            dash = (4, 3) if value == self._speed_limit else None
             canvas.create_line(left, y, width - right, y, fill=color, dash=dash)
-            label = f"{value} km/h" if value == SPEED_LIMIT_KMH else str(value)
+            label = f"{value} km/h" if value == self._speed_limit else str(value)
             canvas.create_text(left - 7, y, text=label, anchor=tk.E, fill=color)
 
         span = self._view_end - self._view_start
@@ -644,7 +643,7 @@ class DetailedSpeedChart(ttk.Frame):
         for x in sorted(bins):
             total, count, low, high = bins[x]
             average_y = y_for(total / count)
-            color = "#c62828" if high > SPEED_LIMIT_KMH else "#1565c0"
+            color = "#c62828" if high > self._speed_limit else "#1565c0"
             canvas.create_line(x, y_for(low), x, y_for(high), fill=color)
             if previous_x is not None and x == previous_x + 1:
                 canvas.create_line(previous_x, previous_y, x, average_y, fill="#1565c0")
@@ -654,7 +653,7 @@ class DetailedSpeedChart(ttk.Frame):
         overspeed_runs = []
         run_start = None
         for second, speed in visible_samples:
-            if speed > SPEED_LIMIT_KMH:
+            if speed > self._speed_limit:
                 if run_start is None:
                     run_start = second
             else:
@@ -772,7 +771,7 @@ class DetailedSpeedChart(ttk.Frame):
             dot_py = dot_y - speed * dot_h / dot_ceiling
             r = 4
             self.canvas.create_oval(dot_x - r, dot_py - r, dot_x + r, dot_py + r,
-                                    fill="#c62828" if speed > SPEED_LIMIT_KMH else "#1565c0",
+                                    fill="#c62828" if speed > self._speed_limit else "#1565c0",
                                     outline="#ffffff", width=1, tags="speed_hover")
         label_x = min(event.x + 12, self.canvas.winfo_width() - 190)
         label_y = max(event.y - 24, 4)
@@ -1209,26 +1208,118 @@ class TachoExplorer(tk.Tk):
 
         try:
             if sys.platform == "win32":
-                self.call("tk", "scaling", max(_WIN_SCALE, 1.25))
-            else:
+                # Tk is not DPI-aware once we opt into per-monitor awareness,
+                # so compensate with the measured system scale. Never force a
+                # minimum >1.0, or 100%-DPI displays get an oversized UI.
+                self.call("tk", "scaling", max(_WIN_SCALE, 1.0))
+            elif sys.platform == "darwin":
+                # macOS handles Retina scaling natively; forcing 1.0 avoids
+                # double-scaling of fonts and widgets.
                 self.call("tk", "scaling", 1.0)
+            else:
+                # Linux/other: derive a scaling factor from the actual screen
+                # DPI so HiDPI displays are not rendered tiny.
+                try:
+                    dpi = self.winfo_fpixels("1i")
+                    scale = max(1.0, min(dpi / 72.0, 3.0)) if dpi else 1.0
+                except Exception:
+                    scale = 1.0
+                self.call("tk", "scaling", scale)
         except Exception:
             _log.debug("tk scaling not available")
 
         style = ttk.Style(self)
         try:
             style.theme_use("clam")
-            # Force light appearance on macOS dark mode
-            if sys.platform == "darwin":
-                self.tk.call("::tk::unsupported::MacWindowStyle", "useDarkMode", "0")
         except Exception:
+            _log.debug("clam theme not available")
+        # Force light appearance on macOS dark mode. This call may raise on
+        # some Tk builds; it must NOT fall back to the native (aqua) theme,
+        # otherwise all clam styling below is silently ignored.
+        if sys.platform == "darwin":
+            for args in (("useDarkMode", "0"), ("appearance", "aqua")):
+                try:
+                    self.tk.call("::tk::unsupported::MacWindowStyle", "style",
+                                 self._w, *args)
+                except Exception:
+                    _log.debug("MacWindowStyle %s not available", args)
+
+        # Force a light title bar on Windows 10/11 dark mode so it matches the
+        # (light) client area. DWMWA_USE_IMMERSIVE_DARK_MODE = 20 (or 19 on
+        # older builds); setting it to 0 requests the light title bar.
+        if sys.platform == "win32":
             try:
-                style.theme_use("aqua")
+                from ctypes import windll, byref, c_int, sizeof
+                self.update_idletasks()
+                hwnd = windll.user32.GetParent(self.winfo_id())
+                value = c_int(0)
+                for attr in (20, 19):
+                    windll.dwmapi.DwmSetWindowAttribute(
+                        hwnd, attr, byref(value), sizeof(value))
             except Exception:
-                pass
+                _log.debug("light title bar not available")
+
+        # A coherent light palette so the whole window matches the (light)
+        # data tables even when the OS is in dark mode. Without this, macOS
+        # dark mode leaves ttk frames/labels dark while the explicitly-styled
+        # Treeview rows stay light, producing a jarring split appearance.
+        APP_BG = "#f4f6f9"
+        APP_FG = "#1c2733"
+        FIELD_BG = "#ffffff"
+        BORDER = "#c5cfdb"
+        self.configure(background=APP_BG)
+
+        # tk_setPalette recolours classic (non-ttk) widgets: menus, canvases,
+        # message boxes. Do this first, then override ttk styles below so the
+        # palette cannot clobber ttk-specific element colours (e.g. the tree
+        # expand/collapse indicator).
+        self.tk_setPalette(background=APP_BG, foreground=APP_FG,
+                           activeBackground="#dbe4f0", activeForeground=APP_FG,
+                           highlightBackground=APP_BG,
+                           highlightColor="#1565c0",
+                           selectBackground="#1565c0", selectForeground="#ffffff")
+
+        # Root style: kills clam's grey 3D borders/shading everywhere at once.
+        style.configure(".", background=APP_BG, foreground=APP_FG,
+                        fieldbackground=FIELD_BG, bordercolor=BORDER,
+                        darkcolor=APP_BG, lightcolor=APP_BG,
+                        troughcolor="#dbe4f0", arrowcolor=APP_FG,
+                        insertcolor=APP_FG, focuscolor="#1565c0",
+                        selectbackground="#1565c0", selectforeground="#ffffff")
+
+        for cls in ("TFrame", "TLabelframe", "TPanedWindow"):
+            style.configure(cls, background=APP_BG)
+        style.configure("TLabelframe.Label", background=APP_BG, foreground=APP_FG)
+        style.configure("TLabel", background=APP_BG, foreground=APP_FG)
+        style.configure("TButton", background="#e3e9f2", foreground=APP_FG,
+                        bordercolor=BORDER)
+        style.map("TButton",
+                  background=[("active", "#d2ddec"), ("pressed", "#c3d1e6")])
+        style.configure("TMenubutton", background="#e3e9f2", foreground=APP_FG,
+                        arrowcolor=APP_FG)
+        style.map("TMenubutton", background=[("active", "#d2ddec")])
+        style.configure("TEntry", fieldbackground=FIELD_BG, foreground=APP_FG,
+                        insertcolor=APP_FG, bordercolor=BORDER)
+        style.configure("TCombobox", fieldbackground=FIELD_BG, foreground=APP_FG)
+        style.configure("Treeview", background=FIELD_BG, fieldbackground=FIELD_BG,
+                        foreground=APP_FG, bordercolor=BORDER)
+        style.map("Treeview",
+                  background=[("selected", "#1565c0")],
+                  foreground=[("selected", "#ffffff")])
+        # Restore a dark, visible expand/collapse arrow on the light tree.
+        style.configure("Treeview.Item", indicatorforeground=APP_FG)
         style.configure("Treeview.Heading", background=HEADER_BG,
-                        font=("", 10, "bold"))
-        style.configure("Treeview", rowheight=int(24 * max(_WIN_SCALE, 1.25)) if sys.platform == "win32" else 24)
+                        foreground=APP_FG, font=("", 10, "bold"),
+                        bordercolor=BORDER, relief=tk.FLAT)
+        style.map("Treeview.Heading", background=[("active", "#d2ddec")])
+        style.configure("TScrollbar", background="#cdd7e4", troughcolor=APP_BG,
+                        bordercolor=BORDER, arrowcolor=APP_FG)
+        style.map("TScrollbar", background=[("active", "#b6c3d6")])
+        # PanedWindow divider (sash) between the tree and the table.
+        style.configure("Sash", background=APP_BG, bordercolor=BORDER,
+                        lightcolor=APP_BG, darkcolor=APP_BG)
+        style.configure("TProgressbar", background="#1565c0", troughcolor="#dbe4f0")
+        style.configure("Treeview", rowheight=int(24 * max(_WIN_SCALE, 1.0)) if sys.platform == "win32" else 24)
 
         self.current_data = None
         self.current_file = None
@@ -1254,7 +1345,10 @@ class TachoExplorer(tk.Tk):
         self.btn_open.pack(side=tk.LEFT, padx=(0, 8))
         self.btn_export = ttk.Menubutton(top, text="\U0001f4e4  Export",
                                          state=tk.DISABLED)
-        export_menu = tk.Menu(self.btn_export, tearoff=0)
+        export_menu = tk.Menu(self.btn_export, tearoff=0,
+                              background="#ffffff", foreground="#1c2733",
+                              activebackground="#1565c0", activeforeground="#ffffff",
+                              borderwidth=0)
         export_menu.add_command(label="PDF (.pdf)", command=self._export_pdf)
         export_menu.add_command(label="Excel (.xlsx)", command=self._export_excel)
         export_menu.add_command(label="CSV (.csv)", command=self._export_csv)
@@ -1291,18 +1385,30 @@ class TachoExplorer(tk.Tk):
         self.speed_chart = DetailedSpeedChart(right)
         self.activity_chart = ActivityTimelineChart(right)
 
-        self.bind("<Control-f>", lambda e: self.table.filter_entry.focus_set())
+        self.bind("<Control-f>", lambda e: self._focus_filter())
 
         status_bar = ttk.Frame(self, relief=tk.SUNKEN)
         status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         self.status = ttk.Label(status_bar, text="Ready \u2014 open a .ddd file",
                                 anchor=tk.W, padding=(6, 2))
         self.status.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.integrity_banner = ttk.Label(status_bar, text="", anchor=tk.E,
+                                           padding=(6, 2), cursor="hand2")
+        self.integrity_banner.pack(side=tk.RIGHT)
+        self.integrity_banner.bind(
+            "<Button-1>", lambda _e: self._show_integrity_details())
+        self._integrity_warnings = []
         self.progress = ttk.Progressbar(status_bar, mode="indeterminate", length=160)
         # packed only while a parse is running \u2014 see _start_parse/_finish_parse
 
         if self._initial_file and os.path.isfile(self._initial_file):
             self.after(100, lambda: self._start_parse(self._initial_file))
+
+    def _focus_filter(self):
+        """Focus the table filter box only when it is actually visible
+        (summary and dashboard views hide the filter bar)."""
+        if self.table.winfo_manager() and self.table.filt_bar.winfo_manager():
+            self.table.filter_entry.focus_set()
 
     # ── File open ──────────────────────────────────────────
 
@@ -1397,8 +1503,6 @@ class TachoExplorer(tk.Tk):
         self.progress.start(12)
         self.update_idletasks()
 
-        import threading
-
         def _worker():
             try:
                 export_fn(self.current_data, path)
@@ -1456,17 +1560,41 @@ class TachoExplorer(tk.Tk):
             initialfile=os.path.splitext(os.path.basename(self.current_file))[0] + "_export.json")
         if not path:
             return
-        try:
-            self.status.config(text="Exporting to JSON\u2026")
-            self.update_idletasks()
-            with open(path, 'w', encoding='utf-8') as f:
-                json.dump(self.current_data, f, indent=2, ensure_ascii=False,
-                          cls=BytesEncoder)
-            self.status.config(text=f"Exported: {os.path.basename(path)}")
-            messagebox.showinfo("Export Complete", f"JSON saved to:\n{path}")
-        except Exception as e:
-            self.status.config(text="Export failed")
-            messagebox.showerror("Export Error", str(e))
+        self.status.config(text="Exporting to JSON\u2026")
+        self.progress.pack(side=tk.RIGHT)
+        self.progress.start(12)
+        self.update_idletasks()
+
+        def _worker():
+            try:
+                with open(path, 'w', encoding='utf-8') as f:
+                    json.dump(self.current_data, f, indent=2, ensure_ascii=False,
+                              cls=BytesEncoder)
+                self._export_queue.put(("JSON", "", None, path))
+            except Exception as exc:
+                self._export_queue.put(("JSON", "", exc, path))
+
+        worker = threading.Thread(target=_worker, daemon=True)
+        worker.start()
+
+        def _poll():
+            if self._destroyed:
+                return
+            try:
+                kind_err, _req, exc, export_path = self._export_queue.get_nowait()
+            except queue.Empty:
+                self.after(50, _poll)
+                return
+            self.progress.stop()
+            self.progress.pack_forget()
+            if exc is not None:
+                self.status.config(text="Export failed")
+                messagebox.showerror("Export Error", str(exc))
+            else:
+                self.status.config(text=f"Exported: {os.path.basename(export_path)}")
+                messagebox.showinfo("Export Complete", f"{kind_err} saved to:\n{export_path}")
+
+        self.after(50, _poll)
 
     def _on_close(self):
         self._destroyed = True
@@ -1554,11 +1682,33 @@ class TachoExplorer(tk.Tk):
         if trep_failed:
             warnings.append(f"\u2022 VU signatures: {trep_failed} TREP section(s) failed")
 
+        self._integrity_warnings = warnings
+        self._integrity_file = os.path.basename(path)
         if warnings:
+            self.integrity_banner.config(
+                text=f"\u26a0\ufe0f  {len(warnings)} integrity warning(s) \u2014 click for details",
+                foreground="#e65100")
             header = (f"The file may be incomplete or corrupted.\n\n"
                       f"{os.path.basename(path)}\n\n")
             messagebox.showwarning("File Integrity Warning",
                                    header + "\n".join(warnings))
+        else:
+            # Valid file: no green tick, no banner — the absence of a warning
+            # is the "all good" signal.
+            self.integrity_banner.config(text="")
+
+    def _show_integrity_details(self):
+        """Show the collected integrity warnings on demand (banner click)."""
+        if not self._integrity_warnings:
+            messagebox.showinfo(
+                "File Integrity",
+                f"{getattr(self, '_integrity_file', '')}\n\n"
+                "No integrity issues detected.")
+            return
+        header = (f"The file may be incomplete or corrupted.\n\n"
+                  f"{getattr(self, '_integrity_file', '')}\n\n")
+        messagebox.showwarning("File Integrity Warning",
+                               header + "\n".join(self._integrity_warnings))
 
     def _update_top_bar(self, data):
         """Refresh filename, generation badge and status badge."""
@@ -1607,8 +1757,8 @@ class TachoExplorer(tk.Tk):
         return integrity or "N/A"
 
     def _update_status_badge(self, data):
-        """Compose the colour-coded integrity label from the certificate
-        chain outcome plus EF/TREP signature verification results."""
+        """Compose the colour-coded integrity label. Only problems are shown;
+        a fully valid file displays no badge (its absence is the OK signal)."""
         integrity = (data.get("metadata") or {}).get("integrity_check", "")
         efv = data.get("ef_signature_verification") or {}
         sv = data.get("signature_verification") or {}
@@ -1622,17 +1772,17 @@ class TachoExplorer(tk.Tk):
         label = self._integrity_label(data)
 
         if chain_ok and ef_ok and not is_vu:
-            text = "\u2705  " + label
-            color = "#2e7d32"
+            text = ""
+            color = "#757575"
         elif sv_ok and vu_chain_ok and sv.get("root_anchored"):
-            text = "\u2705  " + label
-            color = "#2e7d32"
+            text = ""
+            color = "#757575"
         elif sv_ok:
             text = "\u26a0\ufe0f  " + label
             color = "#e65100"
         elif chain_ok and not is_vu:
-            text = "\u2705  " + label
-            color = "#2e7d32"
+            text = ""
+            color = "#757575"
         elif ef_ok:
             text = "\u26a0\ufe0f  " + label
             color = "#e65100"
@@ -1656,8 +1806,8 @@ class TachoExplorer(tk.Tk):
             color = "#757575"
 
         self.lbl_status.config(text=text, foreground=color)
-        # Also update the window title with a compact status.
-        parts = [f"Tacho Explorer v{__version__}", text[:1],
+        # Also update the window title with a compact status (problems only).
+        parts = [f"Tacho Explorer v{__version__}", text[:1].strip(),
                  os.path.basename(self.current_file or "")]
         self.title("  ".join(p for p in parts if p))
 
@@ -2178,7 +2328,8 @@ class TachoExplorer(tk.Tk):
             if name in columns:
                 self._dashboard_drv_col = columns.index(name)
                 break
-        self.table.tv.bind("<Motion>", self._on_dashboard_motion, add="+")
+        self._dashboard_motion_bind = self.table.tv.bind(
+            "<Motion>", self._on_dashboard_motion, add="+")
         self._tooltip_lbl = tk.Label(self.table.tv, text="", bg="#ffffcc",
                                      relief=tk.SOLID, borderwidth=1, font=("", 9),
                                      fg="#37474f", padx=6, pady=2)
@@ -2217,12 +2368,19 @@ class TachoExplorer(tk.Tk):
             self._kpi_frame = None
         if getattr(self, "_tooltip_lbl", None) is not None:
             self._tooltip_lbl.place_forget()
-        self.table.tv.unbind("<Motion>")
+        bind_id = getattr(self, "_dashboard_motion_bind", None)
+        if bind_id is not None:
+            try:
+                self.table.tv.unbind("<Motion>", bind_id)
+            except Exception:
+                pass
+            self._dashboard_motion_bind = None
 
     def _show_daily_summary(self, activity_list, data):
         """Dashboard for the 'Daily Activities' parent node."""
         valid = [d for d in activity_list if isinstance(d, dict)]
         if not valid:
+            self._show_empty("Daily Activities", "No activity data available.")
             return
         is_vu = (data.get("metadata") or {}).get("is_vu", False)
 
@@ -2306,6 +2464,22 @@ class TachoExplorer(tk.Tk):
 
         sort_key = lambda d: _activity_to_iso(str(d.get("date", "")))
         sorted_asc = sorted(valid, key=sort_key)
+
+        # Daily km from odometer deltas (chronological). VU days already carry
+        # a precomputed "_day_km"; for card files derive the distance from the
+        # midnight/odometer reading delta between consecutive days rather than
+        # showing the absolute odometer as if it were a daily distance.
+        card_day_km = {}
+        if not is_vu:
+            prev_odo = None
+            for day_data in sorted_asc:
+                cur_odo = (day_data.get("odometer_midnight")
+                           or day_data.get("odometer_km") or 0) or 0
+                if prev_odo is not None and cur_odo and prev_odo and cur_odo >= prev_odo:
+                    card_day_km[id(day_data)] = cur_odo - prev_odo
+                if cur_odo:
+                    prev_odo = cur_odo
+
         months = {}
         for day_data in sorted_asc:
             date_str = str(day_data.get("date", ""))
@@ -2340,7 +2514,7 @@ class TachoExplorer(tk.Tk):
                     day_km = day_data.get("_day_km", 0) or 0
                     odo = day_data.get("odometer_km", 0) or 0
                 else:
-                    day_km = day_data.get("odometer_midnight", day_data.get("odometer_km", 0)) or 0
+                    day_km = card_day_km.get(id(day_data), 0)
                     odo = 0
                 day_tots = _compute_activity_totals(changes)
                 for act in totals_global:
@@ -2453,6 +2627,7 @@ class TachoExplorer(tk.Tk):
 
         by_day = detailed_speed_by_day(data)
         if not by_day:
+            self._show_empty("Detailed Speed", "No detailed speed samples available.")
             return
 
         total_samples = 0
@@ -2579,12 +2754,30 @@ class TachoExplorer(tk.Tk):
             self.table.pack(fill=tk.BOTH, expand=True)
         self.table.show(title, cols, rows, meta)
 
+    def _show_empty(self, title, message):
+        """Render an explicit empty-state so a data-less node does not leave
+        the previously selected table on screen."""
+        self._show_table(title, ["Info"], [[message]])
+
+    def _authorised_speed_limit(self):
+        """Return the vehicle's authorised speed (km/h) from the most recent
+        calibration, or None to fall back to the default SPEED_LIMIT_KMH."""
+        if not self.current_data:
+            return None
+        for cal in reversed(self.current_data.get("calibrations") or []):
+            if isinstance(cal, dict):
+                spd = cal.get("authorised_speed_kmh")
+                if isinstance(spd, (int, float)) and spd > 0:
+                    return int(spd)
+        return None
+
     def _show_speed_chart(self, day, samples, overspeeding_events=None):
         self._cleanup_dashboard()
         self.table.pack_forget()
         self.activity_chart.pack_forget()
         self.speed_chart.pack(fill=tk.BOTH, expand=True)
-        self.speed_chart.show(day, samples, overspeeding_events)
+        self.speed_chart.show(day, samples, overspeeding_events,
+                              speed_limit=self._authorised_speed_limit())
 
     def _show_activity_chart(self, day, is_vu, activities, day_km,
                              changes_count, driver_info, slot_schedule, markers,
@@ -2695,8 +2888,6 @@ class TachoExplorer(tk.Tk):
                     date_str += f"  \u274c EXPIRED ({abs(days_left)} days ago)"
                 elif cal_soon:
                     date_str += f"  \u26a0\ufe0f  Due in {days_left} days"
-                else:
-                    date_str += "  \u2705 Valid"
                 rows.append(("  Next calibration", date_str, False))
             tyre = cal.get("tyre_size", "")
             speed = cal.get("authorised_speed_kmh", "")
