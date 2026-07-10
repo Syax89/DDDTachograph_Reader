@@ -307,6 +307,7 @@ def walk_g1_vu(data, results):
         0x06: _parse_trep_06_card_download,
         0x11: _parse_sensor_download,
     }
+    dispatch_failed = False
     for msg in messages:
         body = data[msg["body_start"]:msg["body_end"]]
         handler = dispatch.get(msg["trep"])
@@ -315,8 +316,10 @@ def walk_g1_vu(data, results):
         try:
             handler(body, results)
         except Exception as exc:  # a decoder bug must not break the walk
+            dispatch_failed = True
             _log.debug("G1 VU TREP %02X dispatch failed at 0x%X: %s",
                        msg["trep"], msg["pos"], exc)
 
+    complete = complete and not dispatch_failed
     _log.debug("G1 VU walk: %d messages, complete=%s", len(messages), complete)
     return messages, complete

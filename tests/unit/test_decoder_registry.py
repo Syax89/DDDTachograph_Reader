@@ -44,6 +44,15 @@ def test_registry_prefers_dtype_and_parent_specific_decoder():
         tag, generation="G1", dtype=0x02, parent_tag=0x1234).name == "ParentDtypeSpecific"
 
 
+def test_registry_rejects_context_without_a_compatible_decoder():
+    registry = DecoderRegistry.instance()
+    registry.register_decoder(TagDecoder(0x6EF1, "DtypeOnly", dtypes=(0x02,)))
+    registry.register_decoder(TagDecoder(0x6EF2, "ParentOnly", parent_tags=(0x1234,)))
+
+    assert registry.get_decoder(0x6EF1, dtype=0x01) is None
+    assert registry.get_decoder(0x6EF2, parent_tag=0x9999) is None
+
+
 def test_registry_generation_match_beats_priority():
     tag = 0x6EF0
     registry = DecoderRegistry.instance()

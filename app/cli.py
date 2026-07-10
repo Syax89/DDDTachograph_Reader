@@ -93,13 +93,21 @@ Examples:
             args.csv = resolve_path("auto", "csv", out_dir)
 
     generated = []
+    export_failed = False
 
     # JSON output
     if args.json:
         json_path = resolve_path(args.json, "json")
-        with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(result, f, indent=2, ensure_ascii=False, cls=BytesEncoder)
-        generated.append(("JSON", json_path))
+        try:
+            with open(json_path, 'w', encoding='utf-8') as f:
+                json.dump(result, f, indent=2, ensure_ascii=False, cls=BytesEncoder)
+            generated.append(("JSON", json_path))
+        except Exception as e:
+            export_failed = True
+            print(f"⚠️ JSON generation error: {e}", file=sys.stderr)
+            if args.verbose:
+                import traceback
+                traceback.print_exc()
 
     # PDF output
     if args.pdf:
@@ -109,8 +117,10 @@ Examples:
             ExportManager.export_to_pdf(result, pdf_path)
             generated.append(("PDF", pdf_path))
         except ImportError as e:
+            export_failed = True
             print(f"⚠️ PDF export requires reportlab (pip install reportlab): {e}", file=sys.stderr)
         except Exception as e:
+            export_failed = True
             print(f"⚠️ PDF generation error: {e}", file=sys.stderr)
             if args.verbose:
                 import traceback
@@ -124,6 +134,7 @@ Examples:
             ExportManager.export_to_excel(result, excel_path)
             generated.append(("Excel", excel_path))
         except Exception as e:
+            export_failed = True
             print(f"⚠️ Excel generation error: {e}", file=sys.stderr)
             if args.verbose:
                 import traceback
@@ -137,6 +148,7 @@ Examples:
             ExportManager.export_to_csv(result, csv_path)
             generated.append(("CSV", csv_path))
         except Exception as e:
+            export_failed = True
             print(f"⚠️ CSV generation error: {e}", file=sys.stderr)
             if args.verbose:
                 import traceback
@@ -155,6 +167,9 @@ Examples:
         for fmt, path in generated:
             size = os.path.getsize(path)
             print(f"   {fmt}: {path} ({format_size(size)})")
+
+    if export_failed:
+        sys.exit(1)
 
 def print_summary(data):
     """Prints a compact summary to screen."""

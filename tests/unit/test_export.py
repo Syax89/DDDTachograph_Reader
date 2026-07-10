@@ -198,6 +198,21 @@ class TestExportManager(unittest.TestCase):
         self.assertNotIn("'-42", excel_values)
         self.assertIn("2026-06-01 10:30", excel_values)
 
+    def test_spreadsheet_formula_protection_handles_leading_whitespace(self):
+        from app.export import _spreadsheet_value
+
+        for formula in ("\t=SUM(1,1)", "\r+SUM(1,1)", "\n@SUM(1,1)", "  =SUM(1,1)"):
+            assert _spreadsheet_value(formula) == "'" + formula
+        assert _spreadsheet_value("  -42") == "  -42"
+
+    def test_excel_skips_sections_without_visible_columns(self):
+        data = deepcopy(self.mock_data)
+        data["events"] = [{"source": "internal", "confidence": "low"}]
+
+        ExportManager.export_to_excel(data, self.excel_path)
+
+        self.assertTrue(os.path.exists(self.excel_path))
+
     def test_pdf_escapes_dynamic_paragraph_text(self):
         data = deepcopy(self.mock_data)
         data["metadata"]["filename"] = "file & <alter> >.ddd"

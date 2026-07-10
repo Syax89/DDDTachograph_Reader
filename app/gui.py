@@ -19,6 +19,8 @@ import queue
 import threading
 import traceback
 import logging
+from bisect import bisect_left
+from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -81,6 +83,7 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence"}
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
 # Technical columns pushed to table end.
 TRAILING_KEYS = ["record_type"]
+SPEED_LIMIT_KMH = 90
 
 
 # ── Section definitions ──
@@ -227,6 +230,92 @@ def _kv_rows(d):
         else:
             rows.append([field, fmt_val(v, key=k)])
     return (["Field", "Value"], rows)
+
+
+def _utc_speed_block(block):
+    """Return a block's UTC start and raw samples, or ``None`` if invalid."""
+    if not isinstance(block, dict):
+        return None
+    timestamp = block.get("timestamp") or block.get("begin")
+    samples = block.get("_chart_speeds_kmh", block.get("speeds_kmh"))
+    if not isinstance(timestamp, str) or not isinstance(samples, list):
+        return None
+    try:
+        start = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return (start.replace(tzinfo=timezone.utc) if start.tzinfo is None
+            else start.astimezone(timezone.utc)), samples
+
+
+def _activity_to_iso(date_str):
+    """Convert dd/mm/yyyy to yyyy-mm-dd for matching card_iw records."""
+    try:
+        day, month, year = date_str.split("/")
+        return f"{int(year):04d}-{int(month):02d}-{int(day):02d}"
+    except (ValueError, AttributeError):
+        return date_str
+
+
+def _compute_activity_totals(changes):
+    """Return dict {ACTIVITY: total_minutes} from a list of activity changes.
+    Uses the same pairing logic as ActivityTimelineChart._build_blocks."""
+    totals = {a: 0 for a in ACTIVITY_COLORS}
+    parsed = []
+    for ch in changes:
+        if not isinstance(ch, dict):
+            continue
+        t = ActivityTimelineChart._parse_time(ch.get("time", ""))
+        act = str(ch.get("activity", "")).upper()
+        if t is not None and act in ACTIVITY_COLORS:
+            parsed.append((t, act))
+    parsed.sort(key=lambda item: item[0])
+    if not parsed:
+        return totals
+    for i, (start, act) in enumerate(parsed):
+        end = parsed[i + 1][0] if i + 1 < len(parsed) else 86400
+        totals[act] += (end - start) // 60
+    return totals
+
+
+def _fmt_duration_minutes(mins):
+    """Render a minute count as 'Xh Ym'."""
+    return f"{mins // 60}h {mins % 60:02d}m"
+
+
+def detailed_speed_by_day(data):
+    """Return UTC detailed-speed samples grouped by ISO date."""
+    grouped = {}
+    blocks = list(data.get("speed_blocks") or []) + list(data.get("detailed_speed") or [])
+    for block in blocks:
+        decoded = _utc_speed_block(block)
+        if decoded is None:
+            continue
+        start, samples = decoded
+        for offset, speed in enumerate(samples):
+            if not isinstance(speed, int) or speed == 0xFF:
+                continue
+            moment = start + timedelta(seconds=offset)
+            day = moment.date().isoformat()
+            grouped.setdefault(day, {})[moment.hour * 3600 + moment.minute * 60 + moment.second] = speed
+    return {day: sorted(samples.items()) for day, samples in grouped.items()}
+
+
+def detailed_speed_blocks_by_day(blocks):
+    """Group raw records by every UTC day for which they contain a sample."""
+    grouped = {}
+    for block in blocks if isinstance(blocks, list) else []:
+        decoded = _utc_speed_block(block)
+        if decoded is None:
+            continue
+        start, samples = decoded
+        days = set()
+        for offset, speed in enumerate(samples):
+            if isinstance(speed, int) and speed != 0xFF:
+                days.add((start + timedelta(seconds=offset)).date().isoformat())
+        for day in days:
+            grouped.setdefault(day, []).append(block)
+    return grouped
 
 
 
@@ -423,6 +512,675 @@ class DataTable(ttk.Frame):
         self._apply_filter()
 
 
+class DetailedSpeedChart(ttk.Frame):
+    """Canvas chart for one UTC day of per-second speed samples."""
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        header = ttk.Frame(self)
+        header.pack(fill=tk.X, padx=8, pady=(8, 2))
+        self.title_lbl = ttk.Label(header, font=("", 13, "bold"))
+        self.title_lbl.pack(side=tk.LEFT)
+        self.zoom_in_btn = ttk.Button(header, text="+", width=3, command=self._zoom_in)
+        self.zoom_in_btn.pack(side=tk.RIGHT)
+        self.zoom_out_btn = ttk.Button(header, text="-", width=3, command=self._zoom_out)
+        self.zoom_out_btn.pack(side=tk.RIGHT, padx=(0, 4))
+        self.canvas = tk.Canvas(self, background="#ffffff", highlightthickness=0)
+        self.canvas.pack(fill=tk.BOTH, expand=True, padx=8, pady=(2, 2))
+        self.canvas.bind("<Configure>", lambda _event: self._schedule_draw())
+        self.canvas.bind("<Motion>", self._show_hover)
+        self.canvas.bind("<Leave>", lambda _event: self.canvas.delete("speed_hover"))
+        self.canvas.bind("<ButtonPress-1>", self._start_selection)
+        self.canvas.bind("<B1-Motion>", self._extend_selection)
+        self.canvas.bind("<ButtonRelease-1>", self._finish_selection)
+        self.summary_lbl = ttk.Label(self, foreground="gray", anchor=tk.W)
+        self.summary_lbl.pack(fill=tk.X, padx=8, pady=(2, 8))
+        self._day = ""
+        self._samples = []
+        self._sample_seconds = []
+        self._plot = None
+        self._view_start = 0
+        self._view_end = 86400
+        self._selection_start = None
+        self._selection_moved = False
+        self._y_scale = None
+        self._draw_after_id = None
+        self._overspeeding_events = []
+        self._oes_dots = []
+
+    def show(self, day, samples, overspeeding_events=None):
+        self._day = day
+        self._samples = samples
+        self._sample_seconds = [second for second, _ in samples]
+        self._view_start, self._view_end = 0, 86400
+        self._selection_start = None
+        self._selection_moved = False
+        self._overspeeding_events = overspeeding_events or []
+        speeds = [speed for _, speed in samples]
+        recorded = len(speeds)
+        moving = sum(speed > 0 for speed in speeds)
+        above_limit = sum(speed > SPEED_LIMIT_KMH for speed in speeds)
+        internal_gaps = sum(max(0, second - previous - 1)
+                            for (previous, _), (second, _) in zip(samples, samples[1:], strict=False))
+        self.title_lbl.config(text=f"Detailed Speed - {day} (UTC)")
+        self.summary_lbl.config(
+            text=(f"{recorded:,} s recorded | max {max(speeds)} km/h | "
+                  f"avg {sum(speeds) / recorded:.1f} km/h | "
+                  f"{above_limit // 60} min above {SPEED_LIMIT_KMH} km/h | "
+                  f"{moving // 60} min moving | {internal_gaps // 60} min internal gaps")
+            if speeds else "No valid speed samples")
+        self._schedule_draw()
+
+    def _zoom_in(self):
+        self._set_zoom((self._view_start + self._view_end) / 2, (self._view_end - self._view_start) / 2)
+
+    def _zoom_out(self):
+        self._set_zoom((self._view_start + self._view_end) / 2, (self._view_end - self._view_start) * 2)
+
+    def _set_zoom(self, center, span):
+        """Set a bounded UTC view window; 60 seconds is the closest zoom."""
+        span = min(86400, max(60, span))
+        start = max(0, min(center - span / 2, 86400 - span))
+        self._view_start, self._view_end = start, start + span
+        self._schedule_draw()
+
+    def _schedule_draw(self):
+        if self._draw_after_id is not None:
+            self.after_cancel(self._draw_after_id)
+        self._draw_after_id = self.after_idle(self._draw)
+
+    def _draw(self):
+        self._draw_after_id = None
+        canvas = self.canvas
+        canvas.delete("all")
+        width, height = canvas.winfo_width(), canvas.winfo_height()
+        if width < 120 or height < 100:
+            return
+        # The 90 km/h label needs enough dedicated y-axis space on all scales.
+        left, right, top, bottom = 76, 18, 28, height - 34
+        plot_width, plot_height = width - left - right, bottom - top
+        first = bisect_left(self._sample_seconds, self._view_start)
+        last = bisect_left(self._sample_seconds, self._view_end)
+        visible_samples = self._samples[first:last]
+        speeds = [speed for _, speed in visible_samples]
+        max_speed = max(speeds, default=SPEED_LIMIT_KMH)
+        ceiling = max(100, ((max_speed + 19) // 20) * 20)
+
+        def y_for(speed):
+            return bottom - speed * plot_height / ceiling
+
+        self._plot = (left, right, top, bottom, plot_width, self._view_start, self._view_end)
+        self._y_scale = (bottom, ceiling, plot_height)
+
+        for value in (0, SPEED_LIMIT_KMH, ceiling):
+            y = y_for(value)
+            color = "#d32f2f" if value == SPEED_LIMIT_KMH else "#d9e1ea"
+            dash = (4, 3) if value == SPEED_LIMIT_KMH else None
+            canvas.create_line(left, y, width - right, y, fill=color, dash=dash)
+            label = f"{value} km/h" if value == SPEED_LIMIT_KMH else str(value)
+            canvas.create_text(left - 7, y, text=label, anchor=tk.E, fill=color)
+
+        span = self._view_end - self._view_start
+        tick_step = self._tick_step(span)
+        first_tick = int(self._view_start // tick_step) * tick_step
+        for second in range(first_tick, int(self._view_end) + tick_step, tick_step):
+            if second < self._view_start or second > self._view_end:
+                continue
+            x = left + plot_width * (second - self._view_start) / span
+            canvas.create_line(x, top, x, bottom, fill="#edf1f5")
+            canvas.create_text(x, bottom + 16, text=self._time_label(second, span), anchor=tk.N,
+                               fill="#536273")
+        canvas.create_text(left, 10, text="Speed (km/h)", anchor=tk.W, fill="#536273")
+
+        # Aggregate to screen pixels. Missing pixels remain blank, so chart
+        # resolution never invents a continuous speed trace across a gap.
+        bins = {}
+        for second, speed in visible_samples:
+            x = int(left + (second - self._view_start) * plot_width / span)
+            total, count, low, high = bins.get(x, (0, 0, speed, speed))
+            bins[x] = (total + speed, count + 1, min(low, speed), max(high, speed))
+        previous_x = None
+        previous_y = None
+        for x in sorted(bins):
+            total, count, low, high = bins[x]
+            average_y = y_for(total / count)
+            color = "#c62828" if high > SPEED_LIMIT_KMH else "#1565c0"
+            canvas.create_line(x, y_for(low), x, y_for(high), fill=color)
+            if previous_x is not None and x == previous_x + 1:
+                canvas.create_line(previous_x, previous_y, x, average_y, fill="#1565c0")
+            previous_x, previous_y = x, average_y
+
+        # Overspeed zone shading (stipple)
+        overspeed_runs = []
+        run_start = None
+        for second, speed in visible_samples:
+            if speed > SPEED_LIMIT_KMH:
+                if run_start is None:
+                    run_start = second
+            else:
+                if run_start is not None:
+                    overspeed_runs.append((run_start, second))
+                    run_start = None
+        if run_start is not None:
+            overspeed_runs.append((run_start, visible_samples[-1][0]))
+        for rs_start, rs_end in overspeed_runs:
+            x0 = left + (rs_start - self._view_start) * plot_width / span
+            x1 = left + (rs_end - self._view_start) * plot_width / span
+            if x1 - x0 < 1:
+                continue
+            canvas.create_rectangle(x0, top, x1, bottom,
+                                    fill="#ffcdd2", outline="", stipple="gray25",
+                                    tags="speed_overspeed")
+
+        # Overspeeding event markers (red dots from file data)
+        self._oes_dots = []
+        for evt in self._overspeeding_events:
+            ts = evt.get("begin", "")
+            try:
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                sec_of_day = dt.hour * 3600 + dt.minute * 60 + dt.second
+            except (ValueError, AttributeError):
+                continue
+            if sec_of_day < self._view_start or sec_of_day > self._view_end:
+                continue
+            x = left + (sec_of_day - self._view_start) * plot_width / span
+            y_center = y_for(evt.get("max_speed_kmh", 0))
+            r = 4
+            canvas.create_oval(x - r, y_center - r, x + r, y_center + r,
+                               fill="#d32f2f", outline="#ffffff", width=1,
+                               tags="speed_oes")
+            self._oes_dots.append((x, y_center, evt))
+
+    @staticmethod
+    def _tick_step(span):
+        if span >= 43200:
+            return 10800
+        if span >= 14400:
+            return 3600
+        if span >= 7200:
+            return 1800
+        if span >= 3600:
+            return 900
+        if span >= 1800:
+            return 300
+        if span >= 600:
+            return 60
+        return 30
+
+    @staticmethod
+    def _time_label(second, span):
+        hours, remainder = divmod(int(second), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return (f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+                if span < 600 else f"{hours:02d}:{minutes:02d}")
+
+    def _show_hover(self, event):
+        """Show the closest recorded sample under the cursor in UTC."""
+        if not self._plot or not self._samples:
+            return
+        left, _right, top, bottom, plot_width, view_start, view_end = self._plot
+        if not left <= event.x <= left + plot_width or not top <= event.y <= bottom:
+            self.canvas.delete("speed_hover")
+            return
+
+        # Check overspeeding event dots first
+        for ox, oy, evt in self._oes_dots:
+            if abs(event.x - ox) <= 8 and abs(event.y - oy) <= 8:
+                b = evt.get("begin", "")[:16]
+                e = evt.get("end", "")[:16]
+                mx = evt.get("max_speed_kmh", "?")
+                av = evt.get("average_speed_kmh", "?")
+                cd = evt.get("card_driver", {})
+                drv = ""
+                if isinstance(cd, dict):
+                    drv = (cd.get("card_number") or "").strip()
+                text = f"Overspeeding: {b} \u2192 {e} | max {mx} | avg {av}"
+                if drv:
+                    text += f" | {drv}"
+                self.canvas.delete("speed_hover")
+                label_x = min(event.x + 12, self.canvas.winfo_width() - 290)
+                label_y = max(event.y - 24, 4)
+                text_id = self.canvas.create_text(label_x, label_y, text=text,
+                                                  anchor=tk.NW, fill="#17212b",
+                                                  tags="speed_hover")
+                x1, yb1, x2, yb2 = self.canvas.bbox(text_id)
+                bg = self.canvas.create_rectangle(x1 - 5, yb1 - 3, x2 + 5, yb2 + 3,
+                                                  fill="#fffde7", outline="#9e9e9e",
+                                                  tags="speed_hover")
+                self.canvas.tag_lower(bg, text_id)
+                return
+
+        span = view_end - view_start
+        target_second = round(view_start + (event.x - left) * span / plot_width)
+        index = bisect_left(self._sample_seconds, target_second)
+        candidates = self._samples[max(0, index - 1):index + 1]
+        if not candidates:
+            return
+        second, speed = min(candidates, key=lambda sample: abs(sample[0] - target_second))
+        # At day scale, one screen pixel represents several seconds. Do not
+        # pretend a distant sample belongs to a long unrecorded gap.
+        if abs(second - target_second) > max(2, round(span / plot_width) * 2):
+            self.canvas.delete("speed_hover")
+            return
+        hours, remainder = divmod(second, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        text = f"{hours:02d}:{minutes:02d}:{seconds:02d} UTC  |  {speed} km/h"
+        self.canvas.delete("speed_hover")
+        if self._y_scale:
+            dot_y, dot_ceiling, dot_h = self._y_scale
+            dot_x = left + (second - view_start) * plot_width / (view_end - view_start)
+            dot_py = dot_y - speed * dot_h / dot_ceiling
+            r = 4
+            self.canvas.create_oval(dot_x - r, dot_py - r, dot_x + r, dot_py + r,
+                                    fill="#c62828" if speed > SPEED_LIMIT_KMH else "#1565c0",
+                                    outline="#ffffff", width=1, tags="speed_hover")
+        label_x = min(event.x + 12, self.canvas.winfo_width() - 190)
+        label_y = max(event.y - 24, 4)
+        text_id = self.canvas.create_text(label_x, label_y, text=text, anchor=tk.NW,
+                                          fill="#17212b", tags="speed_hover")
+        x1, y1, x2, y2 = self.canvas.bbox(text_id)
+        background = self.canvas.create_rectangle(x1 - 5, y1 - 3, x2 + 5, y2 + 3,
+                                                  fill="#fffde7", outline="#9e9e9e",
+                                                  tags="speed_hover")
+        self.canvas.tag_lower(background, text_id)
+
+    def _start_selection(self, event):
+        if not self._plot:
+            return
+        left, _right, top, bottom, _width, _start, _end = self._plot
+        if left <= event.x <= self.canvas.winfo_width() - 18 and top <= event.y <= bottom:
+            self._selection_start = event.x
+            self._selection_moved = False
+            self.canvas.delete("speed_hover")
+
+    def _extend_selection(self, event):
+        if self._selection_start is None or not self._plot:
+            return
+        left, _right, top, bottom, plot_width, _start, _end = self._plot
+        current = min(max(event.x, left), left + plot_width)
+        if abs(current - self._selection_start) > 3:
+            self._selection_moved = True
+        self.canvas.delete("speed_hover")
+        self.canvas.delete("speed_selection")
+        self.canvas.create_rectangle(self._selection_start, top, current, bottom,
+                                     outline="#1565c0", dash=(4, 3), width=2,
+                                     tags="speed_selection")
+
+    def _finish_selection(self, event):
+        if self._selection_start is None or not self._plot:
+            return
+        left, _right, _top, _bottom, plot_width, view_start, view_end = self._plot
+        current = min(max(event.x, left), left + plot_width)
+        start_x, self._selection_start = self._selection_start, None
+        moved = self._selection_moved
+        self._selection_moved = False
+        self.canvas.delete("speed_selection")
+        # Click without drag: re-center the view on the clicked time.
+        if not moved:
+            span = view_end - view_start
+            target = view_start + (start_x - left) * span / plot_width
+            self._set_zoom(target, span)
+            return
+        # Drag: zoom to the selected region.
+        if abs(current - start_x) < 5:
+            return
+        span = view_end - view_start
+        start = view_start + (min(start_x, current) - left) * span / plot_width
+        end = view_start + (max(start_x, current) - left) * span / plot_width
+        self._set_zoom((start + end) / 2, end - start)
+
+
+# ── Activity timeline chart ─────────────────────────────────────────────
+ACTIVITY_COLORS = {
+    "DRIVE": "#1565c0",
+    "WORK": "#ef6c00",
+    "REST": "#78909c",
+    "AVAILABLE": "#f9a825",
+}
+ACTIVITY_LABEL = {"DRIVE": "Drive", "WORK": "Work", "REST": "Rest",
+                  "AVAILABLE": "Available"}
+
+
+class ActivityTimelineChart(ttk.Frame):
+    """Gantt timeline for one UTC day of driver activity changes."""
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        header = ttk.Frame(self)
+        header.pack(fill=tk.X, padx=8, pady=(8, 2))
+        self.title_lbl = ttk.Label(header, font=("", 13, "bold"))
+        self.title_lbl.pack(side=tk.LEFT)
+        self.info_lbl = ttk.Label(self, foreground="#37474f", anchor=tk.W)
+        self.info_lbl.pack(fill=tk.X, padx=8, pady=(0, 4))
+        self.canvas = tk.Canvas(self, background="#ffffff", highlightthickness=0)
+        self.canvas.pack(fill=tk.BOTH, expand=True, padx=8, pady=(2, 2))
+        self.canvas.bind("<Configure>", lambda _event: self._schedule_draw())
+        self.canvas.bind("<Motion>", self._show_hover)
+        self.canvas.bind("<Leave>", lambda _event: self.canvas.delete("act_hover"))
+        self.summary_lbl = ttk.Label(self, foreground="gray", anchor=tk.W,
+                                     justify=tk.LEFT)
+        self.summary_lbl.pack(fill=tk.X, padx=8, pady=(2, 8))
+        self._day = ""
+        self._slots = {}      # slot_label -> [(start_s, end_s, activity), ...]
+        self._slot_schedule = {}
+        self._markers = []
+        self._oos_events = []
+        self._driver_name = ""
+        self._draw_after_id = None
+        self._layout = None
+        self._info_parts = []
+
+    def show(self, day, is_vu, activities, day_km=0, changes_count=0,
+             driver_info="", slot_schedule=None, markers=None,
+             vehicle_info=None, oos_events=None):
+        self._day = day
+        self._slots = self._build_blocks(activities, is_vu)
+        self._slot_schedule = slot_schedule or {}
+        self._markers = markers or []
+        self._oos_events = oos_events or []
+        self._driver_name = driver_info
+        self.title_lbl.config(text=f"Daily Activities - {day} (UTC)")
+        info_parts = [f"\U0001f4c5 {day}"]
+        if is_vu:
+            info_parts.append(f"\U0001f6e3 {day_km} km")
+        if changes_count:
+            info_parts.append(f"{changes_count} changes")
+        if driver_info:
+            info_parts.append(f"\U0001f464 {driver_info}")
+        self._info_parts = info_parts
+        self.info_lbl.config(text="  |  ".join(info_parts))
+        self._schedule_draw()
+
+    @staticmethod
+    def _parse_time(time_str):
+        parts = str(time_str).split(":")
+        if len(parts) != 2:
+            return None
+        try:
+            return int(parts[0]) * 3600 + int(parts[1]) * 60
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _build_blocks(changes, is_vu):
+        """Convert a list of activity changes to per-slot block lists."""
+        slots = {}
+        # Recognise slots by the card slot label stored in the change record.
+        for ch in changes:
+            if not isinstance(ch, dict):
+                continue
+            slot = str(ch.get("slot") or "First")
+            if is_vu:
+                slot = "Slot 1" if slot == "First" else "Slot 2"
+            else:
+                slot = "Cardholder"
+            slots.setdefault(slot, []).append(ch)
+
+        blocks = {}
+        for slot_label, entries in slots.items():
+            blocks[slot_label] = []
+            # Sort by time, then build continuous blocks.
+            parsed = []
+            for entry in entries:
+                t = ActivityTimelineChart._parse_time(entry.get("time", ""))
+                act = str(entry.get("activity", "")).upper()
+                if t is not None and act in ACTIVITY_COLORS:
+                    parsed.append((t, act))
+            parsed.sort(key=lambda item: item[0])
+            if not parsed:
+                continue
+            # First block starts at its time; the next block's time closes it.
+            for i, (start, act) in enumerate(parsed):
+                end = parsed[i + 1][0] if i + 1 < len(parsed) else 86400
+                blocks[slot_label].append((start, end, act))
+        return blocks
+
+    def _schedule_draw(self):
+        if self._draw_after_id is not None:
+            self.after_cancel(self._draw_after_id)
+        self._draw_after_id = self.after_idle(self._draw)
+
+    def _draw(self):
+        self._draw_after_id = None
+        canvas = self.canvas
+        canvas.delete("all")
+        width, height = canvas.winfo_width(), canvas.winfo_height()
+        if width < 120 or height < 100:
+            return
+
+        if not self._slots:
+            return
+
+        rows = ["DRIVE", "WORK", "REST", "AVAILABLE"]
+        left, right, top, bottom = 100, 14, 64, height - 32
+        plot_width = width - left - right
+        totals_bar = 80
+        usable_width = plot_width - totals_bar - 12
+        plot_height = bottom - top
+        gap = 4
+
+        slot_order = sorted(self._slots.keys())
+        has_multi = len(slot_order) > 1
+
+        if has_multi:
+            section_gap = 44
+            per_section_h = (plot_height - section_gap) // 2
+        else:
+            section_gap = 0
+            per_section_h = plot_height
+
+        self._layout = {"left": left, "plot_width": usable_width,
+                        "act_rows": [], "has_multi": has_multi,
+                        "markers_info": []}
+
+        # Time axis ticks — drawn across both sections
+        for hour in range(0, 25, 6):
+            x = left + usable_width * hour / 24
+            canvas.create_line(x, top, x, bottom, fill="#edf1f5")
+            canvas.create_text(x, top - 22, text=f"{hour:02d}:00",
+                               anchor=tk.S, fill="#536273")
+
+        # Out-of-scope / ferry-train markers (between card markers and activity rows)
+        OOS_COLORS = {
+            "OutOfScope Begin": "#ef6c00",
+            "OutOfScope End": "#ef6c00",
+            "Ferry/Train Begin": "#7b1fa2",
+            "Ferry/Train End": "#7b1fa2",
+        }
+        # Section header height (slot label + markers, above activity rows)
+        header_h = 56 if has_multi else 24
+        oos_info = []
+        for sec, cond, ts in self._oos_events:
+            x = left + sec * usable_width / 86400
+            color = OOS_COLORS.get(cond, "#bdbdbd")
+            size = 4
+            is_begin = "Begin" in cond
+            marker_y = top + header_h - 42 if has_multi else top + header_h - 17
+            if is_begin:
+                canvas.create_polygon(x, marker_y + 2, x - size, marker_y - 3,
+                                      x + size, marker_y - 3,
+                                      fill=color, outline=color, tags="oos_marker")
+            else:
+                canvas.create_polygon(x, marker_y - 2, x - size, marker_y + 3,
+                                      x + size, marker_y + 3,
+                                      fill=color, outline=color, tags="oos_marker")
+            oos_info.append((x, marker_y, cond, ts))
+        self._layout["oos_info"] = oos_info
+
+        usable_h = per_section_h - header_h
+        row_h = max(18, min(30, (usable_h - 3 * gap) // 4))
+
+        totals_lines = []
+
+        for sidx, slot_name in enumerate(slot_order):
+            section_top = top + sidx * (per_section_h + section_gap)
+
+            # Divider line between sections
+            if sidx > 0:
+                dy = section_top - section_gap // 2
+                canvas.create_line(left - 8, dy, left + usable_width + 8, dy,
+                                   fill="#90a4ae", width=1)
+
+            slot_blocks = self._slots.get(slot_name, [])
+
+            # Slot label
+            if slot_name == "Cardholder" and self._driver_name:
+                label_text = f"\U0001f464 {self._driver_name}"
+            else:
+                label_text = slot_name
+            canvas.create_text(left, section_top + header_h // 3,
+                               text=label_text, anchor=tk.W,
+                               fill="#263238", font=("TkDefaultFont", 11, "bold"))
+
+            # Per-slot totals
+            totals = {}
+            for start_s, end_s, act in slot_blocks:
+                totals[act] = totals.get(act, 0) + (end_s - start_s)
+            parts = []
+            for act in rows:
+                seconds = totals.get(act, 0)
+                if seconds:
+                    h, m = divmod(seconds // 60, 60)
+                    parts.append(f"{h}h {m:02d}m {ACTIVITY_LABEL[act]}")
+            totals_lines.append(f"  {slot_name}:  " + "  |  ".join(parts) if parts else f"  {slot_name}:  —")
+
+            # Activity rows start after the header
+            rows_top = section_top + header_h
+            for ridx, act in enumerate(rows):
+                y0 = rows_top + ridx * (row_h + gap)
+                y1 = y0 + row_h
+                color = ACTIVITY_COLORS.get(act, "#bdbdbd")
+
+                # Activity label on the left
+                canvas.create_text(left - 8, (y0 + y1) / 2,
+                                   text=ACTIVITY_LABEL.get(act, act),
+                                   anchor=tk.E, fill="#37474f",
+                                   font=("", 8, "bold"))
+
+                blocks = sorted(
+                    [(s, e) for s, e, a in slot_blocks if a == act],
+                    key=lambda b: b[0])
+
+                slot_tag = slot_name if has_multi else ""
+                self._layout["act_rows"].append((act, y0, y1, blocks, slot_tag))
+
+                for start_s, end_s in blocks:
+                    x0 = left + start_s * usable_width / 86400
+                    x1 = left + end_s * usable_width / 86400
+                    canvas.create_rectangle(x0, y0 + 4, x1, y1 - 4,
+                                            fill=color, outline=color)
+
+                # Per-row total on the right
+                act_total = sum(e - s for s, e in blocks)
+                th, tm = divmod(act_total // 60, 60)
+                total_text = f"{th}h {tm:02d}m"
+                total_x = left + usable_width + 16
+                canvas.create_text(total_x, (y0 + y1) / 2, text=total_text,
+                                   anchor=tk.W, fill="#536273", font=("", 8))
+
+            # Draw card-insertion / withdrawal markers in the header area
+            slot_index = {name: idx for idx, name in enumerate(slot_order)}
+            for sec, m_slot, m_name, is_ins in self._markers:
+                if not m_name:
+                    continue
+                sidx = slot_index.get(m_slot)
+                if sidx is None:
+                    continue
+                marker_section_top = top + sidx * (per_section_h + section_gap)
+                marker_x = left + sec * usable_width / 86400
+                marker_y = marker_section_top + header_h - 14
+                size = 6
+                color = "#2e7d32" if is_ins else "#c62828"
+                if is_ins:
+                    canvas.create_polygon(marker_x, marker_y + 4, marker_x - size, marker_y - 6,
+                                          marker_x + size, marker_y - 6,
+                                          fill=color, outline=color, tags="act_marker")
+                else:
+                    canvas.create_polygon(marker_x, marker_y - 4, marker_x - size, marker_y + 6,
+                                          marker_x + size, marker_y + 6,
+                                          fill=color, outline=color, tags="act_marker")
+                self._layout["markers_info"].append(
+                    (marker_x, marker_y, m_slot, m_name, is_ins, sec))
+
+        self.summary_lbl.config(text="\n".join(totals_lines))
+
+    def _show_hover(self, event):
+        if not self._layout or not self._slots:
+            return
+        self.canvas.delete("act_hover")
+        left = self._layout["left"]
+        plot_width = self._layout["plot_width"]
+
+        # Check markers first
+        for mx, my, m_slot, m_name, is_ins, _sec in self._layout.get("markers_info", []):
+            if abs(event.x - mx) <= 10 and abs(event.y - my) <= 10:
+                kind = "\u25bc Insertion" if is_ins else "\u25b2 Withdrawal"
+                text = f"{kind}: {m_name} ({m_slot})"
+                label_x = min(event.x + 12, self.canvas.winfo_width() - 260)
+                label_y = max(event.y - 24, 4)
+                text_id = self.canvas.create_text(
+                    label_x, label_y, text=text, anchor=tk.NW,
+                    fill="#17212b", tags="act_hover")
+                x1, yb1, x2, yb2 = self.canvas.bbox(text_id)
+                bg = self.canvas.create_rectangle(
+                    x1 - 5, yb1 - 3, x2 + 5, yb2 + 3,
+                    fill="#fffde7", outline="#9e9e9e", tags="act_hover")
+                self.canvas.tag_lower(bg, text_id)
+                return
+
+        # Check OOS markers
+        for ox, oy, cond, ts in self._layout.get("oos_info", []):
+            if abs(event.x - ox) <= 10 and abs(event.y - oy) <= 10:
+                ts_str = ts.strftime("%H:%M") if ts else "?"
+                text = f"{cond}: {ts_str}"
+                label_x = min(event.x + 12, self.canvas.winfo_width() - 260)
+                label_y = max(event.y - 24, 4)
+                text_id = self.canvas.create_text(
+                    label_x, label_y, text=text, anchor=tk.NW,
+                    fill="#17212b", tags="act_hover")
+                x1, yb1, x2, yb2 = self.canvas.bbox(text_id)
+                bg = self.canvas.create_rectangle(
+                    x1 - 5, yb1 - 3, x2 + 5, yb2 + 3,
+                    fill="#fffde7", outline="#9e9e9e", tags="act_hover")
+                self.canvas.tag_lower(bg, text_id)
+                return
+
+        has_multi = self._layout.get("has_multi", False)
+        for act, y0, y1, blocks, slot_tag in self._layout.get("act_rows", []):
+            if not y0 <= event.y <= y1:
+                continue
+            if not left <= event.x <= left + plot_width:
+                continue
+            target_sec = (event.x - left) * 86400 / plot_width
+            matches = [(s, e) for s, e in blocks if s <= target_sec <= e]
+            if not matches:
+                continue
+            start_s, end_s = matches[-1]
+            sh, sm = divmod(start_s // 60, 60)
+            eh, em = divmod(end_s // 60, 60)
+            dur = (end_s - start_s) // 60
+            dh, dm = divmod(dur, 60)
+            if has_multi:
+                text = (f"{slot_tag}  {ACTIVITY_LABEL.get(act, act)}  "
+                        f"[{sh:02d}:{sm:02d} \u2014 {eh:02d}:{em:02d}]  "
+                        f"\u00b7  {dh}h {dm:02d}m")
+            else:
+                text = (f"{ACTIVITY_LABEL.get(act, act)}  "
+                        f"[{sh:02d}:{sm:02d} \u2014 {eh:02d}:{em:02d}]  "
+                        f"\u00b7  {dh}h {dm:02d}m")
+            label_x = min(event.x + 12, self.canvas.winfo_width() - 300)
+            label_y = max(event.y - 24, 4)
+            text_id = self.canvas.create_text(
+                label_x, label_y, text=text, anchor=tk.NW,
+                fill="#17212b", tags="act_hover")
+            x1, yb1, x2, yb2 = self.canvas.bbox(text_id)
+            bg = self.canvas.create_rectangle(
+                x1 - 5, yb1 - 3, x2 + 5, yb2 + 3,
+                fill="#fffde7", outline="#9e9e9e", tags="act_hover")
+            self.canvas.tag_lower(bg, text_id)
+            return
+
+
 # ── Main application ─────────────────────────────────────────────────────
 
 def _resource_path(rel):
@@ -460,6 +1218,9 @@ class TachoExplorer(tk.Tk):
         style = ttk.Style(self)
         try:
             style.theme_use("clam")
+            # Force light appearance on macOS dark mode
+            if sys.platform == "darwin":
+                self.tk.call("::tk::unsupported::MacWindowStyle", "useDarkMode", "0")
         except Exception:
             try:
                 style.theme_use("aqua")
@@ -527,6 +1288,8 @@ class TachoExplorer(tk.Tk):
         pw.add(right, weight=3)
         self.table = DataTable(right)
         self.table.pack(fill=tk.BOTH, expand=True)
+        self.speed_chart = DetailedSpeedChart(right)
+        self.activity_chart = ActivityTimelineChart(right)
 
         self.bind("<Control-f>", lambda e: self.table.filter_entry.focus_set())
 
@@ -711,17 +1474,27 @@ class TachoExplorer(tk.Tk):
 
     def _parse_done(self, data, path):
         """Render a successful parse: rebuild the tree, top bar and status."""
+        parse_error = (data.get("metadata") or {}).get("parse_error")
+        if parse_error:
+            message = parse_error.get("message", "Unknown parsing error") \
+                if isinstance(parse_error, dict) else str(parse_error)
+            self._parse_error(message)
+            return
         self._finish_parse()
         try:
             self.current_data = data
             self.current_file = path
             self._populate_tree(data)
             self._update_top_bar(data)
-            # Clear right panel so stale data from previous file is not shown
-            self.table.tv.delete(*self.table.tv.get_children())
-            self.table.title_lbl.config(text="")
-            self.table.count_lbl.config(text="")
             self.btn_export.config(state=tk.NORMAL)
+            target = getattr(self, "_auto_select_iid", None)
+            if not target:
+                children = self.tree.get_children("")
+                target = children[0] if children else None
+            if target:
+                self.after_idle(
+                    lambda tid=target: self.tree.selection_set(tid)
+                    if self.tree.exists(tid) else None)
             meta = data.get("metadata", {})
             self.status.config(
                 text=f"Loaded: {os.path.basename(path)}  |  "
@@ -777,7 +1550,7 @@ class TachoExplorer(tk.Tk):
             warnings.append("\u2022 VU signature: MSCA\u2192VU chain NOT verified")
         if sv.get("available") and not sv.get("root_anchored"):
             warnings.append("\u2022 VU signature: root ERCA key absent (not anchored)")
-        trep_failed = sum(1 for t in (sv.get("treps") or []) if not t.get("signature_valid", True))
+        trep_failed = sum(1 for t in (sv.get("treps") or []) if t.get("signature_valid") is False)
         if trep_failed:
             warnings.append(f"\u2022 VU signatures: {trep_failed} TREP section(s) failed")
 
@@ -798,21 +1571,26 @@ class TachoExplorer(tk.Tk):
 
     def _integrity_label(self, data):
         """Return a human-readable integrity summary for File Info and status bar."""
-        integrity = (data.get("metadata") or {}).get("integrity_check", "")
+        meta = data.get("metadata") or {}
+        integrity = meta.get("integrity_check", "")
         efv = data.get("ef_signature_verification") or {}
         sv = data.get("signature_verification") or {}
 
         ef_ok = efv.get("failed", 1) == 0 and efv.get("verified", 0) > 0
         sv_ok = sv.get("all_treps_valid") is True
+        vu_chain_ok = sv.get("msca_to_vu") is True
+        is_vu = meta.get("is_vu") is True
         chain_ok = "Verified" in integrity
 
-        if chain_ok and ef_ok:
+        if chain_ok and ef_ok and not is_vu:
             return "All signatures verified"
-        if sv_ok and sv.get("root_anchored"):
+        if sv_ok and vu_chain_ok and sv.get("root_anchored"):
             return "VU signatures verified (root anchored)"
+        if sv_ok and vu_chain_ok:
+            return "VU TREP signatures verified (chain partial)"
         if sv_ok:
-            return "VU TREP signatures verified"
-        if chain_ok:
+            return "VU TREP signatures valid (chain unverified)"
+        if chain_ok and not is_vu:
             return "Certificate chain verified"
         if ef_ok:
             return "EF signatures verified"
@@ -837,20 +1615,22 @@ class TachoExplorer(tk.Tk):
 
         ef_ok = efv.get("failed", 1) == 0 and efv.get("verified", 0) > 0
         sv_ok = sv.get("all_treps_valid") is True
+        vu_chain_ok = sv.get("msca_to_vu") is True
+        is_vu = (data.get("metadata") or {}).get("is_vu") is True
         chain_ok = "Verified" in integrity
 
         label = self._integrity_label(data)
 
-        if chain_ok and ef_ok:
+        if chain_ok and ef_ok and not is_vu:
             text = "\u2705  " + label
             color = "#2e7d32"
-        elif sv_ok and sv.get("root_anchored"):
+        elif sv_ok and vu_chain_ok and sv.get("root_anchored"):
             text = "\u2705  " + label
             color = "#2e7d32"
         elif sv_ok:
-            text = "\u2705  " + label
-            color = "#2e7d32"
-        elif chain_ok:
+            text = "\u26a0\ufe0f  " + label
+            color = "#e65100"
+        elif chain_ok and not is_vu:
             text = "\u2705  " + label
             color = "#2e7d32"
         elif ef_ok:
@@ -889,6 +1669,266 @@ class TachoExplorer(tk.Tk):
         self._payloads[iid] = (label, columns, rows, meta, summary)
         return iid
 
+    def _add_speed_chart_day(self, parent, day, samples, oes=None):
+        iid = self.tree.insert(parent, tk.END, text=day)
+        self._payloads[iid] = ("__speed_chart__", day, samples, oes)
+        return iid
+
+    def _populate_detailed_speed(self, parent, data, raw_blocks):
+        """Add daily UTC graph and raw-record children under Detailed Speed."""
+        node = self.tree.insert(parent, tk.END, text="Detailed Speed")
+        self._payloads[node] = ("__speed_summary__", raw_blocks, data)
+        raw_by_day = detailed_speed_blocks_by_day(raw_blocks)
+
+        # Per-day overspeeding events from file data
+        oes_by_day = {}
+        for evt in data.get("overspeeding_events") or []:
+            if not isinstance(evt, dict):
+                continue
+            ts = evt.get("begin", "")
+            try:
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                day_iso = dt.astimezone(timezone.utc).date().isoformat()
+                oes_by_day.setdefault(day_iso, []).append(evt)
+            except (ValueError, AttributeError):
+                continue
+
+        for day, samples in sorted(detailed_speed_by_day(data).items(), reverse=True):
+            day_node = self._add_speed_chart_day(node, day, samples, oes_by_day.get(day))
+            blocks = raw_by_day.get(day, [])
+            cols, rows = _rows_for(blocks, None) if blocks else (["Value"], [])
+            self._add_section(day_node, f"Detailed Speed {day}", cols, rows)
+
+    def _add_activity_day(self, parent, day, is_vu, activities, day_km,
+                          changes_count, driver_info, slot_schedule, markers,
+                          oos_events=None):
+        iid = self.tree.insert(parent, tk.END, text=day)
+        self._payloads[iid] = ("__activity_chart__", day, is_vu, activities,
+                               day_km, changes_count, driver_info, slot_schedule,
+                               markers, oos_events)
+        return iid
+
+    def _populate_daily_activities(self, parent, data, activity_list):
+        """Add per-day activity timeline and raw-record children."""
+        is_vu = (data.get("metadata") or {}).get("is_vu", False)
+        drv = data.get("driver") or {}
+        driver_name = f"{drv.get('firstname','')} {drv.get('surname','')}".strip()
+        driver_info = driver_name if driver_name and driver_name != "N/A N/A" else ""
+        if not driver_info:
+            card = drv.get("card_number", "")
+            if card and card != "N/A":
+                driver_info = card
+        if not driver_info:
+            inserted = data.get("inserted_drivers") or []
+            if inserted:
+                d = inserted[0]
+                dn = f"{d.get('firstname','')} {d.get('surname','')}".strip()
+                driver_info = dn if dn and dn != "N/A N/A" else d.get("card_number", "")
+                if driver_info and len(driver_info) > 40:
+                    driver_info = driver_info[:40] + "\u2026"
+        if not driver_info:
+            card_recs = data.get("card_records") or []
+            if card_recs:
+                card_num = card_recs[0].get("card_number", "") if isinstance(card_recs[0], dict) else ""
+                if card_num:
+                    driver_info = card_num
+
+        # ── Global slot_labels (default, from inserted_drivers) ──
+        global_slots = {}
+        if is_vu:
+            inserted_all = data.get("inserted_drivers") or []
+            for idx, d in enumerate(inserted_all[:2]):
+                slot_name = f"Slot {idx + 1}"
+                name = f"{d.get('firstname','')} {d.get('surname','')}".strip()
+                if not name or name == "N/A N/A":
+                    name = d.get("card_number", "")
+                if name:
+                    global_slots[slot_name] = name
+            card_recs = data.get("card_records") or []
+            for idx, cr in enumerate(card_recs[:2]):
+                slot_name = f"Slot {idx + 1}"
+                if slot_name in global_slots:
+                    continue
+                card_num = cr.get("card_number", "") if isinstance(cr, dict) else ""
+                if card_num:
+                    global_slots[slot_name] = card_num
+
+        # ── Gather card_iw records per ISO date ──
+        iw_records = data.get("card_iw_records") or []
+        # (date_iso, second, name, is_insertion) for markers
+        iw_events_by_date = {}
+        # (date_iso, slot, start_hhmm, end_hhmm, name) for slot schedule
+        iw_schedule_by_date = {}
+        for iw in iw_records:
+            if not isinstance(iw, dict):
+                continue
+            ins_str = iw.get("insertion_time", "")
+            wit_str = iw.get("withdrawal_time", "")
+            if not isinstance(ins_str, str) or "T" not in ins_str:
+                continue
+            try:
+                ins_dt = datetime.fromisoformat(ins_str.replace("Z", "+00:00"))
+            except ValueError:
+                continue
+            wit_dt = None
+            if isinstance(wit_str, str) and "T" in wit_str:
+                try:
+                    wit_dt = datetime.fromisoformat(wit_str.replace("Z", "+00:00"))
+                except ValueError:
+                    pass
+            name = f"{iw.get('holder_first_names','')} {iw.get('holder_surname','')}".strip()
+            if not name or name == "N/A N/A":
+                name = ""
+            if not name:
+                continue
+            # Clamp to day boundaries
+            if wit_dt is None:
+                wit_dt = ins_dt.replace(hour=23, minute=59, second=59)
+            current = ins_dt
+            while current.date() <= wit_dt.date():
+                day_iso = current.date().isoformat()
+                start_sec = ins_dt.hour * 3600 + ins_dt.minute * 60 + ins_dt.second if current.date() == ins_dt.date() else 0
+                end_sec = wit_dt.hour * 3600 + wit_dt.minute * 60 + wit_dt.second if current.date() == wit_dt.date() else 86399
+                sh, sm = divmod(start_sec // 60, 60)
+                eh, em = divmod(end_sec // 60, 60)
+                start_hhmm = f"{sh:02d}:{sm:02d}"
+                end_hhmm = f"{eh:02d}:{em:02d}"
+                # Markers — only on the actual insertion/withdrawal day
+                if current.date() == ins_dt.date():
+                    iw_events_by_date.setdefault(day_iso, []).append((start_sec, name, True))
+                if current.date() == wit_dt.date():
+                    iw_events_by_date.setdefault(day_iso, []).append((end_sec, name, False))
+                # Schedule
+                iw_schedule_by_date.setdefault(day_iso, []).append((start_hhmm, end_hhmm, name,
+                                                                     ins_dt, wit_dt))
+                current = datetime(current.year, current.month, current.day,
+                                   tzinfo=timezone.utc) + timedelta(days=1)
+
+        # Compute daily km for VU (chronological order).
+        def _date_sort_key(day_data):
+            date_str = str(day_data.get("date", ""))
+            try:
+                day, month, year = date_str.split("/")
+                return (int(year), int(month), int(day))
+            except (ValueError, AttributeError):
+                return (0, 0, 0)
+        chronological = sorted(
+            [d for d in activity_list if isinstance(d, dict)], key=_date_sort_key)
+        for i, day_data in enumerate(chronological):
+            day_data["_day_km"] = 0
+            if i > 0 and is_vu:
+                prev_odo = chronological[i - 1].get("odometer_km", 0) or 0
+                cur_odo = day_data.get("odometer_km", 0) or 0
+                if prev_odo and cur_odo and cur_odo > prev_odo:
+                    day_data["_day_km"] = cur_odo - prev_odo
+
+        node = self.tree.insert(parent, tk.END, text="Daily Activities")
+        self._payloads[node] = ("__daily_summary__", activity_list, data)
+        for day_data in reversed(activity_list):
+            if not isinstance(day_data, dict):
+                continue
+            date_str = day_data.get("date", day_data.get("timestamp", "?"))
+            changes = day_data.get("changes", [])
+            day_km = day_data.get("_day_km", 0)
+            changes_count = (day_data.get("changes_count")
+                             or len(changes))
+            iso_date = _activity_to_iso(date_str)
+
+            # ── Per-day slot resolution with time ranges ──
+            day_slots = dict(global_slots) if is_vu else {}
+            day_schedule = {}
+            day_markers = []
+            if is_vu and iso_date in iw_schedule_by_date:
+                # Build activity card_inserted events: (minute, slot_label)
+                act_insertions = []
+                for ch in changes:
+                    if isinstance(ch, dict) and ch.get("card_inserted"):
+                        t = ch.get("time", "")
+                        slot = ch.get("slot", "")
+                        if isinstance(t, str) and ":" in t and slot:
+                            try:
+                                h, m = t.split(":")[:2]
+                                minute = int(h) * 60 + int(m)
+                                slot_label = "Slot 1" if slot == "First" else "Slot 2"
+                                act_insertions.append((minute, slot_label))
+                            except ValueError:
+                                pass
+
+                # For each schedule entry, match to a slot
+                for start_hhmm, end_hhmm, name, ins_dt, _wit_dt in iw_schedule_by_date[iso_date]:
+                    slot = ""
+                    if act_insertions:
+                        ins_min = ins_dt.hour * 60 + ins_dt.minute
+                        best = min(act_insertions,
+                                   key=lambda ai: abs(ai[0] - ins_min),
+                                   default=None)
+                        if best and abs(best[0] - ins_min) <= 2:
+                            slot = best[1]
+                            day_slots[best[1]] = name
+                    if not slot:
+                        # Fallback: use slot from global assignment if name matches
+                        for sk, sn in global_slots.items():
+                            if name.upper() == sn.upper():
+                                slot = sk
+                                break
+                    if not slot:
+                        slot = "Slot 1"
+                    day_schedule.setdefault(slot, []).append((start_hhmm, end_hhmm, name))
+
+                # Markers from split events
+                for sec, name, is_ins in iw_events_by_date.get(iso_date, []):
+                    # Resolve slot for marker
+                    m_slot = ""
+                    for sk, ranges in day_schedule.items():
+                        for _sh, _eh, rn in ranges:
+                            if rn.upper() == name.upper():
+                                m_slot = sk
+                                break
+                        if m_slot:
+                            break
+                    day_markers.append((sec, m_slot or "Slot 1", name, is_ins))
+
+            # ── Per-day driver_info ──
+            if is_vu and day_schedule:
+                all_names = sorted(set(n for ranges in day_schedule.values() for _s, _e, n in ranges))
+                day_di = f"{len(all_names)} drivers" if all_names else ""
+            else:
+                day_di = driver_info if not is_vu else ""
+
+            # Out-of-scope events for this day
+            oos_events = []
+            sc_conds = data.get("specific_conditions") or []
+            for sc in sc_conds:
+                if not isinstance(sc, dict):
+                    continue
+                ts = sc.get("timestamp", "")
+                try:
+                    sc_dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                    sc_day_iso = sc_dt.astimezone(timezone.utc).date().isoformat()
+                except (ValueError, AttributeError):
+                    continue
+                if sc_day_iso != iso_date:
+                    continue
+                sec_of_day = sc_dt.hour * 3600 + sc_dt.minute * 60 + sc_dt.second
+                cond = sc.get("condition", "")
+                oos_events.append((sec_of_day, cond, sc_dt.astimezone(timezone.utc)))
+
+            day_node = self._add_activity_day(node, date_str, is_vu, changes,
+                                              day_km, changes_count, day_di,
+                                              day_schedule, day_markers,
+                                              oos_events)
+            odometer = day_data.get("odometer_km", 0) or 0
+            if changes:
+                rows = [[fmt_val(ev.get("time", "?")),
+                         fmt_val(ev.get("activity", "?")),
+                         fmt_val(ev.get("slot", "")) if ev.get("slot") else "",
+                         fmt_val(ev.get("crew", "")),
+                         fmt_val(odometer)] for ev in changes if isinstance(ev, dict)]
+                cols = ["Time", "Activity", "Slot", "Crew", "Odometer km"]
+            else:
+                cols, rows = (["Time", "Activity"], [[fmt_val("\u2014"), "(no changes)"]])
+            self._add_section(day_node, f"Daily Activities {date_str}", cols, rows)
+
     def _populate_tree(self, data):
         """Rebuild the section tree from the generations dict produced by
         :func:`build_generations_tree`.  File info, driver/vehicle summary,
@@ -923,17 +1963,20 @@ class TachoExplorer(tk.Tk):
         # Driver card: show holder summary.
         if not is_vu and any(drv.values()):
             cols, rows = self._build_driver_summary(data)
-            self._add_section("", "\U0001f464  Driver / Cardholder", cols, rows, summary=True)
+            self._auto_select_iid = self._add_section(
+                "", "\U0001f464  Driver / Cardholder", cols, rows, summary=True)
 
         if is_vu:
             try:
                 sensor = data.get("sensor_info") or {}
                 if sensor:
                     cols, rows = self._build_sensor_summary(data)
-                    self._add_section("", "\U0001f4e1  Sensor", cols, rows, summary=True)
+                    self._auto_select_iid = self._add_section(
+                        "", "\U0001f4e1  Sensor", cols, rows, summary=True)
                 else:
                     cols, rows = self._build_vehicle_summary(data)
-                    self._add_section("", "\U0001f69a  Vehicle", cols, rows, summary=True)
+                    self._auto_select_iid = self._add_section(
+                        "", "\U0001f69a  Vehicle", cols, rows, summary=True)
             except Exception:
                 _log.debug("Vehicle section render failed: %s", traceback.format_exc())
 
@@ -953,13 +1996,15 @@ class TachoExplorer(tk.Tk):
             annex = annex_map.get(gen_name, "")
             annex_suffix = f"  [{annex}]" if annex else ""
             gnode = self.tree.insert("", tk.END, text=f"\U0001f4e6  {gen_name}{annex_suffix}")
-            activities = None
 
             for item_name, item_data in gen_items.items():
                 if item_name == "_RawTags":
                     continue
                 if item_name in ("DriverActivityData", "Daily Activities") and isinstance(item_data, list):
-                    activities = item_data
+                    self._populate_daily_activities(gnode, data, item_data)
+                    continue
+                if item_name in ("DetailedSpeed", "Detailed Speed (0x052C)"):
+                    self._populate_detailed_speed(gnode, data, item_data)
                     continue
 
                 # Convert item to (cols, rows)
@@ -979,9 +2024,6 @@ class TachoExplorer(tk.Tk):
 
                 self._add_section(gnode, item_name, cols, rows)
 
-            if activities and gen_name == "Generation 1":
-                self._populate_activities(gnode, activities)
-
         # ── Security ──
         self._populate_security(data)
 
@@ -992,48 +2034,6 @@ class TachoExplorer(tk.Tk):
                 if isinstance(item_data, dict) and item_data:
                     cols, rows = _kv_rows(item_data)
                     self._add_section("", f"\U0001f510  {item_name}", cols, rows)
-
-    def _populate_activities(self, parent, activities):
-        """Create an expandable 'Activities' node with days as children."""
-        act_node = self.tree.insert(parent, tk.END, text="Daily Activities")
-        for day in reversed(activities):
-            if not isinstance(day, dict):
-                continue
-            changes = day.get("changes", [])
-            date_str = day.get("date", day.get("timestamp", "?"))
-            km = day.get("odometer_km", 0)
-            driver = day.get("driver", "")
-            daily_counter = day.get("daily_counter", "")
-
-            if isinstance(changes, list) and changes:
-                rows = []
-                for ev in changes:
-                    if isinstance(ev, dict):
-                        slot = ev.get("slot", "")
-                        if isinstance(slot, int):
-                            slot = f"Slot {slot}"
-                        rows.append([
-                            fmt_val(ev.get("time", "?")),
-                            fmt_val(ev.get("activity", "?")),
-                            fmt_val(slot) if slot else "",
-                            fmt_val(ev.get("crew", "")),
-                            fmt_val(km),
-                        ])
-                cols = ["Time", "Activity", "Slot", "Crew", "Odometer km"]
-            else:
-                cols = ["Time", "Activity"]
-                rows = [[fmt_val("\u2014"), "(no event)"]]
-
-            label = date_str
-            extras = []
-            if driver:
-                extras.append(str(driver))
-            if daily_counter != "":
-                extras.append(f"#{daily_counter}")
-            if extras:
-                label = f"{date_str}  [{', '.join(extras)}]"
-
-            self._add_section(act_node, label, cols, rows)
 
     def _populate_security(self, data):
         """Security group: signature verification summaries (card EF + VU
@@ -1097,6 +2097,446 @@ class TachoExplorer(tk.Tk):
                 self._add_section(gnode, auth_label, cols, rows,
                                   meta="BER-TLV walk \u00b7 spec Appendix 11 not public")
 
+    # ── Dashboard views ──────────────────────────────────
+
+    def _show_dashboard(self, title, date_range, kpis, columns, rows,
+                        row_tags=None, tooltips=None):
+        """Render a summary dashboard with KPI cards and sortable table."""
+        self._cleanup_dashboard()
+        self.speed_chart.pack_forget()
+        self.activity_chart.pack_forget()
+        if not self.table.winfo_manager():
+            self.table.pack(fill=tk.BOTH, expand=True)
+
+        if self.table._fit_after_id is not None:
+            self.table.tv.after_cancel(self.table._fit_after_id)
+            self.table._fit_after_id = None
+        if self.table._filter_after_id is not None:
+            self.table.tv.after_cancel(self.table._filter_after_id)
+            self.table._filter_after_id = None
+
+        self.table.title_lbl.config(text=title)
+        self.table.count_lbl.config(text=date_range)
+        self.table.filter_var.set("")
+        self.table._cols = list(columns)
+        self.table._all_rows = [list(r) for r in rows]
+        self.table._sort_state = {}
+        self.table._fitted = False
+
+        self.table.filt_bar.pack_forget()
+
+        kpi_frame = tk.Frame(self.table, bg="#f0f0f0")
+        kpi_frame.pack(fill=tk.X, padx=8, pady=(4, 12), before=self.table.tv.master)
+        self._kpi_frame = kpi_frame
+
+        num_cols = min(len(kpis), 4)
+        for i, (label, value, accent) in enumerate(kpis):
+            row_idx = i // num_cols
+            col_idx = i % num_cols
+            card = tk.Frame(kpi_frame, bg="#f8f9fa",
+                            highlightbackground="#d0d0d0",
+                            highlightthickness=1, padx=14, pady=10)
+            card.grid(row=row_idx, column=col_idx, padx=5, pady=5,
+                      sticky="nsew")
+            tk.Label(card, text=label, font=("", 9), fg="#6b7280",
+                     bg="#f8f9fa", anchor=tk.W).pack(anchor=tk.W)
+            tk.Label(card, text=value, font=("", 14, "bold"), fg=accent,
+                     bg="#f8f9fa", anchor=tk.W).pack(anchor=tk.W)
+
+        for c in range(num_cols):
+            kpi_frame.columnconfigure(c, weight=1, uniform="kpi")
+
+        self.table.tv["columns"] = self.table._cols
+        for c in self.table._cols:
+            self.table.tv.heading(c, text=str(c),
+                                  command=lambda col=c: self.table._sort_by(col))
+            min_w = max(len(str(c)) * 9 + 20, 60)
+            self.table.tv.column(c, minwidth=min_w, anchor=tk.W, stretch=True)
+
+        self.table.tv.tag_configure("total",
+                                    font=("", 10, "bold"),
+                                    foreground="#1565c0",
+                                    background="#e3e9f2")
+        self.table.tv.tag_configure("separator", background="#f0f0f0")
+
+        # Render with row tags
+        row_tags = row_tags or [None] * len(rows)
+        self.table.tv.delete(*self.table.tv.get_children())
+        for i, r in enumerate(self.table._all_rows):
+            tag = "even" if i % 2 == 0 else "odd"
+            rt = row_tags[i] if i < len(row_tags) else None
+            if rt == "total":
+                tag = "total"
+            elif rt == "separator":
+                tag = "separator"
+            self.table.tv.insert("", tk.END, values=r, tags=(tag,))
+
+        # Tooltips for # Drivers column
+        self._dashboard_tooltips = tooltips or {}
+        self._dashboard_drv_col = -1
+        for name in ("# Drivers", "# Vehicles"):
+            if name in columns:
+                self._dashboard_drv_col = columns.index(name)
+                break
+        self.table.tv.bind("<Motion>", self._on_dashboard_motion, add="+")
+        self._tooltip_lbl = tk.Label(self.table.tv, text="", bg="#ffffcc",
+                                     relief=tk.SOLID, borderwidth=1, font=("", 9),
+                                     fg="#37474f", padx=6, pady=2)
+
+        self.table.tv.update_idletasks()
+        self.table._fit_columns()
+        self.table.tv.update()
+        if self.table._fit_after_id is not None:
+            self.table.tv.after_cancel(self.table._fit_after_id)
+            self.table._fit_after_id = None
+
+    def _on_dashboard_motion(self, event):
+        if self._dashboard_drv_col < 0:
+            return
+        row_id = self.table.tv.identify_row(event.y)
+        col_id = self.table.tv.identify_column(event.x)
+        col_idx = int(col_id.replace("#", "")) - 1 if col_id else -1
+        if not row_id or col_idx != self._dashboard_drv_col:
+            self._tooltip_lbl.place_forget()
+            return
+        for i, iid in enumerate(self.table.tv.get_children("")):
+            if iid == row_id:
+                tip = self._dashboard_tooltips.get(i, "")
+                if tip:
+                    self._tooltip_lbl.config(text=tip)
+                    self._tooltip_lbl.place(x=event.x + 16, y=event.y + 16)
+                else:
+                    self._tooltip_lbl.place_forget()
+                return
+        self._tooltip_lbl.place_forget()
+
+    def _cleanup_dashboard(self):
+        """Destroy any KPI card frame left over from a previous dashboard view."""
+        if getattr(self, "_kpi_frame", None) is not None:
+            self._kpi_frame.destroy()
+            self._kpi_frame = None
+        if getattr(self, "_tooltip_lbl", None) is not None:
+            self._tooltip_lbl.place_forget()
+        self.table.tv.unbind("<Motion>")
+
+    def _show_daily_summary(self, activity_list, data):
+        """Dashboard for the 'Daily Activities' parent node."""
+        valid = [d for d in activity_list if isinstance(d, dict)]
+        if not valid:
+            return
+        is_vu = (data.get("metadata") or {}).get("is_vu", False)
+
+        # Per-day driver names from card_iw or cardholder
+        iw_by_date = {}
+        if is_vu:
+            iw_records = data.get("card_iw_records") or []
+            for iw in iw_records:
+                if not isinstance(iw, dict):
+                    continue
+                name = f"{iw.get('holder_first_names','')} {iw.get('holder_surname','')}".strip()
+                if not name or name == "N/A N/A":
+                    continue
+                ins_str = iw.get("insertion_time", "")
+                ins_dt = None
+                for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+                    try:
+                        ins_dt = datetime.strptime(ins_str[:19], fmt)
+                    except (ValueError, IndexError):
+                        pass
+                if ins_dt is None:
+                    continue
+                wit_str = iw.get("withdrawal_time", "")
+                wit_dt = None
+                if isinstance(wit_str, str) and wit_str:
+                    for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+                        try:
+                            wit_dt = datetime.strptime(wit_str[:19], fmt)
+                        except (ValueError, IndexError):
+                            pass
+                if wit_dt is None:
+                    wit_dt = ins_dt.replace(hour=23, minute=59, second=59)
+                current = ins_dt
+                while current.date() <= wit_dt.date():
+                    day_iso = current.date().isoformat()
+                    iw_by_date.setdefault(day_iso, set()).add(name)
+                    current = datetime(current.year, current.month, current.day,
+                                        tzinfo=timezone.utc) + timedelta(days=1)
+
+        # Global driver names for KPI count
+        driver_names = set()
+        for names in iw_by_date.values():
+            driver_names.update(names)
+        if not driver_names:
+            inserted = data.get("inserted_drivers") or []
+            for d in inserted:
+                name = f"{d.get('firstname','')} {d.get('surname','')}".strip()
+                if name and name != "N/A N/A":
+                    driver_names.add(name)
+        if not driver_names:
+            drv = data.get("driver") or {}
+            name = f"{drv.get('firstname','')} {drv.get('surname','')}".strip()
+            if name and name != "N/A N/A":
+                driver_names.add(name)
+        if not driver_names:
+            card_recs = data.get("card_records") or []
+            for cr in card_recs[:2]:
+                cn = cr.get("card_number", "") if isinstance(cr, dict) else ""
+                if cn:
+                    driver_names.add(cn)
+
+        # Vehicle info for card files
+        card_vehicle_plate = ""
+        card_vehicle_tip = ""
+        if not is_vu:
+            veh = data.get("vehicle") or {}
+            plate = (veh.get("plate") or "").strip()
+            nation = (veh.get("registration_nation") or "").strip()
+            vin = (veh.get("vin") or "").strip()
+            if plate and plate != "N/A":
+                card_vehicle_plate = plate
+                parts = [f"{nation} {plate}" if nation else plate]
+                if vin and vin != "N/A":
+                    parts.append(f"VIN {vin}")
+                card_vehicle_tip = "  ·  ".join(parts)
+        n_veh = 1 if card_vehicle_plate else 0
+
+        # Monthly grouping
+        MONTH_NAMES = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun",
+                       7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec"}
+
+        sort_key = lambda d: _activity_to_iso(str(d.get("date", "")))
+        sorted_asc = sorted(valid, key=sort_key)
+        months = {}
+        for day_data in sorted_asc:
+            date_str = str(day_data.get("date", ""))
+            try:
+                day, month, year = date_str.split("/")
+                month_key = f"{year}-{int(month):02d}"
+            except ValueError:
+                month_key = "unknown"
+            months.setdefault(month_key, []).append(day_data)
+
+        totals_global = {"DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0}
+        max_drive = 0
+        table_rows = []
+        row_tags = []
+        tooltips = {}
+        row_idx = 0
+
+        for month_key in reversed(list(months.keys())):
+            m_days = months[month_key]
+            m_tot = {"DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0, "KM": 0,
+                     "drivers": set()}
+            try:
+                y, m = month_key.split("-")
+                m_label = f"\u25b8 {MONTH_NAMES.get(int(m), m)} {y}"
+            except ValueError:
+                m_label = month_key
+
+            for day_data in reversed(m_days):
+                date_str = str(day_data.get("date", day_data.get("timestamp", "?")))
+                changes = day_data.get("changes", [])
+                if is_vu:
+                    day_km = day_data.get("_day_km", 0) or 0
+                    odo = day_data.get("odometer_km", 0) or 0
+                else:
+                    day_km = day_data.get("odometer_midnight", day_data.get("odometer_km", 0)) or 0
+                    odo = 0
+                day_tots = _compute_activity_totals(changes)
+                for act in totals_global:
+                    totals_global[act] += day_tots[act]
+                for act in m_tot:
+                    if act in day_tots:
+                        m_tot[act] += day_tots[act]
+                m_tot["KM"] += day_km
+                if day_tots["DRIVE"] > max_drive:
+                    max_drive = day_tots["DRIVE"]
+                iso_date = _activity_to_iso(date_str)
+                drivers = iw_by_date.get(iso_date, set())
+                if not drivers and not is_vu:
+                    drivers = driver_names
+                m_tot["drivers"].update(drivers)
+                names = ", ".join(sorted(drivers))
+                n_drv = len(drivers) if drivers else 0
+
+                km_str = f"{day_km:,}".replace(",", " ") if day_km else ""
+                if is_vu:
+                    odo_str = f"{odo:,}".replace(",", " ") if odo else ""
+                    table_rows.append([
+                        date_str, f"{n_drv}\u2002\u25be", km_str, odo_str,
+                        _fmt_duration_minutes(day_tots["DRIVE"]),
+                        _fmt_duration_minutes(day_tots["WORK"]),
+                        _fmt_duration_minutes(day_tots["REST"]),
+                        _fmt_duration_minutes(day_tots["AVAILABLE"]),
+                    ])
+                else:
+                    table_rows.append([
+                        date_str, f"{n_veh}\u2002\u25be", km_str,
+                        _fmt_duration_minutes(day_tots["DRIVE"]),
+                        _fmt_duration_minutes(day_tots["WORK"]),
+                        _fmt_duration_minutes(day_tots["REST"]),
+                        _fmt_duration_minutes(day_tots["AVAILABLE"]),
+                    ])
+                row_tags.append(None)
+                if is_vu and names:
+                    tooltips[row_idx] = names
+                elif not is_vu and card_vehicle_tip:
+                    tooltips[row_idx] = card_vehicle_tip
+                row_idx += 1
+
+            # Monthly total row
+            km_month = f"{m_tot['KM']:,}".replace(",", " ") if m_tot["KM"] else ""
+            if is_vu:
+                table_rows.append([
+                    m_label, str(len(m_tot["drivers"])), km_month, "",
+                    _fmt_duration_minutes(m_tot["DRIVE"]),
+                    _fmt_duration_minutes(m_tot["WORK"]),
+                    _fmt_duration_minutes(m_tot["REST"]),
+                    _fmt_duration_minutes(m_tot["AVAILABLE"]),
+                ])
+            else:
+                table_rows.append([
+                    m_label, str(n_veh) if n_veh else "", km_month,
+                    _fmt_duration_minutes(m_tot["DRIVE"]),
+                    _fmt_duration_minutes(m_tot["WORK"]),
+                    _fmt_duration_minutes(m_tot["REST"]),
+                    _fmt_duration_minutes(m_tot["AVAILABLE"]),
+                ])
+            row_tags.append("total")
+            row_idx += 1
+
+            num_cols = 8 if is_vu else 7
+            table_rows.append([""] * num_cols)
+            row_tags.append("separator")
+            row_idx += 1
+
+        # Remove trailing separator
+        if table_rows and row_tags and row_tags[-1] == "separator":
+            table_rows.pop()
+            row_tags.pop()
+
+        day_count = len(sorted_asc)
+        avg_drive = totals_global["DRIVE"] // day_count if day_count else 0
+        driver_count = len(driver_names)
+
+        date_range = f"{sorted_asc[0].get('date', '?')}  \u2192  {sorted_asc[-1].get('date', '?')}  \u00b7  {day_count} days"
+
+        kpis = [
+            ("Drive", _fmt_duration_minutes(totals_global["DRIVE"]), "#1565c0"),
+            ("Work", _fmt_duration_minutes(totals_global["WORK"]), "#ef6c00"),
+            ("Rest", _fmt_duration_minutes(totals_global["REST"]), "#78909c"),
+            ("Available", _fmt_duration_minutes(totals_global["AVAILABLE"]), "#f9a825"),
+            ("Days", str(day_count), "#37474f"),
+            ("Avg Drive / day", _fmt_duration_minutes(avg_drive), "#1565c0"),
+            ("Max Drive / day", _fmt_duration_minutes(max_drive), "#1565c0"),
+        ]
+        if is_vu:
+            kpis.append(("Drivers", str(driver_count), "#37474f"))
+        else:
+            kpis.append(("Vehicles", str(n_veh), "#37474f"))
+
+        if is_vu:
+            columns = ["Date", "# Drivers", "Km", "Odometer",
+                       "Drive", "Work", "Rest", "Available"]
+        else:
+            columns = ["Date", "# Vehicles", "Km",
+                       "Drive", "Work", "Rest", "Available"]
+        self._show_dashboard("Daily Activities",
+                             date_range, kpis, columns, table_rows,
+                             row_tags=row_tags, tooltips=tooltips)
+
+    def _show_speed_summary(self, raw_blocks, data):
+        """Dashboard for the 'Detailed Speed' parent node."""
+        all_blocks = list(raw_blocks or [])
+        all_blocks += list(data.get("speed_blocks") or [])
+        all_blocks += list(data.get("detailed_speed") or [])
+
+        by_day = detailed_speed_by_day(data)
+        if not by_day:
+            return
+
+        total_samples = 0
+        global_max = 0
+        total_speed_sum = 0
+        overspeed_seconds = 0
+        overspeed_events = 0
+        max_daily_avg = 0.0
+        min_daily_avg = float("inf")
+        table_rows = []
+
+        for day_iso in sorted(by_day, reverse=True):
+            samples = by_day[day_iso]
+            if not samples:
+                continue
+            speeds = [s for _, s in samples if isinstance(s, (int, float))]
+            if not speeds:
+                continue
+            n = len(speeds)
+            total_samples += n
+            day_max = max(speeds)
+            if day_max > global_max:
+                global_max = day_max
+            day_avg = sum(speeds) / n
+            total_speed_sum += sum(speeds)
+            if day_avg > max_daily_avg:
+                max_daily_avg = day_avg
+            if day_avg < min_daily_avg:
+                min_daily_avg = day_avg
+
+            # Overspeed (>90 km/h)
+            over_secs = sum(1 for _, s in samples if isinstance(s, (int, float)) and s > 90)
+            overspeed_seconds += over_secs
+
+            # Overspeed events (contiguous runs > 90)
+            events = 0
+            in_over = False
+            for _, s in samples:
+                if isinstance(s, (int, float)) and s > 90:
+                    if not in_over:
+                        events += 1
+                        in_over = True
+                else:
+                    in_over = False
+            overspeed_events += events
+
+            # Format date: yyyy-mm-dd → dd/mm/yyyy
+            try:
+                parts = day_iso.split("-")
+                date_fmt = f"{parts[2]}/{parts[1]}/{parts[0]}"
+            except (IndexError, ValueError):
+                date_fmt = day_iso
+
+            table_rows.append([
+                date_fmt,
+                f"{day_max:.0f}",
+                f"{day_avg:.1f}",
+                str(n),
+                _fmt_duration_minutes(over_secs // 60),
+                str(events),
+            ])
+
+        global_avg = total_speed_sum / total_samples if total_samples else 0
+        if min_daily_avg == float("inf"):
+            min_daily_avg = 0
+        days = sorted(by_day, reverse=True)
+        day_count = len(days)
+        date_range = f"{days[-1]}  \u2192  {days[0]}  \u00b7  {day_count} days"
+
+        kpis = [
+            ("Days", str(day_count), "#37474f"),
+            ("Max speed", f"{global_max:.0f} km/h", "#1565c0"),
+            ("Avg speed", f"{global_avg:.1f} km/h", "#37474f"),
+            ("Samples", f"{total_samples:,}".replace(",", " "), "#37474f"),
+            ("Time >90 km/h", _fmt_duration_minutes(overspeed_seconds // 60), "#d32f2f"),
+            ("Overspeed events", str(overspeed_events), "#d32f2f"),
+            ("Max avg / day", f"{max_daily_avg:.1f} km/h", "#1565c0"),
+            ("Min avg / day", f"{min_daily_avg:.1f} km/h", "#78909c"),
+        ]
+
+        columns = ["Date", "Max km/h", "Avg km/h", "Samples", ">90 km/h", "Events"]
+        self._show_dashboard("Detailed Speed",
+                             date_range, kpis, columns, table_rows)
+
     # ── Selection → table ──────────────────────────────────
 
     def _on_tree_select(self, _event):
@@ -1106,20 +2546,65 @@ class TachoExplorer(tk.Tk):
             return
         payload = self._payloads.get(sel[0])
         if payload:
+            if payload[0] == "__speed_chart__":
+                self._show_speed_chart(payload[1], payload[2],
+                                       payload[3] if len(payload) > 3 else None)
+                return
+            if payload[0] == "__activity_chart__":
+                self._show_activity_chart(*payload[1:])
+                return
+            if payload[0] == "__daily_summary__":
+                self._show_daily_summary(payload[1], payload[2])
+                return
+            if payload[0] == "__speed_summary__":
+                self._show_speed_summary(payload[1], payload[2])
+                return
             if len(payload) >= 5 and payload[4]:
                 label, cols, rows, meta, _ = payload
                 self._show_summary(label, cols, rows, meta)
             else:
                 label, cols, rows, meta = payload[:4]
-                self.table.show(label, cols, rows, meta)
+                self._show_table(label, cols, rows, meta)
         else:
             children = self.tree.get_children(sel[0])
             rows = [[self.tree.item(c, "text")] for c in children]
-            self.table.show(self.tree.item(sel[0], "text").strip(),
-                            ["Sub-section"], rows)
+            self._show_table(self.tree.item(sel[0], "text").strip(),
+                             ["Sub-section"], rows)
+
+    def _show_table(self, title, cols, rows, meta=""):
+        self._cleanup_dashboard()
+        self.speed_chart.pack_forget()
+        self.activity_chart.pack_forget()
+        if not self.table.winfo_manager():
+            self.table.pack(fill=tk.BOTH, expand=True)
+        self.table.show(title, cols, rows, meta)
+
+    def _show_speed_chart(self, day, samples, overspeeding_events=None):
+        self._cleanup_dashboard()
+        self.table.pack_forget()
+        self.activity_chart.pack_forget()
+        self.speed_chart.pack(fill=tk.BOTH, expand=True)
+        self.speed_chart.show(day, samples, overspeeding_events)
+
+    def _show_activity_chart(self, day, is_vu, activities, day_km,
+                             changes_count, driver_info, slot_schedule, markers,
+                             oos_events=None):
+        self._cleanup_dashboard()
+        self.table.pack_forget()
+        self.speed_chart.pack_forget()
+        self.activity_chart.pack(fill=tk.BOTH, expand=True)
+        self.activity_chart.show(day, is_vu, activities, day_km,
+                                 changes_count, driver_info, slot_schedule, markers,
+                                 None, oos_events)
 
     def _show_summary(self, title, cols, rows, meta):
         """Render a rich info panel with section headers instead of a data table."""
+        self._cleanup_dashboard()
+        self.speed_chart.pack_forget()
+        self.activity_chart.pack_forget()
+        if not self.table.winfo_manager():
+
+            self.table.pack(fill=tk.BOTH, expand=True)
         if self.table._fit_after_id is not None:
             self.table.tv.after_cancel(self.table._fit_after_id)
             self.table._fit_after_id = None
@@ -1138,6 +2623,7 @@ class TachoExplorer(tk.Tk):
         self.table.tv.heading("Value", text="")
         self.table.tv.column("Field", width=220, minwidth=140, anchor=tk.W, stretch=False)
         self.table.tv.column("Value", width=100, minwidth=60, anchor=tk.W, stretch=True)
+        self.table._fitted = True
         self.table._render(self.table._all_rows, summary=True)
         self.table.filt_bar.pack_forget()
 

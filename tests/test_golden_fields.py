@@ -74,7 +74,8 @@ class TestG1DriverCards:
         assert _cert_formats(r) == ["G1_RSA", "G1_RSA"]
         assert len(_certs(r)) == 2
         sv = _efv(r)
-        assert "All 9 EF" in sv.get("summary", "")
+        assert sv["verified"] == 9
+        assert sv["failed"] == 0
         assert "verified" in sv.get("summary", "")
 
     def test_D600206451908241231I(self):
@@ -99,7 +100,8 @@ class TestG1DriverCards:
         assert _evt_count(r) == 25
         assert _cert_formats(r) == ["G1_RSA", "G1_RSA"]
         sv = _efv(r)
-        assert "All 12 EF" in sv.get("summary", "")
+        assert sv["verified"] == 12
+        assert sv["failed"] == 0
 
     def test_D600359121909021330(self):
         r = _parse("D600359121909021330 (5).ddd")
@@ -111,7 +113,8 @@ class TestG1DriverCards:
         assert _evt_count(r) == 12
         assert _cert_formats(r) == ["G1_RSA", "G1_RSA"]
         sv = _efv(r)
-        assert "All 12 EF" in sv.get("summary", "")
+        assert sv["verified"] == 12
+        assert sv["failed"] == 0
 
 
 # ── G1 VU TREP06 CardDownload files (D200xxx) ──────────────────────────────

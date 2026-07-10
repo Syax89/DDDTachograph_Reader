@@ -63,7 +63,30 @@ class TestVuSignatures(unittest.TestCase):
         buf[target] ^= 0xFF
         rep = verify_vu_download(bytes(buf))
         self.assertFalse(rep["all_treps_valid"],
-                         "a flipped data byte must invalidate at least one signature")
+                          "a flipped data byte must invalidate at least one signature")
+
+    def test_missing_trep_signature_is_detected(self):
+        from core.parser.vu_dispatcher import iter_vu_sections
+        _, data = _require_g2_vu_files()[0]
+
+        # Remove the whole SignatureRecordArray from a signed section and leave
+        # the remaining sections intact. The verifier must reject the download,
+        # rather than authenticating only the signed subset.
+        target = None
+        for sec in iter_vu_sections(data):
+            for pos, record_type, _record_size, _count, end in sec["records"]:
+                if record_type == 0x08:
+                    target = (pos, end)
+                    break
+            if target:
+                break
+        self.assertIsNotNone(target, "no TREP signature record found")
+
+        start, end = target
+        rep = verify_vu_download(data[:start] + data[end:])
+        self.assertFalse(rep["all_treps_valid"])
+        self.assertTrue(any(t.get("reason") == "signature record missing"
+                            for t in rep["treps"]))
 
     def test_parser_exposes_verification(self):
         name, _ = _require_g2_vu_files()[0]

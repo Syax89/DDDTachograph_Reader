@@ -55,7 +55,17 @@ class CoverageTracker:
         start, end = self._bounded_range(start, end)
         self.mark_classified(start, end, "Unknown")
         if start < end:
-            self.unknown_ranges.append((start, end, data[:end - start]))
+            # Keep only a bounded sample and merge adjacent bytes. A corrupt
+            # stream must not create one Python object per byte or repeatedly
+            # copy an unbounded raw range.
+            sample = data[:min(end - start, 128)]
+            if self.unknown_ranges and self.unknown_ranges[-1][1] == start:
+                previous_start, _previous_end, previous_sample = self.unknown_ranges[-1]
+                remaining = 128 - len(previous_sample)
+                self.unknown_ranges[-1] = (
+                    previous_start, end, previous_sample + sample[:remaining])
+            else:
+                self.unknown_ranges.append((start, end, sample))
 
     def _bounded_range(self, start: int, end: int) -> Tuple[int, int]:
         """Clamp an external byte interval to this tracker's file bounds."""
@@ -174,8 +184,8 @@ class DeterministicParser:
         self.results: Dict[str, Any] = {}
         self.is_vu: bool = False
         self.generation: str = "Unknown"
-        self._ef_data: Dict[Tuple[int, int], bytes] = {}
-        self._ef_signatures: Dict[Tuple[int, int], bytes] = {}
+        self._ef_data: List[Tuple[int, int, bytes]] = []
+        self._ef_signatures: List[Tuple[int, int, bytes]] = []
 
     def parse(self, raw_data: bytes, is_vu: bool) -> Dict[str, Any]:
         """Structural pass: walk the whole file and account for every byte.
@@ -185,6 +195,8 @@ class DeterministicParser:
         attaches the coverage report and per-section breakdown.
         """
         self.coverage = CoverageTracker(len(raw_data))
+        self._ef_data = []
+        self._ef_signatures = []
 
         from core.registry.models import TachoResult
         self.results = TachoResult().to_dict()
@@ -248,10 +260,8 @@ class DeterministicParser:
 
         # Store EF data/signature payloads for card signature verification.
         if not is_vu and (self._ef_data or self._ef_signatures):
-            self.results["_ef_data"] = [(tag, dtype, payload)
-                                        for (tag, dtype), payload in self._ef_data.items()]
-            self.results["_ef_signatures"] = [(tag, dtype, payload)
-                                              for (tag, dtype), payload in self._ef_signatures.items()]
+            self.results["_ef_data"] = self._ef_data
+            self.results["_ef_signatures"] = self._ef_signatures
 
         # Collect unknown ranges and add to raw_tags
         for s, e, data in self.coverage.unknown_ranges:
@@ -269,6 +279,7 @@ class DeterministicParser:
             "uncovered_ranges": [(f"0x{s:06X}", f"0x{e:06X}", e - s)
                                  for s, e in self.coverage.get_uncovered_ranges()],
         }
+        self.results["metadata"]["coverage_pct"] = self.results["coverage"]["covered_pct"]
         self.results["sections"] = self.coverage.get_section_report(file_size)
 
         return self.results
@@ -586,9 +597,9 @@ class DeterministicParser:
         # Collect EF data/signature pairs for later verification.
         if self.parser and not self.is_vu and dtype is not None and dtype <= 0x03:
             if dtype in (0x00, 0x02):
-                self._ef_data[(tag, dtype)] = payload
+                self._ef_data.append((tag, dtype, payload))
             elif dtype in (0x01, 0x03):
-                self._ef_signatures[(tag, dtype)] = payload
+                self._ef_signatures.append((tag, dtype, payload))
 
         if dtype in (1, 3, 11, 15):
             return

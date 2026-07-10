@@ -5,7 +5,7 @@ BER-TLV encoding (ISO 7816-4, Annex 1C):
   Length: 1–4 bytes (short form: 0x00–0x7F; long form: 0x81–0x83 + N bytes)
 """
 import struct
-from core.utils.constants import MAX_TLV_LENGTH
+from core.utils.constants import MAX_BER_TAG_OCTETS, MAX_TLV_LENGTH
 
 
 def read_ber_tlv_header(data, pos=0):
@@ -31,9 +31,13 @@ def read_ber_tlv_header(data, pos=0):
 
         tag = b0
         if (b0 & 0x1F) == 0x1F:   # multi-byte tag
+            tag_octets = 1
             while pos < n:
+                if tag_octets >= MAX_BER_TAG_OCTETS:
+                    return None, None, 0
                 b = data[pos]
                 pos += 1
+                tag_octets += 1
                 tag = (tag << 8) | b
                 if not (b & 0x80):
                     break
