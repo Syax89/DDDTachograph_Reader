@@ -394,6 +394,10 @@ class DataTable(ttk.Frame):
         self._fit_after_id = None
         self._filter_after_id = None
         self._fitted = False
+        # When True the table shows a fixed-width summary (Field/Value) and the
+        # content-proportional auto-fit must never run, or a late <Configure>
+        # timer would resize its columns inconsistently between visits.
+        self._summary_mode = False
 
         self.tv.bind("<Configure>", lambda e: self._schedule_fit())
 
@@ -417,6 +421,7 @@ class DataTable(ttk.Frame):
         self._all_rows = [list(r) for r in rows]
         self._sort_state = {}
         self._fitted = False
+        self._summary_mode = False
 
         self.tv["columns"] = self._cols
         for c in self._cols:
@@ -441,7 +446,7 @@ class DataTable(ttk.Frame):
         set — auto-fit no longer overrides them. Loading a new table resets
         this via :meth:`show`.
         """
-        if not self._cols or self._fitted:
+        if not self._cols or self._fitted or self._summary_mode:
             return
         available = self.tv.winfo_width()
         if available < 50:
@@ -467,7 +472,7 @@ class DataTable(ttk.Frame):
         return longest * _px(8)
 
     def _schedule_fit(self):
-        if self._fitted:
+        if self._fitted or self._summary_mode:
             return
         if self._fit_after_id is not None:
             self.tv.after_cancel(self._fit_after_id)
@@ -2358,6 +2363,7 @@ class TachoExplorer(tk.Tk):
         self.table._all_rows = [list(r) for r in rows]
         self.table._sort_state = {}
         self.table._fitted = False
+        self.table._summary_mode = False
 
         self.table.filt_bar.pack_forget()
 
@@ -2903,6 +2909,7 @@ class TachoExplorer(tk.Tk):
         self.table.tv.column("Field", width=_px(220), minwidth=_px(140), anchor=tk.W, stretch=False)
         self.table.tv.column("Value", width=_px(100), minwidth=_px(60), anchor=tk.W, stretch=True)
         self.table._fitted = True
+        self.table._summary_mode = True
         self.table._render(self.table._all_rows, summary=True)
         self.table.filt_bar.pack_forget()
 
