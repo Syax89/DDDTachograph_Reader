@@ -3,18 +3,17 @@ import pytest
 pytest.importorskip("tkinter")
 
 import tkinter as tk
-_has_display = True
-try:
-    root = tk.Tk()
-    root.withdraw()
-    root.update_idletasks()
-    root.destroy()
-except tk.TclError:
-    _has_display = False
-if not _has_display:
-    pytest.skip("no display available", allow_module_level=True)
 
 from app.gui import ActivityTimelineChart
+
+
+@pytest.fixture(autouse=True)
+def _skip_if_no_display():
+    try:
+        root = tk.Tk()
+        root.destroy()
+    except tk.TclError:
+        pytest.skip("no display available")
 
 
 class TestActivityTimelineChart:
