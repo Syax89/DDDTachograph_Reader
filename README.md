@@ -39,6 +39,29 @@
 
 ---
 
+## Product Tour
+
+<p align="center">
+  <img src="docs/screenshots/product-tour.gif" alt="Animated product tour showing the activity dashboard, activity timeline, speed dashboard, and detailed speed graph" width="960">
+</p>
+
+<p align="center"><sub>Activity dashboard · daily activity timeline · speed dashboard · detailed speed graph</sub></p>
+
+The preview uses anonymized test data. GitHub READMEs do not permit the
+JavaScript needed for a manual left/right carousel, so this lightweight GIF
+cycles through the views automatically.
+
+<details>
+<summary>Open the full-resolution screenshots</summary>
+
+1. [Activity dashboard](docs/screenshots/01_activity_dashboard.png)
+2. [Daily activity timeline](docs/screenshots/02_activity_timeline.png)
+3. [Speed dashboard](docs/screenshots/03_speed_dashboard.png)
+4. [Detailed speed graph](docs/screenshots/04_speed_graph.png)
+</details>
+
+---
+
 ## Download & Usage
 
 ### Pre-built Executable (recommended)
