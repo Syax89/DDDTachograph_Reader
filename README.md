@@ -22,11 +22,15 @@
 - **Vehicle data**: VIN, plate, registration nation, odometer
 - **GNSS positions**: Coordinates, border crossings, places
 - **VU records**: Card insertions/withdrawals, calibrations, sensors, events/faults
+- **Per-day vehicles**: Vehicle(s) driven each day shown in the driver activity chart
+- **Full nation names**: Registration/issuing/sensor nation codes expanded to English names
 
 ### Integrity
 - Cryptographic signature verification (ERCA → MSCA → Card/VU chain)
 - Recursive BER-TLV and STAP parsing (nested containers)
 - 100% byte coverage on all tested files
+- TREP completeness inventory and origin detection (driver card vs VU download)
+- Plausibility gating and best-effort salvage of partial/corrupted downloads
 - Tree structure for data exploration
 
 ### Export
@@ -125,3 +129,20 @@ pyinstaller build.spec
 ## License
 
 MIT © [Syax89](https://github.com/Syax89)
+
+---
+
+## Acknowledgments & Support
+
+Thank you to everyone who has used, tested, and contributed to this project.
+Your feedback and support keep it moving forward.
+
+This project **is and will remain open source** and free to use. If it has been
+useful to you and you'd like to say thanks, you can buy me a coffee — completely
+optional, but always appreciated.
+
+<p align="center">
+  <a href="https://buymeacoffee.com/syax89" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="50" width="210">
+  </a>
+</p>
