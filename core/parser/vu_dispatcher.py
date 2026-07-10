@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from core.utils.logger import get_logger
 from core import decoders
 from core.utils.constants import RECORD_ARRAY_MAX_RECORDS, RECORD_ARRAY_MAX_SIZE
-from core.utils.event_codes import describe_event, describe_fault, describe_calibration_purpose, describe_control_type
+from core.utils.event_codes import describe_event, describe_fault, describe_calibration_purpose, describe_control_type, describe_record_purpose
 
 _log = get_logger(__name__)
 
@@ -520,7 +520,9 @@ def decode_overspeeding_event(rec):
     return {
         "confidence": "high",
         "event_type": rec[0],
+        "event_type_label": describe_event(rec[0]),
         "record_purpose": rec[1],
+        "record_purpose_label": describe_record_purpose(rec[1]),
         "begin": _iso(struct.unpack(">I", rec[2:6])[0]),
         "end": _iso(struct.unpack(">I", rec[6:10])[0]),
         "max_speed_kmh": rec[10],
@@ -538,7 +540,9 @@ def decode_power_interruption(rec):
     out = {
         "confidence": "medium",
         "event_type": rec[0],
+        "event_type_label": describe_event(rec[0]),
         "record_purpose": rec[1],
+        "record_purpose_label": describe_record_purpose(rec[1]),
         "begin": _iso(struct.unpack(">I", rec[2:6])[0]),
         "end": _iso(struct.unpack(">I", rec[6:10])[0]),
         "card_driver_begin": decode_full_card_number_gen(rec, 10),

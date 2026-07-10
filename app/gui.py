@@ -2204,7 +2204,16 @@ class TachoExplorer(tk.Tk):
 
                 # Convert item to (cols, rows)
                 if isinstance(item_data, list) and item_data:
-                    if isinstance(item_data[0], dict):
+                    # VU Identification is a single descriptive record: show it
+                    # vertically (Field / Value) instead of one wide row.
+                    if (item_name == "VU Identifications"
+                            and len(item_data) == 1
+                            and isinstance(item_data[0], dict)):
+                        vu_id = {k: v for k, v in item_data[0].items()
+                                 if k not in HIDDEN_KEYS and k not in TRAILING_KEYS
+                                 and not str(k).startswith("_")}
+                        cols, rows = _kv_rows(vu_id)
+                    elif isinstance(item_data[0], dict):
                         cols, rows = _rows_for(item_data, None)
                     else:
                         cols, rows = (["Value"], [[fmt_val(v)] for v in item_data])
@@ -2965,16 +2974,7 @@ class TachoExplorer(tk.Tk):
                 except Exception:
                     pass
             icon = "\u274c " if cal_expired else ("\u26a0\ufe0f " if cal_soon else "")
-            rows.append(("\U0001f527  " + icon + "LAST CALIBRATION", "", True))
-            workshop = cal.get("workshop_name", "")
-            if workshop:
-                rows.append(("  Workshop", workshop, False))
-            purpose = cal.get("calibration_purpose_label", "")
-            if purpose:
-                rows.append(("  Purpose", purpose, False))
-            cal_date = cal.get("old_time", "")
-            if cal_date:
-                rows.append(("  Date", fmt_val(cal_date), False))
+            rows.append(("\U0001f527  " + icon + "TACHOGRAPH", "", True))
             if next_date:
                 date_str = fmt_val(next_date)
                 if cal_expired:
@@ -2988,13 +2988,6 @@ class TachoExplorer(tk.Tk):
                 rows.append(("  Tyre size", tyre, False))
             if speed:
                 rows.append(("  Authorised speed", f"{speed} km/h", False))
-            load = cal.get("by_default_load_type_label", "")
-            if load:
-                rows.append(("  Default load type", load, False))
-            country_ts = cal.get("calibration_country_timestamp", "")
-            country = cal.get("calibration_country", "")
-            if country and country_ts:
-                rows.append(("  Calibration country", f"{country} ({fmt_val(country_ts)})", False))
             rows.append(sep)
 
         if sensors:

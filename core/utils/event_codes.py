@@ -198,6 +198,45 @@ def describe_specific_condition(code: int) -> str:
     return SPECIFIC_CONDITION_TYPES.get(code, f"Condition 0x{code:02X}")
 
 
+# ── Event/Fault record purpose (Annex 1B §2.72 / Annex 1C §2.75) ───────────
+#
+# EventFaultRecordPurpose explains WHY a given event or fault was stored:
+#   '00'H one of the 10 most recent (or last) events or faults
+#   '01'H the longest event for one of the last 10 days of occurrence
+#   '02'H one of the 5 longest events over the last 365 days
+#   '03'H the last event for one of the last 10 days of occurrence
+#   '04'H the most serious event for one of the last 10 days of occurrence
+#   '05'H one of the 5 most serious events over the last 365 days
+#   '06'H the first event or fault having occurred after the last calibration
+#   '07'H an active / on-going event or fault
+#   '08'H..'7F'H reserved for future use
+#   '80'H..'FF'H manufacturer specific
+
+EVENT_FAULT_RECORD_PURPOSE: dict[int, str] = {
+    0x00: "One of the 10 most recent (or last) events/faults",
+    0x01: "Longest event for one of the last 10 days of occurrence",
+    0x02: "One of the 5 longest events over the last 365 days",
+    0x03: "Last event for one of the last 10 days of occurrence",
+    0x04: "Most serious event for one of the last 10 days of occurrence",
+    0x05: "One of the 5 most serious events over the last 365 days",
+    0x06: "First event/fault after the last calibration",
+    0x07: "Active / on-going event or fault",
+}
+
+
+def describe_record_purpose(code) -> str:
+    """Human-readable EventFaultRecordPurpose (Annex 1B §2.72)."""
+    if code is None:
+        return "Unknown"
+    if code in EVENT_FAULT_RECORD_PURPOSE:
+        return EVENT_FAULT_RECORD_PURPOSE[code]
+    if 0x08 <= code <= 0x7F:
+        return f"Reserved (0x{code:02X})"
+    if code >= 0x80:
+        return f"Manufacturer specific (0x{code:02X})"
+    return f"Unknown (0x{code:02X})"
+
+
 def describe_calibration_purpose(code) -> str:
     """Return a human-readable label for a CalibrationPurpose byte."""
     if code is None:

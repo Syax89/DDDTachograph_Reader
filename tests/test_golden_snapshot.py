@@ -57,6 +57,12 @@ def semantic_snapshot(result):
     return _normalize(payload)
 
 
+def _diff_keys(expected, current):
+    """Return the top-level keys whose values differ (compact mismatch report)."""
+    keys = set(expected) | set(current)
+    return sorted(k for k in keys if expected.get(k) != current.get(k)) or ["<none>"]
+
+
 def list_ddd_files():
     if not os.path.isdir(DDD_DIR):
         return []
@@ -106,12 +112,14 @@ class TestGoldenSnapshot(unittest.TestCase):
 
                 # Round-trip current snapshot through JSON for a like-for-like compare.
                 current = json.loads(json.dumps(snapshot, ensure_ascii=False, sort_keys=True))
-                self.assertEqual(
-                    expected,
-                    current,
-                    f"Decoded output changed for {os.path.basename(path)}. "
-                    f"If intentional, regenerate with UPDATE_GOLDEN=1.",
-                )
+                # Compare directly instead of self.assertEqual: these snapshots
+                # can be several MB, and unittest's rich diff on a mismatch is
+                # so large it appears to hang. Emit a compact, per-key summary.
+                if current != expected:
+                    self.fail(
+                        f"Decoded output changed for {os.path.basename(path)}. "
+                        f"Differing top-level keys: {_diff_keys(expected, current)}. "
+                        f"If intentional, regenerate with UPDATE_GOLDEN=1.")
 
 if __name__ == "__main__":
     unittest.main()

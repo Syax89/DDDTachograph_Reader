@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from core.utils.logger import get_logger
 from core.decoders.common import decode_activity_val, decode_date, decode_string, get_nation, parse_cyclic_buffer_activities
 from core.decoders.cert import parse_g1_certificate
-from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault
+from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault, describe_record_purpose
 
 _log = get_logger(__name__)
 
@@ -807,7 +807,9 @@ def _parse_trep_03_structured(data, results):
                 overspeed.append({
                     "description": describe_event(rec[0]),
                     "event_type": rec[0],
+                    "event_type_label": describe_event(rec[0]),
                     "record_purpose": rec[1],
+                    "record_purpose_label": describe_record_purpose(rec[1]),
                     "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
                     "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat()
                     if 946684800 <= end_ts <= 4102444800 else "N/A",
@@ -861,6 +863,7 @@ def _parse_trep_03_structured(data, results):
                     "description": describe_event(evt["event_type"]),
                     "type_code": evt["event_type"],
                     "record_purpose": evt["event_purpose"],
+                    "record_purpose_label": describe_record_purpose(evt["event_purpose"]),
                     "begin_time": evt["begin_time"],
                     "end_time": evt["end_time"],
                     "similar_events": evt["similar_events"],
