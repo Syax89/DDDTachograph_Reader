@@ -19,6 +19,11 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label", "timestamp", "date", "begin", "begin_time", "start"]
 TRAILING_KEYS = ["record_type", "type_code"]
 
+# Columns holding a nation code, expanded to the full English country name.
+NATION_COLS = {"nation", "vehicle_nation", "issuing_nation", "registration_nation",
+               "approval_nation", "member_state", "card_issuing_member_state",
+               "nation_code"}
+
 # Acronyms kept upper-case when humanising keys.
 _ACRONYMS = {"vin", "gnss", "vu", "its", "id", "km", "kmh", "iw", "ic", "icc",
              "rsa", "ecdsa", "msca", "erca", "trep", "ad", "g1", "g2"}
@@ -221,13 +226,22 @@ def _visible_columns(records):
 
 def records_to_table(records):
     """Convert a list of record dicts to (header_labels, rows) of formatted
-    strings, hiding internal keys and humanising the column names."""
+    strings, hiding internal keys and humanising the column names. Nation code
+    columns are expanded to full English country names."""
     records = [r for r in records if isinstance(r, dict)]
     if not records:
         return [], []
+    from core.decoders.common import nation_full_name
     cols = _visible_columns(records)
     headers = [humanize_key(c) for c in cols]
-    rows = [[fmt_value(rec.get(c)) for c in cols] for rec in records]
+
+    def _cell(col, rec):
+        value = rec.get(col)
+        if col in NATION_COLS and value not in (None, ""):
+            return nation_full_name(value)
+        return fmt_value(value)
+
+    rows = [[_cell(c, rec) for c in cols] for rec in records]
     return headers, rows
 
 
