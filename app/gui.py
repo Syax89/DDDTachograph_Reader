@@ -3381,8 +3381,10 @@ class TachoExplorer(tk.Tk):
                 pass
             self._dashboard_motion_bind = None
 
-    def _show_daily_summary(self, activity_list, data):
-        """Dashboard for the 'Daily Activities' parent node."""
+    def _show_daily_summary(self, activity_list, data, _fast_refresh=False):
+        """Dashboard for the 'Daily Activities' parent node.
+        When ``_fast_refresh=True``, skips the full layout rebuild and only
+        updates table rows and KPI labels in place (used by the slot toggle)."""
         valid = [d for d in activity_list if isinstance(d, dict)]
         if not valid:
             self._show_empty("Daily Activities", "No activity data available.")
@@ -3698,24 +3700,73 @@ class TachoExplorer(tk.Tk):
         else:
             columns = ["Date", "# Vehicles", "Ev", "Km",
                        "Drive", "Work", "Rest", "Available"]
-        self._show_dashboard("Daily Activities",
-                             date_range, kpis, columns, table_rows,
-                             row_tags=row_tags, tooltips=tooltips,
-                             ev_tooltips=ev_tooltips)
+        if _fast_refresh:
+            self._update_dashboard_in_place(
+                date_range, kpis, table_rows, row_tags,
+                columns, tooltips, ev_tooltips, activity_list, data)
+        else:
+            self._show_dashboard("Daily Activities",
+                                 date_range, kpis, columns, table_rows,
+                                 row_tags=row_tags, tooltips=tooltips,
+                                 ev_tooltips=ev_tooltips)
 
-        self._dashboard_activity_list = activity_list
-        self._dashboard_data = data
-        self._dashboard_is_vu = is_vu
-        self.table.tv.unbind("<Double-1>")
-        self.table.tv.bind("<Double-1>",
-                           lambda e: self._on_dashboard_double_click(e))
+            self._dashboard_activity_list = activity_list
+            self._dashboard_data = data
+            self._dashboard_is_vu = is_vu
+            self.table.tv.unbind("<Double-1>")
+            self.table.tv.bind("<Double-1>",
+                               lambda e: self._on_dashboard_double_click(e))
 
-        # ── Slot toggle for VU files ──
-        if is_vu:
-            self._build_vu_slot_toggle(activity_list, data)
+            # ── Slot toggle for VU files ──
+            if is_vu:
+                self._build_vu_slot_toggle(activity_list, data)
+
+    def _update_dashboard_in_place(
+            self, date_range, kpis, table_rows, row_tags,
+            columns, tooltips, ev_tooltips, activity_list, data):
+        """Update just the table rows, KPI labels, and toggle without destroying layout."""
+        self.table.count_lbl.config(text=date_range)
+
+        # Update KPI cards
+        kpi_frame = getattr(self, "_kpi_frame", None)
+        if kpi_frame is not None:
+            for child in kpi_frame.winfo_children():
+                if isinstance(child, tk.Frame):
+                    labels = [w for w in child.winfo_children() if isinstance(w, tk.Label)]
+                    if len(labels) >= 2:
+                        label_text = labels[0].cget("text")
+                        for lbl, val, _accent in kpis:
+                            if lbl == label_text:
+                                labels[1].config(text=val)
+                                break
+
+        # Refresh table
+        self.table._all_rows = [list(r) for r in table_rows]
+        self.table.tv.delete(*self.table.tv.get_children())
+        for i, r in enumerate(self.table._all_rows):
+            tag = "even" if i % 2 == 0 else "odd"
+            rt = row_tags[i] if i < len(row_tags) else None
+            if rt == "total":
+                tag = "total"
+            elif rt == "separator":
+                tag = "separator"
+            self.table.tv.insert("", tk.END, values=r, tags=(tag,))
+
+        # Tooltips
+        self._dashboard_tooltips = tooltips or {}
+        self._dashboard_ev_tips = ev_tooltips or {}
+
+        # Update slot label in toggle bar
+        slot_frame = getattr(self, "_slot_toggle_frame", None)
+        if slot_frame is not None:
+            slot_label = getattr(self, "_vu_slot_filter", "Slot 1")
+            for child in slot_frame.winfo_children():
+                if isinstance(child, tk.Label):
+                    child.config(text=slot_label)
+                    break
 
     def _build_vu_slot_toggle(self, activity_list, data):
-        """Add a Slot 1 / Slot 2 toggle button above the daily activities table."""
+        """Add a Slot 1 / Slot 2 toggle button above the daily activities table."""
         slot_label = getattr(self, "_vu_slot_filter", "Slot 1")
         if getattr(self, "_slot_toggle_frame", None) is not None:
             self._slot_toggle_frame.destroy()
@@ -3723,21 +3774,19 @@ class TachoExplorer(tk.Tk):
         self._slot_toggle_frame = btn_frame
         btn_frame.pack(fill=tk.X, padx=8, pady=(0, 4), before=self.table.tv.master)
 
-        lbl = tk.Label(btn_frame, text="Slot:", font=("", 9),
-                       fg="#6b7280", bg="#f4f6f9")
-        lbl.pack(side=tk.LEFT, padx=(0, 4))
+        tk.Label(btn_frame, text=slot_label, font=("", 10, "bold"),
+                 fg="#1565c0", bg="#f4f6f9").pack(side=tk.LEFT)
 
         def _toggle():
             new_slot = "Slot 2" if slot_label == "Slot 1" else "Slot 1"
             self._vu_slot_filter = new_slot
-            self._show_daily_summary(activity_list, data)
+            self._show_daily_summary(activity_list, data, _fast_refresh=True)
 
-        btn = tk.Button(btn_frame, text=slot_label, font=("", 9, "bold"),
-                        bg="#1976d2", fg="#ffffff", relief=tk.FLAT,
-                        padx=12, pady=2, activebackground="#1565c0",
-                        activeforeground="#ffffff", cursor="hand2",
-                        command=_toggle)
-        btn.pack(side=tk.LEFT)
+        tk.Button(btn_frame, text="\u21c4", font=("", 10),
+                  bg="#e8edf2", fg="#37474f", relief=tk.FLAT,
+                  padx=8, pady=0, activebackground="#dbe4f0",
+                  activeforeground="#1565c0", cursor="hand2",
+                  command=_toggle).pack(side=tk.RIGHT)
 
     def _show_speed_summary(self, raw_blocks, data):
         """Dashboard for the 'Detailed Speed' parent node."""
