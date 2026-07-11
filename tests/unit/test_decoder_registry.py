@@ -71,8 +71,8 @@ def test_registry_generation_match_beats_priority():
     ("requested_generation", "decoder_generation", "compatible"),
     [
         ("G1", "G1", True),
-        ("G1", "G2", False),
-        ("G1", "G2.2", False),
+        ("G1", "G2", True),     # G1 is a bypass (card files default to G1)
+        ("G1", "G2.2", True),   # G1 is a bypass (card files default to G1)
         ("G1", "all", True),
         ("G2", "G1", False),
         ("G2", "G2", True),
