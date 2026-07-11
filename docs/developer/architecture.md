@@ -133,13 +133,15 @@ Field-level byte decoders, split by scope. `core/decoders/__init__.py` is a faca
 | `core/decoders/card_g22.py` | G2.2 card tags: GNSS accumulated driving, load/unload, trailers, enhanced places, load sensor, border crossings |
 | `core/decoders/cert.py` | Certificates: G1 RSA profiles, signatures, public keys, G2.2 CVC profiles and auth sub-tags |
 | `core/decoders/vu_g1.py` | G1 VU download messages: overview + TREP 02–06 stream walkers |
-| `core/decoders/vu_g2.py` | G2/G2.2 VU RecordArray dispatch (`parse_g2_vu_record`) |
+| `core/decoders/vu_g2.py` | Compatibility adapter for isolated G2/G2.2 VU RecordArray tag payloads (`parse_g2_vu_record`) |
 
-`core/decoders/vu_g2.py` dispatches G2/G2.2 VU RecordArray records to the
-record-type decoders in `core/parser/vu_dispatcher.py`:
-- `decode_vu_card_record()` (0x0509): card records
-- `decode_card_iw()` (0x050A): insertion/withdrawal records
-- `parse_g2_vu_record()`: Generic dispatcher for all G2/G2.2 VU record types using RecordArray format
+`core/parser/vu_dispatcher.py` owns G2/G2.2 VU RecordArray semantics and
+canonical result keys. `core/decoders/vu_g2.py` preserves the public
+tag-keyed adapter for isolated BER-TLV payloads; it does not send them through
+the full TREP stream walker:
+- `walk_vu_record_arrays()`: canonical complete TREP-stream walk
+- `decode_vu_record()`: canonical decoder for one isolated record
+- `parse_g2_vu_record()`: public compatibility adapter that unwraps a tag payload and calls the canonical decoder
 
 ### Models (`core/registry/models.py`)
 

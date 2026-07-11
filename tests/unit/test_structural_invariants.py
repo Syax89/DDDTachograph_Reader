@@ -78,6 +78,31 @@ def test_coverage_classifications_and_sections_are_non_overlapping():
         assert sum(size for _, _, size in intervals) == file_size
 
 
+def test_coverage_report_uses_neutral_byte_range_labels():
+    tracker = CoverageTracker(1536)
+    tracker.mark_covered(0, 1536)
+
+    report = tracker.get_section_report(1536)
+
+    assert list(report) == [
+        "Bytes [0x000000, 0x000100)",
+        "Bytes [0x000100, 0x000300)",
+        "Bytes [0x000300, 0x000480)",
+        "Bytes [0x000480, 0x000600)",
+    ]
+    assert [
+        (entry["start"], entry["end"], entry["size"], entry["covered"], entry["coverage_pct"])
+        for entry in report.values()
+    ] == [
+        ("0x000000", "0x000100", 256, 256, 100.0),
+        ("0x000100", "0x000300", 512, 512, 100.0),
+        ("0x000300", "0x000480", 384, 384, 100.0),
+        ("0x000480", "0x000600", 384, 384, 100.0),
+    ]
+    semantic_labels = {"Header", "Driver Data", "Vehicle Data", "Certificates", "Signature/Tail"}
+    assert semantic_labels.isdisjoint(report)
+
+
 def test_g1_card_download_chain_validation_handles_thousands_of_messages():
     # The first valid marker after the opaque TREP 06 payload requires the
     # validator to inspect the complete long TREP 04 chain.

@@ -24,6 +24,9 @@ NATION_COLS = {"nation", "vehicle_nation", "issuing_nation", "registration_natio
                "approval_nation", "member_state", "card_issuing_member_state",
                "nation_code"}
 
+# Values in these fields can include a known tachograph record-code label.
+_CODE_LABEL_KEYS = {"trep", "tag_id", "data_type"}
+
 # Acronyms kept upper-case when humanising keys.
 _ACRONYMS = {"vin", "gnss", "vu", "its", "id", "km", "kmh", "iw", "ic", "icc",
              "rsa", "ecdsa", "msca", "erca", "trep", "ad", "g1", "g2"}
@@ -174,10 +177,17 @@ def _fmt_dict(d):
     return items if len(items) <= 120 else items[:120] + "…"
 
 
-def fmt_value(v):
-    """Format any decoded value as compact human-readable text."""
+def fmt_scalar(v, key=None, *, include_code_label=False):
+    """Format a non-container decoded value for human-readable display.
+
+    ``include_code_label`` is for views that show the numeric code alongside
+    its tachograph name; report exports retain their existing numeric output.
+    """
     if v is None:
         return ""
+    if key in NATION_COLS and v not in (None, ""):
+        from core.decoders.common import nation_full_name
+        return nation_full_name(v)
     if isinstance(v, bool):
         return "Yes" if v else "No"
     if isinstance(v, float):
@@ -186,10 +196,21 @@ def fmt_value(v):
     if isinstance(v, int):
         if v in _NOT_AVAILABLE_INTS:
             return "N/A"
-        return f"{v:,}".replace(",", " ") if abs(v) >= 10000 else str(v)
+        label = code_label(v, key=key) if include_code_label and key in _CODE_LABEL_KEYS else ""
+        suffix = f"  ({label})" if label else ""
+        return (f"{v:,}".replace(",", " ") if abs(v) >= 10000 else str(v)) + suffix
     if isinstance(v, (bytes, bytearray)):
         h = v.hex()
         return h if len(h) <= 64 else h[:64] + "…"
+    if isinstance(v, str):
+        label = code_label(v, key=key) if include_code_label and key in _CODE_LABEL_KEYS else ""
+        text = fmt_iso(v)
+        return f"{text}  ({label})" if label else text
+    return str(v)
+
+
+def fmt_value(v):
+    """Format any decoded value as compact human-readable text."""
     if isinstance(v, dict):
         return _fmt_dict(v)
     if isinstance(v, (list, tuple, set, frozenset)):
@@ -200,27 +221,32 @@ def fmt_value(v):
             text = ", ".join(fmt_value(x) for x in v)
             return text if len(text) <= 200 else text[:200] + "…"
         return f"[{len(v)} items]"
-    if isinstance(v, str):
-        return fmt_iso(v)
-    return str(v)
+    return fmt_scalar(v)
 
 
-def _visible_columns(records):
-    """Ordered union of visible record keys: leading, natural, trailing."""
+def visible_columns(records, *, hidden_keys=HIDDEN_KEYS, leading_keys=LEADING_KEYS,
+                    trailing_keys=TRAILING_KEYS, value_column_for_non_dict=False):
+    """Return visible record keys in leading, natural, trailing order.
+
+    Callers may provide a presentation policy without importing UI code. The
+    optional value column preserves views that represent scalar records.
+    """
     natural = []
     present = set()
     for rec in records:
         if not isinstance(rec, dict):
+            if value_column_for_non_dict:
+                return ["Value"]
             continue
         for k in rec:
             present.add(k)
-            if (k in HIDDEN_KEYS or k in LEADING_KEYS or k in TRAILING_KEYS
+            if (k in hidden_keys or k in leading_keys or k in trailing_keys
                     or k in natural or str(k).startswith("_")):
                 continue
             natural.append(k)
-    cols = [k for k in LEADING_KEYS if k in present]
+    cols = [k for k in leading_keys if k in present]
     cols += natural
-    cols += [k for k in TRAILING_KEYS if k in present]
+    cols += [k for k in trailing_keys if k in present]
     return cols
 
 
@@ -232,7 +258,7 @@ def records_to_table(records):
     if not records:
         return [], []
     from core.decoders.common import nation_full_name
-    cols = _visible_columns(records)
+    cols = visible_columns(records)
     headers = [humanize_key(c) for c in cols]
 
     def _cell(col, rec):
@@ -391,20 +417,40 @@ def expand_activities(activities):
 def summary_rows(data):
     """(Field, Value) rows for the file/driver/vehicle summary."""
     meta = data.get("metadata", {})
+    coverage = data.get("coverage") or {}
     driver = data.get("driver", {})
     vehicle = data.get("vehicle", {})
     sv = data.get("signature_verification") or {}
     efv = data.get("ef_signature_verification") or {}
+
+    byte_accounted_pct = coverage.get("byte_accounted_pct", meta.get("coverage_pct", 0))
+    byte_accounted_bytes = coverage.get("byte_accounted_bytes")
+    byte_accounted_value = f"{byte_accounted_pct}%"
+    if byte_accounted_bytes is not None:
+        byte_accounted_value += (
+            f" ({byte_accounted_bytes:,} / {meta.get('file_size_bytes', 0):,} bytes)"
+        ).replace(",", " ")
 
     rows = [
         ("File", meta.get("filename", "N/A")),
         ("Generation", meta.get("generation", "N/A")),
         ("Source", "Vehicle Unit (VU)" if meta.get("is_vu") else "Driver Card"),
         ("File size", f"{meta.get('file_size_bytes', 0):,} bytes".replace(",", " ")),
-        ("Coverage", f"{meta.get('coverage_pct', 0)}%"),
+        ("Byte-accounted coverage", byte_accounted_value),
         ("Integrity", meta.get("integrity_check", "N/A")),
         ("Parsed at", fmt_value(meta.get("parsed_at", ""))),
     ]
+    if "unknown_bytes" in coverage:
+        rows.insert(5, (
+            "Unknown bytes",
+            f"{coverage['unknown_bytes']:,} ({coverage.get('unknown_pct', 0)}%)".replace(",", " "),
+        ))
+    if "structurally_identified_pct" in coverage:
+        rows.insert(6, (
+            "Structurally identified coverage",
+            f"{coverage['structurally_identified_pct']}% "
+            "(not a semantic decoding rate)",
+        ))
     if meta.get("app_version"):
         rows.append(("Reader version", meta["app_version"]))
     if sv.get("summary"):

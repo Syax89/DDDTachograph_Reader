@@ -9,6 +9,9 @@ from cryptography.x509.oid import NameOID
 
 from core.crypto.signature import SignatureValidator
 from core.crypto.vu_signature import cvc_temporal_status, parse_cvc, verify_cvc_chain_link
+from core.decoders.cert import parse_certificate, parse_g22_certificate_subtag
+from core.registry.registry import DecoderRegistry
+from core.utils.constants import CVC_EFFECTIVE_DATE_TAG, CVC_EXPIRATION_DATE_TAG
 
 
 UTC = datetime.timezone.utc
@@ -112,3 +115,36 @@ def test_cvc_dates_are_deterministic_and_separate_from_chain_signature():
             card_raw, _cvc(msca_key, msca_key),
             verification_time=END + datetime.timedelta(seconds=1))
         assert status is False
+
+
+def test_cvc_date_tags_have_consistent_crypto_decoder_and_display_meanings():
+    key = ec.generate_private_key(ec.SECP256R1())
+    raw = _cvc(key, key)
+    effective = int(START.timestamp()).to_bytes(4, "big")
+    expiration = int(END.timestamp()).to_bytes(4, "big")
+
+    parsed = parse_cvc(raw)
+    assert parsed["effective_date"] == effective.hex()
+    assert parsed["expiration_date"] == expiration.hex()
+    assert cvc_temporal_status(
+        parsed, START - datetime.timedelta(seconds=1))["status"] == "not_yet_valid"
+    assert cvc_temporal_status(
+        parsed, END + datetime.timedelta(seconds=1))["status"] == "expired"
+
+    certificate_results = {}
+    parse_certificate(raw, certificate_results)
+    display = certificate_results["certificates"][0]
+    assert display["valid_from"] == START.isoformat()
+    assert display["valid_to"] == END.isoformat()
+
+    subtag_results = {}
+    parse_g22_certificate_subtag(effective, subtag_results, CVC_EFFECTIVE_DATE_TAG)
+    parse_g22_certificate_subtag(expiration, subtag_results, CVC_EXPIRATION_DATE_TAG)
+    assert subtag_results["card_icc"] == {
+        "effective_date": "01/01/2010",
+        "expiry_date": "01/01/2011",
+    }
+
+    names = DecoderRegistry.instance().get_tag_names()
+    assert names[CVC_EFFECTIVE_DATE_TAG] == "G22_CardEffectiveDate"
+    assert names[CVC_EXPIRATION_DATE_TAG] == "G22_CardExpiryDate"

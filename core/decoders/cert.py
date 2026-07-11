@@ -5,7 +5,11 @@ from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
 from core.decoders.common import decode_date, decode_string, get_nation
-from core.utils.constants import EC_CURVE_OIDS
+from core.utils.constants import (
+    CVC_EFFECTIVE_DATE_TAG,
+    CVC_EXPIRATION_DATE_TAG,
+    EC_CURVE_OIDS,
+)
 from core.utils.ber_tlv import read_ber_tlv_header as _read_ber_tlv
 
 _log = get_logger(__name__)
@@ -67,9 +71,9 @@ def parse_g22_certificate_subtag(val, results, tag):
     try:
         if tag == 0x5F20:  # G22_CardHolderName
             results.setdefault("card_icc", {})["holder_name"] = decode_string(val)
-        elif tag == 0x5F24:  # G22_CardEffectiveDate
+        elif tag == CVC_EFFECTIVE_DATE_TAG:
             results.setdefault("card_icc", {})["effective_date"] = decode_date(val)
-        elif tag == 0x5F25:  # G22_CardExpiryDate
+        elif tag == CVC_EXPIRATION_DATE_TAG:
             results.setdefault("card_icc", {})["expiry_date"] = decode_date(val)
         elif tag == 0x5F29:  # G22_CardIssuingMemberState
             if len(val) >= 1:
@@ -149,8 +153,8 @@ def _parse_cvc_fields(cert_bytes):
     chr_hex = fields.get(0x5F20, b"").hex()
     oid = pk_info.get(0x06, b"").hex()
     point = pk_info.get(0x86)
-    effective_hex = fields.get(0x5F25, b"").hex()
-    expiration_hex = fields.get(0x5F24, b"").hex()
+    effective_hex = fields.get(CVC_EFFECTIVE_DATE_TAG, b"").hex()
+    expiration_hex = fields.get(CVC_EXPIRATION_DATE_TAG, b"").hex()
 
     result = {
         "format": "CVC",

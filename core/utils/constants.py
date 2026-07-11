@@ -8,6 +8,11 @@ RECORD_ARRAY_MAX_RECORDS = 20000
 RECORD_ARRAY_MAX_SIZE = 4096
 MAX_ODO_DISTANCE_KM = 1000000
 
+# CVC validity fields: 0x5F25 is effective/not-before; 0x5F24 is
+# expiration/not-after. These semantics apply to both crypto and display paths.
+CVC_EFFECTIVE_DATE_TAG = 0x5F25
+CVC_EXPIRATION_DATE_TAG = 0x5F24
+
 # EC curve OID (hex string) → human-readable name.
 EC_CURVE_OIDS = {
     "2b2403030208010107": "brainpoolP256r1",

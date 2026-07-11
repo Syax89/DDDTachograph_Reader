@@ -5,9 +5,11 @@ no semantic content (activities/border crossings dropped) because the data is
 keyed by recordType in RecordArrays, not by the 0x05xx tags.
 """
 import os
+import struct
 import unittest
 
 from app.engine import TachoParser
+from core.decoders.vu_g2 import parse_g2_vu_record
 from core.parser.vu_dispatcher import (
     decode_border_crossing,
     decode_full_card_number_gen,
@@ -80,7 +82,6 @@ class TestDetailedSpeedFold(unittest.TestCase):
         # Synthetic 0x7634 (Detailed speed) section: one 0x12 RecordArray with
         # two 64-byte VuDetailedSpeedBlock records (timestamp + 60 speeds) and
         # one all-0xFF padding block that must be skipped.
-        import struct
         ts = 1751277600  # 2025-06-30 10:00 UTC
         block1 = struct.pack(">I", ts) + bytes([50] * 30 + [70] * 30)
         block2 = b"\xff" * 64
@@ -96,6 +97,31 @@ class TestDetailedSpeedFold(unittest.TestCase):
         self.assertEqual(blocks[0]["min_speed_kmh"], 50)
         self.assertEqual(blocks[0]["samples"], 60)
         self.assertTrue(blocks[0]["begin"].startswith("2025-06-30"))
+
+
+class TestTagAdapterCanonicalization(unittest.TestCase):
+    def test_adapter_matches_full_stream_shapes_for_shared_record_types(self):
+        timestamp = 1751277600
+        cases = (
+            (0x052C, 0x12, "speed_blocks",
+             struct.pack(">I", timestamp) + bytes(range(60))),
+            (0x0510, 0x20, "sensor_pairings",
+             b"\x01" * 8 + b"APPROVAL        " + struct.pack(">I", timestamp)),
+            (0x0511, 0x21, "sensor_gnss_couplings",
+             b"\x02" * 8 + b"APPROVAL        " + struct.pack(">I", timestamp)),
+        )
+
+        for tag, record_type, key, record in cases:
+            with self.subTest(tag=f"0x{tag:04X}"):
+                record_array = struct.pack(">BHH", record_type, len(record), 1) + record
+                adapter_results = {}
+                stream_results = {}
+
+                parse_g2_vu_record(record_array, adapter_results, tag)
+                walk_vu_record_arrays(b"\x76\x34" + record_array, stream_results)
+
+                self.assertIn(key, adapter_results)
+                self.assertEqual(adapter_results[key], stream_results[key])
 
 
 def _resolve_by_feature(feature):

@@ -57,6 +57,7 @@ class DecoderRegistry:
 
     def _build(self):
         from core import decoders
+        from core.utils.constants import CVC_EFFECTIVE_DATE_TAG, CVC_EXPIRATION_DATE_TAG
 
         definitions = [
 
@@ -470,13 +471,13 @@ class DecoderRegistry:
                        decoders.parse_g22_certificate_subtag,
                        annex_ref="Annex 1C §2.17", generation="G2.2"),
 
-            TagDecoder(0x5F25, "G22_CardExpiryDate",
-                       decoders.parse_g22_certificate_subtag,
-                       annex_ref="Annex 1C §2.24", generation="G2.2"),
+            TagDecoder(CVC_EFFECTIVE_DATE_TAG, "G22_CardEffectiveDate",
+                        decoders.parse_g22_certificate_subtag,
+                        annex_ref="Annex 1C §2.24", generation="G2.2"),
 
-            TagDecoder(0x5F24, "G22_CardEffectiveDate",
-                       decoders.parse_g22_certificate_subtag,
-                       annex_ref="Annex 1C §2.24", generation="G2.2"),
+            TagDecoder(CVC_EXPIRATION_DATE_TAG, "G22_CardExpiryDate",
+                        decoders.parse_g22_certificate_subtag,
+                        annex_ref="Annex 1C §2.24", generation="G2.2"),
 
             TagDecoder(0x5F37, "G22_CertificateSignature",
                        decoders.parse_certificate_signature,
@@ -526,10 +527,11 @@ class DecoderRegistry:
     ) -> Optional[TagDecoder]:
         """Return the best decoder for *tag* in the supplied context.
 
-        Selection is intentionally permissive for generation: older Gen2 EFs can
-        still appear in Gen2.2 cards, and legacy callers may omit context. Scope,
-        dtype and parent constraints are hard filters when a decoder declares
-        them because those dimensions identify different payload layouts.
+        When supplied, generation is a hard compatibility filter: an exact
+        generation match, an ``all`` decoder, or a G2 decoder for G2.2 input is
+        allowed. Legacy callers that omit generation retain tag-only selection.
+        Scope, dtype and parent constraints are also hard filters when a decoder
+        declares them because those dimensions identify different payload layouts.
         """
         candidates = list(self._by_tag.get(tag, ()))
         if not candidates:
@@ -538,6 +540,14 @@ class DecoderRegistry:
         if is_vu is not None:
             candidates = [d for d in candidates
                           if not ((d.card_only and is_vu) or (d.vu_only and not is_vu))]
+            if not candidates:
+                return None
+
+        if generation is not None:
+            candidates = [d for d in candidates
+                          if d.generation == generation
+                          or d.generation == "all"
+                          or (generation == "G2.2" and d.generation == "G2")]
             if not candidates:
                 return None
 
@@ -564,6 +574,8 @@ class DecoderRegistry:
     ) -> Tuple[int, int, int, int]:
         gen_score = 0
         if generation:
+            # Generation compatibility is filtered by get_decoder; score the
+            # remaining exact, universal, and G2-to-G2.2 fallback variants.
             if decoder.generation == generation:
                 gen_score = 30
             elif decoder.generation == "all":
@@ -606,6 +618,10 @@ class DecoderRegistry:
 
     def get_all_tags(self) -> List[int]:
         return sorted(self._registry.keys())
+
+    def get_tag_names(self) -> Dict[int, str]:
+        """Return the authoritative display name for each registered tag."""
+        return {tag: decoder.name for tag, decoder in self._registry.items()}
 
     def iter_decoders(self) -> List[TagDecoder]:
         """Return every registered decoder variant in deterministic order."""

@@ -29,3 +29,7 @@ def test_adjacent_unknown_bytes_produce_one_bounded_range():
     assert unparsed[0]["length"] == 4096
     assert len(unparsed[0]["data_hex"]) <= 259  # 128 bytes plus ellipsis
     assert results["metadata"]["coverage_pct"] == results["coverage"]["covered_pct"]
+    assert results["coverage"]["byte_accounted_pct"] == 100.0
+    assert results["coverage"]["unknown_bytes"] == 4096
+    assert results["coverage"]["unknown_pct"] == 100.0
+    assert results["coverage"]["structurally_identified_pct"] == 0.0

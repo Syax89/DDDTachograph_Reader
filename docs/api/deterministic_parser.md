@@ -34,7 +34,7 @@ def __init__(self, total_size: int)
 | `merge_ranges()` | Merges overlapping covered ranges |
 | `get_coverage_pct()` | Returns total coverage percentage (0.0–100.0) |
 | `get_uncovered_ranges()` | Returns list of `(start, end)` tuples for uncovered bytes |
-| `get_section_report(file_size)` | Returns per-section coverage breakdown |
+| `get_section_report(file_size)` | Returns per-byte-range coverage breakdown |
 
 **Internal state:**
 - `covered_ranges` — List of `(start, end)` tuples
@@ -125,14 +125,15 @@ Main entry point. Executes the two-pass deterministic parse.
         "uncovered_ranges": []
     },
     "sections": {
-        "Header": {"start": "0x000000", "end": "0x000100", "size": 256, "covered": 256, "coverage_pct": 100.0},
-        "Driver Data": {...},
-        "Vehicle Data": {...},
-        "Certificates": {...},
-        "Signature/Tail": {...}
+        "Bytes [0x000000, 0x000100)": {"start": "0x000000", "end": "0x000100", "size": 256, "covered": 256, "coverage_pct": 100.0},
+        "Bytes [0x000100, 0x00181C)": {...},
+        # ... additional contiguous byte ranges ...
     }
 }
 ```
+
+`"sections"` is retained as the API container name. Its entries are neutral
+display byte ranges, not inferred semantic file sections.
 
 ---
 

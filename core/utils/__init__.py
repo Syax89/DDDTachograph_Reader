@@ -28,7 +28,13 @@ from core.utils.constants import (
     MAX_ODO_DISTANCE_KM,
 )
 from core.utils.ber_tlv import read_ber_tlv_header
-from core.utils.coverage import merge_intervals, coverage_pct, is_padding_block, KNOWN_PADDING_BYTES
+from core.utils.coverage import (
+    KNOWN_PADDING_BYTES,
+    coverage_metrics,
+    coverage_pct,
+    is_padding_block,
+    merge_intervals,
+)
 from core.utils.event_codes import (
     describe_event,
     describe_fault,

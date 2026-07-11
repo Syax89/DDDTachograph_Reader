@@ -45,22 +45,22 @@ class TestMockDDDCoverage(unittest.TestCase):
         return result
 
     def test_mock_g1_card_coverage(self):
-        self._parse_and_check("mock_g1_card.ddd", min_pct=50)
+        self._parse_and_check("mock_g1_card.ddd", min_pct=98)
 
     def test_mock_g1_vu_coverage(self):
-        self._parse_and_check("mock_g1_vu.ddd", min_pct=30)
+        self._parse_and_check("mock_g1_vu.ddd", min_pct=98)
 
     def test_mock_g2_card_coverage(self):
-        self._parse_and_check("mock_g2_card.ddd", min_pct=40)
+        self._parse_and_check("mock_g2_card.ddd", min_pct=98)
 
     def test_mock_g2_vu_coverage(self):
-        self._parse_and_check("mock_g2_vu.ddd", min_pct=30)
+        self._parse_and_check("mock_g2_vu.ddd", min_pct=98)
 
     def test_mock_g22_card_coverage(self):
-        self._parse_and_check("mock_g22_card.ddd", min_pct=40)
+        self._parse_and_check("mock_g22_card.ddd", min_pct=98)
 
     def test_mock_g22_vu_coverage(self):
-        self._parse_and_check("mock_g22_vu.ddd", min_pct=30)
+        self._parse_and_check("mock_g22_vu.ddd", min_pct=98)
 
 
 class TestMockDDDGenerationDetection(unittest.TestCase):
@@ -128,28 +128,58 @@ class TestMockDDDContentExtraction(unittest.TestCase):
     def test_g2_card_has_driver_info(self):
         path = os.path.join(MOCK_DIR, "mock_g2_card.ddd")
         result = TachoParser(path).parse()
-        result.get("driver", {})
-        # Mock DDD generator is WIP — driver extraction depends on exact BER-TLV encoding
-        # Accept both cases as the parser handles real files correctly
-        self.assertIsNotNone(result.get("driver"))
+        driver = result.get("driver", {})
+        self.assertNotEqual(driver.get("surname", "N/A"), "N/A")
+        self.assertNotEqual(driver.get("firstname", "N/A"), "N/A")
+        self.assertNotEqual(driver.get("birth_date", "N/A"), "N/A")
 
     def test_g22_card_has_gnss_data(self):
         path = os.path.join(MOCK_DIR, "mock_g22_card.ddd")
         result = TachoParser(path).parse()
-        # Mock generator WIP — GNSS data may not fully extract
         self.assertIsNotNone(result.get("gnss_ad_records"))
 
     def test_g22_card_has_trailer_data(self):
         path = os.path.join(MOCK_DIR, "mock_g22_card.ddd")
         result = TachoParser(path).parse()
-        # Mock generator WIP — trailer data may not fully extract
         self.assertIsNotNone(result.get("trailer_registrations"))
 
     def test_g22_card_has_border_crossings(self):
         path = os.path.join(MOCK_DIR, "mock_g22_card.ddd")
         result = TachoParser(path).parse()
-        # Mock generator WIP — border data may not fully extract
         self.assertIsNotNone(result.get("border_crossings"))
+
+    def test_g1_card_content_has_activity_and_events(self):
+        path = os.path.join(MOCK_DIR, "mock_g1_card.ddd")
+        result = TachoParser(path).parse()
+        activities = result.get("activities", [])
+        self.assertGreater(len(activities), 0)
+        self.assertIsNotNone(activities[0].get("date"))
+        self.assertGreater(len(activities[0].get("changes", [])), 0)
+        events = result.get("events", [])
+        self.assertGreater(len(events), 0)
+        self.assertIsNotNone(events[0].get("description"))
+
+    def test_g2_card_content_has_activity_and_events(self):
+        path = os.path.join(MOCK_DIR, "mock_g2_card.ddd")
+        result = TachoParser(path).parse()
+        activities = result.get("activities", [])
+        self.assertGreater(len(activities), 0)
+        self.assertIsNotNone(activities[0].get("date"))
+        self.assertGreater(len(activities[0].get("changes", [])), 0)
+        events = result.get("events", [])
+        self.assertGreater(len(events), 0)
+        self.assertIsNotNone(events[0].get("description"))
+
+    def test_g22_card_content_has_activity_and_events(self):
+        path = os.path.join(MOCK_DIR, "mock_g22_card.ddd")
+        result = TachoParser(path).parse()
+        activities = result.get("activities", [])
+        self.assertGreater(len(activities), 0)
+        self.assertIsNotNone(activities[0].get("date"))
+        self.assertGreater(len(activities[0].get("changes", [])), 0)
+        events = result.get("events", [])
+        self.assertGreater(len(events), 0)
+        self.assertIsNotNone(events[0].get("description"))
 
 
 class TestRealDDDCoverage(unittest.TestCase):

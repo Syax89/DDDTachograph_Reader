@@ -22,9 +22,28 @@ jobs:
           exit 1
         fi
 
-  test:
+  lint:
     runs-on: ubuntu-latest
     needs: check-version
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    - name: Ruff (correctness rules)
+      run: |
+        pip install -r requirements-dev.txt
+        ruff check .
+    - name: Mypy
+      run: |
+        pip install -r requirements-dev.txt
+        mypy .
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [check-version, lint]
     steps:
     - uses: actions/checkout@v7
     - name: Set up Python

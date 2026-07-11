@@ -1384,14 +1384,62 @@ def _decode_embedded_card_image(data, results):
 
 
 # Semantic keys produced by card EF decoders worth merging up from an embedded
-# card image. Lists are extended (deduped); dict/scalar keys fill only when the
+# card image.  Lists are extended (deduped); dict/scalar keys fill only when the
 # live result is still empty/N-A so a real VU value is never overwritten.
-_CARD_MERGE_LIST_KEYS = (
-    "activities", "events", "faults", "places", "card_iw_records",
-    "specific_conditions", "card_download_records", "card_downloads",
-    "inserted_drivers", "controls",
-)
-_CARD_MERGE_DICT_KEYS = ("driver", "vehicle")
+#
+# The keys are derived automatically from the public TachoResult dataclass: every
+# field whose type is List[...] or Dict[...] is eligible unless it is
+# infrastructure metadata, clearly VU-only, Gen 2.2–only, or dead.  This means a
+# new card-side decoder that sets a matching TachoResult key is merged without
+# any manual allowlist update.
+
+import typing
+
+def _derive_card_merge_keys():
+    from core.registry.models import TachoResult
+
+    _EXCLUDED = frozenset({
+        # Infrastructure / view-only keys
+        "metadata", "raw_tags", "coverage", "sections", "generations",
+        # VU-only list keys (never produced by a card EF decoder)
+        "card_numbers", "card_iw_records", "company_locks",
+        "overspeeding_events", "overspeeding_control",
+        "time_adjustments", "sensor_daily_records",
+        "inserted_drivers", "workshops", "calibration_vins",
+        "speed_blocks", "vu_certificates", "vu_identifications",
+        "card_records", "download_activities", "downloadable_periods",
+        "its_consents", "power_interruptions", "sensor_pairings",
+        "sensor_gnss_couplings", "vu_record_arrays", "vu_controller",
+        "signed_daily_records", "sensor_faults", "time_adj_gnss",
+        # VU-only dict keys
+        "company_info", "vu_overview", "vu_info",
+        "sensor_info", "previous_vehicle",
+        "signature_verification", "certificate_temporal_validity",
+        # Verification metadata, not actual card data to merge
+        "ef_signature_verification",
+        # Gen 2.2–only fields (card_g22.py decoders — never in a G1 card download)
+        "gnss_ad_records", "load_unload_records", "trailer_registrations",
+        "gnss_places", "load_sensor_data", "border_crossings",
+        "gnss_auth", "load_unload_auth",
+        # Dead / never produced by any card EF decoder
+        "locations",
+    })
+
+    list_keys = []
+    dict_keys = []
+
+    for name, fdef in TachoResult.__dataclass_fields__.items():
+        if name in _EXCLUDED:
+            continue
+        origin = typing.get_origin(fdef.type)
+        if origin is list:
+            list_keys.append(name)
+        elif origin is dict:
+            dict_keys.append(name)
+
+    return tuple(list_keys), tuple(dict_keys)
+
+_CARD_MERGE_LIST_KEYS, _CARD_MERGE_DICT_KEYS = _derive_card_merge_keys()
 
 
 def _merge_card_download(results, sub):
