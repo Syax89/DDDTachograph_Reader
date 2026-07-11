@@ -3186,7 +3186,8 @@ class TachoExplorer(tk.Tk):
             self.table.tv.heading(c, text=str(c),
                                   command=lambda col=c: self.table._sort_by(col))
             min_w = max(len(str(c)) * _px(9) + _px(20), _px(60))
-            self.table.tv.column(c, minwidth=min_w, anchor=tk.W, stretch=True)
+            anchor = tk.W if c == "Date" else tk.CENTER
+            self.table.tv.column(c, minwidth=min_w, anchor=anchor, stretch=True)
 
         self.table.tv.tag_configure("total",
                                     font=("", 10, "bold"),
