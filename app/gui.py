@@ -3407,9 +3407,33 @@ class TachoExplorer(tk.Tk):
                 filtered.append(copy)
             valid = filtered
 
-        # Per-day driver names from card_iw or cardholder
+        # Per-day driver names from card_iw, filtered by selected slot
         iw_by_date = {}
         if is_vu:
+            # Build a lookup: (date_iso, minute_of_day) -> slot
+            # from the original unfiltered activity changes
+            slot_by_minute: dict[tuple[str, int], str] = {}
+            for day_data in activity_list:
+                if not isinstance(day_data, dict):
+                    continue
+                date_str = str(day_data.get("date", ""))
+                date_iso = _activity_to_iso(date_str)
+                for ch in day_data.get("changes", []):
+                    if not isinstance(ch, dict):
+                        continue
+                    if not ch.get("card_inserted"):
+                        continue
+                    t = ch.get("time", "")
+                    if isinstance(t, str) and ":" in t:
+                        try:
+                            h, m = t.split(":")[:2]
+                            minute = int(h) * 60 + int(m)
+                            slot = str(ch.get("slot") or "")
+                            if slot:
+                                slot_by_minute[(date_iso, minute)] = slot
+                        except ValueError:
+                            pass
+
             iw_records = data.get("card_iw_records") or []
             for iw in iw_records:
                 if not isinstance(iw, dict):
@@ -3439,7 +3463,26 @@ class TachoExplorer(tk.Tk):
                 current = ins_dt
                 while current.date() <= wit_dt.date():
                     day_iso = current.date().isoformat()
-                    iw_by_date.setdefault(day_iso, set()).add(name)
+                    # Determine which slot this driver is in on this day
+                    ins_minute = ins_dt.hour * 60 + ins_dt.minute if current.date() == ins_dt.date() else 0
+                    iw_slot = ""
+                    # Look for a card_inserted event within 2 minutes on the insertion day
+                    if current.date() == ins_dt.date():
+                        for offset in range(-2, 3):
+                            check_min = ins_minute + offset
+                            if 0 <= check_min < 1440:
+                                iw_slot = slot_by_minute.get((day_iso, check_min), "")
+                                if iw_slot:
+                                    break
+                    if not iw_slot:
+                        # Fallback: use card_inserted from any time on this day
+                        for (d, _m), s in slot_by_minute.items():
+                            if d == day_iso:
+                                iw_slot = s
+                                break
+                    iw_slot_name = "First" if iw_slot == "First" else ("Second" if iw_slot == "Second" else "")
+                    if iw_slot_name and iw_slot_name == slot_name:
+                        iw_by_date.setdefault(day_iso, set()).add(name)
                     current = datetime(current.year, current.month, current.day,
                                         tzinfo=timezone.utc) + timedelta(days=1)
 
@@ -3447,12 +3490,19 @@ class TachoExplorer(tk.Tk):
         driver_names = set()
         for names in iw_by_date.values():
             driver_names.update(names)
+        slot_idx = 0 if slot_name == "First" else 1
         if not driver_names:
             inserted = data.get("inserted_drivers") or []
-            for d in inserted:
+            if slot_idx < len(inserted):
+                d = inserted[slot_idx]
                 name = f"{d.get('firstname','')} {d.get('surname','')}".strip()
                 if name and name != "N/A N/A":
                     driver_names.add(name)
+            else:
+                for d in inserted:
+                    name = f"{d.get('firstname','')} {d.get('surname','')}".strip()
+                    if name and name != "N/A N/A":
+                        driver_names.add(name)
         if not driver_names:
             drv = data.get("driver") or {}
             name = f"{drv.get('firstname','')} {drv.get('surname','')}".strip()
@@ -3460,10 +3510,15 @@ class TachoExplorer(tk.Tk):
                 driver_names.add(name)
         if not driver_names:
             card_recs = data.get("card_records") or []
-            for cr in card_recs[:2]:
-                cn = cr.get("card_number", "") if isinstance(cr, dict) else ""
+            if is_vu and slot_idx < len(card_recs):
+                cn = card_recs[slot_idx].get("card_number", "") if isinstance(card_recs[slot_idx], dict) else ""
                 if cn:
                     driver_names.add(cn)
+            else:
+                for cr in card_recs[:2]:
+                    cn = cr.get("card_number", "") if isinstance(cr, dict) else ""
+                    if cn:
+                        driver_names.add(cn)
 
         # Vehicle info for card files
         card_vehicle_plate = ""
