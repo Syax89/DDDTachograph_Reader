@@ -2,7 +2,63 @@
 
 ## [Unreleased]
 
-## [2.5.0] - 2026-07-10 — "Revolution"
+## [2.6.0] - 2026-07-11 — "Restore"
+
+A precision release that restores common sense to the daily dashboard: no more
+48-hour days, empty generation sections, or merged crew data. The new slot toggle
+filters VU data to a single card slot at a time, and the double-click daily detail
+popup gives you a complete chronological timeline of every event in a day.
+
+### Added
+- **Slot 1 / Slot 2 toggle** — Single button in the Daily Activities header switches
+  between VU card slots. Default view shows Slot 1 data only.
+- **Day Detail Popup** — Double-click a date row in the Activities table to open a
+  rich popup with a chronological timeline of activity changes, events, faults,
+  GNSS positions, conditions, overspeeding, power interruptions, border crossings,
+  and load/unload operations. Card & VU support with dual-slot driver presence.
+  Only one window per unique day (re-opening lifts and focuses the existing one).
+- **# Drivers per slot** — The driver-count column now respects the active slot
+  filter. Driver names are matched to slots via `card_inserted` activity events
+  (±2 min window on insertion time).
+- **Event column (⚠️)** — Warning icon with tooltip showing the day's events;
+  double-click opens the detail popup.
+- **Vehicles KPI** — Counts unique vehicles from all `vehicle_sessions`, not just
+  the static vehicle registered on the card.
+
+### Fixed
+- **Rest totals capped at 24 h** — Multi-slot days no longer show 48 h of rest
+  (24 h × 2 slots). Drive and Work remain summed across slots (each driver
+  accumulates independently); Rest and Available now use the *maximum* across
+  slots, since they share the same calendar day.
+- **Generation tree** — G1 VU files no longer display empty/redundant G2 and
+  G2.2 sections. Only generations up to the file's detected generation are shown.
+- **Slot toggle closure** — Fixed stale captured variable in the toggle callback
+  that prevented the second and subsequent slot switches from working.
+- **In-place refresh** — Slot toggle updates table rows, KPI labels, and the
+  toggle label without a full layout rebuild, eliminating the brief layout flicker.
+- **Dashboard column centering** — All columns now centre-aligned except Date.
+- **Window deduplication** — `DayDetailWindow._open_windows` with proper type
+  annotations; duplicate popups lift and focus instead of creating a second window.
+
+### Changed
+- **Day detail column widths** — Fixed-width `_DETAIL_RANGE`, `_DETAIL_DUR`,
+  and `LABEL_W` constants for consistent alignment across the timeline.
+- **Timeline layout** — Single-row layout (no wrap), 900×580 window with
+  horizontal scrollbar; odometer and "End: HH:MM" removed for clarity.
+- **Slot labels in timeline** — Card inserted entries show `[Slot 1]` / `[Slot 2]`
+  next to the driver name.
+- **Default VU slot** — VU daily activities default to Slot 1 on first view;
+  slot state persists across dashboard reloads.
+- **Color palette** — Unified professional palette: Drive in blue,
+  Work/Rest/Available in greyscale; all other markers use a single neutral tone.
+
+### Internal
+- **Registry generation filter** — G1 card files skip the generation check in
+  `get_decoder()`, defaulting to the G1 decoder set (fixes CI failures).
+- **Golden snapshots** — Regenerated to match updated generations tree and
+  activity totals logic.
+- **CI** — Ruff, mypy, and pytest (362 tests, 31 intentional headless/Tk skips)
+  passing on Python 3.10, 3.12, 3.13, and 3.14.
 
 The biggest release yet. TachoReader grows from a decoder into a full visual
 analytics tool: interactive **activity timelines** and **speed graphs**, a
