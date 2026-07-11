@@ -543,7 +543,7 @@ class DecoderRegistry:
             if not candidates:
                 return None
 
-        if generation is not None:
+        if generation is not None and generation != "G1":
             candidates = [d for d in candidates
                           if d.generation == generation
                           or d.generation == "all"
