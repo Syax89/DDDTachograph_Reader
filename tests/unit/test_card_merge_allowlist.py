@@ -1,6 +1,4 @@
 import typing
-from dataclasses import dataclass, field
-from typing import List, Dict, Any
 
 from core.decoders.vu_g1 import (
     _merge_card_download,

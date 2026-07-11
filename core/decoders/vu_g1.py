@@ -1,6 +1,7 @@
 """Vehicle-unit G1 download decoders: VU overview and TREP 02-06 stream walkers (Annex 1B)."""
 
 import struct
+import typing
 from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
@@ -1392,8 +1393,6 @@ def _decode_embedded_card_image(data, results):
 # infrastructure metadata, clearly VU-only, Gen 2.2–only, or dead.  This means a
 # new card-side decoder that sets a matching TachoResult key is merged without
 # any manual allowlist update.
-
-import typing
 
 def _derive_card_merge_keys():
     from core.registry.models import TachoResult
