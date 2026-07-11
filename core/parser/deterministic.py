@@ -80,11 +80,13 @@ class CoverageTracker:
 
     def get_coverage_pct(self) -> float:
         """Covered bytes as a percentage of the file size."""
-        if self.total_size == 0:
-            return 0.0
-        self.merge_ranges()
         from core.utils.coverage import coverage_pct
-        return coverage_pct(sum(e - s for s, e in self.covered_ranges), self.total_size)
+        return coverage_pct(self.get_accounted_bytes(), self.total_size)
+
+    def get_accounted_bytes(self) -> int:
+        """Return the size of the union of all structurally accounted ranges."""
+        self.merge_ranges()
+        return sum(end - start for start, end in self.covered_ranges)
 
     def get_uncovered_ranges(self) -> List[Tuple[int, int]]:
         """Gaps between covered ranges, as [start, end) pairs in file order."""
@@ -132,31 +134,37 @@ class CoverageTracker:
         return dict(totals)
 
     def get_section_report(self, file_size: int) -> Dict[str, Any]:
-        """Generate a coverage report broken down by file section."""
+        """Generate a coverage report partitioned into neutral byte ranges.
+
+        These ranges are a display-oriented partition of the file, not parsed
+        semantic sections. Their half-open offsets are included in each key so
+        callers cannot infer a file format structure from the report label.
+        """
         file_size = max(0, file_size)
         header_end = min(256, file_size)
         driver_end = max(header_end, min(file_size // 2, file_size))
         vehicle_end = max(driver_end, min(3 * file_size // 4, file_size))
         tail_start = max(vehicle_end, file_size - 512)
-        sections = {
-            "Header": (0, header_end),
-            "Driver Data": (header_end, driver_end),
-            "Vehicle Data": (driver_end, vehicle_end),
-            "Certificates": (vehicle_end, tail_start),
-            "Signature/Tail": (tail_start, file_size),
-        }
+        ranges = (
+            (0, header_end),
+            (header_end, driver_end),
+            (driver_end, vehicle_end),
+            (vehicle_end, tail_start),
+            (tail_start, file_size),
+        )
 
         self.merge_ranges()
         report = {}
-        for section_name, (sec_start, sec_end) in sections.items():
+        for sec_start, sec_end in ranges:
             if sec_start >= sec_end:
                 continue
+            label = f"Bytes [0x{sec_start:06X}, 0x{sec_end:06X})"
             covered = sum(
                 max(0, min(e, sec_end) - max(s, sec_start))
                 for s, e in self.covered_ranges
             )
             sec_size = sec_end - sec_start
-            report[section_name] = {
+            report[label] = {
                 "start": f"0x{sec_start:06X}",
                 "end": f"0x{sec_end:06X}",
                 "size": sec_size,
@@ -272,12 +280,20 @@ class DeterministicParser:
                 "data_hex": data.hex() if length <= 128 else f"{data[:128].hex()}..."
             })
 
+        classifications = self.coverage.get_non_overlapping_classifications()
+        from core.utils.coverage import coverage_metrics
+        metrics = coverage_metrics(
+            file_size, self.coverage.get_accounted_bytes(), classifications
+        )
         self.results["coverage"] = {
             "total_bytes": file_size,
-            "covered_pct": self.coverage.get_coverage_pct(),
-            "classifications": self.coverage.get_non_overlapping_classifications(),
+            # Legacy name retained for API compatibility. It is byte-accounted
+            # coverage, not a semantic decoding rate.
+            "covered_pct": metrics["byte_accounted_pct"],
+            "classifications": classifications,
             "uncovered_ranges": [(f"0x{s:06X}", f"0x{e:06X}", e - s)
-                                 for s, e in self.coverage.get_uncovered_ranges()],
+                                  for s, e in self.coverage.get_uncovered_ranges()],
+            **metrics,
         }
         self.results["metadata"]["coverage_pct"] = self.results["coverage"]["covered_pct"]
         self.results["sections"] = self.coverage.get_section_report(file_size)

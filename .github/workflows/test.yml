@@ -18,11 +18,11 @@ jobs:
         cache: 'pip'
     - name: Ruff (correctness rules — see ruff.toml)
       run: |
-        pip install ruff
+        pip install -r requirements-dev.txt
         ruff check .
     - name: Mypy (see mypy.ini)
       run: |
-        pip install mypy
+        pip install -r requirements-dev.txt
         mypy .
 
   test:

@@ -11,8 +11,9 @@ marker ``0x76 0xNN`` and terminated by a SignatureRecordArray (recordType 0x08):
 
 RecordArray header = recordType(1) + recordSize(2 BE) + noOfRecords(2 BE).
 
-This module walks that stream and dispatches every record by recordType, so no
-record is silently dropped. recordType→size has been confirmed empirically
+This module owns the canonical VU RecordArray semantic API: full VU streams
+use :func:`walk_vu_record_arrays`, while the legacy tag-keyed adapter uses
+:func:`decode_vu_tag_record` for an already-isolated array. recordType→size has been confirmed empirically
 against the real files in ``DDD/`` (see ``specs/vu_recordtype_map.md``). Records
 with a confirmed byte-level structure are fully decoded; the rest are surfaced
 raw with an explicit ``confidence`` flag rather than guessed values.
@@ -78,6 +79,62 @@ RECORD_TYPES = {
     0x40: ("VuDetailedSpeedSample", "low"),
     0x60: ("Terminator", "low"),
 }
+
+# Canonical result-list names for record types shared by full VU streams and
+# tag-keyed RecordArray payloads. Keep consumer-facing key ownership here.
+VU_RECORD_RESULT_KEYS = {
+    0x22: "border_crossings",
+    0x23: "load_unload_records",
+    0x1C: "places",
+    0x09: "specific_conditions",
+    0x16: "gnss_ad_records",
+    0x1B: "overspeeding_events",
+    0x1A: "overspeeding_control",
+    0x1F: "power_interruptions",
+    0x17: "its_consents",
+    0x1E: "time_adjustments",
+    0x10: "company_locks",
+    0x11: "control_activities",
+    0x19: "vu_identifications",
+    0x0C: "calibrations",
+    0x0D: "card_iw_records",
+    0x0E: "card_records",
+    0x13: "downloadable_periods",
+    0x14: "download_activities",
+    0x20: "sensor_pairings",
+    0x21: "sensor_gnss_couplings",
+    0x12: "speed_blocks",
+}
+
+# 0x05xx tags are used only by the tag-keyed adapter. The mapped record types
+# share the full-VU record semantics above; tag-only variants are handled by
+# ``decode_vu_tag_record`` below.
+VU_TAG_RECORD_TYPES = {
+    0x0509: 0x0E,
+    0x050A: 0x0D,
+    0x050B: 0x13,
+    0x050D: 0x1E,
+    0x050F: 0x10,
+    0x0510: 0x20,
+    0x0511: 0x21,
+    0x0512: 0x17,
+    0x052C: 0x12,
+    0x052D: 0x1B,
+    0x052E: 0x1A,
+    0x0530: 0x1F,
+    0x0532: 0x21,
+    0x0533: 0x20,
+}
+
+VU_TAG_RESULT_KEYS = {
+    tag: VU_RECORD_RESULT_KEYS[record_type]
+    for tag, record_type in VU_TAG_RECORD_TYPES.items()
+}
+VU_TAG_RESULT_KEYS.update({
+    0x052B: "vu_controller",
+    0x052F: "time_adj_gnss",
+    0x0531: "sensor_faults",
+})
 
 # TREP marker (second byte after 0x76) → section name. Covers G1/G2/G2.2.
 TREP_SECTIONS = {
@@ -763,6 +820,15 @@ def _decode_record(record_type, rec):
     return out
 
 
+def decode_vu_record(record_type, rec):
+    """Decode one isolated VU RecordArray record in the canonical app shape.
+
+    This deliberately accepts a single record, not a complete TREP stream, so
+    the tag-keyed adapter can share semantics without calling the stream walker.
+    """
+    return _decode_record(record_type, rec)
+
+
 def iter_vu_sections(data):
     """Yield sections from a VU RecordArray stream as {marker, trep, records: [(pos, rt, rs, nr, end), ...]}.
 
@@ -812,7 +878,7 @@ def walk_vu_record_arrays(data, results):
             rpos = pos + 5
             for _ in range(nr):
                 rec = data[rpos:rpos + rs]
-                current["records"].setdefault(rt, []).append(_decode_record(rt, rec))
+                current["records"].setdefault(rt, []).append(decode_vu_record(rt, rec))
                 rpos += rs
         sections.append({
             "trep": f"0x{current['trep']:02X}",
@@ -845,7 +911,8 @@ def _emit_section(section, results):
                 results["vehicle"]["plate"] = plate
 
     # Border crossings (0x22) and load/unload (0x23) — confirmed structures.
-    for rt, key in ((0x22, "border_crossings"), (0x23, "load_unload_records")):
+    for rt in (0x22, 0x23):
+        key = VU_RECORD_RESULT_KEYS[rt]
         for r in recs.get(rt, []):
             if r.get("card_driver") is not None or r.get("timestamp"):
                 results.setdefault(key, []).append(r)
@@ -853,20 +920,17 @@ def _emit_section(section, results):
     # Places (0x1C) and specific conditions (0x09) → existing result lists.
     for r in recs.get(0x1C, []):
         if r.get("timestamp"):
-            results.setdefault("places", []).append(r)
+            results.setdefault(VU_RECORD_RESULT_KEYS[0x1C], []).append(r)
     for r in recs.get(0x09, []):
         if r.get("timestamp"):
-            results.setdefault("specific_conditions", []).append(r)
+            results.setdefault(VU_RECORD_RESULT_KEYS[0x09], []).append(r)
     for r in recs.get(0x16, []):
         if r.get("timestamp"):
-            results.setdefault("gnss_ad_records", []).append(r)
-    for rt, key in ((0x1B, "overspeeding_events"), (0x1A, "overspeeding_control"),
-                    (0x1F, "power_interruptions"), (0x17, "its_consents"),
-                    (0x1E, "time_adjustments"), (0x10, "company_locks"),
-                    (0x11, "control_activities"), (0x19, "vu_identifications"),
-                    (0x0C, "calibrations"), (0x0D, "card_iw_records"),
-                    (0x0E, "card_records"), (0x14, "download_activities"),
-                    (0x20, "sensor_pairings"), (0x21, "sensor_gnss_couplings")):
+            results.setdefault(VU_RECORD_RESULT_KEYS[0x16], []).append(r)
+    handled_record_types = {0x22, 0x23, 0x1C, 0x09, 0x16, 0x12}
+    for rt, key in VU_RECORD_RESULT_KEYS.items():
+        if rt in handled_record_types:
+            continue
         for r in recs.get(rt, []):
             results.setdefault(key, []).append(r)
 
@@ -875,7 +939,7 @@ def _emit_section(section, results):
     # generations). Padding blocks decode with begin=None and are skipped.
     for r in recs.get(0x12, []):
         if r.get("begin"):
-            results.setdefault("speed_blocks", []).append(r)
+            results.setdefault(VU_RECORD_RESULT_KEYS[0x12], []).append(r)
 
     # VuEventRecord (0x15) → events, VuFaultRecord (0x18) → faults.
     # Only the standard prefix is decoded; flagged confidence: low.
@@ -1056,3 +1120,21 @@ def decode_controller_identification(rec):
         }
     except (struct.error, IndexError):
         return None
+
+
+def decode_vu_tag_record(tag, rec):
+    """Decode an isolated 0x05xx VU tag record in the canonical result shape.
+
+    Most tag-keyed records have an equivalent full-VU record type. The three
+    remaining tag-only formats retain their dedicated decoder and result key.
+    """
+    record_type = VU_TAG_RECORD_TYPES.get(tag)
+    if record_type is not None:
+        return decode_vu_record(record_type, rec)
+    tag_decoders = {
+        0x052B: decode_controller_identification,
+        0x052F: decode_time_adj_gnss,
+        0x0531: decode_sensor_fault,
+    }
+    decoder = tag_decoders.get(tag)
+    return decoder(rec) if decoder else None

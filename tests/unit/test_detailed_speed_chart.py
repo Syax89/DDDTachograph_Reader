@@ -9,8 +9,7 @@ def test_detailed_speed_groups_samples_by_utc_day_and_keeps_gaps():
         "speed_blocks": [{
             "begin": "2025-06-30T23:59:59+00:00",
             "_chart_speeds_kmh": [88, None, 95],
-        }],
-        "detailed_speed": [{
+        }, {
             "timestamp": "2025-07-01T00:00:03+00:00",
             "speeds_kmh": [0xFF, 62],
         }],

@@ -71,8 +71,8 @@ from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 
 from core.utils.version import __version__  # noqa: E402
-from core.utils.report_format import humanize_key, _NOT_AVAILABLE_INTS, _ISO_RE, code_label, NATION_COLS  # noqa: E402
-from core.decoders.common import nation_full_name  # noqa: E402
+from core.utils.report_format import fmt_scalar, humanize_key, visible_columns  # noqa: E402
+from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
 
@@ -114,12 +114,6 @@ SPEED_LIMIT_KMH = 90
 
 
 
-def _fmt_iso(s):
-    """Convert ISO timestamp (2025-04-23T08:37:00+00:00) to 2025-04-23 08:37."""
-    m = _ISO_RE.match(s)
-    return f"{m.group(1)} {m.group(2)}" if m else s
-
-
 def _fmt_coords(lat, lon):
     if lat is None or lon is None:
         return ""
@@ -152,33 +146,11 @@ def _fmt_dict(d):
     return items if len(items) <= 120 else items[:120] + "\u2026"
 
 
-# Columns whose values may carry a human-readable code label.
-_CODE_KEYS = {"trep", "tag_id", "data_type"}
-_NATION_COLS = NATION_COLS
-
 def fmt_val(v, key=None):
     """Render any parser value for display: booleans as Yes/No, floats
     trimmed, large ints with thousands spaces, 0xFFFFFF sentinels as N/A,
     bytes as hex, ISO timestamps shortened, dicts/lists flattened. Nation
     code columns are expanded to the full English country name."""
-    if v is None:
-        return ""
-    if key in _NATION_COLS and v not in (None, "") and not isinstance(v, (dict, list)):
-        return nation_full_name(v)
-    if isinstance(v, bool):
-        return "Yes" if v else "No"
-    if isinstance(v, float):
-        s = f"{v:.6f}".rstrip("0").rstrip(".")
-        return s if s else "0"
-    if isinstance(v, int):
-        if v in _NOT_AVAILABLE_INTS:
-            return "N/A"
-        label = code_label(v, key=key) if key in _CODE_KEYS else ""
-        suffix = f"  ({label})" if label else ""
-        return (f"{v:,}".replace(",", " ") if abs(v) >= 10000 else str(v)) + suffix
-    if isinstance(v, (bytes, bytearray)):
-        h = v.hex()
-        return h if len(h) <= 64 else h[:64] + "\u2026"
     if isinstance(v, dict):
         return _fmt_dict(v)
     if isinstance(v, list):
@@ -187,11 +159,7 @@ def fmt_val(v, key=None):
         if all(not isinstance(x, (dict, list)) for x in v):
             return ", ".join(fmt_val(x) for x in v)
         return f"[{len(v)} items]"
-    if isinstance(v, str):
-        label = code_label(v, key=key) if key in _CODE_KEYS else ""
-        text = _fmt_iso(v)
-        return f"{text}  ({label})" if label else text
-    return str(v)
+    return fmt_scalar(v, key=key, include_code_label=True)
 
 
 def _columns_for(records, transformer):
@@ -201,23 +169,15 @@ def _columns_for(records, transformer):
         if isinstance(sample, list):
             sample = sample[0]
         return list(sample.keys())
-    cols = []
-    for rec in records:
-        if not isinstance(rec, dict):
-            return ["Value"]
-        for k in rec:
-            if (k in HIDDEN_KEYS or k in LEADING_KEYS or k in TRAILING_KEYS
-                    or k in cols or str(k).startswith("_")):
-                continue
-            cols.append(k)
-    # Leading keys at the front (if present)
-    for k in LEADING_KEYS:
-        if any(isinstance(r, dict) and k in r for r in records):
-            cols.insert(0, k)
-    for k in TRAILING_KEYS:
-        if any(isinstance(r, dict) and k in r for r in records):
-            cols.append(k)
-    return cols
+    # Reversed leading keys preserve this view's historical front-insertion
+    # order while the shared helper performs visibility filtering.
+    return visible_columns(
+        records,
+        hidden_keys=HIDDEN_KEYS,
+        leading_keys=tuple(reversed(LEADING_KEYS)),
+        trailing_keys=TRAILING_KEYS,
+        value_column_for_non_dict=True,
+    )
 
 
 def _rows_for(records, transformer):
@@ -326,7 +286,7 @@ def _fmt_duration_minutes(mins):
 def detailed_speed_by_day(data):
     """Return UTC detailed-speed samples grouped by ISO date."""
     grouped = {}
-    blocks = list(data.get("speed_blocks") or []) + list(data.get("detailed_speed") or [])
+    blocks = list(data.get("speed_blocks") or [])
     for block in blocks:
         decoded = _utc_speed_block(block)
         if decoded is None:
@@ -375,7 +335,6 @@ class DataTable(ttk.Frame):
         self.title_lbl.pack(side=tk.LEFT)
         self.count_lbl = ttk.Label(head, text="", foreground="gray")
         self.count_lbl.pack(side=tk.LEFT, padx=(8, 0))
-
         filt = ttk.Frame(self)
         self.filt_bar = filt
         filt.pack(fill=tk.X, padx=8, pady=(0, 4))
@@ -384,7 +343,6 @@ class DataTable(ttk.Frame):
         self.filter_var.trace_add("write", lambda *_: self._schedule_filter())
         self.filter_entry = ttk.Entry(filt, textvariable=self.filter_var)
         self.filter_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(4, 0))
-
         body = ttk.Frame(self)
         body.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
 
@@ -723,7 +681,7 @@ class DetailedSpeedChart(ttk.Frame):
             if sec_of_day < self._view_start or sec_of_day > self._view_end:
                 continue
             x = left + (sec_of_day - self._view_start) * plot_width / span
-            y_center = y_for(evt.get("max_speed_kmh", 0))
+            y_center = y_for(evt.get("max_speed_kmh", ""))
             r = 4
             canvas.create_oval(x - r, y_center - r, x + r, y_center + r,
                                fill="#d32f2f", outline="#ffffff", width=1,
@@ -889,6 +847,13 @@ class ActivityTimelineChart(ttk.Frame):
         header.pack(fill=tk.X, padx=8, pady=(8, 2))
         self.title_lbl = ttk.Label(header, font=("", 13, "bold"))
         self.title_lbl.pack(side=tk.LEFT)
+        self.detail_btn = tk.Label(header, text="?", font=("", 12, "bold"),
+                                   fg="#1565C0", bg="#E3F2FD", padx=6, pady=0,
+                                   cursor="hand2", relief=tk.FLAT,
+                                   bd=1, highlightthickness=0)
+        self.detail_btn.pack(side=tk.RIGHT, padx=(8, 0))
+        self.detail_btn.bind("<Enter>", lambda e: e.widget.configure(bg="#BBDEFB"))
+        self.detail_btn.bind("<Leave>", lambda e: e.widget.configure(bg="#E3F2FD"))
         self.info_lbl = ttk.Label(self, foreground="#37474f", anchor=tk.W)
         self.info_lbl.pack(fill=tk.X, padx=8, pady=(0, 4))
         self.canvas = tk.Canvas(self, background="#ffffff", highlightthickness=0)
@@ -908,16 +873,40 @@ class ActivityTimelineChart(ttk.Frame):
         self._draw_after_id = None
         self._layout = None
         self._info_parts = []
+        self._activities = []
+        self._day_km = 0
+        self._changes_count = 0
+        self._vehicle_info = []
+        self._details_data = {}
 
     def show(self, day, is_vu, activities, day_km=0, changes_count=0,
              driver_info="", slot_schedule=None, markers=None,
-             vehicle_info=None, oos_events=None):
+             vehicle_info=None, oos_events=None, data=None):
         self._day = day
         self._slots = self._build_blocks(activities, is_vu)
         self._slot_schedule = slot_schedule or {}
         self._markers = markers or []
         self._oos_events = oos_events or []
         self._driver_name = driver_info
+        self._activities = activities
+        self._day_km = day_km
+        self._changes_count = changes_count
+        self._vehicle_info = vehicle_info or []
+        self._details_data = data or {}
+        self._is_vu = is_vu
+
+        def _open_detail(e):
+            if not self._day:
+                return
+            DayDetailWindow(self.winfo_toplevel(), self._day,
+                            self._activities, self._day_km,
+                            self._changes_count, self._driver_name,
+                            self._slot_schedule, self._markers,
+                            self._oos_events, self._vehicle_info,
+                            self._details_data, is_vu=self._is_vu)
+
+        self.detail_btn.unbind("<Button-1>")
+        self.detail_btn.bind("<Button-1>", _open_detail)
         self.title_lbl.config(text=f"Daily Activities - {day} (UTC)")
         info_parts = [f"\U0001f4c5 {day}"]
         if is_vu:
@@ -1239,6 +1228,631 @@ class ActivityTimelineChart(ttk.Frame):
             return
 
 
+
+
+
+# ── Day detail popup ──────────────────────────────────────────────────────
+
+class DayDetailWindow(tk.Toplevel):
+    """Chronological log of all events for a single day (driver card / VU)."""
+
+    _open_windows = {}
+
+    COLORS = {
+        "DRIVE":      "#1565C0",
+        "WORK":       "#546E7A",
+        "REST":       "#78909C",
+        "AVAILABLE":  "#90A4AE",
+        "UNKNOWN":    "#78909C",
+        "CARD_IN":    "#2E7D32",
+        "CARD_OUT":   "#B71C1C",
+        "MANUAL":     "#6A1B9A",
+        "EVENT":      "#5D4037",
+        "FAULT":      "#5D4037",
+        "CONDITION":  "#5D4037",
+        "PLACES":     "#5D4037",
+        "OVERSPEED":  "#5D4037",
+        "POWER":      "#5D4037",
+        "BORDER":     "#5D4037",
+        "LOADUNLD":   "#5D4037",
+    }
+
+    def __init__(self, parent, day, activities, day_km, changes_count,
+                 driver_info, slot_schedule, markers, oos_events,
+                 vehicle_info, data, is_vu=False):
+        existing = DayDetailWindow._open_windows.get(day)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            existing.focus_force()
+            return
+        super().__init__(parent)
+        DayDetailWindow._open_windows[day] = self
+        self.title(f"Daily Detail — {day} (UTC)")
+        self.geometry("900x580")
+        self.resizable(True, True)
+        self.configure(bg="#FAFAFA")
+        self.transient(parent)
+
+        self._day = day
+        self._day_km = day_km
+        self._driver_info = driver_info
+        self._vehicle_info = vehicle_info or []
+        self._iso_date = _activity_to_iso(day)
+        self._is_vu = is_vu
+        self._data = data
+        self._slot_schedule = slot_schedule or {}
+        self._markers = markers or []
+        self._oos_events = oos_events or []
+        self._changes_count = changes_count
+
+        # Split activities by slot (VU files have two slots)
+        self._act_slot1 = [c for c in (activities or [])
+                           if isinstance(c, dict)
+                           and c.get("slot", "First") == "First"]
+        self._act_slot2 = [c for c in (activities or [])
+                           if isinstance(c, dict)
+                           and c.get("slot", "") == "Second"]
+        self._current_slot = 1
+
+        # ── Header ──
+        hdr = tk.Frame(self, bg="#FAFAFA")
+        hdr.pack(fill=tk.X, padx=14, pady=(12, 6))
+        title_row = tk.Frame(hdr, bg="#FAFAFA")
+        title_row.pack(fill=tk.X)
+        tk.Label(title_row, text="Daily Detail",
+                 font=("", 16, "bold"), fg="#263238", bg="#FAFAFA",
+                 anchor=tk.W).pack(side=tk.LEFT)
+        if is_vu:
+            self._slot_btn = tk.Label(title_row, text="Slot 2",
+                                      font=("", 10, "bold"),
+                                      fg="#1565C0", bg="#E3F2FD",
+                                      padx=10, pady=2,
+                                      cursor="hand2", relief=tk.FLAT, bd=1)
+            self._slot_btn.pack(side=tk.RIGHT)
+            self._slot_btn.bind("<Enter>", lambda e: e.widget.configure(bg="#BBDEFB"))
+            self._slot_btn.bind("<Leave>", lambda e: e.widget.configure(bg="#E3F2FD"))
+            self._slot_btn.bind("<Button-1>", lambda e: self._toggle_slot())
+        else:
+            self._slot_btn = None
+        tk.Label(hdr, text=f"{day} (UTC)",
+                 font=("", 11), fg="#607D8B", bg="#FAFAFA",
+                 anchor=tk.W).pack(anchor=tk.W, pady=(1, 6))
+        self._header_info = tk.Label(hdr, text="",
+                                     font=("", 10), fg="#78909C", bg="#FAFAFA",
+                                     anchor=tk.W)
+        self._header_info.pack(anchor=tk.W, pady=(0, 2))
+        self._refresh_header()
+
+        # ── Body: scrolled text ──
+        text_frame = ttk.Frame(self)
+        text_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+        scroll_y = ttk.Scrollbar(text_frame, orient=tk.VERTICAL)
+        scroll_x = ttk.Scrollbar(text_frame, orient=tk.HORIZONTAL)
+        self.text = tk.Text(text_frame, font=("Menlo", 11), wrap=tk.NONE,
+                            bg="#FFFFFF", fg="#263238", padx=14, pady=10,
+                            yscrollcommand=scroll_y.set,
+                            xscrollcommand=scroll_x.set, cursor="arrow",
+                            borderwidth=1, relief=tk.SOLID)
+        scroll_y.config(command=self.text.yview)
+        scroll_x.config(command=self.text.xview)
+        scroll_y.pack(side=tk.RIGHT, fill=tk.Y)
+        scroll_x.pack(side=tk.BOTTOM, fill=tk.X)
+        self.text.pack(fill=tk.BOTH, expand=True)
+
+        self.text.tag_configure("t_label", foreground="#263238",
+                                font=("Menlo", 11, "bold"))
+        self.text.tag_configure("t_marker", foreground="#263238",
+                                font=("Menlo", 11, "normal"))
+        self.text.tag_configure("t_event", foreground="#263238",
+                                font=("Menlo", 11, "italic"))
+        self.text.tag_configure("t_sub", foreground="#5D4037",
+                                font=("Menlo", 10))
+        self.text.tag_configure("t_hdr", foreground="#37474F",
+                                font=("Menlo", 12, "bold"))
+        self.text.tag_configure("t_time", foreground="#90A4AE",
+                                font=("Menlo", 10))
+        self.text.tag_configure("t_count", foreground="#78909C",
+                                font=("Menlo", 10))
+        self.text.tag_configure("t_odo", foreground="#78909C",
+                                font=("Menlo", 10))
+
+        self._render()
+
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
+
+    def _refresh_header(self):
+        info = []
+        if self._driver_info:
+            info.append(f"Driver: {self._driver_info}")
+        if self._vehicle_info:
+            plates = [v.get("plate", "?") for v in self._vehicle_info[:3]]
+            info.append(f"Vehicle: {', '.join(plates)}")
+        if self._day_km:
+            info.append(f"Distance: {self._day_km} km")
+        slot_label = f"Slot {self._current_slot}" if self._is_vu else ""
+        n_act = len(self._act_slot1) if self._current_slot == 1 else len(self._act_slot2)
+        info.append(f"{n_act} activity changes"
+                    + (f" ({slot_label})" if slot_label else ""))
+        self._header_info.config(text="  |  ".join(info))
+
+    # ── Slot toggle ────────────────────────────────────────────────────
+
+    def _toggle_slot(self):
+        if self._current_slot == 1:
+            self._current_slot = 2
+            self._slot_btn.config(text="Slot 1")
+        else:
+            self._current_slot = 1
+            self._slot_btn.config(text="Slot 2")
+        self._refresh_header()
+        self._render()
+
+    def _render(self):
+        activities = (self._act_slot1 if self._current_slot == 1
+                      else self._act_slot2)
+        shared = self._build_shared_timeline()
+        act_timeline = self._build_activity_timeline(activities)
+        timeline = act_timeline + shared
+        timeline.sort(key=lambda e: (e[0], e[1]))
+
+        self.text.config(state=tk.NORMAL)
+        self.text.delete("1.0", tk.END)
+        self._write_timeline(timeline)
+        self._write_summary(timeline)
+        self.text.config(state=tk.DISABLED)
+
+    def _on_close(self):
+        DayDetailWindow._open_windows.pop(self._day, None)
+        self.destroy()
+
+    # ── Timeline construction ──────────────────────────────────────────
+
+    def _build_shared_timeline(self):
+        """Non-activity entries shared across slots: card I/W, events, faults,
+        places, conditions, overspeeding, power interruptions, border crossings,
+        load/unload."""
+        entries = []
+        data = self._data
+
+        # 2. Card I/W from slot_schedule (only if no card_iw_records available)
+        if not (data.get("card_iw_records") or []):
+            for _slot_key, ranges in (self._slot_schedule or {}).items():
+                for start_hhmm, end_hhmm, name in ranges:
+                    if start_hhmm:
+                        sm = _hhmm_to_min(start_hhmm)
+                        detail = _fmt_empty_prefix() + name
+                        entries.append((sm, 500, "CARD_IN", start_hhmm,
+                                        "Card inserted", detail, 0, ""))
+                    if end_hhmm and end_hhmm != "24:00":
+                        em = _hhmm_to_min(end_hhmm)
+                        detail = _fmt_empty_prefix() + name
+                        entries.append((em, 510, "CARD_OUT", end_hhmm,
+                                        "Card withdrawn", detail, 0, ""))
+
+        # Card I/W records from data
+        for rec in (data.get("card_iw_records") or []):
+            if not isinstance(rec, dict):
+                continue
+            ins_ts = rec.get("insertion_time", "")
+            ins_dt = _parse_iso(ins_ts)
+            if not ins_dt or ins_dt.date().isoformat() != self._iso_date:
+                continue
+            hhmm = ins_dt.strftime("%H:%M")
+            im = _hhmm_to_min(hhmm)
+            if rec.get("manual_input"):
+                label = "Manual entry"
+                slot = rec.get("card_slot")
+                slot_str = f"[Slot {'2' if slot else '1'}]" if slot is not None else ""
+                detail = _fmt_empty_prefix() + slot_str
+                odo = rec.get("odometer_insertion_km")
+                odo_str = str(odo) if odo else ""
+                entries.append((im, 520, "MANUAL", hhmm, label,
+                                detail, 0, odo_str))
+            else:
+                name = f"{rec.get('holder_surname','')} {rec.get('holder_first_names','')}".strip()
+                if not name or name == "N/A N/A":
+                    name = rec.get("card_number", "") or "Unknown"
+                label = "Card inserted"
+                slot = rec.get("card_slot")
+                slot_str = f"[Slot {'2' if slot else '1'}]" if slot is not None else ""
+                detail = _fmt_empty_prefix() + f"{name} {slot_str}" if slot_str else _fmt_empty_prefix() + name
+                odo = rec.get("odometer_insertion_km")
+                odo_str = str(odo) if odo else ""
+                entries.append((im, 490, "CARD_IN", hhmm, label,
+                                detail, 0, odo_str))
+            wit_ts = rec.get("withdrawal_time", "")
+            if wit_ts:
+                wit_dt = _parse_iso(wit_ts)
+                if wit_dt and wit_dt.date().isoformat() == self._iso_date:
+                    whhmm = wit_dt.strftime("%H:%M")
+                    wm = _hhmm_to_min(whhmm)
+                    odo = rec.get("odometer_withdrawal_km")
+                    odo_str = str(odo) if odo else ""
+                    entries.append((wm, 510, "CARD_OUT", whhmm,
+                                    "Card withdrawn", "", 0, odo_str))
+
+        # Events
+        for ev in (data.get("events") or []):
+            if not isinstance(ev, dict):
+                continue
+            begin_ts = ev.get("begin") or ev.get("begin_time") or ""
+            dt = _parse_iso(begin_ts)
+            if not dt or dt.date().isoformat() != self._iso_date:
+                continue
+            hhmm = dt.strftime("%H:%M")
+            desc = ev.get("description", "Unknown event")
+            plate_str = ""
+            plate = ev.get("vehicle_plate", "")
+            if plate:
+                plate_str = f"  Plate: {plate}"
+            detail = _fmt_empty_prefix() + desc + plate_str
+            entries.append((_hhmm_to_min(hhmm), 800, "EVENT", hhmm,
+                            "Event", detail, 0, ""))
+
+        # Faults
+        for flt in (data.get("faults") or []):
+            if not isinstance(flt, dict):
+                continue
+            begin_ts = flt.get("begin") or flt.get("begin_time") or ""
+            dt = _parse_iso(begin_ts)
+            if not dt or dt.date().isoformat() != self._iso_date:
+                continue
+            hhmm = dt.strftime("%H:%M")
+            desc = flt.get("description", "Unknown fault")
+            detail = _fmt_empty_prefix() + desc
+            entries.append((_hhmm_to_min(hhmm), 810, "FAULT", hhmm,
+                            "Fault", detail, 0, ""))
+
+        # Specific conditions
+        for sec_of_day, cond, _dt in (self._oos_events or []):
+            hh, mm = divmod(sec_of_day, 3600)
+            mm //= 60
+            hhmm = f"{hh:02d}:{mm:02d}"
+            label = _condition_label(cond)
+            entries.append((sec_of_day // 60, 900, "CONDITION", hhmm,
+                            label, "", 0, ""))
+
+        # Places
+        for pl in (data.get("places") or []):
+            if not isinstance(pl, dict):
+                continue
+            ts = pl.get("timestamp", "")
+            dt = _parse_iso(ts)
+            if not dt or dt.date().isoformat() != self._iso_date:
+                continue
+            hhmm = dt.strftime("%H:%M")
+            entry_type = pl.get("entry_type", "")
+            nation_code = pl.get("nation", "")
+            if isinstance(nation_code, int):
+                nation_code = get_nation(nation_code)
+            country = nation_full_name(nation_code) if nation_code else ""
+            if not country:
+                country = nation_code or "Unknown"
+            if entry_type == "START":
+                label = "Place: Begin"
+            elif entry_type == "END":
+                label = "Place: End"
+            else:
+                label = "Place"
+            detail = country
+            odo = pl.get("odometer_km")
+            odo_str = str(odo) if odo else ""
+            entries.append((_hhmm_to_min(hhmm), 850, "PLACES", hhmm,
+                            label, detail, 0, odo_str))
+        # VU-specific: overspeeding events
+        for oe in (data.get("overspeeding_events") or []):
+            if not isinstance(oe, dict):
+                continue
+            begin_ts = oe.get("begin") or oe.get("begin_time") or ""
+            dt = _parse_iso(begin_ts)
+            if not dt or dt.date().isoformat() != self._iso_date:
+                continue
+            hhmm = dt.strftime("%H:%M")
+            max_s = oe.get("max_speed_kmh")
+            avg_s = oe.get("average_speed_kmh")
+            speed_parts = []
+            if max_s is not None:
+                speed_parts.append(f"Max {max_s} km/h")
+            if avg_s is not None:
+                speed_parts.append(f"Avg {avg_s} km/h")
+            speed_str = "  |  ".join(speed_parts) if speed_parts else ""
+            detail = _fmt_empty_prefix() + speed_str
+            entries.append((_hhmm_to_min(hhmm), 820, "OVERSPEED", hhmm,
+                            "Overspeeding", detail, 0, ""))
+
+        # VU-specific: power interruptions
+        for pi in (data.get("power_interruptions") or []):
+            if not isinstance(pi, dict):
+                continue
+            begin_ts = pi.get("begin") or pi.get("begin_time") or ""
+            dt = _parse_iso(begin_ts)
+            if not dt or dt.date().isoformat() != self._iso_date:
+                continue
+            hhmm = dt.strftime("%H:%M")
+            entries.append((_hhmm_to_min(hhmm), 830, "POWER", hhmm,
+                            "Power interruption", "", 0, ""))
+
+        # VU-specific (G2.2): border crossings
+        for bc in (data.get("border_crossings") or []):
+            if not isinstance(bc, dict):
+                continue
+            ts = bc.get("timestamp", bc.get("begin_time", ""))
+            dt = _parse_iso(ts)
+            if not dt or dt.date().isoformat() != self._iso_date:
+                continue
+            hhmm = dt.strftime("%H:%M")
+            left = bc.get("country_left", "")
+            entered = bc.get("country_entered", "")
+            if left and entered:
+                desc = f"{left} \u2192 {entered}"
+            elif left:
+                desc = f"Left: {left}"
+            elif entered:
+                desc = f"Entered: {entered}"
+            else:
+                desc = ""
+            odo = bc.get("odometer_km")
+            odo_str = str(odo) if odo else ""
+            entries.append((_hhmm_to_min(hhmm), 840, "BORDER", hhmm,
+                            "Border crossing",
+                            _fmt_empty_prefix() + desc, 0, odo_str))
+
+        # VU-specific (G2.2): load/unload
+        for lu in (data.get("load_unload_records") or []):
+            if not isinstance(lu, dict):
+                continue
+            ts = lu.get("timestamp", "")
+            dt = _parse_iso(ts)
+            if not dt or dt.date().isoformat() != self._iso_date:
+                continue
+            hhmm = dt.strftime("%H:%M")
+            op = (lu.get("operation_type") or "").capitalize()
+            odo = lu.get("odometer_km")
+            odo_str = str(odo) if odo else ""
+            entries.append((_hhmm_to_min(hhmm), 845, "LOADUNLD", hhmm,
+                            f"Load/Unload: {op}" if op else "Load/Unload",
+                            "", 0, odo_str))
+
+        return entries
+
+    def _build_activity_timeline(self, activities):
+        """Build timeline entries from activity changes only."""
+        # Build driver presence map for VU files
+        driver_by_slot = self._driver_presence() if self._is_vu else {}
+
+        entries = []
+        for i, ch in enumerate(activities):
+            if not isinstance(ch, dict):
+                continue
+            act = (ch.get("activity") or "").upper()
+            if act not in ("DRIVE", "WORK", "REST", "AVAILABLE"):
+                act = "UNKNOWN"
+            start_time = ch.get("time", "")
+            if not isinstance(start_time, str) or ":" not in start_time:
+                continue
+            start_min = _hhmm_to_min(start_time)
+            next_time = "24:00"
+            if i + 1 < len(activities):
+                nt = activities[i + 1].get("time", "")
+                if isinstance(nt, str) and ":" in nt:
+                    next_time = nt
+            end_min = _hhmm_to_min(next_time)
+            dur_min = max(0, end_min - start_min)
+            if dur_min <= 0:
+                continue
+            dur_str = _format_duration(dur_min)
+
+            slot = ch.get("slot", "")
+            crew = ch.get("crew", False)
+            card_in = ch.get("card_inserted", True)
+            time_range = f"{start_time} \u2192 {next_time}"
+            detail = _fmt_range_dur(time_range, dur_str)
+
+            # Driver / slot info
+            if self._is_vu:
+                slot_key = 0 if self._current_slot == 1 else 1
+                active_name = self._find_driver(start_min, driver_by_slot.get(slot_key, []))
+                if active_name:
+                    detail += active_name
+                elif not card_in:
+                    detail += "No card present"
+                else:
+                    detail += f"Slot {self._current_slot}"
+                if crew and active_name:
+                    detail += "  Crew"
+            else:
+                if slot and slot != "First":
+                    detail += f"Slot {slot}"
+                if crew:
+                    detail += "  Crew"
+                if not card_in:
+                    detail += "  No card present"
+
+            entries.append((start_min, 1000, act, start_time,
+                            _activity_label(act), detail, dur_min, ""))
+
+            if not card_in:
+                entries.append((start_min, 999, "CARD_OUT", start_time,
+                                "Card not inserted",
+                                f"Card absent from the tachograph as of {start_time}",
+                                0, ""))
+        return entries
+
+    def _driver_presence(self):
+        """Build {slot: [(start_min, end_min, name), ...]} from card_iw_records."""
+        result = {}
+        for rec in (self._data.get("card_iw_records") or []):
+            if not isinstance(rec, dict):
+                continue
+            ins_dt = _parse_iso(rec.get("insertion_time", ""))
+            if not ins_dt or ins_dt.date().isoformat() != self._iso_date:
+                continue
+            name = f"{rec.get('holder_surname','')} {rec.get('holder_first_names','')}".strip()
+            if not name or name == "N/A N/A":
+                name = rec.get("card_number", "") or "Unknown"
+            start_min = ins_dt.hour * 60 + ins_dt.minute
+            wit_dt = _parse_iso(rec.get("withdrawal_time", "") or "")
+            if wit_dt and wit_dt.date().isoformat() == self._iso_date:
+                end_min = wit_dt.hour * 60 + wit_dt.minute
+            else:
+                end_min = 1440
+            slot = rec.get("card_slot", 0)
+            result.setdefault(slot, []).append((start_min, end_min, name))
+        return result
+
+    @staticmethod
+    def _find_driver(minute, ranges):
+        for start_min, end_min, name in ranges:
+            if start_min <= minute < end_min:
+                return name
+        return None
+
+    # ── Write to Text widget ───────────────────────────────────────────
+
+    def _write_timeline(self, timeline):
+        ACTIVITY_KINDS = {"DRIVE", "WORK", "REST", "AVAILABLE", "UNKNOWN"}
+        LABEL_W = 22
+        LABEL_W = 22
+
+        if not timeline:
+            self.text.insert(tk.END, "No data for this day.\n", "t_sub")
+            return
+
+        self.text.insert(tk.END, "Activity Timeline\n", "t_hdr")
+
+        for entry in timeline:
+            if len(entry) < 8:
+                continue
+            _sk, _rk, kind, time_str, label, detail, _dur, odo_str = entry
+            is_activity = kind in ACTIVITY_KINDS
+            display_label = label if is_activity else f"\u2014\u2014 {label}"
+            padded = display_label.ljust(LABEL_W)
+
+            prefix = f"  {time_str}  {padded}"
+            body = f"{detail}"
+
+            line = f"{prefix}{body}\n"
+            self.text.insert(tk.END, line)
+
+            # Italic for events/faults
+            if kind in ("EVENT", "FAULT"):
+                line_start = self.text.index(tk.END + "-1c linestart")
+                label_start = f"{line_start} + {len(f'  {time_str}  ')}c"
+                label_end = f"{line_start} + {len(prefix)}c"
+                self.text.tag_add("t_event", label_start, label_end)
+
+    def _write_summary(self, timeline):
+        self.text.insert(tk.END, "\n")
+        self.text.insert(tk.END,
+                         "\u2500" * 52 + "\n", "t_sub")
+        self.text.insert(tk.END, "Summary\n", "t_hdr")
+
+        totals = {"DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0, "UNKNOWN": 0}
+        for entry in timeline:
+            if len(entry) < 8:
+                continue
+            _sk, _rk, kind, _t, _l, _d, dur, _odo = entry
+            if kind in totals:
+                totals[kind] += dur
+
+        for act, label in [("DRIVE", "Drive"), ("WORK", "Work"),
+                           ("AVAILABLE", "Available"), ("REST", "Rest")]:
+            self.text.insert(tk.END,
+                             f"  {label:12s} {_format_duration(totals[act])}\n",
+                             f"t_{act}")
+
+        counts = [
+            ("Events", "EVENT"), ("Faults", "FAULT"),
+            ("Conditions", "CONDITION"), ("Places", "PLACES"),
+            ("Overspeeding", "OVERSPEED"), ("Power interruptions", "POWER"),
+            ("Border crossings", "BORDER"), ("Load/Unload", "LOADUNLD"),
+            ("Manual entries", "MANUAL"),
+        ]
+        self.text.insert(tk.END, "\n")
+        for label, kind in counts:
+            n = sum(1 for _s, _r, k, *_ in timeline if k == kind)
+            if n > 0 or kind in ("EVENT", "FAULT", "CONDITION", "PLACES", "MANUAL"):
+                self.text.insert(tk.END,
+                                 f"  {label:20s} {n}\n",
+                                 "t_count")
+
+        card_in_times = sorted({sk for sk, _rk, k, *_ in timeline
+                                if k == "CARD_IN"})
+        card_out_times = sorted({sk for sk, _rk, k, *_ in timeline
+                                 if k == "CARD_OUT"})
+        act_card_present = sorted({e[0] for e in timeline
+                                   if e[2] in ("DRIVE", "WORK", "REST", "AVAILABLE")})
+
+        if not card_in_times and act_card_present:
+            card_in_times = [act_card_present[0]]
+            card_out_times = [act_card_present[-1]]
+
+        if card_in_times:
+            h1, m1 = divmod(card_in_times[0], 60)
+            h2, m2 = divmod(card_out_times[-1] if card_out_times else 1440, 60)
+            self.text.insert(tk.END,
+                             f"  Card present: {h1:02d}:{m1:02d}"
+                             f" \u2013 {h2:02d}:{m2:02d}\n",
+                             "t_count")
+
+
+# ── Day detail helpers ───────────────────────────────────────────────────
+
+# Column widths for timeline detail line (used by both activity and shared builders)
+_DETAIL_RANGE = 15   # "00:00 → 04:15  "
+_DETAIL_DUR   = 12   # "(4h 15m)     "  
+# Driver/desc starts at _DETAIL_RANGE + _DETAIL_DUR
+
+def _fmt_range_dur(time_range, dur_str):
+    """Return the range+duration prefix with fixed column widths."""
+    return time_range.ljust(_DETAIL_RANGE) + f"({dur_str})".ljust(_DETAIL_DUR)
+
+def _fmt_empty_prefix():
+    """Return empty range+duration reserved space for non-activity lines."""
+    return " " * _DETAIL_RANGE + " " * _DETAIL_DUR
+
+
+def _hhmm_to_min(s):
+    try:
+        h, m = s.split(":")[:2]
+        return int(h) * 60 + int(m)
+    except (ValueError, AttributeError):
+        return 0
+
+
+def _format_duration(minutes):
+    h, m = divmod(minutes, 60)
+    if h == 0:
+        return f"{m}m"
+    return f"{h}h {m:02d}m"
+
+
+def _activity_label(act):
+    return {"DRIVE": "Drive", "WORK": "Work",
+            "REST": "Rest", "AVAILABLE": "Available"}.get(act, act)
+
+
+def _condition_label(cond):
+    m = {
+        "1": "Out of scope \u2014 Begin",
+        "2": "Out of scope \u2014 End",
+        "3": "Ferry / Train \u2014 Begin",
+        "4": "Ferry / Train \u2014 End",
+        "OutOfScope Begin": "Out of scope \u2014 Begin",
+        "OutOfScope End": "Out of scope \u2014 End",
+        "FerryTrain Begin": "Ferry / Train \u2014 Begin",
+        "FerryTrain End": "Ferry / Train \u2014 End",
+    }
+    return m.get(str(cond), f"Condition: {cond}")
+
+
+def _ts_to_hhmm(ts):
+    dt = _parse_iso(str(ts))
+    if dt:
+        return dt.strftime("%H:%M")
+    return str(ts)[:5]
+
+
 # ── Main application ─────────────────────────────────────────────────────
 
 def _resource_path(rel):
@@ -1437,6 +2051,7 @@ class TachoExplorer(tk.Tk):
         self.tree.pack(fill=tk.BOTH, expand=True)
         self.tree.column("#0", width=_px(340), minwidth=_px(200))
         self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
+        self.tree.bind("<Double-1>", self._on_tree_double_click)
         # Right: table
         right = ttk.Frame(pw)
         pw.add(right, weight=3)
@@ -1993,9 +2608,10 @@ class TachoExplorer(tk.Tk):
         """
         by_plate = {}
         for s in sessions:
-            plate = s.get("plate", "")
+            plate = s.get("vehicle_plate") or s.get("plate", "")
+            nation = s.get("vehicle_nation") or s.get("nation", "")
             entry = by_plate.setdefault(plate, {
-                "plate": plate, "nation": s.get("nation", ""),
+                "plate": plate, "nation": nation,
                 "start": s.get("start"), "end": s.get("end")})
             start = s.get("start")
             end = s.get("end")
@@ -2261,6 +2877,7 @@ class TachoExplorer(tk.Tk):
         security and activities (day hierarchy) are handled separately."""
         self.tree.delete(*self.tree.get_children())
         self._payloads.clear()
+        self._opened_data = data
         meta = data.get("metadata", {})
 
         # ── File Info (key/value) ──
@@ -2279,6 +2896,21 @@ class TachoExplorer(tk.Tk):
             "Generation": meta.get("generation", "?"),
             "Integrity": self._integrity_label(data),
         }
+        coverage = data.get("coverage") or {}
+        if "byte_accounted_pct" in coverage:
+            info["Byte-accounted coverage"] = (
+                f"{coverage['byte_accounted_pct']}% "
+                f"({coverage.get('byte_accounted_bytes', 0):,} / "
+                f"{meta.get('file_size_bytes', 0):,} bytes)"
+            ).replace(",", " ")
+            info["Unknown bytes"] = (
+                f"{coverage.get('unknown_bytes', 0):,} "
+                f"({coverage.get('unknown_pct', 0)}%)"
+            ).replace(",", " ")
+            info["Structurally identified coverage"] = (
+                f"{coverage.get('structurally_identified_pct', 0)}% "
+                "(not a semantic decoding rate)"
+            )
         if meta.get("origin_note"):
             info["Origin details"] = meta["origin_note"]
         if meta.get("decoder_failure_count", 0) > 0:
@@ -2401,7 +3033,9 @@ class TachoExplorer(tk.Tk):
         if not unparsed:
             return
         cov = data.get("coverage") or {}
-        unknown_bytes = (cov.get("classifications") or {}).get("Unknown", 0)
+        unknown_bytes = cov.get(
+            "unknown_bytes", (cov.get("classifications") or {}).get("Unknown", 0)
+        )
         total = (data.get("metadata") or {}).get("file_size_bytes", 0)
         has_container = any(isinstance(e, dict) and e.get("container")
                             for e in unparsed)
@@ -2417,7 +3051,7 @@ class TachoExplorer(tk.Tk):
             if has_container:
                 row.insert(0, entry.get("container", "file"))
             rows.append(row)
-        pct = (unknown_bytes / total * 100) if total else 0
+        pct = cov.get("unknown_pct", (unknown_bytes / total * 100) if total else 0)
         meta = f"{unknown_bytes:,} bytes undecoded".replace(",", " ")
         if total:
             meta += f"  \u00b7  {pct:.2f}% of file"
@@ -2500,7 +3134,7 @@ class TachoExplorer(tk.Tk):
     # ── Dashboard views ──────────────────────────────────
 
     def _show_dashboard(self, title, date_range, kpis, columns, rows,
-                        row_tags=None, tooltips=None):
+                        row_tags=None, tooltips=None, ev_tooltips=None):
         """Render a summary dashboard with KPI cards and sortable table."""
         self._cleanup_dashboard()
         self.speed_chart.pack_forget()
@@ -2572,13 +3206,16 @@ class TachoExplorer(tk.Tk):
                 tag = "separator"
             self.table.tv.insert("", tk.END, values=r, tags=(tag,))
 
-        # Tooltips for # Drivers column
+        # Tooltips for # Drivers / # Vehicles column
         self._dashboard_tooltips = tooltips or {}
         self._dashboard_drv_col = -1
         for name in ("# Drivers", "# Vehicles"):
             if name in columns:
                 self._dashboard_drv_col = columns.index(name)
                 break
+        # Tooltips for Ev column
+        self._dashboard_ev_col = columns.index("Ev") if "Ev" in columns else -1
+        self._dashboard_ev_tips = ev_tooltips or {}
         self._dashboard_motion_bind = self.table.tv.bind(
             "<Motion>", self._on_dashboard_motion, add="+")
         self._tooltip_lbl = tk.Label(self.table.tv, text="", bg="#ffffcc",
@@ -2592,20 +3229,117 @@ class TachoExplorer(tk.Tk):
             self.table.tv.after_cancel(self.table._fit_after_id)
             self.table._fit_after_id = None
 
+    def _on_dashboard_double_click(self, event):
+        is_vu = getattr(self, "_dashboard_is_vu", False)
+        row_id = self.table.tv.identify_row(event.y)
+        if not row_id:
+            return
+        values = self.table.tv.item(row_id, "values")
+        if not values:
+            return
+        date_str = values[0]
+        activity_list = getattr(self, "_dashboard_activity_list", [])
+        data = getattr(self, "_dashboard_data", {}) or {}
+        day_data = None
+        for d in activity_list:
+            if isinstance(d, dict) and d.get("date", d.get("timestamp", "")) == date_str:
+                day_data = d
+                break
+        if not day_data:
+            return
+        changes = day_data.get("changes", [])
+        day_km = day_data.get("_day_km", 0) or day_data.get("odometer_km", 0) or 0
+        changes_count = day_data.get("changes_count") or len(changes)
+
+        drv = data.get("driver") or {}
+        driver_name = f"{drv.get('firstname','')} {drv.get('surname','')}".strip()
+        if not driver_name or driver_name == "N/A N/A":
+            driver_name = drv.get("card_number", "") or ""
+
+        # Build slot_schedule/markers/vehicles for the day
+        iso_date = _activity_to_iso(date_str)
+        vehicles = []
+        for sess in (data.get("vehicle_sessions") or []):
+            if not isinstance(sess, dict):
+                continue
+            sd = _parse_iso(sess.get("start"))
+            ed = _parse_iso(sess.get("end"))
+            anchor = sd or ed
+            if not anchor:
+                continue
+            if anchor.date().isoformat() == iso_date:
+                vehicles.append(sess)
+
+        # Build markers and schedule from card_iw_records
+        markers = []
+        slot_schedule = {}
+        for rec in (data.get("card_iw_records") or []):
+            if not isinstance(rec, dict):
+                continue
+            ins_ts = rec.get("insertion_time", "")
+            ins_dt = _parse_iso(ins_ts)
+            if not ins_dt or ins_dt.date().isoformat() != iso_date:
+                continue
+            sec_of_day = ins_dt.hour * 3600 + ins_dt.minute * 60 + ins_dt.second
+            name = f"{rec.get('holder_surname','')} {rec.get('holder_first_names','')}".strip()
+            if not name or name == "N/A N/A":
+                name = rec.get("card_number", "") or "Sconosciuto"
+            slot = rec.get("card_slot", 0)
+            slot_label = "Slot 1" if not slot else "Slot 2"
+            markers.append((sec_of_day, slot_label, name, True))
+
+            # Build schedule: start/end times for display
+            wit_ts = rec.get("withdrawal_time", "")
+            if not wit_ts:
+                continue
+            wit_dt = _parse_iso(wit_ts)
+            end_hhmm = wit_dt.strftime("%H:%M") if wit_dt else None
+            start_hhmm = ins_dt.strftime("%H:%M")
+            slot_schedule.setdefault(slot_label, []).append((start_hhmm, end_hhmm, name))
+
+        # Build oos_events
+        oos_events = []
+        for sc in (data.get("specific_conditions") or []):
+            if not isinstance(sc, dict):
+                continue
+            ts = sc.get("timestamp", "")
+            try:
+                sc_dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                if sc_dt.date().isoformat() != iso_date:
+                    continue
+                sec_of_day = sc_dt.hour * 3600 + sc_dt.minute * 60 + sc_dt.second
+                cond = sc.get("condition", "")
+                oos_events.append((sec_of_day, cond, sc_dt.astimezone(timezone.utc)))
+            except (ValueError, AttributeError):
+                continue
+
+        day_vehicles = self._day_vehicles_info(vehicles)
+
+        DayDetailWindow(self, date_str, changes, day_km, changes_count,
+                        driver_name, slot_schedule, markers, oos_events,
+                        day_vehicles, data, is_vu=is_vu)
+
     def _on_dashboard_motion(self, event):
-        if self._dashboard_drv_col < 0:
+        drv_col = getattr(self, "_dashboard_drv_col", -1)
+        ev_col = getattr(self, "_dashboard_ev_col", -1)
+        if drv_col < 0 and ev_col < 0:
             return
         row_id = self.table.tv.identify_row(event.y)
         col_id = self.table.tv.identify_column(event.x)
         col_idx = int(col_id.replace("#", "")) - 1 if col_id else -1
-        if not row_id or col_idx != self._dashboard_drv_col:
+        if not row_id or (col_idx != drv_col and col_idx != ev_col):
             self._tooltip_lbl.place_forget()
             return
         for i, iid in enumerate(self.table.tv.get_children("")):
             if iid == row_id:
-                tip = self._dashboard_tooltips.get(i, "")
+                if col_idx == drv_col:
+                    tip = self._dashboard_tooltips.get(i, "")
+                else:
+                    ev_tips = getattr(self, "_dashboard_ev_tips", {}) or {}
+                    tip = ev_tips.get(i, "")
                 if tip:
-                    self._tooltip_lbl.config(text=tip)
+                    self._tooltip_lbl.config(text=tip, justify=tk.LEFT,
+                                             wraplength=380)
                     self._tooltip_lbl.place(x=event.x + 16, y=event.y + 16)
                 else:
                     self._tooltip_lbl.place_forget()
@@ -2709,6 +3443,52 @@ class TachoExplorer(tk.Tk):
                 card_vehicle_tip = "  ·  ".join(parts)
         n_veh = 1 if card_vehicle_plate else 0
 
+        # Per-day events for warning indicator and tooltips
+        event_dates = set()
+        events_by_date = {}  # iso_date -> [list of descriptions]
+        for ev in (data.get("events") or []):
+            if not isinstance(ev, dict):
+                continue
+            begin_ts = ev.get("begin") or ev.get("begin_time") or ""
+            dt = _parse_iso(begin_ts)
+            if not dt:
+                continue
+            iso = dt.date().isoformat()
+            event_dates.add(iso)
+            desc = ev.get("description", "Unknown event")
+            time_str = dt.strftime("%H:%M")
+            events_by_date.setdefault(iso, []).append(f"{time_str}  {desc}")
+
+        # Per-day vehicles from vehicle_sessions (driver cards)
+        veh_by_date = {}
+        if not is_vu:
+            for sess in (data.get("vehicle_sessions") or []):
+                if not isinstance(sess, dict):
+                    continue
+                plate = (sess.get("vehicle_plate") or "").strip()
+                if not plate:
+                    continue
+                start_dt = _parse_iso(sess.get("start"))
+                end_dt = _parse_iso(sess.get("end"))
+                if start_dt:
+                    veh_by_date.setdefault(start_dt.date().isoformat(), set()).add(plate)
+                if end_dt:
+                    veh_by_date.setdefault(end_dt.date().isoformat(), set()).add(plate)
+            # Fill gaps: a session spans from start date to end date
+            for sess in (data.get("vehicle_sessions") or []):
+                if not isinstance(sess, dict):
+                    continue
+                plate = (sess.get("vehicle_plate") or "").strip()
+                if not plate:
+                    continue
+                start_dt = _parse_iso(sess.get("start"))
+                end_dt = _parse_iso(sess.get("end"))
+                if start_dt and end_dt and start_dt.date() != end_dt.date():
+                    current = start_dt.date() + timedelta(days=1)
+                    while current <= end_dt.date():
+                        veh_by_date.setdefault(current.isoformat(), set()).add(plate)
+                        current += timedelta(days=1)
+
         # Monthly grouping
         MONTH_NAMES = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun",
                        7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec"}
@@ -2746,6 +3526,7 @@ class TachoExplorer(tk.Tk):
         table_rows = []
         row_tags = []
         tooltips = {}
+        ev_tooltips = {}
         row_idx = 0
 
         for month_key in reversed(list(months.keys())):
@@ -2785,18 +3566,21 @@ class TachoExplorer(tk.Tk):
                 n_drv = len(drivers) if drivers else 0
 
                 km_str = f"{day_km:,}".replace(",", " ") if day_km else ""
+                ev_str = "\u26a0\ufe0f" if iso_date in event_dates else ""
                 if is_vu:
                     odo_str = f"{odo:,}".replace(",", " ") if odo else ""
                     table_rows.append([
-                        date_str, f"{n_drv}\u2002\u25be", km_str, odo_str,
+                        date_str, f"{n_drv}\u2002\u25be", ev_str, km_str, odo_str,
                         _fmt_duration_minutes(day_tots["DRIVE"]),
                         _fmt_duration_minutes(day_tots["WORK"]),
                         _fmt_duration_minutes(day_tots["REST"]),
                         _fmt_duration_minutes(day_tots["AVAILABLE"]),
                     ])
                 else:
+                    day_vehicles = veh_by_date.get(iso_date, set())
+                    n_day_veh = len(day_vehicles) or n_veh
                     table_rows.append([
-                        date_str, f"{n_veh}\u2002\u25be", km_str,
+                        date_str, f"{n_day_veh}\u2002\u25be", ev_str, km_str,
                         _fmt_duration_minutes(day_tots["DRIVE"]),
                         _fmt_duration_minutes(day_tots["WORK"]),
                         _fmt_duration_minutes(day_tots["REST"]),
@@ -2807,21 +3591,30 @@ class TachoExplorer(tk.Tk):
                     tooltips[row_idx] = names
                 elif not is_vu and card_vehicle_tip:
                     tooltips[row_idx] = card_vehicle_tip
+                if iso_date in event_dates:
+                    ev_list = events_by_date.get(iso_date, [])
+                    ev_text = "\n".join(ev_list)
+                    ev_text += "\n\n\u2139\ufe0f  Double-click for full details"
+                    ev_tooltips[row_idx] = ev_text
                 row_idx += 1
 
             # Monthly total row
             km_month = f"{m_tot['KM']:,}".replace(",", " ") if m_tot["KM"] else ""
             if is_vu:
                 table_rows.append([
-                    m_label, str(len(m_tot["drivers"])), km_month, "",
+                    m_label, str(len(m_tot["drivers"])), "", km_month, "",
                     _fmt_duration_minutes(m_tot["DRIVE"]),
                     _fmt_duration_minutes(m_tot["WORK"]),
                     _fmt_duration_minutes(m_tot["REST"]),
                     _fmt_duration_minutes(m_tot["AVAILABLE"]),
                 ])
             else:
+                m_veh = len({p for day in m_days
+                              for p in veh_by_date.get(
+                                  _activity_to_iso(str(day.get("date", ""))), set())})
+                m_n_veh = m_veh or n_veh
                 table_rows.append([
-                    m_label, str(n_veh) if n_veh else "", km_month,
+                    m_label, str(m_n_veh) if m_n_veh else "", "", km_month,
                     _fmt_duration_minutes(m_tot["DRIVE"]),
                     _fmt_duration_minutes(m_tot["WORK"]),
                     _fmt_duration_minutes(m_tot["REST"]),
@@ -2830,7 +3623,7 @@ class TachoExplorer(tk.Tk):
             row_tags.append("total")
             row_idx += 1
 
-            num_cols = 8 if is_vu else 7
+            num_cols = 9 if is_vu else 8
             table_rows.append([""] * num_cols)
             row_tags.append("separator")
             row_idx += 1
@@ -2858,23 +3651,33 @@ class TachoExplorer(tk.Tk):
         if is_vu:
             kpis.append(("Drivers", str(driver_count), "#37474f"))
         else:
-            kpis.append(("Vehicles", str(n_veh), "#37474f"))
+            all_vehicles = set()
+            for plates in veh_by_date.values():
+                all_vehicles.update(plates)
+            kpis.append(("Vehicles", str(len(all_vehicles) or n_veh), "#37474f"))
 
         if is_vu:
-            columns = ["Date", "# Drivers", "Km", "Odometer",
+            columns = ["Date", "# Drivers", "Ev", "Km", "Odometer",
                        "Drive", "Work", "Rest", "Available"]
         else:
-            columns = ["Date", "# Vehicles", "Km",
+            columns = ["Date", "# Vehicles", "Ev", "Km",
                        "Drive", "Work", "Rest", "Available"]
         self._show_dashboard("Daily Activities",
                              date_range, kpis, columns, table_rows,
-                             row_tags=row_tags, tooltips=tooltips)
+                             row_tags=row_tags, tooltips=tooltips,
+                             ev_tooltips=ev_tooltips)
+
+        self._dashboard_activity_list = activity_list
+        self._dashboard_data = data
+        self._dashboard_is_vu = is_vu
+        self.table.tv.unbind("<Double-1>")
+        self.table.tv.bind("<Double-1>",
+                           lambda e: self._on_dashboard_double_click(e))
 
     def _show_speed_summary(self, raw_blocks, data):
         """Dashboard for the 'Detailed Speed' parent node."""
         all_blocks = list(raw_blocks or [])
         all_blocks += list(data.get("speed_blocks") or [])
-        all_blocks += list(data.get("detailed_speed") or [])
 
         by_day = detailed_speed_by_day(data)
         if not by_day:
@@ -2965,6 +3768,20 @@ class TachoExplorer(tk.Tk):
 
     # ── Selection → table ──────────────────────────────────
 
+    def _on_tree_double_click(self, event):
+        iid = self.tree.identify_row(event.y)
+        if not iid:
+            return
+        self.tree.selection_set(iid)
+        payload = self._payloads.get(iid)
+        if not payload or payload[0] != "__activity_chart__":
+            return
+        day, is_vu, activities, day_km, changes_count, driver_info, slot_schedule, markers, oos_events, vehicle_info = payload[1:]
+        data = getattr(self, "_opened_data", None) or {}
+        DayDetailWindow(self, day, activities, day_km, changes_count,
+                        driver_info, slot_schedule, markers, oos_events,
+                        vehicle_info, data, is_vu=is_vu)
+
     def _on_tree_select(self, _event):
         """Tree selection → show the node's stored payload in the table."""
         sel = self.tree.selection()
@@ -3039,7 +3856,8 @@ class TachoExplorer(tk.Tk):
         self.activity_chart.pack(fill=tk.BOTH, expand=True)
         self.activity_chart.show(day, is_vu, activities, day_km,
                                  changes_count, driver_info, slot_schedule, markers,
-                                 vehicle_info, oos_events)
+                                 vehicle_info, oos_events,
+                                 data=getattr(self, "_opened_data", None) or {})
 
     def _show_summary(self, title, cols, rows, meta):
         """Render a rich info panel with section headers instead of a data table."""

@@ -1,6 +1,6 @@
 """Data models for tachograph parsing results. Defines TachoResult and related utilities used throughout the pipeline."""
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 from datetime import datetime
 
 def _clean_tag_name(name: str) -> str:
@@ -20,6 +20,25 @@ def _tag_generation(name: str) -> str:
         return "Generation 1"
     # Unprefixed tags: classify by tag ID range
     return "Generation 1"
+
+
+def _occurrence_generation(generation: Any) -> Optional[str]:
+    """Map parser and display generation labels to generation-tree keys."""
+    if not isinstance(generation, str):
+        return None
+    labels = {
+        "g1": "Generation 1",
+        "g1 (digital)": "Generation 1",
+        "generation 1": "Generation 1",
+        "g2": "Generation 2",
+        "g2 (smart)": "Generation 2",
+        "generation 2": "Generation 2",
+        "g2.2": "Generation 2.2",
+        "g2.2 (smart v2)": "Generation 2.2",
+        "generation 2.2": "Generation 2.2",
+    }
+    return labels.get(" ".join(generation.casefold().split()))
+
 
 @dataclass
 class TachoResult:
@@ -63,6 +82,54 @@ class TachoResult:
     load_sensor_data: List[Dict[str, Any]] = field(default_factory=list)
     border_crossings: List[Dict[str, Any]] = field(default_factory=list)
     signed_daily_records: List[Dict[str, Any]] = field(default_factory=list)
+    # Card and VU sections shared by decoders, reports, and the GUI.
+    card_application: Dict[str, Any] = field(default_factory=dict)
+    control_activities: List[Dict[str, Any]] = field(default_factory=list)
+    card_downloads: List[Dict[str, Any]] = field(default_factory=list)
+    card_chip: Dict[str, Any] = field(default_factory=dict)
+    company_info: Dict[str, Any] = field(default_factory=dict)
+    vu_overview: Dict[str, Any] = field(default_factory=dict)
+    vu_info: Dict[str, Any] = field(default_factory=dict)
+    card_numbers: List[str] = field(default_factory=list)
+    card_iw_records: List[Dict[str, Any]] = field(default_factory=list)
+    company_locks: List[Dict[str, Any]] = field(default_factory=list)
+    overspeeding_events: List[Dict[str, Any]] = field(default_factory=list)
+    overspeeding_control: List[Dict[str, Any]] = field(default_factory=list)
+    specific_conditions: List[Dict[str, Any]] = field(default_factory=list)
+    time_adjustments: List[Dict[str, Any]] = field(default_factory=list)
+    sensor_daily_records: List[Dict[str, Any]] = field(default_factory=list)
+    sensor_info: Dict[str, Any] = field(default_factory=dict)
+    previous_vehicle: Dict[str, Any] = field(default_factory=dict)
+    inserted_drivers: List[Dict[str, Any]] = field(default_factory=list)
+    workshops: List[str] = field(default_factory=list)
+    calibration_vins: Set[str] = field(default_factory=set)
+    speed_blocks: List[Dict[str, Any]] = field(default_factory=list)
+    certificates: List[Dict[str, Any]] = field(default_factory=list)
+    card_issuer: Dict[str, Any] = field(default_factory=dict)
+    card_icc: Dict[str, Any] = field(default_factory=dict)
+    company_holders: List[Dict[str, Any]] = field(default_factory=list)
+    vehicle_units: List[Dict[str, Any]] = field(default_factory=list)
+    vu_certificates: List[Dict[str, Any]] = field(default_factory=list)
+    vu_identifications: List[Dict[str, Any]] = field(default_factory=list)
+    card_records: List[Dict[str, Any]] = field(default_factory=list)
+    download_activities: List[Dict[str, Any]] = field(default_factory=list)
+    downloadable_periods: List[Dict[str, Any]] = field(default_factory=list)
+    its_consents: List[Dict[str, Any]] = field(default_factory=list)
+    power_interruptions: List[Dict[str, Any]] = field(default_factory=list)
+    signature_verification: Dict[str, Any] = field(default_factory=dict)
+    sensor_pairings: List[Dict[str, Any]] = field(default_factory=list)
+    sensor_gnss_couplings: List[Dict[str, Any]] = field(default_factory=list)
+    vu_record_arrays: List[Dict[str, Any]] = field(default_factory=list)
+    gnss_auth: List[Dict[str, Any]] = field(default_factory=list)
+    load_unload_auth: List[Dict[str, Any]] = field(default_factory=list)
+    sensor_faults: List[Dict[str, Any]] = field(default_factory=list)
+    vu_controller: List[Dict[str, Any]] = field(default_factory=list)
+    time_adj_gnss: List[Dict[str, Any]] = field(default_factory=list)
+    certificate_temporal_validity: Dict[str, Any] = field(default_factory=dict)
+    ef_signature_verification: Dict[str, Any] = field(default_factory=dict)
+    coverage: Dict[str, Any] = field(default_factory=dict)
+    sections: Dict[str, Any] = field(default_factory=dict)
+    generations: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self, tags: Optional[Dict[int, str]] = None) -> Dict[str, Any]:
         """Convert the result to a dictionary, with optional hierarchical generations tree."""
@@ -84,7 +151,54 @@ class TachoResult:
             "gnss_places": self.gnss_places,
             "load_sensor_data": self.load_sensor_data,
             "border_crossings": self.border_crossings,
-            "signed_daily_records": self.signed_daily_records
+            "signed_daily_records": self.signed_daily_records,
+            "card_application": self.card_application,
+            "control_activities": self.control_activities,
+            "card_downloads": self.card_downloads,
+            "card_chip": self.card_chip,
+            "company_info": self.company_info,
+            "vu_overview": self.vu_overview,
+            "vu_info": self.vu_info,
+            "card_numbers": self.card_numbers,
+            "card_iw_records": self.card_iw_records,
+            "company_locks": self.company_locks,
+            "overspeeding_events": self.overspeeding_events,
+            "overspeeding_control": self.overspeeding_control,
+            "specific_conditions": self.specific_conditions,
+            "time_adjustments": self.time_adjustments,
+            "sensor_daily_records": self.sensor_daily_records,
+            "sensor_info": self.sensor_info,
+            "previous_vehicle": self.previous_vehicle,
+            "inserted_drivers": self.inserted_drivers,
+            "workshops": self.workshops,
+            "calibration_vins": self.calibration_vins,
+            "speed_blocks": self.speed_blocks,
+            "certificates": self.certificates,
+            "card_issuer": self.card_issuer,
+            "card_icc": self.card_icc,
+            "company_holders": self.company_holders,
+            "vehicle_units": self.vehicle_units,
+            "vu_certificates": self.vu_certificates,
+            "vu_identifications": self.vu_identifications,
+            "card_records": self.card_records,
+            "download_activities": self.download_activities,
+            "downloadable_periods": self.downloadable_periods,
+            "its_consents": self.its_consents,
+            "power_interruptions": self.power_interruptions,
+            "signature_verification": self.signature_verification,
+            "sensor_pairings": self.sensor_pairings,
+            "sensor_gnss_couplings": self.sensor_gnss_couplings,
+            "vu_record_arrays": self.vu_record_arrays,
+            "gnss_auth": self.gnss_auth,
+            "load_unload_auth": self.load_unload_auth,
+            "sensor_faults": self.sensor_faults,
+            "vu_controller": self.vu_controller,
+            "time_adj_gnss": self.time_adj_gnss,
+            "certificate_temporal_validity": self.certificate_temporal_validity,
+            "ef_signature_verification": self.ef_signature_verification,
+            "coverage": self.coverage,
+            "sections": self.sections,
+            "generations": self.generations,
         }
         if tags:
             result["generations"] = build_generations_tree(result, tags)
@@ -305,19 +419,8 @@ def _build_gen2(results: Dict[str, Any], driver: Dict[str, Any],
                 flat[f"{prefix} {field}"] = label
         g["Certificate Temporal Validity"] = flat
 
-    # Sensor pairings (two possible keys)
-    for key in ("sensor_pairings", "sensor_paired"):
-        val = results.get(key)
-        if _non_empty(val):
-            g["Sensor Pairings"] = val
-            break
-
-    # GNSS sensor couplings (two possible keys)
-    for key in ("sensor_gnss_couplings", "sensor_gnss_coupled"):
-        val = results.get(key)
-        if _non_empty(val):
-            g["GNSS Sensor Couplings"] = val
-            break
+    _add(0x0000, "Sensor Pairings", results.get("sensor_pairings"))
+    _add(0x0000, "GNSS Sensor Couplings", results.get("sensor_gnss_couplings"))
 
     # VU RecordArray structural summary
     _add(0x0000, "VU RecordArray Summary", results.get("vu_record_arrays"))
@@ -359,7 +462,7 @@ def _build_gen22(results: Dict[str, Any], driver: Dict[str, Any],
 
     # G2.2-specific additional decoded keys
     for src_key, display_name in [
-        ("detailed_speed",        "Detailed Speed (0x052C)"),
+        ("speed_blocks",          "Detailed Speed (0x052C)"),
         ("gnss_auth",             "GNSS Authentication"),
         ("load_unload_auth",      "Load/Unload Authentication"),
         ("sensor_faults",         "Sensor Faults"),
@@ -368,34 +471,27 @@ def _build_gen22(results: Dict[str, Any], driver: Dict[str, Any],
     ]:
         _add(0x0000, display_name, results.get(src_key))
 
-    # G2.2 sensor pairings variant
-    for key in ("sensor_paired_g22",):
-        val = results.get(key)
-        if _non_empty(val):
-            g["Sensor Pairings (G2.2)"] = val
-            break
-
-    # G2.2 GNSS sensor couplings variant
-    for key in ("sensor_gnss_coupled_g22",):
-        val = results.get(key)
-        if _non_empty(val):
-            g["GNSS Sensor Couplings (G2.2)"] = val
-            break
+    _add(0x0000, "Sensor Pairings (G2.2)", results.get("sensor_pairings"))
+    _add(0x0000, "GNSS Sensor Couplings (G2.2)", results.get("sensor_gnss_couplings"))
 
     return g
 
 
 def _split_raw_tags(raw_tags: Dict[str, Any],
                     tags: Dict[int, str]) -> Dict[str, Dict[str, Any]]:
-    """Partition raw_tags occurrences into per-generation buckets."""
+    """Partition raw tag occurrences by explicit generation or legacy prefix."""
     buckets: Dict[str, Dict[str, Any]] = {
         "Generation 1": {}, "Generation 2": {}, "Generation 2.2": {}}
     for key, occs in raw_tags.items():
         parts = key.split(" > ")
         leaf = parts[-1]
-        gen = _tag_generation(leaf)
+        fallback_gen = _tag_generation(leaf)
         clean = _clean_tag_name(leaf)
-        buckets[gen].setdefault(clean, []).extend(occs)
+        for occurrence in occs:
+            generation = (_occurrence_generation(occurrence.get("generation"))
+                          if isinstance(occurrence, dict) else None)
+            gen = generation or fallback_gen
+            buckets[gen].setdefault(clean, []).append(occurrence)
     return {k: v for k, v in buckets.items() if v}
 
 

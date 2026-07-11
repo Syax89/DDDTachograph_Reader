@@ -362,8 +362,8 @@ class TestGen22Decoders:
 
         parse_g2_vu_record(record_array, results, 0x052C)
 
-        assert len(results["detailed_speed"]) == 1
-        assert results["detailed_speed"][0]["max_speed_kmh"] == 59
+        assert len(results["speed_blocks"]) == 1
+        assert results["speed_blocks"][0]["max_speed_kmh"] == 59
 
     def test_overspeeding_event_decode(self):
         ts_begin = 1700000000

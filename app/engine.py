@@ -7,10 +7,10 @@ import logging
 from datetime import datetime
 
 from core.crypto.signature import SignatureValidator
+from core.registry.registry import DecoderRegistry
 from core.registry.models import TachoResult, build_generations_tree
 from core.utils.version import __version__
 from core import decoders
-from core.utils.tag_defs import TACHO_TAGS
 from core.utils.logger import decoder_failure_count, decoder_failures, reset_decoder_failures
 
 logger = logging.getLogger(__name__)
@@ -46,8 +46,8 @@ class TachoParser:
         self.TAGS = self._load_tags()
 
     def _load_tags(self):
-        """Load tags from internal defaults and optional JSON file."""
-        tags = TACHO_TAGS.copy()
+        """Load registry names and optional fallbacks for unregistered tags."""
+        tags = DecoderRegistry.instance().get_tag_names()
 
         json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'all_tacho_tags.json')
         if not os.path.exists(json_path):
@@ -58,7 +58,10 @@ class TachoParser:
                     extra_tags = json.load(f)
                     for k, v in extra_tags.items():
                         try:
-                            tags[int(k, 16)] = v
+                            tag = int(k, 16)
+                            # Registered names are owned by DecoderRegistry;
+                            # external files can only label unknown tags.
+                            tags.setdefault(tag, v)
                         except (ValueError, TypeError):
                             logger.debug("Skipping non-hex tag key: %s", k)
             except (json.JSONDecodeError, ValueError) as e:
@@ -75,7 +78,7 @@ class TachoParser:
             return None
 
     def get_coverage_report(self):
-        """Percentage of bytes assigned to identified fields.
+        """Percentage of bytes structurally accounted for, including unknown bytes.
 
         Returns None if no parse has occurred yet (raw_data is None).
         """
@@ -85,22 +88,22 @@ class TachoParser:
             return 0.0
         cov = self.results.get("coverage", {})
         if cov:
-            return cov.get("covered_pct", 0.0)
+            return cov.get("byte_accounted_pct", cov.get("covered_pct", 0.0))
         return self.results.get("metadata", {}).get("coverage_pct", 0.0)
 
     def get_section_report(self):
-        """Human-readable per-section coverage summary."""
+        """Human-readable per-byte-range accounted coverage summary."""
         if self.file_size == 0:
             return {"error": "Empty file, no coverage data"}
 
         sections = self.results.get("sections", {})
         if not sections:
-            return {"error": "No section data available. Run parse() first."}
+            return {"error": "No byte-range data available. Run parse() first."}
 
         summary = []
         for name, info in sections.items():
             if isinstance(info, dict) and "coverage_pct" in info:
-                summary.append(f"  {name}: {info['coverage_pct']}% "
+                summary.append(f"  {name}: Byte-accounted {info['coverage_pct']}% "
                                f"({info.get('covered', 0):,}/{info.get('size', 0):,} bytes)")
 
         return {

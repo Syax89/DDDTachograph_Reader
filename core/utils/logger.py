@@ -50,22 +50,18 @@ def get_logger(name: str = "ddd_tacho") -> logging.Logger:
         if _logger is None:
             _logger = logging.getLogger("ddd_tacho")
             _counter = _CountingHandler()
-            if not _logger.handlers:
+            _has_external = bool(_logger.handlers)
+            _logger.addHandler(_counter)
+            _logger.setLevel(logging.DEBUG)
+            _logger.propagate = False
+            if not _has_external:
                 _console_handler = logging.StreamHandler()
                 _console_handler.setFormatter(logging.Formatter(
                     '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
                     datefmt='%H:%M:%S'
                 ))
-                # Console stays quiet (WARNING+); the logger itself runs at DEBUG so
-                # the counting handler always sees decoder failure events.
                 _console_handler.setLevel(logging.WARNING)
                 _logger.addHandler(_console_handler)
-                _logger.addHandler(_counter)
-                _logger.setLevel(logging.DEBUG)
-                # The logger runs at DEBUG so the counter sees every failure event;
-                # don't bubble those debug records up to the root handler (which would
-                # flood the console), the project's own console handler gates output.
-                _logger.propagate = False
     return _logger
 
 

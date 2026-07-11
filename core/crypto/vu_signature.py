@@ -26,7 +26,11 @@ import datetime
 
 from core.utils.logger import get_logger
 from core.parser.vu_dispatcher import iter_vu_sections, TREP_SECTIONS
-from core.utils.constants import EC_CURVE_OIDS
+from core.utils.constants import (
+    CVC_EFFECTIVE_DATE_TAG,
+    CVC_EXPIRATION_DATE_TAG,
+    EC_CURVE_OIDS,
+)
 
 _log = get_logger(__name__)
 
@@ -152,8 +156,8 @@ def parse_cvc(cert_bytes):
         "chr": (_tlv_value(fields, 0x5F20) or b"").hex(),
         "curve_oid": (_tlv_value(public_key_fields, 0x06) or b"").hex(),
         "public_point": _tlv_value(public_key_fields, 0x86),
-        "effective_date": (_tlv_value(fields, 0x5F25) or b"").hex(),
-        "expiration_date": (_tlv_value(fields, 0x5F24) or b"").hex(),
+        "effective_date": (_tlv_value(fields, CVC_EFFECTIVE_DATE_TAG) or b"").hex(),
+        "expiration_date": (_tlv_value(fields, CVC_EXPIRATION_DATE_TAG) or b"").hex(),
         "signature": signature_element["value"],
         "body_tlv": body_tlv,
     }
@@ -375,6 +379,15 @@ def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
                     "section": TREP_SECTIONS.get(sec["trep"], f"TREP 0x{sec['trep']:02X}"),
                     "signature_valid": False,
                     "reason": "multiple signature records",
+                })
+                continue
+            if recs[-1][1] != _SIGNATURE_RECORD:
+                all_valid = False
+                report["treps"].append({
+                    "trep": f"0x{sec['trep']:02X}",
+                    "section": TREP_SECTIONS.get(sec["trep"], f"TREP 0x{sec['trep']:02X}"),
+                    "signature_valid": False,
+                    "reason": "signature record is not final",
                 })
                 continue
             sig_pos, _, sig_size, _, _ = sig_recs[0]

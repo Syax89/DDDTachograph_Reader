@@ -1,6 +1,6 @@
-"""Shared coverage utilities: interval merging, percentage calculation."""
+"""Shared coverage utilities: interval merging and coverage metrics."""
 
-from typing import List, Optional, Tuple
+from typing import Dict, List, Mapping, Optional, Tuple
 
 KNOWN_PADDING_BYTES = {0x00, 0xFF, 0x55}
 
@@ -27,6 +27,34 @@ def coverage_pct(covered_bytes: int, total_size: int) -> float:
     if total_size == 0:
         return 0.0
     return round(covered_bytes / total_size * 100, 2)
+
+
+def coverage_metrics(
+    total_size: int, accounted_bytes: int, classifications: Mapping[str, int]
+) -> Dict[str, float | int]:
+    """Build presentation metrics from non-overlapping byte classifications.
+
+    "accounted" includes every byte assigned a classification, including
+    padding and unknown data. Structural identification is deliberately not a
+    semantic decoding metric: it counts only known non-padding classifications.
+    """
+    unknown_bytes = int(classifications.get("Unknown", 0))
+    structurally_identified_bytes = sum(
+        int(byte_count)
+        for classification, byte_count in classifications.items()
+        if classification not in {"Unknown", "Unclassified"}
+        and not classification.startswith("Padding(")
+    )
+    return {
+        "byte_accounted_bytes": accounted_bytes,
+        "byte_accounted_pct": coverage_pct(accounted_bytes, total_size),
+        "unknown_bytes": unknown_bytes,
+        "unknown_pct": coverage_pct(unknown_bytes, total_size),
+        "structurally_identified_bytes": structurally_identified_bytes,
+        "structurally_identified_pct": coverage_pct(
+            structurally_identified_bytes, total_size
+        ),
+    }
 
 
 def is_padding_block(data: bytes) -> Optional[int]:

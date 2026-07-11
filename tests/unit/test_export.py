@@ -9,7 +9,7 @@ from unittest.mock import patch
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.export import ExportManager
-from core.utils.report_format import build_monthly_activity_report
+from core.utils.report_format import build_monthly_activity_report, summary_rows
 
 
 MOCK_DATA = {
@@ -22,6 +22,14 @@ MOCK_DATA = {
         "coverage_pct": 100.0,
         "is_vu": False,
         "decoder_failure_count": 0,
+    },
+    "coverage": {
+        "byte_accounted_bytes": 12345,
+        "byte_accounted_pct": 100.0,
+        "unknown_bytes": 12,
+        "unknown_pct": 0.1,
+        "structurally_identified_bytes": 12333,
+        "structurally_identified_pct": 99.9,
     },
     "driver": {
         "firstname": "Mario",
@@ -101,6 +109,9 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("mock_file.ddd", summary_text)
         self.assertIn("Mario Rossi", summary_text)
         self.assertIn("AA123BB", summary_text)
+        self.assertIn("Byte-accounted coverage", summary_text)
+        self.assertIn("Unknown bytes", summary_text)
+        self.assertNotIn("Coverage", [cell.value for cell in wb["Summary"]["A"]])
 
         # Daily Activities: monthly grouped report with hours columns + monthly totals
         ws = wb["Daily Activities"]
@@ -138,6 +149,8 @@ class TestExportManager(unittest.TestCase):
 
         self.assertIn("DDD TACHOGRAPH REPORT", text)
         self.assertIn("Mario Rossi", text)
+        self.assertIn("Byte-accounted coverage;100.0% (12 345 / 12 345 bytes)", text)
+        self.assertIn("Unknown bytes;12 (0.1%)", text)
         self.assertIn("=== DAILY ACTIVITIES ===", text)
         self.assertIn("=== EVENTS ===", text)
         # Section description row
@@ -152,6 +165,17 @@ class TestExportManager(unittest.TestCase):
         # Formatted timestamp, not raw ISO
         self.assertIn("2026-06-01 10:30", text)
         self.assertNotIn("2026-06-01T10:30:00+00:00", text)
+
+    def test_summary_labels_distinguish_accounted_unknown_and_structural_metrics(self):
+        rows = dict(summary_rows(self.mock_data))
+
+        self.assertEqual(rows["Byte-accounted coverage"], "100.0% (12 345 / 12 345 bytes)")
+        self.assertEqual(rows["Unknown bytes"], "12 (0.1%)")
+        self.assertEqual(
+            rows["Structurally identified coverage"],
+            "99.9% (not a semantic decoding rate)",
+        )
+        self.assertNotIn("Coverage", rows)
 
     def test_export_to_pdf(self):
         ExportManager.export_to_pdf(self.mock_data, self.pdf_path)

@@ -1,6 +1,10 @@
 import struct
 
+import pytest
+
+from app.engine import TachoParser
 from core.registry.registry import DecoderRegistry, TagDecoder
+from core.registry.models import TachoResult, build_generations_tree
 from core.parser.deterministic import DeterministicParser
 from scripts.tag_decoding_matrix import rows
 
@@ -63,6 +67,47 @@ def test_registry_generation_match_beats_priority():
     assert registry.get_decoder(tag, generation="G2").name == "G2Decoder"
 
 
+@pytest.mark.parametrize(
+    ("requested_generation", "decoder_generation", "compatible"),
+    [
+        ("G1", "G1", True),
+        ("G1", "G2", False),
+        ("G1", "G2.2", False),
+        ("G1", "all", True),
+        ("G2", "G1", False),
+        ("G2", "G2", True),
+        ("G2", "G2.2", False),
+        ("G2", "all", True),
+        ("G2.2", "G1", False),
+        ("G2.2", "G2", True),
+        ("G2.2", "G2.2", True),
+        ("G2.2", "all", True),
+    ],
+)
+def test_registry_generation_compatibility_filter(
+    requested_generation, decoder_generation, compatible,
+):
+    registry = DecoderRegistry.instance()
+    registry.register_decoder(TagDecoder(
+        0x6EF3, "OnlyCandidate", generation=decoder_generation))
+
+    decoder = registry.get_decoder(0x6EF3, generation=requested_generation)
+
+    if compatible:
+        assert decoder.name == "OnlyCandidate"
+    else:
+        assert decoder is None
+
+
+def test_registry_omitted_generation_preserves_legacy_selection():
+    tag = 0x6EF4
+    registry = DecoderRegistry.instance()
+    registry.register_decoder(TagDecoder(tag, "G1Decoder", generation="G1"))
+    registry.register_decoder(TagDecoder(tag, "G2Decoder", generation="G2", priority=1))
+
+    assert registry.get_decoder(tag).name == "G2Decoder"
+
+
 def test_registered_decoders_have_normative_references():
     registry = DecoderRegistry.instance()
     missing = [f"0x{d.tag:04X} {d.name}" for d in registry.iter_decoders()
@@ -77,3 +122,27 @@ def test_generated_matrix_covers_every_registry_variant():
     actual = {(item["tag"], item["name"], item["generation"]) for item in rows()}
 
     assert actual == expected
+
+
+def test_engine_tree_uses_registered_display_name(tmp_path):
+    registry = DecoderRegistry.instance()
+    registry.register_decoder(TagDecoder(
+        0x0526, "G22_RegistryDrivenName", generation="G2.2", priority=1))
+
+    parser = TachoParser(str(tmp_path / "input.ddd"))
+    result = TachoResult().to_dict()
+    result["load_unload_records"] = [{"operation": "load"}]
+    tree = build_generations_tree(result, parser.TAGS)
+
+    assert parser.TAGS[0x0526] == "G22_RegistryDrivenName"
+    assert "RegistryDrivenName" in tree["Generation 2.2"]
+
+
+def test_generation_tree_uses_readable_fallback_for_unregistered_tag(tmp_path):
+    parser = TachoParser(str(tmp_path / "input.ddd"))
+    result = TachoResult().to_dict()
+    result["gnss_auth"] = [{"status": "available"}]
+    tree = build_generations_tree(result, parser.TAGS)
+
+    assert 0x0000 not in parser.TAGS
+    assert "GNSS Authentication" in tree["Generation 2.2"]
