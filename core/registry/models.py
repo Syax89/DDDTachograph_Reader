@@ -495,20 +495,37 @@ def _split_raw_tags(raw_tags: Dict[str, Any],
     return {k: v for k, v in buckets.items() if v}
 
 
+def _meta_gen_to_short(meta_gen: str) -> int:
+    """Convert a metadata generation string to a numeric level.
+
+    'G1 (Digital)' → 1, 'G2 (Smart)' → 2, 'G2.2 (Smart V2)' → 3.
+    Unknown/empty → 3 (show all, backward-compatible).
+    """
+    if "2.2" in meta_gen or "Smart V2" in meta_gen:
+        return 3
+    if "G2" in meta_gen or "Smart" in meta_gen:
+        return 2
+    if "G1" in meta_gen or "Digital" in meta_gen:
+        return 1
+    return 3  # Unknown: show everything
+
+
 def build_generations_tree(results: Dict[str, Any], tags: Dict[int, str]) -> Dict[str, Any]:
     """Build hierarchical view of decoded data grouped by generation.
 
-    Each generation section contains every decoded data key applicable to
-    that generation.  Shared legacy keys (activities, events, places …) appear
-    in Gen1 and are repeated in Gen2/Gen2.2 where the regulation extends or
-    reuses them.
+    Only generations <= the file's actual generation are included — a G1 VU
+    file will not show Gen2/Gen2.2 sections even if the same data keys exist.
     """
     driver = results.get("driver", {})
     vehicle = results.get("vehicle", {})
 
-    gen1  = _build_gen1(results, driver, vehicle, tags)
-    gen2  = _build_gen2(results, driver, vehicle, tags)
-    gen22 = _build_gen22(results, driver, vehicle, tags)
+    # Determine which generations to include
+    meta_gen = (results.get("metadata") or {}).get("generation", "")
+    max_gen = _meta_gen_to_short(meta_gen)
+
+    gen1  = _build_gen1(results, driver, vehicle, tags) if max_gen >= 1 else {}
+    gen2  = _build_gen2(results, driver, vehicle, tags) if max_gen >= 2 else {}
+    gen22 = _build_gen22(results, driver, vehicle, tags) if max_gen >= 3 else {}
 
     raw_by_gen = _split_raw_tags(results.get("raw_tags", {}), tags)
 
