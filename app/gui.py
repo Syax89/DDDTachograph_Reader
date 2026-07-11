@@ -3368,6 +3368,9 @@ class TachoExplorer(tk.Tk):
         if getattr(self, "_kpi_frame", None) is not None:
             self._kpi_frame.destroy()
             self._kpi_frame = None
+        if getattr(self, "_slot_toggle_frame", None) is not None:
+            self._slot_toggle_frame.destroy()
+            self._slot_toggle_frame = None
         if getattr(self, "_tooltip_lbl", None) is not None:
             self._tooltip_lbl.place_forget()
         bind_id = getattr(self, "_dashboard_motion_bind", None)
@@ -3708,14 +3711,17 @@ class TachoExplorer(tk.Tk):
                            lambda e: self._on_dashboard_double_click(e))
 
         # ── Slot toggle for VU files ──
-        if is_vu and getattr(self, "_kpi_frame", None) is not None:
-            self._build_vu_slot_toggle(self._kpi_frame, activity_list, data)
+        if is_vu:
+            self._build_vu_slot_toggle(activity_list, data)
 
-    def _build_vu_slot_toggle(self, kpi_frame, activity_list, data):
+    def _build_vu_slot_toggle(self, activity_list, data):
         """Add Slot 1 / Slot 2 toggle buttons above the daily activities table."""
         slot_label = getattr(self, "_vu_slot_filter", "Slot 1")
-        btn_frame = tk.Frame(kpi_frame, bg="#f0f0f0")
-        btn_frame.grid(row=0, column=0, columnspan=4, sticky="e", pady=(0, 2))
+        if getattr(self, "_slot_toggle_frame", None) is not None:
+            self._slot_toggle_frame.destroy()
+        btn_frame = tk.Frame(self.table, bg="#f0f0f0")
+        self._slot_toggle_frame = btn_frame
+        btn_frame.pack(fill=tk.X, padx=8, pady=(0, 4), before=self.table.tv.master)
 
         def _switch(slot):
             self._vu_slot_filter = slot
