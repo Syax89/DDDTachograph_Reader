@@ -3715,27 +3715,29 @@ class TachoExplorer(tk.Tk):
             self._build_vu_slot_toggle(activity_list, data)
 
     def _build_vu_slot_toggle(self, activity_list, data):
-        """Add Slot 1 / Slot 2 toggle buttons above the daily activities table."""
+        """Add a Slot 1 / Slot 2 toggle button above the daily activities table."""
         slot_label = getattr(self, "_vu_slot_filter", "Slot 1")
         if getattr(self, "_slot_toggle_frame", None) is not None:
             self._slot_toggle_frame.destroy()
-        btn_frame = tk.Frame(self.table, bg="#f0f0f0")
+        btn_frame = tk.Frame(self.table, bg="#f4f6f9")
         self._slot_toggle_frame = btn_frame
         btn_frame.pack(fill=tk.X, padx=8, pady=(0, 4), before=self.table.tv.master)
 
-        def _switch(slot):
-            self._vu_slot_filter = slot
+        lbl = tk.Label(btn_frame, text="Slot:", font=("", 9),
+                       fg="#6b7280", bg="#f4f6f9")
+        lbl.pack(side=tk.LEFT, padx=(0, 4))
+
+        def _toggle():
+            new_slot = "Slot 2" if slot_label == "Slot 1" else "Slot 1"
+            self._vu_slot_filter = new_slot
             self._show_daily_summary(activity_list, data)
 
-        for label, slot_key in [("Slot 1", "Slot 1"), ("Slot 2", "Slot 2")]:
-            is_active = (slot_key == slot_label)
-            bg = "#1565c0" if is_active else "#e0e0e0"
-            fg = "#ffffff" if is_active else "#555555"
-            btn = tk.Button(btn_frame, text=label, font=("", 9, "bold"),
-                            bg=bg, fg=fg, relief=tk.FLAT, padx=12, pady=2,
-                            activebackground="#1976d2", activeforeground="#ffffff",
-                            cursor="hand2", command=lambda s=slot_key: _switch(s))
-            btn.pack(side=tk.RIGHT, padx=2)
+        btn = tk.Button(btn_frame, text=slot_label, font=("", 9, "bold"),
+                        bg="#1976d2", fg="#ffffff", relief=tk.FLAT,
+                        padx=12, pady=2, activebackground="#1565c0",
+                        activeforeground="#ffffff", cursor="hand2",
+                        command=_toggle)
+        btn.pack(side=tk.LEFT)
 
     def _show_speed_summary(self, raw_blocks, data):
         """Dashboard for the 'Detailed Speed' parent node."""
