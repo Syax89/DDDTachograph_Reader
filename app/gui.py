@@ -3778,7 +3778,8 @@ class TachoExplorer(tk.Tk):
                  fg="#1565c0", bg="#f4f6f9").pack(side=tk.LEFT)
 
         def _toggle():
-            new_slot = "Slot 2" if slot_label == "Slot 1" else "Slot 1"
+            current = getattr(self, "_vu_slot_filter", "Slot 1")
+            new_slot = "Slot 2" if current == "Slot 1" else "Slot 1"
             self._vu_slot_filter = new_slot
             self._show_daily_summary(activity_list, data, _fast_refresh=True)
 
