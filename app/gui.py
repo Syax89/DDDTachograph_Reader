@@ -3261,6 +3261,10 @@ class TachoExplorer(tk.Tk):
         if not day_data:
             return
         changes = day_data.get("changes", [])
+        if is_vu:
+            slot_name = "First" if getattr(self, "_vu_slot_filter", "Slot 1") == "Slot 1" else "Second"
+            changes = [c for c in changes
+                       if isinstance(c, dict) and str(c.get("slot") or "") == slot_name]
         day_km = day_data.get("_day_km", 0) or day_data.get("odometer_km", 0) or 0
         changes_count = day_data.get("changes_count") or len(changes)
 
@@ -3381,6 +3385,22 @@ class TachoExplorer(tk.Tk):
             self._show_empty("Daily Activities", "No activity data available.")
             return
         is_vu = (data.get("metadata") or {}).get("is_vu", False)
+
+        # ── Slot filter for VU files ──
+        slot_label = getattr(self, "_vu_slot_filter", "Slot 1")
+        slot_name = "First" if slot_label == "Slot 1" else "Second"
+
+        # Build a filtered view: each day's changes limited to the chosen slot
+        if is_vu:
+            filtered = []
+            for day_data in valid:
+                all_changes = day_data.get("changes", [])
+                filtered_changes = [c for c in all_changes
+                                    if isinstance(c, dict) and str(c.get("slot") or "") == slot_name]
+                copy = dict(day_data)
+                copy["changes"] = filtered_changes
+                filtered.append(copy)
+            valid = filtered
 
         # Per-day driver names from card_iw or cardholder
         iw_by_date = {}
@@ -3686,6 +3706,30 @@ class TachoExplorer(tk.Tk):
         self.table.tv.unbind("<Double-1>")
         self.table.tv.bind("<Double-1>",
                            lambda e: self._on_dashboard_double_click(e))
+
+        # ── Slot toggle for VU files ──
+        if is_vu and getattr(self, "_kpi_frame", None) is not None:
+            self._build_vu_slot_toggle(self._kpi_frame, activity_list, data)
+
+    def _build_vu_slot_toggle(self, kpi_frame, activity_list, data):
+        """Add Slot 1 / Slot 2 toggle buttons above the daily activities table."""
+        slot_label = getattr(self, "_vu_slot_filter", "Slot 1")
+        btn_frame = tk.Frame(kpi_frame, bg="#f0f0f0")
+        btn_frame.grid(row=0, column=0, columnspan=4, sticky="e", pady=(0, 2))
+
+        def _switch(slot):
+            self._vu_slot_filter = slot
+            self._show_daily_summary(activity_list, data)
+
+        for label, slot_key in [("Slot 1", "Slot 1"), ("Slot 2", "Slot 2")]:
+            is_active = (slot_key == slot_label)
+            bg = "#1565c0" if is_active else "#e0e0e0"
+            fg = "#ffffff" if is_active else "#555555"
+            btn = tk.Button(btn_frame, text=label, font=("", 9, "bold"),
+                            bg=bg, fg=fg, relief=tk.FLAT, padx=12, pady=2,
+                            activebackground="#1976d2", activeforeground="#ffffff",
+                            cursor="hand2", command=lambda s=slot_key: _switch(s))
+            btn.pack(side=tk.RIGHT, padx=2)
 
     def _show_speed_summary(self, raw_blocks, data):
         """Dashboard for the 'Detailed Speed' parent node."""
