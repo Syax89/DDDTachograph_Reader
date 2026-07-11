@@ -1236,7 +1236,7 @@ class ActivityTimelineChart(ttk.Frame):
 class DayDetailWindow(tk.Toplevel):
     """Chronological log of all events for a single day (driver card / VU)."""
 
-    _open_windows = {}
+    _open_windows: dict[str, "DayDetailWindow"] = {}
 
     COLORS = {
         "DRIVE":      "#1565C0",
