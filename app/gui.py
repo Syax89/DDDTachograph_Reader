@@ -256,12 +256,15 @@ def _compute_activity_totals(changes):
     """Return dict {ACTIVITY: total_minutes} from a list of activity changes.
 
     Changes are grouped per card slot (driver) first, so crew days (two
-    drivers recording simultaneously in slots ``First``/``Second``) are
-    summed independently instead of being flattened into a single timeline.
-    Matches the pairing logic of ActivityTimelineChart._build_blocks.
+    drivers recording simultaneously in slots ``First``/``Second``) keep
+    their timelines independent.
+
+    Drive/Work durations are summed across slots (each driver accumulates
+    independently).  Rest/Available durations are kept at the **maximum**
+    across slots because they share the same 24h day and cannot exceed it.
     """
-    totals = {a: 0 for a in ACTIVITY_COLORS}
-    by_slot = {}
+    ACCUM_BY_SUM = {"DRIVE", "WORK"}
+    per_slot: dict[str, dict[str, int]] = {}
     for ch in changes:
         if not isinstance(ch, dict):
             continue
@@ -269,12 +272,21 @@ def _compute_activity_totals(changes):
         act = str(ch.get("activity", "")).upper()
         if t is not None and act in ACTIVITY_COLORS:
             slot = str(ch.get("slot") or "First")
-            by_slot.setdefault(slot, []).append((t, act))
-    for parsed in by_slot.values():
+            per_slot.setdefault(slot, []).append((t, act))
+
+    totals = {a: 0 for a in ACTIVITY_COLORS}
+    for parsed in per_slot.values():
         parsed.sort(key=lambda item: item[0])
+        slot_tot: dict[str, int] = {}
         for i, (start, act) in enumerate(parsed):
             end = parsed[i + 1][0] if i + 1 < len(parsed) else 86400
-            totals[act] += (end - start) // 60
+            slot_tot[act] = slot_tot.get(act, 0) + (end - start) // 60
+        for act, mins in slot_tot.items():
+            if act in ACCUM_BY_SUM:
+                totals[act] += mins
+            else:
+                if mins > totals[act]:
+                    totals[act] = mins
     return totals
 
 
