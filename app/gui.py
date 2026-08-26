@@ -263,31 +263,8 @@ def _compute_activity_totals(changes):
     independently).  Rest/Available durations are kept at the **maximum**
     across slots because they share the same 24h day and cannot exceed it.
     """
-    ACCUM_BY_SUM = {"DRIVE", "WORK"}
-    per_slot: dict[str, dict[str, int]] = {}
-    for ch in changes:
-        if not isinstance(ch, dict):
-            continue
-        t = ActivityTimelineChart._parse_time(ch.get("time", ""))
-        act = str(ch.get("activity", "")).upper()
-        if t is not None and act in ACTIVITY_COLORS:
-            slot = str(ch.get("slot") or "First")
-            per_slot.setdefault(slot, []).append((t, act))
-
-    totals = {a: 0 for a in ACTIVITY_COLORS}
-    for parsed in per_slot.values():
-        parsed.sort(key=lambda item: item[0])
-        slot_tot: dict[str, int] = {}
-        for i, (start, act) in enumerate(parsed):
-            end = parsed[i + 1][0] if i + 1 < len(parsed) else 86400
-            slot_tot[act] = slot_tot.get(act, 0) + (end - start) // 60
-        for act, mins in slot_tot.items():
-            if act in ACCUM_BY_SUM:
-                totals[act] += mins
-            else:
-                if mins > totals[act]:
-                    totals[act] = mins
-    return totals
+    from core.utils.activity_stats import compute_activity_totals as _shared
+    return _shared(changes)
 
 
 def _fmt_duration_minutes(mins):
