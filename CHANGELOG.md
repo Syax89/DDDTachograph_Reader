@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## [2.6.1] - 2026-08-26 — "Bugless"
+
+A hardening release from a full code review: 18 verified bugs fixed across
+the decoders, CLI summary, GUI export path and report formatting, plus a
+coverage gate in CI that fails the build whenever undecoded bytes increase.
 
 ### Fixed
 - **CLI summary integrity** — `print_summary` read the wrong field for VU
