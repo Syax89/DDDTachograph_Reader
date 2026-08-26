@@ -2,6 +2,51 @@
 
 ## [Unreleased]
 
+### Fixed
+- **CLI summary integrity** — `print_summary` read the wrong field for VU
+  files (`signature_verification.status/overall`), printing `Integrity: N/D`
+  and no line at all for driver cards; it now uses the canonical
+  `metadata.integrity_check` (same source as GUI/JSON).
+- **Activity totals now slot-aware everywhere** — CLI summary and PDF export
+  computed durations between consecutive events without grouping by crew
+  slot, so two-slot days mixed both timelines (a real VU file showed
+  `Rest 1075h50m`/`1223h12m` instead of the correct `868h02m`). The GUI's
+  per-slot semantics (DRIVE/WORK summed, REST/AVAILABLE maxed per shared
+  24h day) now live in `core/utils/activity_stats.py`, shared by CLI, PDF
+  and GUI. This also fixed a latent `AttributeError` crash when a day's
+  changes contained a non-dict element.
+- **VU vehicle identification** — `parse_vu_vehicle_identification` read
+  VIN/plate/nation in inverted order vs Annex 1B; the validation gate then
+  silently dropped the data. Decoder now uses spec order VIN(17)+nation(1)+plate(14).
+- **G1 overview regex fallback** — the emergency VIN/plate recovery was dead
+  code because `TachoResult` defaults (`"N/A"`) are truthy; a `_missing()`
+  helper now treats the sentinel as empty.
+- **Timestamp bounds (2000–2100)** — `decode_date`, cyclic-buffer records,
+  current-usage, control-activity, G1 events/faults and sensor daily records
+  accepted corrupt TimeReal values outside the epoch window, producing
+  1970/2106 dates. All now require `946684800 ≤ ts ≤ 4102444800`.
+- **TREP 02 heuristic terminator** — the `(0,0)` change-stream terminator
+  was matched as a valid pair, emitting a phantom REST change at midnight.
+  It now terminates the stream.
+- **Sensor approval offset** — G1 sensor approval block was read 2 bytes
+  early (`[98:116]`); now at the documented `[100:118]`.
+- **G2 daily record `card_inserted`** — the inline ActivityChangeInfo
+  bit-splitting in `decode_g2_daily_record` dropped bit 13; it now goes
+  through the shared `decode_activity_val`.
+- **Monthly report sorting** — `MM/YYYY` month keys sorted lexicographically
+  (`01/2024` before `02/2023`); totals rows are now year-major ordered.
+- **CLI summary robustness** — a day block with `changes: None` no longer
+  crashes the totals loop; the vehicle line is no longer printed for `N/A`
+  defaults (the check compared against the wrong `N/D` sentinel).
+- **GUI export race** — export workers read `self.current_data` after spawn;
+  a parse completing meanwhile could serialize the new file's data under the
+  old filename. The data is now captured on the main thread before spawning.
+
+### CI
+- **Coverage gate** — new `coverage` job runs the semantic coverage audit
+  against a committed mock baseline (`--fail-on-regression`); decoder
+  changes that increase undecoded bytes fail the build.
+
 ## [2.6.0] - 2026-07-11 — "Restore"
 
 A precision release that restores common sense to the daily dashboard: no more
