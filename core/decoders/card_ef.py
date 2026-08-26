@@ -205,7 +205,7 @@ def parse_g1_current_usage(val, results):
         return
     try:
         ts = struct.unpack(">I", val[0:4])[0]
-        if ts == 0 or ts == 0xFFFFFFFF or ts > 4102444800:
+        if ts == 0 or ts == 0xFFFFFFFF or ts < 946684800 or ts > 4102444800:
             return
         results["vehicle"]["plate"] = decode_string(val[5:19], is_id=True)
         results["vehicle"]["registration_nation"] = get_nation(val[4])
@@ -410,13 +410,13 @@ def parse_g1_events_data(val, results):
                 continue
             begin_ts = struct.unpack(">I", val[off+1:off+5])[0]
             end_ts = struct.unpack(">I", val[off+5:off+9])[0]
-            if begin_ts == 0 or begin_ts == 0xFFFFFFFF:
+            if not (946684800 <= begin_ts <= 4102444800):
                 off += rec_size
                 continue
             nation = get_nation(val[off+9])
             plate = decode_string(val[off+10:off+24], is_id=True)
             begin = datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat()
-            end = datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A"
+            end = datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if 946684800 <= end_ts <= 4102444800 else "N/A"
             if (ev_type, begin, end) in seen:
                 off += rec_size
                 continue
@@ -453,13 +453,13 @@ def parse_g1_faults_data(val, results):
                 continue
             begin_ts = struct.unpack(">I", val[off+1:off+5])[0]
             end_ts = struct.unpack(">I", val[off+5:off+9])[0]
-            if begin_ts == 0 or begin_ts == 0xFFFFFFFF:
+            if not (946684800 <= begin_ts <= 4102444800):
                 off += rec_size
                 continue
             nation = get_nation(val[off+9])
             plate = decode_string(val[off+10:off+24], is_id=True)
             begin = datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat()
-            end = datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if end_ts != 0xFFFFFFFF else "N/A"
+            end = datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if 946684800 <= end_ts <= 4102444800 else "N/A"
             if (fault_type, begin, end) in seen:
                 off += rec_size
                 continue
@@ -815,7 +815,7 @@ def parse_control_activity_data(val, results):
             chunk = val[off:off + rec_size]
             control_type = chunk[0]
             ts = struct.unpack(">I", chunk[1:5])[0]
-            if ts == 0 or ts == 0xFFFFFFFF or ts < 946684800:
+            if ts == 0 or ts == 0xFFFFFFFF or ts < 946684800 or ts > 4102444800:
                 off += rec_size
                 continue
 

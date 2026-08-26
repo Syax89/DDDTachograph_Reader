@@ -1,7 +1,7 @@
 import struct
 from typing import Optional
 
-from core.decoders import get_nation
+from core.decoders import decode_activity_val, get_nation
 
 
 class RecordArrayParser:
@@ -196,24 +196,23 @@ def decode_g2_daily_record(data: bytes, offset: int = 0):
             c = struct.unpack(">H", counters_data[i * 2:i * 2 + 2])[0]
             counters.append(c)
 
-    activity_map = {0: "REST", 1: "AVAILABLE", 2: "WORK", 3: "DRIVE"}
-
     changes = []
     for i in range(3, len(counters)):
         c = counters[i]
         if c == 0:
             continue
-        slot = (c >> 15) & 1
-        crew = (c >> 14) & 1
-        activity = (c >> 11) & 3
-        minute = c & 0x7FF
-        if minute > 1439:
+        # Same packed format 'scpaattttttttttt' as the G1 ActivityChangeInfo;
+        # decode_activity_val also exposes bit 13 (card_not_inserted) which the
+        # old inline bit-splitting dropped. Returns None for invalid minutes.
+        activity = decode_activity_val(c)
+        if activity is None:
             continue
         changes.append({
-            "time": f"{minute // 60:02d}:{minute % 60:02d}",
-            "activity": activity_map.get(activity, f"type_{activity}"),
-            "slot": "Second" if slot else "First",
-            "crew": bool(crew),
+            "time": activity["time"],
+            "activity": activity["activity"],
+            "slot": activity["slot"],
+            "crew": activity["crew"],
+            "card_inserted": activity["card_inserted"],
         })
 
     sig_len = rec_data[45] if len(rec_data) > 45 else None

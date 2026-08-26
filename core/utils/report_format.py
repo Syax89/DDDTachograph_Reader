@@ -340,7 +340,17 @@ def build_monthly_activity_report(activities):
     headers = ["Date", "Odometer km", "Drive (h)", "Work (h)",
                "Rest (h)", "Available (h)", "Unknown (h)", "Total (h)"]
     rows = []
-    for month_key in sorted(months.keys()):
+    # 'MM/YYYY' labels sort lexicographically (01/2024 before 02/2023), so sort
+    # by a year-major key while keeping the displayed label 'MM/YYYY'.
+    def _month_sort_key(month_key):
+        if len(month_key) == 7 and month_key[2] == "/":
+            try:
+                return (int(month_key[3:7]), int(month_key[0:2]))
+            except ValueError:
+                pass
+        return (9999, 0)
+
+    for month_key in sorted(months.keys(), key=_month_sort_key):
         days = sorted(months[month_key], key=lambda d: str(d.get("date", "")))
         month_totals = {"drive": 0, "work": 0, "rest": 0, "available": 0, "unknown": 0}
         month_total = 0

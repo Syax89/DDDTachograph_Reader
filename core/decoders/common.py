@@ -126,7 +126,7 @@ def decode_date(data, prefer_datef=False):
     ts_valid = False
     try:
         ts = struct.unpack(">I", data[:4])[0]
-        if ts != 0 and ts != 0xFFFFFFFF and 0 < ts <= 4102444800:
+        if 946684800 <= ts <= 4102444800:
             ts_valid = True
     except (struct.error, ValueError, OverflowError):
         pass
@@ -213,7 +213,7 @@ def parse_cyclic_buffer_activities(val, results):
             # An invalid header skips this record's body, but the walk continues
             # via prev_len (a bare `continue` here would re-read the same header
             # until the iteration budget runs out, without ever advancing).
-            record_valid = not (rec_len < 14 or rec_len > 2048 or ts == 0 or ts == 0xFFFFFFFF)
+            record_valid = not (rec_len < 14 or rec_len > 2048) and (946684800 <= ts <= 4102444800)
 
             if record_valid:
                 try:

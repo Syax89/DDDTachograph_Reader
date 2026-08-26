@@ -54,3 +54,24 @@ jobs:
 
     - name: Run test suite
       run: pytest -q
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Generate synthetic mock data
+      run: python tests/integration/generate_mock_ddd.py
+    - name: Semantic coverage audit (no regressions vs committed baseline)
+      # Fails when unparsed/semantic-debt bytes increase versus the mock
+      # baseline committed at scripts/mock_semantic_baseline.json. Decoder
+      # changes that leave more bytes undecoded are caught here.
+      run: python scripts/semantic_coverage_audit.py --ddd-dir tests/mock_data --baseline scripts/mock_semantic_baseline.json --fail-on-regression

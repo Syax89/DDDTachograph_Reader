@@ -2167,9 +2167,14 @@ class TachoExplorer(tk.Tk):
         self.progress.start(12)
         self.update_idletasks()
 
+        # Capture on the main thread: the worker must serialize the data this
+        # export was started with, not whatever _parse_done assigns to
+        # self.current_data while the worker is running.
+        data = self.current_data
+
         def _worker():
             try:
-                export_fn(self.current_data, path)
+                export_fn(data, path)
                 self._export_queue.put((kind, requirement, None, path))
             except Exception as exc:
                 self._export_queue.put((kind, requirement, exc, path))
@@ -2229,10 +2234,14 @@ class TachoExplorer(tk.Tk):
         self.progress.start(12)
         self.update_idletasks()
 
+        # Capture on the main thread (see _run_export): the worker must not
+        # read self.current_data, which _parse_done may reassign concurrently.
+        data = self.current_data
+
         def _worker():
             try:
                 with open(path, 'w', encoding='utf-8') as f:
-                    json.dump(self.current_data, f, indent=2, ensure_ascii=False,
+                    json.dump(data, f, indent=2, ensure_ascii=False,
                               cls=BytesEncoder)
                 self._export_queue.put(("JSON", "", None, path))
             except Exception as exc:
