@@ -9,6 +9,7 @@ import re
 from xml.sax.saxutils import escape
 
 from core.utils.report_format import records_to_table, section_tables, summary_rows
+from core.utils.activity_stats import compute_activity_totals
 
 _log = logging.getLogger("export")
 
@@ -187,18 +188,6 @@ class ExportManager:
             TableStyle, HRFlowable,
         )
 
-        def _t2m(ts):
-            parts = str(ts).split(":")
-            if len(parts) != 2:
-                return None
-            try:
-                hours, minutes = (int(part) for part in parts)
-            except ValueError:
-                return None
-            if not 0 <= hours <= 24 or not 0 <= minutes < 60 or (hours == 24 and minutes):
-                return None
-            return hours * 60 + minutes
-
         def _pdf_text(value):
             return escape(str(value))
 
@@ -365,25 +354,10 @@ class ExportManager:
         for day in activities:
             if not isinstance(day, dict):
                 continue
-            changes = day.get("changes") or []
-            if not isinstance(changes, list) or len(changes) < 2:
-                continue
-            for i, ch in enumerate(changes):
-                if not isinstance(ch, dict):
-                    continue
-                act = str(ch.get("activity", "")).upper()
-                t1 = _t2m(str(ch.get("time", "00:00")))
-                t2 = _t2m(str(changes[i + 1].get("time", "00:00"))) if i + 1 < len(changes) else 1440
-                if t1 is None or t2 is None:
-                    continue
-                if t2 < t1:
-                    t2 += 1440
-                if act == "DRIVE":
-                    total_drive += t2 - t1
-                elif act == "WORK":
-                    total_work += t2 - t1
-                elif act == "REST":
-                    total_rest += t2 - t1
+            totals = compute_activity_totals(day.get("changes") or [])
+            total_drive += totals["DRIVE"]
+            total_work += totals["WORK"]
+            total_rest += totals["REST"]
 
         drive_h = f"{total_drive // 60}h {total_drive % 60}m"
         work_h = f"{total_work // 60}h {total_work % 60}m"

@@ -12,6 +12,7 @@ from datetime import datetime
 
 from core.utils.encoding import BytesEncoder
 from core.utils.version import __version__
+from core.utils.activity_stats import compute_activity_totals
 
 
 def main():
@@ -218,32 +219,11 @@ def print_summary(data):
             date_val = day_block.get("date", "")
             if date_val:
                 dates.add(date_val)
-            events = day_block.get("changes", [])
-            for i, ev in enumerate(events):
-                if not isinstance(ev, dict):
-                    continue
-                tipo = ev.get("activity", ev.get("type", ""))
-                start_time = ev.get("time", "")
-                if i < len(events) - 1:
-                    next_ev = events[i + 1]
-                    end_time = next_ev.get("time", "")
-                else:
-                    end_time = "24:00"
-                try:
-                    h1, m1 = map(int, str(start_time).split(':')[:2])
-                    h2, m2 = map(int, str(end_time).split(':')[:2])
-                    dur = max(0, (h2 * 60 + m2) - (h1 * 60 + m1))
-                except (ValueError, TypeError):
-                    dur = 0
-                tipo_upper = str(tipo).upper()
-                if tipo_upper in ("GUIDA", "DRIVING", "DRIVE"):
-                    drive_min += dur
-                elif tipo_upper in ("LAVORO", "WORK"):
-                    work_min += dur
-                elif tipo_upper in ("DISPONIBILITA", "AVAILABILITY", "AVAILABLE"):
-                    avail_min += dur
-                elif tipo_upper in ("RIPOSO", "REST", "BREAK"):
-                    rest_min += dur
+            totals = compute_activity_totals(day_block.get("changes", []))
+            drive_min += totals["DRIVE"]
+            work_min += totals["WORK"]
+            rest_min += totals["REST"]
+            avail_min += totals["AVAILABLE"]
         days = len(dates)
 
         print(f"\n📊 Activity ({len(activities)} daily blocks, {days} days):")
