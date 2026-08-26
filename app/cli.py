@@ -177,7 +177,6 @@ def print_summary(data):
     driver = data.get("driver", {})
     vehicle = data.get("vehicle", {})
     activities = data.get("activities", [])
-    sig = data.get("signature_verification", {})
 
     print("=" * 60)
     print("🚛 DDD TACHOGRAPH READER - SUMMARY")
@@ -189,9 +188,7 @@ def print_summary(data):
     print(f"\n📄 File: {meta.get('filename', 'N/D')} ({file_type}, Gen {gen})")
 
     # Signature
-    if sig:
-        status = sig.get("status", sig.get("overall", "N/D"))
-        print(f"🔐 Integrity: {status}")
+    print(f"🔐 Integrity: {meta.get('integrity_check', 'N/D')}")
 
     # Driver
     name = driver.get("name", driver.get("surname", ""))
