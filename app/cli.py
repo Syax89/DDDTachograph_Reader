@@ -201,9 +201,9 @@ def print_summary(data):
         print(f"   Card: {card}")
 
     # Vehicle
-    vin = vehicle.get("vin", "N/D")
-    plate = vehicle.get("plate", vehicle.get("registration", "N/D"))
-    if vin != "N/D" or plate != "N/D":
+    vin = vehicle.get("vin", "N/A")
+    plate = vehicle.get("plate", vehicle.get("registration", "N/A"))
+    if vin != "N/A" or plate != "N/A":
         print(f"\n🚗 Vehicle: {plate} (VIN: {vin})")
 
     # Activities summary
@@ -219,7 +219,7 @@ def print_summary(data):
             date_val = day_block.get("date", "")
             if date_val:
                 dates.add(date_val)
-            totals = compute_activity_totals(day_block.get("changes", []))
+            totals = compute_activity_totals(day_block.get("changes") or [])
             drive_min += totals["DRIVE"]
             work_min += totals["WORK"]
             rest_min += totals["REST"]

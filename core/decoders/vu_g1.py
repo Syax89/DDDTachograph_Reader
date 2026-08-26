@@ -18,16 +18,24 @@ def _mark_heuristic(results, section, fields):
     mark_heuristic(results, section, fields)
 
 
+def _missing(value):
+    """True when *value* is absent or the 'N/A' sentinel used by TachoResult
+    defaults (the defaults are truthy, so bare truthiness checks are dead code)."""
+    return not value or value == "N/A"
+
+
 def parse_vu_vehicle_identification(val, results):
     """Parse VU_VehicleIdentification (tag 0x0001 in VU context)."""
     if len(val) < 32:
         return
     try:
-        # Only decode if format looks like standard VRN data:
-        # byte[0] = nation (0x00-0xFD), byte[1:15] = readable plate, byte[15:32] = readable VIN
-        nation = get_nation(val[0])
-        plate = decode_string(val[1:15], is_id=True)
-        vin = decode_string(val[15:32], is_id=True)
+        # Only decode if format looks like standard VRN data (Annex 1B §2.15,
+        # same layout as parse_g1_vu_overview):
+        # byte[0:17] = readable VIN, byte[17] = nation (0x00-0xFD),
+        # byte[18:32] = readable plate
+        vin = decode_string(val[0:17], is_id=True)
+        nation = get_nation(val[17])
+        plate = decode_string(val[18:32], is_id=True)
         # Validate: VIN should be 17 alphanumeric chars, plate should be non-empty
         if len(vin) == 17 and vin.isalnum() and len(plate) >= 1:
             results["vehicle"]["registration_nation"] = nation
@@ -242,7 +250,7 @@ def parse_g1_vu_overview(val, results):
         # (Annex 1B §4.5.3.2.2 defines the fixed layout; regex is a last resort
         # for non-standard/corrupt downloads only).
         if not body_validated:
-            if not results["vehicle"].get("vin"):
+            if _missing(results["vehicle"].get("vin")):
                 _log.warning("VU overview: VIN not parsed via fixed-offset, trying regex")
                 for m in re.finditer(rb'[A-Z0-9]{17}', val[:500]):
                     vin = m.group().decode()
@@ -251,7 +259,7 @@ def parse_g1_vu_overview(val, results):
                         regex_fields_parsed.add("vin")
                         break
 
-            if not results["vehicle"].get("plate"):
+            if _missing(results["vehicle"].get("plate")):
                 _log.warning("VU overview: plate not parsed via fixed-offset, trying regex")
                 plate_match = re.search(rb'[\x01-\x1F]?([A-Z0-9]{3,14})\s{3,}', val[150:450])
                 if plate_match:
@@ -460,10 +468,13 @@ def _parse_trep_02_activities(data, results):
                 slot = struct.unpack(">H", data[pair_pos:pair_pos+2])[0]
                 act = struct.unpack(">H", data[pair_pos+2:pair_pos+4])[0]
                 pair_pos += 4
-                if slot <= 1440 and 0 <= act <= 10:
-                    changes_list.append({"minute": slot, "activity": activity_map.get(act, f"type_{act}")})
-                elif slot == 0 and act == 0:
+                if slot == 0 and act == 0:
+                    # (0, 0) terminates the change stream — must be checked
+                    # BEFORE the valid-range test, which also matches (0, 0)
+                    # and would otherwise emit a phantom REST change at 00:00.
                     break
+                elif slot <= 1440 and 0 <= act <= 10:
+                    changes_list.append({"minute": slot, "activity": activity_map.get(act, f"type_{act}")})
                 else:
                     changes_list = []
                     break
@@ -1545,7 +1556,7 @@ def _decode_sensor_block(body, results, offset=0):
     ts_first = struct.unpack(">I", block[0:4])[0]
     ts_last = struct.unpack(">I", block[4:8])[0]
 
-    serial_bytes = block[98:116]
+    serial_bytes = block[100:118]
     approval_prefix = serial_bytes[0]
     approval_nation = get_nation(serial_bytes[1]) if len(serial_bytes) > 1 else ""
     approval_number = ""
@@ -1632,7 +1643,8 @@ def _extract_sensor_daily_records(body, start, copy_start, copy_end):
             seen.add(date_str)
             records.append({
                 "date": date_str,
-                "first_event": datetime.fromtimestamp(ts_event, tz=timezone.utc).isoformat(),
+                "first_event": datetime.fromtimestamp(ts_event, tz=timezone.utc).isoformat()
+                if 946684800 <= ts_event <= 4102444800 else None,
                 "speed_samples": count,
                 "speed_min": min(valid) if valid else None,
                 "speed_max": max(valid) if valid else None,

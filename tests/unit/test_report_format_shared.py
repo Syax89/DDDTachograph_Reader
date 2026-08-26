@@ -1,4 +1,4 @@
-from core.utils.report_format import fmt_scalar, visible_columns
+from core.utils.report_format import build_monthly_activity_report, fmt_scalar, visible_columns
 
 
 def test_fmt_scalar_preserves_shared_display_conventions():
@@ -26,3 +26,17 @@ def test_visible_columns_accepts_a_caller_presentation_policy():
     ) == ["purpose", "description", "value", "extra", "record_type"]
     assert visible_columns(["scalar", {"value": 1}]) == ["value"]
     assert visible_columns([{"value": 1}, "scalar"], value_column_for_non_dict=True) == ["Value"]
+
+
+def test_monthly_report_sorts_by_year_then_month():
+    """'MM/YYYY' labels must sort chronologically, not lexicographically."""
+    activities = [
+        {"date": "15/01/2024", "changes": [{"activity": "DRIVE", "time": "00:00"}]},
+        {"date": "15/02/2023", "changes": [{"activity": "DRIVE", "time": "00:00"}]},
+        {"date": "15/11/2023", "changes": [{"activity": "DRIVE", "time": "00:00"}]},
+    ]
+
+    headers, rows = build_monthly_activity_report(activities)
+
+    total_rows = [r[0] for r in rows if str(r[0]).endswith("TOTAL")]
+    assert total_rows == ["02/2023 TOTAL", "11/2023 TOTAL", "01/2024 TOTAL"]
