@@ -192,3 +192,66 @@ def parse_g22_border_crossings(val, results):
             results.setdefault("border_crossings", []).append(record)
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Border crossings parse failed: %s", exc)
+
+
+# tag=0x052602/0x052702/0x053002 (CardPlaceAuthDailyWorkPeriod,
+# GNSSAuthAccumulatedDriving, CardLoadTypeEntries) all share the same
+# pointer(2) + 5-byte-record(TimeReal(4)+byte(1)) shape (reference
+# implementation definitions.go:1428-1431,1460-1464,2341-2344). Only the
+# trailing byte's meaning and the result key differ; its enum values are not
+# in the available reference (PositionAuthenticationStatus/LoadType are
+# plain `byte` with no const table) so it is exposed as the raw code, same
+# style as _decode_gnss_place_auth's authentication_status/authenticated.
+def _parse_g22_5byte_pointer_records(val, results, result_key, code_field):
+    """Shared decoder for the pointer(2) + [TimeReal(4)+code(1)] x N layout."""
+    if len(val) < 7:
+        return
+    try:
+        for chunk in _flat_records(val, 5, pointer=True):
+            ts = struct.unpack(">I", chunk[0:4])[0]
+            if not _valid_ts(ts):
+                continue
+            results.setdefault(result_key, []).append({
+                "timestamp": _iso(ts),
+                code_field: chunk[4],
+            })
+    except (struct.error, IndexError, ValueError) as exc:
+        _log.debug("%s parse failed: %s", result_key, exc)
+
+
+def parse_g22_place_auth_daily_work_period(val, results):
+    """Parse CardPlaceAuthDailyWorkPeriod (Annex 1C §2.116a-b, tag 0x0526)."""
+    _parse_g22_5byte_pointer_records(val, results, "place_auth_records", "authentication_status")
+
+
+def parse_g22_gnss_auth_accumulated_driving(val, results):
+    """Parse GNSSAuthAccumulatedDriving (Annex 1C §2.79a-b, tag 0x0527)."""
+    _parse_g22_5byte_pointer_records(val, results, "gnss_auth_records", "authentication_status")
+
+
+def parse_g22_load_type_entries(val, results):
+    """Parse CardLoadTypeEntries (Annex 1C §2.24a-b, tag 0x0530)."""
+    _parse_g22_5byte_pointer_records(val, results, "load_type_entries", "load_type")
+
+
+def parse_g22_driver_card_application_identification_v2(val, results):
+    """Parse DriverCardApplicationIdentificationSecondGenV2 (tag 0x0525).
+
+    5 fixed uint16 counters, no pointer prefix (reference implementation
+    definitions.go:2106-2113): lengthOfFollowingData,
+    noOfBorderCrossingRecords, noOfLoadUnloadRecords,
+    noOfLoadTypeEntryRecords, vuConfigurationLengthRange.
+    """
+    if len(val) < 10:
+        return
+    try:
+        fields = struct.unpack(">HHHHH", val[:10])
+        results["card_application_v2"] = {
+            "length_of_following_data": fields[0],
+            "no_border_crossing_records": fields[1],
+            "no_load_unload_records": fields[2],
+            "no_load_type_entry_records": fields[3],
+            "vu_configuration_length_range": fields[4],
+        }
+    except (struct.error, IndexError, ValueError) as exc:
+        _log.debug("Driver card application identification V2 parse failed: %s", exc)

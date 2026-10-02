@@ -296,22 +296,35 @@ def generate_g2_vu(out):
 
 def generate_g22_card(out):
     acts = activities_week()
-    gnss = b""
-    for d in range(7):
-        gnss += struct.pack(">IiiHH", ts(2025,5,1+d,12), int(45.4642*1e7), int(9.19*1e7), 85, 180)
     # Real G2.2 card downloads are flat STAP streams; the G2.2-only EFs
-    # (0x0525-0x052A) plus dtype 0x02/0x03 mark the file as Gen2v2.
+    # (0x0525-0x0530) plus dtype 0x02/0x03 mark the file as Gen2v2.
+    # Fixed per Batch 3 (A-F4/D2-001/D2-002): payloads now match the
+    # corrected FID map (reference Go implementation definitions.go).
+    def coord(v):
+        return int(v).to_bytes(3, "big", signed=True)
+
+    def gnss_place_auth(t):
+        # GNSSPlaceAuthRecord (12B): ts(4)+accuracy(1)+lat(3)+lon(3)+auth(1)
+        return struct.pack(">I", t) + bytes([7]) + coord(45041) + coord(9125) + bytes([1])
+
+    place_auth = struct.pack(">IB", ts(2025, 5, 2, 10), 1)                 # pointer(2)+5B record below
+    gnss_auth = struct.pack(">IB", ts(2025, 5, 1, 8), 1)                   # pointer(2)+5B record below
+    border_crossing = (bytes([get_nation_byte(), get_nation_byte("F")])
+                        + gnss_place_auth(ts(2025, 5, 3, 18)) + (89500).to_bytes(3, "big"))
+    load_unload = (struct.pack(">IB", ts(2025, 5, 1, 8), 0x01)
+                    + gnss_place_auth(ts(2025, 5, 1, 8)) + (89600).to_bytes(3, "big"))
+    load_type = struct.pack(">IB", ts(2025, 5, 2, 14), 2)                  # pointer(2)+5B record below
     data = b"".join([
         stap(0x0101, 0x00, build_g2_icc()),
         stap(0x0102, 0x02, build_g2_card_id()),
         stap(0x0201, 0x02, build_g2_driver()),
         stap(0x0504, 0x02, make_cyclic(acts)),
-        stap(0x0525, 0x02, gnss),
-        stap(0x0526, 0x02, struct.pack(">IBii", ts(2025,5,2,10), 0, int(45.4642*1e7), int(9.19*1e7))),
-        stap(0x0527, 0x02, struct.pack(">IB", ts(2025,5,1,8), get_nation_byte()) + s("AB12345CD", 14) + b'\x00' * 7),
-        stap(0x0528, 0x02, struct.pack(">IiiBB", ts(2025,5,1,8), int(45.4642*1e7), int(9.19*1e7), 0x01, get_nation_byte())),
-        stap(0x0529, 0x02, struct.pack(">IHHH", ts(2025,5,2,14), 5000, 7000, 12000)),
-        stap(0x052A, 0x02, struct.pack(">IBBii", ts(2025,5,3,18), get_nation_byte(), get_nation_byte("F"), int(44.5*1e7), int(7.0*1e7))),
+        stap(0x0525, 0x02, struct.pack(">HHHHH", 10, 1, 1, 1, 0)),
+        stap(0x0526, 0x02, b"\x00\x00" + place_auth),
+        stap(0x0527, 0x02, b"\x00\x00" + gnss_auth),
+        stap(0x0528, 0x02, b"\x00\x00" + border_crossing),
+        stap(0x0529, 0x02, b"\x00\x00" + load_unload),
+        stap(0x0530, 0x02, b"\x00\x00" + load_type),
         stap(0x0505, 0x02, build_g1_vehicles()),
         stap(0x0523, 0x02, build_g2_vehicle_units()),
         stap(0x0524, 0x02, build_g2_gnss_places()),

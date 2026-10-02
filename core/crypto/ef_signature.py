@@ -50,6 +50,29 @@ _EF_MIN_LENGTHS = {
     0x052A: 10,    # BorderCrossings (G2.2)
 }
 
+# G1 driver-card EFs present in every real sample available to this project
+# (Annex 1B Appendix 1 TCS_025 core driver-card EFs). Deliberately narrower
+# than "every G1 EF that can exist" -- 0x0507/0x0521 vary across real cards
+# and are NOT included here, to avoid flagging a legitimately-absent optional
+# EF as missing. Used only to catch a signed EF being deleted outright
+# (E-F3/CARD-MANDATORY-MISSING), not as an exhaustive structural check.
+_G1_CORE_TAGS = frozenset({0x0501, 0x0502, 0x0503, 0x0504, 0x0505, 0x0506, 0x0508, 0x0520, 0x0522})
+
+
+def missing_core_efs(pairs: List[Dict[str, Any]], generation: str) -> List[int]:
+    """Return core G1 EF tags with no entry at all in ``pairs``.
+
+    ``pair_ef_records`` only reports tags it actually saw data/signature
+    occurrences for -- a fully-deleted EF (both copies removed) leaves no
+    trace, so completeness must be checked against a known tag set rather
+    than by inspecting the pairs alone.
+    """
+    if not generation.startswith("G1"):
+        return []
+    present = {pair["tag"] for pair in pairs}
+    return sorted(_G1_CORE_TAGS - present)
+
+
 # Schema for data+dtype pairs (one pair per generation).
 _GEN_PAIRS: Tuple[Tuple[int, int, str, str], ...] = (
     (0x00, 0x01, "G1", "RSA"),

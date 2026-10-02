@@ -221,28 +221,32 @@ class TestGen22Decoders:
         assert results["trailer_registrations"][0]["nation"] == "I"
         assert results["trailer_registrations"][0]["trailer_plate"] == "TEST000000001"
 
-    def test_trailer_record_array_wrapper_dispatches_without_nested_tlv_parsing(self):
-        record = bytes([0x1A]) + b"\x01TEST000000001"
-        payload = b"\x24" + struct.pack(">HH", 15, 1) + record
+    def test_gnss_auth_accumulated_pointer_payload_dispatches_without_nested_tlv_parsing(self):
+        record = struct.pack(">IB", 1700000000, 1)  # TimeReal(4) + auth code(1)
+        payload = b"\x00\x00" + record
         raw = struct.pack(">HBH", 0x0527, 0x02, len(payload)) + payload
 
         result = DeterministicParser().parse(raw, is_vu=False)
 
         assert DecoderRegistry.instance().is_container(0x0527, generation="G2.2", is_vu=False) is False
         assert result["metadata"].get("decoder_validation_warnings") is None
-        assert len(result["trailer_registrations"]) == 1
+        assert len(result["gnss_auth_records"]) == 1
 
     def test_card_payload_is_not_recursively_parsed_as_ber_container(self):
-        payload = self._gnss_place()
+        ts = 1700000000
+        record = bytes([0x1A, 0x0D]) + self._gnss_place(ts) + (654321).to_bytes(3, "big")
+        payload = b"\x00\x00" + record
         raw = struct.pack(">HBH", 0x0528, 0x02, len(payload)) + payload
+
         result = DeterministicParser().parse(raw, is_vu=False)
 
         assert DecoderRegistry.instance().is_container(0x0528, generation="G2.2", is_vu=False) is False
-        assert len(result["gnss_places"]) == 1
+        assert result["metadata"].get("decoder_validation_warnings") is None
+        assert len(result["border_crossings"]) == 1
         assert result["coverage"]["uncovered_ranges"] == []
 
-    def test_wrong_gnss_accumulated_layout_produces_a_validation_warning(self):
-        payload = b"\x00" * 38  # Two bare records are invalid: the EF requires a 2-byte pointer.
+    def test_wrong_driver_card_application_v2_layout_produces_a_validation_warning(self):
+        payload = b"\x00" * 38  # Not a multiple of the fixed 10-byte record.
         raw = struct.pack(">HBH", 0x0525, 0x02, len(payload)) + payload
         result = DeterministicParser().parse(raw, is_vu=False)
 
@@ -253,10 +257,10 @@ class TestGen22Decoders:
     @pytest.mark.parametrize(
         ("tag", "payload"),
         [
-            (0x0526, lambda self: struct.pack(
+            (0x0529, lambda self: struct.pack(
                 ">IB", 1700000000, 1
             ) + self._gnss_place(1700000001) + (123456).to_bytes(3, "big")),
-            (0x052A, lambda self: bytes([0x1A, 0x0D]) + self._gnss_place(1700000000)
+            (0x0528, lambda self: bytes([0x1A, 0x0D]) + self._gnss_place(1700000000)
              + (654321).to_bytes(3, "big")),
         ],
     )
@@ -267,7 +271,7 @@ class TestGen22Decoders:
         result = DeterministicParser().parse(raw, is_vu=False)
 
         assert result["metadata"].get("decoder_validation_warnings") is None
-        key = "load_unload_records" if tag == 0x0526 else "border_crossings"
+        key = "load_unload_records" if tag == 0x0529 else "border_crossings"
         assert len(result[key]) == 1
 
     def test_malformed_timestamp_and_coordinates_are_rejected(self):

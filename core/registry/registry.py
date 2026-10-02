@@ -237,35 +237,44 @@ class DecoderRegistry:
                         min_length=100),
 
             # ── G2.2 card EF payloads (flat records, not BER containers) ──
-            TagDecoder(0x0525, "G22_GNSSAccumulatedDriving",
-                        decoders.parse_g22_gnss_accumulated_driving,
-                        annex_ref="Reg. EU 2021/1228", generation="G2.2",
-                        card_only=True, min_length=21, record_size=19, record_layout="pointer"),
+            # Fixed per Batch 3 (A-F4/D2-001/D2-002/CARD-G22-FID): the FID
+            # map below was wrong for every tag 0x0525-0x0530. Verified
+            # independently against the reference Go implementation
+            # (tachoparser/pkg/decoder/definitions.go, plain text, not the
+            # OCR'd regulation image the original finding cites) field by
+            # field. 0x0529 "LoadSensorData" does not exist in Annex 1C or
+            # the reference implementation at all -- it was invented; this
+            # tag is now unregistered on the card side (the EF slot for it
+            # has no decoder until a real spec for it turns up).
+            TagDecoder(0x0525, "G22_DriverCardApplicationIdentificationV2",
+                        decoders.parse_g22_driver_card_application_identification_v2,
+                        annex_ref="Annex 1C §2.61a", generation="G2.2",
+                        card_only=True, min_length=10, record_size=10, record_layout="flat"),
 
-            TagDecoder(0x0526, "G22_LoadUnloadOperations",
-                          decoders.parse_g22_load_unload_operations,
-                          annex_ref="Annex 1C §§2.24c-2.24d", generation="G2.2",
-                          card_only=True, min_length=22, record_size=20, record_layout="pointer"),
+            TagDecoder(0x0526, "G22_CardPlaceAuthDailyWorkPeriod",
+                          decoders.parse_g22_place_auth_daily_work_period,
+                          annex_ref="Annex 1C §§2.116a-2.116b", generation="G2.2",
+                          card_only=True, min_length=7, record_size=5, record_layout="pointer"),
 
-            TagDecoder(0x0527, "G22_TrailerRegistrations",
-                         decoders.parse_g22_trailer_registrations,
-                         annex_ref="Annex 1C §2.166a", generation="G2.2",
-                         card_only=True, min_length=5, record_size=15, record_layout="record_array"),
+            TagDecoder(0x0527, "G22_GNSSAuthAccumulatedDriving",
+                         decoders.parse_g22_gnss_auth_accumulated_driving,
+                         annex_ref="Annex 1C §§2.79a-2.79b", generation="G2.2",
+                         card_only=True, min_length=7, record_size=5, record_layout="pointer"),
 
-            TagDecoder(0x0528, "G22_GNSSEnhancedPlaces",
-                        decoders.parse_g22_gnss_enhanced_places,
-                        annex_ref="Annex 1C §2.79c", generation="G2.2",
-                        card_only=True, min_length=12, record_size=12, record_layout="flat"),
-
-            TagDecoder(0x0529, "G22_LoadSensorData",
-                        decoders.parse_g22_load_sensor_data,
-                        annex_ref="Reg. EU 2023/980", generation="G2.2",
-                        card_only=True, min_length=8),
-
-            TagDecoder(0x052A, "G22_BorderCrossings",
+            TagDecoder(0x0528, "G22_CardBorderCrossings",
                         decoders.parse_g22_border_crossings,
-                          annex_ref="Annex 1C §§2.11a-2.11b", generation="G2.2",
-                         card_only=True, min_length=19, record_size=17, record_layout="pointer"),
+                        annex_ref="Annex 1C §§2.11a-2.11b", generation="G2.2",
+                        card_only=True, min_length=19, record_size=17, record_layout="pointer"),
+
+            TagDecoder(0x0529, "G22_CardLoadUnloadOperations",
+                        decoders.parse_g22_load_unload_operations,
+                        annex_ref="Annex 1C §§2.24c-2.24d", generation="G2.2",
+                        card_only=True, min_length=22, record_size=20, record_layout="pointer"),
+
+            TagDecoder(0x0530, "G22_CardLoadTypeEntries",
+                        decoders.parse_g22_load_type_entries,
+                          annex_ref="Annex 1C §§2.24a-2.24b", generation="G2.2",
+                         card_only=True, min_length=7, record_size=5, record_layout="pointer"),
 
             TagDecoder(0x0225, "G22_VU_GNSSADRecord",
                        decoders.parse_g22_gnss_accumulated_driving,

@@ -453,12 +453,12 @@ def _build_gen22(results: Dict[str, Any], driver: Dict[str, Any],
         if _non_empty(value):
             g[_tag_name(tag_id, tags, fallback)] = value
 
-    _add(0x0525, "GNSSAccumulatedDriving",  results.get("gnss_ad_records"))
-    _add(0x0526, "LoadUnloadOperations",    results.get("load_unload_records"))
-    _add(0x0527, "TrailerRegistrations",    results.get("trailer_registrations"))
-    _add(0x0528, "GNSSEnhancedPlaces",      results.get("gnss_places"))
-    _add(0x0529, "LoadSensorData",          results.get("load_sensor_data"))
-    _add(0x052A, "BorderCrossings",         results.get("border_crossings"))
+    _add(0x0525, "DriverCardApplicationIdentificationV2", results.get("card_application_v2"))
+    _add(0x0526, "PlaceAuthDailyWorkPeriod", results.get("place_auth_records"))
+    _add(0x0527, "GNSSAuthAccumulatedDriving", results.get("gnss_auth_records"))
+    _add(0x0528, "BorderCrossings",            results.get("border_crossings"))
+    _add(0x0529, "LoadUnloadOperations",       results.get("load_unload_records"))
+    _add(0x0530, "LoadTypeEntries",            results.get("load_type_entries"))
 
     # G2.2-specific additional decoded keys
     for src_key, display_name in [
