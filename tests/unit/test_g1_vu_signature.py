@@ -160,3 +160,33 @@ def test_partial_unanchored_chain_never_reports_anchored():
     report = parser.results["signature_verification"]
     assert report["all_treps_valid"] is True
     assert report["root_anchored"] is False
+
+
+def test_untrusted_chain_with_missing_key_is_not_anchored():
+    """M1: an untrusted chain must not gain anchoring from a missing key.
+
+    ``root_anchored`` comes from the structured chain trust only; a missing
+    public key must never be treated as if the (untrusted) chain were anchored.
+    """
+    key = rsa.generate_private_key(public_exponent=65537, key_size=1024)
+    parser = _parser_for(_signed_overview(key), None, chain_anchored=False)
+
+    parser._verify_g1_vu_signatures()
+
+    report = parser.results["signature_verification"]
+    assert report["root_anchored"] is False
+    assert report["msca_to_vu"] is False
+    assert parser.validation_status == "Unverified (G1 VU TREP Signatures Not Checked)"
+
+
+def test_anchored_chain_with_missing_key_is_not_downgraded_by_anchoring():
+    """Control: an anchored chain with a missing key still reports anchored,
+    but never Verified (nothing was checked)."""
+    key = rsa.generate_private_key(public_exponent=65537, key_size=1024)
+    parser = _parser_for(_signed_overview(key), None, chain_anchored=True)
+
+    parser._verify_g1_vu_signatures()
+
+    report = parser.results["signature_verification"]
+    assert report["root_anchored"] is True
+    assert parser.validation_status == "Unverified (G1 VU TREP Signatures Not Checked)"

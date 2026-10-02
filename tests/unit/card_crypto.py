@@ -57,17 +57,21 @@ def stap(tag, dtype, data):
     return struct.pack(">HBH", tag, dtype, len(data)) + data
 
 
-def new_cvc_identity(msca_signer):
+def new_cvc_identity(msca_signer, *, root_chr=b"EUROOT01"):
     """Return a Card←MSCA←``msca_signer`` CVC identity.
 
     ``msca_signer`` is the ERCA key that signs the MSCA (``None`` for a
-    self-signed attacker MSCA).
+    self-signed attacker MSCA). Certificate references are linked the correct
+    way round: the CA's ``car`` is the root's ``chr`` and the CardSign's ``car``
+    is the CA's ``chr``, with distinct holder identities.
     """
     card_key = ec.generate_private_key(ec.SECP256R1())
     msca_key = ec.generate_private_key(ec.SECP256R1())
     signer = msca_key if msca_signer is None else msca_signer
-    msca_cert = cvc(msca_key, signer, b"MSSCA001", b"EUROOT01")
-    card_cert = cvc(card_key, msca_key, b"EUOCARD1", b"MSSCA001")
+    msca_chr = b"MSSCA001"
+    msca_car = msca_chr if msca_signer is None else root_chr
+    msca_cert = cvc(msca_key, signer, msca_car, msca_chr)
+    card_cert = cvc(card_key, msca_key, msca_chr, b"EUOCARD1")
     return {
         "card_key": card_key,
         "msca_key": msca_key,
@@ -173,19 +177,30 @@ def _gnss_place_auth(ts):
 _TS = 1700000000
 
 
-def _app_identification_g1():
-    return bytes([0x01]) + b"\x01\x00" + bytes(7)  # type + structure version {01 00}
+def application_identification(gen, card_type=0x01, v2=False):
+    """A signed Application_Identification payload with an explicit card type.
 
-
-def _app_identification_g2(v2=False):
+    ``gen`` is 1 or 2. The first byte is ``typeOfTachographCardId`` (1 = driver,
+    2 = workshop, 3 = control, 4 = company).
+    """
+    if gen == 1:
+        return bytes([card_type]) + b"\x01\x00" + bytes(7)  # 10 bytes
     version = b"\x01\x01" if v2 else b"\x01\x00"
-    return bytes([0x01]) + version + bytes(14)  # 17-byte G2 application identification
+    return bytes([card_type]) + version + bytes(14)  # 17 bytes
 
 
-def g1_core_payloads():
+def non_driver_envelope(gen, card_type):
+    """The DDP_035 universal minimum for a non-driver card: 0501 + 0520."""
+    return {
+        0x0501: application_identification(gen, card_type),
+        0x0520: bytes(143),  # Identification
+    }
+
+
+def g1_core_payloads(card_type=0x01):
     """The nine mandatory G1 driver-card EFs (DDP_035), each ≥ its min length."""
     return {
-        0x0501: _app_identification_g1(),
+        0x0501: application_identification(1, card_type),
         0x0502: bytes(48),   # Events_Data
         0x0503: bytes(24),   # Faults_Data
         0x0504: bytes(range(20)),  # Driver_Activity_Data
@@ -197,10 +212,10 @@ def g1_core_payloads():
     }
 
 
-def g2_core_payloads(v2=False):
+def g2_core_payloads(card_type=0x01, v2=False):
     """The G2 mandatory set: the G1 core plus VehicleUnits_Used / GNSS_Places."""
-    payloads = dict(g1_core_payloads())
-    payloads[0x0501] = _app_identification_g2(v2=v2)
+    payloads = dict(g1_core_payloads(card_type))
+    payloads[0x0501] = application_identification(2, card_type, v2=v2)
     payloads[0x0523] = bytes(12)  # VehicleUnits_Used
     payloads[0x0524] = bytes(20)  # GNSS_Places
     return payloads

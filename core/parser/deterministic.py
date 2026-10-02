@@ -589,13 +589,26 @@ class DeterministicParser:
 
         if self.parser:
             if tag in (0xC108, 0x0104):
+                # CA / MemberState certificate (generation-2 DF).
                 self.parser.msca_cert_raw = payload
                 if length == 194:  # keep the G1 copy for the G1 RSA chain
                     self.parser.msca_cert_g1 = payload
-            elif tag in (0xC100, 0x0103, 0xC101, 0x7F21):
+            elif tag in (0xC101, 0x0103, 0x7F21):
+                # CardSign certificate — the generation-2 EF-signing key.
                 self.parser.card_cert_raw = payload
-                if length == 194:
+                if length == 194 and (dtype is None or dtype <= 0x01):
                     self.parser.card_cert_g1 = payload
+            elif tag == 0xC100:
+                # In the generation-1 DF, C100 is the card certificate. In the
+                # generation-2 DF the same FID is CardMA (Member Authority), a
+                # different role that must NEVER be used as the CardSign key
+                # regardless of stream order (TCS_152: CardMA C100h vs
+                # CardSign C101h). Only the generation-1 copies (dtype 00/01)
+                # are accepted here.
+                if dtype is None or dtype <= 0x01:
+                    self.parser.card_cert_raw = payload
+                    if length == 194:
+                        self.parser.card_cert_g1 = payload
 
     def _dispatch_decoder(
         self,

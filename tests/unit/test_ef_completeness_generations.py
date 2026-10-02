@@ -9,14 +9,18 @@ demanded from the display label alone.
 All chains and EF signatures are real RSA (G1 ISO 9796-2 / PKCS#1 v1.5) and
 ECDSA (G2 CVC) — nothing is mocked.
 """
+import pytest
+
 from core.crypto.ef_signature import missing_core_efs
 from core.utils.report_format import VERDICT_UNVERIFIED, VERDICT_VERIFIED, integrity_verdict
 from tests.unit.card_crypto import (
+    application_identification,
     g1_core_payloads,
     g1_cert_records,
     g1_identity,
     g2_cert_records,
     g2_core_payloads,
+    non_driver_envelope,
     parse_bytes,
     signed_pairs,
     stap,
@@ -24,6 +28,10 @@ from tests.unit.card_crypto import (
     trusted_root_and_msca,
     v2_payloads,
 )
+
+# Recognised non-driver card types: workshop (2), control (3), company (4).
+NON_DRIVER_TYPES = (0x02, 0x03, 0x04)
+DRIVER_ONLY_G1 = (0x0502, 0x0503, 0x0504, 0x0505, 0x0506, 0x0508, 0x0522)
 
 
 def _g1_card(g1_ids, payloads):
@@ -213,4 +221,76 @@ def test_integrity_verdict_fails_closed_on_structured_missing_efs():
             "failed": 0, "skipped": 0, "verified": 8,
         },
     }
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
+
+
+# ── F1: mandatory scope depends on card type, per application generation ───
+
+@pytest.mark.parametrize("card_type", NON_DRIVER_TYPES)
+def test_g1_non_driver_card_is_not_charged_driver_only_efs(card_type):
+    """DDP_035 makes the driver data EFs mandatory only for driver cards. A
+    workshop/control/company card download carrying just the universal minimum
+    (Application_Identification + Identification) is complete."""
+    g1_ids = g1_identity()
+    result = _parse_g1(g1_ids, _g1_card(g1_ids, non_driver_envelope(1, card_type)))
+
+    assert result["ef_signature_verification"]["missing_core_efs"] == []
+    assert result["metadata"]["integrity_check"] == "Verified"
+    assert integrity_verdict(result) == VERDICT_VERIFIED
+
+
+@pytest.mark.parametrize("card_type", NON_DRIVER_TYPES)
+def test_g2_non_driver_card_is_not_charged_driver_only_efs(card_type):
+    erca_cert, identity = trusted_root_and_msca()
+    result = _parse_g2(erca_cert, _g2_card(identity, non_driver_envelope(2, card_type)))
+
+    assert result["ef_signature_verification"]["missing_core_efs"] == []
+    assert result["metadata"]["integrity_check"] == "Verified"
+    assert integrity_verdict(result) == VERDICT_VERIFIED
+
+
+def test_driver_card_missing_driver_only_efs_is_incomplete():
+    """The same minimal envelope with type = driver (1): the driver data EFs are
+    now required, so completeness fails closed."""
+    g1_ids = g1_identity()
+    result = _parse_g1(g1_ids, _g1_card(g1_ids, non_driver_envelope(1, 0x01)))
+
+    missing = result["ef_signature_verification"]["missing_core_efs"]
+    for tag in DRIVER_ONLY_G1:
+        assert tag in missing
+    assert not result["metadata"]["integrity_check"].startswith("Verified")
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
+
+
+def test_absent_application_identity_fails_closed_to_the_driver_set():
+    g1_ids = g1_identity()
+    payloads = {0x0520: bytes(143)}  # Identification only; 0501 absent
+    result = _parse_g1(g1_ids, _g1_card(g1_ids, payloads))
+
+    missing = result["ef_signature_verification"]["missing_core_efs"]
+    assert 0x0501 in missing and 0x0502 in missing
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
+
+
+def test_duplicated_application_identity_fails_closed_to_the_driver_set():
+    g1_ids = g1_identity()
+    app = application_identification(1, 0x02)  # claims non-driver
+    data = (_g1_card(g1_ids, {0x0520: bytes(143)})
+            + signed_pairs({0x0501: app}, g1_ids["card_key"], 1)
+            + signed_pairs({0x0501: app}, g1_ids["card_key"], 1))
+    result = _parse_g1(g1_ids, data)
+
+    missing = result["ef_signature_verification"]["missing_core_efs"]
+    assert 0x0502 in missing  # ambiguous identity -> driver set (fail closed)
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
+
+
+def test_malformed_application_identity_fails_closed_to_the_driver_set():
+    g1_ids = g1_identity()
+    payloads = non_driver_envelope(1, 0x02)
+    payloads[0x0501] = bytes([0x02])  # 1-byte, unreadable identity
+    result = _parse_g1(g1_ids, _g1_card(g1_ids, payloads))
+
+    missing = result["ef_signature_verification"]["missing_core_efs"]
+    assert 0x0502 in missing
     assert integrity_verdict(result) == VERDICT_UNVERIFIED
