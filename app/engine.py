@@ -34,6 +34,9 @@ class TachoParser:
         self.msca_cert_raw = None
         self.card_cert_raw = None
         self.card_cert_sign_seen = False
+        # A generation-2 (CVC/DER encoded) CA has claimed the generation-2
+        # `msca_cert_raw` slot; a later generation-1 CA copy must not take it.
+        self.ca_cert_g2_seen = False
         self.msca_cert_g1 = None
         self.card_cert_g1 = None
         self.validation_status = "Pending"
@@ -228,6 +231,7 @@ class TachoParser:
         self.msca_cert_raw = None
         self.card_cert_raw = None
         self.card_cert_sign_seen = False
+        self.ca_cert_g2_seen = False
         self.msca_cert_g1 = None
         self.card_cert_g1 = None
         self.validation_status = "Pending"

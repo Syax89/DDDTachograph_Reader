@@ -416,3 +416,49 @@ def test_card_tree_keeps_custom_registry_0528_name(tmp_path):
     tree = build_generations_tree(result, parser.TAGS)
 
     assert "RegistryBorderCrossings" in tree["Generation 2.2"]
+
+
+def test_corrected_v2_efs_decode_content_and_reach_tree_and_export():
+    """Content pin for every corrected V2 EF from one real signed file, with the
+    0526 CardPlaceAuthDailyWorkPeriod assertion the strictest of them: swapping
+    the decoder of any of 0525-0530 must not leave the suite green."""
+    erca_cert, identity = trusted_root_and_msca()
+    payloads = g2_core_payloads(v2=True)
+    payloads.update(v2_payloads())
+    # Two CardPlaceAuth records; pointer 1 (the newest slot) carries code 8.
+    payloads[0x0526] = b"\x00\x01" + struct.pack(">IBIB", TS, 9, TS + 60, 8)
+    data = (g2_cert_records(identity["card_cert"], identity["msca_cert"])
+            + signed_pairs(payloads, identity["card_key"], 2))
+    with trust_store(g2_erca_cert=erca_cert) as certs_dir:
+        result = parse_bytes(data, certs_dir)[1]
+
+    assert result["metadata"]["integrity_check"] == "Verified"
+
+    app_v2 = result["card_application_v2"]
+    assert app_v2["length_of_following_data"] == 8
+    assert app_v2["no_border_crossing_records"] == 1
+
+    # 0526 — the strictest assertion (decoded content, not just key presence).
+    place = result["place_auth_records"]
+    assert [r["authentication_status"] for r in place] == [9, 8]
+    assert [r["record_index"] for r in place] == [0, 1]
+    assert [r["is_newest"] for r in place] == [False, True]
+    assert place[0]["timestamp"] != place[1]["timestamp"]
+
+    # Siblings.
+    assert [r["authentication_status"] for r in result["gnss_auth_records"]] == [1]
+    assert result["border_crossings"][0]["nation_from"] == "I"
+    assert result["border_crossings"][0]["vehicle_odometer_value"] == 100
+    assert result["load_unload_records"][0]["operation"] == "LOAD"
+    assert result["load_unload_records"][0]["vehicle_odometer_value"] == 100
+    assert [r["load_type"] for r in result["load_type_entries"]] == [1]
+
+    # Surfaced into the tree and the shared export sections.
+    g22 = result["generations"]["Generation 2.2"]
+    assert g22["CardPlaceAuthDailyWorkPeriod"] == place
+    assert g22["CardBorderCrossings"] == result["border_crossings"]
+    assert g22["CardLoadTypeEntries"] == result["load_type_entries"]
+    labels = [row[0] for row in section_tables(result)]
+    for expected in ("Places Authentication", "GNSS Places Authentication",
+                     "Load Type Entries", "Border Crossings", "Load / Unload"):
+        assert expected in labels
