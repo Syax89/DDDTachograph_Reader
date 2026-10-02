@@ -105,7 +105,7 @@ class DecoderRegistry:
             TagDecoder(0x0501, "G1_DriverCardApplicationIdentification",
                        decoders.parse_g1_app_identification,
                        annex_ref="Annex 1B §2.28", generation="G1", card_only=True,
-                       min_length=10, record_size=10),
+                       min_length=10, record_size=(10, 17)),
 
             TagDecoder(0x0502, "G1_EventsData",
                        decoders.parse_g1_events_data,
@@ -125,7 +125,7 @@ class DecoderRegistry:
             TagDecoder(0x0505, "G1_VehiclesUsed",
                        decoders.parse_g1_vehicles_used,
                        annex_ref="Annex 1B §2.19", generation="G1", card_only=True,
-                       min_length=4, record_size=31),
+                       min_length=4, record_size=(31, 48, 35)),
 
             TagDecoder(0x0506, "G1_Places",
                        decoders.parse_g1_places,
@@ -160,7 +160,12 @@ class DecoderRegistry:
             TagDecoder(0x050C, "CalibrationData",
                        decoders.parse_calibration_data,
                        annex_ref="Annex 1B §2.118", generation="all",
-                       min_length=167),
+                       # 167 B is the documented VuCalibrationRecord size, but
+                       # the decoder also accepts a 105 B non-standard layout
+                       # observed in some G2 files (see parse_calibration_data).
+                       # A 167 B gate silently dropped every such file before
+                       # it ever reached the decoder (A-F3).
+                       min_length=107),
 
             TagDecoder(0x050D, "VuTimeAdjustmentData",
                        decoders.parse_g2_vu_record,

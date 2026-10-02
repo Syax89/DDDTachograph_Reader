@@ -35,3 +35,17 @@ def test_certificate_and_icc_records_are_not_treated_as_signed_efs():
     )
 
     assert pairs == []
+
+
+def test_card_download_ef_is_excluded_from_signature_verification():
+    """D2-010 (Batch 2): Annex 1C §3.3 DDP_035 signs "the other application
+    data EFs ... except EF Card_Download" -- 0x050E must never enter the
+    report, or a correctly-unsigned EF reads as a failed signature."""
+    pairs = pair_ef_records(
+        [(0x0502, 0x00, b"data"), (0x050E, 0x00, b"\x00\x00\x00\x00")],
+        [(0x0502, 0x01, b"signature")],
+    )
+
+    tags = {p["tag"] for p in pairs}
+    assert 0x050E not in tags
+    assert 0x0502 in tags
