@@ -326,11 +326,12 @@ class DeterministicParser:
 
         Card files carry no 0x76 header, so header sniffing always yields G1.
         The Gen2 EF copies are marked by appendix dtype 0x02/0x03, and the
-        Gen2v2-only EFs (0x0525-0x052A) mark a G2.2 card.
+        Gen2v2-only EFs (0x0525-0x0530, 0x0540) mark a G2.2 card. 0x052A is
+        not a V2 marker.
         """
         if self.generation not in ("G1", "Unknown"):
             return self.generation
-        G22_CARD_TAGS = {0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x052A}
+        G22_CARD_TAGS = {0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x0530, 0x0540}
         has_g2 = False
         for occs in self.results.get("raw_tags", {}).values():
             for occ in occs:
@@ -591,21 +592,10 @@ class DeterministicParser:
                 self.parser.msca_cert_raw = payload
                 if length == 194:  # keep the G1 copy for the G1 RSA chain
                     self.parser.msca_cert_g1 = payload
-            elif tag == 0xC10A:
-                # G2.2-native CA certificate (Reg. EU 2023/980): same role as
-                # 0xC108/0x0104 in the chain, just a different FID
-                # (XD-F4/CARD-G22-CERT-TAGS) -- the registry already
-                # decodes this tag, but it never reached
-                # validate_tacho_chain without this branch.
-                self.parser.msca_cert_raw = payload
             elif tag in (0xC100, 0x0103, 0xC101, 0x7F21):
                 self.parser.card_cert_raw = payload
                 if length == 194:
                     self.parser.card_cert_g1 = payload
-            elif tag == 0xC102:
-                # G2.2-native card certificate, same role as 0xC100/0x0103
-                # (XD-F4/CARD-G22-CERT-TAGS).
-                self.parser.card_cert_raw = payload
 
     def _dispatch_decoder(
         self,
@@ -674,6 +664,7 @@ class DeterministicParser:
         elif dec.record_size is not None:
             record_sizes = dec.record_size if isinstance(dec.record_size, tuple) else (dec.record_size,)
             valid = False
+            pointer_expected = None
             for record_size in record_sizes:
                 is_record_array = (
                     length >= 5
@@ -693,10 +684,21 @@ class DeterministicParser:
                 }
                 if layouts.get(dec.record_layout, layouts["flexible"]):
                     valid = True
+                    # The leading 2-byte value of a cyclic record EF is the
+                    # index of the newest record (Annex 1C §2.24a). An
+                    # out-of-range pointer is surfaced rather than silently
+                    # interpreted across the wrong slot.
+                    if dec.record_layout == "pointer" and is_pointer_prefixed:
+                        count = (length - 2) // record_size
+                        if int.from_bytes(payload[0:2], "big") >= count:
+                            pointer_expected = count
                     break
             if not valid:
                 issue = "record_size"
                 expected = list(record_sizes) if len(record_sizes) > 1 else record_sizes[0]
+            elif pointer_expected is not None:
+                issue = "pointer_range"
+                expected = pointer_expected
 
         if issue is None:
             return None

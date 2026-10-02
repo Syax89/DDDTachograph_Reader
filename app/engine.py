@@ -585,8 +585,7 @@ class TachoParser:
         present = {entry.get("gen") for entry in ef_report.get("ef_results", [])}
         ef_report["untrusted_generations"] = sorted(
             gen for gen in present if not chain_trust.get(gen, False))
-        ef_report["missing_core_efs"] = missing_core_efs(
-            pairs, self.results["metadata"]["generation"])
+        ef_report["missing_core_efs"] = missing_core_efs(pairs)
         self.results["ef_signature_verification"] = ef_report
 
     def _apply_ef_verdict(self, ef_phase_ok, chain_phase_ok=True):
@@ -650,11 +649,17 @@ class TachoParser:
         from core.parser.g1_walker import TREP_NAMES, iter_g1_vu_messages
 
         messages = list(iter_g1_vu_messages(bytes(self.raw_data)))
+        # Root anchoring comes from the structured per-generation chain trust
+        # recorded by _validate_certificate_chain, never from the human-readable
+        # verdict string: a suffixed status ("Verified (…)", "Partial …") must
+        # not make an anchored chain look unanchored (or vice versa), and a
+        # re-run over an already-suffixed verdict must stay consistent.
+        chain_trust = getattr(self, "_chain_trust", None) or {}
         report = {
             "available": self.card_public_key is not None,
             "algorithm": "RSA-SHA1",
             "msca_to_vu": self.card_public_key is not None,
-            "root_anchored": self.validation_status == "Verified",
+            "root_anchored": bool(chain_trust.get("G1")),
             "treps": [],
             "all_treps_valid": False,
             "missing_signatures": 0,
