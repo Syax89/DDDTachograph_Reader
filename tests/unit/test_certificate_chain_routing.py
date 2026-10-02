@@ -23,7 +23,8 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 from core.crypto.vu_signature import cvc_public_key, parse_cvc, verify_cvc_chain_link
 from core.registry.registry import DecoderRegistry
-from core.utils.report_format import VERDICT_VERIFIED, integrity_verdict
+from core.utils.report_format import (
+    VERDICT_UNVERIFIED, VERDICT_VERIFIED, integrity_verdict)
 from tests.unit.card_crypto import (
     cvc,
     g1_cert_records,
@@ -214,5 +215,56 @@ def test_g1_c100_card_certificate_capture_is_legitimate():
 
     assert parser.card_cert_raw == g1_ids["card_cert"]
     assert parser.msca_cert_raw == g1_ids["msca_cert"]
+    assert result["metadata"]["integrity_check"] == "Verified"
+    assert integrity_verdict(result) == VERDICT_VERIFIED
+
+
+# ── R5: C100 CardMA must never be the EF signing key, even with no C101 ────
+
+@pytest.mark.parametrize("dtype", [0x00, 0x01, 0x02, 0x03])
+def test_c100_cardma_without_c101_never_supplies_the_ef_signing_key(dtype):
+    """R5: with a normative CA present but NO CardSign record, a genuine
+    CA-signed CardMA ``C100`` must not stand in as the EF-signing key even when
+    the EF pairs are signed by the CardMA key (which would otherwise verify)."""
+    erca_cert, identity = trusted_root_and_msca()
+    ma_key, ma_cert = _cardma_identity(identity)
+    payloads = g2_core_payloads(v2=True)
+    payloads.update(v2_payloads())
+    data = (stap(0xC100, dtype, ma_cert)
+            + stap(0xC108, 0x02, identity["msca_cert"])
+            + signed_pairs(payloads, ma_key, 2))  # signed by CardMA
+
+    with trust_store(g2_erca_cert=erca_cert) as certs_dir:
+        parser, result = parse_bytes(data, certs_dir)
+
+    assert parser.card_cert_raw is None  # CardMA never takes the CardSign slot
+    meta = result["metadata"]["integrity_check"]
+    assert not meta.startswith("Verified")
+    assert meta in ("Incomplete Certificates", "Invalid Certificate Chain")
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
+    efv = result["ef_signature_verification"]
+    assert efv.get("verified", 0) == 0        # nothing verified with the CardMA key
+    assert efv.get("failed", 0) >= 1 or efv.get("skipped", 0) >= 1
+
+
+@pytest.mark.parametrize("position", ["before", "after"])
+def test_g1_form_c100_never_clobbers_a_captured_cardsign(position):
+    """A legitimate generation-1 (194-byte, non-CVC) C100 arriving after the
+    generation-2 CardSign must not clobber the CardSign / EF-signing slot; the
+    same file reaches Verified in either stream order."""
+    erca_cert, identity = trusted_root_and_msca()
+    g1_ids = g1_identity()
+    g1_record = stap(0xC100, 0x00, g1_ids["card_cert"])  # 194-byte G1 form
+    core = (stap(0xC101, 0x02, identity["card_cert"])
+            + stap(0xC108, 0x02, identity["msca_cert"]))
+    certs = g1_record + core if position == "before" else core + g1_record
+    payloads = g2_core_payloads(v2=True)
+    payloads.update(v2_payloads())
+    data = certs + signed_pairs(payloads, identity["card_key"], 2)  # CardSign-signed
+
+    with trust_store(g2_erca_cert=erca_cert, g1_erca_key=g1_ids["erca_key"]) as certs_dir:
+        parser, result = parse_bytes(data, certs_dir)
+
+    assert parser.card_cert_raw == identity["card_cert"]
     assert result["metadata"]["integrity_check"] == "Verified"
     assert integrity_verdict(result) == VERDICT_VERIFIED

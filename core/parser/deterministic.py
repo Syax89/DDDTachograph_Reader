@@ -600,15 +600,16 @@ class DeterministicParser:
                 if length == 194 and (dtype is None or dtype <= 0x01):
                     self.parser.card_cert_g1 = payload
             elif tag == 0xC100:
-                # In the generation-1 DF, C100 is the card certificate. In the
-                # generation-2 DF the same FID is CardMA (Member Authority), a
-                # different role that must NEVER be used as the CardSign key
-                # (TCS_152: CardMA C100h vs CardSign C101h). Only the
-                # generation-1 copies (dtype 00/01) are accepted, and only when
-                # no normative CardSign certificate — which may arrive later in
-                # the stream — has already claimed the slot; the G1 RSA chain
-                # input is still fed either way.
-                if dtype is None or dtype <= 0x01:
+                # In the generation-1 DF, C100 is the card certificate: the
+                # 194-byte G1 form, whose first byte is never the 0x30 DER /
+                # 0x7F CVC generation-2 encoding marker. In the generation-2 DF
+                # the same FID is CardMA (Member Authority) — a CVC-encoded
+                # payload with a different role that must NEVER supply the
+                # CardSign / EF-signing key, in any stream order, for any
+                # appendix dtype, and whether or not a C101 was seen. The
+                # payload encoding is the same discriminator the chain validator
+                # uses (card_cert_raw[0] in (0x30, 0x7F)), so no new heuristic.
+                if payload and payload[0] not in (0x30, 0x7F):
                     if not getattr(self.parser, "card_cert_sign_seen", False):
                         self.parser.card_cert_raw = payload
                     if length == 194:
