@@ -293,3 +293,33 @@ def test_g1_card_certificate_gate_accepts_only_the_194_byte_form():
 
     shortened = _parse_with(g1_cert[:193])
     assert shortened.card_cert_g1 is None
+
+
+@pytest.mark.parametrize("order", ["g1_then_g2", "g2_then_g1"])
+def test_dual_generation_ca_records_are_order_independent(order):
+    """A file carrying both a genuine generation-1 CA (194-byte form) and a
+    genuine generation-2 CA (CVC) keeps the generation-2 CA in `msca_cert_raw`
+    in either stream order and reads Verified in both; the generation-1 copy
+    stays available for the G1 RSA chain."""
+    erca_cert, identity = trusted_root_and_msca()
+    g1_ids = g1_identity()
+
+    g1_card = stap(0xC100, 0x00, g1_ids["card_cert"])
+    g1_ca = stap(0xC108, 0x00, g1_ids["msca_cert"])
+    cardsign = stap(0xC101, 0x02, identity["card_cert"])
+    g2_ca = stap(0xC108, 0x02, identity["msca_cert"])
+    certs = (g1_card + g1_ca + cardsign + g2_ca if order == "g1_then_g2"
+             else g1_card + g2_ca + cardsign + g1_ca)
+
+    payloads = g2_core_payloads(v2=True)
+    payloads.update(v2_payloads())
+    data = (certs
+            + signed_pairs(g1_core_payloads(), g1_ids["card_key"], 1)
+            + signed_pairs(payloads, identity["card_key"], 2))
+    with trust_store(g2_erca_cert=erca_cert, g1_erca_key=g1_ids["erca_key"]) as certs_dir:
+        parser, result = parse_bytes(data, certs_dir)
+
+    assert parser.msca_cert_raw == identity["msca_cert"]   # the generation-2 CA
+    assert parser.msca_cert_g1 == g1_ids["msca_cert"]       # the generation-1 copy
+    assert result["metadata"]["integrity_check"] == "Verified"
+    assert integrity_verdict(result) == VERDICT_VERIFIED

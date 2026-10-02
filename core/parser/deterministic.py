@@ -589,8 +589,18 @@ class DeterministicParser:
 
         if self.parser:
             if tag in (0xC108, 0x0104):
-                # CA / MemberState certificate (generation-2 DF).
-                self.parser.msca_cert_raw = payload
+                # CA / MemberState certificate. The same FID carries both the
+                # generation-2 CA (CVC/DER encoded: 0x30/0x7F) and the
+                # generation-1 CA (the 194-byte form). Mirroring the CardSign
+                # guard, a generation-1 copy must not take the generation-2
+                # `msca_cert_raw` slot once a generation-2 CA has claimed it, in
+                # any stream order; the generation-1 copy still feeds the
+                # generation-1 RSA chain through `msca_cert_g1`.
+                if payload and payload[0] in (0x30, 0x7F):
+                    self.parser.msca_cert_raw = payload
+                    self.parser.ca_cert_g2_seen = True
+                elif not getattr(self.parser, "ca_cert_g2_seen", False):
+                    self.parser.msca_cert_raw = payload
                 if length == 194:  # keep the G1 copy for the G1 RSA chain
                     self.parser.msca_cert_g1 = payload
             elif tag in (0xC101, 0x0103, 0x7F21):
