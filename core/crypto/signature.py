@@ -493,11 +493,21 @@ class SignatureValidator:
             return False, None
 
     def _validate_g2_cvc_chain(self, card_cert_raw, msca_cert_raw, verification_time=None):
-        """Validate a G2 CVC certificate chain (MSCA→Card link).
+        """Validate a G2 CVC certificate chain (ERCA→MSCA→Card).
 
-        Returns ``(status, ec_public_key)``.  *status* is one of:
-          ``"Partial — MSCA→Card verified (no ERCA root)"``,
-          ``"Partial — MSCA→Card FAILED"``, or ``False``.
+        The card is trusted only when it is cryptographically anchored to a
+        known ERCA-2 root: the MSCA certificate must verify against a root key
+        from :meth:`_g2_erca_keys` **and** the card must be signed by that MSCA.
+        An attacker can present a self-consistent MSCA→Card chain of their own
+        making, so the MSCA→Card link alone proves nothing about trust.
+
+        Returns ``(status, ec_public_key)``.  Only a fully anchored chain yields
+        ``(True, card_pub)``.  Unanchored chains return an explicit non-verified
+        status and ``None``:
+          ``"Partial — MSCA→Card verified (no ERCA root)"``    — no root key loaded,
+          ``"Partial — MSCA→Card verified (ERCA anchor FAILED)"`` — root(s) present but none signs the MSCA,
+          ``"Partial — MSCA→Card FAILED"``                     — card not signed by MSCA,
+          or ``False`` on parse/curve failure.
         """
         from core.crypto.vu_signature import (
             cvc_public_key, cvc_temporal_status, parse_cvc, verify_cvc_chain_link)
@@ -535,8 +545,24 @@ class SignatureValidator:
             self.logger.warning("G2 CVC chain has temporally invalid certificates")
             return False, None
 
-        self.logger.info("G2 CVC MSCA→Card link VERIFIED")
-        return "Partial — MSCA→Card verified (no ERCA root)", card_pub
+        # Anchor the MSCA certificate to the ERCA-2 root trust store. Prefer the
+        # key whose CAR matches the MSCA's, then try every registered root (raw
+        # points carry a synthetic CAR that can never match a real KID), exactly
+        # as the VU download verifier does.
+        erca_keys = self._g2_erca_keys() or {}
+        matched = erca_keys.get(msca_cvc.get("car"))
+        candidates = [matched] if matched else list(erca_keys.values())
+        for erca_pub, erca_hash in candidates:
+            if erca_pub is not None and verify_cvc_chain_link(msca_cvc, erca_pub, erca_hash):
+                self.logger.info("G2 CVC chain VERIFIED (ERCA→MSCA→Card)")
+                return True, card_pub
+
+        if not erca_keys:
+            self.logger.warning("G2 CVC chain unanchored: no ERCA root key available")
+            return "Partial — MSCA→Card verified (no ERCA root)", None
+
+        self.logger.warning("G2 CVC chain unanchored: MSCA not signed by any ERCA root")
+        return "Partial — MSCA→Card verified (ERCA anchor FAILED)", None
 
     def validate_block(self, data, signature, public_key, algorithm='RSA'):
         """

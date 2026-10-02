@@ -143,7 +143,8 @@ def verify_ef_pairs(pairs: List[Dict[str, Any]],
     """
     if not pairs:
         return {"summary": "No EF signature pairs found", "ef_results": [],
-                "verified": 0, "failed": 0, "total": 0}
+                "verified": 0, "failed": 0, "skipped": 0, "total": 0,
+                "key_trust": None}
 
     results = []
     verified = 0
@@ -248,16 +249,20 @@ def verify_ef_pairs(pairs: List[Dict[str, Any]],
             "status": status, "data_size": len(data), "sig_size": len(sig),
         })
 
-    # Build summary.
+    # Build summary. Skipped pairs are never counted as verified: a partial
+    # check that leaves some EFs unverified must say so explicitly.
     total = verified + failed
-    if total == 0 and skipped > 0:
-        summary = f"No EF signatures verified ({skipped} skipped)"
-    elif failed == 0 and total > 0:
+    skipped_note = f", {skipped} skipped" if skipped else ""
+    if total == 0 and skipped == 0:
+        summary = "No EF signature pairs found"
+    elif failed == 0 and skipped == 0:
         summary = f"All {total} EF signature(s) verified"
-    elif verified == 0 and total > 0:
-        summary = f"All {total} EF signature(s) FAILED"
+    elif failed == 0:
+        summary = f"{verified}/{total} EF signature(s) verified{skipped_note}"
+    elif verified == 0:
+        summary = f"All {total} EF signature(s) FAILED{skipped_note}"
     else:
-        summary = f"{verified}/{total} EF signature(s) verified, {failed} FAILED"
+        summary = f"{verified}/{total} EF signature(s) verified, {failed} FAILED{skipped_note}"
 
     key_trust = None
     if used_cvc_key:
