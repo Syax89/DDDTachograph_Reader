@@ -33,7 +33,10 @@ _EF_MIN_LENGTHS = {
     0x0507: 10,    # CurrentUsage
     0x0508: 40,    # ControlActivityData
     0x050A: 10,    # VuCardIWRecord
-    0x050E: 2,     # CardDownload (4 bytes TimeReal)
+    # 0x050E (CardDownload) intentionally absent: Annex 1C §3.3 DDP_035
+    # signs "the other application data EFs ... except EF Card_Download".
+    # Including it here made every card download report a false "FAILED"
+    # EF signature for data the norm declares unsigned (D2-010).
     0x0520: 10,    # Identification
     0x0521: 10,    # DrivingLicenceInfo
     0x0522: 10,    # SpecificConditions

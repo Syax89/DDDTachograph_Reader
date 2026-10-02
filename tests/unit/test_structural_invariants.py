@@ -112,3 +112,69 @@ def test_g1_card_download_chain_validation_handles_thousands_of_messages():
     assert len(messages) == 1_501
     assert messages[0]["trep"] == 0x06
     assert messages[-1]["end"] == len(b"\x76\x06payload" + chain)
+
+
+def test_card_application_identification_accepts_g2_17_byte_layout():
+    """Batch 2, A-F2: the registry gate for 0x0501 must accept the G2 17-byte
+    layout the decoder already supports, not only the G1 10-byte one."""
+    registry = DecoderRegistry.instance()
+
+    body17 = bytes([0, 0, 1, 0, 0, 0, 7, 0, 5, 0, 2, 0, 1, 0, 0, 0, 3])
+    payload = b"\x00\x00" + body17
+    result = DeterministicParser(registry=registry).parse(
+        _stap(0x0501, payload), is_vu=False
+    )
+
+    assert "decoder_validation_warnings" not in result["metadata"]
+    assert result.get("card_application", {}).get("no_place_records") == 5
+
+
+def test_calibration_data_accepts_105_byte_nonstandard_layout():
+    """Batch 2, A-F3: a 107-byte payload (2-byte pointer + 105-byte record)
+    must reach the decoder's own documented 105-byte fallback instead of
+    being rejected by a 167-byte-only gate."""
+    registry = DecoderRegistry.instance()
+
+    body105 = bytes([5]) + b"\x00" * 104  # purpose=5, non-standard short layout
+    payload = b"\x00\x00" + body105
+    result = DeterministicParser(registry=registry).parse(
+        _stap(0x050C, payload), is_vu=False
+    )
+
+    assert "decoder_validation_warnings" not in result["metadata"]
+    assert len(result.get("calibrations", [])) == 1
+
+
+def test_vehicles_used_accepts_g2_48_byte_record_size():
+    """Batch 2, A-F1: the registry gate for 0x0505 must accept the G2
+    48-byte CardVehicleRecord layout, not only the G1 31-byte one -- a
+    real G2 card (verified against DRIVER_MILAN_ADALBERTO.ddd in the
+    confirmation campaign) silently lost the whole Vehicles_Used dataset
+    without this."""
+    registry = DecoderRegistry.instance()
+    dec = registry.get_decoder(0x0505, generation="G1", is_vu=False)
+    assert dec.record_size == (31, 48, 35)
+
+    import struct as _struct
+    from datetime import datetime, timezone
+
+    def g2_record(plate):
+        odo_begin = (900000).to_bytes(3, "big")
+        odo_end = (900100).to_bytes(3, "big")
+        first_use = _struct.pack(">I", int(datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp()))
+        last_use = _struct.pack(">I", int(datetime(2024, 1, 2, tzinfo=timezone.utc).timestamp()))
+        nation = b"\x01"
+        plate_field = plate.encode().ljust(14, b" ")
+        counter = b"\x00\x01"
+        vin = b"WDB1234567890123\x00"[:17]
+        return odo_begin + odo_end + first_use + last_use + nation + plate_field + counter + vin
+
+    rec_data = g2_record("TESTPLATE1234")
+    assert len(rec_data) == 48
+    payload = b"\x00\x00" + rec_data  # vehiclePointerNewestRecord(2) + 1 record
+    result = DeterministicParser(registry=registry).parse(
+        _stap(0x0505, payload), is_vu=False
+    )
+
+    assert "decoder_validation_warnings" not in result["metadata"]
+    assert len(result.get("vehicle_sessions", [])) == 1
