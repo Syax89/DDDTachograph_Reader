@@ -8,7 +8,15 @@ are unsupported compatibility aliases whose provenance is unverified.
 
 These tests use **distinct, genuine** normative CVCs with real ECDSA signatures
 and signed V2 data, asserting correct role routing. Unsupported C102/C10A bytes
-must not overwrite the normative C101/C108 chain inputs.
+must not overwrite the normative C101/C108 chain inputs, for either G2 appendix
+dtype (data 0x02 or signature 0x03).
+
+**Scope of what these tests prove:** the native G2 certificate FIDs, distinct
+genuine CVC public keys, a real ECDSA signature over each CVC body, and the
+CA.CAR = root.CHR / CardSign.CAR = CA.CHR reference relationships. The
+certificates are **shortened synthetic envelopes**, so this is NOT a complete
+normative CVC / CHA / certificate-profile conformance check; C109 Link
+handling and full profile/CHA validation are out of scope for this batch.
 """
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -125,16 +133,18 @@ def _signed_v2_core(identity):
     return signed_pairs(payloads, identity["card_key"], 2)
 
 
-def test_g2_c102_c10a_dtype02_cannot_replace_normative_certificates():
-    """M4: an unsupported C102/C10A appendix carrying the G2 dtype (02/03) must
-    not overwrite the normative CardSign (C101) / CA (C108) inputs."""
+@pytest.mark.parametrize("dtype", [0x02, 0x03])
+def test_g2_c102_c10a_dtype0203_cannot_replace_normative_certificates(dtype):
+    """M4: an unsupported C102/C10A appendix carrying either G2 appendix dtype
+    (data 0x02 or signature 0x03) must not overwrite the normative CardSign
+    (C101) / CA (C108) inputs."""
     erca_cert, identity = trusted_root_and_msca()
     other = new_cvc_identity(None)  # genuinely signed, different identity
     data = b"".join([
         g2_cert_records(identity["card_cert"], identity["msca_cert"]),
         _signed_v2_core(identity),
-        stap(0xC102, 0x02, other["card_cert"]),
-        stap(0xC10A, 0x02, other["msca_cert"]),
+        stap(0xC102, dtype, other["card_cert"]),
+        stap(0xC10A, dtype, other["msca_cert"]),
     ])
     with trust_store(g2_erca_cert=erca_cert) as certs_dir:
         parser, result = parse_bytes(data, certs_dir)
@@ -151,12 +161,13 @@ def _cardma_certificate(identity):
     return cvc(ma_key, identity["msca_key"], b"MSSCA001", b"CARDMA01")
 
 
+@pytest.mark.parametrize("dtype", [0x02, 0x03])
 @pytest.mark.parametrize("position", ["before", "after"])
-def test_g2_c100_cardma_never_replaces_cardsign(position):
+def test_g2_c100_cardma_never_replaces_cardsign(dtype, position):
     """F4: in the generation-2 DF, C100 is CardMA — a different role that must
-    never be used as the CardSign key, in either stream order."""
+    never be used as the CardSign key, in either stream order or appendix dtype."""
     erca_cert, identity = trusted_root_and_msca()
-    ma_record = stap(0xC100, 0x02, _cardma_certificate(identity))
+    ma_record = stap(0xC100, dtype, _cardma_certificate(identity))
     core = g2_cert_records(identity["card_cert"], identity["msca_cert"])
     certs = ma_record + core if position == "before" else core + ma_record
     with trust_store(g2_erca_cert=erca_cert) as certs_dir:
