@@ -115,6 +115,31 @@ def g1_identity():
             "msca_cert": msca_cert, "erca_key": erca}
 
 
+def g1_identity_with_ca_marker(marker, *, attempts=6000):
+    """A real G1 chain whose MSCA (CA) certificate's leading byte is ``marker``.
+
+    A generation-1 CA is an ISO 9796-2 RSA block, so its leading byte is
+    unconstrained: roughly 2/256 of genuine CAs start with the 0x30/0x7F
+    generation-2 encoding markers. The ERCA key is fixed and only the CA key is
+    redrawn, so each attempt costs one RSA key generation. Raises rather than
+    returning nothing, so a caller cannot silently skip the case.
+    """
+    erca = rsa.generate_private_key(public_exponent=65537, key_size=1024)
+    for _ in range(attempts):
+        msca = rsa.generate_private_key(public_exponent=65537, key_size=1024)
+        msca_cert = _rsa_g1_cert(msca, erca, b"ROOT0001", b"MSCA0001")
+        if msca_cert[0] != marker:
+            continue
+        while True:
+            card_key = rsa.generate_private_key(public_exponent=65537, key_size=1024)
+            card_cert = _rsa_g1_cert(card_key, msca, b"MSCA0001", b"CARD0001")
+            if card_cert[0] not in (0x30, 0x7F):
+                break
+        return {"card_key": card_key, "card_cert": card_cert,
+                "msca_cert": msca_cert, "erca_key": erca}
+    raise AssertionError(f"no genuine G1 CA starting with 0x{marker:02X} in {attempts} draws")
+
+
 def write_g1_trust(certs_dir, erca_key):
     """Write the raw RSA ERCA modulus+exponent trust material (n(128)+e(8))."""
     public = erca_key.public_key().public_numbers()

@@ -30,6 +30,7 @@ from tests.unit.card_crypto import (
     g1_cert_records,
     g1_core_payloads,
     g1_identity,
+    g1_identity_with_ca_marker,
     g2_cert_records,
     g2_core_payloads,
     new_cvc_identity,
@@ -295,31 +296,88 @@ def test_g1_card_certificate_gate_accepts_only_the_194_byte_form():
     assert shortened.card_cert_g1 is None
 
 
-@pytest.mark.parametrize("order", ["g1_then_g2", "g2_then_g1"])
-def test_dual_generation_ca_records_are_order_independent(order):
-    """A file carrying both a genuine generation-1 CA (194-byte form) and a
-    genuine generation-2 CA (CVC) keeps the generation-2 CA in `msca_cert_raw`
-    in either stream order and reads Verified in both; the generation-1 copy
-    stays available for the G1 RSA chain."""
-    erca_cert, identity = trusted_root_and_msca()
-    g1_ids = g1_identity()
+_MARKER_CA_CACHE: dict = {}
 
+
+def _g1_identity_with_marker(marker):
+    """Cached genuine G1 chain whose CA certificate starts with ``marker``."""
+    if marker not in _MARKER_CA_CACHE:
+        _MARKER_CA_CACHE[marker] = g1_identity_with_ca_marker(marker)
+    return _MARKER_CA_CACHE[marker]
+
+
+def _dual_generation_file(order, g1_ids, identity):
+    """One genuine G1 chain and one genuine G2 chain, in the given CA order."""
     g1_card = stap(0xC100, 0x00, g1_ids["card_cert"])
     g1_ca = stap(0xC108, 0x00, g1_ids["msca_cert"])
     cardsign = stap(0xC101, 0x02, identity["card_cert"])
     g2_ca = stap(0xC108, 0x02, identity["msca_cert"])
     certs = (g1_card + g1_ca + cardsign + g2_ca if order == "g1_then_g2"
              else g1_card + g2_ca + cardsign + g1_ca)
-
     payloads = g2_core_payloads(v2=True)
     payloads.update(v2_payloads())
-    data = (certs
+    return (certs
             + signed_pairs(g1_core_payloads(), g1_ids["card_key"], 1)
             + signed_pairs(payloads, identity["card_key"], 2))
+
+
+@pytest.mark.parametrize("ca_marker", [None, 0x30, 0x7F])
+@pytest.mark.parametrize("order", ["g1_then_g2", "g2_then_g1"])
+def test_dual_generation_ca_records_are_order_independent(ca_marker, order):
+    """A file carrying both a genuine generation-1 CA (194-byte form) and a
+    genuine generation-2 CA (CVC) keeps the generation-2 CA in `msca_cert_raw`
+    in either stream order and reads Verified in both — even when the G1 CA's
+    unconstrained leading byte happens to be the 0x30/0x7F 2-encoding marker.
+    The generation-1 copy stays available for the G1 RSA chain."""
+    erca_cert, identity = trusted_root_and_msca()
+    g1_ids = g1_identity() if ca_marker is None else _g1_identity_with_marker(ca_marker)
+    if ca_marker is None:
+        assert g1_ids["msca_cert"][0] not in (0x30, 0x7F)
+    else:
+        assert g1_ids["msca_cert"][0] == ca_marker
+
     with trust_store(g2_erca_cert=erca_cert, g1_erca_key=g1_ids["erca_key"]) as certs_dir:
-        parser, result = parse_bytes(data, certs_dir)
+        parser, result = parse_bytes(_dual_generation_file(order, g1_ids, identity), certs_dir)
 
     assert parser.msca_cert_raw == identity["msca_cert"]   # the generation-2 CA
     assert parser.msca_cert_g1 == g1_ids["msca_cert"]       # the generation-1 copy
     assert result["metadata"]["integrity_check"] == "Verified"
     assert integrity_verdict(result) == VERDICT_VERIFIED
+
+
+@pytest.mark.parametrize("ca_marker", [None, 0x30, 0x7F])
+def test_g1_only_file_with_marker_ca_keeps_the_flag_clear(ca_marker):
+    """A generation-1-only file still verifies through the G1 chain, and a
+    generation-1 CA must never set `ca_cert_g2_seen` (the flag means 'a
+    generation-2 CA claimed the slot')."""
+    g1_ids = g1_identity() if ca_marker is None else _g1_identity_with_marker(ca_marker)
+    data = (g1_cert_records(g1_ids["card_cert"], g1_ids["msca_cert"])
+            + signed_pairs(g1_core_payloads(), g1_ids["card_key"], 1))
+
+    with trust_store(g1_erca_key=g1_ids["erca_key"]) as certs_dir:
+        parser, result = parse_bytes(data, certs_dir)
+
+    assert parser.msca_cert_raw == g1_ids["msca_cert"]
+    assert parser.msca_cert_g1 == g1_ids["msca_cert"]
+    assert parser.ca_cert_g2_seen is False
+    assert result["metadata"]["integrity_check"] == "Verified"
+    assert integrity_verdict(result) == VERDICT_VERIFIED
+
+
+def test_194_byte_cvc_form_ca_with_g2_dtype_still_claims_the_g2_slot():
+    """The appendix dtype stays in the generation-1 predicate: valid G2
+    certificates may also be 194 bytes, so a 194-byte CVC-form CA carried with
+    dtype 0x02 must still claim the generation-2 slot (length alone must not
+    decide)."""
+    erca_cert, identity = trusted_root_and_msca()
+    synthetic = b"\x7f" + bytes(193)  # 194 bytes, CVC-looking, generation-2 dtype
+    data = (stap(0xC101, 0x02, identity["card_cert"])
+            + stap(0xC108, 0x02, synthetic)
+            + signed_pairs(g2_core_payloads(v2=True), identity["card_key"], 2))
+
+    with trust_store(g2_erca_cert=erca_cert) as certs_dir:
+        parser, _result = parse_bytes(data, certs_dir)
+
+    assert parser.msca_cert_raw == synthetic
+    assert parser.ca_cert_g2_seen is True
+    assert parser.msca_cert_g1 is None
