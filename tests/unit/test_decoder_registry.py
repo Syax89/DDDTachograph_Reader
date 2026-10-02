@@ -131,7 +131,7 @@ def test_engine_tree_uses_registered_display_name(tmp_path):
 
     parser = TachoParser(str(tmp_path / "input.ddd"))
     result = TachoResult().to_dict()
-    result["load_unload_records"] = [{"operation": "load"}]
+    result["place_auth_records"] = [{"authentication_status": 1}]
     tree = build_generations_tree(result, parser.TAGS)
 
     assert parser.TAGS[0x0526] == "G22_RegistryDrivenName"

@@ -556,7 +556,7 @@ class TachoParser:
         ef_sig_raw = self.results.pop("_ef_signatures", None)
         if ef_data_raw is None or ef_sig_raw is None:
             return
-        from core.crypto.ef_signature import pair_ef_records, verify_ef_pairs
+        from core.crypto.ef_signature import pair_ef_records, verify_ef_pairs, missing_core_efs
         from cryptography.hazmat.primitives.asymmetric import rsa as _rsa
         pairs = pair_ef_records(ef_data_raw, ef_sig_raw)
         key_type = "RSA" if isinstance(self.card_public_key, _rsa.RSAPublicKey) else (
@@ -585,6 +585,8 @@ class TachoParser:
         present = {entry.get("gen") for entry in ef_report.get("ef_results", [])}
         ef_report["untrusted_generations"] = sorted(
             gen for gen in present if not chain_trust.get(gen, False))
+        ef_report["missing_core_efs"] = missing_core_efs(
+            pairs, self.results["metadata"]["generation"])
         self.results["ef_signature_verification"] = ef_report
 
     def _apply_ef_verdict(self, ef_phase_ok, chain_phase_ok=True):
@@ -610,6 +612,15 @@ class TachoParser:
             self.validation_status = "Unverified (EF Signature Verification Failed)"
             return
         efv = self.results.get("ef_signature_verification") or {}
+        missing_core = efv.get("missing_core_efs") or []
+        if missing_core:
+            # A signed EF was removed outright (both data and signature
+            # copies): it leaves no trace in ef_results, so a chain-only
+            # check would read this as "nothing to verify, OK"
+            # (E-F3/CARD-MANDATORY-MISSING).
+            self.validation_status = "Unverified (Missing EF: {})".format(
+                ", ".join(f"0x{tag:04X}" for tag in missing_core))
+            return
         untrusted = efv.get("untrusted_generations") or []
         if untrusted:
             # EF maths may check out against an attacker key; without a trusted
@@ -652,10 +663,14 @@ class TachoParser:
         if not messages:
             report["summary"] = "No G1 VU TREP sections found"
             self.results["signature_verification"] = report
+            if self.validation_status.startswith("Verified"):
+                self.validation_status = "Unverified (G1 VU TREP Signatures Not Checked)"
             return
         if self.card_public_key is None:
             report["summary"] = "G1 VU public key unavailable; TREP signatures not verified"
             self.results["signature_verification"] = report
+            if self.validation_status.startswith("Verified"):
+                self.validation_status = "Unverified (G1 VU TREP Signatures Not Checked)"
             return
 
         all_valid = True
@@ -700,11 +715,16 @@ class TachoParser:
         )
         self.results["signature_verification"] = report
 
-        if self.validation_status == "Verified":
-            if all_valid:
+        if self.validation_status.startswith("Verified"):
+            if report["all_treps_valid"]:
                 self.validation_status = "Verified (G1 VU chain and TREP signatures)"
             elif report["missing_signatures"]:
                 self.validation_status = "Incomplete (G1 VU TREP signatures missing)"
+            elif signed_messages == 0:
+                # Only unsigned TREP 0x11/0x14 sections were present: nothing
+                # to check, so "Verified" must not stand, but nothing failed
+                # either -- E-F4 (CRYPTO-G1-VU-STALE-VERDICT).
+                self.validation_status = "Unverified (G1 VU TREP Signatures Not Checked)"
             else:
                 self.validation_status = "Invalid G1 VU TREP Signature"
 

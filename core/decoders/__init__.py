@@ -54,6 +54,10 @@ from core.decoders.card_g22 import (
     parse_g22_gnss_enhanced_places,
     parse_g22_load_sensor_data,
     parse_g22_border_crossings,
+    parse_g22_place_auth_daily_work_period,
+    parse_g22_gnss_auth_accumulated_driving,
+    parse_g22_load_type_entries,
+    parse_g22_driver_card_application_identification_v2,
 )
 from core.decoders.cert import (
     parse_g22_auth_subtag,

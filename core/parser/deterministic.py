@@ -591,10 +591,21 @@ class DeterministicParser:
                 self.parser.msca_cert_raw = payload
                 if length == 194:  # keep the G1 copy for the G1 RSA chain
                     self.parser.msca_cert_g1 = payload
+            elif tag == 0xC10A:
+                # G2.2-native CA certificate (Reg. EU 2023/980): same role as
+                # 0xC108/0x0104 in the chain, just a different FID
+                # (XD-F4/CARD-G22-CERT-TAGS) -- the registry already
+                # decodes this tag, but it never reached
+                # validate_tacho_chain without this branch.
+                self.parser.msca_cert_raw = payload
             elif tag in (0xC100, 0x0103, 0xC101, 0x7F21):
                 self.parser.card_cert_raw = payload
                 if length == 194:
                     self.parser.card_cert_g1 = payload
+            elif tag == 0xC102:
+                # G2.2-native card certificate, same role as 0xC100/0x0103
+                # (XD-F4/CARD-G22-CERT-TAGS).
+                self.parser.card_cert_raw = payload
 
     def _dispatch_decoder(
         self,
