@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.engine import TachoParser
+from core.utils.report_format import VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED, integrity_verdict
 
 
 def _component(value: object, fallback: str) -> str:
@@ -26,13 +27,15 @@ def _component(value: object, fallback: str) -> str:
 
 def _integrity_status(result: dict) -> str:
     metadata = result.get("metadata") or {}
-    integrity = str(metadata.get("integrity_check") or "")
-    if metadata.get("parse_error") or integrity.startswith("Error") or integrity.startswith("Invalid"):
+    verdict = integrity_verdict(result)
+    if verdict == VERDICT_CORRUPT:
         return "CORRUPT"
     if float(metadata.get("coverage_pct") or 0) < 100:
         return "PARTIAL"
-    if integrity.startswith("Verified"):
+    if verdict == VERDICT_VERIFIED:
         return "VERIFIED"
+    if verdict == VERDICT_PARTIAL:
+        return "PARTIAL"
     return "UNVERIFIED"
 
 

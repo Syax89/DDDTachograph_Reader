@@ -71,7 +71,9 @@ from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 
 from core.utils.version import __version__  # noqa: E402
-from core.utils.report_format import fmt_scalar, humanize_key, visible_columns  # noqa: E402
+from core.utils.report_format import (  # noqa: E402
+    VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
+    fmt_scalar, humanize_key, integrity_verdict, visible_columns)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
@@ -2410,6 +2412,13 @@ class TachoExplorer(tk.Tk):
         ef_failed = efv.get("failed", 0)
         if ef_failed:
             warnings.append(f"\u2022 EF data signatures: {ef_failed} failed verification")
+        ef_skipped = efv.get("skipped", 0)
+        if ef_skipped:
+            warnings.append(
+                f"\u2022 Card data signatures: {ef_skipped} EF signature(s) not checked")
+        if (meta.get("is_vu") is not True and integrity_verdict(data) != VERDICT_VERIFIED
+                and not ef_failed and not ef_skipped):
+            warnings.append(f"\u2022 Card integrity: {self._integrity_label(data)}")
 
         sv = data.get("signature_verification") or {}
         if sv.get("available") and not sv.get("msca_to_vu"):
@@ -2458,30 +2467,54 @@ class TachoExplorer(tk.Tk):
         self._update_status_badge(data)
 
     def _integrity_label(self, data):
-        """Return a human-readable integrity summary for File Info and status bar."""
+        """Return a human-readable integrity summary for File Info and status bar.
+
+        The label must reflect the actual trust verdict: a partial/unanchored
+        chain or an unverified EF is never collapsed into a blanket "verified".
+        """
         meta = data.get("metadata") or {}
         integrity = meta.get("integrity_check", "")
         efv = data.get("ef_signature_verification") or {}
         sv = data.get("signature_verification") or {}
-
-        ef_ok = efv.get("failed", 1) == 0 and efv.get("verified", 0) > 0
-        sv_ok = sv.get("all_treps_valid") is True
-        vu_chain_ok = sv.get("msca_to_vu") is True
         is_vu = meta.get("is_vu") is True
-        chain_ok = "Verified" in integrity
 
-        if chain_ok and ef_ok and not is_vu:
-            return "All signatures verified"
-        if sv_ok and vu_chain_ok and sv.get("root_anchored"):
-            return "VU signatures verified (root anchored)"
-        if sv_ok and vu_chain_ok:
-            return "VU TREP signatures verified (chain partial)"
-        if sv_ok:
-            return "VU TREP signatures valid (chain unverified)"
-        if chain_ok and not is_vu:
-            return "Certificate chain verified"
-        if ef_ok:
-            return "EF signatures verified"
+        if is_vu:
+            sv_ok = sv.get("all_treps_valid") is True
+            vu_chain_ok = sv.get("msca_to_vu") is True
+            if sv_ok and vu_chain_ok and sv.get("root_anchored"):
+                return "VU signatures verified (root anchored)"
+            if sv_ok and vu_chain_ok:
+                return "VU TREP signatures verified (chain partial)"
+            if sv_ok:
+                return "VU TREP signatures valid (chain unverified)"
+        else:
+            if integrity_verdict(data) == VERDICT_VERIFIED:
+                return "All signatures verified"
+            if efv.get("failed", 0):
+                return "Card data signature mismatch"
+            if efv.get("skipped", 0):
+                return "EF signatures incomplete"
+            # Chain-level failures must surface even when there is no signed EF
+            # pair to explain them (never hidden behind "No EF signatures").
+            if "Invalid" in integrity:
+                return "Certificate chain invalid"
+            if "anchor" in integrity.lower() or "Missing ERCA" in integrity:
+                return "Certificate chain not anchored to a trusted root"
+            if "not trusted" in integrity:
+                return "Card signing key not trusted"
+            if "EF Signature Verification Failed" in integrity:
+                return "EF signature verification failed"
+            if "Error" in integrity:
+                return "Verification error"
+            if not (efv.get("ef_results") or []):
+                return "No EF signatures verified"
+            if integrity.startswith("Partial"):
+                return "Partial verification"
+            if "Incomplete" in integrity:
+                return "Incomplete certificates"
+            return integrity or "N/A"
+
+        # VU negative/corrupt fallbacks.
         if integrity.startswith("Partial"):
             return "Partial verification"
         if integrity == "Invalid Certificate Chain":
@@ -2500,48 +2533,38 @@ class TachoExplorer(tk.Tk):
         integrity = (data.get("metadata") or {}).get("integrity_check", "")
         efv = data.get("ef_signature_verification") or {}
         sv = data.get("signature_verification") or {}
-
-        ef_ok = efv.get("failed", 1) == 0 and efv.get("verified", 0) > 0
-        sv_ok = sv.get("all_treps_valid") is True
-        vu_chain_ok = sv.get("msca_to_vu") is True
         is_vu = (data.get("metadata") or {}).get("is_vu") is True
-        chain_ok = "Verified" in integrity
+        verdict = integrity_verdict(data)
 
         label = self._integrity_label(data)
 
-        if chain_ok and ef_ok and not is_vu:
-            text = ""
-            color = "#757575"
-        elif sv_ok and vu_chain_ok and sv.get("root_anchored"):
-            text = ""
-            color = "#757575"
-        elif sv_ok:
-            text = "\u26a0\ufe0f  " + label
-            color = "#e65100"
-        elif chain_ok and not is_vu:
-            text = ""
-            color = "#757575"
-        elif ef_ok:
-            text = "\u26a0\ufe0f  " + label
-            color = "#e65100"
-        elif integrity.startswith("Partial"):
-            text = "\u26a0\ufe0f  " + label
-            color = "#e65100"
-        elif integrity == "Invalid Certificate Chain":
-            text = "\u274c  " + label
-            color = "#c62828"
-        elif "Missing ERCA" in integrity:
-            text = "\u26a0\ufe0f  " + label
-            color = "#f57c00"
+        if is_vu:
+            sv_ok = sv.get("all_treps_valid") is True
+            vu_chain_ok = sv.get("msca_to_vu") is True
+            if sv_ok and vu_chain_ok and sv.get("root_anchored"):
+                text, color = "", "#757575"
+            elif sv_ok:
+                text, color = "\u26a0\ufe0f  " + label, "#e65100"
+            elif verdict == VERDICT_CORRUPT:
+                text, color = "\u274c  " + label, "#c62828"
+            elif verdict == VERDICT_PARTIAL:
+                text, color = "\u26a0\ufe0f  " + label, "#f57c00"
+            elif "Incomplete" in integrity:
+                text, color = "\u2753  Incomplete certificates", "#757575"
+            elif "Error" in integrity:
+                text, color = "\u274c  Parse error", "#c62828"
+            else:
+                text, color = "", "#757575"
+        elif verdict == VERDICT_VERIFIED:
+            text, color = "", "#757575"
+        elif verdict == VERDICT_CORRUPT or efv.get("failed", 0):
+            text, color = "\u274c  " + label, "#c62828"
         elif "Incomplete" in integrity:
-            text = "\u2753  Incomplete certificates"
-            color = "#757575"
+            text, color = "\u2753  Incomplete certificates", "#757575"
         elif "Error" in integrity:
-            text = "\u274c  Parse error"
-            color = "#c62828"
+            text, color = "\u274c  Parse error", "#c62828"
         else:
-            text = ""
-            color = "#757575"
+            text, color = "\u26a0\ufe0f  " + label, "#e65100"
 
         self.lbl_status.config(text=text, foreground=color)
         # Also update the window title with a compact status (problems only).

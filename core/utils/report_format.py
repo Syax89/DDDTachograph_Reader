@@ -15,6 +15,51 @@ _ISO_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2})?")
 # Internal bookkeeping keys never shown in exports.
 HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
                "non_zero_regions", "name", "size", "confidence", "counters_raw"}
+
+# Canonical trust verdicts for a parsed download. Consumers (GUI badge, rename
+# tooling, reports) must classify with these rather than by substring-matching
+# the human-readable ``metadata.integrity_check`` string.
+VERDICT_CORRUPT = "corrupt"
+VERDICT_UNVERIFIED = "unverified"
+VERDICT_PARTIAL = "partial"
+VERDICT_VERIFIED = "verified"
+
+
+def integrity_verdict(result):
+    """Classify a parse result into a single canonical trust verdict.
+
+    Returns one of :data:`VERDICT_CORRUPT`, :data:`VERDICT_UNVERIFIED`,
+    :data:`VERDICT_PARTIAL`, :data:`VERDICT_VERIFIED`. A ``verified`` verdict is
+    only ever returned when the whole download is cryptographically anchored
+    **and** every card EF signature verified; anything else fails closed.
+    """
+    meta = result.get("metadata") or {}
+    integrity = str(meta.get("integrity_check") or "")
+    if meta.get("parse_error") or integrity.startswith(("Error", "Invalid")):
+        return VERDICT_CORRUPT
+
+    if meta.get("is_vu") is True:
+        sv = result.get("signature_verification") or {}
+        if sv.get("all_treps_valid") and sv.get("msca_to_vu") and sv.get("root_anchored"):
+            return VERDICT_VERIFIED
+        if sv.get("all_treps_valid"):
+            return VERDICT_PARTIAL
+        return VERDICT_UNVERIFIED
+
+    # Driver cards: require a verified chain *and* a complete EF check whose
+    # signing key is trusted for every generation present.
+    if not integrity.startswith("Verified"):
+        return VERDICT_PARTIAL if integrity.startswith("Partial") else VERDICT_UNVERIFIED
+    efv = result.get("ef_signature_verification") or {}
+    if efv.get("untrusted_generations"):
+        # EF signatures may verify mathematically against an attacker key; an
+        # untrusted generation is never verified regardless of the chain string.
+        return VERDICT_UNVERIFIED
+    if (efv.get("failed", 0) == 0 and efv.get("skipped", 0) == 0
+            and efv.get("verified", 0) > 0):
+        return VERDICT_VERIFIED
+    return VERDICT_UNVERIFIED
+
 # Descriptive columns pushed to the table start / technical ones to the end.
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label", "timestamp", "date", "begin", "begin_time", "start"]
 TRAILING_KEYS = ["record_type", "type_code"]

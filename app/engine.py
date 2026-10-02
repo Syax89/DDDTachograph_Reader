@@ -37,6 +37,10 @@ class TachoParser:
         self.card_cert_g1 = None
         self.validation_status = "Pending"
         self.is_vu = False
+        # Per-generation chain trust. A verified chain for one generation must
+        # never launder another generation's untrusted signing key.
+        self._chain_trust = {"G1": False, "G2": False}
+        self._chain_present = {"G1": False, "G2": False}
 
         # Initialize results using the model but keep it as a dict for legacy compatibility
         self.results = TachoResult().to_dict()
@@ -153,9 +157,15 @@ class TachoParser:
             self.results["metadata"]["coverage_pct"] = \
                 self.results.get("coverage", {}).get("covered_pct", 100.0)
             self._run_phase("activity_dedup", self._dedup_and_sort_activities)
-            self._run_phase("certificate_chain", self._validate_certificate_chain)
+            chain_phase_ok = self._run_phase(
+                "certificate_chain", self._validate_certificate_chain)
             self._run_phase("g1_vu_signatures", self._verify_g1_vu_signatures)
-            self._run_phase("ef_signatures", self._verify_ef_signatures)
+            ef_phase_ok = self._run_phase("ef_signatures", self._verify_ef_signatures)
+            # The certificate chain authenticates the card key, not the EF
+            # payloads, so EF verification must be folded into the overall
+            # verdict before it is published (an EF failure must not keep the
+            # file looking identical to a clean one).
+            self._apply_ef_verdict(ef_phase_ok, chain_phase_ok)
 
             self.results["metadata"]["integrity_check"] = self.validation_status
             self.results["metadata"]["decoder_failure_count"] = decoder_failure_count()
@@ -186,9 +196,12 @@ class TachoParser:
         A failure is recorded in ``metadata["parse_warnings"]`` and logged, but
         never aborts the parse: structural data already recovered stays intact
         so partial/corrupt files still surface everything that was decoded.
+        Returns ``True`` when the phase completed, ``False`` when it raised so
+        callers can fail closed on integrity-relevant phases.
         """
         try:
             fn()
+            return True
         except KeyboardInterrupt:
             raise
         except Exception as exc:
@@ -199,6 +212,7 @@ class TachoParser:
                 "message": str(exc) or type(exc).__name__,
                 "exception_type": type(exc).__name__,
             })
+            return False
 
 
     # ── parse() phases ─────────────────────────────────────────────────
@@ -215,6 +229,8 @@ class TachoParser:
         self.msca_cert_g1 = None
         self.card_cert_g1 = None
         self.validation_status = "Pending"
+        self._chain_trust = {"G1": False, "G2": False}
+        self._chain_present = {"G1": False, "G2": False}
 
     def _open_file(self):
         """Memory-map the file and detect VU vs card (first byte 0x76 = VU)."""
@@ -434,42 +450,81 @@ class TachoParser:
             if g1_vu_msca and g1_vu_card:
                 self.card_cert_g1 = g1_vu_card
                 self.msca_cert_g1 = g1_vu_msca
+        # Each generation present in the file is validated independently so its
+        # trust outcome can be retained: a fully-anchored chain for one
+        # generation must never launder an unanchored/failed key of another
+        # (see _apply_ef_verdict).
+        chain_trust = {"G1": False, "G2": False}
+        chain_present = {"G1": False, "G2": False}
+        temporal = {}
+
+        status, pubkey = False, None
         if self.card_cert_raw and self.msca_cert_raw:
-            status, pubkey = self.validator.validate_tacho_chain(self.card_cert_raw, self.msca_cert_raw)
-            # The last certificates seen in the file may be the G2 copies;
-            # if the chain did not fully verify and distinct G1 (194-byte)
-            # certificates are also present, try the G1 chain and keep the
-            # better outcome.
-            if status is not True and self.card_cert_g1 and self.msca_cert_g1 and \
-                    (self.card_cert_g1 != self.card_cert_raw or self.msca_cert_g1 != self.msca_cert_raw):
+            # The last certificates seen in the file may be the G2 copies; a
+            # file can also carry distinct G1 (194-byte) certificates. The
+            # encoding marker (0x30 DER / 0x7F CVC) picks the generation exactly
+            # as validate_tacho_chain does.
+            raw_gen = "G2" if self.card_cert_raw[0] in (0x30, 0x7F) else "G1"
+            status, pubkey = self.validator.validate_tacho_chain(
+                self.card_cert_raw, self.msca_cert_raw)
+            chain_present[raw_gen] = True
+            if status is True:
+                chain_trust[raw_gen] = True
+            temporal.update(self.validator.last_chain_temporal_validity)
+
+            if self.card_cert_g1 and self.msca_cert_g1 and \
+                    (self.card_cert_g1 != self.card_cert_raw
+                     or self.msca_cert_g1 != self.msca_cert_raw):
                 g1_status, g1_pubkey = self.validator.validate_tacho_chain(
                     self.card_cert_g1, self.msca_cert_g1)
+                chain_present["G1"] = True
+                if g1_status is True:
+                    chain_trust["G1"] = True
+                # Keep the temporal status already reported by the G2 chain;
+                # the G1 path does not populate it.
+                for key, value in self.validator.last_chain_temporal_validity.items():
+                    temporal.setdefault(key, value)
+                # Keep the better chain outcome for the reported verdict, and on
+                # a full-verify tie keep the G1 key: it is the RSA key the G1 EF
+                # signatures need, while the G2 CVC key stays available as the
+                # ECDSA fallback in _verify_ef_signatures.
                 rank = {True: 4,
                         "Incomplete (Missing ERCA)": 3,
                         "Partial — MSCA→Card verified (no ERCA root)": 2,
                         "Cannot Verify (Missing ERCA Root)": 1}
-                if rank.get(g1_status, 0) > rank.get(status, 0):
+                if (rank.get(g1_status, 0) > rank.get(status, 0)
+                        or (g1_status is True and status is True)):
                     status, pubkey = g1_status, g1_pubkey
         elif self.card_cert_g1 and self.msca_cert_g1:
             # G1 VU files: certificates were extracted from TREP 01 Overview
             # and stored directly as the G1 copies.
             status, pubkey = self.validator.validate_tacho_chain(
                 self.card_cert_g1, self.msca_cert_g1)
-        else:
-            status, pubkey = False, None
+            chain_present["G1"] = True
+            if status is True:
+                chain_trust["G1"] = True
+            temporal.update(self.validator.last_chain_temporal_validity)
 
-        if self.validator.last_chain_temporal_validity:
-            self.results["certificate_temporal_validity"] = \
-                self.validator.last_chain_temporal_validity
+        self._chain_trust = chain_trust
+        self._chain_present = chain_present
+
+        if temporal:
+            self.results["certificate_temporal_validity"] = temporal
+            self.validator.last_chain_temporal_validity = temporal
 
         if status is True:
             self.validation_status = "Verified"
             self.card_public_key = pubkey
         elif status == "Partial — MSCA→Card verified (no ERCA root)":
-            self.validation_status = "Verified (Partial — CVC MSCA→Card)"
-            self.card_public_key = pubkey
+            # MSCA→Card link holds, but the chain is not anchored to a trusted
+            # ERCA root: a self-signed attacker chain would land here, so this
+            # must never read as verified.
+            self.validation_status = "Unverified (CVC MSCA→Card ok, no ERCA anchor)"
+        elif status == "Partial — MSCA→Card verified (ERCA anchor FAILED)":
+            self.validation_status = "Unverified (CVC MSCA→Card ok, ERCA anchor failed)"
         elif status == "Incomplete (Missing ERCA)":
-            self.validation_status = "Verified (Local Chain)"
+            # Local (self-asserted) chain only — no trusted root, so not verified.
+            self.validation_status = "Unverified (Local Chain Only — ERCA Missing)"
             self.card_public_key = pubkey
         elif status == "Cannot Verify (Missing ERCA Root)":
             self.validation_status = "Unverified (Missing ERCA Root)"
@@ -522,7 +577,53 @@ class TachoParser:
                                     self.validator,
                                     self.results["metadata"]["generation"],
                                     key_type, card_ec_key, card_ec_hash)
+        # Record, per EF generation actually present, whether the chain that
+        # supplied its signing key is trusted. The overall verdict requires every
+        # applicable generation to be trusted (see _apply_ef_verdict and
+        # core.utils.report_format.integrity_verdict).
+        chain_trust = getattr(self, "_chain_trust", None) or {}
+        present = {entry.get("gen") for entry in ef_report.get("ef_results", [])}
+        ef_report["untrusted_generations"] = sorted(
+            gen for gen in present if not chain_trust.get(gen, False))
         self.results["ef_signature_verification"] = ef_report
+
+    def _apply_ef_verdict(self, ef_phase_ok, chain_phase_ok=True):
+        """Fold chain + EF signature verification into the overall verdict.
+
+        The certificate chain authenticates the card key, not the EF payloads,
+        so a download can only read as Verified when *every* applicable EF
+        generation is backed by a trusted chain and its signatures verified.
+        The fold only ever downgrades: an already invalid/unanchored chain is
+        never upgraded. VU downloads carry their own verdict via
+        ``signature_verification`` and are left untouched.
+        """
+        if self.is_vu:
+            return
+        if not chain_phase_ok:
+            # The chain phase raised: never publish a stale positive verdict.
+            self.validation_status = "Unverified (Certificate Chain Error)"
+            return
+        if not str(self.validation_status).startswith("Verified"):
+            # Keep the authoritative negative/partial chain verdict.
+            return
+        if not ef_phase_ok:
+            self.validation_status = "Unverified (EF Signature Verification Failed)"
+            return
+        efv = self.results.get("ef_signature_verification") or {}
+        untrusted = efv.get("untrusted_generations") or []
+        if untrusted:
+            # EF maths may check out against an attacker key; without a trusted
+            # chain for that generation the download is still unverified.
+            self.validation_status = "Unverified ({} card key not trusted)".format(
+                "/".join(untrusted))
+        elif not (efv.get("ef_results") or []):
+            # No signed EF pair at all: a certificate chain alone does not make
+            # a download fully verified.
+            self.validation_status = "Unverified (No EF Signature Pairs)"
+        elif efv.get("failed", 0):
+            self.validation_status = "Unverified (EF Signature Mismatch)"
+        elif efv.get("skipped", 0):
+            self.validation_status = "Unverified (EF Signatures Incomplete)"
 
     def _verify_g1_vu_signatures(self):
         """Verify every signed G1 VU TREP after recovering the VU public key.
