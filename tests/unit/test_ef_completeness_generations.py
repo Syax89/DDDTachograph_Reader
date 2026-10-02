@@ -363,3 +363,47 @@ def test_mixed_unknown_g2_type_is_judged_per_application_generation():
     missing = result["ef_signature_verification"]["missing_core_efs"]
     assert 0x0502 in missing and 0x0523 in missing
     assert integrity_verdict(result) == VERDICT_UNVERIFIED
+
+
+# ── R6: V2-evidence union, duplicated-identity helper contract ─────────────
+
+def test_v2_evidence_from_0525_alone_still_demands_v2_driver_records():
+    """M15: V2 evidence is the union of the universal Application_Identification_V2
+    tag (0x0525) and the V2 driver record set. A V1 structure version with ONLY
+    0x0525 present must still demand the V2 driver records — no single EF's
+    presence/removal decides the trigger."""
+    erca_cert, identity = trusted_root_and_msca()
+    payloads = g2_core_payloads(v2=False)              # 0x0501 declares {01 00}
+    payloads[0x0525] = v2_payloads()[0x0525]           # only 0x0525, no 0x0526-0x0530
+    result = _parse_g2(erca_cert, _g2_card(identity, payloads))
+
+    missing = result["ef_signature_verification"]["missing_core_efs"]
+    for tag in (0x0526, 0x0527, 0x0528, 0x0529, 0x0530):
+        assert tag in missing
+    assert 0x0525 not in missing
+    assert result["metadata"]["generation"] == "G2.2 (Smart V2)"
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
+
+
+def test_paired_tag_data_requires_exactly_one_paired_identity():
+    """M17: the identity helper yields a value only for exactly one PAIRED
+    match, so a duplicated Application_Identification (two readable copies) stays
+    unknown and completeness fails closed instead of trusting a non-driver type."""
+    from core.crypto.ef_signature import _paired_tag_data
+
+    app = application_identification(1, 0x02)  # claims non-driver
+    single = [{"tag": 0x0501, "gen": "G1", "status": "paired", "data": app}]
+    assert _paired_tag_data(single, 0x0501, "G1") == app
+
+    duplicated = [
+        {"tag": 0x0501, "gen": "G1", "status": "paired", "data": app},
+        {"tag": 0x0501, "gen": "G1", "status": "paired", "data": app},
+    ]
+    assert _paired_tag_data(duplicated, 0x0501, "G1") is None
+    assert _paired_tag_data([], 0x0501, "G1") is None
+    assert _paired_tag_data(single, 0x0502, "G1") is None
+
+    # Fail-closed consequence: an ambiguous identity keeps the driver set.
+    duplicated_pairs = duplicated + [
+        {"tag": 0x0520, "gen": "G1", "status": "paired", "data": bytes(143)}]
+    assert 0x0502 in missing_core_efs(duplicated_pairs)
