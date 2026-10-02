@@ -268,3 +268,28 @@ def test_g1_form_c100_never_clobbers_a_captured_cardsign(position):
     assert parser.card_cert_raw == identity["card_cert"]
     assert result["metadata"]["integrity_check"] == "Verified"
     assert integrity_verdict(result) == VERDICT_VERIFIED
+
+
+def test_g1_card_certificate_gate_accepts_only_the_194_byte_form():
+    """M3: the `card_cert_g1` generation-1 RSA chain input is fed from the exact
+    194-byte card certificate form; a differently-sized G1-form payload must not
+    feed it (the constant is real generated output, not free to drift)."""
+    erca_cert, identity = trusted_root_and_msca()
+    g1_ids = g1_identity()
+    g1_cert = g1_ids["card_cert"]
+    assert len(g1_cert) == 194
+    assert g1_cert[0] not in (0x30, 0x7F)  # the generation-1 payload form
+
+    def _parse_with(card_payload):
+        data = (stap(0xC100, 0x00, card_payload)
+                + stap(0xC108, 0x00, g1_ids["msca_cert"])
+                + signed_pairs(g1_core_payloads(), g1_ids["card_key"], 1))
+        with trust_store(g1_erca_key=g1_ids["erca_key"]) as certs_dir:
+            return parse_bytes(data, certs_dir)[0]
+
+    exact = _parse_with(g1_cert)
+    assert exact.card_cert_g1 == g1_cert
+    assert exact.card_cert_raw == g1_cert
+
+    shortened = _parse_with(g1_cert[:193])
+    assert shortened.card_cert_g1 is None
