@@ -51,24 +51,65 @@ _EF_MIN_LENGTHS = {
     0x0540: 1,     # VuConfiguration (G2.2, opaque byte string; optional)
 }
 
-# Driver-card EFs that Annex 1C §3.3 DDP_035 makes mandatory in every download
-# session (reference/annex1C.txt:21525-21644), per EF application generation.
-# 0x0507 (CurrentUsage) and 0x0521 (DrivingLicenceInfo) exist on the card but
-# are NOT mandatory in every download, so they are deliberately absent: their
-# omission must not be reported as an incomplete download. Used to catch a
-# signed EF being deleted outright (E-F3/CARD-MANDATORY-MISSING), not as an
-# exhaustive structural check.
-_G1_CORE_TAGS = frozenset({0x0501, 0x0502, 0x0503, 0x0504, 0x0505, 0x0506, 0x0508, 0x0520, 0x0522})
-# The generation-2 application has the same core plus VehicleUnits_Used and
-# GNSS_Places (DDP_035 Tachograph_G2 DF driver-card list).
-_G2_CORE_TAGS = _G1_CORE_TAGS | {0x0523, 0x0524}
+# Annex 1C §3.3 DDP_035 (reference/annex1C.txt:21556-21644) makes
+# Application_Identification and Identification mandatory for EVERY card type,
+# but the additional data EFs are mandatory only "when downloading a driver
+# card". 0x0507 (CurrentUsage) and 0x0521 (DrivingLicenceInfo) exist on the
+# card but are NOT mandatory in every download, so they are deliberately
+# absent. Used to catch a signed EF being deleted outright
+# (E-F3/CARD-MANDATORY-MISSING), not as an exhaustive structural check.
+_UNIVERSAL_CORE_TAGS = frozenset({0x0501, 0x0520})
+# Driver-only mandatory EFs for the generation-1 application.
+_G1_DRIVER_TAGS = frozenset({0x0502, 0x0503, 0x0504, 0x0505, 0x0506, 0x0508, 0x0522})
+# Generation-2 adds VehicleUnits_Used and GNSS_Places to the driver set.
+_G2_DRIVER_TAGS = _G1_DRIVER_TAGS | {0x0523, 0x0524}
 # Version-2-only generation-2 EFs (TCS_152 note: present only in version 2).
-# Conditional on V2 evidence, never on the display label.
-_G22_V2_TAGS = frozenset({0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x0530})
+# Application_Identification_V2 (0x0525) is universal "if present"; the V2
+# driver records are driver-only "if present".
+_G22_V2_UNIVERSAL_TAGS = frozenset({0x0525})
+_G22_V2_DRIVER_TAGS = frozenset({0x0526, 0x0527, 0x0528, 0x0529, 0x0530})
+# V2-only tags whose mere presence is structured V2 evidence.
+_G22_V2_TAGS = _G22_V2_UNIVERSAL_TAGS | _G22_V2_DRIVER_TAGS
+
+# EquipmentType / typeOfTachographCardId (Annex 1C Appendix 1 §2.67).
+DRIVER_CARD_TYPE = 0x01
+# Recognised, non-driver card types: workshop (2), control (3), company (4).
+NON_DRIVER_CARD_TYPES = frozenset({0x02, 0x03, 0x04})
 
 # Struct-version bytes {01 01} of EF Application_Identification that mark a
 # version-2 generation-2 card (TCS_152; {01 00} is version 1).
 _V2_STRUCTURE_VERSION = b"\x01\x01"
+
+# Minimum Application_Identification length for the card type to be trusted
+# (G1 10 bytes / G2 17 bytes); a shorter payload leaves the identity unknown.
+_APP_ID_MIN_BYTES = 10
+
+
+def _paired_tag_data(pairs: List[Dict[str, Any]], tag: int, gen: str) -> Optional[bytes]:
+    """Return the data payload of the single paired (*tag*, *gen*) EF, else None.
+
+    None means the identity cannot be read unambiguously (missing, malformed,
+    duplicated, or only a signature half). Callers treat that as unknown.
+    """
+    matches = [p for p in pairs
+               if p["tag"] == tag and p.get("gen") == gen and p.get("status") == "paired"]
+    if len(matches) != 1:
+        return None
+    data = matches[0].get("data")
+    return bytes(data) if isinstance(data, (bytes, bytearray)) else None
+
+
+def _application_card_type(pairs: List[Dict[str, Any]], gen: str) -> Optional[int]:
+    """Card type of the *gen* application from its own Application_Identification.
+
+    Derived from that generation's signed 0x0501 bytes, never the merged display
+    ``card_application`` dict nor an unsigned label. Returns ``None`` when the
+    identity is missing/malformed/duplicated, so the caller can fail closed.
+    """
+    data = _paired_tag_data(pairs, 0x0501, gen)
+    if not data or len(data) < _APP_ID_MIN_BYTES:
+        return None
+    return data[0]
 
 
 def _v2_application_present(pairs: List[Dict[str, Any]]) -> bool:
@@ -83,11 +124,26 @@ def _v2_application_present(pairs: List[Dict[str, Any]]) -> bool:
             continue
         if pair["tag"] in _G22_V2_TAGS:
             return True
-        if pair["tag"] == 0x0501 and pair.get("status") == "paired":
-            data = pair.get("data") or b""
-            if len(data) >= 3 and data[1:3] == _V2_STRUCTURE_VERSION:
-                return True
-    return False
+    data = _paired_tag_data(pairs, 0x0501, "G2")
+    return data is not None and len(data) >= 3 and data[1:3] == _V2_STRUCTURE_VERSION
+
+
+def _required_tags(gen: str, card_type: Optional[int], v2_present: bool) -> set:
+    """Mandatory tag set for one EF application generation present in the file.
+
+    ``card_type`` is that generation's Application_Identification type; ``None``
+    (unknown/unreadable) fails closed by requiring the driver set, so an
+    unidentifiable card cannot evade the driver download checks.
+    """
+    required = set(_UNIVERSAL_CORE_TAGS)
+    driver = card_type is None or card_type == DRIVER_CARD_TYPE
+    if driver:
+        required |= _G1_DRIVER_TAGS if gen == "G1" else _G2_DRIVER_TAGS
+    if gen == "G2" and v2_present:
+        required |= _G22_V2_UNIVERSAL_TAGS
+        if driver:
+            required |= _G22_V2_DRIVER_TAGS
+    return required
 
 
 def missing_core_efs(pairs: List[Dict[str, Any]]) -> List[int]:
@@ -95,9 +151,12 @@ def missing_core_efs(pairs: List[Dict[str, Any]]) -> List[int]:
 
     Completeness is keyed on the EF *application* generations actually observed
     (the dtype-00/01 G1 copies vs the dtype-02/03 G2 copies), never on the
-    user-facing generation label: an unsigned, unregistered dtype-02 record
-    must not disable G1 checking, and a G2 application that was never captured
-    must not be demanded from the display label alone.
+    user-facing generation label, and the mandatory set depends on the card type
+    encoded in that generation's own Application_Identification bytes: an
+    explicit non-driver card type must not be charged driver-only EFs, while an
+    unknown/unreadable identity fails closed. An unsigned, unregistered
+    dtype-02 record must not disable G1 checking, and a G2 application that was
+    never captured must not be demanded from the display label alone.
 
     ``pair_ef_records`` only reports tags it actually saw data/signature
     occurrences for -- a fully-deleted EF (both copies removed) leaves no
@@ -106,13 +165,13 @@ def missing_core_efs(pairs: List[Dict[str, Any]]) -> List[int]:
     """
     present = {(pair["tag"], pair["gen"]) for pair in pairs}
     generations = {gen for _tag, gen in present}
+    v2_present = _v2_application_present(pairs)
     missing: set = set()
-    if "G1" in generations:
-        missing |= {tag for tag in _G1_CORE_TAGS if (tag, "G1") not in present}
-    if "G2" in generations:
-        missing |= {tag for tag in _G2_CORE_TAGS if (tag, "G2") not in present}
-        if _v2_application_present(pairs):
-            missing |= {tag for tag in _G22_V2_TAGS if (tag, "G2") not in present}
+    for gen in ("G1", "G2"):
+        if gen not in generations:
+            continue
+        required = _required_tags(gen, _application_card_type(pairs, gen), v2_present)
+        missing |= {tag for tag in required if (tag, gen) not in present}
     return sorted(missing)
 
 

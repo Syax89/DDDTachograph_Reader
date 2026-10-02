@@ -193,8 +193,11 @@ def test_chain_without_signed_efs_is_not_fully_verified():
 # EF generation present has to be backed by its own trusted chain. Both chains
 # and every EF signature are verified with real RSA/ECDSA crypto here.
 
-def _mixed_card(g2_identity, g1_ids, *, drop_g2=()):
+def _mixed_card(g2_identity, g1_ids, *, drop_g1=(), drop_g2=()):
     """Genuine G1 (194-byte ISO 9796-2) certs + a G2 CVC chain, full cores."""
+    g1_payloads = g1_core_payloads()
+    for tag in drop_g1:
+        g1_payloads.pop(tag, None)
     g2_payloads = g2_core_payloads()
     for tag in drop_g2:
         g2_payloads.pop(tag, None)
@@ -208,7 +211,7 @@ def _mixed_card(g2_identity, g1_ids, *, drop_g2=()):
         # ...then the G2 CVC chain, whose copies win the "raw" pair.
         _stap(0xC101, 0x02, g2_identity["card_cert"]),
         _stap(0xC108, 0x02, g2_identity["msca_cert"]),
-        signed_pairs(g1_core_payloads(), g1_ids["card_key"], 1),
+        signed_pairs(g1_payloads, g1_ids["card_key"], 1),
         signed_pairs(g2_payloads, g2_identity["card_key"], 2),
     ])
 
@@ -258,6 +261,22 @@ def test_deleting_a_g2_copy_while_the_g1_copy_remains_is_incomplete():
     erca_cert, identity = trusted_root_and_msca()
     g1_ids = g1_identity()
     data = _mixed_card(identity, g1_ids, drop_g2=(0x0502,))
+
+    with _trust_store(g2_erca_cert=erca_cert, g1_erca_key=g1_ids["erca_key"]) as certs_dir:
+        result = _parse(data, certs_dir)
+
+    efv = result["ef_signature_verification"]
+    assert efv["missing_core_efs"] == [0x0502]
+    assert not result["metadata"]["integrity_check"].startswith("Verified")
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
+
+
+def test_deleting_a_g1_copy_while_the_g2_copy_remains_is_incomplete():
+    """M2 (opposite direction): a G2 copy must not stand in for a deleted G1
+    copy — completeness is checked for every application generation present."""
+    erca_cert, identity = trusted_root_and_msca()
+    g1_ids = g1_identity()
+    data = _mixed_card(identity, g1_ids, drop_g1=(0x0502,))
 
     with _trust_store(g2_erca_cert=erca_cert, g1_erca_key=g1_ids["erca_key"]) as certs_dir:
         result = _parse(data, certs_dir)

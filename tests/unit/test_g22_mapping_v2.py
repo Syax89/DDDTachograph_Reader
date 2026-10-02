@@ -268,3 +268,151 @@ def test_mock_g22_card_application_v2_length_field_is_8(tmp_path):
     result = DeterministicParser().parse(path.read_bytes(), is_vu=False)
 
     assert result["card_application_v2"]["length_of_following_data"] == 8
+
+
+# ── M3: every corrected V2 EF is really ECDSA-verified ─────────────────────
+
+def _full_v2_payloads():
+    payloads = g2_core_payloads(v2=True)
+    payloads.update(v2_payloads())
+    payloads[0x0540] = b"opaque-vu-configuration-bytes"
+    return payloads
+
+
+@pytest.mark.parametrize("tag", [0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x0530, 0x0540])
+def test_v2_ef_byte_tamper_fails_signature_and_all_surfaces(tag):
+    erca_cert, identity = trusted_root_and_msca()
+    payloads = _full_v2_payloads()
+    genuine = payloads[tag]
+    bad = bytearray(genuine)
+    bad[len(bad) // 2] ^= 0xFF
+    signed = {t: v for t, v in payloads.items() if t != tag}
+    data = b"".join([
+        g2_cert_records(identity["card_cert"], identity["msca_cert"]),
+        signed_pairs(signed, identity["card_key"], 2),
+        stap(tag, 0x02, bytes(bad)),
+        stap(tag, 0x03, ef_signature(identity["card_key"], genuine)),
+    ])
+    with trust_store(g2_erca_cert=erca_cert) as certs_dir:
+        attack = parse_bytes(data, certs_dir)[1]
+
+    efv = attack["ef_signature_verification"]
+    failed_tags = {r["tag"] for r in efv["ef_results"] if r["status"] == "failed"}
+    assert f"0x{tag:04X}" in failed_tags
+    assert efv["failed"] >= 1
+    assert attack["metadata"]["integrity_check"] == "Unverified (EF Signature Mismatch)"
+    assert integrity_verdict(attack) == VERDICT_UNVERIFIED
+    assert _integrity_status(attack) == "UNVERIFIED"
+
+
+def test_full_v2_signed_control_is_verified_before_tampering():
+    """Positive control: the same fixture, untampered, is actually Verified and
+    every corrected V2 EF is in the verified set."""
+    erca_cert, identity = trusted_root_and_msca()
+    payloads = _full_v2_payloads()
+    data = (g2_cert_records(identity["card_cert"], identity["msca_cert"])
+            + signed_pairs(payloads, identity["card_key"], 2))
+    with trust_store(g2_erca_cert=erca_cert) as certs_dir:
+        result = parse_bytes(data, certs_dir)[1]
+
+    assert result["metadata"]["integrity_check"] == "Verified"
+    assert integrity_verdict(result) == VERDICT_VERIFIED
+    verified = {r["tag"] for r in result["ef_signature_verification"]["ef_results"]
+                if r["status"] == "verified"}
+    for tag in (0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x0530, 0x0540):
+        assert f"0x{tag:04X}" in verified
+
+
+# ── F2: newest pointer retained for the 0528/0529 card records ─────────────
+
+def _0528_record(ts=TS):
+    return bytes([0x1A, 0x0D]) + _gnss_place(ts) + (100).to_bytes(3, "big")
+
+
+def _0529_record(ts=TS):
+    return struct.pack(">IB", ts, 1) + _gnss_place(ts) + (100).to_bytes(3, "big")
+
+
+@pytest.mark.parametrize(("tag", "key", "make_record"), [
+    (0x0528, "border_crossings", _0528_record),
+    (0x0529, "load_unload_records", _0529_record),
+])
+def test_0528_0529_pointer_selects_newest_record(tag, key, make_record):
+    slots = make_record() * 2  # two records with identical timestamps
+    ptr0 = _parse_card_ef(tag, b"\x00\x00" + slots)
+    ptr1 = _parse_card_ef(tag, b"\x00\x01" + slots)
+
+    assert [r["record_index"] for r in ptr0[key]] == [0, 1]
+    assert [r["is_newest"] for r in ptr0[key]] == [True, False]
+    assert [r["is_newest"] for r in ptr1[key]] == [False, True]
+    assert ptr0[key] != ptr1[key]  # pointer 0 vs 1 must be distinguishable
+
+
+@pytest.mark.parametrize("tag", [0x0528, 0x0529])
+def test_0528_0529_out_of_range_pointer_is_rejected(tag):
+    slots = (_0528_record() if tag == 0x0528 else _0529_record()) * 2
+    bad = _parse_card_ef(tag, b"\xff\xff" + slots)
+
+    key = "border_crossings" if tag == 0x0528 else "load_unload_records"
+    assert not bad.get(key)
+    warning = bad["metadata"]["decoder_validation_warnings"][0]
+    assert warning["code"] == "decoder_pointer_range_violation"
+
+
+# ── F3: VU RecordArray context in the Gen 2.2 tree ─────────────────────────
+
+def _vu_record_array_file():
+    gnss = struct.pack(">I", TS) + bytes(38) + _gnss_place() + (100).to_bytes(3, "big")
+    border = bytes(38) + bytes([0x1A, 0x0D]) + _gnss_place() + (100).to_bytes(3, "big")
+    unload = struct.pack(">IB", TS, 1) + bytes(38) + _gnss_place() + (100).to_bytes(3, "big")
+    return (b"\x76\x31" + _arr(0x08, bytes(64))
+            + b"\x76\x32" + _arr(0x16, gnss) + _arr(0x22, border) + _arr(0x23, unload)
+            + _arr(0x08, bytes(64)))
+
+
+def test_vu_tree_uses_vu_section_names_and_keeps_gnss(tmp_path):
+    path = tmp_path / "vu_g22.ddd"
+    path.write_bytes(_vu_record_array_file())
+    result = TachoParser(str(path)).parse()
+
+    g22 = result["generations"]["Generation 2.2"]
+    # VU provenance: source-agnostic section names, not the card-only FIDs.
+    assert "BorderCrossings" in g22 and "CardBorderCrossings" not in g22
+    assert "LoadUnloadOperations" in g22 and "CardLoadUnloadOperations" not in g22
+    assert g22["GNSSAccumulatedDriving"] == result["gnss_ad_records"]
+    assert g22["BorderCrossings"] == result["border_crossings"]
+    assert g22["LoadUnloadOperations"] == result["load_unload_records"]
+    # VU row identity/values preserved, and VU RecordArray fields are untouched
+    # by the card pointer contract.
+    assert result["border_crossings"][0]["name"] == "VuBorderCrossingRecord"
+    assert result["load_unload_records"][0]["name"] == "VuLoadUnloadRecord"
+    assert result["border_crossings"][0]["odometer_km"] == 100
+    assert "record_index" not in result["border_crossings"][0]
+    assert "is_newest" not in result["load_unload_records"][0]
+
+
+def test_card_tree_uses_card_section_names(tmp_path):
+    parser = TachoParser(str(tmp_path / "input.ddd"))
+    result = TachoResult().to_dict()
+    result["metadata"]["is_vu"] = False
+    result["border_crossings"] = [{"nation_from": "I"}]
+    result["load_unload_records"] = [{"operation": "LOAD"}]
+    tree = build_generations_tree(result, parser.TAGS)
+
+    g22 = tree["Generation 2.2"]
+    assert "CardBorderCrossings" in g22 and "BorderCrossings" not in g22
+    assert "CardLoadUnloadOperations" in g22 and "LoadUnloadOperations" not in g22
+
+
+def test_card_tree_keeps_custom_registry_0528_name(tmp_path):
+    registry = DecoderRegistry.instance()
+    registry.register_decoder(TagDecoder(
+        0x0528, "G22_RegistryBorderCrossings", generation="G2.2", priority=1))
+
+    parser = TachoParser(str(tmp_path / "input.ddd"))
+    result = TachoResult().to_dict()
+    result["metadata"]["is_vu"] = False
+    result["border_crossings"] = [{"nation_from": "I"}]
+    tree = build_generations_tree(result, parser.TAGS)
+
+    assert "RegistryBorderCrossings" in tree["Generation 2.2"]

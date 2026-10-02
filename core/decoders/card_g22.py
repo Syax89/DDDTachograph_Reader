@@ -95,12 +95,18 @@ def parse_g22_gnss_accumulated_driving(val, results):
         _log.debug("GNSS accumulated driving parse failed: %s", exc)
 
 def parse_g22_load_unload_operations(val, results):
-    """Parse pointer-prefixed 20-byte CardLoadUnloadRecord values."""
+    """Parse pointer-prefixed 20-byte CardLoadUnloadRecord values.
+
+    The leading 2-byte value is the newest (last updated) record index
+    (Annex 1C §2.24c); it is preserved as ``record_index``/``is_newest`` so
+    records with identical timestamps stay distinguishable in physical order.
+    """
     if len(val) < 22:
         return
     try:
         op_map = {0x01: "LOAD", 0x02: "UNLOAD", 0x03: "SIMULTANEOUS"}
-        for chunk in _flat_records(val, 20, pointer=True):
+        newest = struct.unpack(">H", val[0:2])[0]
+        for index, chunk in enumerate(_flat_records(val, 20, pointer=True)):
             ts = struct.unpack(">I", chunk[0:4])[0]
             if not _valid_ts(ts):
                 continue
@@ -112,6 +118,8 @@ def parse_g22_load_unload_operations(val, results):
             record.update({f"gnss_{k}": v for k, v in place.items() if k != "timestamp"})
             record["gnss_timestamp"] = place["timestamp"]
             record["vehicle_odometer_value"] = _u24(chunk, 17)
+            record["record_index"] = index
+            record["is_newest"] = index == newest
             results.setdefault("load_unload_records", []).append(record)
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Load/unload operations parse failed: %s", exc)
@@ -170,11 +178,16 @@ def parse_g22_load_sensor_data(val, results):
         _log.debug("Load sensor data parse failed: %s", exc)
 
 def parse_g22_border_crossings(val, results):
-    """Parse pointer-prefixed 17-byte CardBorderCrossingRecord values."""
+    """Parse pointer-prefixed 17-byte CardBorderCrossingRecord values.
+
+    The leading 2-byte value is the newest (last updated) record index
+    (Annex 1C §2.11a); it is preserved as ``record_index``/``is_newest``.
+    """
     if len(val) < 19:
         return
     try:
-        for chunk in _flat_records(val, 17, pointer=True):
+        newest = struct.unpack(">H", val[0:2])[0]
+        for index, chunk in enumerate(_flat_records(val, 17, pointer=True)):
             place = _decode_gnss_place_auth(chunk, 2)
             if not place:
                 continue
@@ -188,6 +201,8 @@ def parse_g22_border_crossings(val, results):
                 "authentication_status": place["authentication_status"],
                 "authenticated": place["authenticated"],
                 "vehicle_odometer_value": _u24(chunk, 14),
+                "record_index": index,
+                "is_newest": index == newest,
             }
             results.setdefault("border_crossings", []).append(record)
     except (struct.error, IndexError, ValueError) as exc:

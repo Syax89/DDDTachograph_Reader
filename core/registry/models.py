@@ -472,17 +472,28 @@ def _build_gen22(results: Dict[str, Any], driver: Dict[str, Any],
     """Generation 2.2 (Reg. 2023/980) — Smart Tacho V2 fields only."""
     g: Dict[str, Any] = {}
 
+    # The border-crossing / load-unload / GNSS result keys are produced by both
+    # the G2.2 card EFs (0528/0529) and the VU RecordArrays (RT22/RT23/RT16), so
+    # the display identity must follow the *actual* provenance: a VU download
+    # uses a source-agnostic section name, a card download the card FID. Asking
+    # the registry with the wrong scope would label VU rows with a card-only
+    # decoder identity.
+    is_vu = bool((results.get("metadata") or {}).get("is_vu"))
+
+    def _ctx(card_tag: int) -> int:
+        return 0x0000 if is_vu else card_tag
+
     def _add(tag_id: int, fallback: str, value):
         if _non_empty(value):
             g[_tag_name_for_context(tag_id, tags, fallback,
-                                    generation="G2.2", is_vu=False)] = value
+                                    generation="G2.2", is_vu=is_vu)] = value
 
     _add(0x0525, "DriverCardApplicationIdentificationV2", results.get("card_application_v2"))
-    _add(0x0526, "PlaceAuthDailyWorkPeriod", results.get("place_auth_records"))
-    _add(0x0527, "GNSSAuthAccumulatedDriving", results.get("gnss_auth_records"))
-    _add(0x0528, "BorderCrossings",            results.get("border_crossings"))
-    _add(0x0529, "LoadUnloadOperations",       results.get("load_unload_records"))
-    _add(0x0530, "LoadTypeEntries",            results.get("load_type_entries"))
+    _add(_ctx(0x0526), "PlaceAuthDailyWorkPeriod", results.get("place_auth_records"))
+    _add(_ctx(0x0527), "GNSSAuthAccumulatedDriving", results.get("gnss_auth_records"))
+    _add(_ctx(0x0528), "BorderCrossings",            results.get("border_crossings"))
+    _add(_ctx(0x0529), "LoadUnloadOperations",       results.get("load_unload_records"))
+    _add(_ctx(0x0530), "LoadTypeEntries",            results.get("load_type_entries"))
 
     # GNSS Accumulated Driving, restored: decoded from the G2.2 VU RecordArray
     # 0x16 / card EF 0x0223, not the V2 Application_Identification (0x0525).
