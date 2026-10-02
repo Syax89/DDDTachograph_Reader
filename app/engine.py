@@ -33,6 +33,7 @@ class TachoParser:
         self.card_public_key = None
         self.msca_cert_raw = None
         self.card_cert_raw = None
+        self.card_cert_sign_seen = False
         self.msca_cert_g1 = None
         self.card_cert_g1 = None
         self.validation_status = "Pending"
@@ -226,6 +227,7 @@ class TachoParser:
         self.card_public_key = None
         self.msca_cert_raw = None
         self.card_cert_raw = None
+        self.card_cert_sign_seen = False
         self.msca_cert_g1 = None
         self.card_cert_g1 = None
         self.validation_status = "Pending"

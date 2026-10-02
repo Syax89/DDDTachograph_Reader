@@ -22,6 +22,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
 
 from core.crypto.vu_signature import cvc_public_key, parse_cvc, verify_cvc_chain_link
+from core.registry.registry import DecoderRegistry
 from core.utils.report_format import VERDICT_VERIFIED, integrity_verdict
 from tests.unit.card_crypto import (
     cvc,
@@ -155,27 +156,52 @@ def test_g2_c102_c10a_dtype0203_cannot_replace_normative_certificates(dtype):
     assert integrity_verdict(result) == VERDICT_VERIFIED
 
 
-def _cardma_certificate(identity):
-    """A genuine CardMA (Member Authority) CVC: holder CARDMA01, issued by the CA."""
+def _cardma_identity(identity):
+    """A genuine CA-signed CardMA CVC (holder CARDMA01) and its private key."""
     ma_key = ec.generate_private_key(ec.SECP256R1())
-    return cvc(ma_key, identity["msca_key"], b"MSSCA001", b"CARDMA01")
+    ma_cert = cvc(ma_key, identity["msca_key"], b"MSSCA001", b"CARDMA01")
+    return ma_key, ma_cert
 
 
-@pytest.mark.parametrize("dtype", [0x02, 0x03])
+@pytest.mark.parametrize("dtype", [0x00, 0x01, 0x02, 0x03])
 @pytest.mark.parametrize("position", ["before", "after"])
 def test_g2_c100_cardma_never_replaces_cardsign(dtype, position):
-    """F4: in the generation-2 DF, C100 is CardMA — a different role that must
-    never be used as the CardSign key, in either stream order or appendix dtype."""
+    """F4/R4: in the generation-2 DF C100 is CardMA. A genuine CA-signed CardMA
+    certificate carrying ANY appendix dtype, in either stream order, must never
+    take the CardSign slot. The EF pairs are signed by the CardMA key, so a leak
+    into the CardSign slot would surface as a silent `Verified`; the correct
+    routing leaves an explicit failed-signature outcome instead."""
     erca_cert, identity = trusted_root_and_msca()
-    ma_record = stap(0xC100, dtype, _cardma_certificate(identity))
+    ma_key, ma_cert = _cardma_identity(identity)
+    ma_record = stap(0xC100, dtype, ma_cert)
     core = g2_cert_records(identity["card_cert"], identity["msca_cert"])
     certs = ma_record + core if position == "before" else core + ma_record
+    payloads = g2_core_payloads(v2=True)
+    payloads.update(v2_payloads())
+    data = certs + signed_pairs(payloads, ma_key, 2)  # signed by CardMA, not CardSign
+
     with trust_store(g2_erca_cert=erca_cert) as certs_dir:
-        parser, result = parse_bytes(certs + _signed_v2_core(identity), certs_dir)
+        parser, result = parse_bytes(data, certs_dir)
 
     assert parser.card_cert_raw == identity["card_cert"]
-    assert result["metadata"]["integrity_check"] == "Verified"
-    assert integrity_verdict(result) == VERDICT_VERIFIED
+    assert not result["metadata"]["integrity_check"].startswith("Verified")
+    assert integrity_verdict(result) != VERDICT_VERIFIED
+    # Explicit failed-signature outcome, never a silent success.
+    assert result["ef_signature_verification"]["failed"] >= 1
+    assert result["metadata"]["integrity_check"] == "Unverified (EF Signature Mismatch)"
+
+
+def test_unsupported_c102_c10a_aliases_are_marked_non_native():
+    """Pin the registry marking that labels the unsupported C102/C10A
+    compatibility aliases as non-native, so the marking cannot be silently
+    removed: they must not claim a normative Annex 1C identity."""
+    registry = DecoderRegistry.instance()
+    for tag, legacy_name in ((0xC102, "G22_CardCertificate_Legacy"),
+                             (0xC10A, "G22_CA_Certificate_Legacy")):
+        dec = registry.get_decoder(tag, generation="G2.2", is_vu=False)
+        assert dec is not None
+        assert dec.name == legacy_name
+        assert "Unverified" in dec.annex_ref and "not Annex" in dec.annex_ref
 
 
 def test_g1_c100_card_certificate_capture_is_legitimate():
