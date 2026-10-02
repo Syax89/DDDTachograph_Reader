@@ -239,13 +239,11 @@ class DecoderRegistry:
             # ── G2.2 card EF payloads (flat records, not BER containers) ──
             # Fixed per Batch 3 (A-F4/D2-001/D2-002/CARD-G22-FID): the FID
             # map below was wrong for every tag 0x0525-0x0530. Verified
-            # independently against the reference Go implementation
-            # (tachoparser/pkg/decoder/definitions.go, plain text, not the
-            # OCR'd regulation image the original finding cites) field by
-            # field. 0x0529 "LoadSensorData" does not exist in Annex 1C or
-            # the reference implementation at all -- it was invented; this
-            # tag is now unregistered on the card side (the EF slot for it
-            # has no decoder until a real spec for it turns up).
+            # independently against the TCS_152 table and the reference Go
+            # implementation (tachoparser/pkg/decoder/definitions.go). The old
+            # 0x0529 "LoadSensorData" name does not exist in Annex 1C or the
+            # reference implementation; 0x0529 is CardLoadUnloadOperations
+            # (it IS registered here, on the card side).
             TagDecoder(0x0525, "G22_DriverCardApplicationIdentificationV2",
                         decoders.parse_g22_driver_card_application_identification_v2,
                         annex_ref="Annex 1C §2.61a", generation="G2.2",
@@ -459,15 +457,21 @@ class DecoderRegistry:
                        annex_ref="Annex 1C §2.31", generation="G2",
                        signature_block=True, record_size=194),
 
-            TagDecoder(0xC102, "G22_CardCertificate",
+            # Legacy compatibility aliases retained only so raw bytes carrying
+            # these non-normative FIDs reach the certificate inspector. TCS_152
+            # lists C100/CardMA, C101/CardSign, C108/CA and C109/Link for G2
+            # (including V2); C102/C10A are NOT native Annex 1C certificate
+            # FIDs and their provenance is unverified, so they must not be
+            # treated as card/CA certificates by the chain validator.
+            TagDecoder(0xC102, "G22_CardCertificate_Legacy",
                        decoders.parse_certificate,
-                       annex_ref="Reg. EU 2023/980", generation="G2.2",
-                       signature_block=True),
+                       annex_ref="Unverified compatibility alias (not Annex 1C)",
+                       generation="G2.2", signature_block=True),
 
-            TagDecoder(0xC10A, "G22_CA_Certificate",
+            TagDecoder(0xC10A, "G22_CA_Certificate_Legacy",
                        decoders.parse_certificate,
-                       annex_ref="Reg. EU 2023/980", generation="G2.2",
-                       signature_block=True),
+                       annex_ref="Unverified compatibility alias (not Annex 1C)",
+                       generation="G2.2", signature_block=True),
 
             # ── G2.2 Certificate Profile ──
             TagDecoder(0x42, "CertificateProfileIdentifier",

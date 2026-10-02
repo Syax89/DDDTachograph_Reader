@@ -42,35 +42,78 @@ _EF_MIN_LENGTHS = {
     0x0522: 10,    # SpecificConditions
     0x0523: 8,     # VehicleUnitsUsed (G2)
     0x0524: 10,    # GNSSPlaces (G2)
-    0x0525: 10,    # GNSSAccumulatedDriving (G2.2)
-    0x0526: 10,    # LoadUnloadOperations (G2.2)
-    0x0527: 10,    # TrailerRegistrations (G2.2)
-    0x0528: 10,    # GNSSEnhancedPlaces (G2.2)
-    0x0529: 10,    # LoadSensorData (G2.2)
-    0x052A: 10,    # BorderCrossings (G2.2)
+    0x0525: 10,    # DriverCardApplicationIdentificationV2 (G2.2)
+    0x0526: 7,     # CardPlaceAuthDailyWorkPeriod (G2.2, pointer + 5B record)
+    0x0527: 7,     # GNSSAuthAccumulatedDriving (G2.2, pointer + 5B record)
+    0x0528: 19,    # CardBorderCrossings (G2.2, pointer + 17B record)
+    0x0529: 22,    # CardLoadUnloadOperations (G2.2, pointer + 20B record)
+    0x0530: 7,     # CardLoadTypeEntries (G2.2, pointer + 5B record)
+    0x0540: 1,     # VuConfiguration (G2.2, opaque byte string; optional)
 }
 
-# G1 driver-card EFs present in every real sample available to this project
-# (Annex 1B Appendix 1 TCS_025 core driver-card EFs). Deliberately narrower
-# than "every G1 EF that can exist" -- 0x0507/0x0521 vary across real cards
-# and are NOT included here, to avoid flagging a legitimately-absent optional
-# EF as missing. Used only to catch a signed EF being deleted outright
-# (E-F3/CARD-MANDATORY-MISSING), not as an exhaustive structural check.
+# Driver-card EFs that Annex 1C §3.3 DDP_035 makes mandatory in every download
+# session (reference/annex1C.txt:21525-21644), per EF application generation.
+# 0x0507 (CurrentUsage) and 0x0521 (DrivingLicenceInfo) exist on the card but
+# are NOT mandatory in every download, so they are deliberately absent: their
+# omission must not be reported as an incomplete download. Used to catch a
+# signed EF being deleted outright (E-F3/CARD-MANDATORY-MISSING), not as an
+# exhaustive structural check.
 _G1_CORE_TAGS = frozenset({0x0501, 0x0502, 0x0503, 0x0504, 0x0505, 0x0506, 0x0508, 0x0520, 0x0522})
+# The generation-2 application has the same core plus VehicleUnits_Used and
+# GNSS_Places (DDP_035 Tachograph_G2 DF driver-card list).
+_G2_CORE_TAGS = _G1_CORE_TAGS | {0x0523, 0x0524}
+# Version-2-only generation-2 EFs (TCS_152 note: present only in version 2).
+# Conditional on V2 evidence, never on the display label.
+_G22_V2_TAGS = frozenset({0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x0530})
+
+# Struct-version bytes {01 01} of EF Application_Identification that mark a
+# version-2 generation-2 card (TCS_152; {01 00} is version 1).
+_V2_STRUCTURE_VERSION = b"\x01\x01"
 
 
-def missing_core_efs(pairs: List[Dict[str, Any]], generation: str) -> List[int]:
-    """Return core G1 EF tags with no entry at all in ``pairs``.
+def _v2_application_present(pairs: List[Dict[str, Any]]) -> bool:
+    """True when the file carries structured evidence of a V2 application.
+
+    Either an actual V2-only EF application record is present, or the signed
+    G2 Application_Identification (0x0501) declares cardStructureVersion
+    {01 01}. A bare display label never counts.
+    """
+    for pair in pairs:
+        if pair.get("gen") != "G2":
+            continue
+        if pair["tag"] in _G22_V2_TAGS:
+            return True
+        if pair["tag"] == 0x0501 and pair.get("status") == "paired":
+            data = pair.get("data") or b""
+            if len(data) >= 3 and data[1:3] == _V2_STRUCTURE_VERSION:
+                return True
+    return False
+
+
+def missing_core_efs(pairs: List[Dict[str, Any]]) -> List[int]:
+    """Return mandatory EF tags missing for an EF application generation present.
+
+    Completeness is keyed on the EF *application* generations actually observed
+    (the dtype-00/01 G1 copies vs the dtype-02/03 G2 copies), never on the
+    user-facing generation label: an unsigned, unregistered dtype-02 record
+    must not disable G1 checking, and a G2 application that was never captured
+    must not be demanded from the display label alone.
 
     ``pair_ef_records`` only reports tags it actually saw data/signature
     occurrences for -- a fully-deleted EF (both copies removed) leaves no
-    trace, so completeness must be checked against a known tag set rather
-    than by inspecting the pairs alone.
+    trace, so completeness must be checked against a known tag set rather than
+    by inspecting the pairs alone. Returns the sorted integer tag list.
     """
-    if not generation.startswith("G1"):
-        return []
-    present = {pair["tag"] for pair in pairs}
-    return sorted(_G1_CORE_TAGS - present)
+    present = {(pair["tag"], pair["gen"]) for pair in pairs}
+    generations = {gen for _tag, gen in present}
+    missing: set = set()
+    if "G1" in generations:
+        missing |= {tag for tag in _G1_CORE_TAGS if (tag, "G1") not in present}
+    if "G2" in generations:
+        missing |= {tag for tag in _G2_CORE_TAGS if (tag, "G2") not in present}
+        if _v2_application_present(pairs):
+            missing |= {tag for tag in _G22_V2_TAGS if (tag, "G2") not in present}
+    return sorted(missing)
 
 
 # Schema for data+dtype pairs (one pair per generation).
@@ -84,7 +127,7 @@ _GEN_PAIRS: Tuple[Tuple[int, int, str, str], ...] = (
 # are G1-era EFs and must keep their G1 RSA verification.
 _G2_ONLY_TAGS = {
     0x0523, 0x0524,
-    0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x052A,
+    0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x0530, 0x0540,
 }
 
 

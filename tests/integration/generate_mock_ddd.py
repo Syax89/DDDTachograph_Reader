@@ -319,7 +319,7 @@ def generate_g22_card(out):
         stap(0x0102, 0x02, build_g2_card_id()),
         stap(0x0201, 0x02, build_g2_driver()),
         stap(0x0504, 0x02, make_cyclic(acts)),
-        stap(0x0525, 0x02, struct.pack(">HHHHH", 10, 1, 1, 1, 0)),
+        stap(0x0525, 0x02, struct.pack(">HHHHH", 8, 1, 1, 1, 0)),
         stap(0x0526, 0x02, b"\x00\x00" + place_auth),
         stap(0x0527, 0x02, b"\x00\x00" + gnss_auth),
         stap(0x0528, 0x02, b"\x00\x00" + border_crossing),

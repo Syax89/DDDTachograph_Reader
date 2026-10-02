@@ -51,6 +51,10 @@ def integrity_verdict(result):
     if not integrity.startswith("Verified"):
         return VERDICT_PARTIAL if integrity.startswith("Partial") else VERDICT_UNVERIFIED
     efv = result.get("ef_signature_verification") or {}
+    if efv.get("missing_core_efs"):
+        # A mandatory per-download EF was removed outright for an application
+        # generation present in the file: fail closed regardless of the string.
+        return VERDICT_UNVERIFIED
     if efv.get("untrusted_generations"):
         # EF signatures may verify mathematically against an attacker key; an
         # untrusted generation is never verified regardless of the chain string.
@@ -92,6 +96,9 @@ EXPORT_SECTIONS = [
     ("gnss_places", "GNSS Places"),
     ("border_crossings", "Border Crossings"),
     ("load_unload_records", "Load / Unload"),
+    ("place_auth_records", "Places Authentication"),
+    ("gnss_auth_records", "GNSS Places Authentication"),
+    ("load_type_entries", "Load Type Entries"),
     ("load_sensor_data", "Load Sensor Data"),
     ("trailer_registrations", "Trailer Registrations"),
     ("overspeeding_events", "Overspeeding Events"),
@@ -121,6 +128,7 @@ EXPORT_SECTIONS = [
 DICT_SECTIONS = [
     ("card_issuer", "Card Issuer"),
     ("card_application", "Card Application"),
+    ("card_application_v2", "Card Application V2"),
     ("card_chip", "IC Chip"),
     ("card_icc", "ICC Identification"),
     ("vu_overview", "VU Overview"),
@@ -146,6 +154,9 @@ SECTION_DESCRIPTIONS = {
     "gnss_places": "GNSS-authenticated places visited (enhanced position with authentication status).",
     "border_crossings": "Border crossing records with country codes, timestamps, and GNSS position.",
     "load_unload_records": "Load and unload operation records with timestamps and odometer readings.",
+    "place_auth_records": "Place authentication status records (V2): timestamp and authentication code.",
+    "gnss_auth_records": "GNSS place authentication records (V2): timestamp and authentication code.",
+    "load_type_entries": "Load type entries (V2): timestamp and entered load type code.",
     "load_sensor_data": "Axle load sensor data (weight per axle, if equipped).",
     "trailer_registrations": "Trailer coupling and decoupling registrations with plate numbers.",
     "overspeeding_events": "Overspeeding events with begin/end times, max speed, and average speed.",

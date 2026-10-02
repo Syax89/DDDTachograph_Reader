@@ -210,6 +210,27 @@ def _tag_name(tag_id: int, tags: Dict[int, str], fallback: str) -> str:
     return _clean_tag_name(tags.get(tag_id, fallback))
 
 
+def _tag_name_for_context(tag_id: int, tags: Dict[int, str], fallback: str,
+                          *, generation: str, is_vu: bool) -> str:
+    """Context-aware display name for a tag that is registered for both scopes.
+
+    The tag-only index in *tags* cannot distinguish two decoders sharing one
+    tag id (0x0530 is both the G2.2 card Load_Type_Entries and the G2 VU
+    PowerSupplyInterruptionData), so it would label the card section with the
+    VU name. Ask the registry with the card/VU + generation context instead;
+    this keeps VU names intact and still honours custom registry-driven names.
+    """
+    try:
+        from core.registry.registry import DecoderRegistry
+        dec = DecoderRegistry.instance().get_decoder(
+            tag_id, generation=generation, is_vu=is_vu)
+        if dec is not None:
+            return _clean_tag_name(dec.name)
+    except Exception:  # registry unavailable: fall back to the tag-only index
+        pass
+    return _clean_tag_name(tags.get(tag_id, fallback))
+
+
 def _driver_card_id(driver: Dict[str, Any]) -> Dict[str, Any]:
     """G1 Identification (0x0520) fields from driver dict."""
     return {
@@ -425,8 +446,10 @@ def _build_gen2(results: Dict[str, Any], driver: Dict[str, Any],
     # VU RecordArray structural summary
     _add(0x0000, "VU RecordArray Summary", results.get("vu_record_arrays"))
 
-    # GNSS Accumulated Driving (can come from G2 card EF 0x0524 or G2.2 EF 0x0525)
-    _add(0x0525, "GNSSAccumulatedDriving", results.get("gnss_ad_records"))
+    # GNSS Accumulated Driving (decoded from the G2 card EF 0x0223 / G2.2 VU
+    # RecordArray 0x16). 0x0525 is the V2 Application_Identification, so this
+    # section is source-agnostic instead of being mislabelled with that tag.
+    _add(0x0000, "GNSSAccumulatedDriving", results.get("gnss_ad_records"))
 
     # Places duplicated here — G2 extends with GNSS coordinates
     _add(0x0506, "Places", results.get("places"))
@@ -451,7 +474,8 @@ def _build_gen22(results: Dict[str, Any], driver: Dict[str, Any],
 
     def _add(tag_id: int, fallback: str, value):
         if _non_empty(value):
-            g[_tag_name(tag_id, tags, fallback)] = value
+            g[_tag_name_for_context(tag_id, tags, fallback,
+                                    generation="G2.2", is_vu=False)] = value
 
     _add(0x0525, "DriverCardApplicationIdentificationV2", results.get("card_application_v2"))
     _add(0x0526, "PlaceAuthDailyWorkPeriod", results.get("place_auth_records"))
@@ -459,6 +483,10 @@ def _build_gen22(results: Dict[str, Any], driver: Dict[str, Any],
     _add(0x0528, "BorderCrossings",            results.get("border_crossings"))
     _add(0x0529, "LoadUnloadOperations",       results.get("load_unload_records"))
     _add(0x0530, "LoadTypeEntries",            results.get("load_type_entries"))
+
+    # GNSS Accumulated Driving, restored: decoded from the G2.2 VU RecordArray
+    # 0x16 / card EF 0x0223, not the V2 Application_Identification (0x0525).
+    _add(0x0000, "GNSSAccumulatedDriving", results.get("gnss_ad_records"))
 
     # G2.2-specific additional decoded keys
     for src_key, display_name in [

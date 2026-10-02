@@ -203,17 +203,26 @@ def parse_g22_border_crossings(val, results):
 # plain `byte` with no const table) so it is exposed as the raw code, same
 # style as _decode_gnss_place_auth's authentication_status/authenticated.
 def _parse_g22_5byte_pointer_records(val, results, result_key, code_field):
-    """Shared decoder for the pointer(2) + [TimeReal(4)+code(1)] x N layout."""
+    """Shared decoder for the pointer(2) + [TimeReal(4)+code(1)] x N layout.
+
+    The leading 2-byte value is the index of the newest (last updated) record
+    (Annex 1C §2.24a). It is preserved as ``record_index``/``is_newest`` while
+    the records stay in physical order, so two same-timestamp records with
+    different codes remain distinguishable.
+    """
     if len(val) < 7:
         return
     try:
-        for chunk in _flat_records(val, 5, pointer=True):
+        newest = struct.unpack(">H", val[0:2])[0]
+        for index, chunk in enumerate(_flat_records(val, 5, pointer=True)):
             ts = struct.unpack(">I", chunk[0:4])[0]
             if not _valid_ts(ts):
                 continue
             results.setdefault(result_key, []).append({
                 "timestamp": _iso(ts),
                 code_field: chunk[4],
+                "record_index": index,
+                "is_newest": index == newest,
             })
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("%s parse failed: %s", result_key, exc)
