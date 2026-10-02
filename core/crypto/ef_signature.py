@@ -71,9 +71,10 @@ _G22_V2_DRIVER_TAGS = frozenset({0x0526, 0x0527, 0x0528, 0x0529, 0x0530})
 # V2-only tags whose mere presence is structured V2 evidence.
 _G22_V2_TAGS = _G22_V2_UNIVERSAL_TAGS | _G22_V2_DRIVER_TAGS
 
-# EquipmentType / typeOfTachographCardId (Annex 1C Appendix 1 §2.67).
-DRIVER_CARD_TYPE = 0x01
-# Recognised, non-driver card types: workshop (2), control (3), company (4).
+# EquipmentType / typeOfTachographCardId (Annex 1C Appendix 1 §2.67):
+# 1 = driver card. Recognised non-driver types are workshop (2), control (3)
+# and company (4); 0 (member state), 5 and every other value are not a card
+# subtype this reader recognises and must not bypass the driver requirements.
 NON_DRIVER_CARD_TYPES = frozenset({0x02, 0x03, 0x04})
 
 # Struct-version bytes {01 01} of EF Application_Identification that mark a
@@ -136,7 +137,10 @@ def _required_tags(gen: str, card_type: Optional[int], v2_present: bool) -> set:
     unidentifiable card cannot evade the driver download checks.
     """
     required = set(_UNIVERSAL_CORE_TAGS)
-    driver = card_type is None or card_type == DRIVER_CARD_TYPE
+    # Only explicitly recognised non-driver types (workshop/control/company) may
+    # skip the driver-only data EFs. None (identity unavailable), driver (1) and
+    # every other/unknown/reserved value keep the conservative driver set.
+    driver = card_type not in NON_DRIVER_CARD_TYPES
     if driver:
         required |= _G1_DRIVER_TAGS if gen == "G1" else _G2_DRIVER_TAGS
     if gen == "G2" and v2_present:

@@ -294,3 +294,72 @@ def test_malformed_application_identity_fails_closed_to_the_driver_set():
     missing = result["ef_signature_verification"]["missing_core_efs"]
     assert 0x0502 in missing
     assert integrity_verdict(result) == VERDICT_UNVERIFIED
+
+
+# ── R3: unknown / reserved equipment values must stay fail-closed ──────────
+
+# Reserved or unsupported typeOfTachographCardId values: 0 (member state),
+# 5 and 255 (undefined). None may never bypass the driver requirements.
+UNKNOWN_CARD_TYPES = (0x00, 0x05, 0xFF)
+
+
+def _v2_unknown_envelope(card_type):
+    """G2 universal minimum whose Application_Identification declares {01 01}."""
+    return {0x0501: application_identification(2, card_type, v2=True),
+            0x0520: bytes(143)}
+
+
+@pytest.mark.parametrize("card_type", UNKNOWN_CARD_TYPES)
+def test_g1_unknown_card_type_keeps_driver_requirements(card_type):
+    g1_ids = g1_identity()
+    result = _parse_g1(g1_ids, _g1_card(g1_ids, non_driver_envelope(1, card_type)))
+
+    missing = result["ef_signature_verification"]["missing_core_efs"]
+    assert 0x0502 in missing
+    for tag in DRIVER_ONLY_G1:
+        assert tag in missing
+    assert not result["metadata"]["integrity_check"].startswith("Verified")
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
+
+
+@pytest.mark.parametrize("card_type", UNKNOWN_CARD_TYPES)
+def test_g2_unknown_card_type_keeps_driver_requirements(card_type):
+    erca_cert, identity = trusted_root_and_msca()
+    result = _parse_g2(erca_cert, _g2_card(identity, non_driver_envelope(2, card_type)))
+
+    missing = result["ef_signature_verification"]["missing_core_efs"]
+    assert 0x0502 in missing and 0x0523 in missing and 0x0524 in missing
+    assert not result["metadata"]["integrity_check"].startswith("Verified")
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
+
+
+@pytest.mark.parametrize("card_type", UNKNOWN_CARD_TYPES)
+def test_g2_unknown_card_type_with_v2_evidence_requires_v2_driver_records(card_type):
+    """V2 evidence (structure version {01 01}) plus an unknown type still
+    requires the V2 driver records — the V2 conditional does not widen scope."""
+    erca_cert, identity = trusted_root_and_msca()
+    result = _parse_g2(erca_cert, _g2_card(identity, _v2_unknown_envelope(card_type)))
+
+    missing = result["ef_signature_verification"]["missing_core_efs"]
+    for tag in (0x0502, 0x0523, 0x0524, 0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x0530):
+        assert tag in missing
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
+
+
+def test_mixed_unknown_g2_type_is_judged_per_application_generation():
+    """Per-application behaviour on one mixed file: a driver-complete G1
+    application must not mask a G2 application with an unknown card type."""
+    erca_cert, identity = trusted_root_and_msca()
+    g1_ids = g1_identity()
+    data = b"".join([
+        g1_cert_records(g1_ids["card_cert"], g1_ids["msca_cert"]),
+        signed_pairs(g1_core_payloads(), g1_ids["card_key"], 1),
+        g2_cert_records(identity["card_cert"], identity["msca_cert"]),
+        signed_pairs(non_driver_envelope(2, 0xFF), identity["card_key"], 2),
+    ])
+    with trust_store(g2_erca_cert=erca_cert, g1_erca_key=g1_ids["erca_key"]) as certs_dir:
+        result = parse_bytes(data, certs_dir)[1]
+
+    missing = result["ef_signature_verification"]["missing_core_efs"]
+    assert 0x0502 in missing and 0x0523 in missing
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
