@@ -588,26 +588,34 @@ class DeterministicParser:
         self.results.setdefault("raw_tags", {}).setdefault(full_key, []).append(entry)
 
         if self.parser:
+            # The generation-1 certificate form: the 194-byte ISO 9796-2 block
+            # carried with the generation-1 appendix dtype. Valid generation-2
+            # certificates may also be 194 bytes (core/crypto/signature.py), so
+            # the dtype must stay in the predicate — length alone must not decide,
+            # and the unconstrained leading byte of a G1 RSA block must not either.
+            is_g1_form = length == 194 and (dtype is None or dtype <= 0x01)
+
             if tag in (0xC108, 0x0104):
                 # CA / MemberState certificate. The same FID carries both the
-                # generation-2 CA (CVC/DER encoded: 0x30/0x7F) and the
-                # generation-1 CA (the 194-byte form). Mirroring the CardSign
-                # guard, a generation-1 copy must not take the generation-2
-                # `msca_cert_raw` slot once a generation-2 CA has claimed it, in
-                # any stream order; the generation-1 copy still feeds the
+                # generation-2 CA (CVC/DER encoded) and the generation-1 CA (the
+                # G1 form above, whose leading byte is unconstrained). Mirroring
+                # the CardSign guard, a generation-1 copy never claims the
+                # generation-2 `msca_cert_raw` slot once a generation-2 CA has
+                # claimed it, in any stream order; it still takes the slot while
+                # no generation-2 CA has been seen, and it always feeds the
                 # generation-1 RSA chain through `msca_cert_g1`.
-                if payload and payload[0] in (0x30, 0x7F):
+                if is_g1_form:
+                    if not getattr(self.parser, "ca_cert_g2_seen", False):
+                        self.parser.msca_cert_raw = payload
+                    self.parser.msca_cert_g1 = payload
+                else:
                     self.parser.msca_cert_raw = payload
                     self.parser.ca_cert_g2_seen = True
-                elif not getattr(self.parser, "ca_cert_g2_seen", False):
-                    self.parser.msca_cert_raw = payload
-                if length == 194:  # keep the G1 copy for the G1 RSA chain
-                    self.parser.msca_cert_g1 = payload
             elif tag in (0xC101, 0x0103, 0x7F21):
                 # CardSign certificate — the generation-2 EF-signing key.
                 self.parser.card_cert_raw = payload
                 self.parser.card_cert_sign_seen = True
-                if length == 194 and (dtype is None or dtype <= 0x01):
+                if is_g1_form:
                     self.parser.card_cert_g1 = payload
             elif tag == 0xC100:
                 # In the generation-1 DF, C100 is the card certificate: the
