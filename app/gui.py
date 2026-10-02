@@ -2554,7 +2554,14 @@ class TachoExplorer(tk.Tk):
             elif "Error" in integrity:
                 text, color = "\u274c  Parse error", "#c62828"
             else:
-                text, color = "", "#757575"
+                # Reached only when the file is NOT fully trusted (the
+                # all-good case is returned above): VERDICT_UNVERIFIED with
+                # no "Incomplete"/"Error" marker, e.g. a VU whose chain is
+                # anchored but whose TREP signatures failed
+                # ("Partial (VU - chain ok)"). Hiding the badge here read as
+                # a clean file; it must warn like every other non-verified
+                # VU state (R1, Batch 1 refutation).
+                text, color = "\u26a0\ufe0f  " + label, "#e65100"
         elif verdict == VERDICT_VERIFIED:
             text, color = "", "#757575"
         elif verdict == VERDICT_CORRUPT or efv.get("failed", 0):
