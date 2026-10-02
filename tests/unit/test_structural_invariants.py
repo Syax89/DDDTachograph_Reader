@@ -115,18 +115,37 @@ def test_g1_card_download_chain_validation_handles_thousands_of_messages():
 
 
 def test_card_application_identification_accepts_g2_17_byte_layout():
-    """Batch 2, A-F2: the registry gate for 0x0501 must accept the G2 17-byte
-    layout the decoder already supports, not only the G1 10-byte one."""
+    """Batch 2, A-F2: the registry gate for 0x0501 must accept the G2
+    17-byte layout the decoder already supports, not only the G1 10-byte
+    one. Unlike 0x0505/0x050C, this EF has NO 2-byte pointer prefix (the
+    decoder reads val[0] directly) -- the payload IS the bare record."""
     registry = DecoderRegistry.instance()
 
-    body17 = bytes([0, 0, 1, 0, 0, 0, 7, 0, 5, 0, 2, 0, 1, 0, 0, 0, 3])
-    payload = b"\x00\x00" + body17
+    payload = bytes([0, 0, 1, 0, 0, 0, 7, 0, 5, 0, 2, 0, 1, 0, 0, 0, 3])
+    assert len(payload) == 17
     result = DeterministicParser(registry=registry).parse(
         _stap(0x0501, payload), is_vu=False
     )
 
     assert "decoder_validation_warnings" not in result["metadata"]
-    assert result.get("card_application", {}).get("no_place_records") == 5
+    assert result.get("card_application", {}).get("no_place_records") == 2
+
+
+def test_card_application_identification_rejects_truncated_lengths():
+    """Batch 2 refutation (A-F2 PARTIAL): widening record_size to (10, 17)
+    must not open a gap for lengths that are neither a valid G1 (10B) nor
+    G2 (17B) record. record_layout="flat" (exact bare-record match) closes
+    the window the default "flexible" layout left open via
+    is_documented_partial/is_pointer_prefixed for 11-16B and 18-19B."""
+    registry = DecoderRegistry.instance()
+    dec = registry.get_decoder(0x0501, generation="G1", is_vu=False)
+
+    for length in (11, 13, 14, 15, 16, 18, 19):
+        warning = DeterministicParser._validate_decoder_payload(
+            dec, b"\x00" * length, 0x0501, None
+        )
+        assert warning is not None, f"length={length} must be rejected, not silently accepted"
+        assert warning["code"] == "decoder_record_size_violation"
 
 
 def test_calibration_data_accepts_105_byte_nonstandard_layout():

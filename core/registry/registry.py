@@ -105,7 +105,16 @@ class DecoderRegistry:
             TagDecoder(0x0501, "G1_DriverCardApplicationIdentification",
                        decoders.parse_g1_app_identification,
                        annex_ref="Annex 1B §2.28", generation="G1", card_only=True,
-                       min_length=10, record_size=(10, 17)),
+                       # "flat" (exact bare-record match), not the "flexible"
+                       # default: unlike 0x0505/0x050C, this EF carries NO
+                       # 2-byte pointer prefix (the decoder reads val[0]
+                       # directly), so "flexible"'s is_pointer_prefixed
+                       # check wrongly let length=19 (2+17) through as if it
+                       # were a shifted/offset record -- same class of gap
+                       # for every length in is_documented_partial's window
+                       # (11-16B), accepted with no warning (refutation
+                       # leg, Batch 2 A-F2).
+                       min_length=10, record_size=(10, 17), record_layout="flat"),
 
             TagDecoder(0x0502, "G1_EventsData",
                        decoders.parse_g1_events_data,
