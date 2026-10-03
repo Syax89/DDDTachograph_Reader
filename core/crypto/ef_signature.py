@@ -202,6 +202,21 @@ _G2_ONLY_TAGS = {
 _KNOWN_UNSIGNED_TAGS = frozenset({0x050E})
 
 
+def _is_certificate_or_metadata_tag(tag: int) -> bool:
+    """True for tags that are never Annex 1B/1C *signed EF* payloads.
+
+    ICC/IC metadata and the card-identifier records sit below the application
+    EF space (tag < 0x0500); the CVC certificate block (0xC100-0xC1FF) and the
+    BER-wrapped certificates (0x7F00-0x7FFF) are certificate containers. These
+    share the card record stream and may arrive with a signature-appendix
+    (dtype 0x01/0x03) record, but that record is a certificate/metadata block,
+    not an unclassifiable signed EF.
+    """
+    return (tag < 0x0500
+            or 0xC100 <= tag <= 0xC1FF
+            or 0x7F00 <= tag <= 0x7FFF)
+
+
 def pair_ef_records(ef_data: List[Tuple[int, int, bytes]],
                     ef_signatures: List[Tuple[int, int, bytes]]) -> List[Dict[str, Any]]:
     """Classify EF data/signature occurrences by tag and generation.
@@ -234,12 +249,16 @@ def pair_ef_records(ef_data: List[Tuple[int, int, bytes]],
             if not known_signed:
                 if (tag not in _KNOWN_UNSIGNED_TAGS
                         and not (gen == "G1" and tag in _G2_ONLY_TAGS)
-                        and data_records and signature_records):
-                    # A data AND a signature occurrence of a tag the known set
-                    # does not list is a signed EF we cannot classify: report it
-                    # explicitly as unsupported rather than dropping it silently,
-                    # so the integrity summary cannot read "all verified" while
-                    # it went unverified.
+                        and not _is_certificate_or_metadata_tag(tag)
+                        and signature_records):
+                    # A *signature* occurrence of a tag the known set does not
+                    # list is a signed EF we cannot classify: the signature half
+                    # is what marks an EF as signed (a data-only record is just
+                    # an unlisted unsigned payload). Report it explicitly as
+                    # unsupported rather than dropping it silently, so the
+                    # integrity summary cannot read "all verified" while a lone
+                    # signature went unverified (D2-003). Certificate/metadata
+                    # blocks (see above) are not signed EFs and stay excluded.
                     pairs.append({
                         "tag": tag,
                         "gen": gen,

@@ -253,13 +253,20 @@ def parse_cyclic_buffer_activities(val, results):
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Cyclic buffer activity parse failed: %s", exc)
 
-def _decode_gnss_coord(data, offset):
-    """Decode GeoCoordinates — Annex 1C §2.76: signed int24, ±DDMM.M ×10.
-    
-    Latitude:  ±DDMM.M × 10  (e.g. 45°31.2'N → +45312)
-    Longitude: ±DDDMM.M × 10 (e.g. 009°12.5'E → +9125)
+def _decode_gnss_coord(data, offset, maximum_degrees=180):
+    """Decode GeoCoordinates — Annex 1C §2.76: signed int24, ±DD(D)MM.M ×10.
+
+    Latitude:  ±DDMM.M × 10  (e.g. 45°31.2'N → +45312), |DD| = 0..90
+    Longitude: ±DDDMM.M × 10 (e.g. 009°12.5'E → +9125), |DDD| = 0..180
     Unknown position = 0x7FFFFF (3 bytes).
-    Returns decimal degrees, or None on no-fix / out of bounds.
+
+    A latitude/longitude is bounded on the globe: |degrees| ≤ 90 for a
+    latitude, ≤ 180 for a longitude, and the minutes must be a real
+    60-minute fraction (< 60). Values outside those bounds are corrupt bytes
+    (e.g. an out-of-range EF Places/GNSS payload), not a position, so they
+    return ``None`` exactly like the unknown-position sentinel — the same
+    bound ``core.decoders.card_g22._coord`` already enforces. *maximum_degrees*
+    selects the latitude (90) or longitude (180) limit.
     """
     if len(data) < offset + 3:
         return None
@@ -270,4 +277,8 @@ def _decode_gnss_coord(data, offset):
     v = abs(raw) / 10.0          # DDMM.M
     deg = int(v // 100)
     minutes = v - deg * 100
+    if deg > maximum_degrees or minutes >= 60.0:
+        return None
+    if deg == maximum_degrees and minutes != 0.0:
+        return None
     return round(sign * (deg + minutes / 60.0), 7)

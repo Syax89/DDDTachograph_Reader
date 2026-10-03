@@ -515,8 +515,8 @@ def _decode_place_records(val, off, stride):
             if stride >= 21:
                 # GNSSPlaceRecord at offset 10: timeStamp(4) + gnssAccuracy(1)
                 # + latitude(3) + longitude(3) [+ authenticationStatus(1) G2.2]
-                lat = _decode_gnss_coord(chunk, 15)
-                lon = _decode_gnss_coord(chunk, 18)
+                lat = _decode_gnss_coord(chunk, 15, maximum_degrees=90)
+                lon = _decode_gnss_coord(chunk, 18, maximum_degrees=180)
                 if lat is not None and lon is not None:
                     record["gnss_accuracy"] = chunk[14]
                     record["latitude"] = lat
@@ -656,8 +656,8 @@ def parse_card_gnss_places(val, results):
             ts = struct.unpack(">I", chunk[0:4])[0]
             if ts < 946684800 or ts > 4102444800:
                 continue
-            lat = _decode_gnss_coord(chunk, 9)
-            lon = _decode_gnss_coord(chunk, 12)
+            lat = _decode_gnss_coord(chunk, 9, maximum_degrees=90)
+            lon = _decode_gnss_coord(chunk, 12, maximum_degrees=180)
             if lat is None or lon is None:
                 continue
             dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()

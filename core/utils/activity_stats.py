@@ -54,8 +54,11 @@ def compute_activity_totals(changes):
 
     Keys: DRIVE, WORK, REST, AVAILABLE, UNKNOWN. Any activity label outside the
     recognised kinds is accumulated as UNKNOWN so its hours stay in the totals
-    instead of vanishing. See the module docstring for the slot-grouping /
-    sum-vs-max semantics (UNKNOWN uses max, like REST/AVAILABLE).
+    instead of vanishing. A card-not-inserted period ('p'=1, 'c'=0 — the record
+    carries ``card_inserted`` False and ``crew`` False) is likewise bucketed as
+    UNKNOWN: Annex 1C §2.1 declares its activity code "not relevant". See the
+    module docstring for the slot-grouping / sum-vs-max semantics (UNKNOWN uses
+    max, like REST/AVAILABLE).
     """
     ACCUM_BY_SUM = {"DRIVE", "WORK"}
     per_slot: dict[str, list] = {}
@@ -67,6 +70,14 @@ def compute_activity_totals(changes):
             continue
         act = str(ch.get("activity", "")).upper()
         if act not in ACTIVITY_KINDS:
+            act = UNKNOWN_ACTIVITY
+        elif ch.get("card_inserted") is False and ch.get("crew") is False:
+            # Annex 1C §2.1 note (2): during a card-not-inserted period
+            # ('p'=1) with a single crew member ('c'=0) the recorded activity
+            # code `aa` is "not relevant"; the period is UNKNOWN, not a real
+            # REST/WORK/etc. Declassify it so card-absent minutes cannot
+            # inflate the activity totals (F-F4). Both bits must be explicitly
+            # present and false: records without the flags are left untouched.
             act = UNKNOWN_ACTIVITY
         slot = str(ch.get("slot") or "First")
         per_slot.setdefault(slot, []).append((t, act))
