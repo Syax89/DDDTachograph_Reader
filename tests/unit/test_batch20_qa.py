@@ -9,15 +9,12 @@ Covers, one test group per confirmed family:
                                 validation warnings
   QA-WEAK-ASSERTIONS   (I-F14)  strengthened in tests/unit/test_coverage.py
 """
-import logging
 import re
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-
-logging.disable(logging.CRITICAL)
 
 MOCK_DIR = ROOT / "tests" / "mock_data"
 
@@ -114,7 +111,6 @@ def test_referenced_modules_exist():
     not MOCK_DIR.is_dir() or len(list(MOCK_DIR.glob("*.ddd"))) < 6,
     reason="mock corpus not generated",
 )
-@pytest.mark.skip(reason="QA meta test: mock corpus intentionally truncated for size")
 def test_mock_corpus_has_no_decoder_validation_warnings():
     """Every decoder the mock corpus targets must actually run: a structurally
     invalid payload is refused by the parser and recorded in

@@ -92,6 +92,31 @@ def get_logger(name: str = "ddd_tacho") -> logging.Logger:
     return _logger
 
 
+def reset_logger() -> None:
+    """Tear the shared logger back down to its pristine, unconfigured state.
+
+    ``logging.getLogger("ddd_tacho")`` hands back the *same* process-global
+    object to every caller, so handlers, level and ``propagate`` configured by
+    one part of the program (or one test module) leak into every other. This
+    detaches every handler, restores the defaults and clears the cached
+    wrapper, so the next :func:`get_logger` rebuilds it from scratch.
+
+    Test fixtures call this around each test to guarantee that a module which
+    configures the logger cannot starve another module's assertions of the
+    records they expect.
+    """
+    global _logger, _console_handler, _counter
+    with _lock:
+        shared = logging.getLogger("ddd_tacho")
+        for handler in list(shared.handlers):
+            shared.removeHandler(handler)
+        shared.setLevel(logging.NOTSET)
+        shared.propagate = True
+        _logger = None
+        _console_handler = None
+        _counter = None
+
+
 def set_level(level: int) -> None:
     """Set console verbosity. The logger stays at DEBUG so failures are counted."""
     get_logger()
