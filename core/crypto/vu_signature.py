@@ -288,6 +288,49 @@ def decode_vu_certificates(raw_data):
     return out
 
 
+def _unsigned_gaps(data, sections):
+    """Byte ranges that no signature covers and that are not a download trailer.
+
+    The per-TREP ECDSA signatures authenticate only their own section payload.
+    Any byte outside every section — before the first ``0x76`` marker, between
+    sections, or after the last one — is covered by no signature at all, yet
+    ``all_treps_valid`` used to be reported without saying so. Return those
+    ranges so the caller can flag them.
+
+    A short ``0x76 0x00`` trailer appended by some download tools after the last
+    section is *not* authenticable payload: the structural walk already
+    recognises it (``DeterministicParser._classify_gaps`` → ``7600_DownloadTrailer``),
+    so it is not counted as unsigned data riding along.
+    """
+    covered = bytearray(len(data))
+    for sec in sections:
+        start = sec["marker"]
+        end = start + 2
+        for (*_, rec_end) in sec["records"]:
+            if rec_end > end:
+                end = rec_end
+        end = min(end, len(data))
+        covered[start:end] = b"\x01" * (end - start)
+
+    gaps = []
+    start = None
+    for pos, is_covered in enumerate(covered):
+        if not is_covered:
+            if start is None:
+                start = pos
+        elif start is not None:
+            gaps.append((start, pos))
+            start = None
+    if start is not None:
+        gaps.append((start, len(data)))
+
+    def _is_download_trailer(s, e):
+        return (e == len(data) and 2 <= e - s <= 8
+                and data[s] == 0x76 and data[s + 1] == 0x00)
+
+    return [(s, e) for s, e in gaps if not _is_download_trailer(s, e)]
+
+
 def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
     """Verify the cryptographic integrity of a Gen2/Gen2.2 VU download.
 
@@ -298,6 +341,8 @@ def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
         "root_anchored": bool,       # MSCA cert verified against an ERCA root key
          "treps": [{"trep", "section", "signature_valid", "reason"}],
          "all_treps_valid": bool,
+         "unsigned_bytes": int,       # only when bytes sit outside every section
+         "unsigned_ranges": [[s, e]], # byte ranges covered by no signature
          "certificate_temporal_validity": {"msca": ..., "vu": ...},
          "summary": str,
        }
@@ -415,12 +460,24 @@ def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
             })
 
         report["all_treps_valid"] = bool(report["treps"]) and all_valid
+
+        # Bytes outside every section are authenticated by no signature. Flag
+        # them so a report never asserts a fully signed download while unsigned
+        # bytes ride along. (A recognised download trailer is not counted.)
+        unsigned = _unsigned_gaps(data, sections)
+        if unsigned:
+            report["unsigned_bytes"] = sum(end - start for start, end in unsigned)
+            report["unsigned_ranges"] = [[start, end] for start, end in unsigned]
+
         anchor = "root-anchored" if report["root_anchored"] else "root not anchored (ERCA-2 key absent)"
         report["summary"] = (
             f"MSCA→VU: {'OK' if report['msca_to_vu'] else 'FAIL'}; "
             f"TREP signatures: {sum(t['signature_valid'] for t in report['treps'])}/"
             f"{len(report['treps'])} valid; {anchor}"
         )
+        if unsigned:
+            report["summary"] += (
+                f"; {report['unsigned_bytes']} unsigned byte(s) outside signed sections")
         return report
     except Exception as exc:  # never break parsing on a crypto issue
         _log.debug("VU signature verification failed: %s", exc)

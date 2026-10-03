@@ -48,6 +48,7 @@ RECORD_TYPES = {
     0x04: ("MemberStateCertificate", "low"),       # (205) raw cert
     0x05: ("OdometerValueMidnight", "high"),       # OdometerShort (3)
     0x06: ("DateOfDayDownloaded", "high"),         # TimeReal (4)
+    0x07: ("SensorPaired", "low"),                 # G1 SensorPaired (20) — Annex 1C §2.120
     0x08: ("SignatureRecord", "high"),             # ECC (64)
     0x09: ("VuSpecificConditionRecord", "high"),   # entryTime(4)+type(1)=5
     0x0A: ("VehicleIdentificationNumber", "medium"),
@@ -69,6 +70,7 @@ RECORD_TYPES = {
     0x1A: ("VuOverSpeedingControlData", "high"),   # (9)
     0x1B: ("VuOverSpeedingEventRecord", "medium"), # (32)
     0x1C: ("VuPlaceDailyWorkPeriodRecord", "high"),# (40/41)
+    0x1D: ("VuTimeAdjustmentGNSSRecord", "high"),  # (8) oldTimeValue+newTimeValue — Annex 1C §2.120
     0x1E: ("VuTimeAdjustmentRecord", "high"),      # (99) old+new+name+addr+cardAndGen
     0x1F: ("VuPowerSupplyInterruptionRecord", "medium"),  # (87)
     0x20: ("VuSensorPairedRecord", "medium"),      # (28) serial+approval+date
@@ -76,10 +78,25 @@ RECORD_TYPES = {
     0x22: ("VuBorderCrossingRecord", "high"),      # (55)
     0x23: ("VuLoadUnloadRecord", "high"),          # (58)
     0x24: ("VehicleRegistrationIdentification", "medium"),  # G2.2 (15)
-    0x29: ("ActivityChangeInfo_Slot2", "medium"),
-    0x40: ("VuDetailedSpeedSample", "low"),
-    0x60: ("Terminator", "low"),
+    # Codes above the normative Value-assignment (0x24) have NO name in Annex
+    # 1C §2.120: 0x25..0x7F are RFU, 0x80..0xFF manufacturer-specific. The
+    # entries below are observed meanings on specific units, kept only as a
+    # hint — ``is_normative_record_type`` reports them as unmapped (D2-005).
+    0x29: ("RFU_0x29_Slot2Activity", "medium"),
+    0x40: ("RFU_0x40_DetailedSpeedSample", "low"),
+    0x60: ("RFU_0x60_Terminator", "low"),
 }
+
+# Annex 1C §2.120 RecordType Value-assignment enumerates 36 record types which,
+# in declaration order, occupy the contiguous codes 0x01..0x24. Any code above
+# 0x24 is RFU or manufacturer-specific and therefore has no normative name:
+# such records must be surfaced as unmapped, never labelled as if defined.
+NORMATIVE_RECORD_TYPES = frozenset(range(0x01, 0x25))
+
+
+def is_normative_record_type(record_type: int) -> bool:
+    """True when ``record_type`` is one defined by the Annex 1C enumeration."""
+    return record_type in NORMATIVE_RECORD_TYPES
 
 # Canonical result-list names for record types shared by full VU streams and
 # tag-keyed RecordArray payloads. Keep consumer-facing key ownership here.
@@ -94,6 +111,7 @@ VU_RECORD_RESULT_KEYS = {
     0x1F: "power_interruptions",
     0x17: "its_consents",
     0x1E: "time_adjustments",
+    0x1D: "time_adj_gnss",
     0x10: "company_locks",
     0x11: "control_activities",
     0x19: "vu_identifications",
@@ -740,6 +758,11 @@ def _decode_record(record_type, rec):
     name, confidence = RECORD_TYPES.get(record_type, (f"Unknown_0x{record_type:02X}", "low"))
     out = {"record_type": f"0x{record_type:02X}", "name": name,
            "size": len(rec), "confidence": confidence}
+    if record_type not in NORMATIVE_RECORD_TYPES:
+        # Outside the Annex 1C §2.120 Value-assignment there is no normative
+        # name; flag the record so a non-standard type is never presented as a
+        # defined record type (D2-005 / VU-UNMAPPED-RECORDS).
+        out["normative"] = False
 
     if record_type in _RECORD_DECODERS:
         decoded = _RECORD_DECODERS[record_type](rec)
@@ -923,6 +946,7 @@ def walk_vu_record_arrays(data, results):
     state = {}
     total_records = 0
     capped = False
+    unmapped = set()
 
     for sec in iter_vu_sections(data, state):
         current = {"trep": sec["trep"], "name": TREP_SECTIONS.get(sec["trep"], f"TREP_0x{sec['trep']:02X}"),
@@ -930,6 +954,11 @@ def walk_vu_record_arrays(data, results):
         for (pos, rt, rs, nr, _end) in sec["records"]:
             if capped:
                 break
+            if rt not in NORMATIVE_RECORD_TYPES:
+                # A record type with no Annex 1C §2.120 name (RFU/manufacturer
+                # specific) is decoded but must be flagged, not silently
+                # presented as a known record type (D2-005).
+                unmapped.add(rt)
             rpos = pos + 5
             for _ in range(nr):
                 if total_records >= VU_MAX_TOTAL_RECORDS:
@@ -952,6 +981,8 @@ def walk_vu_record_arrays(data, results):
     results["_vu_walk_complete"] = not capped and not state.get("truncated", False)
     if capped:
         results["_vu_walk_record_cap"] = VU_MAX_TOTAL_RECORDS
+    if unmapped:
+        results["vu_unmapped_record_types"] = sorted(f"0x{rt:02X}" for rt in unmapped)
     return sections
 
 
@@ -1063,6 +1094,12 @@ def decode_time_adj_gnss(rec):
         "old_time": _iso(old_ts) or "N/A",
         "new_time": _iso(new_ts) or "N/A",
     }
+
+
+# recordType 0x1D (VuTimeAdjustmentGNSSRecord) shares the 8-byte old/new layout
+# of the tag-only 0x052F record; register it so a full VU stream decodes it
+# instead of leaving it raw.
+_RECORD_DECODERS[0x1D] = decode_time_adj_gnss
 
 
 def decode_sensor_fault(rec):
