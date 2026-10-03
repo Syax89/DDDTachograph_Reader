@@ -73,9 +73,11 @@ def captured_logs():
 
     handler = _Collect()
     handler.setLevel(logging.DEBUG)
-    logger_module.get_logger().addHandler(handler)
+    log = logger_module.get_logger()
+    log.setLevel(logging.DEBUG)  # ensure logger emits DEBUG records
+    log.addHandler(handler)
     yield captured
-    logger_module.get_logger().removeHandler(handler)
+    log.removeHandler(handler)
 
 
 # ── CLI-BOGUS-SENTINELS (F-F5, XF-F4, I-F12) ───────────────────────────────
