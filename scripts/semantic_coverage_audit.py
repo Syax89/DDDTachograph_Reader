@@ -176,6 +176,13 @@ def load_baseline(path: str = BASELINE_PATH) -> Dict[str, Any]:
 def compare_to_baseline(metrics: Mapping[str, Mapping[str, Any]], baseline: Mapping[str, Mapping[str, Any]]) -> Dict[str, Any]:
     regressions = []
     missing_baseline = []
+    # QA-DROPPED-CORPUS (AUDIT-DROPPED-BASELINE): the loop below only walks the
+    # files that are *currently* present, so a corpus that lost files (or was
+    # never generated, e.g. an empty/missing --ddd-dir) silently "passes": an
+    # empty ``metrics`` iterates zero times. Every baseline file that is absent
+    # from the current corpus is therefore a regression — the gate must fail
+    # closed when the corpus it claims to guard is gone.
+    dropped_from_corpus = [filename for filename in baseline if filename not in metrics]
     for filename, current in metrics.items():
         expected = baseline.get(filename)
         if not expected:
@@ -203,7 +210,8 @@ def compare_to_baseline(metrics: Mapping[str, Mapping[str, Any]], baseline: Mapp
                 "increase": current_debt - baseline_debt,
             })
     return {"regressions": regressions, "missing_baseline": missing_baseline,
-            "passed": not regressions and not missing_baseline}
+            "dropped_from_corpus": dropped_from_corpus,
+            "passed": not regressions and not missing_baseline and not dropped_from_corpus}
 
 
 def audit_directory(directory: str = DDD_DIR) -> Dict[str, Dict[str, Any]]:
@@ -250,6 +258,10 @@ def main() -> int:
         if comparison["missing_baseline"]:
             print("\nFiles missing from baseline:")
             for filename in comparison["missing_baseline"]:
+                print(f"- {filename}")
+        if comparison.get("dropped_from_corpus"):
+            print("\nFiles dropped from the corpus (in baseline, absent now):")
+            for filename in comparison["dropped_from_corpus"]:
                 print(f"- {filename}")
         if comparison["regressions"]:
             print("\nRegressions versus baseline:")

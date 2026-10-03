@@ -26,6 +26,35 @@ FAKE_DRIVERS = [
 ]
 FAKE_COMPANY = "NORTHBRIDGE HAULAGE LTD"
 FAKE_AUTHORITY = "DVLA SWANSEA"
+FAKE_LICENCE = "SMITH901234JD9AB"
+# 16-char synthetic card number (FullCardNumberAndGeneration carries 16 bytes).
+# Clearly fake so no reviewer mistakes it for a real identifier.
+FAKE_CARD_NUMBER = "IT00000000000000"
+
+
+def _scrub_card_tree(node):
+    """Recursively replace every card number in a parsed-result tree.
+
+    QA-SCREENSHOT-PII (SELF-PUBLISH-PII): card numbers appear under many keys
+    (``driver.card_number``; the ``card`` dict of ``card_iw_records`` and
+    ``inserted_drivers``; ``card_driver``/``card_codriver`` on activity events;
+    ``company_card``/``control_card``/``workshop_card``; ``vu_card_record.card``;
+    the top-level ``card_numbers`` list). Scrubbing them in one pass closes the
+    leak wherever a captured panel happens to render one.
+    """
+    if isinstance(node, dict):
+        if isinstance(node.get("card_number"), str) and node["card_number"]:
+            node["card_number"] = FAKE_CARD_NUMBER
+        numbers = node.get("card_numbers")
+        if isinstance(numbers, list):
+            for i, value in enumerate(numbers):
+                if isinstance(value, str) and value:
+                    numbers[i] = FAKE_CARD_NUMBER
+        for value in node.values():
+            _scrub_card_tree(value)
+    elif isinstance(node, list):
+        for item in node:
+            _scrub_card_tree(item)
 
 
 def anonymize(data):
@@ -43,12 +72,18 @@ def anonymize(data):
         drv["surname"], drv["firstname"] = sur, first
         drv["issuing_authority"] = FAKE_AUTHORITY
         if drv.get("licence_number"):
-            drv["licence_number"] = "SMITH901234JD9AB"
+            drv["licence_number"] = FAKE_LICENCE
 
-    for iw in data.get("card_iw") or []:
-        if isinstance(iw, dict) and iw.get("holder_surname"):
-            sur, first = name_for(iw.get("card_number", iw.get("holder_surname")))
-            iw["holder_surname"], iw["holder_first_names"] = sur, first
+    # Card insertion/withdrawal records feed the activity timeline (holder
+    # names). The parser key is ``card_iw_records``; the old code iterated a
+    # nonexistent ``card_iw`` key, so none of these identities were anonymized.
+    for key in ("card_iw_records", "card_iw"):
+        for iw in data.get(key) or []:
+            if not isinstance(iw, dict):
+                continue
+            if iw.get("holder_surname") or iw.get("holder_first_names"):
+                sur, first = name_for(iw.get("card_number", iw.get("holder_surname")))
+                iw["holder_surname"], iw["holder_first_names"] = sur, first
 
     for d in data.get("inserted_drivers") or []:
         if isinstance(d, dict) and d.get("surname"):
@@ -67,6 +102,11 @@ def anonymize(data):
     for session in data.get("vehicle_sessions") or []:
         if isinstance(session, dict):
             session["vehicle_plate"] = "AB24 CDE"
+
+    # Final pass: every card number left anywhere in the tree (see
+    # _scrub_card_tree). Runs after name anonymization so names are still keyed
+    # by the original card number for stable, distinct fakes.
+    _scrub_card_tree(data)
     return data
 
 

@@ -4561,7 +4561,8 @@ def _smoke_check(path):
     _emit(f"SMOKE START: v{__version__} file={path}")
     try:
         from app.engine import TachoParser
-        result = TachoParser(path).parse()
+        parser = TachoParser(path)
+        result = parser.parse()
     except Exception:
         _emit(f"SMOKE FAIL: parse raised\n{traceback.format_exc()}")
         return 1
@@ -4575,8 +4576,20 @@ def _smoke_check(path):
     if not result.get("raw_tags"):
         _emit("SMOKE FAIL: no structures decoded")
         return 1
+    # QA-FROZEN-CERT-GATE (I-F5): a frozen bundle must ship a usable ERCA root
+    # store. A missing/corrupt ``certs/`` directory leaves the signature
+    # validator with an empty root store (core/crypto/signature.py only logs a
+    # warning), so every chain is silently unverifiable while the parse still
+    # succeeds — the old smoke test returned 0 in that case. Fail the gate so a
+    # bundle that cannot anchor signatures is never released.
+    validator = getattr(parser, "validator", None)
+    roots = getattr(validator, "root_certificates", None)
+    if not roots:
+        _emit("SMOKE FAIL: ERCA root store empty (missing/broken certs/)")
+        return 1
     _emit(f"SMOKE OK: v{__version__} gen={meta.get('generation')} "
-          f"sections={len(result.get('raw_tags') or {})}")
+          f"sections={len(result.get('raw_tags') or {})} "
+          f"erca_roots={len(roots)}")
     return 0
 
 
