@@ -9,13 +9,16 @@ trust store and injected via ``SignatureValidator(certs_dir=...)``.
 Generic identities only — no personal data, no real cards.
 """
 import contextlib
+import datetime
 import hashlib
 import os
 import struct
 import tempfile
 
+from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, padding, rsa, utils
+from cryptography.x509.oid import NameOID
 
 P256_OID = "2a8648ce3d030107"
 
@@ -43,6 +46,39 @@ def cvc(private_key, signer_key, car, chr_):
     r, s = utils.decode_dss_signature(der)
     signature = r.to_bytes(32, "big") + s.to_bytes(32, "big")
     return tlv(b"\x7f\x21", body_tlv + tlv(b"\x5f\x37", signature))
+
+
+def cvc_pad(private_key, signer_key, car, chr_, pad=5):
+    """A real, validly signed CVC whose body carries one extra ignored primitive
+    TLV, so the certificate is exactly 194 bytes (the generation-1 length)."""
+    point = private_key.public_key().public_bytes(
+        serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+    public_key = tlv(b"\x06", bytes.fromhex(P256_OID)) + tlv(b"\x86", point)
+    body = tlv(b"\x42", car) + tlv(b"\x5f\x20", chr_)
+    body += tlv(b"\x5f\x25", (1600000000).to_bytes(4, "big"))
+    body += tlv(b"\x5f\x24", (2000000000).to_bytes(4, "big"))
+    body += tlv(b"\x7f\x49", public_key) + tlv(b"\x53", b"\x00" * (pad - 2))
+    body_tlv = tlv(b"\x7f\x4e", body)
+    der = signer_key.sign(body_tlv, ec.ECDSA(hashes.SHA256()))
+    r, s = utils.decode_dss_signature(der)
+    return tlv(b"\x7f\x21", body_tlv + tlv(b"\x5f\x37", r.to_bytes(32, "big") + s.to_bytes(32, "big")))
+
+
+def der_certificate(private_key, signer_key, common_name=b"DER-ENTITY"):
+    """A real DER-encoded X.509 certificate signed by ``signer_key``.
+
+    Its first byte is 0x30, the other unconstrained generation-2 encoding form
+    (a CardMA certificate can be carried this way alongside the CVC form).
+    """
+    now = datetime.datetime(2024, 1, 1)
+    subject = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name.decode())])
+    issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "DER-ISSUER")])
+    builder = (x509.CertificateBuilder()
+               .subject_name(subject).issuer_name(issuer)
+               .public_key(private_key.public_key())
+               .serial_number(x509.random_serial_number())
+               .not_valid_before(now).not_valid_after(now + datetime.timedelta(days=3650)))
+    return builder.sign(signer_key, hashes.SHA256()).public_bytes(serialization.Encoding.DER)
 
 
 def ef_signature(card_key, data):
