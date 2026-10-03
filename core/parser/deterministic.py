@@ -21,6 +21,22 @@ from core.utils.logger import get_logger
 
 _log = get_logger(__name__)
 
+# TRTP marker (byte after the 0x76 SID) → generation, from the Annex 1C
+# consolidated TRTP table (§ "There are seven types of data transfer"):
+#   Overview 01/21/31, Activities 02/22/32, Events&Faults 03/23/33,
+#   Detailed speed 04/24/34, Technical data 05/25/35, Card download 06.
+#   Download interface version is 00 and is supported by Gen 2.2 only.
+# A selective VU download can start with ANY of these, not just the Overview
+# marker, so the leading marker (never a byte pair inside a record) selects the
+# generation. 0x24 is shared by G2 and G2.2 (Detailed speed) → treated as G2.
+_TRTP_GENERATION = {
+    0x00: "G2.2",
+    0x01: "G1", 0x02: "G1", 0x03: "G1", 0x04: "G1", 0x05: "G1", 0x06: "G1",
+    0x11: "G1", 0x14: "G1",
+    0x21: "G2", 0x22: "G2", 0x23: "G2", 0x24: "G2", 0x25: "G2",
+    0x31: "G2.2", 0x32: "G2.2", 0x33: "G2.2", 0x34: "G2.2", 0x35: "G2.2",
+}
+
 
 class CoverageTracker:
     """Tracks which byte ranges have been covered during parsing."""
@@ -301,14 +317,23 @@ class DeterministicParser:
         return self.results
 
     def _detect_generation(self, raw_data: bytes) -> str:
-        """Sniff generation from the 2-byte header (0x7631=G2.2, 0x762x=G2)."""
+        """Detect the generation from the leading SID/TREP marker.
+
+        A VU download is ``SID 0x76 + TREP`` messages; a selective download may
+        start with ANY TRTP marker, not just the Overview one (e.g. a Gen 2.2
+        file that starts with Activities ``76 32`` or the Download interface
+        version ``76 00``). The leading marker — which is record framing, never
+        a byte pair inside a record — selects the generation via
+        ``_TRTP_GENERATION`` (Annex 1C TRTP table). Anything else (no leading
+        0x76 message marker, e.g. a card EF image) keeps the G1/Unknown default
+        so the card refinement path still applies.
+        """
         if len(raw_data) < 2:
             return "Unknown"
-        header = raw_data[:2]
-        if header == b'\x76\x31':
-            return "G2.2"
-        elif header in (b'\x76\x21', b'\x76\x22'):
-            return "G2"
+        if raw_data[0] == 0x76:
+            gen = _TRTP_GENERATION.get(raw_data[1])
+            if gen is not None:
+                return gen
         return "G1"
 
     def _gen_full_label(self, gen: str) -> str:

@@ -310,14 +310,24 @@ class TachoParser:
             try:
                 from core.parser.vu_dispatcher import walk_vu_record_arrays
                 walker_success = walk_vu_record_arrays(self.raw_data, self.results)
+                # Completeness comes from the real walk outcome: a truncated
+                # array (rs*nr beyond EOF) or the global record cap leaves the
+                # stream incomplete and is reported as partial, never complete.
+                complete = bool(self.results.get("_vu_walk_complete", False))
                 # Only fall back to heuristic if the walker produced NO results
                 if not walker_success or not self.results.get("vu_record_arrays"):
                     decoders.parse_vu_download_messages(self.raw_data, self.results)
+                    complete = False  # heuristic fallback cannot vouch for EOF
             except Exception as exc:
                 logger.debug("VU RecordArray dispatch failed: %s", exc, exc_info=False)
                 if not self.results.get("vu_record_arrays"):
                     decoders.parse_vu_download_messages(self.raw_data, self.results)
-            self._build_trep_report(generation, complete_walk=True)
+                complete = False
+            if not complete:
+                logger.warning("VU download incomplete: %s",
+                               "record cap reached" if self.results.get("_vu_walk_record_cap")
+                               else "truncated/partial RecordArray stream")
+            self._build_trep_report(generation, complete_walk=complete)
             # Cryptographic integrity: verify the ECDSA download signatures
             # and the MSCA→VU certificate chain (Annex 1C Appendix 11).
             try:

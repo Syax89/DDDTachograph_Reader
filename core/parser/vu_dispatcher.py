@@ -27,7 +27,8 @@ from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
 from core import decoders
-from core.utils.constants import RECORD_ARRAY_MAX_RECORDS, RECORD_ARRAY_MAX_SIZE
+from core.utils.constants import (
+    RECORD_ARRAY_MAX_RECORDS, RECORD_ARRAY_MAX_SIZE, VU_MAX_TOTAL_RECORDS)
 from core.utils.event_codes import describe_event, describe_fault, describe_calibration_purpose, describe_control_type, describe_record_purpose
 
 _log = get_logger(__name__)
@@ -829,11 +830,17 @@ def decode_vu_record(record_type, rec):
     return _decode_record(record_type, rec)
 
 
-def iter_vu_sections(data):
+def iter_vu_sections(data, state=None):
     """Yield sections from a VU RecordArray stream as {marker, trep, records: [(pos, rt, rs, nr, end), ...]}.
 
     This is the canonical section iterator shared by ``walk_vu_record_arrays``
     and ``vu_signature_verifier._iter_sections``.
+
+    When *state* is a dict it is updated with ``{"truncated": bool}``: True when
+    a RecordArray declares more bytes (``rs * nr``) than remain before EOF. In
+    that case the walk skips to the next section marker (instead of aborting the
+    whole stream) so later genuine sections are still recovered, while callers
+    can fail the stream closed as partial/truncated.
     """
     n = len(data)
     pos = 0
@@ -856,38 +863,73 @@ def iter_vu_sections(data):
             pos += 1
             continue
         if pos + 5 + rs * nr > n:
-            break
+            # Header declares more bytes than exist before EOF: EOF truncation
+            # or a lying noOfRecords. Flag it and skip to the next section
+            # marker (the remaining bytes are a partial payload, not new
+            # headers) instead of aborting the walk, so a genuine section that
+            # follows is still recovered.
+            if state is not None:
+                state["truncated"] = True
+            pos += 1
+            while pos + 5 <= n and not (data[pos] == 0x76 and data[pos + 1] in trep_bytes):
+                pos += 1
+            continue
         if cur is not None:
             cur["records"].append((pos, rt, rs, nr, pos + 5 + rs * nr))
         pos += 5 + rs * nr
     if cur:
         yield cur
+    if state is not None:
+        state.setdefault("truncated", False)
 
 
 def walk_vu_record_arrays(data, results):
     """Walk the VU RecordArray stream, dispatch by recordType, and populate
     ``results``. Returns a list of section summaries (also stored under
-    ``results['vu_record_arrays']``)."""
+    ``results['vu_record_arrays']``).
+
+    The number of decoded records is bounded globally by ``VU_MAX_TOTAL_RECORDS``
+    so a small, densely packed untrusted file cannot amplify into hundreds of MB
+    of dicts (per-array ``RECORD_ARRAY_MAX_RECORDS`` alone does not bound the
+    stream). Completeness is derived from the real walk outcome: if the bound is
+    hit or any declared array exceeds EOF, ``results['_vu_walk_complete']`` is
+    False so the caller fails the stream closed as partial rather than reporting
+    it complete.
+    """
     data = bytes(data)
     sections = []
+    state = {}
+    total_records = 0
+    capped = False
 
-    for sec in iter_vu_sections(data):
+    for sec in iter_vu_sections(data, state):
         current = {"trep": sec["trep"], "name": TREP_SECTIONS.get(sec["trep"], f"TREP_0x{sec['trep']:02X}"),
                    "records": {}}
         for (pos, rt, rs, nr, _end) in sec["records"]:
+            if capped:
+                break
             rpos = pos + 5
             for _ in range(nr):
+                if total_records >= VU_MAX_TOTAL_RECORDS:
+                    capped = True
+                    break
                 rec = data[rpos:rpos + rs]
                 current["records"].setdefault(rt, []).append(decode_vu_record(rt, rec))
                 rpos += rs
+                total_records += 1
         sections.append({
             "trep": f"0x{current['trep']:02X}",
             "section": current["name"],
             "record_counts": {f"0x{rt:02X}": len(v) for rt, v in current["records"].items()},
         })
         _emit_section(current, results)
+        if capped:
+            break
 
     results["vu_record_arrays"] = sections
+    results["_vu_walk_complete"] = not capped and not state.get("truncated", False)
+    if capped:
+        results["_vu_walk_record_cap"] = VU_MAX_TOTAL_RECORDS
     return sections
 
 
