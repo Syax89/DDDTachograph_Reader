@@ -3,7 +3,7 @@
 import struct
 from datetime import datetime, timezone
 
-from core.utils.logger import get_logger
+from core.utils.logger import get_logger, redact
 from core.utils.constants import MAX_ODO_DISTANCE_KM
 from core.decoders.common import _decode_gnss_coord, decode_date, decode_string, get_nation, is_known_nation, mark_heuristic
 from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault
@@ -969,7 +969,7 @@ def parse_card_issuer_identification(val, results):
                     issuer_entry["raw_string"] = raw_text
                     structured_parsed = True
                     _log.debug("Card issuer structured parse: type=0x%02X issuer=%s card=%s",
-                               card_type, issuer_code, card_num_raw)
+                               card_type, issuer_code, redact(card_num_raw))
             except (IndexError, ValueError) as exc:
                 _log.debug("Card issuer structured parse attempt failed: %s", exc)
 
@@ -983,7 +983,7 @@ def parse_card_issuer_identification(val, results):
                 issuer_entry["card_number"] = card_num
                 issuer_entry["company_name"] = company
                 issuer_entry["raw_string"] = raw_text
-                _log.debug("Card issuer Italian regex match: card=%s", card_num)
+                _log.debug("Card issuer Italian regex match: card=%s", redact(card_num))
                 structured_parsed = True
                 mark_heuristic(results, "card_issuer_0x0100", ["card_number", "company_name"])
 
@@ -1063,7 +1063,7 @@ def parse_company_holder_data(val, results):
                     else:
                         entry["company_address"] += " " + post_card
                 structured_parsed = True
-                _log.debug("Company holder: card-number delimiter parse, card=%s", card_num)
+                _log.debug("Company holder: card-number delimiter parse, card=%s", redact(card_num))
                 mark_heuristic(results, "company_holder_0x2020",
                                ["company_name", "company_address", "card_number"])
 

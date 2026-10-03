@@ -4,7 +4,7 @@ import struct
 import typing
 from datetime import datetime, timezone
 
-from core.utils.logger import get_logger
+from core.utils.logger import get_logger, redact
 from core.decoders.common import decode_activity_val, decode_date, decode_string, get_nation
 from core.decoders.cert import parse_g1_certificate
 from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault, describe_record_purpose
@@ -460,8 +460,8 @@ def _parse_trep_02_activities(data, results):
                 "_key": driver_key,
             })
 
-        _log.debug("TREP 02: structured G1 parse — driver=%s %s, scanning for daily records from offset %d",
-                   surname_s, firstname_s, card_start)
+        _log.debug("TREP 02: structured G1 parse — driver=%s, scanning for daily records from offset %d",
+                   redact(f"{surname_s} {firstname_s}"), card_start)
 
         # Attempt daily record boundary detection: look for 0x7622/0x7632 markers
         daily_boundaries = []

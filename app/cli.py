@@ -47,6 +47,14 @@ Examples:
         level=logging.DEBUG if args.verbose else logging.WARNING,
         format="%(levelname)s: %(message)s"
     )
+    if args.verbose:
+        # ``logging.basicConfig`` only configures the *root* logger. The parser
+        # logger ``ddd_tacho`` sets ``propagate=False`` and owns a console
+        # handler pinned at WARNING (core/utils/logger.py), so ``-v`` used to
+        # leave the parser's own diagnostics silent (CLI-VERBOSE-SILENT). Lower
+        # that handler too so ``-v`` actually raises parser verbosity.
+        from core.utils.logger import enable_debug
+        enable_debug()
 
     if not os.path.isfile(args.file):
         print(f"❌ File not found: {args.file}", file=sys.stderr)
@@ -196,6 +204,22 @@ Examples:
     if export_failed:
         sys.exit(1)
 
+# Identity/field sentinels meaning "no value decoded". The CLI must never
+# render these as if they were real data (CLI-BOGUS-SENTINELS: F-F5, XF-F4,
+# I-F12). Kept in sync with the driver/vehicle defaults in
+# ``core/registry/models.py`` and the "N/D" placeholder used for absent
+# metadata.
+_PLACEHOLDERS = frozenset({"N/A", "N/D", "NONE", "UNKNOWN"})
+
+
+def _is_present(value):
+    """True when *value* is a decoded value, not an absent/sentinel field."""
+    if value is None:
+        return False
+    text = str(value).strip()
+    return text != "" and text.upper() not in _PLACEHOLDERS
+
+
 def print_summary(data):
     """Prints a compact summary to screen."""
     meta = data.get("metadata", {})
@@ -207,27 +231,36 @@ def print_summary(data):
     print("🚛 DDD TACHOGRAPH READER - SUMMARY")
     print("=" * 60)
 
-    # File info
-    file_type = meta.get("file_type", meta.get("type", "N/D"))
+    # File info — ``metadata.file_type``/``type`` is not populated by any
+    # decoder, so the lookup used to fall through to the bogus "N/D" sentinel
+    # (XF-F4). Fall back to the decoded source kind instead.
+    file_type = meta.get("file_type") or meta.get("type") or ""
+    if not _is_present(file_type):
+        file_type = "Vehicle Unit" if meta.get("is_vu") else "Driver Card"
     gen = meta.get("generation", "N/D")
     print(f"\n📄 File: {meta.get('filename', 'N/D')} ({file_type}, Gen {gen})")
 
     # Signature
     print(f"🔐 Integrity: {meta.get('integrity_check', 'N/D')}")
 
-    # Driver
-    name = driver.get("name", driver.get("surname", ""))
-    first = driver.get("first_name", driver.get("firstname", ""))
-    card = driver.get("card_number", "N/D")
-    if name or first:
-        print(f"\n👤 Driver: {first} {name}".strip())
-    if card != "N/D":
+    # Driver — when no card data was decoded the ``driver`` dict carries the
+    # truthy sentinel "N/A" in every field (core/registry/models.py), so the
+    # old truthiness guard rendered a bogus "Driver: N/A N/A" / "Card: N/A"
+    # block. Treat the sentinels as absent, exactly as the vehicle line below
+    # already does (F-F5 / XF-F4 / I-F12).
+    name = driver.get("name") or driver.get("surname") or ""
+    first = driver.get("first_name") or driver.get("firstname") or ""
+    card = driver.get("card_number") or ""
+    identity = " ".join(p for p in (first, name) if _is_present(p))
+    if identity:
+        print(f"\n👤 Driver: {identity}")
+    if _is_present(card):
         print(f"   Card: {card}")
 
     # Vehicle
     vin = vehicle.get("vin", "N/A")
     plate = vehicle.get("plate", vehicle.get("registration", "N/A"))
-    if vin != "N/A" or plate != "N/A":
+    if _is_present(vin) or _is_present(plate):
         print(f"\n🚗 Vehicle: {plate} (VIN: {vin})")
 
     # Activities summary

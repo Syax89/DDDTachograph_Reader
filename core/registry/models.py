@@ -1,7 +1,7 @@
 """Data models for tachograph parsing results. Defines TachoResult and related utilities used throughout the pipeline."""
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional, Set
-from datetime import datetime
+from datetime import datetime, timezone
 
 def _clean_tag_name(name: str) -> str:
     """Strip generation and protocol prefixes: G22_Foo → Foo, G2_Bar → Bar, VU_Baz → Baz."""
@@ -45,7 +45,7 @@ class TachoResult:
     metadata: Dict[str, Any] = field(default_factory=lambda: {
         "filename": "N/A",
         "generation": "Unknown",
-        "parsed_at": datetime.now().isoformat(),
+        "parsed_at": datetime.now(timezone.utc).isoformat(),
         "integrity_check": "Pending",
         "file_size_bytes": 0,
         "coverage_pct": 0.0

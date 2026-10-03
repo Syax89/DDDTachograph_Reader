@@ -135,7 +135,7 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("Description", headers)
         self.assertNotIn("Confidence", headers)
         values = [c.value for c in ws[3]]
-        self.assertIn("2026-06-01 10:30", values)
+        self.assertIn("2026-06-01 10:30Z", values)
         # Description is in a merged cell row 1
         desc = ws.cell(row=1, column=1).value
         self.assertIsNotNone(desc)
@@ -205,7 +205,7 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("'=untrusted Header", csv_values)
         self.assertIn("-42", csv_values)
         self.assertNotIn("'-42", csv_values)
-        self.assertIn("2026-06-01 10:30", csv_values)
+        self.assertIn("2026-06-01 10:30Z", csv_values)
 
         ExportManager.export_to_excel(data, self.excel_path)
         from openpyxl import load_workbook
@@ -220,7 +220,7 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("'=untrusted Header", excel_values)
         self.assertIn("-42", excel_values)
         self.assertNotIn("'-42", excel_values)
-        self.assertIn("2026-06-01 10:30", excel_values)
+        self.assertIn("2026-06-01 10:30Z", excel_values)
 
     def test_spreadsheet_formula_protection_handles_leading_whitespace(self):
         from app.export import _spreadsheet_value
