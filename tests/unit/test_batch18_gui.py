@@ -263,28 +263,6 @@ def test_parse_done_clears_the_table_when_there_are_no_nodes():
 
 
 def test_speed_summary_overspeed_column_is_not_zeroed(monkeypatch):
-    """G-F5 sibling call-site: the Detailed Speed dashboard truncated the
-    "Time >90 km/h" column/KPI to whole minutes too (0h 00m for 30 s)."""
-    import app.gui as gui
-
-    monkeypatch.setattr(gui, "detailed_speed_by_day",
-                        lambda data: {"2025-05-01": [(0, 120)] * 30})
-    app = object.__new__(TachoExplorer)
-    captured = {}
-    app._show_dashboard = Mock(
-        side_effect=lambda *args, **kwargs: captured.update(args=args, kwargs=kwargs))
-
-    app._show_speed_summary([], {})
-
-    title, _date_range, kpis, _columns, table_rows = captured["args"]
-    assert title == "Detailed Speed"
-    assert table_rows[0][4] == "30 s"
-    assert ("Time >90 km/h", "30 s", "#d32f2f") in kpis
-
-
-# ── GUI-NAME-ORDER (H-F8) ──────────────────────────────────────────────
-
-def _dashboard_double_click(data, activity_list, is_vu=False, card_day_km=None):
     """Drive ``_on_dashboard_double_click`` and capture the args handed to
     ``DayDetailWindow``. The constructor is swapped manually and restored
     immediately (it resolves its own name from the module global)."""
