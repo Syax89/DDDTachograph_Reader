@@ -354,6 +354,7 @@ def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
     report = {"available": False, "msca_to_vu": False, "root_anchored": False,
                "treps": [], "all_treps_valid": False, "summary": "",
                "certificate_temporal_validity": {}}
+    anchor_attempted = False
     try:
         sections = list(iter_vu_sections(data))
         if not sections:
@@ -394,6 +395,7 @@ def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
                 # back to trying every registered root (raw points carry a
                 # synthetic CAR that can never match the real KID).
                 if erca_keys:
+                    anchor_attempted = True
                     matched = erca_keys.get(msca.get("car"))
                     candidates = [matched] if matched else list(erca_keys.values())
                     for erca_pub, erca_hash in candidates:
@@ -469,7 +471,19 @@ def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
             report["unsigned_bytes"] = sum(end - start for start, end in unsigned)
             report["unsigned_ranges"] = [[start, end] for start, end in unsigned]
 
-        anchor = "root-anchored" if report["root_anchored"] else "root not anchored (ERCA-2 key absent)"
+        if report["root_anchored"]:
+            anchor = "root-anchored"
+        elif anchor_attempted:
+            # A root key was supplied and tried, but none signs the MSCA: the
+            # anchor *failed*, it is not absent. Mirrors _validate_g2_cvc_chain's
+            # "no ERCA root" vs "ERCA anchor FAILED" distinction.
+            anchor = "root not anchored (ERCA-2 anchor failed)"
+        elif erca_keys:
+            # Keys were supplied but no MSCA certificate could be parsed, so no
+            # anchor was attempted — do not claim it failed.
+            anchor = "root not anchored (no MSCA certificate to anchor)"
+        else:
+            anchor = "root not anchored (ERCA-2 key absent)"
         report["summary"] = (
             f"MSCA→VU: {'OK' if report['msca_to_vu'] else 'FAIL'}; "
             f"TREP signatures: {sum(t['signature_valid'] for t in report['treps'])}/"
