@@ -150,6 +150,24 @@ def _required_tags(gen: str, card_type: Optional[int], v2_present: bool) -> set:
     return required
 
 
+def observed_generations(entries: List[Dict[str, Any]]) -> set:
+    """EF *application* generations actually evidenced by ``entries``.
+
+    ``entries`` is either the ``pair_ef_records`` pair list or a
+    ``verify_ef_pairs`` ``ef_results`` list; both carry ``gen`` and ``status``.
+
+    An ``unsupported`` entry is a lone signature occurrence of a tag outside the
+    known signed-EF set (see ``pair_ef_records``): it proves nothing about an EF
+    *application* generation, so it must never be counted as one. Counting it
+    made a single stray/mis-framed dtype-0x03 record on an otherwise complete G1
+    card demand the whole (never captured) G2 application — a fabricated
+    ``Unverified (Missing EF: 0x0501, … )`` — and report a phantom untrusted G2
+    signing key (audit: BATCH7_RETROSPECTIVE_REVIEW F1).
+    """
+    return {entry.get("gen") for entry in entries
+            if entry.get("status") != "unsupported"}
+
+
 def missing_core_efs(pairs: List[Dict[str, Any]]) -> List[int]:
     """Return mandatory EF tags missing for an EF application generation present.
 
@@ -168,7 +186,9 @@ def missing_core_efs(pairs: List[Dict[str, Any]]) -> List[int]:
     by inspecting the pairs alone. Returns the sorted integer tag list.
     """
     present = {(pair["tag"], pair["gen"]) for pair in pairs}
-    generations = {gen for _tag, gen in present}
+    # Only generations an EF pair actually evidences may be demanded — see
+    # ``observed_generations`` (audit: BATCH7_RETROSPECTIVE_REVIEW F1).
+    generations = observed_generations(pairs)
     v2_present = _v2_application_present(pairs)
     missing: set = set()
     for gen in ("G1", "G2"):

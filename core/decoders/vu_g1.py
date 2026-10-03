@@ -993,22 +993,26 @@ def _parse_trep_03_events_faults_heuristic(data, results):
         # VuFaultRecord starts at offset 1 — not 2 (starting at 2 read the first
         # record shifted by one byte and mislabelled the event that follows as a
         # fault). Records already present are tracked so a re-run over the same
-        # results does not duplicate them.
+        # results does not duplicate them. The dedup key also carries the record
+        # purpose: the VU stores distinct records sharing (type, begin, end) that
+        # differ only by purpose, and `_parse_trep_03_structured` keys on purpose
+        # for exactly that reason (audit: BATCH8_RETROSPECTIVE_REVIEW B8-R1).
         pos = 1
         structured_count = 0
         seen_fault_keys = {
-            (f.get("fault_type"), f.get("begin_time"), f.get("end_time"))
+            (f.get("fault_type"), f.get("begin_time"), f.get("end_time"), f.get("fault_purpose"))
             for f in results.get("faults", []) if isinstance(f, dict)
         }
         seen_event_keys = {
-            (e.get("type_code"), e.get("begin_time"), e.get("end_time"))
+            (e.get("type_code"), e.get("begin_time"), e.get("end_time"), e.get("record_purpose"))
             for e in results.get("events", []) if isinstance(e, dict)
         }
         while pos + 82 <= len(data) and structured_count < 500:
             if 0x01 <= data[pos] <= 0xFF:
                 fault = _parse_vu_fault_record(data, pos)
                 if fault is not None:
-                    fkey = (fault.get("fault_type"), fault.get("begin_time"), fault.get("end_time"))
+                    fkey = (fault.get("fault_type"), fault.get("begin_time"), fault.get("end_time"),
+                            fault.get("fault_purpose"))
                     if fkey not in seen_fault_keys:
                         seen_fault_keys.add(fkey)
                         results.setdefault("faults", []).append(fault)
@@ -1018,12 +1022,15 @@ def _parse_trep_03_events_faults_heuristic(data, results):
             if pos + 83 <= len(data):
                 evt = _parse_vu_event_record(data, pos)
                 if evt is not None:
-                    ekey = (evt["event_type"], evt["begin_time"], evt["end_time"])
+                    ekey = (evt["event_type"], evt["begin_time"], evt["end_time"],
+                            evt.get("event_purpose"))
                     if ekey not in seen_event_keys:
                         seen_event_keys.add(ekey)
                         results.setdefault("events", []).append({
                             "description": describe_event(evt["event_type"]),
                             "type_code": evt["event_type"],
+                            "record_purpose": evt.get("event_purpose"),
+                            "record_purpose_label": describe_record_purpose(evt.get("event_purpose")),
                             "begin_time": evt["begin_time"],
                             "end_time": evt["end_time"],
                             "similar_events": evt.get("similar_events", 0),

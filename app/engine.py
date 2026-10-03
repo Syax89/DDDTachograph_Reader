@@ -616,7 +616,12 @@ class TachoParser:
         ef_sig_raw = self.results.pop("_ef_signatures", None)
         if ef_data_raw is None or ef_sig_raw is None:
             return
-        from core.crypto.ef_signature import pair_ef_records, verify_ef_pairs, missing_core_efs
+        from core.crypto.ef_signature import (
+            missing_core_efs,
+            observed_generations,
+            pair_ef_records,
+            verify_ef_pairs,
+        )
         from cryptography.hazmat.primitives.asymmetric import rsa as _rsa
         pairs = pair_ef_records(ef_data_raw, ef_sig_raw)
         key_type = "RSA" if isinstance(self.card_public_key, _rsa.RSAPublicKey) else (
@@ -642,7 +647,10 @@ class TachoParser:
         # applicable generation to be trusted (see _apply_ef_verdict and
         # core.utils.report_format.integrity_verdict).
         chain_trust = getattr(self, "_chain_trust", None) or {}
-        present = {entry.get("gen") for entry in ef_report.get("ef_results", [])}
+        # Only generations an EF result actually evidences: an ``unsupported``
+        # lone signature must not report a phantom untrusted signing key
+        # (audit: BATCH7_RETROSPECTIVE_REVIEW F1).
+        present = observed_generations(ef_report.get("ef_results", []))
         ef_report["untrusted_generations"] = sorted(
             gen for gen in present if not chain_trust.get(gen, False))
         ef_report["missing_core_efs"] = missing_core_efs(pairs)
