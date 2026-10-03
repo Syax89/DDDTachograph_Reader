@@ -85,5 +85,5 @@ def test_monthly_report_unknown_column_is_real():
     row = rows[0]
     assert row[2] == "02:00"          # Drive  = 08:00-10:00
     assert row[4] == "12:00"          # Rest   = 12:00-24:00
-    assert row[6] == "\u26a0 02:00"   # Unknown = 10:00-12:00 (warning glyph)
-    assert row[7] == "16:00"          # Total keeps Drive+Rest+Unknown
+    assert row[6] == "\u26a0 10:00"   # Unknown = 00:00-08:00 (no 00:00 status)
+    assert row[7] == "24:00"          # Total keeps Drive+Rest+Unknown; full day

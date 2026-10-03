@@ -85,6 +85,17 @@ def compute_activity_totals(changes):
     totals = {a: 0 for a in ACTIVITY_KINDS + (UNKNOWN_ACTIVITY,)}
     for parsed in per_slot.values():
         parsed.sort(key=lambda item: item[0])
+        # Annex 1C §2.170 (VuActivityDailyData): a daily record "always
+        # includes two ActivityChangeInfo words giving the status of the two
+        # slots at 00:00". When that leading entry is absent — dropped by a
+        # decoder, or the day starts with the card not yet inserted — the
+        # interval [00:00, first recorded change) was attributed to no activity
+        # at all and silently vanished (a day of 06:00→24:00 totalled 18h, not
+        # 24h). Bucket it as UNKNOWN, matching §2.1 note (2) ("UNKNOWN periods
+        # correspond to periods where the driver card was not inserted"), so no
+        # recorded hour disappears from the day.
+        if parsed[0][0] > 0:
+            parsed.insert(0, (0, UNKNOWN_ACTIVITY))
         slot_tot: dict[str, int] = {}
         for i, (start, act) in enumerate(parsed):
             end = parsed[i + 1][0] if i + 1 < len(parsed) else 86400

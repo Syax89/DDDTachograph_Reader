@@ -62,8 +62,10 @@ def test_unrecognised_activity_is_bucketed_as_unknown_not_dropped():
         {"activity": "MYSTERY", "time": "10:00"},
         {"activity": "REST", "time": "12:00"},
     ]
+    # 00:00-08:00 carries no leading 00:00 status entry, so it is UNKNOWN (480);
+    # the MYSTERY label adds 10:00-12:00 (120). Both stay in the day.
     assert compute_activity_totals(day) == {
-        "DRIVE": 120, "WORK": 0, "REST": 720, "AVAILABLE": 0, "UNKNOWN": 120,
+        "DRIVE": 120, "WORK": 0, "REST": 720, "AVAILABLE": 0, "UNKNOWN": 600,
     }
 
     # UNKNOWN is a period: kept at the max across slots, not summed.
@@ -82,15 +84,21 @@ def test_empty_changes_return_all_zero_totals():
     }
 
 
-def test_single_slot_day_matches_naive_expectation():
-    """One slot only: same result a correct single-crew computation gives."""
+def test_single_slot_day_spans_the_whole_day():
+    """One slot only: every hour of the day is attributed, none vanishes.
+
+    The first recorded change is at 08:00 with no leading 00:00 status entry
+    (Annex 1C §2.170 requires one), so 00:00-08:00 is UNKNOWN; the rest follows
+    the recorded changes. The day spans a full 24h instead of silently
+    shrinking to 16h (REPORT-OVERNIGHT-GAP / XF-F2).
+    """
     single = [
         {"activity": "DRIVE", "time": "08:00"},
         {"activity": "WORK", "time": "12:00"},
         {"activity": "REST", "time": "14:00"},
     ]
     assert compute_activity_totals(single) == {
-        "DRIVE": 240, "WORK": 120, "REST": 600, "AVAILABLE": 0, "UNKNOWN": 0,
+        "DRIVE": 240, "WORK": 120, "REST": 600, "AVAILABLE": 0, "UNKNOWN": 480,
     }
 
 
