@@ -9,5 +9,6 @@ from core.parser.vu_dispatcher import (
     iter_vu_sections,
     walk_vu_record_arrays,
     RECORD_TYPES,
+    NORMATIVE_RECORD_TYPES,
     TREP_SECTIONS,
 )

@@ -613,6 +613,7 @@ _RECORD_TYPE_MAP = {
     0x04: "MemberStateCertificate",
     0x05: "OdometerValueMidnight",
     0x06: "DateOfDayDownloaded",
+    0x07: "SensorPaired",
     0x08: "SignatureRecord",
     0x09: "VuSpecificConditionRecord",
     0x0A: "VehicleIdentificationNumber",
@@ -634,6 +635,7 @@ _RECORD_TYPE_MAP = {
     0x1A: "VuOverSpeedingControlData",
     0x1B: "VuOverSpeedingEventRecord",
     0x1C: "VuPlaceDailyWorkPeriodRecord",
+    0x1D: "VuTimeAdjustmentGNSSRecord",
     0x1E: "VuTimeAdjustmentRecord",
     0x1F: "VuPowerSupplyInterruptionRecord",
     0x20: "VuSensorPairedRecord",
@@ -641,9 +643,9 @@ _RECORD_TYPE_MAP = {
     0x22: "VuBorderCrossingRecord",
     0x23: "VuLoadUnloadRecord",
     0x24: "VehicleRegistrationIdentification",
-    0x29: "ActivityChangeInfo_Slot2",
-    0x40: "VuDetailedSpeedSample",
-    0x60: "Terminator",
+    0x29: "RFU_0x29_Slot2Activity",
+    0x40: "RFU_0x40_DetailedSpeedSample",
+    0x60: "RFU_0x60_Terminator",
 }
 
 # Consolidated lookup: every known numeric code → human label(s).

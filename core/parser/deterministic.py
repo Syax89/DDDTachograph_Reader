@@ -393,7 +393,8 @@ class DeterministicParser:
         used for semantic decoding and signature verification). Bytes outside
         any section/record are classified as padding or unknown.
         """
-        from core.parser.vu_dispatcher import iter_vu_sections, RECORD_TYPES, TREP_SECTIONS
+        from core.parser.vu_dispatcher import (
+            iter_vu_sections, RECORD_TYPES, TREP_SECTIONS, NORMATIVE_RECORD_TYPES)
 
         data = bytes(raw_data)
         for sec in iter_vu_sections(data):
@@ -414,12 +415,13 @@ class DeterministicParser:
                 self.coverage.mark_classified(pos, end, f"Tag_76{trep:02X} > RecordType_{rt:02X}")
                 payload = data[pos + 5:end]
                 key = f"{sec_key} > {rt:02X}_{name}"
+                normative = rt in NORMATIVE_RECORD_TYPES
                 self.results["raw_tags"].setdefault(key, []).append({
                     "offset": f"0x{pos:08X}", "tag_id": f"0x{rt:04X}",
                     "tag_name": name, "data_type": "RecordArray",
                     "length": end - pos - 5, "depth": 1,
                     "record_size": rs, "no_of_records": nr,
-                    "is_spec_verified": confidence in ("high", "medium"),
+                    "is_spec_verified": normative and confidence in ("high", "medium"),
                     "annex_ref": "Annex 1C Appendix 7", "generation": self.generation,
                     "data_hex": payload.hex() if len(payload) <= 128 else f"{payload[:128].hex()}..."
                 })
