@@ -5,7 +5,9 @@ import pytest
 
 pytest.importorskip("tkinter")
 
-from app.gui import TachoExplorer, _columns_for, fmt_val
+import tkinter as tk
+
+from app.gui import DayDetailWindow, TachoExplorer, _changes_for_slot, _columns_for, fmt_val
 
 
 def test_gui_scalar_formatting_matches_existing_display_output():
@@ -122,3 +124,74 @@ def test_day_detail_uses_the_same_slot_filter_as_the_summary(monkeypatch):
     app._on_dashboard_double_click(Mock(y=10))
 
     assert [c["activity"] for c in captured["changes"]] == ["DRIVE", "WORK"]
+
+
+def test_day_detail_slot_split_matches_the_dashboard():
+    """M20: DayDetailWindow re-split its activities with its own rules.
+
+    The old split invented a change with no ``slot`` key into slot 1 (default
+    ``"First"``) and dropped a change with ``slot=""`` from *both* tabs. It must
+    use the same unassigned semantics as ``_changes_for_slot``: a slot-less
+    change is shown in both tabs and attributed to neither.
+    """
+    try:
+        root = tk.Tk()
+    except tk.TclError:
+        pytest.skip("no display available")
+    root.withdraw()
+
+    def opened(activities, day):
+        win = DayDetailWindow(root, day, activities, 0, len(activities),
+                              "", {}, [], [], [], {}, is_vu=True)
+        try:
+            return (win, [c["activity"] for c in win._act_slot1],
+                    [c["activity"] for c in win._act_slot2])
+        finally:
+            DayDetailWindow._open_windows.clear()
+
+    def split(activities, day):
+        win, s1, s2 = opened(activities, day)
+        win.destroy()
+        return s1, s2
+
+    try:
+        # a change with NO slot key -> both tabs (was: invented into slot 1)
+        assert split([{"activity": "WORK", "time": "10:00"}], "d1") == (
+            ["WORK"], ["WORK"])
+        # a change with slot="" -> both tabs (was: dropped from both)
+        assert split([{"activity": "WORK", "time": "10:00", "slot": ""}], "d2") == (
+            ["WORK"], ["WORK"])
+        # real slots stay in their own tab only
+        assert split([{"activity": "DRIVE", "time": "08:00", "slot": "First"}], "d3") == (
+            ["DRIVE"], [])
+        assert split([{"activity": "REST", "time": "12:00", "slot": "Second"}], "d4") == (
+            [], ["REST"])
+
+        mixed = [
+            {"activity": "DRIVE", "time": "08:00", "slot": "First"},
+            {"activity": "REST", "time": "12:00", "slot": "Second"},
+            {"activity": "WORK", "time": "10:00"},                    # no slot key
+            {"activity": "AVAILABLE", "time": "14:00", "slot": ""},   # slot-less
+        ]
+        win, s1, s2 = opened(mixed, "d5")
+        # exactly the dashboard's split: nothing invented, nothing dropped
+        assert s1 == [c["activity"] for c in _changes_for_slot(mixed, "First")]
+        assert s2 == [c["activity"] for c in _changes_for_slot(mixed, "Second")]
+        assert s1 == ["DRIVE", "WORK", "AVAILABLE"]
+        assert s2 == ["REST", "WORK", "AVAILABLE"]
+        # The header count and the rendered slot-1 view are per-tab: a mutant
+        # whose total/render sums slot1 + slot2 would double-count them.
+        assert "3 activity changes" in win._header_info.cget("text")
+        win.destroy()
+
+        win2, _, _ = opened([
+            {"activity": "DRIVE", "time": "00:00", "slot": "First"},
+            {"activity": "REST", "time": "12:00", "slot": "Second"},
+        ], "d6")
+        body = win2.text.get("1.0", tk.END).split("Summary\n", 1)[0]
+        assert "Drive" in body
+        assert "Rest" not in body   # slot 2's REST must not render in the slot-1 tab
+        win2.destroy()
+    finally:
+        DayDetailWindow._open_windows.clear()
+        root.destroy()

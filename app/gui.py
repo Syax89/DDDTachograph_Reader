@@ -1292,13 +1292,15 @@ class DayDetailWindow(tk.Toplevel):
         self._oos_events = oos_events or []
         self._changes_count = changes_count
 
-        # Split activities by slot (VU files have two slots)
-        self._act_slot1 = [c for c in (activities or [])
-                           if isinstance(c, dict)
-                           and c.get("slot", "First") == "First"]
-        self._act_slot2 = [c for c in (activities or [])
-                           if isinstance(c, dict)
-                           and c.get("slot", "") == "Second"]
+        # Split activities by slot (VU files have two slots) with the SAME
+        # unassigned semantics as the dashboard: _changes_for_slot keeps the
+        # selected slot's changes plus any change that carries no slot at all.
+        # A slot-less change belongs to neither slot, is shown in BOTH tabs
+        # (never invented into slot 1, never dropped), and each tab renders
+        # exactly one of these lists — never slot1 + slot2 — so an unassigned
+        # change visible in both tabs cannot inflate a total.
+        self._act_slot1 = _changes_for_slot(activities or [], "First")
+        self._act_slot2 = _changes_for_slot(activities or [], "Second")
         self._current_slot = 1
 
         # ── Header ──
