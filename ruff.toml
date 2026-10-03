@@ -10,5 +10,4 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"gui_tree.py" = ["E402"]   # imports after the Windows High-DPI setup block
 "build.spec" = ["E402", "F821"]  # PyInstaller spec: Analysis/EXE are injected globals
