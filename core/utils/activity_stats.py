@@ -10,36 +10,52 @@ Semantics:
   independent.
 - Drive/Work durations are summed across slots (each driver accumulates
   independently).
-- Rest/Available durations are kept at the **maximum** across slots because
-  they share the same 24h day and cannot exceed it.
+- Rest/Available/Unknown durations are kept at the **maximum** across slots
+  because they share the same 24h day and cannot exceed it (they are periods,
+  not additive).
+- An activity label that is not one of the four recognised kinds is bucketed
+  as ``UNKNOWN`` rather than silently dropped, so no recorded hour disappears
+  from the totals.
 - The day ends at 86400 seconds (``24:00``).
-- Non-dict entries and unparsable times are skipped.
+- Non-dict entries and unusable (out-of-range / unparsable) times are skipped.
 """
 
 # Recognised activity kinds; order matches the GUI's ACTIVITY_COLORS keys.
 ACTIVITY_KINDS = ("DRIVE", "WORK", "REST", "AVAILABLE")
+# Bucket for any activity label outside ACTIVITY_KINDS (see app/gui.py:1704).
+UNKNOWN_ACTIVITY = "UNKNOWN"
 
 
 def parse_time(time_str):
-    """Parse an ``'HH:MM'`` time to seconds since midnight, or None.
+    """Parse an ``'HH:MM'`` time to seconds since midnight, or ``None``.
 
-    Same semantics as ``ActivityTimelineChart._parse_time`` in app/gui.py:
-    exactly two colon-separated integer parts, otherwise None.
+    Only exactly two colon-separated integer parts inside a real clock range
+    are accepted: ``0 <= hours <= 24``, ``0 <= minutes < 60``, with ``24:00``
+    the only valid 24-hour value. Out-of-range values (``'25:00'``,
+    ``'08:75'``, ``'24:01'``) and negative values are rejected as unusable
+    (``None``). This is the range guard the report's former ``_time_to_minutes``
+    applied; every consumer (report tables, PDF cover, CLI summary and the GUI
+    timeline) now routes through this single function.
     """
     parts = str(time_str).split(":")
     if len(parts) != 2:
         return None
     try:
-        return int(parts[0]) * 3600 + int(parts[1]) * 60
-    except ValueError:
+        hours, minutes = int(parts[0]), int(parts[1])
+    except (ValueError, TypeError):
         return None
+    if not 0 <= hours <= 24 or not 0 <= minutes < 60 or (hours == 24 and minutes):
+        return None
+    return hours * 3600 + minutes * 60
 
 
 def compute_activity_totals(changes):
     """Return dict {ACTIVITY: total_minutes} from a list of activity changes.
 
-    Keys: DRIVE, WORK, REST, AVAILABLE.  See module docstring for the
-    slot-grouping / sum-vs-max semantics.
+    Keys: DRIVE, WORK, REST, AVAILABLE, UNKNOWN. Any activity label outside the
+    recognised kinds is accumulated as UNKNOWN so its hours stay in the totals
+    instead of vanishing. See the module docstring for the slot-grouping /
+    sum-vs-max semantics (UNKNOWN uses max, like REST/AVAILABLE).
     """
     ACCUM_BY_SUM = {"DRIVE", "WORK"}
     per_slot: dict[str, list] = {}
@@ -47,12 +63,15 @@ def compute_activity_totals(changes):
         if not isinstance(ch, dict):
             continue
         t = parse_time(ch.get("time", ""))
+        if t is None:
+            continue
         act = str(ch.get("activity", "")).upper()
-        if t is not None and act in ACTIVITY_KINDS:
-            slot = str(ch.get("slot") or "First")
-            per_slot.setdefault(slot, []).append((t, act))
+        if act not in ACTIVITY_KINDS:
+            act = UNKNOWN_ACTIVITY
+        slot = str(ch.get("slot") or "First")
+        per_slot.setdefault(slot, []).append((t, act))
 
-    totals = {a: 0 for a in ACTIVITY_KINDS}
+    totals = {a: 0 for a in ACTIVITY_KINDS + (UNKNOWN_ACTIVITY,)}
     for parsed in per_slot.values():
         parsed.sort(key=lambda item: item[0])
         slot_tot: dict[str, int] = {}

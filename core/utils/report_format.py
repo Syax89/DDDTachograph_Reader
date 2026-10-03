@@ -344,10 +344,12 @@ def _compute_day_hours(day):
 
     Delegates to :func:`core.utils.activity_stats.compute_activity_totals`, the
     single slot-aware engine also used by the PDF cover (``app/export.py``), the
-    GUI dashboard and the CLI summary. The previous in-file implementation
-    walked ``changes`` in list order, ignored ``slot`` and never sorted, so a
-    crew day (both slots recording at once) was counted twice and could add up
-    to a 48-hour day that contradicted the cover stats in the same report.
+    GUI dashboard and the CLI summary. The old in-file implementation walked
+    ``changes`` in list order, ignored ``slot`` and never sorted, so it summed
+    overlapping periods from both card slots (an impossible >24h REST/Available
+    day) and disagreed with the cover stats in the same document. The invariant
+    now is agreement, not a 24h ceiling: report tables, cover, GUI and CLI all
+    derive from this one engine for the same input.
     """
     changes = day.get("changes") or []
     buckets = {"drive": 0, "work": 0, "rest": 0, "available": 0, "unknown": 0}
@@ -358,6 +360,7 @@ def _compute_day_hours(day):
     buckets["work"] = totals["WORK"]
     buckets["rest"] = totals["REST"]
     buckets["available"] = totals["AVAILABLE"]
+    buckets["unknown"] = totals["UNKNOWN"]
     return buckets, sum(buckets.values())
 
 
