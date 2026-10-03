@@ -2139,13 +2139,38 @@ class TachoExplorer(tk.Tk):
             # A failed re-open keeps the previously loaded file exportable.
             self.btn_export.config(state=tk.NORMAL)
 
+    def _reset_file_display(self):
+        """Clear every per-file display field a successful load sets.
+
+        A fatal parse must not leave the previous file's identity (filename,
+        generation badge, integrity banner and collected warnings) on screen,
+        or the user attributes them to the file that just failed to open
+        (H-F5). The previous downloads' *data* is deliberately retained so it
+        stays exportable; only the on-screen identity is reset.
+        """
+        self.lbl_file.config(text="No file loaded")
+        self.lbl_gen.config(text="")
+        self.lbl_status.config(text="")
+        self.integrity_banner.config(text="")
+        self._integrity_warnings = []
+        self._integrity_file = ""
+        self.title(f"Tacho Explorer v{__version__}")
+
     def _parse_error(self, msg):
         self._finish_parse()
+        self._reset_file_display()
         try:
             messagebox.showerror("Parsing Error", str(msg))
         except Exception:
             pass
-        self.status.config(text="Ready \u2014 open a .ddd file")
+        if self.current_data:
+            # A failed re-open keeps the previously loaded file exportable, but
+            # the status must make clear that what is shown is NOT the new file.
+            self.status.config(
+                text=f"Parsing error \u2014 showing previous file: "
+                     f"{os.path.basename(self.current_file or '')}")
+        else:
+            self.status.config(text="Ready \u2014 open a .ddd file")
 
     # ── Export ────────────────────────────────────────────
 
@@ -2366,12 +2391,15 @@ class TachoExplorer(tk.Tk):
         sv = data.get("signature_verification") or {}
         treps = sv.get("treps") or []
         if treps:
-            valid = sum(1 for t in treps if t.get("signature_valid") is True)
-            total = len(treps)
-            if valid < total:
+            # Reuse the verifier's own accounting (app/engine.py for G1,
+            # core/crypto/vu_signature.py for G2). TREP 0x11/0x14 sensor
+            # sections carry signature_valid=None ("signature not applicable")
+            # and must not be recounted over len(treps): doing so produced a
+            # spurious warning on a fully verified G1 VU download.
+            if not sv.get("all_treps_valid"):
                 warnings.append(
-                    f"\u2022 VU sections validated: {valid}/{total} "
-                    f"signature(s) verified; {total - valid} NOT validated")
+                    f"\u2022 VU sections validated: "
+                    f"{sv.get('summary') or 'not all sections were validated'}")
         elif sv.get("available") is False:
             warnings.append(
                 "\u2022 VU sections validated: 0 \u2014 signatures could not be "
@@ -3411,13 +3439,20 @@ class TachoExplorer(tk.Tk):
         slot_label = getattr(self, "_vu_slot_filter", "Slot 1")
         slot_name = "First" if slot_label == "Slot 1" else "Second"
 
-        # Build a filtered view: each day's changes limited to the chosen slot
+        # Build a filtered view: each day's changes limited to the chosen slot.
+        # Changes that carry no slot at all (heuristic G1 VU TREP 02 activities,
+        # see core/decoders/vu_g1.py) are kept in every slot view rather than
+        # dropped: excluding them zeroed every activity total of the day while
+        # the same rows stayed visible in the day tree. No slot is invented for
+        # them; they are simply treated as unassigned and still counted.
         if is_vu:
             filtered = []
             for day_data in valid:
                 all_changes = day_data.get("changes", [])
-                filtered_changes = [c for c in all_changes
-                                    if isinstance(c, dict) and str(c.get("slot") or "") == slot_name]
+                filtered_changes = [
+                    c for c in all_changes
+                    if isinstance(c, dict)
+                    and str(c.get("slot") or "") in ("", slot_name)]
                 copy = dict(day_data)
                 copy["changes"] = filtered_changes
                 filtered.append(copy)

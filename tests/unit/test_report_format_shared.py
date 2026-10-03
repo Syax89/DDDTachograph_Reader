@@ -40,3 +40,28 @@ def test_monthly_report_sorts_by_year_then_month():
 
     total_rows = [r[0] for r in rows if str(r[0]).endswith("TOTAL")]
     assert total_rows == ["02/2023 TOTAL", "11/2023 TOTAL", "01/2024 TOTAL"]
+
+
+def test_monthly_report_is_slot_aware_for_crew_days():
+    """F-F1 / XF-F1 / XG-F1: the report engine must group by card slot.
+
+    The old in-file engine walked ``changes`` in list order and ignored
+    ``slot``, so a crew day (both slots recording at once) was double-counted
+    into a 48-hour day that contradicted the cover stats. The shared slot-aware
+    engine sums DRIVE/WORK across slots and keeps REST/AVAILABLE at the max:
+    two 8h-drive slots give 16h DRIVE and 16h REST (32h total), never 48h.
+    """
+    crew = [
+        {"activity": "DRIVE", "time": "00:00", "slot": "First"},
+        {"activity": "REST",  "time": "08:00", "slot": "First"},
+        {"activity": "DRIVE", "time": "00:00", "slot": "Second"},
+        {"activity": "REST",  "time": "08:00", "slot": "Second"},
+    ]
+
+    _, rows = build_monthly_activity_report(
+        [{"date": "01/05/2025", "odometer_km": 1234, "changes": crew}])
+
+    assert rows[0] == ["01/05/2025", "1234", "16:00", "00:00", "16:00",
+                       "00:00", "00:00", "32:00"]
+    assert rows[1][0] == "05/2025 TOTAL"
+    assert rows[1][-1] == "32:00"

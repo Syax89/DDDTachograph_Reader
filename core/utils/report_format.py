@@ -8,6 +8,8 @@ humanised (``vehicle_plate`` → ``Vehicle Plate``).
 """
 import re
 
+from core.utils.activity_stats import compute_activity_totals
+
 # Tachograph "data not available" sentinels.
 _NOT_AVAILABLE_INTS = {0xFFFFFF, 0xFFFFFFFF}
 _ISO_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2})?")
@@ -327,19 +329,6 @@ def records_to_table(records):
     return headers, rows
 
 
-def _time_to_minutes(time_str):
-    parts = str(time_str).split(":")
-    if len(parts) != 2:
-        return None
-    try:
-        hours, minutes = (int(part) for part in parts)
-    except ValueError:
-        return None
-    if not 0 <= hours <= 24 or not 0 <= minutes < 60 or (hours == 24 and minutes):
-        return None
-    return hours * 60 + minutes
-
-
 def _hours_str(minutes):
     h = minutes // 60
     m = minutes % 60
@@ -351,37 +340,25 @@ ACTIVITY_COL_KEYS = ["drive", "work", "rest", "available", "unknown"]
 
 
 def _compute_day_hours(day):
+    """Per-day activity buckets in minutes, grouped by card slot.
+
+    Delegates to :func:`core.utils.activity_stats.compute_activity_totals`, the
+    single slot-aware engine also used by the PDF cover (``app/export.py``), the
+    GUI dashboard and the CLI summary. The previous in-file implementation
+    walked ``changes`` in list order, ignored ``slot`` and never sorted, so a
+    crew day (both slots recording at once) was counted twice and could add up
+    to a 48-hour day that contradicted the cover stats in the same report.
+    """
     changes = day.get("changes") or []
     buckets = {"drive": 0, "work": 0, "rest": 0, "available": 0, "unknown": 0}
-    key_map = {"DRIVE": "drive", "WORK": "work", "REST": "rest",
-               "AVAIL": "available", "AVAILABLE": "available"}
     if not isinstance(changes, list) or not changes:
         return buckets, 0
-    if len(changes) == 1:
-        ch = changes[0]
-        if isinstance(ch, dict):
-            act = str(ch.get("activity", "")).upper()
-            bucket = key_map.get(act, "unknown")
-            buckets[bucket] = 24 * 60
-        return buckets, 24 * 60
-    for i in range(len(changes)):
-        ch = changes[i]
-        if not isinstance(ch, dict):
-            continue
-        act = str(ch.get("activity", "")).upper()
-        bucket = key_map.get(act, "unknown")
-        t1 = _time_to_minutes(str(ch.get("time", "00:00")))
-        if i + 1 < len(changes):
-            t2 = _time_to_minutes(str(changes[i + 1].get("time", "00:00")))
-        else:
-            t2 = 24 * 60
-        if t1 is None or t2 is None:
-            continue
-        if t2 < t1:
-            t2 += 24 * 60
-        buckets[bucket] += t2 - t1
-    total = sum(buckets.values())
-    return buckets, total
+    totals = compute_activity_totals(changes)
+    buckets["drive"] = totals["DRIVE"]
+    buckets["work"] = totals["WORK"]
+    buckets["rest"] = totals["REST"]
+    buckets["available"] = totals["AVAILABLE"]
+    return buckets, sum(buckets.values())
 
 
 def build_monthly_activity_report(activities):

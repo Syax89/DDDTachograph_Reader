@@ -68,3 +68,90 @@ def test_gui_rejects_structured_parse_error_before_rendering():
 
     app._parse_error.assert_called_once_with("Empty file")
     app._populate_tree.assert_not_called()
+
+
+def _g1_vu_data(all_treps_valid, treps):
+    return {
+        "metadata": {"is_vu": True, "integrity_check": "Verified (VU Chain)"},
+        "coverage": {},
+        "signature_verification": {
+            "available": True, "msca_to_vu": True, "root_anchored": True,
+            "all_treps_valid": all_treps_valid,
+            "summary": "G1 VU TREP signatures: 1/1 valid",
+            "treps": treps,
+        },
+    }
+
+
+def test_g1_sensor_treps_do_not_raise_a_spurious_integrity_warning(monkeypatch):
+    """H-F2: TREP 0x11/0x14 carry ``signature_valid=None`` ("not applicable").
+
+    Recounting them over ``len(treps)`` reported "1/3 verified; 2 NOT
+    validated" and popped a "File Integrity Warning" on an otherwise fully
+    verified G1 VU download. The GUI must reuse the verifier's verdict.
+    """
+    app = object.__new__(TachoExplorer)
+    app.integrity_banner = Mock()
+    app._integrity_warnings = []
+    app._integrity_file = ""
+    monkeypatch.setattr("app.gui.messagebox", Mock())
+
+    data = _g1_vu_data(True, [
+        {"trep": "0x01", "signature_valid": True},
+        {"trep": "0x11", "signature_valid": None, "reason": "signature not applicable"},
+        {"trep": "0x14", "signature_valid": None, "reason": "signature not applicable"},
+    ])
+
+    app._check_integrity(data, "g1vu.ddd")
+
+    assert app._integrity_warnings == []
+    assert app.integrity_banner.config.call_args.kwargs["text"] == ""
+
+
+def test_g1_failed_trep_still_raises_an_integrity_warning(monkeypatch):
+    """Control for H-F2: a genuine failure must still warn."""
+    app = object.__new__(TachoExplorer)
+    app.integrity_banner = Mock()
+    app._integrity_warnings = []
+    app._integrity_file = ""
+    monkeypatch.setattr("app.gui.messagebox", Mock())
+
+    data = _g1_vu_data(False, [
+        {"trep": "0x01", "signature_valid": True},
+        {"trep": "0x02", "signature_valid": False},
+    ])
+
+    app._check_integrity(data, "g1vu.ddd")
+
+    assert any("VU sections validated" in w for w in app._integrity_warnings)
+
+
+def test_fatal_parse_clears_the_previous_file_display(monkeypatch):
+    """H-F5: a fatal parse must not leave the previous file's identity,
+    integrity banner or collected warnings on screen."""
+    app = object.__new__(TachoExplorer)
+    app.lbl_file = Mock()
+    app.lbl_gen = Mock()
+    app.lbl_status = Mock()
+    app.integrity_banner = Mock()
+    app.status = Mock()
+    app.title = Mock()
+    app.progress = Mock()
+    app.btn_open = Mock()
+    app.btn_export = Mock()
+    app._parsing = True
+    app.current_data = {"metadata": {"generation": "G2 (Smart)"}}
+    app.current_file = "first_file.ddd"
+    app._integrity_warnings = ["\u2022 5 bytes classified as Unknown (unparseable)"]
+    app._integrity_file = "first_file.ddd"
+    monkeypatch.setattr("app.gui.messagebox", Mock())
+
+    app._parse_error("no structural data recovered")
+
+    assert app._integrity_warnings == []
+    assert app._integrity_file == ""
+    assert app.integrity_banner.config.call_args.kwargs["text"] == ""
+    assert app.lbl_file.config.call_args.kwargs["text"] == "No file loaded"
+    assert app.lbl_gen.config.call_args.kwargs["text"] == ""
+    # The previous file stays exportable, but the status says so explicitly.
+    assert "previous file" in app.status.config.call_args.kwargs["text"]
