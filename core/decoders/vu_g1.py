@@ -177,9 +177,15 @@ def parse_g1_vu_overview(val, results):
         # the three TimeReal fields at 420-432 decodes to a plausible date.
         # This rejects false-positive 0x76 0x01 markers inside certificate or
         # activity data (which is dense with valid timestamps).
+        # The TREP 01 body starts at the MemberStateCertificate (offset 0): the
+        # caller already stripped the SID/TREP bytes. The alignment is chosen
+        # from the verified field shape (VIN at 388 must be 17 alphanumeric
+        # chars AND a plausible TimeReal at 420-432), NEVER from a single
+        # unconstrained byte: the certificate's first byte is an RSA signature
+        # byte and is 0x00 by chance ~1/256 — keying the shift on it would move
+        # the VIN/plate/nation/date/slot fields and publish a wrong identity.
         body = None
-        candidates = [val[2:], val] if (len(val) > 2 and val[0] == 0x00) else [val, val[2:]]
-        for cand in candidates:
+        for cand in (val, val[2:]):
             if len(cand) >= 433:
                 vin_check = decode_string(cand[388:405], is_id=True)
                 ts_fields = struct.unpack(">III", cand[420:432])
@@ -189,7 +195,7 @@ def parse_g1_vu_overview(val, results):
                     break
         body_validated = body is not None
         if body is None:
-            body = val[2:] if len(val) > 2 and val[0] == 0x00 else val
+            body = val
 
         if body_validated:
             try:
@@ -295,13 +301,19 @@ def parse_g1_vu_overview(val, results):
 def parse_vu_download_messages(raw_data, results):
     """Parse VU download messages (SID 0x76 + TREP) in the raw binary data.
     
-    Message types (TREP):
+    Message types (TREP), Annex 1B §2.2.6:
       0x01 = Overview (certificates + vehicle ID)
       0x02 = Activities (card holder + daily activity records)
       0x03 = Events & Faults
       0x04 = Detailed speed data
       0x05 = Technical data (calibrations)
       0x06 = Card download
+
+    Runs only when the deterministic walk could not validate the whole stream.
+    Each message is handed its own bounded slice of the buffer at most once;
+    a CardDownload (whose length is implicit) is decoded a single time over the
+    remaining tail, so k embedded ``76 06`` byte pairs no longer re-parse the
+    whole tail per marker (O(k·n) → O(n)).
     """
     try:
         pos = 0
@@ -313,8 +325,25 @@ def parse_vu_download_messages(raw_data, results):
                     found_messages.append((pos, trep))
             pos += 1
 
-        for msg_offset, trep in found_messages:
-            data = raw_data[msg_offset + 2:]  # Skip SID+TREP
+        n = len(raw_data)
+        card_region_end = -1
+        for i, (msg_offset, trep) in enumerate(found_messages):
+            if trep == 0x06:
+                # A CardDownload has no length field: decode the tail once from
+                # its first marker. Subsequent 06 markers lie inside that
+                # already-decoded region (embedded byte pairs), so skip them
+                # instead of re-parsing the whole tail for each.
+                if msg_offset < card_region_end:
+                    continue
+                data = raw_data[msg_offset + 2:]
+                _parse_trep_06_card_download(data, results)
+                card_region_end = n
+                continue
+            body_start = msg_offset + 2
+            body_end = found_messages[i + 1][0] if i + 1 < len(found_messages) else n
+            if body_end <= body_start:
+                continue
+            data = raw_data[body_start:body_end]
             if trep == 0x01:
                 parse_g1_vu_overview(data, results)
             elif trep == 0x02:
@@ -325,8 +354,6 @@ def parse_vu_download_messages(raw_data, results):
                 _parse_trep_04_speed(data, results)
             elif trep == 0x05:
                 _parse_trep_05_technical(data, results)
-            elif trep == 0x06:
-                _parse_trep_06_card_download(data, results)
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("VU download messages parse failed: %s", exc)
 
@@ -338,30 +365,32 @@ def _parse_trep_02_activities(data, results):
     """
     import re
     try:
+        # Deterministic G1 layout first (Annex 1B §2.2.6.2). A structurally
+        # valid G1 TREP 02 (including the 18-byte "card not inserted" day) is
+        # authoritative: it must never be routed to the G2 parser, because an
+        # odometer value such as 30242 km (0x007622) puts the byte pair
+        # ``76 22`` inside the body and a naive "0x7622 in data[:500]" sniff
+        # would silently discard the whole day + driver.
+        if _parse_trep_02_g1_structured(data, results):
+            return
+
         if len(data) < 50:
             return
 
-        # Detect G2 RecordArray format: starts with 0x76 marker or 0x6864 prefix
-        # followed by structured driver records and 0x7622/0x7632 daily records
+        # G2 RecordArray format: the body begins with the 0x6864 driver-record
+        # prefix (a structural marker), not merely a 0x7622/0x7632 byte pair
+        # somewhere in the payload.
         is_g2 = False
         if len(data) >= 4:
             lead = struct.unpack(">H", data[:2])[0]
             lead2 = struct.unpack(">H", data[1:3])[0]
             if lead == 0x6864 or lead2 == 0x6864:
                 is_g2 = True
-        if not is_g2:
-            for pattern in (b'\x76\x22', b'\x76\x32'):
-                if pattern in data[:500]:
-                    is_g2 = True
-                    break
 
         if is_g2:
             _log.debug("TREP 02: G2 RecordArray format detected, delegating to structured parser")
             from core.parser.record_array import parse_g2_trep02_activities
             parse_g2_trep02_activities(data, results)
-            return
-
-        if _parse_trep_02_g1_structured(data, results):
             return
 
         if len(data) < 110:

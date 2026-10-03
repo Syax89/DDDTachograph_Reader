@@ -146,33 +146,61 @@ def _trep14_body_len(d, p, n):
     return 2 if p + 2 <= n else None
 
 
-def _next_valid_marker(d, p, n, validation_depth=0):
+def _new_walk_ctx():
+    """Shared caches for one walk over a fixed ``(d, n)`` buffer.
+
+    ``markers`` memoises ``_next_valid_marker(p)`` by start offset and ``memo``
+    memoises ``_valid_chain_from(pos)`` by position. Both are pure functions of
+    the buffer, so sharing them across a whole walk keeps the nested
+    CardDownload boundary search polynomial instead of exponential.
+    """
+    return {"memo": {}, "markers": {}}
+
+
+def _next_valid_marker(d, p, n, validation_depth=0, ctx=None):
     """Return the next marker that starts a valid TREP chain, or EOF.
 
     TREP 06 CardDownload has no explicit length. Card EF payloads can contain
     byte pairs such as ``76 01`` that look like message markers, so a raw scan
     would split the card data in the middle. Accept a candidate boundary only
     when the remaining bytes form a valid Annex 1B TREP sequence.
+
+    *ctx* carries the shared memo/cache across a whole walk: without it every
+    nested CardDownload node restarts the boundary search from scratch, which a
+    crafted repeated ``76 04 00 00 76 06 00 00 00 00`` pattern turns into
+    exponential time.
     """
+    if ctx is None:
+        ctx = _new_walk_ctx()
+    markers = ctx["markers"]
+    if p in markers:
+        return markers[p]
+    memo = ctx["memo"]
     pos = p
-    memo = {}
+    result = n
     while pos < n - 1:
         if d[pos] == 0x76 and d[pos + 1] in TREP_NAMES:
             # A nested TREP 06 candidate cannot be disambiguated from card EF
             # payload without a length field; keep it inside the card download.
-            if d[pos + 1] != 0x06 and _valid_chain_from(d, pos, n, memo, validation_depth + 1):
-                return pos
+            if d[pos + 1] != 0x06 and _valid_chain_from(d, pos, n, memo, validation_depth + 1, ctx):
+                result = pos
+                break
         pos += 1
-    return n
+    markers[p] = result
+    return result
 
 
-def _valid_chain_from(d, pos, n, memo, validation_depth=0):
+def _valid_chain_from(d, pos, n, memo, validation_depth=0, ctx=None):
     """Return True if bytes from *pos* to EOF form a valid TREP sequence.
 
     This uses explicit DFS frames rather than Python recursion: a card-download
     marker can be followed by thousands of valid short TREP messages. Nested
     variable-length card-download checks are capped separately.
     """
+    if ctx is not None:
+        memo = ctx["memo"]
+    else:
+        ctx = {"memo": memo, "markers": {}}
     if validation_depth > MAX_CHAIN_VALIDATION_DEPTH:
         _log.debug("G1 TREP chain validation depth exceeded at 0x%X", pos)
         return False
@@ -200,7 +228,7 @@ def _valid_chain_from(d, pos, n, memo, validation_depth=0):
             trep = d[current + 1]
             body_start = current + 2
             if trep == 0x06:
-                body_len = _next_valid_marker(d, body_start, n, validation_depth + 1) - body_start
+                body_len = _next_valid_marker(d, body_start, n, validation_depth + 1, ctx) - body_start
             else:
                 body_len = _BODY_LEN_FNS[trep](d, body_start, n)
             if body_len is None:
@@ -261,12 +289,19 @@ def iter_g1_vu_messages(data):
     """
     n = len(data)
     pos = 0
+    ctx = _new_walk_ctx()
     while pos < n:
         if not _is_marker(data, pos):
             return
         trep = data[pos + 1]
         body_start = pos + 2
-        body_len = _BODY_LEN_FNS[trep](data, body_start, n)
+        if trep == 0x06:
+            # CardDownload length is determined by the boundary search; share
+            # the walk caches so each position is resolved once (see
+            # _next_valid_marker).
+            body_len = _next_valid_marker(data, body_start, n, ctx=ctx) - body_start
+        else:
+            body_len = _BODY_LEN_FNS[trep](data, body_start, n)
         if body_len is None:
             return
         body_end = body_start + body_len

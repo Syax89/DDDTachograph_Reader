@@ -1,4 +1,6 @@
 """Regression tests for malformed VU record recovery."""
+import struct
+
 from core.parser import g1_walker
 from core.parser.vu_dispatcher import walk_vu_record_arrays
 
@@ -49,3 +51,159 @@ def test_genuine_trep11_with_trailer_is_accepted():
 
     assert 0x11 in treps
     assert 0x14 in treps
+
+
+# ── B-F3: CardDownload boundary search must not blow up ──────────────────
+
+_CARD_PATTERN = bytes.fromhex("76040000760600000000")
+
+
+def test_carddownload_boundary_search_scales_polynomially(monkeypatch):
+    """A crafted repeated ``76 04 00 00 76 06 00 00 00 00`` payload hung the
+    walker (k=24 took 33.9s, k=50 >2min) because every nested TREP 06 restarted
+    the boundary search with a fresh memo. Guard by operation count — no wall
+    clock — so CI stays deterministic: base grows ~4x per +1 unit (k=8→127,
+    k=16→32767); fixed is linear (k=8→7, k=16→15)."""
+    real = g1_walker._valid_chain_from
+    calls = {"n": 0}
+
+    def counting(*args, **kwargs):
+        calls["n"] += 1
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(g1_walker, "_valid_chain_from", counting)
+
+    def measured(k):
+        calls["n"] = 0
+        list(g1_walker.iter_g1_vu_messages(_CARD_PATTERN * k))
+        return calls["n"]
+
+    small = measured(8)
+    large = measured(16)
+    assert large <= 4 * small + 8, (
+        f"_valid_chain_from calls grew super-linearly: k=8 -> {small}, "
+        f"k=16 -> {large}")
+
+
+def test_carddownload_is_not_silently_dropped():
+    """No silent drop: a valid TREP 06 body must still be followed by the
+    genuine TREP 04 that closes it (the readback that proves the cost fix did
+    not 'solve' the hang by discarding CardDownload sections)."""
+    data = b"\x76\x06" + b"card-payload" + b"\x76\x04\x00\x00"
+    messages = list(g1_walker.iter_g1_vu_messages(data))
+    assert [m["trep"] for m in messages] == [0x06, 0x04]
+    assert messages[0]["body_end"] == len(data) - 4
+    assert messages[-1]["end"] == len(data)
+
+
+# ── D-F1: byte-scan fallback must inspect each section once ──────────────
+
+def test_download_fallback_decodes_card_section_once(monkeypatch):
+    """The fallback re-parsed the whole tail once per ``76 06`` (O(k·n):
+    4KB→2s, 16KB→34s). It must now decode the CardDownload region once."""
+    from core.decoders import vu_g1
+
+    real = vu_g1._parse_trep_06_card_download
+    calls = {"n": 0}
+
+    def counting(*args, **kwargs):
+        calls["n"] += 1
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(vu_g1, "_parse_trep_06_card_download", counting)
+
+    chunk = bytes.fromhex("7606") + b"A" * 10
+    vu_g1.parse_vu_download_messages(chunk * 100, {})
+    assert calls["n"] <= 2, f"CardDownload re-parsed {calls['n']} times for 100 markers"
+
+
+# ── XB-F4 / D-F2: lying record count must not lose later sections ────────
+
+def _array(rt, rs, nr, fill=b"\x00"):
+    return bytes([rt]) + struct.pack(">HH", rs, nr) + fill * (rs * nr)
+
+
+def test_lying_record_count_keeps_later_section():
+    """An array whose declared rs*nr exceeds EOF used to ``break`` the whole
+    walk, silently losing every later section."""
+    data = (b"\x76\x31" + _array(0x01, 4, 2)
+            + bytes([0x03]) + struct.pack(">HH", 4, 20000)   # claims 80000 bytes
+            + b"\x76\x32" + _array(0x01, 4, 2))
+    results = {}
+    sections = walk_vu_record_arrays(data, results)
+
+    assert [s["trep"] for s in sections] == ["0x31", "0x32"]
+    assert results["_vu_walk_complete"] is False
+
+
+def test_truncated_g2_download_is_not_reported_complete(tmp_path):
+    """A download whose last section declares more bytes than exist must fail
+    closed (complete_walk False / partial), never be reported complete."""
+    from app.engine import TachoParser
+
+    data = (b"\x76\x31" + _array(0x01, 4, 2)
+            + b"\x76\x32" + _array(0x01, 4, 2)
+            + b"\x76\x33" + _array(0x01, 4, 2)
+            + b"\x76\x35" + bytes([0x01]) + struct.pack(">HH", 4, 300))
+    path = tmp_path / "truncated.ddd"
+    path.write_bytes(data)
+
+    report = TachoParser(str(path)).parse()["metadata"]["trep_report"]
+    assert report["complete_walk"] is False
+    assert report["is_partial"] is True
+
+
+# ── XD-F2: dense stream must be bounded and fail closed ──────────────────
+
+def test_dense_stream_record_cap_fails_closed(monkeypatch):
+    """Per-array cap 20000 does not bound the stream. With the global cap the
+    walk stops, reports partial, and never allocates unbounded dicts."""
+    from core.parser import vu_dispatcher
+    from core.utils.constants import RECORD_ARRAY_MAX_RECORDS, VU_MAX_TOTAL_RECORDS
+
+    assert VU_MAX_TOTAL_RECORDS >= RECORD_ARRAY_MAX_RECORDS
+
+    monkeypatch.setattr(vu_dispatcher, "VU_MAX_TOTAL_RECORDS", 100)
+    data = b"\x76\x31" + _array(0x01, 1, 20000, b"\x01")
+
+    results = {}
+    sections = walk_vu_record_arrays(data, results)
+    decoded = sum(sum(s["record_counts"].values()) for s in sections)
+
+    assert results["_vu_walk_complete"] is False
+    assert results["_vu_walk_record_cap"] == 100
+    assert decoded == 100, f"decoded {decoded} records despite cap of 100"
+
+
+def test_dense_stream_below_cap_is_complete():
+    """Negative sibling: a small, valid stream stays complete (the cap is not a
+    blanket 'partial' verdict)."""
+    results = {}
+    walk_vu_record_arrays(b"\x76\x31" + _array(0x01, 4, 3), results)
+    assert results["_vu_walk_complete"] is True
+
+
+# ── D-F3 / D2-008: generation from the leading TRTP marker ───────────────
+
+def test_generation_from_leading_trtp_marker():
+    from core.parser.deterministic import DeterministicParser
+
+    def gen(first_two):
+        return DeterministicParser()._detect_generation(first_two + b"\x00" * 40)
+
+    # Gen 2.2 selective downloads may start with any G2.2 TRTP, incl. TREP 00.
+    for trep in (0x00, 0x31, 0x32, 0x33, 0x34, 0x35):
+        assert gen(bytes([0x76, trep])) == "G2.2", f"76 {trep:02X} should be G2.2"
+    for trep in (0x21, 0x22, 0x23, 0x24, 0x25):
+        assert gen(bytes([0x76, trep])) == "G2", f"76 {trep:02X} should be G2"
+    for trep in (0x01, 0x02, 0x03, 0x05, 0x06):
+        assert gen(bytes([0x76, trep])) == "G1", f"76 {trep:02X} should be G1"
+
+
+def test_g1_file_with_inner_g2_marker_stays_g1():
+    """Generation must come from the leading marker, never a byte pair inside a
+    record: a G1 file (76 01) containing 76 32 in its body stays G1."""
+    from core.parser.deterministic import DeterministicParser
+
+    data = b"\x76\x01" + b"\x00" * 5 + b"\x76\x32" + b"\x00" * 40
+    assert DeterministicParser()._detect_generation(data) == "G1"

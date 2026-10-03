@@ -6,6 +6,10 @@ STAP_HEADER_SIZE = 5
 MAX_RECURSION_DEPTH = 12
 RECORD_ARRAY_MAX_RECORDS = 20000
 RECORD_ARRAY_MAX_SIZE = 4096
+# Global cap on records decoded from one VU RecordArray stream. The per-array
+# cap above does not bound the stream, so a small densely-packed file could
+# otherwise amplify into hundreds of MB of per-record dicts.
+VU_MAX_TOTAL_RECORDS = 500000
 MAX_ODO_DISTANCE_KM = 1000000
 
 # CVC validity fields: 0x5F25 is effective/not-before; 0x5F24 is
