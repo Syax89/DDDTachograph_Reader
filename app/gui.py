@@ -267,6 +267,18 @@ def _fmt_duration_minutes(mins):
     return f"{mins // 60}h {mins % 60:02d}m"
 
 
+def _fmt_seconds_duration(seconds):
+    """Render a whole-second count as a duration without truncating a
+    non-zero value to "0 min" (GUI-SPEED-ROUNDING, G-F5).  Values under a
+    minute are shown in seconds; longer ones keep minutes and drop the
+    residual seconds only when they are exactly zero."""
+    seconds = max(0, int(seconds))
+    if seconds < 60:
+        return f"{seconds} s"
+    minutes, rest = divmod(seconds, 60)
+    return f"{minutes} min {rest} s" if rest else f"{minutes} min"
+
+
 def detailed_speed_by_day(data):
     """Return UTC detailed-speed samples grouped by ISO date."""
     grouped = {}
@@ -547,8 +559,9 @@ class DetailedSpeedChart(ttk.Frame):
         self.summary_lbl.config(
             text=(f"{recorded:,} s recorded | max {max(speeds)} km/h | "
                   f"avg {sum(speeds) / recorded:.1f} km/h | "
-                  f"{above_limit // 60} min above {self._speed_limit} km/h | "
-                  f"{moving // 60} min moving | {internal_gaps // 60} min internal gaps")
+                  f"{_fmt_seconds_duration(above_limit)} above {self._speed_limit} km/h | "
+                  f"{_fmt_seconds_duration(moving)} moving | "
+                  f"{_fmt_seconds_duration(internal_gaps)} internal gaps")
             if speeds else "No valid speed samples")
         self._schedule_draw()
 
@@ -1473,7 +1486,10 @@ class DayDetailWindow(tk.Toplevel):
                 entries.append((im, 520, "MANUAL", hhmm, label,
                                 detail, 0, odo_str))
             else:
-                name = f"{rec.get('holder_surname','')} {rec.get('holder_first_names','')}".strip()
+                # GUI-NAME-ORDER (H-F8): render "First names Surname", as the
+                # dashboard table and _populate_daily_activities already do —
+                # not the reversed "Surname First names".
+                name = f"{rec.get('holder_first_names','')} {rec.get('holder_surname','')}".strip()
                 if not name or name == "N/A N/A":
                     name = rec.get("card_number", "") or "Unknown"
                 label = "Card inserted"
@@ -1711,7 +1727,8 @@ class DayDetailWindow(tk.Toplevel):
             ins_dt = _parse_iso(rec.get("insertion_time", ""))
             if not ins_dt or ins_dt.date().isoformat() != self._iso_date:
                 continue
-            name = f"{rec.get('holder_surname','')} {rec.get('holder_first_names','')}".strip()
+            # GUI-NAME-ORDER (H-F8): "First names Surname", not reversed.
+            name = f"{rec.get('holder_first_names','')} {rec.get('holder_surname','')}".strip()
             if not name or name == "N/A N/A":
                 name = rec.get("card_number", "") or "Unknown"
             start_min = ins_dt.hour * 60 + ins_dt.minute
@@ -2354,13 +2371,26 @@ class TachoExplorer(tk.Tk):
             self._update_top_bar(data)
             self.btn_export.config(state=tk.NORMAL)
             target = getattr(self, "_auto_select_iid", None)
+            if target and not self.tree.exists(target):
+                target = None  # stale iid from a previous file's tree
             if not target:
                 children = self.tree.get_children("")
                 target = children[0] if children else None
+            # GUI-STALE-TABLE (XG-F4): the node's table is rendered by the
+            # deferred <<TreeviewSelect>> event, so between the filename update
+            # above and that event the pane still showed the PREVIOUS file's
+            # rows under the NEW filename. Replace the pane synchronously with
+            # an explicit placeholder (never the old file's data) and keep the
+            # single deferred render of the chosen node.
             if target:
+                self._show_empty(os.path.basename(path), "Loading\u2026")
                 self.after_idle(
                     lambda tid=target: self.tree.selection_set(tid)
                     if self.tree.exists(tid) else None)
+            else:
+                # No selectable node: the placeholder stays (no render follows).
+                self._show_empty(os.path.basename(path),
+                                 "No sections to display.")
             meta = data.get("metadata", {})
             self.status.config(
                 text=f"Loaded: {os.path.basename(path)}  |  "
@@ -2986,6 +3016,7 @@ class TachoExplorer(tk.Tk):
         security and activities (day hierarchy) are handled separately."""
         self.tree.delete(*self.tree.get_children())
         self._payloads.clear()
+        self._auto_select_iid = None
         self._opened_data = data
         meta = data.get("metadata", {})
 
@@ -3040,8 +3071,14 @@ class TachoExplorer(tk.Tk):
 
         drv = data.get("driver", {})
 
-        # Driver card: show holder summary.
-        if not is_vu and any(drv.values()):
+        # Driver card: show holder summary. GUI-BOGUS-DRIVER (G-F8): an
+        # untouched TachoResult.driver keeps every field at the literal "N/A"
+        # (core/registry/models.py), which is a *truthy* string. Testing
+        # ``any(drv.values())`` therefore created — and auto-selected — a
+        # phantom "Driver / Cardholder" section for files with no driver data,
+        # where every row read "N/A". Require a *useful* value, matching the
+        # "N/A" filter _build_driver_summary already applies to the other fields.
+        if not is_vu and any(v and v != "N/A" for v in drv.values()):
             cols, rows = self._build_driver_summary(data)
             self._auto_select_iid = self._add_section(
                 "", "\U0001f464  Driver / Cardholder", cols, rows, summary=True)
@@ -3367,7 +3404,22 @@ class TachoExplorer(tk.Tk):
         # the slot-less heuristic changes, so a slot-less day is not empty
         # either.
         changes = day_data.get("changes") or []
-        day_km = day_data.get("_day_km", 0) or day_data.get("odometer_km", 0) or 0
+        # GUI-DISTANCE-FALLBACK (XG-F9): the day-detail popup must show the
+        # day's distance, not the absolute odometer. For a VU the day distance
+        # is precomputed in "_day_km"; for a card file reuse the odometer-delta
+        # the dashboard computes for the very same day (stored by
+        # _show_daily_summary) rather than falling back to "odometer_km", which
+        # is the absolute reading and produced a huge, misleading "Distance".
+        if is_vu:
+            day_km = day_data.get("_day_km", 0) or 0
+        else:
+            # __dict__ lookup (not getattr): on a Tk widget a missing attribute
+            # falls through to tkinter.Misc.__getattr__. The mapping is always
+            # set by _show_daily_summary before the dashboard is clickable, so a
+            # missing entry simply means "no known distance" -> 0, never the
+            # absolute odometer.
+            day_km = (self.__dict__.get("_dashboard_card_day_km") or {}).get(
+                id(day_data), 0)
         changes_count = day_data.get("changes_count") or len(changes)
 
         drv = data.get("driver") or {}
@@ -3408,9 +3460,15 @@ class TachoExplorer(tk.Tk):
             if not ins_dt or ins_dt.date().isoformat() != iso_date:
                 continue
             sec_of_day = ins_dt.hour * 3600 + ins_dt.minute * 60 + ins_dt.second
-            name = f"{rec.get('holder_surname','')} {rec.get('holder_first_names','')}".strip()
+            # GUI-NAME-ORDER (H-F8): the popup markers/schedule must show
+            # "First names Surname" like every other view, not the reversed
+            # "Surname First names".
+            name = f"{rec.get('holder_first_names','')} {rec.get('holder_surname','')}".strip()
             if not name or name == "N/A N/A":
-                name = rec.get("card_number", "") or "Sconosciuto"
+                # GUI-DISTANCE-FALLBACK (XG-F9): the UI is English; the
+                # previous hard-coded Italian "Sconosciuto" was the only
+                # untranslated string in app/.
+                name = rec.get("card_number", "") or "Unknown"
             slot = rec.get("card_slot", 0)
             slot_label = "Slot 1" if not slot else "Slot 2"
             markers.append((sec_of_day, slot_label, name, True))
@@ -3724,6 +3782,11 @@ class TachoExplorer(tk.Tk):
                     card_day_km[id(day_data)] = cur_odo - prev_odo
                 if cur_odo:
                     prev_odo = cur_odo
+        # GUI-DISTANCE-FALLBACK (XG-F9): expose the per-day card distance the
+        # dashboard shows, so the day-detail popup (opened by double-click) can
+        # display the SAME number instead of falling back to the absolute
+        # odometer.
+        self._dashboard_card_day_km = card_day_km
 
         months = {}
         for day_data in sorted_asc:
@@ -4031,7 +4094,8 @@ class TachoExplorer(tk.Tk):
                 f"{day_max:.0f}",
                 f"{day_avg:.1f}",
                 str(n),
-                _fmt_duration_minutes(over_secs // 60),
+                # GUI-SPEED-ROUNDING (G-F5): seconds, not truncated minutes.
+                _fmt_seconds_duration(over_secs),
                 str(events),
             ])
 
@@ -4047,7 +4111,7 @@ class TachoExplorer(tk.Tk):
             ("Max speed", f"{global_max:.0f} km/h", "#1565c0"),
             ("Avg speed", f"{global_avg:.1f} km/h", "#37474f"),
             ("Samples", f"{total_samples:,}".replace(",", " "), "#37474f"),
-            ("Time >90 km/h", _fmt_duration_minutes(overspeed_seconds // 60), "#d32f2f"),
+            ("Time >90 km/h", _fmt_seconds_duration(overspeed_seconds), "#d32f2f"),
             ("Overspeed events", str(overspeed_events), "#d32f2f"),
             ("Max avg / day", f"{max_daily_avg:.1f} km/h", "#1565c0"),
             ("Min avg / day", f"{min_daily_avg:.1f} km/h", "#78909c"),
@@ -4602,7 +4666,13 @@ def main():
     if args[:1] == ["--version"]:
         _emit(f"TachoReader {__version__}")
         sys.exit(0)
-    if args[:1] == ["--smoke"] and len(args) == 2:
+    if args[:1] == ["--smoke"]:
+        # GUI-SMOKE-LAUNCH (H-F6): a bare "--smoke" (no file) must not fall
+        # through to launching the GUI — a headless CI runner would hang. Emit
+        # a usage message and exit non-zero; only "--smoke <file>" self-checks.
+        if len(args) != 2:
+            _emit("usage: --smoke <file.ddd>")
+            sys.exit(2)
         sys.exit(_smoke_check(args[1]))
     initial = args[0] if args and os.path.isfile(args[0]) else None
     TachoExplorer(initial_file=initial).mainloop()
