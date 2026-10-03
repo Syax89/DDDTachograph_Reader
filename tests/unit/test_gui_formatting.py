@@ -184,6 +184,20 @@ def test_day_detail_slot_split_matches_the_dashboard():
         assert "3 activity changes" in win._header_info.cget("text")
         win.destroy()
 
+        # Asymmetric counts (1 slot-1-only vs 2 slot-2-only changes) so a header
+        # that always reported the slot-1 length, or the sum of both lists, is
+        # caught. The fixture above is 3-vs-3 and cannot distinguish them, and
+        # the two lists now deliberately overlap, so the sum is always wrong.
+        win3, _, _ = opened([
+            {"activity": "DRIVE", "time": "00:00", "slot": "First"},
+            {"activity": "REST", "time": "12:00", "slot": "Second"},
+            {"activity": "WORK", "time": "13:00", "slot": "Second"},
+        ], "d7")
+        assert "1 activity changes" in win3._header_info.cget("text")
+        win3._toggle_slot()  # -> Slot 2
+        assert "2 activity changes" in win3._header_info.cget("text")
+        win3.destroy()
+
         win2, _, _ = opened([
             {"activity": "DRIVE", "time": "00:00", "slot": "First"},
             {"activity": "REST", "time": "12:00", "slot": "Second"},
