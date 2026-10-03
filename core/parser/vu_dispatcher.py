@@ -421,7 +421,7 @@ def decode_full_card_number_gen(data, off):
         return {"present": False}
     card_type = rec[0]
     nation = decoders.get_nation(rec[1])
-    number = "".join(chr(b) if 0x20 <= b < 0x7F else "" for b in rec[2:18]).strip()
+    number = _ascii(rec, 2, 16)
     generation = rec[18]
     if not number:
         # Zero/partial filler (cardType 0, generation 0xFF): no card in slot.

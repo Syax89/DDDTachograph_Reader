@@ -52,28 +52,6 @@ class RecordArrayParser:
             pos += record_size
 
 
-def decode_card_number(data: bytes, offset: int = 0) -> str:
-    """Decode a G2 card number: 1 byte nation + 16 chars + optional 0x02 terminator."""
-    result = []
-    if offset >= len(data):
-        return ""
-    nation = data[offset]
-    if 0x01 <= nation <= 0xFD:
-        result.append(get_nation(nation))
-    offset += 1
-    for i in range(16):
-        if offset + i >= len(data):
-            break
-        b = data[offset + i]
-        if b in (0x00, 0x02, 0x03, 0xFF):
-            break
-        if 0x20 <= b < 0x7F:
-            result.append(chr(b))
-        else:
-            result.append(f"\\x{b:02X}")
-    return "".join(result)
-
-
 def decode_g2_driver_record(data: bytes, offset: int = 0):
     """Decode a G2 driver card record from TREP 02 Activities section 1.
 
