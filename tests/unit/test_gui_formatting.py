@@ -100,10 +100,17 @@ def test_dashboard_slot_view_does_not_leak_the_other_slot():
     assert row2[5] == "14h 00m"   # Drive  = Second 10:00-24:00
 
 
-def test_day_detail_uses_the_same_slot_filter_as_the_summary(monkeypatch):
-    """The day-detail path had the identical ``== slot_name`` predicate as the
-    summary, so a slot-less day opened an EMPTY detail. Both must filter through
-    the shared ``_changes_for_slot`` helper."""
+def test_day_detail_popup_receives_the_full_day_change_set(monkeypatch):
+    """GUI-DASHBOARD-SLOT2-POPUP (G-F2 / H-F4): the day-detail popup re-splits
+    the day's changes by slot itself (via ``_changes_for_slot``) and starts on
+    slot 1, so the dashboard must NOT pre-filter them to its own selected slot.
+    Pre-filtering stripped the popup's *other* slot and made it show
+    "No data for this day." when that slot was selected.
+
+    This supersedes the batch-5 pin that had enshrined the pre-filter. Its
+    original intent is preserved: the slot-less change (no ``slot`` key) is still
+    handed to the popup, so a slot-less day never opens an empty detail.
+    """
     app = object.__new__(TachoExplorer)
     app._dashboard_is_vu = True
     app._vu_slot_filter = "Slot 1"
@@ -113,8 +120,8 @@ def test_day_detail_uses_the_same_slot_filter_as_the_summary(monkeypatch):
     app._day_vehicles_info = Mock(return_value=[])
     app._dashboard_activity_list = [{"date": "01/05/2025", "changes": [
         {"activity": "DRIVE", "time": "08:00"},                    # no slot -> kept
-        {"activity": "WORK",  "time": "12:00", "slot": "First"},   # kept
-        {"activity": "REST",  "time": "16:00", "slot": "Second"},  # other slot -> dropped
+        {"activity": "WORK",  "time": "12:00", "slot": "First"},
+        {"activity": "REST",  "time": "16:00", "slot": "Second"},  # other slot -> also passed
     ]}]
     app._dashboard_data = {"metadata": {"is_vu": True}}
 
@@ -123,7 +130,7 @@ def test_day_detail_uses_the_same_slot_filter_as_the_summary(monkeypatch):
                         lambda *a, **k: captured.setdefault("changes", a[2]))
     app._on_dashboard_double_click(Mock(y=10))
 
-    assert [c["activity"] for c in captured["changes"]] == ["DRIVE", "WORK"]
+    assert [c["activity"] for c in captured["changes"]] == ["DRIVE", "WORK", "REST"]
 
 
 def test_day_detail_slot_split_matches_the_dashboard():
