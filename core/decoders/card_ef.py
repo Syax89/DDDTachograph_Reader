@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
 from core.utils.constants import MAX_ODO_DISTANCE_KM
-from core.decoders.common import _decode_gnss_coord, decode_date, decode_string, get_nation, mark_heuristic
+from core.decoders.common import _decode_gnss_coord, decode_date, decode_string, get_nation, is_known_nation, mark_heuristic
 from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault
 
 _log = get_logger(__name__)
@@ -496,9 +496,10 @@ def _decode_place_records(val, off, stride):
             if entry_type not in entry_names:
                 continue
             nation_code = chunk[5]
-            # NationNumeric valid range includes 0xFD (EC), 0xFE (EUR),
-            # 0xFF (WLD). Only reject values above the defined range.
-            if nation_code > 0xFF:
+            # NationNumeric is a single byte, so a `> 0xFF` range test could
+            # never fire. Reject unassigned values (0x36..0xFC) instead; the
+            # defined set (0x01..0x35, 0xFD/0xFE/0xFF) is kept.
+            if not is_known_nation(nation_code):
                 continue
 
             dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
@@ -1031,6 +1032,12 @@ def parse_company_holder_data(val, results):
                         entry["card_number"] = decode_string(sections[2], is_id=True).strip()
                     if entry.get("company_name"):
                         structured_parsed = True
+                        # The code-page split is a best-effort reconstruction,
+                        # not a spec-offset layout — flag it like the other two
+                        # branches so the GUI/exports warn it is inferred.
+                        mark_heuristic(results, "company_holder_0x2020",
+                                       sorted(k for k in entry
+                                              if k != "raw_text"))
                         _log.debug("Company holder: structured split parsed %d sections", len(sections))
         except (IndexError, ValueError) as exc:
             _log.debug("Company holder structured split failed: %s", exc)

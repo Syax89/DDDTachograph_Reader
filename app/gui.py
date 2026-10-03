@@ -1041,6 +1041,8 @@ class ActivityTimelineChart(ttk.Frame):
             "OutOfScope End": "#ef6c00",
             "Ferry/Train Begin": "#7b1fa2",
             "Ferry/Train End": "#7b1fa2",
+            # Generation 1 single ferry/train crossing code (Annex 1C §2.154).
+            "Ferry/Train crossing": "#7b1fa2",
         }
         # Section header height (slot label + markers, above activity rows)
         header_h = 56 if has_multi else 24
@@ -1869,6 +1871,7 @@ def _condition_label(cond):
         "4": "Ferry / Train \u2014 End",
         "OutOfScope Begin": "Out of scope \u2014 Begin",
         "OutOfScope End": "Out of scope \u2014 End",
+        "Ferry/Train crossing": "Ferry / Train crossing",
         "FerryTrain Begin": "Ferry / Train \u2014 Begin",
         "FerryTrain End": "Ferry / Train \u2014 End",
     }

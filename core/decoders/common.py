@@ -33,20 +33,34 @@ _CODEPAGE_ENCODINGS = {
     0x0E: 'iso-8859-14', 0x0F: 'iso-8859-15', 0x10: 'iso-8859-16',
 }
 
+# NationNumeric → NationAlpha (Annex 1B §2.101 / Annex 1C §2.100). The set of
+# defined values is a hard prefix (0x01..0x35) followed by the special codes
+# 0xFD/0xFE/0xFF; everything in between (0x36..0xFC) is unassigned.
+_NATIONS = {
+    0x00: "No information available",
+    0x01: "A", 0x02: "AL", 0x03: "AND", 0x04: "ARM", 0x05: "AZ", 0x06: "B", 0x07: "BG",
+    0x08: "BIH", 0x09: "BY", 0x0A: "CH", 0x0B: "CY", 0x0C: "CZ", 0x0D: "D", 0x0E: "DK",
+    0x0F: "E", 0x10: "EST", 0x11: "F", 0x12: "FIN", 0x13: "FL", 0x14: "FO", 0x15: "UK",
+    0x16: "GE", 0x17: "GR", 0x18: "H", 0x19: "HR", 0x1A: "I", 0x1B: "IRL", 0x1C: "IS",
+    0x1D: "KZ", 0x1E: "L", 0x1F: "LT", 0x20: "LV", 0x21: "M", 0x22: "MC", 0x23: "MD",
+    0x24: "MK", 0x25: "N", 0x26: "NL", 0x27: "P", 0x28: "PL", 0x29: "RO", 0x2A: "RSM",
+    0x2B: "RUS", 0x2C: "S", 0x2D: "SK", 0x2E: "SLO", 0x2F: "TM", 0x30: "TR", 0x31: "UA",
+    0x32: "V", 0x33: "YU", 0x34: "MNE", 0x35: "SRB", 0xFD: "EC", 0xFE: "EUR", 0xFF: "WLD"
+}
+
+
 def get_nation(code):
     """Map numeric nation code to ISO/Common code (Annex 1B)."""
-    nations = {
-        0x00: "No information available",
-        0x01: "A", 0x02: "AL", 0x03: "AND", 0x04: "ARM", 0x05: "AZ", 0x06: "B", 0x07: "BG",
-        0x08: "BIH", 0x09: "BY", 0x0A: "CH", 0x0B: "CY", 0x0C: "CZ", 0x0D: "D", 0x0E: "DK",
-        0x0F: "E", 0x10: "EST", 0x11: "F", 0x12: "FIN", 0x13: "FL", 0x14: "FR", 0x15: "UK",
-        0x16: "GE", 0x17: "GR", 0x18: "H", 0x19: "HR", 0x1A: "I", 0x1B: "IRL", 0x1C: "IS",
-        0x1D: "KZ", 0x1E: "L", 0x1F: "LT", 0x20: "LV", 0x21: "M", 0x22: "MC", 0x23: "MD",
-        0x24: "MK", 0x25: "N", 0x26: "NL", 0x27: "P", 0x28: "PL", 0x29: "RO", 0x2A: "RSM",
-        0x2B: "RUS", 0x2C: "S", 0x2D: "SK", 0x2E: "SLO", 0x2F: "TM", 0x30: "TR", 0x31: "UA",
-        0x32: "V", 0x33: "YU", 0x34: "MNE", 0x35: "SRB", 0xFD: "EC", 0xFE: "EUR", 0xFF: "WLD"
-    }
-    return nations.get(code, f"Unknown({code:02X})")
+    return _NATIONS.get(code, f"Unknown({code:02X})")
+
+
+def is_known_nation(code):
+    """True when *code* is a defined NationNumeric value (Annex 1B §2.101).
+
+    NationNumeric is a single byte; unassigned values (0x36..0xFC, excluding the
+    special codes 0xFD/0xFE/0xFF) are not valid nations.
+    """
+    return code in _NATIONS
 
 
 # Short ISO/Common nation code → full English country name (Annex 1B).
@@ -56,7 +70,7 @@ _NATION_FULL_NAMES = {
     "BIH": "Bosnia and Herzegovina", "BY": "Belarus", "CH": "Switzerland",
     "CY": "Cyprus", "CZ": "Czech Republic", "D": "Germany", "DK": "Denmark",
     "E": "Spain", "EST": "Estonia", "F": "France", "FIN": "Finland",
-    "FL": "Liechtenstein", "FR": "Faroe Islands", "UK": "United Kingdom",
+    "FL": "Liechtenstein", "FO": "Faroe Islands", "UK": "United Kingdom",
     "GE": "Georgia", "GR": "Greece", "H": "Hungary", "HR": "Croatia",
     "I": "Italy", "IRL": "Ireland", "IS": "Iceland", "KZ": "Kazakhstan",
     "L": "Luxembourg", "LT": "Lithuania", "LV": "Latvia", "M": "Malta",
@@ -153,6 +167,9 @@ def decode_datef(data):
         d  = (data[3] >> 4) * 10 + (data[3] & 0x0F)
         year = yh * 100 + yl
         if 1900 <= year <= 2100 and 1 <= m <= 12 and 1 <= d <= 31:
+            # The BCD range check alone accepts impossible calendar dates
+            # (e.g. 31/02). Reject them explicitly.
+            datetime(year, m, d)
             return f"{d:02d}/{m:02d}/{year}"
     except (IndexError, ValueError) as exc:
         _log.debug("Datef BCD decode failed (len=%d): %s", len(data), exc)

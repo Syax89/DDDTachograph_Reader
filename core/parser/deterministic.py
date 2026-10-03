@@ -287,6 +287,11 @@ class DeterministicParser:
                 self.generation = refined
                 self.results["metadata"]["generation"] = self._gen_full_label(refined)
 
+        # Specific-condition type 0x03/0x04 mean different things per generation
+        # (see _finalize_specific_conditions). The decoders run before a card's
+        # generation is refined, so correct the labels once it is final.
+        self._finalize_specific_conditions()
+
         # Store EF data/signature payloads for card signature verification.
         if not is_vu and (self._ef_data or self._ef_signatures):
             self.results["_ef_data"] = self._ef_data
@@ -320,6 +325,31 @@ class DeterministicParser:
         self.results["sections"] = self.coverage.get_section_report(file_size)
 
         return self.results
+
+    def _finalize_specific_conditions(self):
+        """Apply generation-1 semantics to SpecificConditions records.
+
+        The card/VU decoders always emit the generation-2 labels because a card's
+        generation is only resolved after parsing. In generation 1 (Annex 1C
+        §2.154) type 0x03 is a single ``Ferry / Train crossing`` code and 0x04 is
+        RFU; both differ from generation 2. Relabel/drop once the generation is
+        known. Types 0x01/0x02 are identical across generations.
+        """
+        if self.generation != "G1":
+            return
+        records = self.results.get("specific_conditions")
+        if not records:
+            return
+        from core.utils.event_codes import specific_condition_label
+        finalized = []
+        for rec in records:
+            code = rec.get("type_code")
+            if code == 0x04:
+                continue  # RFU in generation 1
+            if code == 0x03:
+                rec["condition"] = specific_condition_label(code, generation="G1")
+            finalized.append(rec)
+        self.results["specific_conditions"] = finalized
 
     def _detect_generation(self, raw_data: bytes) -> str:
         """Detect the generation from the leading SID/TREP marker.
