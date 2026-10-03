@@ -1240,6 +1240,10 @@ def _parse_trep_05_technical(data, results):
 
         # Attempt 2: Regex VIN-scan heuristic (original fallback)
         _log.debug("TREP 05: structured record extraction failed, falling back to regex VIN-scan")
+        # Records this heuristic branch adds carry inferred purpose/timestamp/
+        # workshop (B-F8/XB-F2); count them so the fields actually gained can be
+        # flagged heuristic, exactly like the TREP 02/03/06 fallbacks.
+        _cal_before = len(cal_records)
 
         for vin_match in re.finditer(rb'[A-Z0-9]{17}', data[off:]):
             vin = vin_match.group().decode()
@@ -1324,6 +1328,12 @@ def _parse_trep_05_technical(data, results):
                 if ws_name and ws_name not in workshops:
                     workshops.append(ws_name)
                 cal_vins.add(vin)
+
+        # Flag the fields this inference branch actually gained as heuristic so
+        # the GUI/CLI cannot present inferred calibration purpose/date/workshop
+        # as decoded fact (B-F8/XB-F2).
+        if len(cal_records) > _cal_before:
+            _mark_heuristic(results, "vu_technical_TREP05", ["calibrations"])
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 05 technical parse failed: %s", exc)
 

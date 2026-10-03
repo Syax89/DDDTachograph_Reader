@@ -90,28 +90,29 @@ def test_g1_optional_download_efs_are_not_required():
 
 
 def test_g1_with_unknown_dtype02_does_not_disable_g1_checking():
-    """An unsigned, unregistered dtype-02 record flips the *label* to G2 but
-    must not disable completeness for the G1 application actually present."""
+    """An unsigned, unregistered dtype-02 record must not flip a valid G1 card
+    to G2 (XD-F3) nor disable completeness for the G1 application present."""
     g1_ids = g1_identity()
     payloads = g1_core_payloads()
     del payloads[0x0502]
     data = _g1_card(g1_ids, payloads) + stap(0x9001, 0x02, b"X")
     result = _parse_g1(g1_ids, data)
 
-    assert result["metadata"]["generation"].startswith("G2")  # label flipped
+    assert result["metadata"]["generation"].startswith("G1")  # label unchanged
     assert result["ef_signature_verification"]["missing_core_efs"] == [0x0502]
     assert not result["metadata"]["integrity_check"].startswith("Verified")
     assert integrity_verdict(result) == VERDICT_UNVERIFIED
 
 
 def test_label_does_not_demand_an_unobserved_g2_application():
-    """A G1-only download (label upgraded by an unregistered dtype-02 record)
-    must not be judged incomplete for a G2 application that was never captured."""
+    """A G1-only download carrying an unregistered dtype-02 record (which no
+    longer upgrades the label) must not be judged incomplete for a G2
+    application that was never captured."""
     g1_ids = g1_identity()
     data = _g1_card(g1_ids, g1_core_payloads()) + stap(0x9001, 0x02, b"X")
     result = _parse_g1(g1_ids, data)
 
-    assert result["metadata"]["generation"].startswith("G2")
+    assert result["metadata"]["generation"].startswith("G1")
     assert result["ef_signature_verification"]["missing_core_efs"] == []
     assert result["metadata"]["integrity_check"] == "Verified"
     assert integrity_verdict(result) == VERDICT_VERIFIED

@@ -117,7 +117,12 @@ def parse_g22_load_unload_operations(val, results):
             record = {"timestamp": _iso(ts), "operation": op_map.get(op_type, f"0x{op_type:02X}")}
             record.update({f"gnss_{k}": v for k, v in place.items() if k != "timestamp"})
             record["gnss_timestamp"] = place["timestamp"]
-            record["vehicle_odometer_value"] = _u24(chunk, 17)
+            # Annex 1C §2.76 / DDP_035: 0xFFFFFF is the "unknown odometer"
+            # sentinel, not 16 777 215 km. Omit the field like the GNSS-AD
+            # decoder does instead of publishing a fabricated distance.
+            odometer = _u24(chunk, 17)
+            if odometer != 0xFFFFFF:
+                record["vehicle_odometer_value"] = odometer
             record["record_index"] = index
             record["is_newest"] = index == newest
             results.setdefault("load_unload_records", []).append(record)
@@ -200,10 +205,15 @@ def parse_g22_border_crossings(val, results):
                 "gnss_accuracy": place["gnss_accuracy"],
                 "authentication_status": place["authentication_status"],
                 "authenticated": place["authenticated"],
-                "vehicle_odometer_value": _u24(chunk, 14),
                 "record_index": index,
                 "is_newest": index == newest,
             }
+            # Annex 1C §2.76 / DDP_035: 0xFFFFFF is the "unknown odometer"
+            # sentinel, not 16 777 215 km. Omit the field like the GNSS-AD and
+            # load/unload decoders do instead of publishing a fabricated distance.
+            odometer = _u24(chunk, 14)
+            if odometer != 0xFFFFFF:
+                record["vehicle_odometer_value"] = odometer
             results.setdefault("border_crossings", []).append(record)
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Border crossings parse failed: %s", exc)

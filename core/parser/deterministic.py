@@ -355,24 +355,34 @@ class DeterministicParser:
         """Refine the generation label for card files after parsing.
 
         Card files carry no 0x76 header, so header sniffing always yields G1.
-        The Gen2 EF copies are marked by appendix dtype 0x02/0x03, and the
+        A card's generation is decided by *generation-specific EF evidence*,
+        never by the mere presence of a dtype-0x02/0x03 record: any bytes can
+        be mis-framed as a STAP record, so a single stray dtype-0x02 record
+        must not flip a valid G1 card to G2 (XD-F3). The Gen2 copies of the
+        universal Application_Identification (0x0501) and the Gen2-only EFs
+        VehicleUnits_Used / GNSS_Places (0x0523/0x0524) mark a G2 card; the
         Gen2v2-only EFs (0x0525-0x0530, 0x0540) mark a G2.2 card. 0x052A is
         not a V2 marker.
         """
         if self.generation not in ("G1", "Unknown"):
             return self.generation
         G22_CARD_TAGS = {0x0525, 0x0526, 0x0527, 0x0528, 0x0529, 0x0530, 0x0540}
+        # Gen2-exclusive EF copies that exist with the dtype-0x02 appendix only
+        # on a Gen2 card (0x0501 is universal, 0x0523/0x0524 are Gen2-only).
+        G2_CARD_MARKERS = {0x0501, 0x0523, 0x0524}
         has_g2 = False
         for occs in self.results.get("raw_tags", {}).values():
             for occ in occs:
-                if occ.get("data_type") in ("0x02", "0x03"):
+                if occ.get("data_type") not in ("0x02", "0x03"):
+                    continue
+                try:
+                    tid = int(occ.get("tag_id", "0x0"), 16)
+                except (ValueError, TypeError):
+                    continue
+                if tid in G22_CARD_TAGS:
+                    return "G2.2"
+                if tid in G2_CARD_MARKERS:
                     has_g2 = True
-                    try:
-                        tid = int(occ.get("tag_id", "0x0"), 16)
-                    except (ValueError, TypeError):
-                        continue
-                    if tid in G22_CARD_TAGS:
-                        return "G2.2"
         return "G2" if has_g2 else self.generation
 
     def _parse_vu_stream(self, raw_data: bytes):
