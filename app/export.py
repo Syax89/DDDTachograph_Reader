@@ -351,6 +351,8 @@ class ExportManager:
         total_drive = 0
         total_work = 0
         total_rest = 0
+        total_available = 0
+        total_unknown = 0
         for day in activities:
             if not isinstance(day, dict):
                 continue
@@ -358,18 +360,28 @@ class ExportManager:
             total_drive += totals["DRIVE"]
             total_work += totals["WORK"]
             total_rest += totals["REST"]
+            total_available += totals["AVAILABLE"]
+            total_unknown += totals["UNKNOWN"]
 
         drive_h = f"{total_drive // 60}h {total_drive % 60}m"
         work_h = f"{total_work // 60}h {total_work % 60}m"
         rest_h = f"{total_rest // 60}h {total_rest % 60}m"
-        total_h = f"{(total_drive + total_work + total_rest) // 60}h {(total_drive + total_work + total_rest) % 60}m"
+        available_h = f"{total_available // 60}h {total_available % 60}m"
+        unknown_h = f"{total_unknown // 60}h {total_unknown % 60}m"
+        # Total must sum every bucket the monthly table engine reports, so the
+        # cover and the table cannot disagree; omitting AVAILABLE/UNKNOWN made
+        # the cover Total (Drive+Work+Rest) contradict the table (XF-F3).
+        grand_total = (total_drive + total_work + total_rest
+                       + total_available + total_unknown)
+        total_h = f"{grand_total // 60}h {grand_total % 60}m"
 
         stats_style = ParagraphStyle("StatsBar", parent=styles["Normal"],
                                      fontSize=9, textColor=PRIMARY,
                                      fontName="Helvetica-Bold", leading=13)
-        if total_drive + total_work + total_rest > 0:
+        if grand_total > 0:
             story.append(Paragraph(
                 f"Drive: {drive_h}  ·  Work: {work_h}  ·  Rest: {rest_h}  ·  "
+                f"Available: {available_h}  ·  Unknown: {unknown_h}  ·  "
                 f"Total: {total_h}  ·  Active days: "
                 f"{len([d for d in activities if isinstance(d, dict) and d.get('changes')])}  ·  "
                 f"Events: {len(events)}",

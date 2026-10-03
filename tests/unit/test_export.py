@@ -262,11 +262,14 @@ class TestExportManager(unittest.TestCase):
         )
         self.assertIn("Mario &lt;b&gt;Rossi&lt;/b&gt; &amp; Co", paragraph_text)
 
-    def test_pdf_handles_malformed_activity_times_without_changing_valid_totals(self):
+    def test_pdf_handles_malformed_activity_times_without_corrupting_the_row(self):
         _, valid_rows = build_monthly_activity_report(self.mock_data["activities"])
         self.assertEqual(valid_rows[0][2], "04:00")
         self.assertEqual(valid_rows[0][4], "12:00")
-        self.assertEqual(valid_rows[0][-1], "16:00")
+        # 00:00-08:00 has no leading 00:00 status entry -> UNKNOWN; the day spans
+        # 00:00→24:00 instead of shrinking to 16h (REPORT-OVERNIGHT-GAP).
+        self.assertEqual(valid_rows[0][6], "\u26a0 08:00")
+        self.assertEqual(valid_rows[0][-1], "24:00")
 
         malformed_activities = [{
             "date": "03/06/2026",
@@ -278,7 +281,7 @@ class TestExportManager(unittest.TestCase):
         _, malformed_rows = build_monthly_activity_report(malformed_activities)
         self.assertEqual(malformed_rows[0][2], "00:00")
         self.assertEqual(malformed_rows[0][4], "12:00")
-        self.assertEqual(malformed_rows[0][-1], "12:00")
+        self.assertEqual(malformed_rows[0][-1], "24:00")
 
         data = deepcopy(self.mock_data)
         data["activities"] = malformed_activities
@@ -315,18 +318,22 @@ class TestExportManager(unittest.TestCase):
 
         stats = next(t for t in captured
                      if t.startswith("Drive: ") and "Rest:" in t)
-        # Cover = DRIVE/WORK/REST only: the unknown 10:00-12:00 is NOT folded
-        # back into Drive; the cover Total is Drive+Work+Rest.
+        # Cover now sums every bucket the table engine reports (XF-F3): the
+        # 00:00-08:00 gap is UNKNOWN 8h, the MYSTERY 10:00-12:00 is UNKNOWN 2h,
+        # so Unknown = 10h and the Total matches the table (24h).
         self.assertIn("Drive: 2h 0m", stats)
         self.assertIn("Rest: 12h 0m", stats)
-        self.assertIn("Total: 14h 0m", stats)
+        self.assertIn("Available: 0h 0m", stats)
+        self.assertIn("Unknown: 10h 0m", stats)
+        self.assertIn("Total: 24h 0m", stats)
 
         # The report shows the SAME Drive/Rest and keeps the unknown hours.
         _, rows = build_monthly_activity_report(data["activities"])
         row = rows[0]
         self.assertEqual(row[2], "02:00")          # Drive matches the cover
         self.assertEqual(row[4], "12:00")          # Rest matches the cover
-        self.assertEqual(row[6], "\u26a0 02:00")   # Unknown hours kept
+        self.assertEqual(row[6], "\u26a0 10:00")   # Unknown hours kept
+        self.assertEqual(row[7], "24:00")          # Table total == cover total
 
 
 if __name__ == "__main__":

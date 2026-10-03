@@ -189,7 +189,14 @@ SECTION_DESCRIPTIONS = {
 
 
 def fmt_iso(s):
-    """ISO timestamp (2025-04-23T08:37:00+00:00) → '2025-04-23 08:37'."""
+    """ISO timestamp (2025-04-23T08:37:00+00:00) → '2025-04-23 08:37'.
+
+    A non-string (``None``, a number from a malformed/None-shaped field) is
+    returned unchanged instead of raising ``TypeError`` on the regex match
+    (XF-F9): report exports must survive shape deviations in a decoded field.
+    """
+    if not isinstance(s, str):
+        return s
     m = _ISO_RE.match(s)
     return f"{m.group(1)} {m.group(2)}" if m else s
 
@@ -379,6 +386,57 @@ def _compute_day_hours(day):
     return buckets, sum(buckets.values())
 
 
+def _as_dict(value):
+    """Coerce a possibly-absent/mis-shaped mapping field to a dict.
+
+    Report/export consumers index decoded containers with ``.get``; a field
+    that is ``None`` or a scalar must degrade to an empty mapping rather than
+    raising ``AttributeError`` (XF-F9: formatter robustness).
+    """
+    return value if isinstance(value, dict) else {}
+
+
+def _parse_state_rows(meta):
+    """Rows disclosing a partial/uncertain parse in the exported summary.
+
+    The in-session GUI warns about these conditions (``_check_integrity``) but
+    the persistent export omitted them, so a partial download was written out
+    identically to a complete one (D2-009). Returns [] for a clean parse.
+    """
+    rows = []
+    trep = _as_dict(meta.get("trep_report"))
+    if trep.get("is_partial"):
+        rows.append(("Download completeness",
+                     f"{trep.get('mandatory_ok', 0)}/{trep.get('mandatory_total', 0)} "
+                     f"mandatory sections ({trep.get('completeness_pct', 0)}%)"))
+        missing = trep.get("mandatory_missing") or []
+        if missing:
+            rows.append(("Missing mandatory sections",
+                         ", ".join(str(t.get("name", "")) for t in missing
+                                   if isinstance(t, dict))))
+        suspect = trep.get("decoded_suspect") or []
+        if suspect:
+            rows.append(("Corrupted sections (data discarded)",
+                         ", ".join(str(t.get("name", "")) for t in suspect
+                                   if isinstance(t, dict))))
+        if not trep.get("complete_walk", True):
+            rows.append(("Structural walk", "did not reach end of file"))
+    salvaged = meta.get("salvage_recovered") or []
+    if salvaged:
+        rows.append(("Recovered data (low confidence)",
+                     ", ".join(str(s) for s in salvaged)))
+    warnings = meta.get("parse_warnings") or []
+    if warnings:
+        rows.append(("Parse warnings",
+                     f"{len(warnings)} parsing phase(s) failed"))
+    decoder_failures = meta.get("decoder_failure_count", 0)
+    if isinstance(decoder_failures, int) and decoder_failures > 0:
+        rows.append(("Decoder failures", decoder_failures))
+    if meta.get("origin_note"):
+        rows.append(("Origin", meta["origin_note"]))
+    return rows
+
+
 def build_monthly_activity_report(activities):
     months = {}
     for day in activities:
@@ -407,7 +465,11 @@ def build_monthly_activity_report(activities):
         month_total = 0
         for day in days:
             date_str = str(day.get("date", ""))
-            km = fmt_value(day.get("odometer_km", 0))
+            # G1 VU activity blocks carry ``odometer_midnight`` (no
+            # ``odometer_km``), so the monthly Odometer column rendered a
+            # hard 0 for every heuristic G1 VU day (F-F2 / XF-F5). Use the
+            # same fallback as ``expand_activities`` below.
+            km = fmt_value(day.get("odometer_km", day.get("odometer_midnight", 0)))
             buckets, total = _compute_day_hours(day)
             unknown_str = _hours_str(buckets["unknown"])
             if buckets["unknown"] > 0:
@@ -477,12 +539,12 @@ def expand_activities(activities):
 
 def summary_rows(data):
     """(Field, Value) rows for the file/driver/vehicle summary."""
-    meta = data.get("metadata", {})
-    coverage = data.get("coverage") or {}
-    driver = data.get("driver", {})
-    vehicle = data.get("vehicle", {})
-    sv = data.get("signature_verification") or {}
-    efv = data.get("ef_signature_verification") or {}
+    meta = _as_dict(data.get("metadata"))
+    coverage = _as_dict(data.get("coverage"))
+    driver = _as_dict(data.get("driver"))
+    vehicle = _as_dict(data.get("vehicle"))
+    sv = _as_dict(data.get("signature_verification"))
+    efv = _as_dict(data.get("ef_signature_verification"))
 
     byte_accounted_pct = coverage.get("byte_accounted_pct", meta.get("coverage_pct", 0))
     byte_accounted_bytes = coverage.get("byte_accounted_bytes")
@@ -519,9 +581,11 @@ def summary_rows(data):
     if efv.get("summary"):
         rows.append(("EF card data signatures", efv["summary"]))
     certs = data.get("certificates") or []
+    certs = [c for c in certs if isinstance(c, dict)] if isinstance(certs, list) else []
     if certs:
         rows.append(("Certificates", f"{len(certs)} decoded ({', '.join(sorted(set(c.get('format', '') for c in certs if c.get('format'))))})"))
     vu_certs = data.get("vu_certificates") or []
+    vu_certs = [c for c in vu_certs if isinstance(c, dict)] if isinstance(vu_certs, list) else []
     if vu_certs:
         rows.append(("VU Certificates (CVC)", f"{len(vu_certs)} decoded"))
 
@@ -540,6 +604,10 @@ def summary_rows(data):
             val = vehicle.get(key, "N/A")
             if val and val != "N/A":
                 rows.append((f"Vehicle {humanize_key(key)}", fmt_value(val)))
+
+    # Disclose a partial/uncertain parse in the exported report (D2-009), so a
+    # truncated download is not written out as if it were complete.
+    rows.extend(_parse_state_rows(meta))
     return rows
 
 

@@ -76,21 +76,45 @@ Examples:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     def resolve_path(val, ext, default_dir="."):
-        if val == "auto":
-            return os.path.join(default_dir, f"{basename}_{timestamp}.{ext}")
-        return val
+        """Resolve an output path; ``auto`` picks a non-colliding name.
+
+        Auto names are second-granular, so two runs within the same second
+        would otherwise overwrite each other silently (XF-F7); an existing
+        name gets a numeric suffix. Explicit paths are returned unchanged —
+        the caller chose them.
+        """
+        if val != "auto":
+            return val
+        stem = os.path.join(default_dir, f"{basename}_{timestamp}")
+        path = f"{stem}.{ext}"
+        counter = 1
+        while os.path.exists(path):
+            path = f"{stem}_{counter}.{ext}"
+            counter += 1
+        return path
 
     # --all mode
     if args.all is not None:
         out_dir = args.all if args.all != "auto" else f"{basename}_output"
-        os.makedirs(out_dir, exist_ok=True)
-        if args.json is None:
+        if os.path.exists(out_dir) and not os.path.isdir(out_dir):
+            print(f"❌ --all output path exists and is not a directory: {out_dir}",
+                  file=sys.stderr)
+            sys.exit(1)
+        try:
+            os.makedirs(out_dir, exist_ok=True)
+        except OSError as e:
+            print(f"❌ Cannot create output directory {out_dir}: {e}", file=sys.stderr)
+            sys.exit(1)
+        # A bare ``--json``/``--pdf``/... stores the value "auto"; treat it as
+        # unset here so the file is written into the --all directory rather
+        # than the current working directory (XF-F7).
+        if args.json in (None, "auto"):
             args.json = resolve_path("auto", "json", out_dir)
-        if args.pdf is None:
+        if args.pdf in (None, "auto"):
             args.pdf = resolve_path("auto", "pdf", out_dir)
-        if args.excel is None:
+        if args.excel in (None, "auto"):
             args.excel = resolve_path("auto", "xlsx", out_dir)
-        if args.csv is None:
+        if args.csv in (None, "auto"):
             args.csv = resolve_path("auto", "csv", out_dir)
 
     generated = []
