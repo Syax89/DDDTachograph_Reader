@@ -585,7 +585,26 @@ class DetailedSpeedChart(ttk.Frame):
         visible_samples = self._samples[first:last]
         speeds = [speed for _, speed in visible_samples]
         max_speed = max(speeds, default=self._speed_limit)
-        ceiling = max(100, ((max_speed + 19) // 20) * 20)
+        # G-F4: a recorded overspeeding event can exceed every sampled speed of
+        # the visible window. Include the visible events' max speed in the
+        # ceiling, otherwise the marker is drawn above the plot (off-canvas,
+        # invisible and unhoverable).
+        event_max = 0.0
+        for evt in self._overspeeding_events:
+            begin = evt.get("begin", "")
+            try:
+                evt_dt = datetime.fromisoformat(str(begin).replace("Z", "+00:00"))
+            except (ValueError, AttributeError, TypeError):
+                continue
+            evt_sec = evt_dt.hour * 3600 + evt_dt.minute * 60 + evt_dt.second
+            if evt_sec < self._view_start or evt_sec > self._view_end:
+                continue
+            try:
+                event_max = max(event_max, float(evt.get("max_speed_kmh")))
+            except (TypeError, ValueError):
+                continue
+        top_speed = max(max_speed, event_max)
+        ceiling = max(100, (int(top_speed) + 19) // 20 * 20)
 
         def y_for(speed):
             return bottom - speed * plot_height / ceiling
@@ -665,7 +684,11 @@ class DetailedSpeedChart(ttk.Frame):
             if sec_of_day < self._view_start or sec_of_day > self._view_end:
                 continue
             x = left + (sec_of_day - self._view_start) * plot_width / span
-            y_center = y_for(evt.get("max_speed_kmh", ""))
+            try:
+                evt_speed = float(evt.get("max_speed_kmh"))
+            except (TypeError, ValueError):
+                evt_speed = self._speed_limit
+            y_center = y_for(evt_speed)
             r = 4
             canvas.create_oval(x - r, y_center - r, x + r, y_center + r,
                                fill="#d32f2f", outline="#ffffff", width=1,
@@ -1244,7 +1267,7 @@ class DayDetailWindow(tk.Toplevel):
 
     def __init__(self, parent, day, activities, day_km, changes_count,
                  driver_info, slot_schedule, markers, oos_events,
-                 vehicle_info, data, is_vu=False):
+                 vehicle_info, data, is_vu=False, initial_slot=1):
         existing = DayDetailWindow._open_windows.get(day)
         if existing is not None and existing.winfo_exists():
             existing.lift()
@@ -1279,7 +1302,9 @@ class DayDetailWindow(tk.Toplevel):
         # change visible in both tabs cannot inflate a total.
         self._act_slot1 = _changes_for_slot(activities or [], "First")
         self._act_slot2 = _changes_for_slot(activities or [], "Second")
-        self._current_slot = 1
+        # Open on the slot the caller asked for (the dashboard's selected slot).
+        # Both tabs always hold the full split, so the toggle can switch freely.
+        self._current_slot = initial_slot if (is_vu and initial_slot == 2) else 1
 
         # ── Header ──
         hdr = tk.Frame(self, bg="#FAFAFA")
@@ -1290,7 +1315,8 @@ class DayDetailWindow(tk.Toplevel):
                  font=("", 16, "bold"), fg="#263238", bg="#FAFAFA",
                  anchor=tk.W).pack(side=tk.LEFT)
         if is_vu:
-            self._slot_btn = tk.Label(title_row, text="Slot 2",
+            self._slot_btn = tk.Label(title_row,
+                                      text="Slot 2" if self._current_slot == 1 else "Slot 1",
                                       font=("", 10, "bold"),
                                       fg="#1565C0", bg="#E3F2FD",
                                       padx=10, pady=2,
@@ -1767,12 +1793,19 @@ class DayDetailWindow(tk.Toplevel):
                                 if k == "CARD_IN"})
         card_out_times = sorted({sk for sk, _rk, k, *_ in timeline
                                  if k == "CARD_OUT"})
-        act_card_present = sorted({e[0] for e in timeline
-                                   if e[2] in ("DRIVE", "WORK", "REST", "AVAILABLE")})
+        act_entries = [e for e in timeline
+                       if e[2] in ("DRIVE", "WORK", "REST", "AVAILABLE")]
+        act_card_present = sorted({e[0] for e in act_entries})
 
-        if not card_in_times and act_card_present:
+        # G-F3/XG-F8: only *estimate* a card-presence window when the timeline
+        # carries no explicit "Card not inserted" marker, and end that window at
+        # the END of the last activity (start + duration), never at its start.
+        card_explicitly_absent = any(
+            k == "CARD_OUT" and label == "Card not inserted"
+            for _sk, _rk, k, _t, label, *_ in timeline)
+        if not card_in_times and act_card_present and not card_explicitly_absent:
             card_in_times = [act_card_present[0]]
-            card_out_times = [act_card_present[-1]]
+            card_out_times = [max(e[0] + e[6] for e in act_entries)]
 
         if card_in_times:
             h1, m1 = divmod(card_in_times[0], 60)
@@ -2762,6 +2795,11 @@ class TachoExplorer(tk.Tk):
                 name = ""
             if not name:
                 continue
+            # Authoritative slot from the record's cardSlot field (0=driver,
+            # 1=co-driver). Used instead of inferring the slot from a time/name
+            # heuristic, which mislabelled Slot 2 drivers' markers as Slot 1.
+            raw_slot = iw.get("card_slot")
+            rec_slot = None if raw_slot is None else ("Slot 2" if raw_slot else "Slot 1")
             # Clamp to day boundaries
             if wit_dt is None:
                 wit_dt = ins_dt.replace(hour=23, minute=59, second=59)
@@ -2776,12 +2814,14 @@ class TachoExplorer(tk.Tk):
                 end_hhmm = f"{eh:02d}:{em:02d}"
                 # Markers — only on the actual insertion/withdrawal day
                 if current.date() == ins_dt.date():
-                    iw_events_by_date.setdefault(day_iso, []).append((start_sec, name, True))
+                    iw_events_by_date.setdefault(day_iso, []).append(
+                        (start_sec, name, True, rec_slot))
                 if current.date() == wit_dt.date():
-                    iw_events_by_date.setdefault(day_iso, []).append((end_sec, name, False))
+                    iw_events_by_date.setdefault(day_iso, []).append(
+                        (end_sec, name, False, rec_slot))
                 # Schedule
                 iw_schedule_by_date.setdefault(day_iso, []).append((start_hhmm, end_hhmm, name,
-                                                                     ins_dt, wit_dt))
+                                                                     ins_dt, wit_dt, rec_slot))
                 current = datetime(current.year, current.month, current.day,
                                    tzinfo=timezone.utc) + timedelta(days=1)
 
@@ -2809,7 +2849,7 @@ class TachoExplorer(tk.Tk):
             if not isinstance(day_data, dict):
                 continue
             date_str = day_data.get("date", day_data.get("timestamp", "?"))
-            changes = day_data.get("changes", [])
+            changes = day_data.get("changes") or []
             day_km = day_data.get("_day_km", 0)
             changes_count = (day_data.get("changes_count")
                              or len(changes))
@@ -2836,9 +2876,12 @@ class TachoExplorer(tk.Tk):
                                 pass
 
                 # For each schedule entry, match to a slot
-                for start_hhmm, end_hhmm, name, ins_dt, _wit_dt in iw_schedule_by_date[iso_date]:
-                    slot = ""
-                    if act_insertions:
+                for entry in iw_schedule_by_date[iso_date]:
+                    start_hhmm, end_hhmm, name, ins_dt, _wit_dt, rec_slot = entry
+                    # Prefer the record's authoritative cardSlot; only fall back
+                    # to the time/name heuristic when it is unknown.
+                    slot = rec_slot or ""
+                    if not slot and act_insertions:
                         ins_min = ins_dt.hour * 60 + ins_dt.minute
                         best = min(act_insertions,
                                    key=lambda ai: abs(ai[0] - ins_min),
@@ -2857,16 +2900,18 @@ class TachoExplorer(tk.Tk):
                     day_schedule.setdefault(slot, []).append((start_hhmm, end_hhmm, name))
 
                 # Markers from split events
-                for sec, name, is_ins in iw_events_by_date.get(iso_date, []):
-                    # Resolve slot for marker
-                    m_slot = ""
-                    for sk, ranges in day_schedule.items():
-                        for _sh, _eh, rn in ranges:
-                            if rn.upper() == name.upper():
-                                m_slot = sk
+                for sec, name, is_ins, rec_slot in iw_events_by_date.get(iso_date, []):
+                    # Resolve slot for the marker: the record's cardSlot is
+                    # authoritative; the name→schedule scan is only a fallback.
+                    m_slot = rec_slot or ""
+                    if not m_slot:
+                        for sk, ranges in day_schedule.items():
+                            for _sh, _eh, rn in ranges:
+                                if rn.upper() == name.upper():
+                                    m_slot = sk
+                                    break
+                            if m_slot:
                                 break
-                        if m_slot:
-                            break
                     day_markers.append((sec, m_slot or "Slot 1", name, is_ins))
 
             # ── Per-day driver_info ──
@@ -3295,10 +3340,14 @@ class TachoExplorer(tk.Tk):
                 break
         if not day_data:
             return
-        changes = day_data.get("changes", [])
-        if is_vu:
-            slot_name = "First" if getattr(self, "_vu_slot_filter", "Slot 1") == "Slot 1" else "Second"
-            changes = _changes_for_slot(changes, slot_name)
+        # GUI-DASHBOARD-SLOT2-POPUP (G-F2/H-F4): hand the popup the day's FULL
+        # change set. The dashboard is a per-slot view, but the popup re-splits
+        # by slot itself (via _changes_for_slot) and opens on the dashboard's
+        # slot; filtering here to that slot stripped the popup's other slot and
+        # made it show "No data for this day.". The unfiltered set still carries
+        # the slot-less heuristic changes, so a slot-less day is not empty
+        # either.
+        changes = day_data.get("changes") or []
         day_km = day_data.get("_day_km", 0) or day_data.get("odometer_km", 0) or 0
         changes_count = day_data.get("changes_count") or len(changes)
 
@@ -3366,9 +3415,11 @@ class TachoExplorer(tk.Tk):
 
         day_vehicles = self._day_vehicles_info(vehicles)
 
+        initial_slot = 2 if (is_vu and getattr(
+            self, "_vu_slot_filter", "Slot 1") == "Slot 2") else 1
         DayDetailWindow(self, date_str, changes, day_km, changes_count,
                         driver_name, slot_schedule, markers, oos_events,
-                        day_vehicles, data, is_vu=is_vu)
+                        day_vehicles, data, is_vu=is_vu, initial_slot=initial_slot)
 
     def _on_dashboard_motion(self, event):
         drv_col = getattr(self, "_dashboard_drv_col", -1)
@@ -3438,7 +3489,7 @@ class TachoExplorer(tk.Tk):
         if is_vu:
             filtered = []
             for day_data in valid:
-                all_changes = day_data.get("changes", [])
+                all_changes = day_data.get("changes") or []
                 # Keep the selected slot's changes and any change that carries
                 # no slot at all (heuristic G1 VU TREP 02, see
                 # core/decoders/vu_g1.py): dropping the slot-less ones zeroed
@@ -3461,7 +3512,7 @@ class TachoExplorer(tk.Tk):
                     continue
                 date_str = str(day_data.get("date", ""))
                 date_iso = _activity_to_iso(date_str)
-                for ch in day_data.get("changes", []):
+                for ch in day_data.get("changes") or []:
                     if not isinstance(ch, dict):
                         continue
                     if not ch.get("card_inserted"):
@@ -3489,7 +3540,7 @@ class TachoExplorer(tk.Tk):
                 for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
                     try:
                         ins_dt = datetime.strptime(ins_str[:19], fmt)
-                    except (ValueError, IndexError):
+                    except (ValueError, IndexError, TypeError):
                         pass
                 if ins_dt is None:
                     continue
@@ -3677,7 +3728,7 @@ class TachoExplorer(tk.Tk):
 
             for day_data in reversed(m_days):
                 date_str = str(day_data.get("date", day_data.get("timestamp", "?")))
-                changes = day_data.get("changes", [])
+                changes = day_data.get("changes") or []
                 if is_vu:
                     day_km = day_data.get("_day_km", 0) or 0
                     odo = day_data.get("odometer_km", 0) or 0
@@ -4448,7 +4499,8 @@ class TachoExplorer(tk.Tk):
 
         rows.append(("\U0001f4ca  STATISTICS", "", True))
         act_days = len(activities)
-        total_changes = sum(len(a.get("changes", [])) for a in activities if isinstance(a, dict))
+        total_changes = sum(len(a.get("changes") or [])
+                            for a in activities if isinstance(a, dict))
         rows.append(("  Days with activity", str(act_days), False))
         rows.append(("  Activity changes", str(total_changes), False))
         rows.append(("  Events", str(len(events)), False))
