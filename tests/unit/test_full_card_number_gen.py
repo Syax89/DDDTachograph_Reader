@@ -11,9 +11,12 @@ Annex 1C (Reg. (EU) 2016/799, consolidated 2023-08-21) Appendix 1:
 * §2.75 — ``generation`` is ``0x01`` = Generation 1, ``0x02`` = Generation 2.
   The trailing byte is a generation code, NOT a ``0x02`` terminator.
 
-``decode_full_card_number_gen`` is the single entry point every VU-record path
-(vu_dispatcher, calibration, control activity, border crossing, VuCardRecord …)
-funnels through, reading the number with the shared ``_ascii`` helper.
+``decode_full_card_number_gen`` is the shared entry point for the supported
+Generation 2 / Generation 2.2 VU-record callers in this module (VuCardRecord,
+card insertion/withdrawal, download activity, control activity, border
+crossing, power interruption, …); they read the number with the shared
+``_ascii`` helper. Generation 1 card data is decoded by other decoders, not
+this function.
 
 Every expected value below is an independent literal; none is recomputed by
 calling the production helper.
@@ -79,9 +82,11 @@ def test_case_is_preserved():
 
 
 def test_embedded_control_byte_is_dropped_not_a_terminator():
-    # 0x02 inside the 16-octet field is not printable and is dropped like any
-    # other control byte; the bytes after it are still part of the number
-    # (§2.74 has no terminator — the trailing octet is the generation).
+    # NON-NORMATIVE input: §2.74 has no terminator, but that neither makes 0x02
+    # a valid printable identification character nor mandates stripping it.
+    # This pins the decoder's existing best-effort behaviour on such input: a
+    # control byte inside the 16-octet field is dropped (not treated as a stop)
+    # and the following octets are still read.
     out = decode_full_card_number_gen(_fcng(0x01, 0x1A, b"AB\x02CDEFGHIJKLMNO", 0x02), 0)
     assert out["present"] is True
     assert out["card_number"] == "ABCDEFGHIJKLMNO"
@@ -122,10 +127,15 @@ def test_decode_vu_card_record_reaches_shared_helper():
 
 
 def test_walk_record_arrays_dispatches_card_record():
-    # The public stream walker (used by app.engine.TachoParser) dispatches
+    # Minimal synthetic ROUTE test (not a complete signed normative download):
+    # the public stream walker (used by app.engine.TachoParser) dispatches
     # recordType 0x0E to the same decoder and surfaces the number.
+    # Annex 1C Appendix 7 §2.2.6.6 places VuCardRecordArray in the Technical
+    # Data structure, served by TREP 05/25/35; 0x76 0x35 is the Generation 2
+    # version 2 TechnicalData section marker (TRTP 35). The Gen2 v2 section
+    # markers per Appendix 7 are TRTP 00/31/32/33/35 — 0x34 is not one of them.
     rec = _vu_card_record(_fcng(0x02, 0x0F, b"E0000000000000AB", 0x01), b"E0000000000000AB")
-    stream = b"\x76\x34" + bytes([0x0E]) + struct.pack(">HH", 45, 1) + rec
+    stream = b"\x76\x35" + bytes([0x0E]) + struct.pack(">HH", 45, 1) + rec
     results = {}
     walk_vu_record_arrays(stream, results)
     cards = results["card_records"]
