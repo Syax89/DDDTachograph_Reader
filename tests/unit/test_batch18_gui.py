@@ -262,7 +262,9 @@ def test_parse_done_clears_the_table_when_there_are_no_nodes():
     app.after_idle.assert_not_called()
 
 
-def test_speed_summary_overspeed_column_is_not_zeroed(monkeypatch):
+# ── GUI-DASHBOARD-DOUBLE-CLICK (H-F8 / XG-F9) ──────────────────────────
+
+def _dashboard_double_click(data, activity_list, card_day_km=None, is_vu=False):
     """Drive ``_on_dashboard_double_click`` and capture the args handed to
     ``DayDetailWindow``. The constructor is swapped manually and restored
     immediately (it resolves its own name from the module global)."""
