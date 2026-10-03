@@ -1855,13 +1855,6 @@ def _condition_label(cond):
     return m.get(str(cond), f"Condition: {cond}")
 
 
-def _ts_to_hhmm(ts):
-    dt = _parse_iso(str(ts))
-    if dt:
-        return dt.strftime("%H:%M")
-    return str(ts)[:5]
-
-
 # ── Main application ─────────────────────────────────────────────────────
 
 def _resource_path(rel):

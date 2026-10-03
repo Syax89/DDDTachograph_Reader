@@ -1028,18 +1028,6 @@ def _emit_section(section, results):
 # ── Additional G2.2 record decoders (moved from g2_decoders) ──────────────
 
 
-def decode_downloadable_period(rec):
-    """VuDownloadablePeriod (8 bytes): minDownloadableTime(4) + maxDownloadableTime(4)."""
-    if len(rec) < 8:
-        return None
-    min_ts = struct.unpack(">I", rec[0:4])[0]
-    max_ts = struct.unpack(">I", rec[4:8])[0]
-    return {
-        "min_downloadable": _iso(min_ts) or "N/A",
-        "max_downloadable": _iso(max_ts) or "N/A",
-    }
-
-
 def decode_time_adj_gnss(rec):
     """VuTimeAdjustmentGNSSRecord (8 bytes): oldTimeValue(4) + newTimeValue(4)."""
     if len(rec) < 8:
