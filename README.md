@@ -6,8 +6,8 @@
 
 > Open Source  `.ddd` digital tachograph file analyzer — full decoding with tree-structured data exploration.
 
-[![Build and Release](https://github.com/Syax89/ddd-tachograph-reader/actions/workflows/build.yml/badge.svg)](https://github.com/Syax89/ddd-tachograph-reader/actions/workflows/build.yml)
-[![Latest Release](https://img.shields.io/github/v/release/Syax89/ddd-tachograph-reader)](https://github.com/Syax89/ddd-tachograph-reader/releases/latest)
+[![Build and Release](https://github.com/Syax89/DDDTachograph_Reader/actions/workflows/build.yml/badge.svg)](https://github.com/Syax89/DDDTachograph_Reader/actions/workflows/build.yml)
+[![Latest Release](https://img.shields.io/github/v/release/Syax89/DDDTachograph_Reader)](https://github.com/Syax89/DDDTachograph_Reader/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 
@@ -62,7 +62,7 @@
 ## Download & Usage
 
 ### Pre-built Executable (recommended)
-Download from the **[Releases](https://github.com/Syax89/ddd-tachograph-reader/releases/latest)** page:
+Download from the **[Releases](https://github.com/Syax89/DDDTachograph_Reader/releases/latest)** page:
 
 | Platform | File |
 |----------|------|
@@ -75,8 +75,8 @@ and drag `TachoReader.app` to Applications.
 ### From Source (developers)
 
 ```bash
-git clone https://github.com/Syax89/ddd-tachograph-reader.git
-cd ddd-tachograph-reader
+git clone https://github.com/Syax89/DDDTachograph_Reader.git
+cd DDDTachograph_Reader
 pip install -r requirements.txt
 
 # GUI
@@ -91,7 +91,7 @@ python app/cli.py path/to/file.ddd
 ## Project Structure
 
 ```
-ddd-tachograph-reader/
+DDDTachograph_Reader/
 ├── app/
 │   ├── cli.py                  # Command-line interface
 │   ├── main.py                 # CLI compatibility entry point

@@ -61,6 +61,7 @@ def reset_logger_singleton():
 @pytest.fixture
 def captured_logs():
     """Capture every record the ``ddd_tacho`` logger emits (propagate=False)."""
+    _reset_ddd_logger()  # ensure clean slate even if autouse ran in another module
     captured = []
 
     class _Collect(logging.Handler):
