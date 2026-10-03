@@ -29,6 +29,23 @@ class TagDecoder:
     parent_tags: Optional[Tuple[int, ...]] = None
 
 
+# Valid VU download section markers: a VU message is ``SID 0x76 + TREP``
+# (Annex 1B App.7 for Gen1, Annex 1C App.7 for Gen2/2.2). A tag whose high byte
+# is 0x76 is a VU container ONLY when its low byte (the TREP) is one of these
+# defined markers. Any other 0x76xx tag (e.g. 0x7607 / 0x76AA) is NOT a
+# container: its payload must be left untouched, otherwise the nested walk
+# surfaces records smuggled inside a phantom container (XD-F1). The set is
+# deliberately a superset of the registered VU container tags (0x7601-0x7606,
+# 0x7621-0x7626, 0x7631-0x7636) so legitimate but unregistered markers such as
+# TREP 0x25/0x35 TechnicalData keep being walked.
+VU_TREP_MARKER_BYTES = frozenset({
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,   # Gen1 + CardDownload / interface version
+    0x11, 0x14,                                  # Gen1 sensor-specific requests
+    0x21, 0x22, 0x23, 0x24, 0x25, 0x26,          # Gen2
+    0x31, 0x32, 0x33, 0x34, 0x35, 0x36,          # Gen2.2
+})
+
+
 class DecoderRegistry:
     """Central registry of all known tag decoders with spec references."""
 
@@ -627,7 +644,10 @@ class DecoderRegistry:
         if dec and dec.container:
             return True
         if (tag & 0xFF00) == 0x7600:
-            return True
+            # Wildcard VU container: honour only registered container tags or
+            # the defined ``0x76 + TREP`` markers. An unregistered 0x76xx tag
+            # is not a container, so the nested walk must not descend into it.
+            return tag in self._container_tags or (tag & 0x00FF) in VU_TREP_MARKER_BYTES
         return False
 
     def is_signature(

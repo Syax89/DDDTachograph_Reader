@@ -30,12 +30,17 @@ TREP_NAMES = {
     },
 }
 
-# Mandatory TREPs in a well-formed download (Overview + Activities +
-# EventsFaults + TechnicalData). DetailedSpeed/CardDownload are optional.
+# Mandatory TREPs in a well-formed download. Per Annex 1C App.7 DDP_054
+# ("It is mandatory for the IDE to request the overview data transfer …") the
+# ONLY section whose request is mandatory is the Overview. The download is
+# selective per TRTP (DDP_011), so a legal file may legitimately contain just
+# Overview, or Overview + any subset of Activities / EventsFaults /
+# TechnicalData / DetailedSpeed. Treating those extra sections as mandatory
+# reported every legal selective download as "partial" (C-F3 / D2-004).
 MANDATORY_TREPS = {
-    "G1": {0x01, 0x02, 0x03, 0x05},
-    "G2": {0x21, 0x22, 0x23, 0x25},
-    "G2.2": {0x31, 0x32, 0x33, 0x35},
+    "G1": {0x01},
+    "G2": {0x21},
+    "G2.2": {0x31},
 }
 
 

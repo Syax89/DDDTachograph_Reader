@@ -20,6 +20,7 @@ def parse_g2_vu_record(val, results, tag):
     """
     from core.parser.record_array import RecordArrayParser as _RAP
     from core.parser import vu_dispatcher as _vd
+    from core.utils.constants import RECORD_ARRAY_MAX_RECORDS
 
     try:
         result_key = _vd.VU_TAG_RESULT_KEYS.get(tag)
@@ -29,7 +30,10 @@ def parse_g2_vu_record(val, results, tag):
         hdr = _RAP.parse_header(val, 0)
         if hdr and hdr["record_size"] > 0 and hdr["no_of_records"] > 0:
             records = []
-            for _idx, rec, _ in _RAP.iter_records(val, 0):
+            # Bound the expansion by the same per-array cap the stream walker
+            # enforces. Without it a corrupt header (noOfRecords up to 65535)
+            # fabricates one decoded record per available payload byte.
+            for _idx, rec, _ in _RAP.iter_records(val, 0, max_records=RECORD_ARRAY_MAX_RECORDS):
                 decoded = _vd.decode_vu_tag_record(tag, rec)
                 if decoded:
                     records.append(decoded)
