@@ -188,3 +188,40 @@ def test_fatal_parse_clears_the_previous_file_display(monkeypatch):
     assert app.lbl_gen.config.call_args.kwargs["text"] == ""
     # The previous file stays exportable, but the status says so explicitly.
     assert "previous file" in app.status.config.call_args.kwargs["text"]
+
+
+def test_fatal_parse_retains_the_exportable_previous_file(monkeypatch):
+    """M11: _reset_file_display clears the DISPLAY fields but must retain the
+    previous file's identity so export after a fatal parse still works.
+
+    The export path (``_run_export`` / ``_export_json`` in app/gui.py) reads
+    ``self.current_data`` (the data to export) and ``self.current_file`` (the
+    suggested filename), so both must survive the reset.
+    """
+    app = object.__new__(TachoExplorer)
+    app.lbl_file = Mock()
+    app.lbl_gen = Mock()
+    app.lbl_status = Mock()
+    app.integrity_banner = Mock()
+    app.status = Mock()
+    app.title = Mock()
+    app.progress = Mock()
+    app.btn_open = Mock()
+    app.btn_export = Mock()
+    app._parsing = True
+    retained = {"metadata": {"filename": "first_file.ddd"}}
+    app.current_data = retained
+    app.current_file = "/tmp/first_file.ddd"
+    app._integrity_warnings = []
+    app._integrity_file = ""
+    monkeypatch.setattr("app.gui.messagebox", Mock())
+
+    app._parse_error("no structural data recovered")
+
+    # Display fields are cleared ...
+    assert app.lbl_file.config.call_args.kwargs["text"] == "No file loaded"
+    assert app._integrity_warnings == []
+    # ... but what the export path reads still points at the retained file.
+    assert app.current_data is retained
+    assert app.current_file == "/tmp/first_file.ddd"
+    assert app.btn_export.config.call_args.kwargs["state"] == "normal"
