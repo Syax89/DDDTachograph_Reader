@@ -94,14 +94,6 @@ FAULT_TYPES: dict[int, str] = {
 #   '04'H Ferry / Train crossing — End (G2 only)
 #   '05'H..'FF'H RFU
 
-SPECIFIC_CONDITION_TYPES: dict[int, str] = {
-    0x00: "RFU",
-    0x01: "Out of scope — Begin",
-    0x02: "Out of scope — End",
-    0x03: "Ferry / Train crossing — Begin",
-    0x04: "Ferry / Train crossing — End",
-}
-
 # Compact labels used as the machine-friendly ``condition`` field in results.
 SPECIFIC_CONDITION_LABELS: dict[int, str] = {
     0x00: "RFU",
@@ -191,11 +183,6 @@ def describe_fault(code) -> str:
         # An event code recorded in a fault slot — describe it as the event.
         return describe_event(code)
     return f"Unknown fault (0x{code:02X})"
-
-
-def describe_specific_condition(code: int) -> str:
-    """Return description for a specific condition type code."""
-    return SPECIFIC_CONDITION_TYPES.get(code, f"Condition 0x{code:02X}")
 
 
 # ── Event/Fault record purpose (Annex 1B §2.72 / Annex 1C §2.75) ───────────
