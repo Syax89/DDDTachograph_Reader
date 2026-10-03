@@ -23,18 +23,23 @@ _log = get_logger(__name__)
 
 # TRTP marker (byte after the 0x76 SID) → generation, from the Annex 1C
 # consolidated TRTP table (§ "There are seven types of data transfer"):
-#   Overview 01/21/31, Activities 02/22/32, Events&Faults 03/23/33,
-#   Detailed speed 04/24/34, Technical data 05/25/35, Card download 06.
-#   Download interface version is 00 and is supported by Gen 2.2 only.
+#   Overview 01/21/31, Activities 02/22/32, Events and faults 03/23/33,
+#   Detailed speed 04/24/24, Technical data 05/25/35, Card download 06.
+#   ("TRTP 00, 31, 32, 33 and 35 are used for Generation 2 version 2" and
+#   "TRTP 24 is used for Generation 2, for version 1 and version 2".)
+# Only 0x24 (Detailed speed) is shared by G2 and G2.2 and is treated as G2 —
+# the annex defines NO 0x34 marker. Download interface version (TREP 00) is
+# Gen 2.2 only. 0x11/0x14 are reserved for manufacturer-specific requests and
+# keep the pre-Batch-4 G1 default.
 # A selective VU download can start with ANY of these, not just the Overview
 # marker, so the leading marker (never a byte pair inside a record) selects the
-# generation. 0x24 is shared by G2 and G2.2 (Detailed speed) → treated as G2.
+# generation.
 _TRTP_GENERATION = {
     0x00: "G2.2",
     0x01: "G1", 0x02: "G1", 0x03: "G1", 0x04: "G1", 0x05: "G1", 0x06: "G1",
     0x11: "G1", 0x14: "G1",
     0x21: "G2", 0x22: "G2", 0x23: "G2", 0x24: "G2", 0x25: "G2",
-    0x31: "G2.2", 0x32: "G2.2", 0x33: "G2.2", 0x34: "G2.2", 0x35: "G2.2",
+    0x31: "G2.2", 0x32: "G2.2", 0x33: "G2.2", 0x35: "G2.2",
 }
 
 

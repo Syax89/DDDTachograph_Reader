@@ -62,8 +62,15 @@ def test_carddownload_boundary_search_scales_polynomially(monkeypatch):
     """A crafted repeated ``76 04 00 00 76 06 00 00 00 00`` payload hung the
     walker (k=24 took 33.9s, k=50 >2min) because every nested TREP 06 restarted
     the boundary search with a fresh memo. Guard by operation count — no wall
-    clock — so CI stays deterministic: base grows ~4x per +1 unit (k=8→127,
-    k=16→32767); fixed is linear (k=8→7, k=16→15)."""
+    clock — so CI stays deterministic.
+
+    The decisive range is k >= 64. Dropping the single ``ctx=ctx`` argument
+    (the reviewer's M1 survivor) restores the pathology at k>=64 — ops 63 -> 2016
+    at k=64 and 127 -> 8128 at k=128, ~4.29x per doubling — and the emitted
+    message boundaries diverge (66 -> 128 messages). The k=8-vs-k=16 range is
+    *blind* to that mutant (15 vs 120 ops both satisfy ``4*small+8``), so the
+    shipped check now also bites at k>=64 while keeping the pre-fix exponential
+    catch (base was k=8->127, k=16->32767 ops)."""
     real = g1_walker._valid_chain_from
     calls = {"n": 0}
 
@@ -78,11 +85,19 @@ def test_carddownload_boundary_search_scales_polynomially(monkeypatch):
         list(g1_walker.iter_g1_vu_messages(_CARD_PATTERN * k))
         return calls["n"]
 
+    # Pre-fix exponential catch (still fails on the base: 32767 > 4*127 + 8).
     small = measured(8)
-    large = measured(16)
-    assert large <= 4 * small + 8, (
+    mid = measured(16)
+    assert mid <= 4 * small + 8, (
         f"_valid_chain_from calls grew super-linearly: k=8 -> {small}, "
-        f"k=16 -> {large}")
+        f"k=16 -> {mid}")
+
+    # The bite at k>=64 (where a dropped ``ctx=ctx`` is distinguishable).
+    for k in (32, 64, 128):
+        ops = measured(k)
+        assert ops <= 4 * k + 8, (
+            f"_valid_chain_from ops at k={k} grew super-linearly: {ops} "
+            f"(limit {4 * k + 8})")
 
 
 def test_carddownload_is_not_silently_dropped():
@@ -183,6 +198,23 @@ def test_dense_stream_below_cap_is_complete():
     assert results["_vu_walk_complete"] is True
 
 
+def test_shipped_memory_ceiling_value_is_pinned():
+    """Pin the SHIPPED ceiling value, not just the mechanism.
+
+    ``test_dense_stream_record_cap_fails_closed`` monkeypatches the constant to
+    100, so it never reads the shipped number: raising it (reviewer's M5,
+    500000 -> 10**9) leaves the suite green. Measured justification for 500000:
+    the smallest dense input that can reach it is 26 x (5 + 20000) = 520130 B
+    (~1 record per input byte) and the worst case is a flat ~5.6 MB tracemalloc
+    peak; a decoded 1-byte record costs up to 280.6x its bytes. Expressing it as
+    25 x RECORD_ARRAY_MAX_RECORDS keeps both edges moving together.
+    """
+    from core.utils.constants import RECORD_ARRAY_MAX_RECORDS, VU_MAX_TOTAL_RECORDS
+
+    assert VU_MAX_TOTAL_RECORDS == 500_000
+    assert VU_MAX_TOTAL_RECORDS == 25 * RECORD_ARRAY_MAX_RECORDS
+
+
 # ── D-F3 / D2-008: generation from the leading TRTP marker ───────────────
 
 def test_generation_from_leading_trtp_marker():
@@ -191,13 +223,18 @@ def test_generation_from_leading_trtp_marker():
     def gen(first_two):
         return DeterministicParser()._detect_generation(first_two + b"\x00" * 40)
 
-    # Gen 2.2 selective downloads may start with any G2.2 TRTP, incl. TREP 00.
-    for trep in (0x00, 0x31, 0x32, 0x33, 0x34, 0x35):
+    # Gen 2.2 TRTP markers per the annex: 00, 31, 32, 33 and 35.
+    for trep in (0x00, 0x31, 0x32, 0x33, 0x35):
         assert gen(bytes([0x76, trep])) == "G2.2", f"76 {trep:02X} should be G2.2"
     for trep in (0x21, 0x22, 0x23, 0x24, 0x25):
         assert gen(bytes([0x76, trep])) == "G2", f"76 {trep:02X} should be G2"
     for trep in (0x01, 0x02, 0x03, 0x05, 0x06):
         assert gen(bytes([0x76, trep])) == "G1", f"76 {trep:02X} should be G1"
+
+    # Exactly the annex G2.2 set: no marker the annex does not define (an
+    # invented mapping in the generation table) may classify as v2.
+    g22 = {b for b in range(0x100) if gen(bytes([0x76, b])) == "G2.2"}
+    assert g22 == {0x00, 0x31, 0x32, 0x33, 0x35}
 
 
 def test_g1_file_with_inner_g2_marker_stays_g1():
