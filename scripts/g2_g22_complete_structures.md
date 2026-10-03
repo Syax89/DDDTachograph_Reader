@@ -62,7 +62,6 @@ Bit 5 del primo byte di tag = 1 indica tag costruito (CONSTRUCTED / container).
 - **Nome**: VuCardRecord
 - **Annex reference**: Annex 1C §4.5.3.2.8
 - **Dimensione record**: **29 byte**
-- **Decoder**: `parse_g2_card_record` in `g2_decoders.py:7`
 - **Stato**: ✅ CONFERMATO
 
 | Offset | Size | Nome | Tipo | Note |
@@ -81,7 +80,6 @@ Bit 5 del primo byte di tag = 1 indica tag costruito (CONSTRUCTED / container).
 - **Nome**: VuCardIWRecord (Insert/Withdrawal)
 - **Annex reference**: Annex 1C §4.5.3.2.9
 - **Dimensione record**: **28 byte**
-- **Decoder**: `parse_g2_card_iw_record` in `g2_decoders.py:49`
 - **Stato**: ✅ CONFERMATO
 
 | Offset | Size | Nome | Tipo | Note |
@@ -104,7 +102,6 @@ Bit 5 del primo byte di tag = 1 indica tag costruito (CONSTRUCTED / container).
 - **Nome**: VuDownloadablePeriod
 - **Annex reference**: Annex 1C §4.5.3.2.10
 - **Dimensione record**: **8 byte**
-- **Decoder**: `parse_g2_downloadable_period` in `g2_decoders.py:97`
 - **Stato**: ✅ CONFERMATO
 
 | Offset | Size | Nome | Tipo | Note |
@@ -118,7 +115,6 @@ Bit 5 del primo byte di tag = 1 indica tag costruito (CONSTRUCTED / container).
 - **Nome**: VuTimeAdjustmentData
 - **Annex reference**: Annex 1C §4.5.3.2.12
 - **Dimensione record**: **variabile** (minimo 9 byte fissi, + parte variabile per workshop)
-- **Decoder**: `parse_g2_time_adjustment` in `g2_decoders.py:118`
 - **Stato**: ⚠️ PARZIALE (parte variabile non decodificata)
 
 | Offset | Size | Nome | Tipo | Note |
@@ -136,7 +132,6 @@ Bit 5 del primo byte di tag = 1 indica tag costruito (CONSTRUCTED / container).
 - **Nome**: VuCompanyLocksData
 - **Annex reference**: Annex 1C §4.5.3.2.14
 - **Dimensione record**: **25 byte**
-- **Decoder**: `parse_g2_company_locks` in `g2_decoders.py:145`
 - **Stato**: ✅ CONFERMATO
 
 | Offset | Size | Nome | Tipo | Note |
@@ -152,7 +147,6 @@ Bit 5 del primo byte di tag = 1 indica tag costruito (CONSTRUCTED / container).
 - **Nome**: SensorPairedData
 - **Annex reference**: Annex 1C §4.5.3.2.15
 - **Dimensione record**: **24 byte**
-- **Decoder**: `parse_g2_sensor_paired` in `g2_decoders.py:176`
 - **Stato**: ✅ CONFERMATO
 
 | Offset | Size | Nome | Tipo | Note |
@@ -168,7 +162,6 @@ Bit 5 del primo byte di tag = 1 indica tag costruito (CONSTRUCTED / container).
 - **Nome**: SensorExternalGNSSCoupledData
 - **Annex reference**: Annex 1C §4.5.3.2.16
 - **Dimensione record**: **20 byte**
-- **Decoder**: `parse_g2_sensor_gnss_coupled` in `g2_decoders.py:203`
 - **Stato**: ✅ CONFERMATO
 
 | Offset | Size | Nome | Tipo | Note |
@@ -183,7 +176,6 @@ Bit 5 del primo byte di tag = 1 indica tag costruito (CONSTRUCTED / container).
 - **Nome**: VuITSConsentData
 - **Annex reference**: Annex 1C §4.5.3.2.17
 - **Dimensione record**: **23 byte**
-- **Decoder**: `parse_g2_its_consent` in `g2_decoders.py:226`
 - **Stato**: ✅ CONFERMATO
 
 | Offset | Size | Nome | Tipo | Note |
@@ -354,7 +346,6 @@ Formato verificato dalla composizione dei campi normativi: due `NationNumeric`, 
 - **Nome**: VuControllerIdentification
 - **Annex reference**: Annex 1C (amended 2021/1228) — VU configuration
 - **Encoding**: RecordArray o record singolo (dimensione variabile)
-- **Decoder**: `parse_g22_controller_identification` in `g2_decoders.py:256`
 - **Stato**: ⚠️ PARZIALMENTE IMPLEMENTATO (struttura variabile con CodedString)
 
 **Struttura** (record singolo, dimensione variabile):
@@ -549,7 +540,6 @@ Questi tag (0x0225-0x0228) rappresentano EF interni alla VU e sono anch'essi CON
 | 0x0227 | G22_VU_TrailerRecord | `parse_g22_trailer_registrations` | ✅ Corretto |
 | 0x0228 | G22_VU_BorderCrossingRecord | `parse_g22_border_crossings` | ✅ Corretto |
 
-**Bug rilevato**: 0x0225 (`G22_VU_GNSSADRecord` = GNSS Accumulated Driving Record) e' mappato a `parse_g22_gnss_enhanced_places` invece che a `parse_g22_gnss_accumulated_driving` in `tag_navigator.py:302`.
 
 ---
 
@@ -600,8 +590,6 @@ Questi tag (0x0225-0x0228) rappresentano EF interni alla VU e sono anch'essi CON
 ## 11. Problemi identificati nel codebase
 
 ### 11.1 — Tag 0x052C-0x0533 non in G2_VU_RECORD_DECODERS
-`g2_decoders.py:309` — `G2_VU_RECORD_DECODERS` contiene solo 0x0509-0x0512 e 0x052B.
-`decoders.py:167-169` — `parse_g2_vu_record` controlla `if tag not in decoders_map: return`, quindi i tag 0x052C-0x0533 vengono silenziosamente ignorati anche se il `tag_navigator.py:274-278` li dispatcherebbe.
 
 **Fix**: aggiungere entries per 0x052C-0x0533 in `G2_VU_RECORD_DECODERS`.
 
@@ -609,10 +597,8 @@ Questi tag (0x0225-0x0228) rappresentano EF interni alla VU e sono anch'essi CON
 I decoder `parse_g2_sensor_gnss_coupled` e `parse_g2_sensor_paired` esistono ma sono registrati solo per i tag G2 (0x0511, 0x0510). Per G2.2 si possono riusare con la stessa funzione, aggiungendo le entries in `G2_VU_RECORD_DECODERS`.
 
 ### 11.3 — Tag 0x0225 mappato a decoder errato
-`tag_navigator.py:302` mappa `0x0225` a `parse_g22_gnss_enhanced_places` ma 0x0225 e' `G22_VU_GNSSADRecord` (GNSS Accumulated Driving record). Dovrebbe invece mappare a `parse_g22_gnss_accumulated_driving` (tag 0x0525).
 
 ### 11.4 — Tag 0x0225 e 0x0226 riferimento incrociato
-`tag_navigator.py:298-303`:
 ```python
 elif tag == 0x0526 or tag == 0x0226:
     decoders.parse_g22_load_unload_operations(...)

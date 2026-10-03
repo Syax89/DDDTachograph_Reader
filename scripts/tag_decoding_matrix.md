@@ -47,7 +47,6 @@ Every registry variant must expose:
 The registry matrix is covered by tests so new entries cannot silently miss the minimum audit data:
 
 ```bash
-python3 -m pytest tests/unit/test_decoder_registry.py -q
 ```
 
 The dataset gates remain:

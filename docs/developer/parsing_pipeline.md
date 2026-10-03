@@ -23,7 +23,6 @@ flowchart LR
     A["First byte"] -->|"0x76"| B[VU]
     A -->|"other"| C[Card]
     B -->|"G2/G2.2"| H["RecordArray stream walk\n(vu_record_dispatcher)"]
-    B -->|"G1"| I["SID/TREP message walk\n(g1_vu_walker)"]
     C -->|"G1"| G["STAP walk\nmode=stap"]
     C -->|"G2/G2.2 EFs"| F["BER-TLV walk\nmode=ber"]
 ```
@@ -108,8 +107,6 @@ It returns `(tag, length, header_size)` and never reads the payload; callers sli
 
 VU downloads are **not** plain TLV at the top level — they are SID/TREP message streams. The structural pass routes them to dedicated walkers:
 
-- **G2/G2.2 VU** (`DeterministicParser._parse_vu_stream()`): walks the sections produced by `core/vu_record_dispatcher.iter_vu_sections()`. Each section is a `0x76 TREP` marker followed by RecordArray blocks keyed by **recordType** (Annex 1C Appendix 7). Walking these bytes as BER would misread `0x76` as a 1-byte tag and classify garbage.
-- **G1 VU** (`DeterministicParser._parse_g1_vu_stream()`): walks SID/TREP messages with structure-determined lengths via `core/g1_vu_walker.iter_g1_vu_messages()` (Annex 1B §2.2.6), including the trailing RSA signature of each message. Falls back to the generic TLV walk when the stream does not validate (truncated or synthetic files).
 
 Semantic decoding of the same streams happens in `TachoParser._decode_vu_semantics()`: `walk_vu_record_arrays()` for G2/G2.2 (with `parse_vu_download_messages()` as heuristic fallback) and `walk_g1_vu()` for G1.
 

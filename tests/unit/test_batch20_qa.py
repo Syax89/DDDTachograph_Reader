@@ -87,7 +87,6 @@ STALE_MODULE_TOKENS = [
 ]
 
 
-@pytest.mark.skip(reason="QA meta test: docs stale refs need manual cleanup campaign")
 def test_docs_do_not_reference_removed_modules():
     offenders = []
     for path in DOC_FILES:

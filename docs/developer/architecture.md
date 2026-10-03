@@ -28,7 +28,6 @@ flowchart TD
     B --> C{Generation + VU/card detection}
     C -->|"Card"| D["DeterministicParser\nSTAP / BER-TLV walk"]
     C -->|"G2/G2.2 VU"| E["RecordArray stream walk\n(vu_record_dispatcher)"]
-    C -->|"G1 VU"| F["SID/TREP message walk\n(g1_vu_walker)"]
     D --> G["DecoderRegistry.get_decoder"]
     E --> G
     F --> G

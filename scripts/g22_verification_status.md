@@ -92,19 +92,16 @@ Questi 7 tag hanno dimensioni puramente stimate dal codice euristico, senza conf
 ## 5. Bug identificati
 
 ### Bug #1 — Tag 0x0225 mappato a decoder errato
-- **File**: `core/tag_navigator.py:302`
 - **Codice attuale**: `elif tag == 0x0528 or tag == 0x0225:`
 - **Problema**: 0x0225 (`G22_VU_GNSSADRecord` = GNSS Accumulated Driving) viene mappato al decoder `parse_g22_gnss_enhanced_places` (che e' per GNSS Enhanced Places 0x0528).
 - **Fix**: `elif tag == 0x0528: decoders.parse_g22_gnss_enhanced_places(...)` e aggiungere `elif tag == 0x0525 or tag == 0x0225: decoders.parse_g22_gnss_accumulated_driving(...)`.
 
 ### Bug #2 — Tag 0x052C-0x0533 non in G2_VU_RECORD_DECODERS
-- **File**: `core/decoders/g2_dispatch.py:309-318`
 - **Problema**: `G2_VU_RECORD_DECODERS` non include entries per i tag 0x052C-0x0533.
 - **Conseguenza**: `parse_g2_vu_record` in `decoders.py:167` fa `return` immediato per questi tag.
 - **Fix**: Aggiungere le entries mancanti con i decoder appropriati.
 
 ### Bug #3 — Discrepanza size VuCardIWRecord
-- **File**: `core/decoders/g2_dispatch.py:49-94`
 - **Problema**: Il decoder si aspetta 28 byte e poi legge `renew_idx` a offset 28 opzionalmente (linea 81: `rec[28] if len(rec) > 28 else 0`). Ma la dimensione dichiarata e' 28, quindi `len(rec)` sara' sempre 28 e `renew_idx` sara' sempre 0 (non letto).
 - **Impatto**: Minore — `cardRenewalIndex` non viene mai popolato correttamente.
 - **Fix**: Dichiarare la dimensione record a 29 byte o rimuovere il campo.
@@ -128,7 +125,6 @@ Questi 7 tag hanno dimensioni puramente stimate dal codice euristico, senza conf
 
 Questo report e' stato generato tramite:
 
-1. **Analisi statica del codebase**: lettura integrale di `g2_decoders.py`, `record_array.py`, `decoders.py`, `tag_definitions.py`, `tag_navigator.py`
 2. **Ricerca normativa**: fetching di Reg. EU 2016/799, 2021/1228, 2023/980 da EUR-Lex
 3. **Analisi dati reali**: scansione di 9 file `.ddd`/`.DDD` (825 KB totali) alla ricerca di tag G2/G2.2
 4. **Cross-referencing**: verifica dei decoder esistenti contro la tabella di dispatch
