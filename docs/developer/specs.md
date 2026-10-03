@@ -122,4 +122,3 @@ This maps directly to `decode_vu_card_record()` in `core/parser/vu_dispatcher.py
 - **`scripts/coverage_audit.py`** — Per-file byte coverage breakdown against the reference DDD samples
 - **`scripts/semantic_coverage_audit.py`** — Checks whether decoders populate expected semantic fields
 - **`scripts/unparsed_pattern_triage.py`** — Analyzes patterns in unparsed byte blocks for potential new tag discovery
-- **`scripts/test_det.py`** — Quick harness for the deterministic parser
