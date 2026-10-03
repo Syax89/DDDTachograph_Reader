@@ -32,7 +32,7 @@ Cross-platform (Windows/macOS) application for parsing, analyzing and visualizin
 ## Repository Layout
 
 ```
-ddd-tachograph-reader/
+DDDTachograph_Reader/
 ├── core/                        # Core parsing engine
 │   ├── decoders/                # Field-level decoders (facade + type-split modules)
 │   │   ├── __init__.py          # Facade re-exporting the public decoder API

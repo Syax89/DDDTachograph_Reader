@@ -25,7 +25,7 @@ If you prefer to run the tool from Python source:
 
 ```bash
 git clone https://github.com/Syax89/DDDTachograph_Reader.git
-cd ddd-tachograph-reader
+cd DDDTachograph_Reader
 pip install -r requirements.txt
 ```
 
