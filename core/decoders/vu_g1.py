@@ -472,7 +472,6 @@ def _parse_trep_02_activities(data, results):
         # Prioritize boundary-aligned records; fall back to timestamp-scan heuristic.
         activity_list = results.setdefault("activities", [])
         activity_map = {0: "rest", 1: "available", 2: "work", 3: "drive", 4: "break_rest"}
-        header_dt = datetime.fromtimestamp(header_ts, tz=timezone.utc)
         scan = card_start
 
         if daily_boundaries:
@@ -481,6 +480,7 @@ def _parse_trep_02_activities(data, results):
             _log.debug("TREP 02: no daily record boundaries found, using timestamp-scan heuristic")
 
         daily_count = 0
+        seen_days = set()
         while scan + 10 <= len(data):
             ts = struct.unpack(">I", data[scan:scan+4])[0]
             if not (946684800 <= ts <= 4102444800):
@@ -520,24 +520,34 @@ def _parse_trep_02_activities(data, results):
                             "available": "AVAILABLE", "break_rest": "REST"}
                 changes = [
                     {"activity": type_map.get(c.get("activity", "work"), "WORK"),
-                     "time": f"{c['minute'] // 60:02d}:{c['minute'] % 60:02d}"}
+                     "time": f"{c['minute'] // 60:02d}:{c['minute'] % 60:02d}",
+                     "slot": "First"}
                     for c in changes_list[:50]
                 ]
-                activity_list.append({
-                    "timestamp": header_dt.isoformat(),
-                    "date": header_dt.strftime("%d/%m/%Y"),
-                    "odometer_midnight": odo,
-                    "card_inserted": bool(card_inserted),
-                    "changes_count": no_changes,
-                    "changes": changes,
-                    "driver": f"{surname_s} {firstname_s}".strip(),
-                })
+                # Each recovered day is labelled with ITS OWN timestamp, not the
+                # message-header timestamp: a TREP02 body/tail can carry blocks
+                # from several days, and stamping them all with the local header
+                # date mis-attributed foreign records to the current day.
+                rec_dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+                day_key = (rec_dt.isoformat(),
+                           tuple((c["time"], c["activity"]) for c in changes))
+                if day_key not in seen_days:
+                    seen_days.add(day_key)
+                    activity_list.append({
+                        "timestamp": rec_dt.isoformat(),
+                        "date": rec_dt.strftime("%d/%m/%Y"),
+                        "odometer_midnight": odo,
+                        "card_inserted": bool(card_inserted),
+                        "changes_count": no_changes,
+                        "changes": changes,
+                        "driver": f"{surname_s} {firstname_s}".strip(),
+                    })
+                    daily_count += 1
                 skip_to = min((b for b in daily_boundaries if b > scan), default=-1)
                 if skip_to > 0 and skip_to < pair_pos + 500:
                     scan = skip_to
                 else:
                     scan = pair_pos
-                daily_count += 1
             else:
                 scan += 1
 

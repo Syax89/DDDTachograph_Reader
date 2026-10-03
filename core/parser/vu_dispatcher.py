@@ -105,6 +105,11 @@ VU_RECORD_RESULT_KEYS = {
     0x20: "sensor_pairings",
     0x21: "sensor_gnss_couplings",
     0x12: "speed_blocks",
+    # recordType 0x29 is an ActivityChangeInfo that the VU partitions into the
+    # co-driver slot on some Gen2.2 models (observed on Stoneridge V6006). It
+    # is decoded by ``_decode_record``; without a result key it was decoded and
+    # then silently discarded (XB-F6 / D2-006).
+    0x29: "co_driver_activities",
 }
 
 # 0x05xx tags are used only by the tag-keyed adapter. The mapped record types
@@ -447,13 +452,24 @@ def _coord_to_deg(raw):
 def decode_geo_coordinates(data, off):
     """GeoCoordinates (6 bytes): latitude(3) + longitude(3), signed int24,
     each coded as ±DDMM.M ×10 (Annex 1C §2.76). Unknown position is encoded
-    as 0x7FFFFF (per coordinate); all-0xFF marks an empty/padded record."""
+    as 0x7FFFFF (per coordinate); all-0xFF marks an empty/padded record.
+
+    A coordinate that is all-0xFF (empty) on ONE axis but not the other, or a
+    wholly zeroed record, is a half-erased / cleared fix — it must NOT be
+    published as a real position near Null Island.
+    """
     if off + 6 > len(data):
         return None
     lat_raw = data[off:off + 3]
     lon_raw = data[off + 3:off + 6]
-    if (lat_raw == b"\xff\xff\xff" and lon_raw == b"\xff\xff\xff") or \
-            lat_raw == b"\x7f\xff\xff" or lon_raw == b"\x7f\xff\xff":
+    _empty = b"\xff\xff\xff"
+    _unknown = b"\x7f\xff\xff"
+    _zero = b"\x00\x00\x00"
+    # No fix if either axis is the empty marker, the per-coordinate "unknown"
+    # sentinel, or if the whole record is cleared to zero.
+    if lat_raw in (_empty, _unknown) or lon_raw in (_empty, _unknown):
+        return {"fix": False}
+    if lat_raw == _zero and lon_raw == _zero:
         return {"fix": False}
     lat = _s24(lat_raw)
     lon = _s24(lon_raw)
@@ -1024,7 +1040,10 @@ def _emit_section(section, results):
             if r.get("odometer_km"):
                 km = r["odometer_km"]
                 break
-        changes = [r["activity"] for r in recs.get(0x01, []) if r.get("activity")]
+        # Daily changes come from BOTH the driver (0x01) and the co-driver
+        # (0x29) ActivityChangeInfo arrays, so slot-2 activities are not lost.
+        changes = [r["activity"] for rt in (0x01, 0x29)
+                   for r in recs.get(rt, []) if r.get("activity")]
         if changes:
             results.setdefault("activities", []).append(
                 {"date": date_str, "odometer_km": int(km), "changes": changes,
