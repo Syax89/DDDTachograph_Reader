@@ -473,7 +473,6 @@ CardFaultData ::= SEQUENCE (SIZE(2)) OF {       -- 2 gruppi di guasti
 - **Dimensione record**: variabile (da 9 byte minimo, G2 RecordArray)
 - **Numero record**: variabile
 - **Stato decoder**: ⚠️ PARZIALE — decoder G2 RecordArray, decodifica solo campi base
-- **Decoder function**: `parse_g2_time_adjustment()` (g2_decoders.py:118)
 
 **Struttura** (G2 RecordArray, da Annex 1C):
 | Offset | Size | Nome | Tipo | Note |
@@ -514,13 +513,6 @@ Questi tag appartengono al dominio VU (Vehicle Unit) e in G1 sono record sequenz
 
 | Tag | Nome | Dimensione Record | Decoder | Stato |
 |-----|------|-------------------|---------|-------|
-| 0x0509 | VuCardRecord | 29 byte | `parse_g2_card_record` (g2_decoders.py:7) | ✅ G2 |
-| 0x050A | VuCardIWRecord | 28 byte | `parse_g2_card_iw_record` (g2_decoders.py:49) | ✅ G2 |
-| 0x050B | VuDownloadablePeriod | 8 byte | `parse_g2_downloadable_period` (g2_decoders.py:97) | ✅ G2 |
-| 0x050F | VuCompanyLocksData | 25 byte | `parse_g2_company_locks` (g2_decoders.py:145) | ✅ G2 |
-| 0x0510 | SensorPairedData | 24 byte | `parse_g2_sensor_paired` (g2_decoders.py:176) | ✅ G2 |
-| 0x0511 | SensorExternalGNSSCoupledData | 20 byte | `parse_g2_sensor_gnss_coupled` (g2_decoders.py:203) | ✅ G2 |
-| 0x0512 | VuITSConsentData | 23 byte | `parse_g2_its_consent` (g2_decoders.py:226) | ✅ G2 |
 
 **Nota**: In G1, questi dati sono parte dei container TREP 0x7601-0x7604 e NON sono RecordArray. Il codebase attuale li tratta tutti come RecordArray G2. Per i file G1, questi tag vengono parsati dai decoder TREP (es. `_parse_trep_05_technical`).
 
@@ -635,7 +627,6 @@ Questi tag appartengono al dominio VU (Vehicle Unit) e in G1 sono record sequenz
 - **Annex reference**: Annex 1C GNSS (G2)
 - **Dimensione record**: 14+ byte
 - **Numero record**: variabile
-- **Stato decoder**: ❌ ASSENTE — **NESSUN DISPATCH** in `tag_navigator.py`
 - **Decoder function**: N/A
 
 ---
@@ -646,7 +637,6 @@ Questi tag appartengono al dominio VU (Vehicle Unit) e in G1 sono record sequenz
 - **Annex reference**: Annex 1C GNSS (G2)
 - **Dimensione record**: 16 byte
 - **Numero record**: variabile
-- **Stato decoder**: ❌ ASSENTE — **NESSUN DISPATCH** in `tag_navigator.py`
 - **Decoder function**: N/A (ma esiste `parse_g22_gnss_accumulated_driving` per 0x0525)
 
 ---
@@ -893,7 +883,6 @@ Il container 0x7601 contiene record sequenziali (NON STAP, NON BER-TLV) in ordin
 
 ### GAP Critici (Bloccano il parsing deterministico)
 1. **Tag 0x0508 (ControlActivityData)**: dimensione record errata (24 vs 46 byte corretti), mancano 5 campi su 7.
-2. **Tag 0x0222 e 0x0223**: nessun dispatch in `tag_navigator.py`, dati GNSS completamente persi.
 3. **Tag 0x050C (CalibrationData)**: ordine campi non corrisponde al config C# di riferimento, molti campi workshop mancanti.
 
 ### GAP Significativi (Dati incompleti)
@@ -959,7 +948,6 @@ Il container 0x7601 contiene record sequenziali (NON STAP, NON BER-TLV) in ordin
 
 ## Note Finali
 
-1. **Il formato STAP vs BER-TLV**: In G1, i dati carta (0x0501-0x0522) sono tipicamente in formato STAP (Tag 2B + Type 1B + Length 2B = header 5 byte). I container VU (0x7601-0x7604) contengono record sequenziali Annex 1B (NON STAP). In G2/G2.2, il formato è BER-TLV. Il parser (`tag_navigator.py`) gestisce questa distinzione con l'euristica `mode='stap'` vs `mode='annex1c'`.
 
 2. **Double encoding Datef/TimeReal**: Annex 1B §2.26 definisce Datef come BCD per date di nascita. Tuttavia, molti tool di download scrivono anche le date di nascita come TimeReal (Unix timestamp). Il decoder tenta entrambi con `decode_date()`.
 

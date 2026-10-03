@@ -58,7 +58,6 @@ def parse_new_tag(data: bytes, results: dict, tag: int) -> None:
     results.setdefault("some_list", []).append({...})
 ```
 
-### Helper Utilities (from `core/decoders/primitives.py`)
 
 | Function | Purpose |
 |---|---|

@@ -7,7 +7,6 @@ Cross-platform (Windows/macOS) application for parsing, analyzing and visualizin
 - **Entry point**: `app/main.py` (CLI compatibility entry point) → `app/cli.py` / `app/engine.py` (TachoParser) → `core/parser/deterministic.py` (STAP/BER-TLV + VU stream walks, full byte coverage)
 - **Decoders**: `core/decoders/` — type-split field decoders: `common.py` (shared helpers), `card_ef.py` (card EFs, multi-gen), `card_g22.py` (G2.2 card tags), `cert.py` (certificates), `vu_g1.py` (G1 VU stream), `vu_g2.py` (G2/G2.2 VU RecordArray dispatch); re-exported via the `__init__.py` facade
 - **Parser engine**: `core/parser/` — deterministic.py, record_array.py, vu_dispatcher.py (RecordArray walker), g1_walker.py
-- **Registry**: `core/registry/` — decoder_registry.py (tag→decoder mapping), models.py (TachoResult)
 - **Crypto**: `core/crypto/` — signature.py (root validator), vu_signature.py (ECDSA TREP + CVC chain), ef_signature.py (card data integrity)
 - **Utils**: `core/utils/` — ber_tlv, coverage, encoding, constants, logger, version, report_format, event_codes, tag_defs
 - **GUI**: `app/gui.py` — regedit-style tree + table viewer with Excel/CSV/JSON export
@@ -28,10 +27,8 @@ All tag specifications are in `scripts/`:
 - `g2_g22_complete_structures.md` — G2/G2.2 tags with Annex 1C references
 - `g22_verification_status.md` — G2.2 tag verification status (HIGH/MEDIUM/LOW confidence)
 - `tachograph.asn` — Formal ASN.1 schema
-- `architecture_migration_plan.md` — Migration plan to deterministic parser
 - `coverage_audit.py` — Run with `python3 scripts/coverage_audit.py` for file-by-file coverage report
 - `semantic_coverage_audit.py` — Semantic coverage audit (unparsed bytes per file)
-- `compare_parsers.py` — Legacy vs deterministic parser comparison
 
 ## Key regulations
 - Reg. 3821/85 Annex 1B — G1 tachograph spec

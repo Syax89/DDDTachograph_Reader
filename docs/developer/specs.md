@@ -83,7 +83,6 @@ Tags in `scripts/g22_verification_status.md` are classified into three confidenc
 | **MEDIUM** | Field list (campologia) is documented in the regulation, but exact byte encoding or field sizes had to be estimated from DDD file analysis. Decoder captures fields correctly but may have edge cases. |
 | **LOW** | No public specification exists for this tag. Structure was reverse-engineered from byte patterns in sample DDD files. Decoder is best-effort and may miss or misparse edge cases. |
 
-In code, per-tag verification metadata lives in `DecoderRegistry`: each `TagDecoder` entry carries `annex_ref` and `generation`, and `DeterministicParser._record_tag()` marks an occurrence `is_spec_verified` when a registered decoder exists for the tag. The VU RecordArray walk uses the per-recordType confidence levels in `core/vu_record_dispatcher.RECORD_TYPES`.
 
 ## How to Read Annex 1B/1C References
 
