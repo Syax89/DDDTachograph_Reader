@@ -22,7 +22,7 @@ CREW_DAY = [
     {"activity": "AVAILABLE", "time": "16:00", "slot": "First"},
 ]
 
-EXPECTED_CREW = {"DRIVE": 720, "WORK": 480, "REST": 360, "AVAILABLE": 600}
+EXPECTED_CREW = {"DRIVE": 720, "WORK": 480, "REST": 360, "AVAILABLE": 600, "UNKNOWN": 0}
 
 
 def test_crew_day_slots_are_grouped_then_summed_or_maxed():
@@ -46,15 +46,39 @@ def test_non_dict_entries_are_skipped_without_crash():
         "junk",
         None,
         42,
-        {"activity": "DRIVE", "time": "not-a-time"},  # unparsable -> skipped
-        {"activity": "UNKNOWN", "time": "10:00"},     # unknown activity -> skipped
+        {"activity": "DRIVE", "time": "not-a-time"},  # unusable time -> skipped
     ] + CREW_DAY
     assert compute_activity_totals(polluted) == EXPECTED_CREW
 
 
+def test_unrecognised_activity_is_bucketed_as_unknown_not_dropped():
+    """An activity label outside the recognised kinds must not vanish.
+
+    Its minutes are kept in an UNKNOWN bucket so a day whose activity code is
+    unrecognised still totals its real span instead of silently shrinking.
+    """
+    day = [
+        {"activity": "DRIVE", "time": "08:00"},
+        {"activity": "MYSTERY", "time": "10:00"},
+        {"activity": "REST", "time": "12:00"},
+    ]
+    assert compute_activity_totals(day) == {
+        "DRIVE": 120, "WORK": 0, "REST": 720, "AVAILABLE": 0, "UNKNOWN": 120,
+    }
+
+    # UNKNOWN is a period: kept at the max across slots, not summed.
+    crew = [
+        {"activity": "MYSTERY", "time": "00:00", "slot": "First"},
+        {"activity": "REST",    "time": "08:00", "slot": "First"},
+        {"activity": "MYSTERY", "time": "00:00", "slot": "Second"},
+        {"activity": "REST",    "time": "04:00", "slot": "Second"},
+    ]
+    assert compute_activity_totals(crew)["UNKNOWN"] == 480  # max(480, 240)
+
+
 def test_empty_changes_return_all_zero_totals():
     assert compute_activity_totals([]) == {
-        "DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0,
+        "DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0, "UNKNOWN": 0,
     }
 
 
@@ -66,7 +90,7 @@ def test_single_slot_day_matches_naive_expectation():
         {"activity": "REST", "time": "14:00"},
     ]
     assert compute_activity_totals(single) == {
-        "DRIVE": 240, "WORK": 120, "REST": 600, "AVAILABLE": 0,
+        "DRIVE": 240, "WORK": 120, "REST": 600, "AVAILABLE": 0, "UNKNOWN": 0,
     }
 
 
@@ -80,6 +104,7 @@ def test_parse_time_valid(time_str, expected):
     assert parse_time(time_str) == expected
 
 
-@pytest.mark.parametrize("bad", ["abc", "", "8:00:00", "08", None, 123])
+@pytest.mark.parametrize("bad", ["abc", "", "8:00:00", "08", None, 123,
+                                  "25:00", "08:75", "24:01", "-1:00", "12:-5"])
 def test_parse_time_invalid_returns_none(bad):
     assert parse_time(bad) is None

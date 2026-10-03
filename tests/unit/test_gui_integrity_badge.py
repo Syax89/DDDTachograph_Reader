@@ -126,6 +126,39 @@ def test_g1_failed_trep_still_raises_an_integrity_warning(monkeypatch):
     assert any("VU sections validated" in w for w in app._integrity_warnings)
 
 
+def test_integrity_warning_text_is_pinned_to_the_verifier_numbers(monkeypatch):
+    """The banner/warning TEXT must carry the verifier's own numbers.
+
+    A fabricated "N/N verified" string, or a recount over ``len(treps)``, must
+    not pass: here the verifier reports 1/2 signed sections valid while there
+    are 3 TREP rows (one is the not-applicable sensor section), so a recount
+    would print "1/3".
+    """
+    app = object.__new__(TachoExplorer)
+    app.integrity_banner = Mock()
+    app._integrity_warnings = []
+    app._integrity_file = ""
+    monkeypatch.setattr("app.gui.messagebox", Mock())
+
+    data = _g1_vu_data(False, [
+        {"trep": "0x01", "signature_valid": True},
+        {"trep": "0x02", "signature_valid": False},
+        {"trep": "0x11", "signature_valid": None,
+         "reason": "signature not applicable"},
+    ])
+    data["signature_verification"]["summary"] = "G1 VU TREP signatures: 1/2 valid"
+
+    app._check_integrity(data, "g1vu.ddd")
+
+    # The VU-sections warning carries the verifier's own "1/2" (signed sections),
+    # never a recount over the 3 TREP rows (which would say "1/3").
+    assert app._integrity_warnings[0] == (
+        "\u2022 VU sections validated: G1 VU TREP signatures: 1/2 valid")
+    assert not any("1/3" in w for w in app._integrity_warnings)
+    assert app.integrity_banner.config.call_args.kwargs["text"] == (
+        "\u26a0\ufe0f  2 integrity warning(s) \u2014 click for details")
+
+
 def test_fatal_parse_clears_the_previous_file_display(monkeypatch):
     """H-F5: a fatal parse must not leave the previous file's identity,
     integrity banner or collected warnings on screen."""

@@ -285,6 +285,49 @@ class TestExportManager(unittest.TestCase):
         ExportManager.export_to_pdf(data, self.pdf_path)
         self.assertTrue(os.path.exists(self.pdf_path))
 
+    def test_pdf_cover_and_report_handle_unknown_activity_consistently(self):
+        """An unrecognised activity label must not vanish, and the PDF cover
+        (which sums only DRIVE/WORK/REST) must stay consistent with the report.
+
+        Both ways: the report's Unknown column becomes real, and the cover's
+        Drive/Rest figures equal the report's (single source of truth) instead
+        of silently absorbing the unknown minutes.
+        """
+        data = deepcopy(self.mock_data)
+        data["activities"] = [{
+            "date": "01/06/2026",
+            "changes": [
+                {"activity": "DRIVE", "time": "08:00"},
+                {"activity": "MYSTERY", "time": "10:00"},  # unrecognised
+                {"activity": "REST", "time": "12:00"},
+            ],
+        }]
+
+        captured = []
+        from reportlab.platypus import Paragraph as ReportLabParagraph
+
+        def capture(text, *args, **kwargs):
+            captured.append(text)
+            return ReportLabParagraph(text, *args, **kwargs)
+
+        with patch("reportlab.platypus.Paragraph", side_effect=capture):
+            ExportManager.export_to_pdf(data, self.pdf_path)
+
+        stats = next(t for t in captured
+                     if t.startswith("Drive: ") and "Rest:" in t)
+        # Cover = DRIVE/WORK/REST only: the unknown 10:00-12:00 is NOT folded
+        # back into Drive; the cover Total is Drive+Work+Rest.
+        self.assertIn("Drive: 2h 0m", stats)
+        self.assertIn("Rest: 12h 0m", stats)
+        self.assertIn("Total: 14h 0m", stats)
+
+        # The report shows the SAME Drive/Rest and keeps the unknown hours.
+        _, rows = build_monthly_activity_report(data["activities"])
+        row = rows[0]
+        self.assertEqual(row[2], "02:00")          # Drive matches the cover
+        self.assertEqual(row[4], "12:00")          # Rest matches the cover
+        self.assertEqual(row[6], "\u26a0 02:00")   # Unknown hours kept
+
 
 if __name__ == "__main__":
     unittest.main()

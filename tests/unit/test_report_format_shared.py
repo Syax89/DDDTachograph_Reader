@@ -46,10 +46,12 @@ def test_monthly_report_is_slot_aware_for_crew_days():
     """F-F1 / XF-F1 / XG-F1: the report engine must group by card slot.
 
     The old in-file engine walked ``changes`` in list order and ignored
-    ``slot``, so a crew day (both slots recording at once) was double-counted
-    into a 48-hour day that contradicted the cover stats. The shared slot-aware
-    engine sums DRIVE/WORK across slots and keeps REST/AVAILABLE at the max:
-    two 8h-drive slots give 16h DRIVE and 16h REST (32h total), never 48h.
+    ``slot``, so it summed overlapping periods from both slots (an impossible
+    >24h REST/Available day) and disagreed with the cover stats. The shared
+    slot-aware engine sums DRIVE/WORK across slots and keeps REST/AVAILABLE at
+    the max: two 8h-drive slots give 16h DRIVE and 16h REST (32h total). A crew
+    day legitimately exceeds 24h (two drivers summing) — the invariant is that
+    report, cover, GUI and CLI agree, not a 24h ceiling.
     """
     crew = [
         {"activity": "DRIVE", "time": "00:00", "slot": "First"},
@@ -65,3 +67,23 @@ def test_monthly_report_is_slot_aware_for_crew_days():
                        "00:00", "00:00", "32:00"]
     assert rows[1][0] == "05/2025 TOTAL"
     assert rows[1][-1] == "32:00"
+
+
+def test_monthly_report_unknown_column_is_real():
+    """An unrecognised activity label must not render as a hard-zero Unknown.
+
+    Its hours are kept in the Unknown column (and the row total) instead of
+    vanishing, matching the shared engine.
+    """
+    day = {"date": "01/05/2025", "changes": [
+        {"activity": "DRIVE", "time": "08:00"},
+        {"activity": "MYSTERY", "time": "10:00"},
+        {"activity": "REST", "time": "12:00"},
+    ]}
+
+    _, rows = build_monthly_activity_report([day])
+    row = rows[0]
+    assert row[2] == "02:00"          # Drive  = 08:00-10:00
+    assert row[4] == "12:00"          # Rest   = 12:00-24:00
+    assert row[6] == "\u26a0 02:00"   # Unknown = 10:00-12:00 (warning glyph)
+    assert row[7] == "16:00"          # Total keeps Drive+Rest+Unknown

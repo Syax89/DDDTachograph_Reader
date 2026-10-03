@@ -269,6 +269,21 @@ def _compute_activity_totals(changes):
     return _shared(changes)
 
 
+def _changes_for_slot(changes, slot_name):
+    """Return the changes for one VU slot view (``"First"``/``"Second"``).
+
+    Keeps the selected slot's changes **and** any change that carries no slot at
+    all (heuristic G1 VU TREP 02 activities have no ``slot`` — see
+    ``core/decoders/vu_g1.py``). Slot-less changes are treated as unassigned and
+    shown in every slot view rather than being dropped, which silently zeroed
+    every daily total. No slot is invented for them. The Daily-Activities
+    dashboard and the day-detail view both filter through this one helper so
+    they can never disagree.
+    """
+    return [c for c in changes
+            if isinstance(c, dict) and str(c.get("slot") or "") in ("", slot_name)]
+
+
 def _fmt_duration_minutes(mins):
     """Render a minute count as 'Xh Ym'."""
     return f"{mins // 60}h {mins % 60:02d}m"
@@ -931,13 +946,14 @@ class ActivityTimelineChart(ttk.Frame):
 
     @staticmethod
     def _parse_time(time_str):
-        parts = str(time_str).split(":")
-        if len(parts) != 2:
-            return None
-        try:
-            return int(parts[0]) * 3600 + int(parts[1]) * 60
-        except ValueError:
-            return None
+        """'HH:MM' → seconds since midnight, or None if unusable.
+
+        Delegates to the shared :func:`core.utils.activity_stats.parse_time` so
+        the GUI timeline rejects the same out-of-range times (``'25:00'``,
+        ``'08:75'``) as the report, cover and CLI instead of accepting them.
+        """
+        from core.utils.activity_stats import parse_time
+        return parse_time(time_str)
 
     @staticmethod
     def _build_blocks(changes, is_vu):
@@ -3307,8 +3323,7 @@ class TachoExplorer(tk.Tk):
         changes = day_data.get("changes", [])
         if is_vu:
             slot_name = "First" if getattr(self, "_vu_slot_filter", "Slot 1") == "Slot 1" else "Second"
-            changes = [c for c in changes
-                       if isinstance(c, dict) and str(c.get("slot") or "") == slot_name]
+            changes = _changes_for_slot(changes, slot_name)
         day_km = day_data.get("_day_km", 0) or day_data.get("odometer_km", 0) or 0
         changes_count = day_data.get("changes_count") or len(changes)
 
@@ -3449,10 +3464,12 @@ class TachoExplorer(tk.Tk):
             filtered = []
             for day_data in valid:
                 all_changes = day_data.get("changes", [])
-                filtered_changes = [
-                    c for c in all_changes
-                    if isinstance(c, dict)
-                    and str(c.get("slot") or "") in ("", slot_name)]
+                # Keep the selected slot's changes and any change that carries
+                # no slot at all (heuristic G1 VU TREP 02, see
+                # core/decoders/vu_g1.py): dropping the slot-less ones zeroed
+                # every activity total of the day. Handled by the shared helper
+                # so the day-detail view filters identically.
+                filtered_changes = _changes_for_slot(all_changes, slot_name)
                 copy = dict(day_data)
                 copy["changes"] = filtered_changes
                 filtered.append(copy)
