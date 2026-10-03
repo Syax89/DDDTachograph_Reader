@@ -3225,6 +3225,8 @@ class TachoExplorer(tk.Tk):
 
         for c in range(num_cols):
             kpi_frame.columnconfigure(c, weight=1, uniform="kpi")
+        for r in range((len(kpis) + num_cols - 1) // num_cols):
+            kpi_frame.rowconfigure(r, weight=1)
 
         self.table.tv["columns"] = self.table._cols
         for c in self.table._cols:
