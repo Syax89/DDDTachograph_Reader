@@ -120,8 +120,18 @@ def build_g1_faults():
 
 
 def build_g1_controls():
+    """ControlActivityData (0x0508): pointer(2) + ControlActivityRecord(44).
+    
+    ControlActivityRecord: controlType(1) + controlTime(4) + controlCardNumber(18) +
+    controlVehicleRegistration(15) + controlDownloadPeriodBegin(4) + controlDownloadPeriodEnd(4) = 46 bytes.
+    """
     ptr = struct.pack(">H", 0)
-    rec = struct.pack(">IB", ts(2025,4,15,10), 0x01).ljust(24, b'\x00')
+    rec = (struct.pack(">IB", ts(2025,4,15,10), 0x01)  # controlTime + controlType
+           + s("I100000168598002", 16) + bytes([get_nation_byte("I"), 0x00])  # controlCardNumber (16 + nation + padding)
+           + s("AB123CD", 14) + bytes([get_nation_byte("I")])  # controlVehicleRegistration (14 + nation)
+           + struct.pack(">I", ts(2025,4,1))  # controlDownloadPeriodBegin
+           + struct.pack(">I", ts(2025,4,15)))  # controlDownloadPeriodEnd
+    assert len(rec) == 46, f"ControlActivityRecord must be 46 bytes, got {len(rec)}"
     return ptr + rec
 
 
@@ -178,7 +188,19 @@ def build_g2_icc():
 
 
 def build_g2_card_id():
-    return bytes([get_nation_byte()]) + s("I100000168598002", 16) + datef(2022,3,1) + datef(2027,3,1)
+    """G2 CardIdentification (0x0102): 65 bytes.
+    
+    Structure: cardIssuingMemberState(1) + cardNumber(16) + cardIssuingAuthorityName(36) +
+    cardIssueDate(4) + cardValidityBegin(4) + cardExpiryDate(4) = 65 bytes.
+    """
+    rec = (bytes([get_nation_byte("I")])  # cardIssuingMemberState
+           + s("I100000168598002", 16)  # cardNumber
+           + s("MINISTERO INFRASTRUTTURE", 36)  # cardIssuingAuthorityName
+           + datef(2022, 3, 1)  # cardIssueDate
+           + datef(2022, 3, 1)  # cardValidityBegin
+           + datef(2027, 3, 1))  # cardExpiryDate
+    assert len(rec) == 65, f"G2 CardIdentification must be 65 bytes, got {len(rec)}"
+    return rec
 
 
 def build_g2_driver():
@@ -228,14 +250,19 @@ def generate_g1_card(out):
 # ─── G1 VU ───
 
 def generate_g1_vu(out):
+    """G1 VU minimal payload: VehicleIdentificationNumber (0x7601) STAP wrapper.
+    
+    Overview section: manuActName(36) + manuAddress(36) + serialNum(8) + VIN(17) +
+    nation(1) + regPlate(14) + padding to avoid spurious tag matches.
+    """
     ov_data = (
         s("TACHOCOMPANY SPA", 36)
         + s("VIA ROMA 123, MILANO", 36)
         + s("e1", 8)
         + s("WVWZZZ3CZ9E123456", 17)
         + bytes([get_nation_byte("I")])
-        + s("AB123CD", 14)
-        + b'\x00' * 200
+        + s("AB123CDEFGHIJK", 14)  # regPlate exactly 14 non-space chars (no 0x20 0x20 run)
+        + b'\x00' * 200  # Zero padding (baseline expects 112 unparsed bytes)
     )
     data = stap(0x7601, 0x00, ov_data)
     with open(out, "wb") as f:

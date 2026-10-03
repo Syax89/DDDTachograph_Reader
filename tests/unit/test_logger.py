@@ -5,28 +5,20 @@ import pytest
 import core.utils.logger as logger_module
 
 
-def _remove_all_counting_handlers():
-    ddd_logger = logging.getLogger("ddd_tacho")
-    for h in list(ddd_logger.handlers):
-        if isinstance(h, logger_module._CountingHandler):
-            ddd_logger.removeHandler(h)
-
-
 @pytest.fixture(autouse=True)
 def reset_logger_singleton():
-    _remove_all_counting_handlers()
-    logger_module._logger = None
-    logger_module._console_handler = None
-    logger_module._counter = None
+    """Rebuild the shared ``ddd_tacho`` logger for each test.
+
+    ``reset_logger`` detaches every handler (counting *and* console) and clears
+    the cached wrapper, so each test starts from a pristine logger regardless
+    of what a previous module left attached.
+    """
+    logger_module.reset_logger()
     yield
-    _remove_all_counting_handlers()
-    logger_module._logger = None
-    logger_module._console_handler = None
-    logger_module._counter = None
+    logger_module.reset_logger()
 
 
 class TestCountingHandler:
-    @pytest.mark.skip(reason="LOG counting test fails in CI multi-python (logger singleton leak)")
     def test_counts_failure_messages(self):
         logger_module.get_logger()
         log = logging.getLogger("ddd_tacho")
@@ -39,7 +31,6 @@ class TestCountingHandler:
         assert logger_module.decoder_failure_count() == 3
         assert len(logger_module.decoder_failures()) == 3
 
-    @pytest.mark.skip(reason="LOG counting test fails in CI multi-python (logger singleton leak)")
     def test_reset_clears_counts(self):
         logger_module.get_logger()
         log = logging.getLogger("ddd_tacho")
@@ -53,7 +44,6 @@ class TestCountingHandler:
 
 
 class TestCountingHandlerWithExternalHandler:
-    @pytest.mark.skip(reason="LOG counting test fails in CI multi-python (logger singleton leak)")
     def test_counter_works_when_external_handler_exists(self):
         ddd_logger = logging.getLogger("ddd_tacho")
         external_handler = logging.StreamHandler()
@@ -72,7 +62,6 @@ class TestCountingHandlerWithExternalHandler:
         finally:
             ddd_logger.removeHandler(external_handler)
 
-    @pytest.mark.skip(reason="Logger leak in CI")
     def test_counter_attached_only_once_with_external_handler(self):
         ddd_logger = logging.getLogger("ddd_tacho")
         external_handler = logging.StreamHandler()

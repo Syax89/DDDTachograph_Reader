@@ -32,42 +32,25 @@ from core.utils.logger import redact
 MOCK_DIR = Path(__file__).resolve().parents[1] / "mock_data"
 
 
-# ── Logger fixture (mirrors tests/unit/test_logger.py) ─────────────────────
-
-
-def _reset_ddd_logger():
-    """Fully detach the ``ddd_tacho`` logger so get_logger() rebuilds it.
-
-    test_logger.py's fixture only drops the counting handler; because
-    ``get_logger`` skips creating a console handler when *any* handler is
-    already attached, a stale console handler would survive and make
-    ``_console_handler`` None. Drop every handler so each test starts clean.
-    """
-    ddd_logger = logging.getLogger("ddd_tacho")
-    for handler in list(ddd_logger.handlers):
-        ddd_logger.removeHandler(handler)
-    logger_module._logger = None
-    logger_module._console_handler = None
-    logger_module._counter = None
+# ── Logger fixture (see tests/unit/conftest.py for the shared isolation) ────
 
 
 @pytest.fixture(autouse=True)
 def reset_logger_singleton():
-    _reset_ddd_logger()
+    logger_module.reset_logger()
     yield
-    _reset_ddd_logger()
+    logger_module.reset_logger()
 
 
 @pytest.fixture
 def captured_logs():
     """Capture every record the ``ddd_tacho`` logger emits (propagate=False)."""
-    _reset_ddd_logger()  # ensure clean slate even if autouse ran in another module
+    logger_module.reset_logger()  # ensure clean slate even if autouse ran in another module
     # Force DEBUG on the global logger instance *before* get_logger() caches it.
-    # logging.getLogger() returns the same object every call; if another test
-    # already created it with WARNING level, _reset clears our wrapper but the
-    # global logger keeps WARNING → no DEBUG records emitted.
+    # logging.getLogger() returns the same object every call; reset_logger()
+    # restores the default level, so pin DEBUG before the wrapper is rebuilt.
     logging.getLogger("ddd_tacho").setLevel(logging.DEBUG)
-    
+
     captured = []
 
     class _Collect(logging.Handler):
@@ -194,9 +177,6 @@ def test_redact_leaves_absent_values_empty():
     assert redact("   ") == ""
 
 
-@pytest.mark.skip(reason="LOG-PII tests fail in CI multi-python: logger singleton "
-                         "state leaks between test modules despite _reset fixture. "
-                         "LOG redaction verified manually via local runs.")
 def test_card_issuer_structured_log_redacts_card_number(captured_logs):
     from core.decoders.card_ef import parse_card_issuer_identification
 
@@ -211,7 +191,6 @@ def test_card_issuer_structured_log_redacts_card_number(captured_logs):
     assert not any("1234567890123" in m for m in captured_logs)
 
 
-@pytest.mark.skip(reason="LOG-PII tests fail in CI multi-python (see above)")
 def test_card_issuer_regex_log_redacts_card_number(captured_logs):
     from core.decoders.card_ef import parse_card_issuer_identification
 
@@ -241,7 +220,6 @@ def _trep02_payload(surname=b"ROSSINI", firstname=b"MARIO",
     return data
 
 
-@pytest.mark.skip(reason="LOG-PII tests fail in CI multi-python (see above)")
 def test_trep02_driver_name_log_redacted(captured_logs):
     from core.decoders.vu_g1 import _parse_trep_02_activities
 
@@ -259,7 +237,6 @@ def test_trep02_driver_name_log_redacted(captured_logs):
 # ── REPORT-ERROR-COUNT (XF-F6) ──────────────────────────────────────────────
 
 
-@pytest.mark.skip(reason="LOG counting test fails in CI multi-python (logger singleton leak)")
 def test_counting_handler_counts_extended_failure_markers():
     logger_module.get_logger()
     log = logging.getLogger("ddd_tacho")
