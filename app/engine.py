@@ -4,7 +4,7 @@ import json
 import mmap
 import warnings
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from core.crypto.signature import SignatureValidator
 from core.registry.registry import DecoderRegistry
@@ -14,6 +14,18 @@ from core import decoders
 from core.utils.logger import decoder_failure_count, decoder_failures, reset_decoder_failures
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_timestamp(value):
+    """Parse an ISO-8601 tachograph timestamp to an aware UTC datetime, or None."""
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+
 
 class TachoParser:
     """Analysis engine for tachograph files (.DDD): driver cards and VU
@@ -335,7 +347,8 @@ class TachoParser:
                     verify_vu_download, decode_vu_certificates)
                 erca_keys = self.validator._g2_erca_keys() or None
                 self.results["signature_verification"] = verify_vu_download(
-                    self.raw_data, erca_keys=erca_keys)
+                    self.raw_data, erca_keys=erca_keys,
+                    verification_time=self._signature_timestamp())
                 self.results["vu_certificates"] = decode_vu_certificates(self.raw_data)
             except Exception as exc:
                 logger.debug("VU signature verification unavailable: %s", exc, exc_info=False)
@@ -454,6 +467,26 @@ class TachoParser:
         unique.sort(key=lambda x: _safe_parse_date(x.get("date")) or datetime.min, reverse=True)
         self.results["activities"] = unique
 
+    def _signature_timestamp(self):
+        """The moment the download was signed, for certificate-date evaluation.
+
+        For a VU download this is the latest VuDownloadActivityData
+        ``downloading_time``; for a driver card the EF Card_Download date.
+        Returns ``None`` when the file carries no such timestamp, so an undated
+        file keeps its historical "not checked" behaviour instead of being
+        judged against the wall clock (a historic download's expired certificate
+        remains useful evidence).
+        """
+        candidates = []
+        for entry in self.results.get("download_activities") or []:
+            if isinstance(entry, dict):
+                candidates.append(entry.get("downloading_time"))
+        for entry in self.results.get("card_downloads") or []:
+            if isinstance(entry, dict):
+                candidates.append(entry.get("download_time"))
+        parsed = [t for t in (_parse_timestamp(value) for value in candidates) if t]
+        return max(parsed) if parsed else None
+
     def _validate_certificate_chain(self):
         """Validate the ERCA→MSCA→Card/VU chain and set validation_status."""
         # G1 VU files carry certificates inside TREP 01 Overview rather than
@@ -477,12 +510,16 @@ class TachoParser:
         status, pubkey = False, None
         if self.card_cert_raw and self.msca_cert_raw:
             # The last certificates seen in the file may be the G2 copies; a
-            # file can also carry distinct G1 (194-byte) certificates. The
-            # encoding marker (0x30 DER / 0x7F CVC) picks the generation exactly
-            # as validate_tacho_chain does.
-            raw_gen = "G2" if self.card_cert_raw[0] in (0x30, 0x7F) else "G1"
+            # file can also carry distinct G1 (194-byte) certificates whose
+            # leading byte is unconstrained. The validator reports the
+            # generation it actually validated (it retries the G1 chain when a
+            # G1 certificate happens to start with the 0x30/0x7F G2 marker), so
+            # per-generation trust follows the real chain, not the raw byte.
+            verify_time = self._signature_timestamp()
             status, pubkey = self.validator.validate_tacho_chain(
-                self.card_cert_raw, self.msca_cert_raw)
+                self.card_cert_raw, self.msca_cert_raw,
+                verification_time=verify_time)
+            raw_gen = getattr(self.validator, "last_chain_generation", None) or "G2"
             chain_present[raw_gen] = True
             if status is True:
                 chain_trust[raw_gen] = True
@@ -492,7 +529,8 @@ class TachoParser:
                     (self.card_cert_g1 != self.card_cert_raw
                      or self.msca_cert_g1 != self.msca_cert_raw):
                 g1_status, g1_pubkey = self.validator.validate_tacho_chain(
-                    self.card_cert_g1, self.msca_cert_g1)
+                    self.card_cert_g1, self.msca_cert_g1,
+                    verification_time=verify_time)
                 chain_present["G1"] = True
                 if g1_status is True:
                     chain_trust["G1"] = True
@@ -515,7 +553,8 @@ class TachoParser:
             # G1 VU files: certificates were extracted from TREP 01 Overview
             # and stored directly as the G1 copies.
             status, pubkey = self.validator.validate_tacho_chain(
-                self.card_cert_g1, self.msca_cert_g1)
+                self.card_cert_g1, self.msca_cert_g1,
+                verification_time=self._signature_timestamp())
             chain_present["G1"] = True
             if status is True:
                 chain_trust["G1"] = True
@@ -552,9 +591,14 @@ class TachoParser:
         had_certs = bool((self.card_cert_raw and self.msca_cert_raw)
                          or (self.card_cert_g1 and self.msca_cert_g1))
         if not self.card_public_key:
-            # Card chain didn't produce a key — check VU verification.
+            # A presented card certificate chain that failed outright must keep
+            # its negative verdict: valid VU signatures elsewhere in the file
+            # prove the VU payload, not the card, and must never launder a
+            # broken card chain. The overall verdict is the worst of the parts,
+            # not the best.
+            card_chain_failed = had_certs and status is False
             sv = self.results.get("signature_verification") or {}
-            if sv.get("msca_to_vu") is True:
+            if sv.get("msca_to_vu") is True and not card_chain_failed:
                 if sv.get("all_treps_valid") and sv.get("root_anchored"):
                     self.validation_status = "Verified (VU Chain)"
                 elif sv.get("all_treps_valid"):

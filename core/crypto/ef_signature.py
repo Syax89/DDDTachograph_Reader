@@ -194,6 +194,14 @@ _G2_ONLY_TAGS = {
 }
 
 
+# EFs the norm declares unsigned even though the card carries a signature block
+# for them: Annex 1C §3.3 DDP_035 signs "the other application data EFs ...
+# except EF Card_Download" (0x050E). They are excluded from the signed-EF
+# integrity report by design, so their signature half must never be reported as
+# an unverified signed EF.
+_KNOWN_UNSIGNED_TAGS = frozenset({0x050E})
+
+
 def pair_ef_records(ef_data: List[Tuple[int, int, bytes]],
                     ef_signatures: List[Tuple[int, int, bytes]]) -> List[Dict[str, Any]]:
     """Classify EF data/signature occurrences by tag and generation.
@@ -215,16 +223,33 @@ def pair_ef_records(ef_data: List[Tuple[int, int, bytes]],
         tags = {tag for tag, dtype in data_by_key if dtype == data_dt}
         tags.update(tag for tag, dtype in signatures_by_key if dtype == sig_dt)
         for tag in sorted(tags):
-            # ICC/IC metadata and certificate blocks share the card record
-            # stream but are not Annex 1B/1C signed EF payloads. Only known
-            # signature-capable EFs participate in this integrity report.
-            if tag not in _EF_MIN_LENGTHS:
-                continue
-            # G2-only tags should not be verified with G1 RSA.
-            if gen == "G1" and tag in _G2_ONLY_TAGS:
-                continue
             data_records = data_by_key[(tag, data_dt)]
             signature_records = signatures_by_key[(tag, sig_dt)]
+            known_signed = (tag in _EF_MIN_LENGTHS
+                            and not (gen == "G1" and tag in _G2_ONLY_TAGS))
+            # ICC/IC metadata and certificate blocks share the card record stream
+            # but are not Annex 1B/1C signed EF payloads; EFs the norm declares
+            # unsigned (_KNOWN_UNSIGNED_TAGS) and G2-only tags arriving with the
+            # generation-1 appendix are likewise not part of this report.
+            if not known_signed:
+                if (tag not in _KNOWN_UNSIGNED_TAGS
+                        and not (gen == "G1" and tag in _G2_ONLY_TAGS)
+                        and data_records and signature_records):
+                    # A data AND a signature occurrence of a tag the known set
+                    # does not list is a signed EF we cannot classify: report it
+                    # explicitly as unsupported rather than dropping it silently,
+                    # so the integrity summary cannot read "all verified" while
+                    # it went unverified.
+                    pairs.append({
+                        "tag": tag,
+                        "gen": gen,
+                        "algo": algo,
+                        "status": "unsupported",
+                        "reason": "EF tag outside the known signed-EF set",
+                        "data_size": sum(len(record) for record in data_records),
+                        "sig_size": sum(len(record) for record in signature_records),
+                    })
+                continue
             pair = {
                 "tag": tag,
                 "gen": gen,
@@ -293,6 +318,19 @@ def verify_ef_pairs(pairs: List[Dict[str, Any]],
             results.append({
                 "tag": f"0x{tag:04X}", "gen": pair["gen"], "algo": algo,
                 "status": "incomplete", "reason": pair["reason"],
+                "data_size": pair["data_size"], "sig_size": pair["sig_size"],
+            })
+            continue
+
+        if pair["status"] == "unsupported":
+            # A signed EF outside the known set: it is not verified, and must
+            # not be counted as such. Skipping it (rather than failing it) keeps
+            # a genuinely unknown-but-signed EF from being reported as a
+            # mismatch, while still surfacing it in the summary and counters.
+            skipped += 1
+            results.append({
+                "tag": f"0x{tag:04X}", "gen": pair["gen"], "algo": algo,
+                "status": "unsupported", "reason": pair["reason"],
                 "data_size": pair["data_size"], "sig_size": pair["sig_size"],
             })
             continue

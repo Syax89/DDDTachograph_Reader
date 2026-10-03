@@ -56,17 +56,45 @@ class TestSignatureValidation(unittest.TestCase):
         self.assertIsNotNone(pub_key)
 
     def test_194_byte_der_and_cvc_certificates_use_g2_validation(self):
-        """G2 encoding markers must override the ambiguous 194-byte G1 length."""
-        for encoding_byte in (0x30, 0x7F):
-            card_cert = bytes([encoding_byte]) + b"x" * 193
-            msca_cert = bytes([encoding_byte]) + b"y" * 193
+        """A genuine G2 encoding (CVC 0x7F21 / DER long-form) routes a 194-byte
+        certificate to the G2 verifier, overriding the ambiguous G1 length.
+
+        The discriminator is the two-byte marker, not the lone leading
+        0x30/0x7F: a generation-1 ISO 9796-2 RSA block starts with an
+        unconstrained signature byte and may begin with either value by chance,
+        so only ``7F 21`` / ``30 8x`` is a real generation-2 encoding.
+        """
+        for marker in (b"\x7f\x21", b"\x30\x82"):
+            card_cert = marker + b"x" * 192
+            msca_cert = marker + b"y" * 192
             with patch.object(
-                self.validator, "_validate_g2_chain", return_value=(False, None)
+                self.validator, "_validate_g2_chain", return_value=(True, "key")
             ) as validate_g2, patch.object(self.validator, "_validate_g1_chain") as validate_g1:
                 self.validator.validate_tacho_chain(card_cert, msca_cert)
 
             validate_g2.assert_called_once_with(card_cert, msca_cert)
             validate_g1.assert_not_called()
+            self.assertEqual(self.validator.last_chain_generation, "G2")
+
+    def test_lone_g2_encoding_byte_in_a_g1_certificate_routes_to_g1(self):
+        """A 194-byte certificate whose unconstrained leading 0x30/0x7F is a
+        generation-1 ISO 9796-2 RSA byte (not a real G2 two-byte marker) is
+        routed to the generation-1 chain, not rejected as a bad G2 cert."""
+        for leading in (0x30, 0x7F):
+            card_cert = bytes([leading]) + b"x" * 193  # second byte is not a G2 marker
+            msca_cert = bytes([leading]) + b"y" * 193
+            with patch.object(
+                self.validator, "_validate_g2_chain", return_value=(False, None)
+            ) as validate_g2, patch.object(
+                self.validator, "_validate_g1_chain", return_value=(True, "g1key")
+            ) as validate_g1:
+                status, key = self.validator.validate_tacho_chain(card_cert, msca_cert)
+
+            # The lone marker is not a G2 encoding, so the G1 chain runs directly.
+            validate_g2.assert_not_called()
+            validate_g1.assert_called_once_with(card_cert, msca_cert)
+            self.assertEqual((status, key), (True, "g1key"))
+            self.assertEqual(self.validator.last_chain_generation, "G1")
 
     def test_missing_certificates_directory_is_not_created(self):
         """A missing trust store is read-only empty state, not setup work."""
