@@ -1244,7 +1244,7 @@ class ActivityTimelineChart(ttk.Frame):
 class DayDetailWindow(tk.Toplevel):
     """Chronological log of all events for a single day (driver card / VU)."""
 
-    _open_windows: dict[str, "DayDetailWindow"] = {}
+    _open_windows: dict[tuple, "DayDetailWindow"] = {}
 
     COLORS = {
         "DRIVE":      "#1565C0",
@@ -1268,13 +1268,22 @@ class DayDetailWindow(tk.Toplevel):
     def __init__(self, parent, day, activities, day_km, changes_count,
                  driver_info, slot_schedule, markers, oos_events,
                  vehicle_info, data, is_vu=False, initial_slot=1):
-        existing = DayDetailWindow._open_windows.get(day)
+        # GUI-STALE-DAY-POPUP (G-F1/XG-F5): the reuse key must carry the FILE
+        # identity, not just the day label. Two different files can share a
+        # ``dd/mm/yyyy`` day (e.g. two downloads covering the same date); keying
+        # only on the day made the second file lift the FIRST file's window and
+        # show the wrong file's data under the new file's load. ``parent`` is
+        # the TachoExplorer (directly, or via ``winfo_toplevel``) and carries
+        # ``current_file``; tests pass a bare Tk root without it (-> None).
+        key = (getattr(parent, "current_file", None), day)
+        existing = DayDetailWindow._open_windows.get(key)
         if existing is not None and existing.winfo_exists():
             existing.lift()
             existing.focus_force()
             return
         super().__init__(parent)
-        DayDetailWindow._open_windows[day] = self
+        self._reuse_key = key
+        DayDetailWindow._open_windows[key] = self
         self.title(f"Daily Detail — {day} (UTC)")
         self.geometry("900x580")
         self.resizable(True, True)
@@ -1415,7 +1424,7 @@ class DayDetailWindow(tk.Toplevel):
         self.text.config(state=tk.DISABLED)
 
     def _on_close(self):
-        DayDetailWindow._open_windows.pop(self._day, None)
+        DayDetailWindow._open_windows.pop(getattr(self, "_reuse_key", None), None)
         self.destroy()
 
     # ── Timeline construction ──────────────────────────────────────────
@@ -2739,16 +2748,23 @@ class TachoExplorer(tk.Tk):
                     continue
                 start_dt = _parse_iso(sess.get("start"))
                 end_dt = _parse_iso(sess.get("end"))
-                anchor = start_dt or end_dt
-                if anchor is None:
+                if start_dt is None and end_dt is None:
                     continue
-                iso = anchor.date().isoformat()
-                vehicles_by_date.setdefault(iso, []).append({
-                    "plate": plate,
-                    "nation": sess.get("vehicle_nation", ""),
-                    "start": start_dt,
-                    "end": end_dt,
-                })
+                # GUI-VEHICLES-PER-DAY (H-F9): a multi-day session must appear on
+                # EVERY day it spans, exactly like the dashboard's gap-fill. The
+                # tree's day nodes feed the SAME day-detail popup as the
+                # dashboard, so anchoring on start/end alone made the two routes
+                # disagree for the middle/end days.
+                current = (start_dt or end_dt).date()
+                last = (end_dt or start_dt).date()
+                while current <= last:
+                    vehicles_by_date.setdefault(current.isoformat(), []).append({
+                        "plate": plate,
+                        "nation": sess.get("vehicle_nation", ""),
+                        "start": start_dt,
+                        "end": end_dt,
+                    })
+                    current += timedelta(days=1)
         if is_vu:
             inserted_all = data.get("inserted_drivers") or []
             for idx, d in enumerate(inserted_all[:2]):
@@ -3362,12 +3378,20 @@ class TachoExplorer(tk.Tk):
         for sess in (data.get("vehicle_sessions") or []):
             if not isinstance(sess, dict):
                 continue
+            # GUI-VEHICLES-PER-DAY (H-F9): the dashboard's "# Vehicles" column
+            # fills every day a session spans (start -> end), but the day detail
+            # only took sessions ANCHORED on the day (start, else end). A session
+            # running 01/05 -> 03/05 was counted on 02 and 03 by the dashboard
+            # yet the detail for those days listed no vehicle. Include a session
+            # when the day falls inside [start, end] (whichever bounds exist) so
+            # the two views agree.
             sd = _parse_iso(sess.get("start"))
             ed = _parse_iso(sess.get("end"))
-            anchor = sd or ed
-            if not anchor:
+            if sd is None and ed is None:
                 continue
-            if anchor.date().isoformat() == iso_date:
+            start_iso = (sd or ed).date().isoformat()
+            end_iso = (ed or sd).date().isoformat()
+            if iso_date and start_iso <= iso_date <= end_iso:
                 vehicles.append(sess)
 
         # Build markers and schedule from card_iw_records
