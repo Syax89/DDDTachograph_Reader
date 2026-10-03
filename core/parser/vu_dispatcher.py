@@ -776,8 +776,14 @@ def _decode_record(record_type, rec):
         out["vin"] = decoders.decode_string(rec[:17], is_id=True)
         return out
     if record_type == 0x0B and len(rec) >= 14:
+        # Annex 1C Table 42 (VehicleRegistrationNumber, 14 bytes): byte 1 is the
+        # code page, bytes 2-14 are the registration number. This record carries
+        # NO nation field — decoding the code-page byte as a NationNumeric would
+        # fabricate a registration country (0x01 -> "A") the record does not
+        # contain. The registration *nation* is only defined for 0x24
+        # (VehicleRegistrationIdentification, below).
         out["confidence"] = "high"
-        out["nation"] = decoders.get_nation(rec[0])
+        out["code_page"] = rec[0]
         out["plate"] = decoders.decode_string(rec[1:14], is_id=True)
         return out
     if record_type == 0x02 and len(rec) >= 1:

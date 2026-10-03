@@ -278,6 +278,16 @@ def _is_marker(data, pos):
     return pos + 2 <= len(data) and data[pos] == 0x76 and data[pos + 1] in TREP_NAMES
 
 
+def _marker_in(data, start):
+    """True when a ``0x76 TREP`` marker exists at or after ``start``.
+
+    Used to tell a harmless trailing pad/trailer (no further message) from a
+    real mis-measured boundary (a message still follows)."""
+    if start >= len(data):
+        return False
+    return any(_is_marker(data, i) for i in range(start, len(data) - 1))
+
+
 def iter_g1_vu_messages(data):
     """Walk the G1 VU message stream from offset 0.
 
@@ -308,10 +318,16 @@ def iter_g1_vu_messages(data):
 
         # The signature is present when the next marker (or EOF) sits exactly
         # 128 bytes after the body; absent when it sits right at the body end.
-        if body_end + RSA_SIGNATURE_LEN == n or _is_marker(data, body_end + RSA_SIGNATURE_LEN):
+        # A trailing pad/trailer after the last signed message (a stray byte, or
+        # any bytes that do not start a further message) must not discard the
+        # whole block: accept it when no TREP marker follows the signature.
+        sig_at = body_end + RSA_SIGNATURE_LEN
+        if sig_at == n or _is_marker(data, sig_at):
             sig_len = RSA_SIGNATURE_LEN
         elif body_end == n or _is_marker(data, body_end):
             sig_len = 0
+        elif not _marker_in(data, sig_at):
+            sig_len = RSA_SIGNATURE_LEN if sig_at <= n else 0
         else:
             return
 
@@ -331,7 +347,12 @@ def walk_g1_vu(data, results):
     """
     data = bytes(data)
     messages = list(iter_g1_vu_messages(data))
-    complete = bool(messages) and messages[-1]["end"] == len(data)
+    # Complete when the last message ends exactly at EOF, or when only a
+    # marker-less trailing pad/trailer remains after it (a stray byte must not
+    # report a well-formed download as partial).
+    complete = bool(messages) and (
+        messages[-1]["end"] == len(data) or not _marker_in(data, messages[-1]["end"])
+    )
 
     def _dispatch_trep02(body, res):
         # The walk yields exact bodies, so try the deterministic layout first:
