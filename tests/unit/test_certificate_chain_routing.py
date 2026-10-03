@@ -27,6 +27,8 @@ from core.utils.report_format import (
     VERDICT_UNVERIFIED, VERDICT_VERIFIED, integrity_verdict)
 from tests.unit.card_crypto import (
     cvc,
+    cvc_pad,
+    der_certificate,
     g1_cert_records,
     g1_core_payloads,
     g1_identity,
@@ -158,11 +160,55 @@ def test_g2_c102_c10a_dtype0203_cannot_replace_normative_certificates(dtype):
     assert integrity_verdict(result) == VERDICT_VERIFIED
 
 
-def _cardma_identity(identity):
-    """A genuine CA-signed CardMA CVC (holder CARDMA01) and its private key."""
+def _cardma_identity(identity, shape="cvc189"):
+    """A genuine CA-signed CardMA certificate and its private key.
+
+    ``shape`` selects the natural encoding of the CardMA certificate:
+      * ``cvc189``  — the common 0x7F-form CVC,
+      * ``cvc194``  — a validly signed CVC padded to the 194-byte G1 length,
+      * ``der_0x30`` — a DER-encoded certificate (leading byte 0x30).
+    """
     ma_key = ec.generate_private_key(ec.SECP256R1())
-    ma_cert = cvc(ma_key, identity["msca_key"], b"MSSCA001", b"CARDMA01")
+    if shape == "cvc189":
+        ma_cert = cvc(ma_key, identity["msca_key"], b"MSSCA001", b"CARDMA01")
+        assert ma_cert[0] == 0x7F and len(ma_cert) == 189
+    elif shape == "cvc194":
+        ma_cert = cvc_pad(ma_key, identity["msca_key"], b"MSSCA001", b"CARDMA01")
+        assert ma_cert[0] == 0x7F and len(ma_cert) == 194
+    elif shape == "der_0x30":
+        ma_cert = der_certificate(ma_key, identity["msca_key"], b"CARDMA01")
+        assert ma_cert[0] == 0x30
+    else:  # pragma: no cover - guard against a typo in a parametrization
+        raise AssertionError(f"unknown CardMA shape {shape!r}")
     return ma_key, ma_cert
+
+
+CARDMA_SHAPES = ("cvc189", "cvc194", "der_0x30")
+
+
+@pytest.mark.parametrize("dtype", [0x00, 0x01, 0x02, 0x03])
+@pytest.mark.parametrize("shape", CARDMA_SHAPES)
+def test_c100_cardma_encoding_shapes_never_supply_the_ef_signing_key(shape, dtype):
+    """F-1: the C100 CardMA guard is encoding-based, so it must hold for every
+    natural shape of the CardMA certificate at every appendix dtype — not only
+    the common 189-byte 0x7F CVC. A genuine CA is present in C108 and the EF
+    pairs are signed by the CardMA key, so any leak would read as a silent
+    `Verified`."""
+    erca_cert, identity = trusted_root_and_msca()
+    ma_key, ma_cert = _cardma_identity(identity, shape=shape)
+    payloads = g2_core_payloads(v2=True)
+    payloads.update(v2_payloads())
+    data = (stap(0xC100, dtype, ma_cert)
+            + stap(0xC108, 0x02, identity["msca_cert"])
+            + signed_pairs(payloads, ma_key, 2))
+
+    with trust_store(g2_erca_cert=erca_cert) as certs_dir:
+        parser, result = parse_bytes(data, certs_dir)
+
+    assert parser.card_cert_raw is None            # the CardMA never takes the slot
+    assert not result["metadata"]["integrity_check"].startswith("Verified")
+    assert result["metadata"]["integrity_check"] == "Incomplete Certificates"
+    assert integrity_verdict(result) == VERDICT_UNVERIFIED
 
 
 @pytest.mark.parametrize("dtype", [0x00, 0x01, 0x02, 0x03])
@@ -331,9 +377,11 @@ def test_dual_generation_ca_records_are_order_independent(ca_marker, order):
     The generation-1 copy stays available for the G1 RSA chain."""
     erca_cert, identity = trusted_root_and_msca()
     g1_ids = g1_identity() if ca_marker is None else _g1_identity_with_marker(ca_marker)
-    if ca_marker is None:
-        assert g1_ids["msca_cert"][0] not in (0x30, 0x7F)
-    else:
+    if ca_marker is not None:
+        # The explicit marker cases must really carry that leading byte. The
+        # marker-free case asserts nothing about the byte: a generation-1 CA is
+        # an RSA block whose leading byte is unconstrained, and the dual-order
+        # assertions below hold for any leading byte.
         assert g1_ids["msca_cert"][0] == ca_marker
 
     with trust_store(g2_erca_cert=erca_cert, g1_erca_key=g1_ids["erca_key"]) as certs_dir:
