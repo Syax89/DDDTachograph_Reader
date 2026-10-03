@@ -90,20 +90,3 @@ def is_plausible_sensor_info(info: dict) -> bool:
         is_printable_text(info.get("sensor_approval")),
     )
     return all(checks)
-
-
-def is_plausible_event_record(event: dict) -> bool:
-    """Sanity-check a decoded VU/card event or fault record.
-
-    Requires at least a plausible begin timestamp and, when present, a
-    printable vehicle plate — enough to reject records carved from noise.
-    """
-    if not isinstance(event, dict):
-        return False
-    begin = event.get("begin") or event.get("begin_time")
-    if isinstance(begin, (int, float)) and not is_plausible_timestamp(int(begin)):
-        return False
-    plate = event.get("vehicle_plate")
-    if plate is not None and not is_printable_text(plate):
-        return False
-    return True
