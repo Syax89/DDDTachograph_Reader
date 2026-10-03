@@ -58,6 +58,32 @@ class TestActivityTimelineChart:
         blocks = ActivityTimelineChart._build_blocks(changes, is_vu=False)
         assert blocks["Cardholder"] == []
 
+    def test_unusable_time_is_dropped_not_drawn_at_a_bogus_offset(self):
+        """The GUI timeline must reject out-of-range times, not draw them.
+
+        ``ActivityTimelineChart._parse_time`` delegates to the shared
+        ``core.utils.activity_stats.parse_time``; re-inlining the old unguarded
+        copy would admit ``'25:00'`` and place a block at 90000 s.
+        """
+        dropped = ActivityTimelineChart._build_blocks(
+            [{"activity": "DRIVE", "time": "25:00", "slot": "First"}], is_vu=False)
+        assert dropped == {"Cardholder": []}   # no block at a fabricated offset
+
+        mixed = ActivityTimelineChart._build_blocks([
+            {"activity": "DRIVE", "time": "25:00", "slot": "First"},  # unusable -> dropped
+            {"activity": "WORK",  "time": "08:00", "slot": "First"},
+            {"activity": "REST",  "time": "12:00", "slot": "First"},
+        ], is_vu=False)
+        assert mixed == {"Cardholder": [(28800, 43200, "WORK"),
+                                        (43200, 86400, "REST")]}
+
+    @pytest.mark.parametrize("bad", ["25:00", "08:75", "24:01", "-1:00", "12:-5",
+                                     "abc", "", "8:00:00", "08"])
+    def test_parse_time_rejects_unusable_values(self, bad):
+        """The GUI entry point must reject the same values as the shared
+        engine's range guard (one implementation, not a re-inlined copy)."""
+        assert ActivityTimelineChart._parse_time(bad) is None
+
     def test_parse_time_handles_midnight_and_invalid(self):
         assert ActivityTimelineChart._parse_time("00:00") == 0
         assert ActivityTimelineChart._parse_time("23:59") == 86340
