@@ -251,11 +251,18 @@ def parse_g1_vu_overview(val, results):
 
         # Emergency heuristic fallback: regex-based extraction, run ONLY when the
         # deterministic fixed-offset parse could not validate the body OR left a
-        # specific field empty. Every value recovered this way is flagged as
-        # low-confidence in metadata so the UI/exports can mark it as inferred
-        # (Annex 1B §4.5.3.2.2 defines the fixed layout; regex is a last resort
-        # for non-standard/corrupt downloads only).
-        if not body_validated:
+        # specific fixed-offset field empty. Every value recovered this way is
+        # flagged as low-confidence in metadata so the UI/exports can mark it as
+        # inferred (Annex 1B §4.5.3.2.2 defines the fixed layout; regex is a last
+        # resort for non-standard/corrupt downloads only). ``card_numbers`` is not
+        # a fixed-offset field, so its emptiness alone is not a recovery trigger.
+        needs_recovery = (
+            not body_validated
+            or _missing(results["vehicle"].get("vin"))
+            or _missing(results["vehicle"].get("plate"))
+            or not (results.get("company_info") or {}).get("name")
+        )
+        if needs_recovery:
             if _missing(results["vehicle"].get("vin")):
                 _log.warning("VU overview: VIN not parsed via fixed-offset, trying regex")
                 for m in re.finditer(rb'[A-Z0-9]{17}', val[:500]):
@@ -972,27 +979,46 @@ def _parse_trep_03_events_faults_heuristic(data, results):
                 drivers.append({"surname": surname, "firstname": firstname, "card_number": card_num, "_key": dk})
 
         # Attempt 1: Structured record-boundary detection (82B faults, 83B events)
-        pos = 2
+        # Count-prefixed TREP 03 body: noOfVuFaults(1) at offset 0, so the first
+        # VuFaultRecord starts at offset 1 — not 2 (starting at 2 read the first
+        # record shifted by one byte and mislabelled the event that follows as a
+        # fault). Records already present are tracked so a re-run over the same
+        # results does not duplicate them.
+        pos = 1
         structured_count = 0
+        seen_fault_keys = {
+            (f.get("fault_type"), f.get("begin_time"), f.get("end_time"))
+            for f in results.get("faults", []) if isinstance(f, dict)
+        }
+        seen_event_keys = {
+            (e.get("type_code"), e.get("begin_time"), e.get("end_time"))
+            for e in results.get("events", []) if isinstance(e, dict)
+        }
         while pos + 82 <= len(data) and structured_count < 500:
             if 0x01 <= data[pos] <= 0xFF:
                 fault = _parse_vu_fault_record(data, pos)
                 if fault is not None:
-                    results.setdefault("faults", []).append(fault)
+                    fkey = (fault.get("fault_type"), fault.get("begin_time"), fault.get("end_time"))
+                    if fkey not in seen_fault_keys:
+                        seen_fault_keys.add(fkey)
+                        results.setdefault("faults", []).append(fault)
                     pos += 82
                     structured_count += 1
                     continue
             if pos + 83 <= len(data):
                 evt = _parse_vu_event_record(data, pos)
                 if evt is not None:
-                    results.setdefault("events", []).append({
-                        "description": describe_event(evt["event_type"]),
-                        "type_code": evt["event_type"],
-                        "begin_time": evt["begin_time"],
-                        "end_time": evt["end_time"],
-                        "similar_events": evt.get("similar_events", 0),
-                        "card_driver_begin": evt.get("card_driver_begin"),
-                    })
+                    ekey = (evt["event_type"], evt["begin_time"], evt["end_time"])
+                    if ekey not in seen_event_keys:
+                        seen_event_keys.add(ekey)
+                        results.setdefault("events", []).append({
+                            "description": describe_event(evt["event_type"]),
+                            "type_code": evt["event_type"],
+                            "begin_time": evt["begin_time"],
+                            "end_time": evt["end_time"],
+                            "similar_events": evt.get("similar_events", 0),
+                            "card_driver_begin": evt.get("card_driver_begin"),
+                        })
                     pos += 83
                     structured_count += 1
                     continue
@@ -1006,6 +1032,8 @@ def _parse_trep_03_events_faults_heuristic(data, results):
         _log.debug("TREP 03 heuristic: structured record detection failed, using byte-scan")
         pos = 2
         seen_timestamps = set()
+        seen_events = {(e.get("begin_time"), e.get("type_code"))
+                       for e in results.get("events", []) if isinstance(e, dict)}
         while pos + 9 < len(data) and len(results.get("events", [])) < 200:
             ev_type = data[pos]
             if 0x01 <= ev_type <= 0x0C:
@@ -1017,13 +1045,15 @@ def _parse_trep_03_events_faults_heuristic(data, results):
                         seen_timestamps.add(tskey)
                         dt1 = datetime.fromtimestamp(ts1, tz=timezone.utc).isoformat()
                         dt2 = datetime.fromtimestamp(ts2, tz=timezone.utc).isoformat()
-                        results.setdefault("events", []).append({
-                            "description": describe_event(ev_type),
-                            "type_code": ev_type,
-                            "begin_time": dt1,
-                            "end_time": dt2,
-                            "driver": f"{surname} {firstname}".strip(),
-                        })
+                        if (dt1, ev_type) not in seen_events:
+                            seen_events.add((dt1, ev_type))
+                            results.setdefault("events", []).append({
+                                "description": describe_event(ev_type),
+                                "type_code": ev_type,
+                                "begin_time": dt1,
+                                "end_time": dt2,
+                                "driver": f"{surname} {firstname}".strip(),
+                            })
                     pos += 9
                     continue
             pos += 1

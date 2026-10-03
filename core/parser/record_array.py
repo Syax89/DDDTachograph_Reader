@@ -1,7 +1,12 @@
 import struct
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from core.decoders import decode_activity_val, get_nation
+
+# Day counter origin for the Gen2 daily record ``day_field`` (Days since
+# 1998-01-01, Annex 1C Appendix 1).
+_G2_DAY_EPOCH = datetime(1998, 1, 1, tzinfo=timezone.utc)
 
 
 class RecordArrayParser:
@@ -205,8 +210,10 @@ def decode_g2_daily_record(data: bytes, offset: int = 0):
         "counters_raw": counters,
         "sig_len": sig_len,
         # signature starts at offset 48; default to a 64-byte signature when
-        # sig_len is absent (48 + 64 = 112)
-        "record_size": 48 + (sig_len if sig_len is not None else 64),
+        # sig_len is absent OR bogus (0). A 0x00 sig_len is not a valid ECDSA
+        # length: trusting it would size the record at 48 bytes and shift every
+        # following day, silently dropping them.
+        "record_size": 48 + (sig_len if sig_len else 64),
     }
 
 
@@ -279,23 +286,48 @@ def parse_g2_trep02_activities(data: bytes, results: dict):
     if first_daily_pos is not None:
         pos = first_daily_pos
         last_counter = None
+
+        def _next_daily_after(p):
+            """Bounded scan for the next valid daily-record marker at/after *p*.
+
+            Used to resync after a corrupt/misaligned record instead of silently
+            dropping the contiguous days that follow it.
+            """
+            for scan in range(p, min(p + 4096, len(data) - 22)):
+                if _valid_daily_at(scan):
+                    return scan
+            return None
+
         while pos + 22 <= len(data):
             tag_check = struct.unpack(">H", data[pos:pos + 2])[0]
             if tag_check not in (0x7622, 0x7632):
-                break
+                nxt = _next_daily_after(pos + 1)
+                if nxt is None:
+                    break
+                pos = nxt
+                continue
 
             daily = decode_g2_daily_record(data, pos)
             if daily is None:
-                break
+                nxt = _next_daily_after(pos + 1)
+                if nxt is None:
+                    break
+                pos = nxt
+                continue
 
             counter = daily["daily_counter"]
             # Counters increase monotonically; a decrease marks the end of the
             # contiguous daily block, except for a genuine 16-bit wrap-around
-            # (…FFFF → 0001) which stays valid.
+            # (…FFFF → 0001) which stays valid. An out-of-order counter does not
+            # discard the remaining days: resync to the next valid marker.
             if last_counter is not None and counter <= last_counter:
                 wrapped = last_counter >= 0xFFF0 and counter <= 0x0010
                 if not wrapped:
-                    break
+                    nxt = _next_daily_after(pos + 1)
+                    if nxt is None:
+                        break
+                    pos = nxt
+                    continue
             last_counter = counter
 
             signed_records.append({
@@ -303,6 +335,20 @@ def parse_g2_trep02_activities(data: bytes, results: dict):
                 "generation": daily["generation"],
                 "sig_len": daily.get("sig_len", 64),
             })
+
+            # Emit the decoded activity changes. Previously only the signed
+            # record summary was kept and the decoded ``changes`` were discarded,
+            # silently losing every activity of the fallback daily path.
+            day_date = _G2_DAY_EPOCH + timedelta(days=daily["day_field"])
+            date_str = day_date.strftime("%d/%m/%Y")
+            if not any(a.get("date") == date_str and a.get("source") == "vu_trep02"
+                       for a in activity_list if isinstance(a, dict)):
+                activity_list.append({
+                    "date": date_str,
+                    "changes": daily["changes"],
+                    "changes_count": daily["changes_count"],
+                    "source": "vu_trep02",
+                })
 
             rec_size = daily.get("record_size", 112)
             pos += rec_size

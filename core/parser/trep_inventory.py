@@ -22,8 +22,11 @@ TREP_NAMES = {
         0x24: "DetailedSpeed", 0x25: "TechnicalData",
     },
     "G2.2": {
-        0x31: "Overview", 0x32: "Activities", 0x33: "EventsFaults",
-        0x34: "DetailedSpeed", 0x35: "TechnicalData",
+        # Annex 1C App.7 §2.2.6.5 DDP_032: DetailedSpeed is "the TREP 04 or 24
+        # Hex" — Gen2/Gen2.2 share TREP 0x24; there is no TREP 0x34. The other
+        # Gen2.2 sections keep the three-variant numbering (31/32/33/35).
+        0x24: "DetailedSpeed", 0x31: "Overview", 0x32: "Activities",
+        0x33: "EventsFaults", 0x35: "TechnicalData",
     },
 }
 
