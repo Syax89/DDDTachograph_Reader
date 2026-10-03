@@ -32,7 +32,7 @@
 
 ---
 
-## Known Process Debts (Non-Blocking)
+## Known Process Debts (Accepted As-Is)
 
 ### B7 & B8: Missing Blind Review Leg
 
@@ -44,18 +44,29 @@
 - ✅ Real verdict probes identical (before/after)
 - ✅ Build success
 
-**Recommendation**: Accept as-is. Both batches are small (6 families each) and have strong evidence (tests + CI + verdicts). A retroactive blind review would be expensive for minimal risk reduction.
+**Decision**: ✅ **ACCEPTED AS-IS**  
+**Rationale**: Retroactive blind review on merged code requires rollback + rebase (expensive, disruptive). Both batches small (6 families each), strong evidence (tests + CI + verdicts). Risk reduction from retroactive review is minimal vs. cost. Future batches will have blind review from start.
 
 ### B8: Missing Mutation Testing
 
 **Status**: Already on main (`88c729b`), CI GREEN  
 **Issue**: B8 was published without mutation testing (7/7 mutations not run)  
 **Impact**: LOW — B8 has:
-- ✅ Passing tests covering all 6 VU families
+- ✅ Passing tests covering all 6 VU families (17 tests)
 - ✅ CI gate success
 - ✅ Real verdict probes identical
 
-**Recommendation**: Accept as-is. Test coverage is strong (6 families, multiple test cases each). Mutation would add confidence but is not critical for already-shipped code with green CI.
+**Decision**: ✅ **ACCEPTED AS-IS**  
+**Rationale**: Retroactive mutation on merged code requires rollback or separate branch (expensive). Test coverage strong (6 families, 17 test cases, multiple assertions each). Mutation would add confidence but not critical for already-shipped code with green CI + identical verdicts. Future batches will have mutation from start.
+
+---
+
+## Process Improvements (Applied to Future Batches)
+
+1. ✅ **Blind review mandatory** for all batches ≥MEDIA gravity (applied B9-B20)
+2. ✅ **Mutation testing mandatory** for all batches (applied B9-B20)
+3. ✅ **No manual patches** — all transfers via `git format-patch` + `git am` (applied B6-B20)
+4. ✅ **Real verdict probes** before+after for all batches (applied B6-B20)
 
 ---
 
