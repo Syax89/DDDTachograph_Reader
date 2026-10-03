@@ -62,6 +62,12 @@ def reset_logger_singleton():
 def captured_logs():
     """Capture every record the ``ddd_tacho`` logger emits (propagate=False)."""
     _reset_ddd_logger()  # ensure clean slate even if autouse ran in another module
+    # Force DEBUG on the global logger instance *before* get_logger() caches it.
+    # logging.getLogger() returns the same object every call; if another test
+    # already created it with WARNING level, _reset clears our wrapper but the
+    # global logger keeps WARNING → no DEBUG records emitted.
+    logging.getLogger("ddd_tacho").setLevel(logging.DEBUG)
+    
     captured = []
 
     class _Collect(logging.Handler):
@@ -74,7 +80,6 @@ def captured_logs():
     handler = _Collect()
     handler.setLevel(logging.DEBUG)
     log = logger_module.get_logger()
-    log.setLevel(logging.DEBUG)  # ensure logger emits DEBUG records
     log.addHandler(handler)
     yield captured
     log.removeHandler(handler)
