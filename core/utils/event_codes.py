@@ -95,6 +95,8 @@ FAULT_TYPES: dict[int, str] = {
 #   '05'H..'FF'H RFU
 
 # Compact labels used as the machine-friendly ``condition`` field in results.
+# Generation 2 (and 2.2) distinguishes the Begin/End pair; generation 1 has a
+# single ``Ferry / Train crossing`` code and treats 0x04 as RFU.
 SPECIFIC_CONDITION_LABELS: dict[int, str] = {
     0x00: "RFU",
     0x01: "OutOfScope Begin",
@@ -103,12 +105,25 @@ SPECIFIC_CONDITION_LABELS: dict[int, str] = {
     0x04: "Ferry/Train End",
 }
 
+SPECIFIC_CONDITION_LABELS_G1: dict[int, str] = {
+    0x00: "RFU",
+    0x01: "OutOfScope Begin",
+    0x02: "OutOfScope End",
+    0x03: "Ferry/Train crossing",
+}
 
-def specific_condition_label(code) -> str:
-    """Compact label for a SpecificConditionType code (Annex 1C §2.154)."""
+
+def specific_condition_label(code, generation: str = "G2") -> str:
+    """Compact label for a SpecificConditionType code (Annex 1C §2.154).
+
+    Generation 1 assigns a single meaning to 0x03 (``Ferry / Train crossing``)
+    and leaves 0x04 RFU; generation 2/2.2 splits it into Begin/End.
+    """
     if code is None:
         return "Unknown"
-    return SPECIFIC_CONDITION_LABELS.get(code, f"0x{code:02X}")
+    table = SPECIFIC_CONDITION_LABELS_G1 if generation == "G1" else SPECIFIC_CONDITION_LABELS
+    return table.get(code, f"0x{code:02X}")
+
 
 # ── Calibration purpose (Annex 1B §2.8 / Annex 1C req. 120) ────────────────
 #
