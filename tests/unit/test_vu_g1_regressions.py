@@ -9,8 +9,11 @@ M4: the TREP 02 timestamp-scan heuristic matched the (0, 0) change-stream
 
 import struct
 
+import pytest
+
 from core.decoders.vu_g1 import (
     _parse_trep_02_activities,
+    _parse_trep_02_g1_structured,
     parse_g1_vu_overview,
     parse_vu_vehicle_identification,
 )
@@ -120,6 +123,45 @@ def test_trep02_plain_body_still_parses():
     _parse_trep_02_activities(_g1_trep02_body(12345), results)
     assert results.get("activities")
     assert results.get("inserted_drivers")
+
+
+def _g1_trep02_malformed_recovery_bodies():
+    """Deterministic mutations of the valid TREP 02 body, each carrying the
+    odometer byte pair ``76 22``/``76 32`` inside the first 500 bytes AND
+    rejected by the structured G1 layout (Annex 1B §2.2.6.2), so the legacy
+    fallback is the *only* path that recovers the driver.
+
+    These are exactly the inputs on which the removed 0x7622/0x7632 content
+    sniff is load-bearing: reinstating it (reviewer's M4) routes them to the G2
+    parser, which recovers nothing, and the driver is silently lost. The
+    well-formed case above cannot see that mutant (the structured parse
+    short-circuits first), so the pin must use malformed bodies.
+    """
+    wrong_len = bytearray(_g1_trep02_body(30242))
+    wrong_len[7:9] = b"\xff\xff"                 # noOfIWRecords -> 65535
+    return {
+        "truncated": _g1_trep02_body(30242)[:140],
+        "wrong_length_card_record": bytes(wrong_len),
+        "odometer_7632_truncated": _g1_trep02_body(30258)[:140],
+    }
+
+
+@pytest.mark.parametrize("name", sorted(_g1_trep02_malformed_recovery_bodies()))
+def test_malformed_trep02_driver_survives_in_fallback(name):
+    """The fallback must still recover the driver from a malformed G1 day whose
+    bytes contain the 0x76 0x22 / 0x76 0x32 pair. Restoring the content sniff
+    (M4) makes this lose the driver."""
+    body = _g1_trep02_malformed_recovery_bodies()[name]
+    assert b"\x76\x22" in body[:500] or b"\x76\x32" in body[:500]
+    assert _parse_trep_02_g1_structured(body, {}) is False, (
+        "structured layout must reject this body so the fallback runs")
+
+    results = {}
+    _parse_trep_02_activities(body, results)
+
+    drivers = results.get("inserted_drivers") or []
+    assert drivers, f"fallback recovered no driver for {name} (sniff stole the body)"
+    assert drivers[0]["card_number"].startswith("I100000114613001")
 
 
 def _g1_overview_body(first_byte):
