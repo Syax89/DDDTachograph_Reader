@@ -7,6 +7,8 @@ import datetime
 import logging
 import os
 
+from core.utils.constants import looks_like_g2_certificate
+
 
 def _get_tbs_bytes(cert):
     """Safe accessor for x509.Certificate.to-be-signed bytes.
@@ -42,6 +44,10 @@ class SignatureValidator:
         self.root_certificates = {} # Map of KeyID -> Certificate
         self.msca_certificates = {} # Cache for MSCA certs found in the file
         self.last_chain_temporal_validity = {}
+        # Generation ("G1"/"G2") of the chain the last validate_tacho_chain() call
+        # actually validated, so consumers attribute per-generation trust to the
+        # real chain rather than to the raw certificate's leading byte.
+        self.last_chain_generation = None
         
         self._load_root_certificates()
 
@@ -274,19 +280,35 @@ class SignatureValidator:
         Returns (is_valid, card_public_key)
         """
         self.last_chain_temporal_validity = {}
+        self.last_chain_generation = None
         if not card_cert_raw or not msca_cert_raw:
             self.logger.warning("Certificate chain is missing a card or MSCA certificate")
             return False, None
 
-        # G2 certs: X.509 DER (starts with ASN.1 SEQUENCE 0x30) or CVC (starts 0x7F).
-        # The encoding marker takes precedence because valid G2 certificates may be
-        # 194 bytes, which is also a common G1 encoded-certificate length.
-        is_likely_g2 = card_cert_raw[0] in (0x30, 0x7F)
-
-        if is_likely_g2:
+        # G2 certs are CVC (0x7F21) or DER X.509 (0x30 + long-form length); the
+        # two-byte encoding marker — not the lone leading 0x30/0x7F — picks the
+        # generation, because a G1 (ISO 9796-2 RSA) certificate may legitimately
+        # start with either byte.
+        if looks_like_g2_certificate(card_cert_raw):
             if verification_time is None:
-                return self._validate_g2_chain(card_cert_raw, msca_cert_raw)
-            return self._validate_g2_chain(card_cert_raw, msca_cert_raw, verification_time)
+                result = self._validate_g2_chain(card_cert_raw, msca_cert_raw)
+            else:
+                result = self._validate_g2_chain(
+                    card_cert_raw, msca_cert_raw, verification_time)
+            if result[0] is not False:
+                self.last_chain_generation = "G2"
+                return result
+            # The generation-2 routing failed. A generation-1 certificate whose
+            # unconstrained leading byte coincided with the 0x30/0x7F marker
+            # would land here; retry as generation-1 and prefer a successful
+            # recovery over the spurious generation-2 failure.
+            g1_result = self._validate_g1_chain(card_cert_raw, msca_cert_raw)
+            if g1_result[0] is True:
+                self.last_chain_generation = "G1"
+                return g1_result
+            self.last_chain_generation = "G2"
+            return result
+        self.last_chain_generation = "G1"
         return self._validate_g1_chain(card_cert_raw, msca_cert_raw)
 
     def _g1_erca_key(self):
