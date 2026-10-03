@@ -211,8 +211,15 @@ def _fmt_coords(lat, lon):
     return f"{lat:.5f}, {lon:.5f}"
 
 
-def _fmt_dict(d):
-    """Readable summary of known tachograph nested structures."""
+def fmt_known_structure(d):
+    """Render a known tachograph nested structure, or ``None`` if ``d`` is not one.
+
+    Handles the shapes every renderer (GUI + report/export) shares: an absent
+    card slot, GNSS coordinates carried either nested under ``geo`` or directly
+    on the dict, a FullCardNumber, and a vehicle registration plate/nation. A
+    ``None`` return means the caller supplies its own generic fallback for
+    everything else.
+    """
     if d.get("present") is False:
         return "—"
     geo = d.get("geo") if isinstance(d.get("geo"), dict) else None
@@ -229,6 +236,14 @@ def _fmt_dict(d):
         if not plate or set(plate) <= {"?"}:
             return "—"
         return f"{nation} {plate}".strip() if "No information" not in nation else plate
+    return None
+
+
+def _fmt_dict(d):
+    """Readable summary of known tachograph nested structures."""
+    known = fmt_known_structure(d)
+    if known is not None:
+        return known
     items = ", ".join(f"{humanize_key(k)}: {fmt_value(v)}"
                       for k, v in d.items()
                       if k not in HIDDEN_KEYS and not str(k).startswith("_"))

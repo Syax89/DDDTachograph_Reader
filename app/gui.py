@@ -73,7 +73,7 @@ from core.utils.encoding import BytesEncoder  # noqa: E402
 from core.utils.version import __version__  # noqa: E402
 from core.utils.report_format import (  # noqa: E402
     VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
-    fmt_scalar, humanize_key, integrity_verdict, visible_columns)
+    fmt_known_structure, fmt_scalar, humanize_key, integrity_verdict, visible_columns)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
@@ -116,33 +116,11 @@ SPEED_LIMIT_KMH = 90
 
 
 
-def _fmt_coords(lat, lon):
-    if lat is None or lon is None:
-        return ""
-    return f"{lat:.5f}, {lon:.5f}"
-
-
 def _fmt_dict(d):
     """Readable summary of known tachograph nested structures."""
-    # Card slot absent
-    if d.get("present") is False:
-        return "\u2014"
-    # GNSS coordinates (gnss_place → geo, or direct geo)
-    geo = d.get("geo") if isinstance(d.get("geo"), dict) else None
-    if geo and ("latitude_deg" in geo or "longitude_deg" in geo):
-        return _fmt_coords(geo.get("latitude_deg"), geo.get("longitude_deg"))
-    if "latitude_deg" in d or "longitude_deg" in d:
-        return _fmt_coords(d.get("latitude_deg"), d.get("longitude_deg"))
-    # Card number (FullCardNumber) — empty number means no card in slot
-    if "card_number" in d:
-        return str(d["card_number"]).strip() or "—"
-    # Vehicle registration
-    if "plate" in d:
-        plate = (d.get("plate") or "").strip() if d.get("plate") is not None else ""
-        nation = (d.get("nation") or "").strip() if d.get("nation") is not None else ""
-        if not plate or set(plate) <= {"?"}:
-            return "\u2014"
-        return f"{nation} {plate}".strip() if "No information" not in nation else plate
+    known = fmt_known_structure(d)
+    if known is not None:
+        return known
     # Compact generic fallback
     items = ", ".join(f"{k}={fmt_val(val)}" for k, val in d.items())
     return items if len(items) <= 120 else items[:120] + "\u2026"
