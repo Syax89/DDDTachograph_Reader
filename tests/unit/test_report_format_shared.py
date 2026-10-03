@@ -7,7 +7,7 @@ def test_fmt_scalar_preserves_shared_display_conventions():
     assert fmt_scalar(12.5) == "12.5"
     assert fmt_scalar(12345) == "12 345"
     assert fmt_scalar(0xFFFFFF) == "N/A"
-    assert fmt_scalar("2026-06-01T10:30:00+00:00") == "2026-06-01 10:30"
+    assert fmt_scalar("2026-06-01T10:30:00+00:00") == "2026-06-01 10:30Z"
     assert fmt_scalar("I", key="nation") == "Italy"
     assert fmt_scalar(0x21, key="trep", include_code_label=True) == "33  (TREP 21)"
 

@@ -150,7 +150,9 @@ def test_monthly_report_prefers_explicit_odometer_km():
 def test_fmt_iso_tolerates_non_string_shapes(value):
     """``fmt_iso`` must not raise ``TypeError`` on a non-string field."""
     assert fmt_iso(value) == value
-    assert fmt_iso("2026-06-01T10:30:00+00:00") == "2026-06-01 10:30"
+    # A UTC offset is surfaced as a trailing 'Z' so the zone is explicit
+    # (REPORT-TIMEZONE / XF-F11).
+    assert fmt_iso("2026-06-01T10:30:00+00:00") == "2026-06-01 10:30Z"
 
 
 def test_summary_rows_survives_none_and_scalar_sections():

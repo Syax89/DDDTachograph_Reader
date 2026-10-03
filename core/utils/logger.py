@@ -7,6 +7,32 @@ _console_handler = None
 _counter = None
 _lock = threading.Lock()
 
+# Substrings (lower-cased) marking a log line as a decoder failure diagnostic.
+# The original heuristic only caught "... fail"/"...failed", so real
+# abort/verify-error/skip diagnostics — "invalid header timestamp, aborting",
+# "ECDSA verify error", "Sensor block dropped: implausible values",
+# "data too short ... skipping" — slipped through and silently undercounted
+# ``decoder_failure_count`` (REPORT-ERROR-COUNT: XF-F6). Sample: these markers
+# are matched against the rendered message; keep them specific enough not to
+# catch benign progress lines ("faults", "events", "fields" are deliberately
+# absent).
+_FAILURE_MARKERS = (
+    "fail", "error", "invalid", "abort", "drop", "skip", "too short",
+    "reject", "refus", "corrupt", "malformed", "missing", "unable",
+    "cannot", "implausible", "truncat",
+)
+
+
+def redact(value):
+    """Non-reversible placeholder for a personal-data value in a log line.
+
+    Card numbers and cardholder names are personal data and must never reach
+    the logs verbatim (LOG-PII: F-F8 / XF-F10). Use this in place of the raw
+    value in DEBUG statements; an empty/absent value renders as ``""``.
+    """
+    text = "" if value is None else str(value).strip()
+    return "<redacted>" if text else ""
+
 
 class _CountingHandler(logging.Handler):
     """Counts decoder failure events without emitting them to the console.
@@ -28,7 +54,8 @@ class _CountingHandler(logging.Handler):
             message = record.getMessage()
         except Exception:
             return
-        if " fail" in message.lower() or message.lower().endswith("failed"):
+        lowered = message.lower()
+        if any(marker in lowered for marker in _FAILURE_MARKERS):
             self.failure_count += 1
             if len(self.failures) < 500:
                 self.failures.append(message)

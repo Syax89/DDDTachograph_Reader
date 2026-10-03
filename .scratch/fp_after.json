@@ -1,0 +1,101 @@
+{
+  "count": 19,
+  "source_root": "/home/simone/ddd-review-r1/integration/batch17-author",
+  "rows": [
+    {
+      "index": 1,
+      "generation": "G1 (Digital)",
+      "sha256": "96d91c90c91a6aea90d8d525a87aad4ccc3a7ea0a37c85840def0c9c073c0c5c"
+    },
+    {
+      "index": 2,
+      "generation": "G2 (Smart)",
+      "sha256": "67acdaf4480c34048e977ce7ce5804cee9cffa28fc463d4a16f8a57c9cf797ef"
+    },
+    {
+      "index": 3,
+      "generation": "G1 (Digital)",
+      "sha256": "cc7b424032ddc5e96f2edf2277501b3c3eaea349c63f77cb9c5fcd7674400f1f"
+    },
+    {
+      "index": 4,
+      "generation": "G1 (Digital)",
+      "sha256": "c75cf468e35b74b5cc4c59c67414d0c8867d2b921acef2e240111ee6c8a56a4c"
+    },
+    {
+      "index": 5,
+      "generation": "G1 (Digital)",
+      "sha256": "87ef00c8968bcf16e39dba5c5deab861e121208cd75db1ff5bf0d6be34f2cbab"
+    },
+    {
+      "index": 6,
+      "generation": "G1 (Digital)",
+      "sha256": "09e40946a17318330d80d231dfef8b206faf6a7fff95f42e6cb01b79c5a639e8"
+    },
+    {
+      "index": 7,
+      "generation": "G2.2 (Smart V2)",
+      "sha256": "7c5c884bf007f05cab94cb08b39ab6e5ab47cd273589bdceb608568ff7f52181"
+    },
+    {
+      "index": 8,
+      "generation": "G2.2 (Smart V2)",
+      "sha256": "bcd75938299a0810bb9bde1fd843da68f893008c6261ba7e3f113b04cba5e8c5"
+    },
+    {
+      "index": 9,
+      "generation": "G1 (Digital)",
+      "sha256": "7399974944ec7dc819790c115d519dfaf78fb1dc6c088522bc7fe1803707067a"
+    },
+    {
+      "index": 10,
+      "generation": "G1 (Digital)",
+      "sha256": "4ca0e1a5eb1e3da9fd302004a27232a8d20e7658f7e4d910447342f945a6b7a7"
+    },
+    {
+      "index": 11,
+      "generation": "G1 (Digital)",
+      "sha256": "5f25a7d02e42ebaef512cf6f3f7c419fc290a2b8371ad6dcc3918c7a4b4592b3"
+    },
+    {
+      "index": 12,
+      "generation": "G2 (Smart)",
+      "sha256": "632d1608dabc6a09a0ab46ef338e9a160d6c55eded8e29cd58b231812becb0d1"
+    },
+    {
+      "index": 13,
+      "generation": "G2 (Smart)",
+      "sha256": "f9c5cca21ad15003d1cc84924262ec4a168a70c758a205b8e7b5d68bf3c836b2"
+    },
+    {
+      "index": 14,
+      "generation": "G2 (Smart)",
+      "sha256": "5deb79b662157d804e7c6a416820f9e23cdbbbbe93434743a9c3220d35c71f2c"
+    },
+    {
+      "index": 15,
+      "generation": "G2.2 (Smart V2)",
+      "sha256": "a371a0e70f17ba816f38e89bad3752d60984c7b9fb1f3fc622d2d5c36cb619a7"
+    },
+    {
+      "index": 16,
+      "generation": "G1 (Digital)",
+      "sha256": "d0d024e41501e0f90fbbb4258b175718e441a6eaab8e63cc8f24be579886fb96"
+    },
+    {
+      "index": 17,
+      "generation": "G1 (Digital)",
+      "sha256": "0dd795634279b3d6204d4f03e1f9d0f4e2950463501631c50b2be303d29e49f5"
+    },
+    {
+      "index": 18,
+      "generation": "G1 (Digital)",
+      "sha256": "65de4f5beed95116bb46e19850f43348ec41856882a5f8b55934701de2f8179b"
+    },
+    {
+      "index": 19,
+      "generation": "G1 (Digital)",
+      "sha256": "9960fc8caa90de8c4827a5771ff326449fc963dde270ab4fb864b12063d16e88"
+    }
+  ]
+}

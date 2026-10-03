@@ -12,7 +12,8 @@ from core.utils.activity_stats import compute_activity_totals
 
 # Tachograph "data not available" sentinels.
 _NOT_AVAILABLE_INTS = {0xFFFFFF, 0xFFFFFFFF}
-_ISO_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2})?")
+_ISO_RE = re.compile(
+    r"^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2})?")
 
 # Internal bookkeeping keys never shown in exports.
 HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
@@ -189,16 +190,26 @@ SECTION_DESCRIPTIONS = {
 
 
 def fmt_iso(s):
-    """ISO timestamp (2025-04-23T08:37:00+00:00) → '2025-04-23 08:37'.
+    """ISO timestamp → ``'YYYY-MM-DD HH:MM'``, keeping a ``Z`` for UTC.
 
-    A non-string (``None``, a number from a malformed/None-shaped field) is
-    returned unchanged instead of raising ``TypeError`` on the regex match
-    (XF-F9): report exports must survive shape deviations in a decoded field.
+    ``2025-04-23T08:37:00+00:00`` → ``2025-04-23 08:37Z``;
+    ``2025-04-23T08:37:00`` (no zone) → ``2025-04-23 08:37``.
+
+    Tachograph event timestamps are UTC, but the trailing offset used to be
+    dropped, so an exported time was indistinguishable from the (formerly
+    local) "Parsed at" field (REPORT-TIMEZONE: XF-F11). A UTC offset (``Z`` or
+    ``+00:00``) is now surfaced as a trailing ``Z`` so the zone is explicit;
+    other offsets are left to the raw value. A non-string (``None``, a number
+    from a malformed/None-shaped field) is returned unchanged instead of
+    raising ``TypeError`` (XF-F9).
     """
     if not isinstance(s, str):
         return s
     m = _ISO_RE.match(s)
-    return f"{m.group(1)} {m.group(2)}" if m else s
+    if not m:
+        return s
+    stamp = f"{m.group(1)} {m.group(2)}"
+    return stamp + "Z" if m.group(3) in ("Z", "+00:00") else stamp
 
 
 def humanize_key(key):

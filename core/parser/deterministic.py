@@ -12,7 +12,7 @@ import inspect
 import heapq
 from typing import Dict, Any, List, Optional, Tuple
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 from core.utils.constants import MAX_TLV_LENGTH, MAX_RECURSION_DEPTH, looks_like_g2_certificate
 from core.registry.registry import DecoderRegistry
@@ -230,7 +230,7 @@ class DeterministicParser:
         from core.registry.models import TachoResult
         self.results = TachoResult().to_dict()
         self.results["metadata"]["file_size_bytes"] = len(raw_data)
-        self.results["metadata"]["parsed_at"] = self.results["metadata"].get("parsed_at") or datetime.now().isoformat()
+        self.results["metadata"]["parsed_at"] = self.results["metadata"].get("parsed_at") or datetime.now(timezone.utc).isoformat()
 
         self.is_vu = is_vu
         self.generation = self._detect_generation(raw_data)

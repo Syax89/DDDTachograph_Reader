@@ -1,0 +1,214 @@
+{
+  "count": 19,
+  "rows": [
+    {
+      "ef_failed": 0,
+      "ef_skipped": 0,
+      "ef_verified": 9,
+      "generation": "G1 (Digital)",
+      "index": 1,
+      "integrity": "Verified",
+      "is_vu": false,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": 0,
+      "ef_skipped": 0,
+      "ef_verified": 24,
+      "generation": "G2 (Smart)",
+      "index": 2,
+      "integrity": "Verified",
+      "is_vu": false,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": 0,
+      "ef_skipped": 0,
+      "ef_verified": 11,
+      "generation": "G1 (Digital)",
+      "index": 3,
+      "integrity": "Verified",
+      "is_vu": false,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": 0,
+      "ef_skipped": 0,
+      "ef_verified": 9,
+      "generation": "G1 (Digital)",
+      "index": 4,
+      "integrity": "Verified",
+      "is_vu": false,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": 0,
+      "ef_skipped": 0,
+      "ef_verified": 11,
+      "generation": "G1 (Digital)",
+      "index": 5,
+      "integrity": "Verified",
+      "is_vu": false,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G1 (Digital)",
+      "index": 6,
+      "integrity": "Verified (G1 VU chain and TREP signatures)",
+      "is_vu": true,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G2.2 (Smart V2)",
+      "index": 7,
+      "integrity": "Verified (VU Chain)",
+      "is_vu": true,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G2.2 (Smart V2)",
+      "index": 8,
+      "integrity": "Verified (VU Chain)",
+      "is_vu": true,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G1 (Digital)",
+      "index": 9,
+      "integrity": "Verified (G1 VU chain and TREP signatures)",
+      "is_vu": true,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G1 (Digital)",
+      "index": 10,
+      "integrity": "Verified (G1 VU chain and TREP signatures)",
+      "is_vu": true,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G1 (Digital)",
+      "index": 11,
+      "integrity": "Verified (G1 VU chain and TREP signatures)",
+      "is_vu": true,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G2 (Smart)",
+      "index": 12,
+      "integrity": "Verified (VU Chain)",
+      "is_vu": true,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G2 (Smart)",
+      "index": 13,
+      "integrity": "Verified (VU Chain)",
+      "is_vu": true,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G2 (Smart)",
+      "index": 14,
+      "integrity": "Verified (VU Chain)",
+      "is_vu": true,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G2.2 (Smart V2)",
+      "index": 15,
+      "integrity": "Verified (VU Chain)",
+      "is_vu": true,
+      "missing_core": [],
+      "verdict": "verified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G1 (Digital)",
+      "index": 16,
+      "integrity": "Incomplete Certificates",
+      "is_vu": false,
+      "missing_core": [],
+      "verdict": "unverified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G1 (Digital)",
+      "index": 17,
+      "integrity": "Incomplete Certificates",
+      "is_vu": false,
+      "missing_core": [],
+      "verdict": "unverified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G1 (Digital)",
+      "index": 18,
+      "integrity": "Incomplete Certificates",
+      "is_vu": false,
+      "missing_core": [],
+      "verdict": "unverified"
+    },
+    {
+      "ef_failed": null,
+      "ef_skipped": null,
+      "ef_verified": null,
+      "generation": "G1 (Digital)",
+      "index": 19,
+      "integrity": "Incomplete Certificates",
+      "is_vu": false,
+      "missing_core": [],
+      "verdict": "unverified"
+    }
+  ]
+}
