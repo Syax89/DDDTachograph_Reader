@@ -2383,3 +2383,60 @@ msgstr "Sewqan ta’ kuljum {driven} — limitu {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Sewqan kontinwu {driven} mingħajr pawża ta’ {pause} min — limitu {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Sommarju"
+
+msgid "📄  FILE"
+msgstr "📄  FJOL"
+
+msgid "  Filename"
+msgstr "  Isem tal-fajl"
+
+msgid "  Origin"
+msgstr "  Oriġini"
+
+msgid "  Period covered"
+msgstr "  Perjodu kopert"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  TOTAL"
+
+msgid "  Drive"
+msgstr "  Sewqan"
+
+msgid "  Work"
+msgstr "  Xogħol"
+
+msgid "  Rest"
+msgstr "  Mistrieħ"
+
+msgid "  Available"
+msgstr "  Disponibbli"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  REGOLI TAL-ĦIN TAS-SEWQAN"
+
+msgid "  Days flagged"
+msgstr "  Ġranet b'ksur"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  INTEGRITÀ"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Kopertura skont il-bytes"
+
+msgid "  Daily driving limit"
+msgstr "  Limitu sewqan ta' kuljum"
+
+msgid "  Continuous driving limit"
+msgstr "  Limitu sewqan kontinwu"
+
+msgid "  Break that resets it"
+msgstr "  Pawża li terġa' tibda"
+
+msgid "{minutes} min"
+msgstr "{minutes} min"

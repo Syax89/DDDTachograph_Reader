@@ -2383,3 +2383,60 @@ msgstr "Tägliche Lenkzeit {driven} — Grenze {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Ununterbrochene Lenkzeit {driven} ohne {pause} Min. Pause — Grenze {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Zusammenfassung"
+
+msgid "📄  FILE"
+msgstr "📄  DATEI"
+
+msgid "  Filename"
+msgstr "  Dateiname"
+
+msgid "  Origin"
+msgstr "  Herkunft"
+
+msgid "  Period covered"
+msgstr "  Abgedeckter Zeitraum"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  GESAMT"
+
+msgid "  Drive"
+msgstr "  Lenkzeit"
+
+msgid "  Work"
+msgstr "  Arbeitszeit"
+
+msgid "  Rest"
+msgstr "  Ruhezeit"
+
+msgid "  Available"
+msgstr "  Bereitschaft"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  LENKZEITREGELN"
+
+msgid "  Days flagged"
+msgstr "  Tage mit Verstößen"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  INTEGRITÄT"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Byte-bilanzierte Abdeckung"
+
+msgid "  Daily driving limit"
+msgstr "  Grenze Tageslenkzeit"
+
+msgid "  Continuous driving limit"
+msgstr "  Grenze Lenkzeit am Stück"
+
+msgid "  Break that resets it"
+msgstr "  Zurücksetzende Pause"
+
+msgid "{minutes} min"
+msgstr "{minutes} Min."

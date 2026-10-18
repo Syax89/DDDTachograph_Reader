@@ -77,8 +77,8 @@ from core.utils.report_format import (  # noqa: E402
     NATION_COLS, VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
     fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
 from core.utils.activity_stats import (  # noqa: E402
-    DAILY_DRIVE_LIMIT_MIN, QUALIFYING_BREAK_MIN, RULE_CONTINUOUS_DRIVING,
-    RULE_DAILY_DRIVING, evaluate_driving_rules)
+    CONTINUOUS_DRIVE_LIMIT_MIN, DAILY_DRIVE_LIMIT_MIN, QUALIFYING_BREAK_MIN,
+    RULE_CONTINUOUS_DRIVING, RULE_DAILY_DRIVING, evaluate_driving_rules)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 from app.i18n import (  # noqa: E402
     LANGUAGES, _, add_recent_file, install, save_language, save_translate_data,
@@ -239,6 +239,55 @@ def _kv_rows(d):
         else:
             rows.append([field, fmt_val(v, key=k)])
     return ([_("Field"), _("Value")], rows)
+
+
+def _summary_block(rows):
+    """Return the first block of a ``(label, value, is_header)`` summary page.
+
+    ``_build_driver_summary`` and ``_build_vehicle_summary`` each build a whole
+    panel of stacked blocks separated by blank ``("", "", True)`` rows. The
+    file overview reuses one block of each (the identity, the vehicle) by
+    calling the builder and taking its leading block, so the two pages can
+    never disagree about the same facts.
+    """
+    block = []
+    for index, row in enumerate(rows):
+        if index and row[2]:
+            break  # a separator row or the next block header ends the block
+        block.append(row)
+    return block
+
+
+def _drop_empty_values(rows):
+    """Drop the ``N/A`` rows of a borrowed block, keeping headers.
+
+    The section builders emit a handful of rows unconditionally, with the
+    model's ``"N/A"`` sentinel (``core/registry/models.py``) as the value. On a
+    section page that reads as "we looked and found nothing"; in a one-page
+    overview it is noise, so an unknown fact is simply not listed.
+    """
+    return [row for row in rows
+            if row[2] or str(row[1]).strip() not in ("", "N/A")]
+
+
+def _activity_days(activities):
+    """Return one file's activity days as ``[(sort_key, display_text), ...]``.
+
+    The sort key is the ISO form :func:`_activity_to_iso` derives, because the
+    decoders emit ``dd/mm/yyyy`` (which sorts lexicographically wrong); the
+    display text is the day exactly as the file recorded it, like the Date
+    column of the Daily-Activities dashboard. A day recorded twice (two
+    download sections, or both card slots) is counted once.
+    """
+    days = {}
+    for record in activities if isinstance(activities, list) else []:
+        if not isinstance(record, dict):
+            continue
+        raw = record.get("date")
+        if raw in (None, ""):
+            continue
+        days.setdefault(_activity_to_iso(str(raw)), str(raw))
+    return sorted(days.items())
 
 
 def _utc_speed_block(block):
@@ -4258,17 +4307,14 @@ class TachoExplorer(tk.Tk):
             self._add_section(day_node, _("Daily Activities {date}").format(date=date_str),
                               cols, rows)
 
-    def _populate_tree(self, data):
-        """Rebuild the section tree from the generations dict produced by
-        :func:`build_generations_tree`.  File info, driver/vehicle summary,
-        security and activities (day hierarchy) are handled separately."""
-        self.tree.delete(*self.tree.get_children())
-        self._payloads.clear()
-        self._auto_select_iid = None
-        self._opened_data = data
-        meta = data.get("metadata", {})
+    def _build_file_info(self, data):
+        """Return the File Info rows as a ``{label: value}`` dict.
 
-        # ── File Info (key/value) ──
+        One builder for the two places that show the same facts: the File Info
+        section (rendered through :func:`_kv_rows`) and the file overview's
+        FILE / INTEGRITY blocks, which read the entries they need out of it.
+        """
+        meta = data.get("metadata", {})
         is_vu = meta.get("is_vu", False)
         origin = meta.get("origin", "")
         if origin == "vehicle_unit" or (not origin and is_vu):
@@ -4306,6 +4352,31 @@ class TachoExplorer(tk.Tk):
             info[_("Decoder failures")] = meta["decoder_failure_count"]
         info[_("Parsed at")] = meta.get("parsed_at", "")
         info[_("App version")] = meta.get("app_version", "")
+        return info
+
+    def _populate_tree(self, data):
+        """Rebuild the section tree from the generations dict produced by
+        :func:`build_generations_tree`.  File info, driver/vehicle summary,
+        security and activities (day hierarchy) are handled separately."""
+        self.tree.delete(*self.tree.get_children())
+        self._payloads.clear()
+        self._auto_select_iid = None
+        self._opened_data = data
+        meta = data.get("metadata", {})
+
+        # ── Summary (first node: the view a freshly parsed file opens on) ──
+        summary_iid = None
+        try:
+            cols, rows = self._build_overview_summary(data)
+        except Exception:
+            _log.debug("Summary section render failed: %s", traceback.format_exc())
+        else:
+            summary_iid = self._add_section(
+                "", _("\U0001f4cb  Summary"), cols, rows, summary=True)
+
+        # ── File Info (key/value) ──
+        is_vu = meta.get("is_vu", False)
+        info = self._build_file_info(data)
         cols, rows = _kv_rows(info)
         self._add_section("", _("\U0001f4c4  File Info"), cols, rows)
 
@@ -4419,6 +4490,15 @@ class TachoExplorer(tk.Tk):
                     cols, rows = _kv_rows(item_data)
                     self._add_section("", f"\U0001f510  {ui_text.label(item_name)}",
                                       cols, rows)
+
+        # The overview is the view a freshly parsed file opens on — for a card
+        # and for a VU alike. It is set last on purpose: the section-specific
+        # auto-selection above stays untouched and becomes the fallback for a
+        # file whose overview could not be built (see the try/except at the top
+        # of this method, and _parse_done's "first child" fallback), so a failed
+        # overview never leaves the pane blank.
+        if summary_iid and self.tree.exists(summary_iid):
+            self._auto_select_iid = summary_iid
 
     def _populate_unparsed(self, data):
         """Surface bytes the structural walk could not decode.
@@ -5566,6 +5646,124 @@ class TachoExplorer(tk.Tk):
         self.table.filt_bar.pack_forget()
 
     # ── Summary builders ──────────────────────────────────────
+
+    def _build_overview_summary(self, data):
+        """One-page overview of the file: the view a freshly opened file shows.
+
+        Answers "what is this file" before any per-generation detail: which file
+        it is and what period it covers, whose card and/or which vehicle
+        recorded it, what it totals, which days the driving-time rules flag and
+        how far the file verifies.
+
+        Nothing here is computed twice. Every block reuses the code that owns
+        the fact — the File Info dict (:meth:`_build_file_info`),
+        :meth:`_build_driver_summary`, :meth:`_build_vehicle_summary`,
+        ``_compute_activity_totals``, ``evaluate_driving_rules`` and
+        :meth:`_integrity_label` — so the overview cannot drift from the section
+        it summarises. Rows use the ``(label, value, is_header)`` shape the
+        other summary panels already render.
+
+        Returns:
+            tuple: ``(columns, rows)`` for ``_add_section(..., summary=True)``.
+        """
+        info = self._build_file_info(data)
+        sep = ("", "", True)
+        rows = []
+        days = _activity_days(data.get("activities"))
+
+        # ── FILE: identity of the file and the period it covers ──
+        rows.append((_("\U0001f4c4  FILE"), "", True))
+        rows.append((_("  Filename"), info.get(_("Filename"), ""), False))
+        rows.append((_("  Generation"), info.get(_("Generation"), "?"), False))
+        rows.append((_("  Origin"), info.get(_("Origin"), ""), False))
+        period = _("No activity data available.")
+        if days:
+            # Single spaces around the arrow (the dashboards' ranges keep their
+            # double): this panel's value column does not fit itself, so the row
+            # buys margin on purpose — 168 px in 187 px at 900x560, not 176 px.
+            period = _("{first} \u2192 {last}").format(
+                first=days[0][1], last=days[-1][1])
+        rows.append((_("  Period covered"), period, False))
+        rows.append(sep)
+
+        # ── DRIVER / CARDHOLDER: card files only, and only when the card
+        # carries something worth showing (GUI-BOGUS-DRIVER, G-F8: an untouched
+        # TachoResult keeps every driver field at the truthy "N/A" sentinel).
+        driver = data.get("driver") or {}
+        if not (data.get("metadata") or {}).get("is_vu") and \
+                any(value and value != "N/A" for value in driver.values()):
+            block = _drop_empty_values(
+                _summary_block(self._build_driver_summary(data)[1]))
+            if len(block) > 1:
+                rows.extend(block)
+                rows.append(sep)
+
+        # ── VEHICLE: a VU always recorded one; a card only when it was used
+        # in a vehicle (the decoders fill ``vehicle`` for both, see
+        # core/decoders/card_ef.py and core/parser/vu_dispatcher.py). ──
+        vehicle = data.get("vehicle") or {}
+        if any(str(vehicle.get(key) or "").strip() not in ("", "N/A")
+               for key in ("plate", "vin", "registration_nation")):
+            block = _drop_empty_values(
+                _summary_block(self._build_vehicle_summary(data)[1]))
+            if len(block) > 1:
+                rows.extend(block)
+                rows.append(sep)
+
+        # ── TOTALS and the driving-time rules, day by day (one pass) ──
+        totals = {"DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0}
+        flagged_days = 0
+        for record in data.get("activities") or []:
+            changes = record.get("changes") if isinstance(record, dict) else None
+            if not isinstance(changes, list) or not changes:
+                continue
+            day_totals = _compute_activity_totals(changes)
+            for activity in totals:
+                totals[activity] += day_totals[activity]
+            # Reg. (EC) 561/2006 art. 6(1) / art. 7, judged per day and per
+            # card slot by the shared evaluator (core.utils.activity_stats).
+            if evaluate_driving_rules(changes).flagged:
+                flagged_days += 1
+
+        rows.append((_("\U0001f4ca  TOTALS"), "", True))
+        rows.append((_("  Drive"), _fmt_duration_minutes(totals["DRIVE"]), False))
+        rows.append((_("  Work"), _fmt_duration_minutes(totals["WORK"]), False))
+        rows.append((_("  Rest"), _fmt_duration_minutes(totals["REST"]), False))
+        rows.append((_("  Available"),
+                     _fmt_duration_minutes(totals["AVAILABLE"]), False))
+        rows.append((_("  Days with activity"), str(len(days)), False))
+        rows.append(sep)
+
+        rows.append((_("\u23f1\ufe0f  DRIVING-TIME RULES"), "", True))
+        # A zero is the good news here, so it is stated as a plain count and
+        # never dressed as a warning.
+        rows.append((_("  Days flagged"), str(flagged_days), False))
+        # One short row per limit, never one sentence for both: the summary
+        # panel deliberately never auto-fits (see ``_show_summary``) and Tk
+        # *clips* an overlong cell instead of wrapping it, so the single
+        # "9h 00m daily driving · 4h 30m continuous without a 45 min break" row
+        # was cut off mid-string at the minimum window (900x560 — 187 px of
+        # value column, against 439 px of text). Short label/value rows are
+        # also the shape of every other row on the page. The numbers stay the
+        # module's own constants, never literals.
+        rows.append((_("  Daily driving limit"),
+                     _fmt_duration_minutes(DAILY_DRIVE_LIMIT_MIN), False))
+        rows.append((_("  Continuous driving limit"),
+                     _fmt_duration_minutes(CONTINUOUS_DRIVE_LIMIT_MIN), False))
+        rows.append((_("  Break that resets it"),
+                     _("{minutes} min").format(minutes=QUALIFYING_BREAK_MIN),
+                     False))
+        rows.append(sep)
+
+        # ── INTEGRITY: the same verdict (and coverage, when reported) the
+        # File Info section and the status badge already show. ──
+        rows.append((_("\U0001f512  INTEGRITY"), "", True))
+        rows.append((_("  Status"), info.get(_("Integrity"), ""), False))
+        coverage = info.get(_("Byte-accounted coverage"))
+        if coverage:
+            rows.append((_("  Byte-accounted coverage"), coverage, False))
+
+        return [_("Field"), _("Value")], rows
 
     def _build_vehicle_summary(self, data):
         """Rich vehicle panel for fleet manager / mechanic."""

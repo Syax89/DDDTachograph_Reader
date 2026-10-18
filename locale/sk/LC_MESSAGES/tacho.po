@@ -2383,3 +2383,60 @@ msgstr "Denná jazda {driven} — limit {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Nepretržitá jazda {driven} bez prestávky {pause} min — limit {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Zhrnutie"
+
+msgid "📄  FILE"
+msgstr "📄  SÚBOR"
+
+msgid "  Filename"
+msgstr "  Názov súboru"
+
+msgid "  Origin"
+msgstr "  Pôvod"
+
+msgid "  Period covered"
+msgstr "  Pokryté obdobie"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  SPOLU"
+
+msgid "  Drive"
+msgstr "  Jazda"
+
+msgid "  Work"
+msgstr "  Práca"
+
+msgid "  Rest"
+msgstr "  Odpočinok"
+
+msgid "  Available"
+msgstr "  Pohotovosť"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  PRAVIDLÁ ČASU VEDENIA"
+
+msgid "  Days flagged"
+msgstr "  Dni s porušením"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  INTEGRITA"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Pokrytie podľa bajtov"
+
+msgid "  Daily driving limit"
+msgstr "  Limit dennej jazdy"
+
+msgid "  Continuous driving limit"
+msgstr "  Limit nepretržitej jazdy"
+
+msgid "  Break that resets it"
+msgstr "  Prestávka, ktorá ju nuluje"
+
+msgid "{minutes} min"
+msgstr "{minutes} min"

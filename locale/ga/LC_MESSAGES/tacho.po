@@ -2383,3 +2383,60 @@ msgstr "Tiomáint laethúil {driven} — teorainn {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Tiomáint leanúnach {driven} gan sos {pause} nóim — teorainn {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Achoimre"
+
+msgid "📄  FILE"
+msgstr "📄  COMHAD"
+
+msgid "  Filename"
+msgstr "  Ainm comhaid"
+
+msgid "  Origin"
+msgstr "  Bunús"
+
+msgid "  Period covered"
+msgstr "  Tréimhse clúdaithe"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  IOMLÁN"
+
+msgid "  Drive"
+msgstr "  Tiomáint"
+
+msgid "  Work"
+msgstr "  Obair"
+
+msgid "  Rest"
+msgstr "  Scíth"
+
+msgid "  Available"
+msgstr "  Ar fáil"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  RIALACHA AM TIOMÁNA"
+
+msgid "  Days flagged"
+msgstr "  Laethanta le sáruithe"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  SLÁINE"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Clúdach de réir na mbeart"
+
+msgid "  Daily driving limit"
+msgstr "  Teorainn laethúil"
+
+msgid "  Continuous driving limit"
+msgstr "  Teorainn leanúnach"
+
+msgid "  Break that resets it"
+msgstr "  Sos a athshocraíonn é"
+
+msgid "{minutes} min"
+msgstr "{minutes} nóim"
