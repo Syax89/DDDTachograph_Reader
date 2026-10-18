@@ -1,4 +1,14 @@
 # Unreleased
+- **The busy bar keeps moving while a file loads**: opening a `.ddd` file used
+  to grey out Open and Export, show a spinning bar and then freeze that bar for
+  the whole render — 116-400 ms on the sample files under Xvfb, up to 86 % of the
+  time the window spends "busy", which reads as a hang. The render still runs on
+  the main thread (the parsed result must not be touched from a worker), but it
+  now yields to the event loop between slices of work, so the bar animates while
+  the tree is built and the window repaints. Nothing else about the load
+  changes: the same tree, the same file overview selected at the end, Open and
+  Export disabled until it is over, and a second open or a drop during the
+  render is refused instead of running a second render on top of the first.
 - **Icons drawn, not typed**: every place the interface used an emoji now draws
   a PNG from a commissioned monochrome icon set (`assets/icons/`, 28 icons at
   six sizes, with the designer's SVG masters), so the same build looks the same

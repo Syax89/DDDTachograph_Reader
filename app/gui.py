@@ -18,6 +18,7 @@ import json
 import queue
 import functools
 import threading
+import time
 import traceback
 import logging
 from bisect import bisect_left
@@ -109,6 +110,28 @@ try:
     from app.export import ExportManager
 except ImportError:
     ExportManager = None  # type: ignore[assignment,misc]
+
+
+#: Longest the render of a freshly parsed file may hold the main thread before
+#: it pumps the event loop again.
+#:
+#: A ``ttk.Progressbar`` in indeterminate mode animates from a Tk *timer*, and
+#: timers are delivered only while the loop runs — so a render that never yields
+#: freezes the busy bar for exactly as long as it takes, which the user reads as
+#: a hang (greyed buttons, motionless bar). One frame at 60 Hz is short enough
+#: that the bar keeps moving and long enough that pumping stays cheap next to
+#: the work it interrupts. See ``TachoExplorer._pump_render``.
+_RENDER_PUMP_INTERVAL = 1 / 60
+
+
+class _RenderAbandoned(Exception):
+    """The window went away while a render was pumping its event loop.
+
+    Raised by :meth:`TachoExplorer._pump_render` and absorbed by the render it
+    interrupts: with the window gone there is nothing left to draw and no widget
+    left to restore, so the render stops there instead of walking a destroyed
+    widget tree and leaving a traceback behind.
+    """
 
 
 #: True once an icon lookup has failed loudly (see :func:`_icon`).
@@ -466,11 +489,19 @@ def _fmt_seconds_duration(seconds):
     return f"{minutes} min {rest} s" if rest else f"{minutes} min"
 
 
-def detailed_speed_by_day(data):
-    """Return UTC detailed-speed samples grouped by ISO date."""
+def detailed_speed_by_day(data, on_progress=None):
+    """Return UTC detailed-speed samples grouped by ISO date.
+
+    *on_progress* is called once per speed block. The GUI passes its event-loop
+    pump there (see ``TachoExplorer._pump_render``): one block holds thousands
+    of one-second samples, so a file's worth of them is long enough to freeze
+    the busy bar if the loop is never given a turn.
+    """
     grouped = {}
     blocks = list(data.get("speed_blocks") or [])
     for block in blocks:
+        if on_progress is not None:
+            on_progress()
         decoded = _utc_speed_block(block)
         if decoded is None:
             continue
@@ -484,10 +515,15 @@ def detailed_speed_by_day(data):
     return {day: sorted(samples.items()) for day, samples in grouped.items()}
 
 
-def detailed_speed_blocks_by_day(blocks):
-    """Group raw records by every UTC day for which they contain a sample."""
+def detailed_speed_blocks_by_day(blocks, on_progress=None):
+    """Group raw records by every UTC day for which they contain a sample.
+
+    *on_progress* behaves as in :func:`detailed_speed_by_day`.
+    """
     grouped = {}
     for block in blocks if isinstance(blocks, list) else []:
+        if on_progress is not None:
+            on_progress()
         decoded = _utc_speed_block(block)
         if decoded is None:
             continue
@@ -2941,6 +2977,18 @@ def _resource_path(rel):
 
 
 class TachoExplorer(tk.Tk):
+    #: Idle defaults for the busy/render state read by ``_parse_done``,
+    #: ``_start_parse`` and ``_pump_render``. They exist on the class as well as
+    #: on the instance because a tkinter widget resolves a missing attribute
+    #: through ``Misc.__getattr__``, which forwards to ``self.tk`` — and on the
+    #: widget-less ``object.__new__(TachoExplorer)`` twins the GUI tests build
+    #: there is no ``self.tk``, so a *missing* attribute recurses until the
+    #: interpreter gives up. An attribute that always answers keeps them alive.
+    _destroyed = False
+    _rendering = False
+    _parsing = False
+    _pump_due = 0.0
+
     def __init__(self, initial_file=None):
         super().__init__()
         # The saved UI language must be loaded before the first _() call below.
@@ -3091,6 +3139,13 @@ class TachoExplorer(tk.Tk):
         self._summary_header_font = None
         self._destroyed = False
         self._parsing = False
+        # True while the tree is being rebuilt from scratch: the render owns the
+        # tree (and the selection) until it ends, so an open, a drop or a
+        # <<TreeviewSelect>> delivered by the render's own event-loop pump is
+        # refused instead of running a second render on top of the first.
+        self._rendering = False
+        # monotonic() timestamp of the next event-loop pump (see _pump_render).
+        self._pump_due = 0.0
         self._exporting = False
         self._parse_queue = queue.Queue()
         self._export_queue = queue.Queue()
@@ -3155,7 +3210,9 @@ class TachoExplorer(tk.Tk):
         through the same entry point as the dialog, so recent files, the busy
         guard and the error reporting are shared, not reimplemented.
         """
-        if self._parsing:
+        if self._parsing or self._rendering:
+            # Mid-parse, or mid-render: the drop is refused rather than queued,
+            # and never opens a second render on top of the one running.
             return "copy"
         paths = []
         for part in (data, *extra):
@@ -3419,9 +3476,10 @@ class TachoExplorer(tk.Tk):
         """Open a recent file through the very same route as the file picker.
 
         ``_open_file`` is the only other caller of :meth:`_start_parse`, and it
-        refuses to start while a parse runs; the same guard applies here.
+        refuses to start while a parse — or the render of its result — runs; the
+        same guard applies here.
         """
-        if self._parsing:
+        if self._parsing or self._rendering:
             return
         self._start_parse(path)
 
@@ -3457,10 +3515,22 @@ class TachoExplorer(tk.Tk):
         The selected node is remembered by its path of labels and selected
         again, so the visible section does not jump to the top.
         """
-        if not self.current_data or self._parsing:
-            return  # a running parse repopulates with the new flag when it ends
+        if not self.current_data or self._parsing or self._rendering:
+            # A running parse repopulates with the new flag when it ends, and a
+            # running render owns the tree: a second toggle arriving through the
+            # render's own event-loop pump would nest one rebuild in another.
+            return
         path = self._selected_path()
-        self._populate_tree(self.current_data)
+        # Same deal as a parse render: the tree is rebuilt from scratch, so the
+        # selection is this method's to set at the end and a <<TreeviewSelect>>
+        # delivered by the pump below must not render a half-built tree.
+        self._rendering = True
+        try:
+            self._populate_tree(self.current_data)
+        except _RenderAbandoned:
+            return  # the window was closed while the tree was being rebuilt
+        finally:
+            self._rendering = False
         self._update_top_bar(self.current_data)
         target = self._node_by_path(path) or getattr(self, "_auto_select_iid", None)
         if not (target and self.tree.exists(target)):
@@ -3585,8 +3655,8 @@ class TachoExplorer(tk.Tk):
     # ── File open ──────────────────────────────────────────
 
     def _open_file(self):
-        """File-picker entry point; ignored while a parse is running."""
-        if self._parsing:
+        """File-picker entry point; ignored while a parse (or its render) runs."""
+        if self._parsing or self._rendering:
             return
         path = filedialog.askopenfilename(
             filetypes=[(_("DDD Files"), "*.ddd *.DDD"), (_("All Files"), "*.*")])
@@ -3597,6 +3667,13 @@ class TachoExplorer(tk.Tk):
     def _start_parse(self, path):
         """Run the parse on a worker thread so the UI stays responsive;
         results are marshalled back via a queue polled on the main loop."""
+        if self._parsing or self._rendering:
+            # A parse is already running, or the previous result is still being
+            # rendered onto the tree. Every entry point checks this before it
+            # gets here (_open_file, _open_recent, the drop handler); it is
+            # enforced here too because the render pumps the event loop, so a
+            # second open can now arrive *while* the tree is being rebuilt.
+            return
         self._parsing = True
         self.btn_open.config(state=tk.DISABLED)
         self.btn_export.config(state=tk.DISABLED)
@@ -3641,10 +3718,59 @@ class TachoExplorer(tk.Tk):
             self.progress.pack_forget()
         except Exception:
             pass
-        self.btn_open.config(state=tk.NORMAL)
-        if self.current_data:
-            # A failed re-open keeps the previously loaded file exportable.
-            self.btn_export.config(state=tk.NORMAL)
+        try:
+            self.btn_open.config(state=tk.NORMAL)
+            if self.current_data:
+                # A failed re-open keeps the previously loaded file exportable.
+                self.btn_export.config(state=tk.NORMAL)
+        except tk.TclError:
+            # The render pumps the event loop, so the window can be closed
+            # while it runs: there is no button left to re-enable.
+            pass
+
+    def _pump_render(self, force=False):
+        """Let the event loop turn while a render holds the main thread.
+
+        The render of a parsed file is one synchronous call: ``_parsing`` has to
+        stay True until it ends (Open, drop-to-open and the language restart are
+        all refused on it) and ``_finish_parse`` has to run in ``_parse_done``'s
+        ``finally``, so the work cannot be split into ``after`` slices — the
+        loop is pumped from *inside* the render instead, at most once per
+        :data:`_RENDER_PUMP_INTERVAL`. That is what keeps the indeterminate
+        progress bar animating (it is driven by a Tk timer) instead of freezing
+        for the whole render and reading as a hang.
+
+        Pumping processes whatever is pending, so the guards are what make it
+        safe: ``_rendering`` is True for the whole rebuild, and the open/drop
+        paths plus <<TreeviewSelect>> refuse while it is set. The render itself
+        stays on the main thread — nothing here touches Tk from a worker.
+
+        A pump must never break the render it interrupts: a widget-less test
+        double (``object.__new__(TachoExplorer)``) has nothing to pump, so that
+        failure is swallowed. A window that was *closed* mid-render is a
+        different case — there is nothing left to draw and no widget left to
+        restore — and is signalled with :class:`_RenderAbandoned` so the render
+        stops instead of walking a destroyed widget tree.
+        """
+        now = time.monotonic()
+        if not force and now < self._pump_due:
+            return
+        self._pump_due = now + _RENDER_PUMP_INTERVAL
+        if self._destroyed:
+            raise _RenderAbandoned
+        gone = False
+        try:
+            self.update()
+            gone = self._destroyed or not self.winfo_exists()
+        except Exception:  # noqa: BLE001 - a failed pump must not fail a render
+            # Two very different cases land here. A widget-less test double has
+            # no Tk interpreter at all (AttributeError) and must simply skip the
+            # pump; a window closed *inside* ``update()`` raises TclError, and
+            # ``_destroyed`` is what tells that apart — the render has to stop.
+            gone = self._destroyed
+            _log.debug("render pump skipped: %s", traceback.format_exc())
+        if gone:
+            raise _RenderAbandoned
 
     def _reset_file_display(self):
         """Clear every per-file display field a successful load sets.
@@ -3827,6 +3953,13 @@ class TachoExplorer(tk.Tk):
         """Render a parse result. Keeps partial data visible: a fatal error
         (no structural data recovered) shows an error and stops; otherwise the
         tree is rendered even when late phases failed or signatures are bad."""
+        if self._rendering:
+            # Never rebuild the tree a still-running render is walking. The
+            # render pumps the event loop, so a result queued behind it can
+            # arrive in the middle of it; the running render restores the UI
+            # state in its own finally, and this superseded result is dropped.
+            _log.warning("Dropping a parse result: another render is running")
+            return
         parse_error = (data.get("metadata") or {}).get("parse_error")
         has_data = bool(data.get("raw_tags") or data.get("generations")
                         or data.get("activities"))
@@ -3837,6 +3970,7 @@ class TachoExplorer(tk.Tk):
             return
         # Rendering's table sizing update() pumps the loop: stay busy until done.
         self._parsing = True
+        self._rendering = True
         try:
             self.current_data = data
             self.current_file = path
@@ -3845,6 +3979,9 @@ class TachoExplorer(tk.Tk):
             # under "Recent files". The path here is the one actually parsed,
             # so a file given on the command line is recorded too.
             add_recent_file(path)
+            # One pump before the heavy part: the status line and the busy bar
+            # reach the screen before the tree rebuild starts, not after it.
+            self._pump_render(force=True)
             self._populate_tree(data)
             self._update_top_bar(data)
             self.btn_export.config(state=tk.NORMAL)
@@ -3862,6 +3999,10 @@ class TachoExplorer(tk.Tk):
             # single deferred render of the chosen node.
             if target:
                 self._show_empty(os.path.basename(path), _("Loading\u2026"))
+                # Nothing pumps the loop between here and the end of this
+                # method: a pump would deliver this callback while _rendering is
+                # still set, and _on_tree_select would refuse it, leaving the
+                # pane on the placeholder.
                 self.after_idle(
                     lambda tid=target: self.tree.selection_set(tid)
                     if self.tree.exists(tid) else None)
@@ -3875,6 +4016,8 @@ class TachoExplorer(tk.Tk):
                     filename=os.path.basename(path),
                     generation=meta.get("generation", "?")))
             self._check_integrity(data, path)
+        except _RenderAbandoned:
+            _log.debug("window closed during the render: nothing left to draw")
         except Exception:
             _log.error("GUI render failed: %s", traceback.format_exc())
             messagebox.showerror(_("Rendering Error"),
@@ -3882,6 +4025,7 @@ class TachoExplorer(tk.Tk):
                                       detail=traceback.format_exc()))
             self.status.config(text=_("Ready \u2014 open a .ddd file"))
         finally:
+            self._rendering = False
             self._finish_parse()
 
     def _check_integrity(self, data, path):
@@ -4194,7 +4338,8 @@ class TachoExplorer(tk.Tk):
         """Add daily UTC graph and raw-record children under Detailed Speed."""
         node = self.tree.insert(parent, tk.END, text=_("Detailed Speed"))
         self._payloads[node] = ("__speed_summary__", raw_blocks, data)
-        raw_by_day = detailed_speed_blocks_by_day(raw_blocks)
+        raw_by_day = detailed_speed_blocks_by_day(
+            raw_blocks, on_progress=self._pump_render)
 
         # Per-day overspeeding events from file data
         oes_by_day = {}
@@ -4209,7 +4354,10 @@ class TachoExplorer(tk.Tk):
             except (ValueError, AttributeError):
                 continue
 
-        for day, samples in sorted(detailed_speed_by_day(data).items(), reverse=True):
+        for day, samples in sorted(
+                detailed_speed_by_day(data, on_progress=self._pump_render).items(),
+                reverse=True):
+            self._pump_render()
             day_node = self._add_speed_chart_day(node, day, samples, oes_by_day.get(day))
             blocks = raw_by_day.get(day, [])
             cols, rows = _rows_for(blocks, None) if blocks else ([_("Value")], [])
@@ -4401,6 +4549,7 @@ class TachoExplorer(tk.Tk):
         node = self.tree.insert(parent, tk.END, text=_("Daily Activities"))
         self._payloads[node] = ("__daily_summary__", activity_list, data)
         for day_data in reversed(activity_list):
+            self._pump_render()
             if not isinstance(day_data, dict):
                 continue
             date_str = day_data.get("date", day_data.get("timestamp", "?"))
@@ -4574,6 +4723,10 @@ class TachoExplorer(tk.Tk):
         self._auto_select_iid = None
         self._opened_data = data
         meta = data.get("metadata", {})
+        # A file with many sections and days spends hundreds of milliseconds
+        # here; the pumps below (and the ones inside the per-day and per-speed
+        # builders) are what keeps the busy bar moving instead of freezing.
+        self._pump_render()
 
         # ── Summary (first node: the view a freshly parsed file opens on) ──
         summary_iid = None
@@ -4658,6 +4811,7 @@ class TachoExplorer(tk.Tk):
                 image=_icon("generation", 16, self.tree) or "")
 
             for item_name, item_data in gen_items.items():
+                self._pump_render()
                 if item_name == "_RawTags":
                     continue
                 if item_name in ("DriverActivityData", "Daily Activities") and isinstance(item_data, list):
@@ -4694,6 +4848,7 @@ class TachoExplorer(tk.Tk):
                 self._add_section(gnode, ui_text.label(item_name), cols, rows)
 
         # ── Security ──
+        self._pump_render()
         self._populate_security(data)
 
         # Security section from generations tree (EF verification)
@@ -5755,6 +5910,12 @@ class TachoExplorer(tk.Tk):
 
     def _on_tree_select(self, _event):
         """Tree selection → show the node's stored payload in the table."""
+        if self._rendering:
+            # A <<TreeviewSelect>> can arrive *during* a render: it pumps the
+            # event loop, and a click lands in a tree that is being rebuilt.
+            # The render owns the selection and sets it when it ends, so a
+            # mid-render selection is ignored rather than rendered on top.
+            return
         sel = self.tree.selection()
         if not sel:
             return
