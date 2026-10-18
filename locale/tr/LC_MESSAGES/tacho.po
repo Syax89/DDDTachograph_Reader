@@ -294,8 +294,8 @@ msgstr "CVC sertifikaları (çözüldü)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kart {time} itibarıyla takografda yok"
 
-msgid "Card data signature mismatch"
-msgstr "Kart verisi imzası uyuşmuyor"
+msgid "Signature mismatch"
+msgstr "İmza uyuşmuyor"
 
 msgid "Card inserted"
 msgstr "Kart takıldı"

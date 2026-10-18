@@ -294,8 +294,8 @@ msgstr "Πιστοποιητικά CVC (αποκωδικοποιημένα)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Η κάρτα απουσιάζει από τον ταχογράφο από τις {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Ασυμφωνία υπογραφής δεδομένων κάρτας"
+msgid "Signature mismatch"
+msgstr "Ασυμφωνία υπογραφής"
 
 msgid "Card inserted"
 msgstr "Κάρτα τοποθετημένη"

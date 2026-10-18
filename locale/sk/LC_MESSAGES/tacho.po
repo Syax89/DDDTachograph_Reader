@@ -294,8 +294,8 @@ msgstr "Certifikáty CVC (dekódované)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Karta nie je v tachografe k {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Nesúlad podpisu dát karty"
+msgid "Signature mismatch"
+msgstr "Nesúlad podpisu"
 
 msgid "Card inserted"
 msgstr "Karta vložená"

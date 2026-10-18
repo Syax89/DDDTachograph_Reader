@@ -2915,6 +2915,12 @@ class TachoExplorer(tk.Tk):
         self.current_data = None
         self.current_file = None
         self._payloads = {}  # iid -> (title, columns, rows, meta)
+        # Reveal label for a summary cell wider than its column, and its
+        # <Motion>/<Leave> bindings (see _bind_summary_reveal).
+        self._summary_tip_lbl = None
+        self._summary_motion_bind = None
+        self._summary_leave_bind = None
+        self._summary_header_font = None
         self._destroyed = False
         self._parsing = False
         self._exporting = False
@@ -3878,7 +3884,12 @@ class TachoExplorer(tk.Tk):
             if integrity_verdict(data) == VERDICT_VERIFIED:
                 return _("All signatures verified")
             if efv.get("failed", 0):
-                return _("Card data signature mismatch")
+                # "Signature mismatch", not "Card data signature mismatch": the
+                # qualifier repeated the file's own type (a card) and pushed the
+                # verdict to 205-374 px, wider than the summary panel's 187 px
+                # value column in 32 of 34 catalogs (see
+                # tests/unit/test_gui_summary_default.py).
+                return _("Signature mismatch")
             if efv.get("skipped", 0):
                 return _("EF signatures incomplete")
             # Chain-level failures must surface even when there is no signed EF
@@ -4885,7 +4896,7 @@ class TachoExplorer(tk.Tk):
             self._tooltip_lbl.place_forget()
 
     def _cleanup_dashboard(self):
-        """Destroy any KPI card frame left over from a previous dashboard view."""
+        """Drop what only the previous view (dashboard or summary) needed."""
         if getattr(self, "_kpi_frame", None) is not None:
             self._kpi_frame.destroy()
             self._kpi_frame = None
@@ -4901,6 +4912,9 @@ class TachoExplorer(tk.Tk):
             except Exception:
                 pass
             self._dashboard_motion_bind = None
+        # Every view switch comes through here, so the summary panel's own
+        # reveal label (and its bindings on the table) is dropped here too.
+        self._cleanup_summary_tooltip()
 
     def _show_daily_summary(self, activity_list, data, _fast_refresh=False):
         """Dashboard for the 'Daily Activities' parent node.
@@ -5644,6 +5658,129 @@ class TachoExplorer(tk.Tk):
         self.table._render(self.table._all_rows, summary=True)
         self.table._sync_xscroll()
         self.table.filt_bar.pack_forget()
+        self._bind_summary_reveal()
+
+    def _bind_summary_reveal(self):
+        """Let a summary cell that does not fit its column be read in full.
+
+        The panel's two columns are deliberately fixed and never auto-fit (see
+        :meth:`_show_summary`), and Tk *clips* an overlong cell instead of
+        wrapping it — so a value longer than the column was cut off with no way
+        to read the rest. That is not a wording problem to shorten away: the
+        values belong to the code that owns them, and they are long in ways the
+        panel cannot bound. The translated integrity verdicts are the worst case
+        — 11 of the 15 ``_integrity_label`` verdicts exceed the 187 px value
+        column in at least one of the 34 catalogs at the minimum window, and 5
+        of them in all 34 — and a period with no activity days, the VU origin
+        and the translated block headers can be just as wide.
+
+        So the value keeps its wording and the panel gains a reveal: hovering a
+        cell whose text does not fit shows the whole of it. This is the pattern
+        the activity dashboard already uses for its row tooltips — a ``Label``
+        placed over the treeview and driven by ``<Motion>`` (see
+        :meth:`_on_dashboard_motion`) — applied to the one panel that clips.
+        """
+        self._cleanup_summary_tooltip()
+        self._summary_tip_lbl = tk.Label(
+            self.table.tv, text="", bg=DASHBOARD_TOOLTIP_BG, relief=tk.SOLID,
+            borderwidth=1, font=FONT_SMALL, fg=TEXT_SECONDARY, padx=6, pady=2,
+            justify=tk.LEFT)
+        self._summary_motion_bind = self.table.tv.bind(
+            "<Motion>", self._on_summary_motion, add="+")
+        self._summary_leave_bind = self.table.tv.bind(
+            "<Leave>", self._on_summary_leave, add="+")
+
+    def _on_summary_motion(self, event):
+        """Reveal the full text of the summary cell under the pointer."""
+        text = self._clipped_summary_cell(event.x, event.y)
+        if text is None:
+            self._hide_summary_tooltip()
+            return
+        tip = self._summary_tip_lbl
+        tip.config(text=text, wraplength=_px(420))
+        # Keep the reveal inside the panel (the Value column, the one that
+        # clips, is the right-hand one): a label placed past the edge would be
+        # clipped by the treeview — the very problem it exists to solve.
+        tip.update_idletasks()
+        tip.place(x=min(event.x + 16,
+                        max(0, self.table.tv.winfo_width() - tip.winfo_reqwidth() - _px(4))),
+                  y=min(event.y + 16,
+                        max(0, self.table.tv.winfo_height() - tip.winfo_reqheight() - _px(4))))
+
+    def _on_summary_leave(self, _event):
+        """Hide the reveal when the pointer leaves the panel.
+
+        Tk raises ``<Leave>`` for the treeview both when the pointer leaves it
+        and when it moves onto the reveal label (a child of the treeview), and
+        tkinter does not expose the ``detail`` field that would tell the two
+        apart. Hiding on both is the safe half of that ambiguity: the worst case
+        is the reveal reappearing on the next ``<Motion>`` over a clipped cell,
+        and it never leaves the label stranded over an unrelated row.
+        """
+        self._hide_summary_tooltip()
+
+    def _clipped_summary_cell(self, x, y):
+        """The text of the cell at (x, y), when it is wider than its column.
+
+        ``None`` when there is no cell there, or when its text fits: the reveal
+        must never cover a value the panel already shows in full.
+        """
+        tv = self.table.tv
+        row_id = tv.identify_row(y)
+        col_id = tv.identify_column(x)
+        if not row_id or not col_id.startswith("#"):
+            return None
+        index = int(col_id[1:]) - 1
+        values = tv.item(row_id, "values")
+        if index < 0 or index >= len(values):
+            return None
+        text = str(values[index])
+        box = tv.bbox(row_id, col_id)
+        if not text or not box:
+            return None
+        if self._summary_cell_font(row_id).measure(text) <= box[2]:
+            return None
+        return text
+
+    def _summary_cell_font(self, row_id):
+        """The font the row's cells are drawn with.
+
+        Summary block headers are drawn with ``FONT_HEADING`` (see
+        :meth:`_DataTable._render`), so measuring a header with the body font
+        would report a clipped header as fitting — and leave the one header that
+        does not fit (the translated "DRIVING-TIME RULES" title, 303 px in ro)
+        with no way to read it.
+        """
+        if "summary_header" in (self.table.tv.item(row_id, "tags") or ()):
+            if self._summary_header_font is None:
+                self._summary_header_font = tkfont.Font(font=FONT_HEADING)
+            return self._summary_header_font
+        return tkfont.nametofont("TkDefaultFont")
+
+    def _hide_summary_tooltip(self):
+        """Hide the reveal label, if one is showing."""
+        if self._summary_tip_lbl is not None:
+            self._summary_tip_lbl.place_forget()
+
+    def _cleanup_summary_tooltip(self):
+        """Drop the reveal label and its bindings: the panel is being replaced."""
+        self._hide_summary_tooltip()
+        for sequence, attribute in (("<Motion>", "_summary_motion_bind"),
+                                    ("<Leave>", "_summary_leave_bind")):
+            bind_id = getattr(self, attribute, None)
+            if bind_id is None:
+                continue
+            try:
+                self.table.tv.unbind(sequence, bind_id)
+            except tk.TclError:  # widget already destroyed
+                pass
+            setattr(self, attribute, None)
+        if self._summary_tip_lbl is not None:
+            try:
+                self._summary_tip_lbl.destroy()
+            except tk.TclError:  # widget already destroyed
+                pass
+            self._summary_tip_lbl = None
 
     # ── Summary builders ──────────────────────────────────────
 
@@ -5662,6 +5799,12 @@ class TachoExplorer(tk.Tk):
         :meth:`_integrity_label` — so the overview cannot drift from the section
         it summarises. Rows use the ``(label, value, is_header)`` shape the
         other summary panels already render.
+
+        Rows whose value would not fit the panel's fixed value column are not
+        shortened here except where the value repeats itself (see the INTEGRITY
+        block); everything else stays the owning code's own wording and is
+        readable in full through the panel's hover reveal
+        (:meth:`_bind_summary_reveal`).
 
         Returns:
             tuple: ``(columns, rows)`` for ``_add_section(..., summary=True)``.
@@ -5759,9 +5902,16 @@ class TachoExplorer(tk.Tk):
         # File Info section and the status badge already show. ──
         rows.append((_("\U0001f512  INTEGRITY"), "", True))
         rows.append((_("  Status"), info.get(_("Integrity"), ""), False))
-        coverage = info.get(_("Byte-accounted coverage"))
-        if coverage:
-            rows.append((_("  Byte-accounted coverage"), coverage, False))
+        # The percentage alone, not File Info's "100.0% (1 234 567 / 1 234 567
+        # bytes)": that string states the same number three times and is 241 px
+        # wide, which does not fit this panel's 187 px value column in *any* of
+        # the 34 catalogs (the percentage is 48 px and fits in all of them).
+        # File Info is the detail page — its columns auto-fit — so the byte
+        # arithmetic stays there, on the row the overview is summarising.
+        coverage_pct = (data.get("coverage") or {}).get("byte_accounted_pct")
+        if coverage_pct is not None:
+            rows.append((_("  Byte-accounted coverage"), f"{coverage_pct}%",
+                         False))
 
         return [_("Field"), _("Value")], rows
 

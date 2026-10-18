@@ -294,8 +294,8 @@ msgstr "CVC certifikati (dekodirano)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kartica nije u tahografu od {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Potpis podataka kartice se ne poklapa"
+msgid "Signature mismatch"
+msgstr "Potpis se ne poklapa"
 
 msgid "Card inserted"
 msgstr "Kartica umetnuta"

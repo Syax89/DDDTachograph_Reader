@@ -294,8 +294,8 @@ msgstr "CVC-certificaten (gedecodeerd)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kaart sinds {time} niet aanwezig in de tachograaf"
 
-msgid "Card data signature mismatch"
-msgstr "Handtekening van kaartgegevens komt niet overeen"
+msgid "Signature mismatch"
+msgstr "Handtekening wijkt af"
 
 msgid "Card inserted"
 msgstr "Kaart ingevoerd"

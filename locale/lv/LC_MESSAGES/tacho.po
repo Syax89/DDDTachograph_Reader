@@ -294,8 +294,8 @@ msgstr "CVC sertifikāti (dekodēti)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Karte nav tahogrāfā no {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Kartes datu paraksts neatbilst"
+msgid "Signature mismatch"
+msgstr "Paraksts neatbilst"
 
 msgid "Card inserted"
 msgstr "Karte ievietota"

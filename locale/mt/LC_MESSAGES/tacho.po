@@ -294,8 +294,8 @@ msgstr "Ċertifikati CVC (dekodifikati)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Il-karta mhix fit-takografu minn {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Firma tad-data tal-karta ma taqbilx"
+msgid "Signature mismatch"
+msgstr "Il-firma ma taqbilx"
 
 msgid "Card inserted"
 msgstr "Karta mdaħħla"

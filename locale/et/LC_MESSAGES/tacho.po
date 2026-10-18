@@ -294,8 +294,8 @@ msgstr "CVC-sertifikaadid (dekodeeritud)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kaart puudub sõidumeerikust alates {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Kaardi andmete allkiri ei klapi"
+msgid "Signature mismatch"
+msgstr "Allkiri ei klapi"
 
 msgid "Card inserted"
 msgstr "Kaart sisestatud"
