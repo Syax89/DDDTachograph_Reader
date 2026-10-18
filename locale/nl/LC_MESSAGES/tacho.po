@@ -2412,13 +2412,13 @@ msgid "DRIVING-TIME RULES"
 msgstr "RIJTIJDREGELS"
 
 msgid "  Days flagged"
-msgstr "  Dagen met overtredingen"
+msgstr "  Dagen gemarkeerd"
 
 msgid "INTEGRITY"
 msgstr "INTEGRITEIT"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Byte-verantwoorde dekking"
+msgstr "  Byte-dekking"
 
 msgid "  Daily driving limit"
 msgstr "  Limiet dagelijkse rijtijd"

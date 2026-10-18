@@ -2427,7 +2427,7 @@ msgid "  Continuous driving limit"
 msgstr "  Limit nepretržitej jazdy"
 
 msgid "  Break that resets it"
-msgstr "  Prestávka, ktorá ju nuluje"
+msgstr "  Nulovacia prestávka"
 
 msgid "{minutes} min"
 msgstr "{minutes} min"

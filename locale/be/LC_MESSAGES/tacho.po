@@ -973,7 +973,7 @@ msgid "ASSOCIATED VEHICLE"
 msgstr "ЗВЯЗАНЫ ТРАНСПАРТНЫ СРОДАК"
 
 msgid "VEHICLE"
-msgstr "ТРАНСПАРТНЫ СРОДАК"
+msgstr "ТРАНСПАРТ"
 
 msgid "Vehicle"
 msgstr "Транспартны сродак"
@@ -2418,7 +2418,7 @@ msgid "INTEGRITY"
 msgstr "ЦЭЛАСНАСЦЬ"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Пакрыццё з улікам байтаў"
+msgstr "  Пакрыццё ў байтах"
 
 msgid "  Daily driving limit"
 msgstr "  Штодзённая мяжа"

@@ -973,7 +973,7 @@ msgid "ASSOCIATED VEHICLE"
 msgstr "СВЯЗАННОЕ ТРАНСПОРТНОЕ СРЕДСТВО"
 
 msgid "VEHICLE"
-msgstr "ТРАНСПОРТНОЕ СРЕДСТВО"
+msgstr "ТРАНСПОРТ"
 
 msgid "Vehicle"
 msgstr "Транспортное средство"
@@ -2418,7 +2418,7 @@ msgid "INTEGRITY"
 msgstr "ЦЕЛОСТНОСТЬ"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Покрытие с учётом байтов"
+msgstr "  Покрытие в байтах"
 
 msgid "  Daily driving limit"
 msgstr "  Дневной предел"
@@ -2427,7 +2427,7 @@ msgid "  Continuous driving limit"
 msgstr "  Непрерывный предел"
 
 msgid "  Break that resets it"
-msgstr "  Сбрасывающий перерыв"
+msgstr "  Перерыв со сбросом"
 
 msgid "{minutes} min"
 msgstr "{minutes} мин"

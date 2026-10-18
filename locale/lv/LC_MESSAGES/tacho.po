@@ -2418,7 +2418,7 @@ msgid "INTEGRITY"
 msgstr "INTEGRITĀTE"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Baitu uzskaites pārklājums"
+msgstr "  Baitu pārklājums"
 
 msgid "  Daily driving limit"
 msgstr "  Dienas brauciena limits"

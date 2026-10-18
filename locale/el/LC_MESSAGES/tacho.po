@@ -50,7 +50,7 @@ msgid "  Days with activities"
 msgstr "  Ημέρες με δραστηριότητες"
 
 msgid "  Days with activity"
-msgstr "  Ημέρες με δραστηριότητα"
+msgstr "  Ημέρες δραστηριότητας"
 
 msgid "  Digital map"
 msgstr "  Ψηφιακός χάρτης"
@@ -2421,13 +2421,13 @@ msgid "  Byte-accounted coverage"
 msgstr "  Κάλυψη σε byte"
 
 msgid "  Daily driving limit"
-msgstr "  Όριο ημερήσιας οδήγησης"
+msgstr "  Ημερήσιο όριο"
 
 msgid "  Continuous driving limit"
 msgstr "  Όριο συνεχούς οδήγησης"
 
 msgid "  Break that resets it"
-msgstr "  Διάλειμμα που το μηδενίζει"
+msgstr "  Διάλειμμα επαναφοράς"
 
 msgid "{minutes} min"
 msgstr "{minutes} λεπ."

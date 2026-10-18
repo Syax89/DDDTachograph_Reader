@@ -2421,7 +2421,7 @@ msgid "  Byte-accounted coverage"
 msgstr "  Couverture en octets"
 
 msgid "  Daily driving limit"
-msgstr "  Limite conduite journalière"
+msgstr "  Limite journalière"
 
 msgid "  Continuous driving limit"
 msgstr "  Limite conduite continue"

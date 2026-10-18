@@ -921,7 +921,7 @@ msgid "Truncated (did not reach end of file)"
 msgstr "Trunchiat (nu s-a ajuns la sfârșitul fișierului)"
 
 msgid "CARDHOLDER"
-msgstr "DEȚINĂTORUL CARDULUI"
+msgstr "DEȚINĂTOR CARD"
 
 msgid "Driver / Cardholder"
 msgstr "Conducător / Deținătorul cardului"
@@ -2424,7 +2424,7 @@ msgid "  Daily driving limit"
 msgstr "  Limită conducere zilnică"
 
 msgid "  Continuous driving limit"
-msgstr "  Limită conducere continuă"
+msgstr "  Conducere continuă"
 
 msgid "  Break that resets it"
 msgstr "  Pauză care îl resetează"

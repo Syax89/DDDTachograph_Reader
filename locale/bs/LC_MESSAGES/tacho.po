@@ -2418,7 +2418,7 @@ msgid "INTEGRITY"
 msgstr "INTEGRITET"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Pokrivenost po bajtovima"
+msgstr "  Pokrivenost bajtova"
 
 msgid "  Daily driving limit"
 msgstr "  Dnevno ograničenje"

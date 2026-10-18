@@ -2424,7 +2424,7 @@ msgid "  Daily driving limit"
 msgstr "  Hámark daglegs aksturs"
 
 msgid "  Continuous driving limit"
-msgstr "  Hámark samfellds aksturs"
+msgstr "  Samfelldur akstur"
 
 msgid "  Break that resets it"
 msgstr "  Hlé sem núllstillir"
