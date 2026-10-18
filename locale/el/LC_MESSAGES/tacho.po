@@ -1888,3 +1888,171 @@ msgstr "Σειριακός αριθμός CAR"
 
 msgid "Translate file contents"
 msgstr "Μετάφραση περιεχομένου αρχείου"
+
+msgid "Albania"
+msgstr "Αλβανία"
+
+msgid "Andorra"
+msgstr "Ανδόρα"
+
+msgid "Armenia"
+msgstr "Αρμενία"
+
+msgid "Austria"
+msgstr "Αυστρία"
+
+msgid "Azerbaijan"
+msgstr "Αζερμπαϊτζάν"
+
+msgid "Belarus"
+msgstr "Λευκορωσία"
+
+msgid "Belgium"
+msgstr "Βέλγιο"
+
+msgid "Bosnia and Herzegovina"
+msgstr "Βοσνία και Ερζεγοβίνη"
+
+msgid "Bulgaria"
+msgstr "Βουλγαρία"
+
+msgid "Croatia"
+msgstr "Κροατία"
+
+msgid "Cyprus"
+msgstr "Κύπρος"
+
+msgid "Czech Republic"
+msgstr "Τσεχία"
+
+msgid "Denmark"
+msgstr "Δανία"
+
+msgid "Estonia"
+msgstr "Εσθονία"
+
+msgid "Europe"
+msgstr "Ευρώπη"
+
+msgid "European Community"
+msgstr "Ευρωπαϊκή Κοινότητα"
+
+msgid "Faroe Islands"
+msgstr "Νήσοι Φερόες"
+
+msgid "Finland"
+msgstr "Φινλανδία"
+
+msgid "France"
+msgstr "Γαλλία"
+
+msgid "Georgia"
+msgstr "Γεωργία"
+
+msgid "Germany"
+msgstr "Γερμανία"
+
+msgid "Greece"
+msgstr "Ελλάδα"
+
+msgid "Hungary"
+msgstr "Ουγγαρία"
+
+msgid "Iceland"
+msgstr "Ισλανδία"
+
+msgid "Ireland"
+msgstr "Ιρλανδία"
+
+msgid "Italy"
+msgstr "Ιταλία"
+
+msgid "Kazakhstan"
+msgstr "Καζακστάν"
+
+msgid "Latvia"
+msgstr "Λετονία"
+
+msgid "Liechtenstein"
+msgstr "Λιχτενστάιν"
+
+msgid "Lithuania"
+msgstr "Λιθουανία"
+
+msgid "Luxembourg"
+msgstr "Λουξεμβούργο"
+
+msgid "Malta"
+msgstr "Μάλτα"
+
+msgid "Moldova"
+msgstr "Μολδαβία"
+
+msgid "Monaco"
+msgstr "Μονακό"
+
+msgid "Montenegro"
+msgstr "Μαυροβούνιο"
+
+msgid "Netherlands"
+msgstr "Ολλανδία"
+
+msgid "North Macedonia"
+msgstr "Βόρεια Μακεδονία"
+
+msgid "Norway"
+msgstr "Νορβηγία"
+
+msgid "Poland"
+msgstr "Πολωνία"
+
+msgid "Portugal"
+msgstr "Πορτογαλία"
+
+msgid "Romania"
+msgstr "Ρουμανία"
+
+msgid "Russia"
+msgstr "Ρωσία"
+
+msgid "San Marino"
+msgstr "Σαν Μαρίνο"
+
+msgid "Serbia"
+msgstr "Σερβία"
+
+msgid "Slovakia"
+msgstr "Σλοβακία"
+
+msgid "Slovenia"
+msgstr "Σλοβενία"
+
+msgid "Spain"
+msgstr "Ισπανία"
+
+msgid "Sweden"
+msgstr "Σουηδία"
+
+msgid "Switzerland"
+msgstr "Ελβετία"
+
+msgid "Turkey"
+msgstr "Τουρκία"
+
+msgid "Turkmenistan"
+msgstr "Τουρκμενιστάν"
+
+msgid "Ukraine"
+msgstr "Ουκρανία"
+
+msgid "United Kingdom"
+msgstr "Ηνωμένο Βασίλειο"
+
+msgid "Vatican City"
+msgstr "Βατικανό"
+
+msgid "World"
+msgstr "Κόσμος"
+
+msgid "Yugoslavia"
+msgstr "Γιουγκοσλαβία"

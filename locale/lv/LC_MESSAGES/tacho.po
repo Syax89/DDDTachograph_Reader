@@ -1888,3 +1888,171 @@ msgstr "CAR sērijas numurs"
 
 msgid "Translate file contents"
 msgstr "Tulkot faila saturu"
+
+msgid "Albania"
+msgstr "Albānija"
+
+msgid "Andorra"
+msgstr "Andora"
+
+msgid "Armenia"
+msgstr "Armēnija"
+
+msgid "Austria"
+msgstr "Austrija"
+
+msgid "Azerbaijan"
+msgstr "Azerbaidžāna"
+
+msgid "Belarus"
+msgstr "Baltkrievija"
+
+msgid "Belgium"
+msgstr "Beļģija"
+
+msgid "Bosnia and Herzegovina"
+msgstr "Bosnija un Hercegovina"
+
+msgid "Bulgaria"
+msgstr "Bulgārija"
+
+msgid "Croatia"
+msgstr "Horvātija"
+
+msgid "Cyprus"
+msgstr "Kipra"
+
+msgid "Czech Republic"
+msgstr "Čehija"
+
+msgid "Denmark"
+msgstr "Dānija"
+
+msgid "Estonia"
+msgstr "Igaunija"
+
+msgid "Europe"
+msgstr "Eiropa"
+
+msgid "European Community"
+msgstr "Eiropas Kopiena"
+
+msgid "Faroe Islands"
+msgstr "Fēru salas"
+
+msgid "Finland"
+msgstr "Somija"
+
+msgid "France"
+msgstr "Francija"
+
+msgid "Georgia"
+msgstr "Gruzija"
+
+msgid "Germany"
+msgstr "Vācija"
+
+msgid "Greece"
+msgstr "Grieķija"
+
+msgid "Hungary"
+msgstr "Ungārija"
+
+msgid "Iceland"
+msgstr "Islande"
+
+msgid "Ireland"
+msgstr "Īrija"
+
+msgid "Italy"
+msgstr "Itālija"
+
+msgid "Kazakhstan"
+msgstr "Kazahstāna"
+
+msgid "Latvia"
+msgstr "Latvija"
+
+msgid "Liechtenstein"
+msgstr "Lihtenšteina"
+
+msgid "Lithuania"
+msgstr "Lietuva"
+
+msgid "Luxembourg"
+msgstr "Luksemburga"
+
+msgid "Malta"
+msgstr "Malta"
+
+msgid "Moldova"
+msgstr "Moldova"
+
+msgid "Monaco"
+msgstr "Monako"
+
+msgid "Montenegro"
+msgstr "Melnkalne"
+
+msgid "Netherlands"
+msgstr "Nīderlande"
+
+msgid "North Macedonia"
+msgstr "Ziemeļmaķedonija"
+
+msgid "Norway"
+msgstr "Norvēģija"
+
+msgid "Poland"
+msgstr "Polija"
+
+msgid "Portugal"
+msgstr "Portugāle"
+
+msgid "Romania"
+msgstr "Rumānija"
+
+msgid "Russia"
+msgstr "Krievija"
+
+msgid "San Marino"
+msgstr "Sanmarīno"
+
+msgid "Serbia"
+msgstr "Serbija"
+
+msgid "Slovakia"
+msgstr "Slovākija"
+
+msgid "Slovenia"
+msgstr "Slovēnija"
+
+msgid "Spain"
+msgstr "Spānija"
+
+msgid "Sweden"
+msgstr "Zviedrija"
+
+msgid "Switzerland"
+msgstr "Šveice"
+
+msgid "Turkey"
+msgstr "Turcija"
+
+msgid "Turkmenistan"
+msgstr "Turkmenistāna"
+
+msgid "Ukraine"
+msgstr "Ukraina"
+
+msgid "United Kingdom"
+msgstr "Apvienotā Karaliste"
+
+msgid "Vatican City"
+msgstr "Vatikāns"
+
+msgid "World"
+msgstr "Pasaule"
+
+msgid "Yugoslavia"
+msgstr "Dienvidslāvija"

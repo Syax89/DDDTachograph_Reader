@@ -1888,3 +1888,171 @@ msgstr "Серыйны нумар CAR"
 
 msgid "Translate file contents"
 msgstr "Перакладаць змесціва файла"
+
+msgid "Albania"
+msgstr "Албанія"
+
+msgid "Andorra"
+msgstr "Андора"
+
+msgid "Armenia"
+msgstr "Арменія"
+
+msgid "Austria"
+msgstr "Аўстрыя"
+
+msgid "Azerbaijan"
+msgstr "Азербайджан"
+
+msgid "Belarus"
+msgstr "Беларусь"
+
+msgid "Belgium"
+msgstr "Бельгія"
+
+msgid "Bosnia and Herzegovina"
+msgstr "Боснія і Герцагавіна"
+
+msgid "Bulgaria"
+msgstr "Балгарыя"
+
+msgid "Croatia"
+msgstr "Харватыя"
+
+msgid "Cyprus"
+msgstr "Кіпр"
+
+msgid "Czech Republic"
+msgstr "Чэхія"
+
+msgid "Denmark"
+msgstr "Данія"
+
+msgid "Estonia"
+msgstr "Эстонія"
+
+msgid "Europe"
+msgstr "Еўропа"
+
+msgid "European Community"
+msgstr "Еўрапейская супольнасць"
+
+msgid "Faroe Islands"
+msgstr "Фарэрскія астравы"
+
+msgid "Finland"
+msgstr "Фінляндыя"
+
+msgid "France"
+msgstr "Францыя"
+
+msgid "Georgia"
+msgstr "Грузія"
+
+msgid "Germany"
+msgstr "Германія"
+
+msgid "Greece"
+msgstr "Грэцыя"
+
+msgid "Hungary"
+msgstr "Венгрыя"
+
+msgid "Iceland"
+msgstr "Ісландыя"
+
+msgid "Ireland"
+msgstr "Ірландыя"
+
+msgid "Italy"
+msgstr "Італія"
+
+msgid "Kazakhstan"
+msgstr "Казахстан"
+
+msgid "Latvia"
+msgstr "Латвія"
+
+msgid "Liechtenstein"
+msgstr "Ліхтэнштэйн"
+
+msgid "Lithuania"
+msgstr "Літва"
+
+msgid "Luxembourg"
+msgstr "Люксембург"
+
+msgid "Malta"
+msgstr "Мальта"
+
+msgid "Moldova"
+msgstr "Малдова"
+
+msgid "Monaco"
+msgstr "Манака"
+
+msgid "Montenegro"
+msgstr "Чарнагорыя"
+
+msgid "Netherlands"
+msgstr "Нідэрланды"
+
+msgid "North Macedonia"
+msgstr "Паўночная Македонія"
+
+msgid "Norway"
+msgstr "Нарвегія"
+
+msgid "Poland"
+msgstr "Польшча"
+
+msgid "Portugal"
+msgstr "Партугалія"
+
+msgid "Romania"
+msgstr "Румынія"
+
+msgid "Russia"
+msgstr "Расія"
+
+msgid "San Marino"
+msgstr "Сан-Марына"
+
+msgid "Serbia"
+msgstr "Сербія"
+
+msgid "Slovakia"
+msgstr "Славакія"
+
+msgid "Slovenia"
+msgstr "Славенія"
+
+msgid "Spain"
+msgstr "Іспанія"
+
+msgid "Sweden"
+msgstr "Швецыя"
+
+msgid "Switzerland"
+msgstr "Швейцарыя"
+
+msgid "Turkey"
+msgstr "Турцыя"
+
+msgid "Turkmenistan"
+msgstr "Туркменістан"
+
+msgid "Ukraine"
+msgstr "Украіна"
+
+msgid "United Kingdom"
+msgstr "Вялікабрытанія"
+
+msgid "Vatican City"
+msgstr "Ватыкан"
+
+msgid "World"
+msgstr "Свет"
+
+msgid "Yugoslavia"
+msgstr "Югаславія"

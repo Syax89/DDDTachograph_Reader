@@ -1888,3 +1888,171 @@ msgstr "Sraithuimhir CAR"
 
 msgid "Translate file contents"
 msgstr "Aistrigh inneachar an chomhaid"
+
+msgid "Albania"
+msgstr "An Albáin"
+
+msgid "Andorra"
+msgstr "Andorra"
+
+msgid "Armenia"
+msgstr "An Airméin"
+
+msgid "Austria"
+msgstr "An Ostair"
+
+msgid "Azerbaijan"
+msgstr "An Asarbaiseáin"
+
+msgid "Belarus"
+msgstr "An Bhealarúis"
+
+msgid "Belgium"
+msgstr "An Bheilg"
+
+msgid "Bosnia and Herzegovina"
+msgstr "An Bhoisnia agus an Heirseagaivéin"
+
+msgid "Bulgaria"
+msgstr "An Bhulgáir"
+
+msgid "Croatia"
+msgstr "An Chróit"
+
+msgid "Cyprus"
+msgstr "An Chipir"
+
+msgid "Czech Republic"
+msgstr "An tSeic"
+
+msgid "Denmark"
+msgstr "An Danmhairg"
+
+msgid "Estonia"
+msgstr "An Eastóin"
+
+msgid "Europe"
+msgstr "An Eoraip"
+
+msgid "European Community"
+msgstr "An Comhphobal Eorpach"
+
+msgid "Faroe Islands"
+msgstr "Oileáin Fharó"
+
+msgid "Finland"
+msgstr "An Fhionlainn"
+
+msgid "France"
+msgstr "An Fhrainc"
+
+msgid "Georgia"
+msgstr "An tSeoirsia"
+
+msgid "Germany"
+msgstr "An Ghearmáin"
+
+msgid "Greece"
+msgstr "An Ghréig"
+
+msgid "Hungary"
+msgstr "An Ungáir"
+
+msgid "Iceland"
+msgstr "An Íoslainn"
+
+msgid "Ireland"
+msgstr "Éire"
+
+msgid "Italy"
+msgstr "An Iodáil"
+
+msgid "Kazakhstan"
+msgstr "An Chasacstáin"
+
+msgid "Latvia"
+msgstr "An Laitvia"
+
+msgid "Liechtenstein"
+msgstr "Lichtinstéin"
+
+msgid "Lithuania"
+msgstr "An Liotuáin"
+
+msgid "Luxembourg"
+msgstr "Lucsamburg"
+
+msgid "Malta"
+msgstr "Málta"
+
+msgid "Moldova"
+msgstr "An Mholdóiv"
+
+msgid "Monaco"
+msgstr "Monacó"
+
+msgid "Montenegro"
+msgstr "Montainéagró"
+
+msgid "Netherlands"
+msgstr "An Ísiltír"
+
+msgid "North Macedonia"
+msgstr "An Mhacadóin Thuaidh"
+
+msgid "Norway"
+msgstr "An Iorua"
+
+msgid "Poland"
+msgstr "An Pholainn"
+
+msgid "Portugal"
+msgstr "An Phortaingéil"
+
+msgid "Romania"
+msgstr "An Rómáin"
+
+msgid "Russia"
+msgstr "An Rúis"
+
+msgid "San Marino"
+msgstr "San Mairíne"
+
+msgid "Serbia"
+msgstr "An tSeirbia"
+
+msgid "Slovakia"
+msgstr "An tSlóvaic"
+
+msgid "Slovenia"
+msgstr "An tSlóivéin"
+
+msgid "Spain"
+msgstr "An Spáinn"
+
+msgid "Sweden"
+msgstr "An tSualainn"
+
+msgid "Switzerland"
+msgstr "An Eilvéis"
+
+msgid "Turkey"
+msgstr "An Tuirc"
+
+msgid "Turkmenistan"
+msgstr "An Tuircméanastáin"
+
+msgid "Ukraine"
+msgstr "An Úcráin"
+
+msgid "United Kingdom"
+msgstr "An Ríocht Aontaithe"
+
+msgid "Vatican City"
+msgstr "An Vatacáin"
+
+msgid "World"
+msgstr "An Domhan"
+
+msgid "Yugoslavia"
+msgstr "An Iúgslaiv"

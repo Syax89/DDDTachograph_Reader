@@ -1888,3 +1888,171 @@ msgstr "CAR raðnúmer"
 
 msgid "Translate file contents"
 msgstr "Þýða innihald skráar"
+
+msgid "Albania"
+msgstr "Albanía"
+
+msgid "Andorra"
+msgstr "Andorra"
+
+msgid "Armenia"
+msgstr "Armenía"
+
+msgid "Austria"
+msgstr "Austurríki"
+
+msgid "Azerbaijan"
+msgstr "Aserbaídsjan"
+
+msgid "Belarus"
+msgstr "Hvíta-Rússland"
+
+msgid "Belgium"
+msgstr "Belgía"
+
+msgid "Bosnia and Herzegovina"
+msgstr "Bosnía og Hersegóvína"
+
+msgid "Bulgaria"
+msgstr "Búlgaría"
+
+msgid "Croatia"
+msgstr "Króatía"
+
+msgid "Cyprus"
+msgstr "Kýpur"
+
+msgid "Czech Republic"
+msgstr "Tékkland"
+
+msgid "Denmark"
+msgstr "Danmörk"
+
+msgid "Estonia"
+msgstr "Eistland"
+
+msgid "Europe"
+msgstr "Evrópa"
+
+msgid "European Community"
+msgstr "Evrópubandalagið"
+
+msgid "Faroe Islands"
+msgstr "Færeyjar"
+
+msgid "Finland"
+msgstr "Finnland"
+
+msgid "France"
+msgstr "Frakkland"
+
+msgid "Georgia"
+msgstr "Georgía"
+
+msgid "Germany"
+msgstr "Þýskaland"
+
+msgid "Greece"
+msgstr "Grikkland"
+
+msgid "Hungary"
+msgstr "Ungverjaland"
+
+msgid "Iceland"
+msgstr "Ísland"
+
+msgid "Ireland"
+msgstr "Írland"
+
+msgid "Italy"
+msgstr "Ítalía"
+
+msgid "Kazakhstan"
+msgstr "Kasakstan"
+
+msgid "Latvia"
+msgstr "Lettland"
+
+msgid "Liechtenstein"
+msgstr "Liechtenstein"
+
+msgid "Lithuania"
+msgstr "Litháen"
+
+msgid "Luxembourg"
+msgstr "Lúxemborg"
+
+msgid "Malta"
+msgstr "Malta"
+
+msgid "Moldova"
+msgstr "Moldóva"
+
+msgid "Monaco"
+msgstr "Mónakó"
+
+msgid "Montenegro"
+msgstr "Svartfjallaland"
+
+msgid "Netherlands"
+msgstr "Holland"
+
+msgid "North Macedonia"
+msgstr "Norður-Makedónía"
+
+msgid "Norway"
+msgstr "Noregur"
+
+msgid "Poland"
+msgstr "Pólland"
+
+msgid "Portugal"
+msgstr "Portúgal"
+
+msgid "Romania"
+msgstr "Rúmenía"
+
+msgid "Russia"
+msgstr "Rússland"
+
+msgid "San Marino"
+msgstr "San Marínó"
+
+msgid "Serbia"
+msgstr "Serbía"
+
+msgid "Slovakia"
+msgstr "Slóvakía"
+
+msgid "Slovenia"
+msgstr "Slóvenía"
+
+msgid "Spain"
+msgstr "Spánn"
+
+msgid "Sweden"
+msgstr "Svíþjóð"
+
+msgid "Switzerland"
+msgstr "Sviss"
+
+msgid "Turkey"
+msgstr "Tyrkland"
+
+msgid "Turkmenistan"
+msgstr "Túrkmenistan"
+
+msgid "Ukraine"
+msgstr "Úkraína"
+
+msgid "United Kingdom"
+msgstr "Bretland"
+
+msgid "Vatican City"
+msgstr "Vatíkanið"
+
+msgid "World"
+msgstr "Heimur"
+
+msgid "Yugoslavia"
+msgstr "Júgóslavía"

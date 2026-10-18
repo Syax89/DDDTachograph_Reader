@@ -1888,3 +1888,171 @@ msgstr "Numri serial CAR"
 
 msgid "Translate file contents"
 msgstr "Përkthe përmbajtjen e skedarit"
+
+msgid "Albania"
+msgstr "Shqipëria"
+
+msgid "Andorra"
+msgstr "Andorra"
+
+msgid "Armenia"
+msgstr "Armenia"
+
+msgid "Austria"
+msgstr "Austria"
+
+msgid "Azerbaijan"
+msgstr "Azerbajxhani"
+
+msgid "Belarus"
+msgstr "Bjellorusia"
+
+msgid "Belgium"
+msgstr "Belgjika"
+
+msgid "Bosnia and Herzegovina"
+msgstr "Bosnja dhe Hercegovina"
+
+msgid "Bulgaria"
+msgstr "Bullgaria"
+
+msgid "Croatia"
+msgstr "Kroacia"
+
+msgid "Cyprus"
+msgstr "Qipro"
+
+msgid "Czech Republic"
+msgstr "Çekia"
+
+msgid "Denmark"
+msgstr "Danimarka"
+
+msgid "Estonia"
+msgstr "Estonia"
+
+msgid "Europe"
+msgstr "Evropa"
+
+msgid "European Community"
+msgstr "Komuniteti Europian"
+
+msgid "Faroe Islands"
+msgstr "Ishujt Faroe"
+
+msgid "Finland"
+msgstr "Finlanda"
+
+msgid "France"
+msgstr "Franca"
+
+msgid "Georgia"
+msgstr "Gjeorgjia"
+
+msgid "Germany"
+msgstr "Gjermania"
+
+msgid "Greece"
+msgstr "Greqia"
+
+msgid "Hungary"
+msgstr "Hungaria"
+
+msgid "Iceland"
+msgstr "Islanda"
+
+msgid "Ireland"
+msgstr "Irlanda"
+
+msgid "Italy"
+msgstr "Italia"
+
+msgid "Kazakhstan"
+msgstr "Kazakistani"
+
+msgid "Latvia"
+msgstr "Letonia"
+
+msgid "Liechtenstein"
+msgstr "Lihtenshtajni"
+
+msgid "Lithuania"
+msgstr "Lituania"
+
+msgid "Luxembourg"
+msgstr "Luksemburgu"
+
+msgid "Malta"
+msgstr "Malta"
+
+msgid "Moldova"
+msgstr "Moldavia"
+
+msgid "Monaco"
+msgstr "Monako"
+
+msgid "Montenegro"
+msgstr "Mali i Zi"
+
+msgid "Netherlands"
+msgstr "Holanda"
+
+msgid "North Macedonia"
+msgstr "Maqedonia e Veriut"
+
+msgid "Norway"
+msgstr "Norvegjia"
+
+msgid "Poland"
+msgstr "Polonia"
+
+msgid "Portugal"
+msgstr "Portugalia"
+
+msgid "Romania"
+msgstr "Rumania"
+
+msgid "Russia"
+msgstr "Rusia"
+
+msgid "San Marino"
+msgstr "San Marino"
+
+msgid "Serbia"
+msgstr "Serbia"
+
+msgid "Slovakia"
+msgstr "Sllovakia"
+
+msgid "Slovenia"
+msgstr "Sllovenia"
+
+msgid "Spain"
+msgstr "Spanja"
+
+msgid "Sweden"
+msgstr "Suedia"
+
+msgid "Switzerland"
+msgstr "Zvicra"
+
+msgid "Turkey"
+msgstr "Turqia"
+
+msgid "Turkmenistan"
+msgstr "Turkmenistani"
+
+msgid "Ukraine"
+msgstr "Ukraina"
+
+msgid "United Kingdom"
+msgstr "Mbretëria e Bashkuar"
+
+msgid "Vatican City"
+msgstr "Vatikani"
+
+msgid "World"
+msgstr "Bota"
+
+msgid "Yugoslavia"
+msgstr "Jugosllavia"
