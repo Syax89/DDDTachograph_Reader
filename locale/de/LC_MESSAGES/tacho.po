@@ -967,7 +967,7 @@ msgid "Security & Certificates"
 msgstr "Sicherheit & Zertifikate"
 
 msgid "CURRENT LOCK"
-msgstr "SPERRE AKTIV"
+msgstr "SPERRE"
 
 msgid "ASSOCIATED VEHICLE"
 msgstr "ZUGEORDNETES FAHRZEUG"

@@ -967,7 +967,7 @@ msgid "Security & Certificates"
 msgstr "Безбедност и сертификати"
 
 msgid "CURRENT LOCK"
-msgstr "ТЕКОВНО ЗАКЛУЧУВАЊЕ"
+msgstr "БРАВА"
 
 msgid "ASSOCIATED VEHICLE"
 msgstr "ПОВРЗАНО ВОЗИЛО"

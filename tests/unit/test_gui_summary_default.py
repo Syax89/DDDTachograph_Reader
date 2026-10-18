@@ -45,7 +45,7 @@ display is available, the same pattern as ``test_gui_driving_rules.py``):
 ``tests/unit/conftest.py`` pins the settings file and the translator for the
 whole directory, so no real user settings are read or written.
 """
-import warnings
+import os
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -90,27 +90,58 @@ MINIMUM_SIZE = "900x560"
 MEASURE_FAMILY = "DejaVu Sans"
 
 
-def measurement_family():
-    """The family the measurements below use, warning loudly when it is missing.
+def _truthy_env(name):
+    """Whether environment variable *name* is set to a truthy value.
+
+    ``CI=false`` / ``CI=0`` are how some local setups switch the flag off, and a
+    plain ``os.environ.get`` would read them as "on" — turning a developer's
+    missing font into a hard failure.
+    """
+    return os.environ.get(name, "").strip().lower() not in ("", "0", "false", "no")
+
+
+def runs_on_ci():
+    """Whether this run is a CI job, where the pinned font must be installed."""
+    return _truthy_env("CI") or _truthy_env("GITHUB_ACTIONS")
+
+
+def missing_font_outcome():
+    """``(action, message)`` for a machine that has no :data:`MEASURE_FAMILY`.
 
     Measuring a *narrower* font than :data:`MEASURE_FAMILY` is worse than not
-    measuring at all — it reports a fit that another machine will not reproduce.
-    So a machine without DejaVu Sans gets a warning that says so in as many
-    words (and names the font actually used inside every failure message) rather
-    than a quiet pass; ``test_the_fit_sweep_measures_a_pinned_font`` pins both
-    halves of that.
+    measuring at all — it reports a fit that another machine will not reproduce
+    — so the absence is never a quiet pass:
+
+    * on CI it **fails**: the runners are ours and the fonts are a documented
+      dependency (``fonts-dejavu-core``), so a leg that could not measure the
+      pinned font is a broken leg, not a skipped test;
+    * locally it **skips**, with the same reason: a developer on a Mac has no
+      DejaVu Sans and must still be able to run the rest of the suite.
+    """
+    message = (
+        f"{MEASURE_FAMILY} is not installed, so the summary fit sweep cannot "
+        f"measure the font this panel is verified against — measuring the "
+        f"machine's own (usually narrower) default instead would report a fit "
+        f"no CI runner reproduces. Install the DejaVu fonts (fonts-dejavu-core "
+        f"on Debian/Ubuntu) and re-run.")
+    return ("fail" if runs_on_ci() else "skip"), message
+
+
+def measurement_family():
+    """The family the measurements below use; a machine without it stops here.
+
+    Returning the machine's own default would turn the whole sweep into a
+    measurement of whatever font this box happens to have — a green run that
+    says nothing about the font the panel was tuned against. So the absence is
+    raised as the outcome :func:`missing_font_outcome` decides: a *failure* on
+    CI, a *skip* with the reason for a local run.
     """
     if MEASURE_FAMILY in set(gui.tkfont.families()):
         return MEASURE_FAMILY
-    fallback = gui.tkfont.nametofont("TkDefaultFont").actual("family")
-    warnings.warn(
-        f"{MEASURE_FAMILY} is not installed: the summary fit sweep is measuring "
-        f"{fallback!r} instead, which is usually narrower than the font this "
-        f"panel is verified against, so a row that clips on a stock Ubuntu "
-        f"runner can pass here. Install the DejaVu fonts (fonts-dejavu-core on "
-        f"Debian/Ubuntu) to measure the pinned font.",
-        UserWarning, stacklevel=3)
-    return fallback
+    action, message = missing_font_outcome()
+    if action == "fail":
+        pytest.fail(message, pytrace=False)
+    pytest.skip(message)
 
 
 def measure_font(heading=False):
@@ -330,11 +361,27 @@ CASE_VERDICTS = {
     "card: no activity days": "No EF signatures verified",
 }
 
-#: The only rows of the overview allowed to be wider than the panel's columns,
-#: named here with their measured widths at 900x560 (measured with the pinned
-#: DejaVu Sans at 10 pt, see :data:`MEASURE_FAMILY`: 187 px value column /
-#: 198 px field column), because the panel does not get to shorten them — the
-#: wording belongs to the code that owns the fact:
+#: The overview's section **headers** allowed to be wider than the panel's
+#: Field column, in the catalogs where the translated block title does not fit.
+#:
+#: Empty: no header clips today. The last one did — the removed
+#: ``DRIVING-TIME RULES`` title, over the column in 22 catalogs — and it left
+#: with its block. The register is kept (and validated by
+#: ``test_the_over_wide_registers_hold_only_what_they_claim``) because a header
+#: is measured with the *bold* font the panel draws it in, so a future catalog
+#: can widen one without any body row changing.
+#:
+#: A header named here may exceed the Field column it is drawn in, and nothing
+#: else: it cannot exempt another row, and it is revealed in full on hover like
+#: the body rows below.
+OVER_WIDE_HEADERS = ()
+
+#: The overview's **body** rows that the panel does not get to shorten, because
+#: the wording belongs to the code that owns the fact. Each is allowed to be too
+#: wide in its **Value** cell only; its label is the panel's own row wording and
+#: must fit like every other one. Measured at 900x560 with the pinned DejaVu Sans
+#: at 10 pt (187 px value column / 198 px field column), see
+#: :data:`MEASURE_FAMILY`:
 #:
 #: ``Status`` — ``_integrity_label``'s 15 verdicts. 11 of them exceed 187 px in
 #:   at least one catalog and 5 exceed it in all 34 (the fully-verified VU
@@ -355,11 +402,14 @@ CASE_VERDICTS = {
 #: None of them is a silent pass: ``test_an_over_wide_cell_is_readable_in_full_on_hover``
 #: pins the panel's hover reveal, and the sweep below measures that reveal on
 #: every one of those cells, in every catalog, as it goes. Any *other* row that
-#: stops fitting fails the sweep with its width, its language and its text.
-OVER_WIDE_ROWS = ("  Status", "  Period covered", "  Origin")
+#: stops fitting fails the sweep with its width, its language and its text, and
+#: so does a registered row's *label*: these two registers are the only place
+#: that can turn a clipped cell into a pass, so their membership is validated
+#: rather than trusted (``test_the_over_wide_registers_hold_only_what_they_claim``).
+OVER_WIDE_VALUES = ("  Status", "  Period covered", "  Origin")
 
 #: The row the defect reported as clipped — the one this test file exists to keep
-#: fitting — so it may never join :data:`OVER_WIDE_ROWS`: not its 198 px Field
+#: fitting — so it may never join either register above: not its 198 px Field
 #: label and not its 187 px Value. Its label is the one nine catalogs had to
 #: shorten (they stated "byte-accounted coverage" in 195–205 px; they now say it
 #: in 101–166 px), which is why this register is the single row a future catalog
@@ -676,47 +726,101 @@ def test_the_driving_time_rules_block_is_no_longer_on_the_overview(explorer):
         assert i18n._(kept) in labels, f"{kept!r} disappeared with the block"
 
 
-def test_the_fit_sweep_measures_a_pinned_font(explorer, monkeypatch):
-    """The sweep's font is pinned, and a machine without it says so out loud.
+def test_the_fit_sweep_measures_a_pinned_font(explorer):
+    """The sweep's font is pinned, and a machine without it cannot pass.
 
     The rows of this panel are measured against a font, and which font decides
     whether the suite passes: the same label measured 194 px on the machine the
     panel was tuned on and 204 px on the Ubuntu runner, because DejaVu Sans is
     ~5 % wider than Noto Sans and ``FONT_BODY`` asks Tk for *the default* family
     rather than naming one. The sweep therefore measures :data:`MEASURE_FAMILY`.
-    Both halves of that are pinned here: that the pin really returns that
-    family (body and bold) when it is installed, and that a machine without it
-    gets a warning naming the font it fell back to — never a quiet pass against
-    a narrower one.
+    The pin is pinned here — the family, the size and the weight the panel
+    really draws with — so a sweep that quietly starts measuring something else
+    cannot pass. (A machine without the family stops inside
+    ``measurement_family`` before this test gets that far; see
+    ``test_a_machine_that_cannot_measure_the_pinned_font_cannot_pass``.)
     """
-    if MEASURE_FAMILY not in set(gui.tkfont.families()):
-        warnings.warn(f"{MEASURE_FAMILY} is not installed, so the installed half "
-                      f"of this test has nothing to check", UserWarning,
-                      stacklevel=2)
-    else:
-        body = measure_font()
-        assert body.actual("family") == MEASURE_FAMILY
-        assert body.actual("size") == gui.FONT_BODY[1]
-        assert body.actual("weight") == "normal"
-        # ... and the heading font is the bold one the headers are drawn with,
-        # not the body font in disguise.
-        heading = measure_font(heading=True)
-        assert heading.actual("family") == MEASURE_FAMILY
-        assert heading.actual("weight") == "bold"
-        assert heading.measure("MMM") > body.measure("MMM")
+    measurement_family()  # fails on CI, skips locally, when it is missing
+    body = measure_font()
+    assert body.actual("family") == MEASURE_FAMILY
+    assert body.actual("size") == gui.FONT_BODY[1]
+    assert body.actual("weight") == "normal"
+    # ... and the heading font is the bold one the headers are drawn with, not
+    # the body font in disguise.
+    heading = measure_font(heading=True)
+    assert heading.actual("family") == MEASURE_FAMILY
+    assert heading.actual("weight") == "bold"
+    assert heading.measure("MMM") > body.measure("MMM")
 
-    # The missing-font path: the fallback is announced, with the font it fell
-    # back to, so a machine that cannot measure the pinned font cannot pass
-    # quietly on a narrower one.
+
+def test_a_machine_that_cannot_measure_the_pinned_font_cannot_pass(explorer,
+                                                                  monkeypatch):
+    """The absence of DejaVu Sans is an outcome, never a quiet green sweep.
+
+    The reviewer's recipe makes this concrete: with a fontconfig that rejects
+    the DejaVu directory, ``tkfont.families()`` no longer lists the family, the
+    sweep silently measured a narrower font and *both* it and the pin test
+    passed. Two honest outcomes replace that warning-and-carry-on:
+
+    * on CI a missing pinned font is a **failure** — the runner is ours and
+      ``fonts-dejavu-core`` is a documented dependency;
+    * on a local machine it is a **skip** that names the family and the fix, so
+      a developer on a Mac can still run the rest of the suite.
+
+    Either way the sweep cannot measure a narrower font than the one the panel
+    is verified against.
+
+    The absence is *simulated* (``tkfont.families`` is patched), not produced by
+    a fontconfig: a real ``<rejectfont>`` cannot do this job here, because on
+    this Tk 8.6 build it is honoured by ``fc-list`` yet the family is still
+    listed by ``tkfont.families()``, so ``measurement_family`` would keep
+    returning it and neither outcome below would ever trigger.
+    """
+    # The exact shape of the reviewer's attack: the family is simply not there.
     real_families = gui.tkfont.families
     monkeypatch.setattr(
         gui.tkfont, "families",
         lambda: [name for name in real_families() if name != MEASURE_FAMILY])
-    with pytest.warns(UserWarning, match="is not installed"):
-        family = measurement_family()
-    # Whatever the machine's default turns out to be, the fallback reports the
-    # font it is really measuring rather than claiming the pinned one.
-    assert family == gui.tkfont.nametofont("TkDefaultFont").actual("family")
+
+    # CI: a failure, naming the font and how to install it — not a skip, and not
+    # a warning nobody escalates.
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.setenv("CI", "1")
+    action, message = missing_font_outcome()
+    assert action == "fail"
+    assert MEASURE_FAMILY in message
+    with pytest.raises(pytest.fail.Exception) as failed:
+        measurement_family()
+    assert MEASURE_FAMILY in str(failed.value)
+    # ... and it is the first thing the sweep asks for (`measure_font`), so the
+    # sweep cannot get as far as measuring a row.
+    with pytest.raises(pytest.fail.Exception):
+        measure_font()
+
+    # A local run (no CI, no GITHUB_ACTIONS): a skip with the same reason.
+    monkeypatch.delenv("CI", raising=False)
+    action, message = missing_font_outcome()
+    assert action == "skip"
+    assert MEASURE_FAMILY in message and "fonts-dejavu-core" in message
+    with pytest.raises(pytest.skip.Exception) as skipped:
+        measurement_family()
+    assert MEASURE_FAMILY in str(skipped.value)
+    with pytest.raises(pytest.skip.Exception):
+        measure_font()
+
+    # CI=0 / CI=false is how a local setup switches the flag off: still local.
+    for off in ("0", "false", "False"):
+        monkeypatch.setenv("CI", off)
+        assert not runs_on_ci(), f"CI={off!r} was read as a CI run"
+        assert missing_font_outcome()[0] == "skip"
+
+    # GITHUB_ACTIONS alone is enough to be treated as CI.
+    monkeypatch.delenv("CI", raising=False)
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    assert runs_on_ci()
+    assert missing_font_outcome()[0] == "fail"
+    with pytest.raises(pytest.fail.Exception):
+        measurement_family()
 
 
 def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explorer):
@@ -737,13 +841,20 @@ def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explor
     * the font is *pinned* (:func:`measure_font`), not the machine's: the same
       label is 194 px in Noto Sans and 204 px in DejaVu Sans, and this sweep is
       green-or-red depending on which one the platform hands out. Eight rows
-      clipped on the Ubuntu runner while the suite was green on a Noto desktop;
-    * a row that is too wide is either *named* in :data:`OVER_WIDE_ROWS` and
-      proven readable in full through the panel's hover reveal, or it fails with
-      its measured width, its catalog and its text. Nothing can join a silent
-      pass. The reveal half of that is asked in the font the panel draws with
-      (:func:`drawn_font`), because a machine whose own font fits the cell is
-      correctly shown nothing on hover — the two fonts coincide on CI.
+      clipped on the Ubuntu runner while the suite was green on a Noto desktop.
+      The sweep *asserts* that pin itself — both the family it asked Tk for and
+      the family Tk resolved (``actual("family")``) — so a substituted or
+      fallback font fails where the measuring happens, instead of relying on a
+      neighbouring test still being collected and running first;
+    * a row that is too wide is either *named* in :data:`OVER_WIDE_HEADERS`
+      (its own Field column) or in :data:`OVER_WIDE_VALUES` (its Value cell
+      only) and proven readable in full through the panel's hover reveal, or it
+      fails with its measured width, its catalog and its text. Nothing can join
+      a silent pass, and a registered body row cannot buy its *label* an
+      exemption: only its value is named. The reveal half of that is asked in
+      the font the panel draws with (:func:`drawn_font`), because a machine
+      whose own font fits the cell is correctly shown nothing on hover — the two
+      fonts coincide on CI.
     """
     explorer.geometry(MINIMUM_SIZE)
     explorer.update()
@@ -752,17 +863,28 @@ def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explor
     # bold is wider than the body font, and the body font would call a clipped
     # header a fit.
     heading_font = measure_font(heading=True)
-    # The sweep is only meaningful in the *pinned* font: ``cget("family")`` is
-    # what was asked for, so this catches a measurement quietly taken from the
-    # machine's default (``sans-serif``/``TkDefaultFont``) instead — which is the
-    # defect this file was fixed for, and which ``actual("family")`` alone would
-    # hide on a machine whose default *is* DejaVu Sans.
+    # The sweep is only meaningful in the *pinned* font, and it asserts that
+    # itself rather than trusting a sibling test: ``cget("family")`` catches a
+    # measurement quietly taken from the machine's default (``sans-serif``/
+    # ``TkDefaultFont``), which is the defect this file was fixed for, and which
+    # ``actual("family")`` alone would hide on a machine whose default *is*
+    # DejaVu Sans. ``actual("family")`` is what Tk *resolved* and draws with, so
+    # it catches the other half: a machine whose fonts substitute another family
+    # for the pinned one keeps ``cget`` truthful while the rows are measured in
+    # a narrower font. Both are asserted here, in this test, so no later
+    # reordering of the helpers can leave the sweep measuring a fallback.
     measured_family = measurement_family()
     for name, used in (("body", font), ("heading", heading_font)):
         assert used.cget("family") == measured_family, (
             f"the {name} font the sweep measures with is {used.cget('family')!r}, "
             f"not the pinned {measured_family!r}: the sweep has stopped "
             f"measuring the font this panel is verified against")
+        resolved = used.actual("family")
+        assert resolved == measured_family, (
+            f"the {name} font the sweep measures with was requested as "
+            f"{measured_family!r} but Tk resolved it to {resolved!r}: every "
+            f"width below would be measured in a font this panel is not "
+            f"verified against")
     # The fonts the panel actually draws with, which is what its reveal decision
     # measures (see :func:`drawn_font`): stable for the whole sweep.
     drawn_body = drawn_font()
@@ -774,7 +896,8 @@ def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explor
     measured = 0
     for lang in i18n.LANGUAGES:
         i18n.install(lang)
-        named_here = tuple(i18n._(name) for name in OVER_WIDE_ROWS)
+        named_headers = tuple(i18n._(name) for name in OVER_WIDE_HEADERS)
+        named_values = tuple(i18n._(name) for name in OVER_WIDE_VALUES)
         must_fit_here = tuple(i18n._(name) for name in MUST_FIT_ROWS)
         for case, data in cases:
             open_file(explorer, data, path="/data/driver_card.ddd")
@@ -794,10 +917,24 @@ def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explor
                         continue
                     detail = (f"{lang} {case} {column} row {label!r}: "
                               f"{got} px in {widths[column]} px — {text!r}")
-                    if label not in named_here:
+                    # A header is named for the Field column it is drawn in; a
+                    # body row is named for its *value* only, so its label is
+                    # held to the same width as every other label on the page.
+                    allowed = (column == "Field" and label in named_headers
+                               if is_header
+                               else column == "Value" and label in named_values)
+                    if not allowed:
                         if label in must_fit_here:
                             unexpected.append(f"{detail} (must fit; it is the "
                                               f"row this test was widened for)")
+                        elif not is_header and label in named_values:
+                            unexpected.append(
+                                f"{detail} (a registered body row is allowed to "
+                                f"be too wide in its value, not in its label)")
+                        elif is_header and label in named_values:
+                            unexpected.append(
+                                f"{detail} (a body row registered in "
+                                f"OVER_WIDE_VALUES cannot exempt a header)")
                         else:
                             unexpected.append(detail)
                         continue
@@ -832,7 +969,117 @@ def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explor
         + "\n  ".join(unexpected))
     assert named, ("no row was too wide in any catalog — the hazard this sweep "
                    "guards against has changed; re-measure and update the "
-                   "OVER_WIDE_ROWS rationale instead of deleting the sweep")
+                   "OVER_WIDE_VALUES rationale instead of deleting the sweep")
+
+
+def test_the_over_wide_registers_hold_only_what_they_claim(explorer):
+    """The two registers are the only way a clipped cell becomes a pass.
+
+    A human-written allowlist is a hole in any sweep, and this one was: adding a
+    plain body row to it — and widening *that row's label* — made the whole
+    all-catalog sweep pass, because the sweep asked the register whether the row
+    was allowed and the register said yes. So the registers are validated
+    instead of trusted, against the panel's own rows and its own header
+    detection (``is_header`` in the ``(label, value, is_header)`` payload, the
+    same flag that picks the bold font and the ``summary_header`` tag):
+
+    * ``OVER_WIDE_HEADERS`` may hold section **headers** only, never a body row;
+    * ``OVER_WIDE_VALUES`` may hold **body rows** only, never a header;
+    * both are duplicate-free, disjoint from ``MUST_FIT_ROWS`` and from each
+      other;
+    * every entry *earns its place*: measured in the pinned font at the panel's
+      real column widths, it must really be over-wide in the column it is named
+      for, in at least one catalog and fixture. A slot cannot be pre-blessed for
+      a row that already fits.
+
+    What a registration still cannot do is exempt a body row's *label*: naming a
+    body row buys its Value cell only, so a widened label fails the sweep itself
+    (``test_every_row_of_the_summary_panel_fits_its_column_in_every_language``).
+    """
+    explorer.geometry(MINIMUM_SIZE)
+    explorer.update()
+    font = measure_font()
+    heading_font = measure_font(heading=True)
+    # The widths the panel really lays a cell out in at the minimum window size.
+    open_file(explorer, card_data(), path="/data/driver_card.ddd")
+    widths = {"Field": field_column_width(explorer),
+              "Value": value_column_width(explorer)}
+    assert widths["Value"] > 0, "the panel must be laid out to be measured"
+    cases = STATUS_CASES + (NO_DAYS_CASE,)
+
+    # ── the registers themselves ──────────────────────────────────────────
+    for name, register in (("OVER_WIDE_HEADERS", OVER_WIDE_HEADERS),
+                           ("OVER_WIDE_VALUES", OVER_WIDE_VALUES)):
+        duplicates = [row for row in set(register) if list(register).count(row) > 1]
+        assert not duplicates, f"{name} lists {duplicates!r} more than once"
+        clashes = set(register) & set(MUST_FIT_ROWS)
+        assert not clashes, (
+            f"{name} names {sorted(clashes)!r}, which is in MUST_FIT_ROWS: the "
+            f"row this file exists to keep fitting cannot be exempted")
+    shared = set(OVER_WIDE_HEADERS) & set(OVER_WIDE_VALUES)
+    assert not shared, (
+        f"{sorted(shared)!r} is in both registers: a row is either a header or "
+        f"a body row, and the register it is in decides the column it exempts")
+
+    # ── what the panel says each of them is ───────────────────────────────
+    # Read from the **rendered** payload, not from the builder, so the rows this
+    # validates are the very rows the sweep measures (``_parse_done`` hands the
+    # builder's output to ``_add_section`` and the sweep reads it back with
+    # ``panel_rows``). Language-independent, so one catalog is enough: the
+    # question is whether the panel renders the row as a header or a body row.
+    i18n.install("en")
+    rendered: dict[str, set] = {}
+    for _case, data in cases:
+        open_file(explorer, data, path="/data/driver_card.ddd")
+        for row in summary_rows(explorer):
+            if len(row) >= 3:
+                rendered.setdefault(row[0], set()).add(bool(row[2]))
+    for name, register, must_be_header in (
+            ("OVER_WIDE_HEADERS", OVER_WIDE_HEADERS, True),
+            ("OVER_WIDE_VALUES", OVER_WIDE_VALUES, False)):
+        expected = "a section header" if must_be_header else "a body row"
+        found = "a body row" if must_be_header else "a header"
+        for msgid in register:
+            kinds = rendered.get(i18n._(msgid))
+            assert kinds, (f"{name} names {msgid!r}, which the overview never "
+                           f"renders: the register is stale")
+            assert kinds == {must_be_header}, (
+                f"{name} may hold {expected} only, but the panel renders "
+                f"{msgid!r} as {found} ({sorted(kinds)}): an allowlist entry is "
+                f"the only way a clipped cell becomes a pass, so the wrong kind "
+                f"of row in it exempts a row the sweep is meant to measure")
+
+    # ── and that each of them is really needed ────────────────────────────
+    # A register entry that fits everywhere would be a free pass for the next
+    # edit that widens it.
+    earned = {"Field": set(), "Value": set()}
+    for lang in i18n.LANGUAGES:
+        i18n.install(lang)
+        for _case, data in cases:
+            _cols, rows = explorer._build_overview_summary(data)
+            for row in rows:
+                if len(row) < 3:
+                    continue
+                label, value, is_header = row[0], str(row[1]), row[2]
+                cell_font = heading_font if is_header else font
+                for msgid in OVER_WIDE_HEADERS:
+                    if label == i18n._(msgid) and \
+                            cell_font.measure(label) > widths["Field"]:
+                        earned["Field"].add(msgid)
+                for msgid in OVER_WIDE_VALUES:
+                    if label == i18n._(msgid) and \
+                            font.measure(value) > widths["Value"]:
+                        earned["Value"].add(msgid)
+    for msgid in OVER_WIDE_HEADERS:
+        assert msgid in earned["Field"], (
+            f"OVER_WIDE_HEADERS names {msgid!r}, which fits its column in every "
+            f"catalog: the exemption is not needed, so it would only hide a "
+            f"future clipping regression")
+    for msgid in OVER_WIDE_VALUES:
+        assert msgid in earned["Value"], (
+            f"OVER_WIDE_VALUES names {msgid!r}, whose value fits the column in "
+            f"every catalog: the exemption is not needed, so it would only hide "
+            f"a future clipping regression")
 
 
 def test_an_over_wide_cell_is_readable_in_full_on_hover(explorer):
@@ -840,7 +1087,7 @@ def test_an_over_wide_cell_is_readable_in_full_on_hover(explorer):
 
     The Status row's verdicts, the catalogs' "no activity data" message and the
     translated block titles can be wider than the column they sit in, and the
-    panel does not get to reword them (see :data:`OVER_WIDE_ROWS`), so the text
+    panel does not get to reword them (see :data:`OVER_WIDE_VALUES`), so the text
     has to stay readable another way: hovering the cell reveals it in full, in
     the font the cell is actually drawn with. Nothing else may be revealed — the
     reveal must never cover a value the panel already shows completely.
@@ -915,7 +1162,7 @@ def test_the_two_rows_the_review_measured_fit_every_catalog(explorer):
     font = measure_font()
     # The default fixture's Status is "No EF signatures verified", one of the
     # verdicts still wider than the column (260 px in el) and therefore named in
-    # OVER_WIDE_ROWS and revealed on hover; here the two *shortened* values are
+    # OVER_WIDE_VALUES and revealed on hover; here the two *shortened* values are
     # what must fit, so the row list is per case.
     cases = (
         ("card: ef mismatch", dict(STATUS_CASES)["card: ef mismatch"],

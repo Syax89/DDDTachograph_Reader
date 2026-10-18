@@ -59,6 +59,23 @@ jobs:
       # strings in the bundle, so the .mo files must match their .po sources.
       run: python scripts/compile_translations.py --check
 
+    - name: Install the fonts the GUI fit sweep measures against
+      # tests/unit/test_gui_summary_default.py measures every row of the summary
+      # panel in DejaVu Sans — the widest default sans any supported platform
+      # ships — and, on CI, *fails* rather than skipping when that family is
+      # missing (a sweep that quietly measured a narrower font would report fits
+      # no runner reproduces). The ubuntu-latest image ships it today; installing
+      # it here makes that a dependency of this workflow instead of a property
+      # of the image.
+      #
+      # Non-fatal by design: this step is a convenience, not the check. A font
+      # that is genuinely missing still reds the leg — the sweep itself fails on
+      # CI when it cannot measure the pinned family — so an apt mirror that is
+      # down or slow must not fail the job for a reason unrelated to the code.
+      if: matrix.python-version == '3.12'
+      continue-on-error: true
+      run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-dejavu-core
+
     - name: Run test suite
       run: pytest -q
 
@@ -66,9 +83,13 @@ jobs:
       # The suite above runs headless, where every test that needs a real Tk
       # widget skips. This single leg re-runs those modules with a virtual
       # display so the row render, the tint tag, the hover tooltips, the
-      # toolbar's labels and icons, the file overview a parse lands on, the
-      # progress bar's re-entrancy guard and the hidden-infraction switch are
-      # exercised in CI too. xvfb-run ships with the ubuntu-latest image.
+      # toolbar's labels and icons, the file overview a parse lands on (and the
+      # all-catalog fit sweep of its rows), the progress bar's re-entrancy
+      # guards, the hidden-infraction switch, the formatted cells, the integrity
+      # badge and the batch-18 GUI cases are exercised in CI too. Every module
+      # here is one this work stream added or changed and each of them skips
+      # without a display, so leaving one out means it never runs at all.
+      # xvfb-run ships with the ubuntu-latest image.
       if: matrix.python-version == '3.12'
       run: >
         xvfb-run -a python -m pytest
@@ -79,6 +100,9 @@ jobs:
         tests/unit/test_gui_icon_scale.py
         tests/unit/test_gui_busy_bar.py
         tests/unit/test_gui_infractions_hidden.py
+        tests/unit/test_gui_formatting.py
+        tests/unit/test_gui_integrity_badge.py
+        tests/unit/test_batch18_gui.py
         -q
 
   coverage:

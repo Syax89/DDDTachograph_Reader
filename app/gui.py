@@ -282,8 +282,14 @@ SPEED_LIMIT_KMH = 90
 #: This is the one switch for every infraction surface of the UI: the red row
 #: tint on a flagged day of the Daily-Activities dashboard, the ``!`` marker in
 #: that day's Drive cell, the tooltip that names the broken rule with the
-#: measured value, and the "Days over {hours} h" KPI card. Turning them back on
-#: is flipping this single name — no other change is needed anywhere.
+#: measured value, and the "Days over {hours} h" KPI card. Turning those back on
+#: is flipping this single name — no other change is needed for *them*.
+#:
+#: It does **not** bring back the file overview's "DRIVING-TIME RULES" block.
+#: That block (the flagged-day count and the three limits) was removed from
+#: ``_build_overview_summary`` outright, not put behind this switch, so
+#: restoring it would mean writing the code again — its msgids (the title, the
+#: count and the three limits) are gone from the catalogs too.
 #:
 #: Why off: the owner reviewed the build and decided that, for a *file
 #: analyzer*, the driving-time rules of Reg. (EC) 561/2006 are not needed yet.
@@ -3632,7 +3638,25 @@ class TachoExplorer(tk.Tk):
         the same node is selected again. A settings write that fails leaves the
         previous choice in place, tells the user, and puts the menu tick back
         where it was — the same contract as a failed language switch.
+
+        Refused while a render owns the tree, and *before* anything is written:
+        the preference is process-global, and the rebuild that applies it is
+        refused in that state, so a toggle delivered by the render's own pump
+        would leave the setting and the menu tick on the new value with every
+        row still formatted the old way. Refusing the toggle keeps the two in
+        step.
+
+        ``_parsing`` alone is not enough to refuse it: while the worker runs
+        there is no render yet, ``_refresh_data_text`` deliberately does nothing
+        (the render that ends the parse formats every row with the live flag),
+        so the toggle is honoured there and applied by the coming render. Only
+        if that parse then *fails* does the retained tree keep the previous
+        formatting under the new tick — a pre-existing edge this guard does not
+        make worse, and not worth refusing a click the successful case applies.
         """
+        if self._rendering:
+            self._translate_data_var.set(self._translate_data)
+            return
         flag = bool(self._translate_data_var.get())
         if flag == self._translate_data:
             return
@@ -3719,10 +3743,18 @@ class TachoExplorer(tk.Tk):
         and lose its result, so the current language is kept and the menu radio
         silently returns to it. A settings write that fails does the same, after
         telling the user.
+
+        A render is busy time too, and it is not always a parse: the
+        translate-data rebuild (:meth:`_refresh_data_text`) raises
+        ``_rendering`` without ever setting ``_parsing``, and it pumps the event
+        loop while it rebuilds the tree. The pump delivers this menu command
+        exactly like any other, so the guard has to name ``_rendering`` as well
+        — otherwise the scheduled restart would run ``_shutdown`` and
+        ``destroy`` on top of a rebuild that is still walking the widgets.
         """
         if code == self._language:
             return
-        if self._parsing or self._exporting:
+        if self._parsing or self._exporting or self._rendering:
             self._restore_language_choice()
             return
         if not save_language(code):
@@ -3949,7 +3981,19 @@ class TachoExplorer(tk.Tk):
     # ── Export ────────────────────────────────────────────
 
     def _run_export(self, kind, extension, filetypes, export_fn, requirement=""):
-        """Shared export flow: pick the destination, run, report the outcome."""
+        """Shared export flow: pick the destination, run, report the outcome.
+
+        Refused while a render runs: the destination picker opens a modal dialog,
+        which would hold the render (and the busy bar) for as long as the user
+        leaves it open — the very freeze the render pump exists to remove. The
+        toolbar disables Export for a parse, but the translate-data rebuild
+        (:meth:`_refresh_data_text`) leaves it enabled, so the guard is here.
+        Like every other busy refusal (Open, drop, the language menu) it is
+        silent: the window is busy for a fraction of a second, and the click can
+        simply be repeated.
+        """
+        if self._rendering:
+            return
         if not self.current_data:
             return
         if ExportManager is None:
@@ -4030,6 +4074,9 @@ class TachoExplorer(tk.Tk):
                          lambda d, p: ExportManager.export_to_csv(d, p))
 
     def _export_json(self):
+        if self._rendering:
+            # Same reason as _run_export: no modal picker on top of a render.
+            return
         if not self.current_data:
             return
         path = filedialog.asksaveasfilename(

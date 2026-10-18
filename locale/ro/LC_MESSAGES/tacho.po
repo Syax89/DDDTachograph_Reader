@@ -967,7 +967,7 @@ msgid "Security & Certificates"
 msgstr "Securitate și certificate"
 
 msgid "CURRENT LOCK"
-msgstr "BLOCARE ACTIVĂ"
+msgstr "LACĂT"
 
 msgid "ASSOCIATED VEHICLE"
 msgstr "VEHICUL ASOCIAT"

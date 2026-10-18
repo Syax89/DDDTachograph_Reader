@@ -17,9 +17,11 @@
   Daily Activities dashboard — sit behind one switch
   (`app.gui.SHOW_DRIVING_INFRACTIONS`, shipped off) while their thresholds are
   decided. The rules are still evaluated day by day, so flipping that single
-  name restores every surface. File-integrity and calibration warnings are
-  untouched, and the exports never reported the flag. Six now-unused msgids were
-  dropped from all 33 catalogs (791 → 785 entries each).
+  name brings those four dashboard surfaces back — but not the overview block,
+  which was removed rather than gated and would have to be written again.
+  File-integrity and calibration warnings are untouched, and the exports never
+  reported the flag. Six now-unused msgids were dropped from all 33 catalogs
+  (791 → 785 entries each).
 - **Icons drawn, not typed**: every place the interface used an emoji now draws
   a PNG from a commissioned monochrome icon set (`assets/icons/`, 28 icons at
   six sizes, with the designer's SVG masters), so the same build looks the same
