@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=TachoReader
+GenericName=Tachograph Reader
+Comment=Analyze EU digital tachograph (.ddd) files
+Exec=TachoReader %f
+Icon=io.github.Syax89.TachoReader
+Terminal=false
+Categories=Utility;Office;
+Keywords=tachograph;ddd;driver;activity;speed;

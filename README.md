@@ -68,9 +68,56 @@ Download from the **[Releases](https://github.com/Syax89/DDDTachograph_Reader/re
 |----------|------|
 | Windows | `TachoReader-v<version>-windows-x64.zip` |
 | macOS | `TachoReader-v<version>-macos.dmg` |
+| Linux (x86_64) | `TachoReader-v<version>-linux-x86_64.flatpak` |
 
 Extract the Windows archive and run `TachoReader.exe`. Open the macOS disk image
-and drag `TachoReader.app` to Applications.
+and drag `TachoReader.app` to Applications. For Linux, see below.
+
+### Linux (Flatpak, x86_64)
+
+Releases built from now on also ship a standalone Flatpak bundle, produced by CI
+from the same PyInstaller bundle as the Windows and macOS packages:
+
+```bash
+flatpak install --user ./TachoReader-v<version>-linux-x86_64.flatpak
+flatpak run io.github.Syax89.TachoReader
+```
+
+> **Availability:** the Flatpak bundle is not part of the already-published
+> `v2.7.1` release — it appears with the next tagged release that includes the
+> Linux packaging job.
+
+The bundle is self-contained: Python, Tk and every Python dependency live inside
+it, and only the `org.freedesktop.Platform` 25.08 runtime is fetched (from
+Flathub) as a dependency.
+
+**Sandbox permissions**
+
+| Permission | Why |
+|------------|-----|
+| `--filesystem=home` | Tk's own file dialogs are plain X11 dialogs, not portal pickers, so opening `.ddd` files and saving exports needs read/write access to your home directory. |
+| `--socket=x11`, `--share=ipc` | Tk is an X11 toolkit with no Wayland-native backend. |
+| no network, no host filesystem | The reader never talks to the network, and files outside your home directory are not reachable. |
+
+**Opening files outside your home directory** (USB sticks, mounted drives,
+`/mnt`, ...) requires an explicit override, for example:
+
+```bash
+flatpak override --user --filesystem=/run/media/$USER io.github.Syax89.TachoReader
+```
+
+**Wayland:** the app runs on the X11 socket, so Wayland sessions need XWayland
+(`xorg-xwayland` on most distributions, shipped by default by current desktops).
+
+**Limitations**
+
+- **x86_64 only** — release CI produces a single `linux-x86_64` bundle; there is
+  no aarch64/ARM build.
+- **Not Flathub-listed** — the bundle is a standalone download, so software
+  centers will not show it and it is **not updated automatically**: installing a
+  newer release file is a manual step.
+- It is an unsigned local bundle, so Flatpak installs it as a sideload rather
+  than from a verified remote.
 
 ### From Source (developers)
 
@@ -105,6 +152,7 @@ DDDTachograph_Reader/
 │   ├── crypto/                  # Certificate and signature validation
 │   └── utils/                   # Shared helpers, constants, and version
 ├── certs/                       # ERCA root certificates
+├── flatpak/                     # Flatpak manifest + desktop entry (Linux bundle)
 ├── tests/                       # Test suite
 ├── scripts/                     # Specifications and audits
 ├── docs/                        # Documentation
@@ -161,6 +209,14 @@ those fixtures are unavailable.
 pip install pyinstaller
 pyinstaller build.spec
 # Output: dist/TachoReader (macOS) / dist/TachoReader.exe (Windows)
+```
+
+On Linux the frozen `dist/TachoReader` directory can be packaged as a Flatpak
+(the same manifest CI uses):
+
+```bash
+flatpak-builder --user --force-clean --repo=flatpak-repo \
+  flatpak-build flatpak/io.github.Syax89.TachoReader.yml
 ```
 
 ---

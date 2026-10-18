@@ -1,0 +1,49 @@
+# Flatpak packaging for the Linux x86_64 release.
+#
+# The bundle is the frozen PyInstaller one-dir output (dist/TachoReader, built
+# by build.spec) packaged verbatim: Python, Tk and every Python dependency are
+# already inside it, so nothing is rebuilt against the SDK. The runtime only
+# supplies the glibc/X11 client libraries the bundle links against.
+app-id: io.github.Syax89.TachoReader
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: TachoReader
+
+# App translations ship inside the frozen bundle (locale/<lang>/LC_MESSAGES/
+# tacho.mo), so no runtime Locale extension is needed.
+separate-locales: false
+
+finish-args:
+  # Tk has no Wayland backend: it always talks X11, via XWayland on a Wayland
+  # session. IPC is granted because X11 clients need a shared socket.
+  - --socket=x11
+  - --share=ipc
+  # Tk's own file dialogs must be able to open .ddd files and save exports
+  # anywhere the user keeps them. No network, no host-wide filesystem access.
+  - --filesystem=home
+
+modules:
+  - name: tachoreader-bundle
+    buildsystem: simple
+    sources:
+      - type: dir
+        path: ../dist/TachoReader
+    build-commands:
+      - mkdir -p /app/tachoreader
+      - cp -a . /app/tachoreader/
+
+  - name: tachoreader-launcher
+    buildsystem: simple
+    sources:
+      - type: file
+        path: tachoreader.sh
+      - type: file
+        path: io.github.Syax89.TachoReader.desktop
+      - type: file
+        path: ../AppIcons/Assets.xcassets/AppIcon.appiconset/256.png
+        dest-filename: io.github.Syax89.TachoReader.png
+    build-commands:
+      - install -Dm755 tachoreader.sh /app/bin/TachoReader
+      - install -Dm644 io.github.Syax89.TachoReader.desktop /app/share/applications/io.github.Syax89.TachoReader.desktop
+      - install -Dm644 io.github.Syax89.TachoReader.png /app/share/icons/hicolor/256x256/apps/io.github.Syax89.TachoReader.png

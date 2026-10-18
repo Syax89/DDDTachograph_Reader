@@ -179,3 +179,30 @@ jobs:
       with:
         files: TachoReader-${{ github.ref_name }}-macos.dmg
         body_path: release_notes.md
+
+  build-linux-flatpak:
+    runs-on: ubuntu-24.04
+    needs: test
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Build, install and smoke-test Flatpak
+      uses: ./.github/actions/build-flatpak
+      with:
+        bundle-name: TachoReader-${{ github.ref_name }}-linux-x86_64.flatpak
+
+    - name: Extract release notes from CHANGELOG
+      run: |
+        VERSION="${GITHUB_REF_NAME#v}"
+        awk -v ver="$VERSION" '
+          $0 ~ "^## \\[" ver "\\]" {flag=1; next}
+          /^## \[/ {flag=0}
+          flag' CHANGELOG.md > release_notes.md
+        test -s release_notes.md || echo "Release $GITHUB_REF_NAME" > release_notes.md
+
+    - name: Upload to release
+      uses: softprops/action-gh-release@v3
+      with:
+        files: TachoReader-${{ github.ref_name }}-linux-x86_64.flatpak
+        body_path: release_notes.md
+        fail_on_unmatched_files: true
