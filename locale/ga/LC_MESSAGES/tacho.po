@@ -976,3 +976,501 @@ msgstr "🧩  Sonraí amha / neamhpharsáilte"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  SONRAÍ AN CHÁRTA"
+
+msgid "Additional Info"
+msgstr "Eolas breise"
+
+msgid "All trep signatures valid"
+msgstr "Gach síniú trep bailí"
+
+msgid "Anchored to erca root"
+msgstr "Ancraithe le fréamh erca"
+
+msgid "Approval Number"
+msgstr "Uimhir cheada"
+
+msgid "Average Speed KMH"
+msgstr "Meánluas KMH"
+
+msgid "Begin"
+msgstr "Tús"
+
+msgid "Begin Time"
+msgstr "Am tosaigh"
+
+msgid "Ca Identifier"
+msgstr "Aitheantóir Ca"
+
+msgid "Calibration Data"
+msgstr "Sonraí calabraithe"
+
+msgid "Calibration VINs"
+msgstr "VINanna calabraithe"
+
+msgid "Calibration Workshops"
+msgstr "Ceárdlanna calabraithe"
+
+msgid "Card"
+msgstr "Cárta"
+
+msgid "Card Codriver Begin"
+msgstr "Tús comhthiománaí an chárta"
+
+msgid "Card Codriver End"
+msgstr "Deireadh comhthiománaí an chárta"
+
+msgid "Card Driver"
+msgstr "Tiománaí an chárta"
+
+msgid "Card Driver Begin"
+msgstr "Tús thiománaí an chárta"
+
+msgid "Card Driver End"
+msgstr "Deireadh thiománaí an chárta"
+
+msgid "Card Expiry"
+msgstr "Éag an chárta"
+
+msgid "Card IW Records"
+msgstr "Taifid IW an chárta"
+
+msgid "Card Number"
+msgstr "Uimhir an chárta"
+
+msgid "Card Slot"
+msgstr "Sliotán an chárta"
+
+msgid "Company Address"
+msgstr "Seoladh na cuideachta"
+
+msgid "Company Card"
+msgstr "Cárta cuideachta"
+
+msgid "Company Info"
+msgstr "Eolas na cuideachta"
+
+msgid "Company Locks"
+msgstr "Glais na cuideachta"
+
+msgid "Company Name"
+msgstr "Ainm na cuideachta"
+
+msgid "Condition"
+msgstr "Coinníoll"
+
+msgid "Control Activity Data"
+msgstr "Sonraí gníomhaíochta rialaithe"
+
+msgid "Control Card"
+msgstr "Cárta rialaithe"
+
+msgid "Control Time"
+msgstr "Am rialaithe"
+
+msgid "Control Type"
+msgstr "Cineál rialaithe"
+
+msgid "Control Type Label"
+msgstr "Lipéad cineáil rialaithe"
+
+msgid "Current Usage"
+msgstr "Úsáid reatha"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Gníomhaíochtaí laethúla 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Gníomhaíochtaí laethúla 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Gníomhaíochtaí laethúla 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Gníomhaíochtaí laethúla 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Gníomhaíochtaí laethúla 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Gníomhaíochtaí laethúla 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Gníomhaíochtaí laethúla 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Gníomhaíochtaí laethúla 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Gníomhaíochtaí laethúla 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Gníomhaíochtaí laethúla 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Gníomhaíochtaí laethúla 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Gníomhaíochtaí laethúla 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Gníomhaíochtaí laethúla 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Gníomhaíochtaí laethúla 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Gníomhaíochtaí laethúla 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Gníomhaíochtaí laethúla 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Gníomhaíochtaí laethúla 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Gníomhaíochtaí laethúla 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Gníomhaíochtaí laethúla 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Gníomhaíochtaí laethúla 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Gníomhaíochtaí laethúla 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Gníomhaíochtaí laethúla 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Gníomhaíochtaí laethúla 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Gníomhaíochtaí laethúla 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Gníomhaíochtaí laethúla 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Gníomhaíochtaí laethúla 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Gníomhaíochtaí laethúla 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Gníomhaíochtaí laethúla 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Gníomhaíochtaí laethúla 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Gníomhaíochtaí laethúla 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Gníomhaíochtaí laethúla 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Gníomhaíochtaí laethúla 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Gníomhaíochtaí laethúla 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Gníomhaíochtaí laethúla 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Gníomhaíochtaí laethúla 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Gníomhaíochtaí laethúla 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Gníomhaíochtaí laethúla 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Gníomhaíochtaí laethúla 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Gníomhaíochtaí laethúla 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Gníomhaíochtaí laethúla 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Gníomhaíochtaí laethúla 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Gníomhaíochtaí laethúla 31/12/2024"
+
+msgid "Description"
+msgstr "Cur síos"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Luas mionsonraithe 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Luas mionsonraithe 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Luas mionsonraithe 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Luas mionsonraithe 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Luas mionsonraithe 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Luas mionsonraithe 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Tús na tréimhse íoslódála"
+
+msgid "Download Period End"
+msgstr "Deireadh na tréimhse íoslódála"
+
+msgid "End"
+msgstr "Deireadh"
+
+msgid "End Time"
+msgstr "Am deiridh"
+
+msgid "Entry Type"
+msgstr "Cineál iontrála"
+
+msgid "Event Type"
+msgstr "Cineál imeachta"
+
+msgid "Event Type Label"
+msgstr "Lipéad cineáil imeachta"
+
+msgid "Events Data"
+msgstr "Sonraí imeachtaí"
+
+msgid "Fault Purpose"
+msgstr "Cuspóir loicht"
+
+msgid "Fault Type"
+msgstr "Cineál loicht"
+
+msgid "Faults Data"
+msgstr "Sonraí locht"
+
+msgid "First Overspeed Since"
+msgstr "An chéad róluas ó"
+
+msgid "Firstname"
+msgstr "Céadainm"
+
+msgid "Format"
+msgstr "Formáid"
+
+msgid "Holder First Names"
+msgstr "Céadainmneacha an tsealbhóra"
+
+msgid "Holder Surname"
+msgstr "Sloinne an tsealbhóra"
+
+msgid "Inserted Drivers"
+msgstr "Tiománaithe ionchurtha"
+
+msgid "Insertion Time"
+msgstr "Am ionchurtha"
+
+msgid "K Constant"
+msgstr "Tairiseach K"
+
+msgid "KM"
+msgstr "km"
+
+msgid "L Tyre Circumference"
+msgstr "L Imlíne an bhoinn"
+
+msgid "Last Control Time"
+msgstr "An t-am rialaithe deireanach"
+
+msgid "Lock In Time"
+msgstr "Am glasála isteach"
+
+msgid "Lock Out Time"
+msgstr "Am glasála amach"
+
+msgid "Manual Input"
+msgstr "Ionchur láimhe"
+
+msgid "Manufacturer"
+msgstr "Monaróir"
+
+msgid "Manufacturer Address"
+msgstr "Seoladh an mhonaróra"
+
+msgid "Manufacturing Date"
+msgstr "Dáta déantúis"
+
+msgid "Max Speed KMH"
+msgstr "Uasluas KMH"
+
+msgid "Minutes"
+msgstr "Nóiméid"
+
+msgid "Msca→vu chain"
+msgstr "Msca→vu slabhra"
+
+msgid "Name"
+msgstr "Ainm"
+
+msgid "Nation"
+msgstr "Tír"
+
+msgid "Nation Code"
+msgstr "Cód tíre"
+
+msgid "New Odometer"
+msgstr "Odamhéadar nua"
+
+msgid "New Time"
+msgstr "Am nua"
+
+msgid "Next Calibration Date"
+msgstr "An chéad dáta calabraithe eile"
+
+msgid "Number Of Overspeed"
+msgstr "Líon na róluas"
+
+msgid "Odometer Insertion KM"
+msgstr "Odamhéadar ionchurtha km"
+
+msgid "Odometer KM"
+msgstr "Odamhéadar km"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Odamhéadar bainte km"
+
+msgid "Old Time"
+msgstr "Am roimhe"
+
+msgid "Overspeeding Control"
+msgstr "Rialú róluais"
+
+msgid "Overspeeding Events"
+msgstr "Imeachtaí róluais"
+
+msgid "Part Number"
+msgstr "Uimhir pháirte"
+
+msgid "Plate"
+msgstr "Pláta"
+
+msgid "Public Key Remainder Hex"
+msgstr "Fuílleach na heochrach poiblí (heics)"
+
+msgid "Public Key Remainder Length"
+msgstr "Fad fhuílleach na heochrach poiblí"
+
+msgid "Purpose"
+msgstr "Cuspóir"
+
+msgid "Purpose Code"
+msgstr "Cód cuspóra"
+
+msgid "Record Purpose"
+msgstr "Cuspóir iontrála"
+
+msgid "Record Purpose Label"
+msgstr "Lipéad cuspóra iontrála"
+
+msgid "Region"
+msgstr "Réigiún"
+
+msgid "Registration Nation"
+msgstr "Tír chláraithe"
+
+msgid "Section"
+msgstr "Roinn"
+
+msgid "Sensor Approval Number"
+msgstr "Uimhir cheada an tsensor"
+
+msgid "Sensor Pairing Date"
+msgstr "Dáta péireála an tsensor"
+
+msgid "Sensor Serial Number"
+msgstr "Uimhir shraithe an tsensor"
+
+msgid "Serial Number"
+msgstr "Uimhir shraithe"
+
+msgid "Signature Hex"
+msgstr "Síniú (heics)"
+
+msgid "Signature Length"
+msgstr "Fad an tsínithe"
+
+msgid "Signature Valid"
+msgstr "Síniú bailí"
+
+msgid "Similar Events"
+msgstr "Imeachtaí comhchosúla"
+
+msgid "Software Install Date"
+msgstr "Dáta suiteála na mbogearraí"
+
+msgid "Software Version"
+msgstr "Leagan na mbogearraí"
+
+msgid "Specific Conditions"
+msgstr "Coinníollacha sonracha"
+
+msgid "Speed Limit"
+msgstr "Teorainn luais"
+
+msgid "Speeds Sample"
+msgstr "Samplaí luais"
+
+msgid "Surname"
+msgstr "Sloinne"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Eolas teicniúil"
+
+msgid "Timestamp"
+msgstr "Stampa ama"
+
+msgid "Total Size"
+msgstr "Méid iomlán"
+
+msgid "Type Code"
+msgstr "Cód cineáil"
+
+msgid "Tyre Size"
+msgstr "Méid an bhoinn"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Aithint feithicle"
+
+msgid "W Constant"
+msgstr "Tairiseach W"
+
+msgid "Withdrawal Time"
+msgstr "Am bainte"
+
+msgid "Workshop"
+msgstr "Ceárta"
+
+msgid "Workshop Address"
+msgstr "Seoladh na ceártain"
+
+msgid "Workshop Card"
+msgstr "Cárta ceártain"
+
+msgid "Workshop Card Expiry"
+msgstr "Éag an chárta cheártain"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Glúin 1  [Iarscríbhinn 1B]"

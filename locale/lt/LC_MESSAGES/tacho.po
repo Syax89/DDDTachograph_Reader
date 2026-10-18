@@ -976,3 +976,501 @@ msgstr "🧩  Neapdoroti / nekoduoti duomenys"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  KORTELĖS DUOMENYS"
+
+msgid "Additional Info"
+msgstr "Papildoma informacija"
+
+msgid "All trep signatures valid"
+msgstr "Visi trep parašai galioja"
+
+msgid "Anchored to erca root"
+msgstr "Pririšta prie erca šaknies"
+
+msgid "Approval Number"
+msgstr "Patvirtinimo numeris"
+
+msgid "Average Speed KMH"
+msgstr "Vidutinis greitis KMH"
+
+msgid "Begin"
+msgstr "Pradžia"
+
+msgid "Begin Time"
+msgstr "Pradžios laikas"
+
+msgid "Ca Identifier"
+msgstr "Ca identifikatorius"
+
+msgid "Calibration Data"
+msgstr "Kalibravimo duomenys"
+
+msgid "Calibration VINs"
+msgstr "Kalibravimo VIN"
+
+msgid "Calibration Workshops"
+msgstr "Kalibravimo dirbtuvės"
+
+msgid "Card"
+msgstr "Kortelė"
+
+msgid "Card Codriver Begin"
+msgstr "Kortelės antrojo vairuotojo pradžia"
+
+msgid "Card Codriver End"
+msgstr "Kortelės antrojo vairuotojo pabaiga"
+
+msgid "Card Driver"
+msgstr "Kortelės vairuotojas"
+
+msgid "Card Driver Begin"
+msgstr "Kortelės vairuotojo pradžia"
+
+msgid "Card Driver End"
+msgstr "Kortelės vairuotojo pabaiga"
+
+msgid "Card Expiry"
+msgstr "Kortelės galiojimas"
+
+msgid "Card IW Records"
+msgstr "Kortelės IW įrašai"
+
+msgid "Card Number"
+msgstr "Kortelės numeris"
+
+msgid "Card Slot"
+msgstr "Kortelės lizdas"
+
+msgid "Company Address"
+msgstr "Įmonės adresas"
+
+msgid "Company Card"
+msgstr "Įmonės kortelė"
+
+msgid "Company Info"
+msgstr "Įmonės informacija"
+
+msgid "Company Locks"
+msgstr "Įmonės užraktai"
+
+msgid "Company Name"
+msgstr "Įmonės pavadinimas"
+
+msgid "Condition"
+msgstr "Sąlyga"
+
+msgid "Control Activity Data"
+msgstr "Kontrolės veiklos duomenys"
+
+msgid "Control Card"
+msgstr "Kontrolės kortelė"
+
+msgid "Control Time"
+msgstr "Kontrolės laikas"
+
+msgid "Control Type"
+msgstr "Kontrolės tipas"
+
+msgid "Control Type Label"
+msgstr "Kontrolės tipo žymė"
+
+msgid "Current Usage"
+msgstr "Dabartinis naudojimas"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Kasdienė veikla 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Kasdienė veikla 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Kasdienė veikla 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Kasdienė veikla 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Kasdienė veikla 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Kasdienė veikla 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Kasdienė veikla 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Kasdienė veikla 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Kasdienė veikla 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Kasdienė veikla 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Kasdienė veikla 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Kasdienė veikla 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Kasdienė veikla 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Kasdienė veikla 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Kasdienė veikla 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Kasdienė veikla 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Kasdienė veikla 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Kasdienė veikla 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Kasdienė veikla 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Kasdienė veikla 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Kasdienė veikla 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Kasdienė veikla 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Kasdienė veikla 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Kasdienė veikla 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Kasdienė veikla 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Kasdienė veikla 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Kasdienė veikla 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Kasdienė veikla 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Kasdienė veikla 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Kasdienė veikla 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Kasdienė veikla 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Kasdienė veikla 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Kasdienė veikla 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Kasdienė veikla 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Kasdienė veikla 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Kasdienė veikla 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Kasdienė veikla 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Kasdienė veikla 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Kasdienė veikla 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Kasdienė veikla 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Kasdienė veikla 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Kasdienė veikla 31/12/2024"
+
+msgid "Description"
+msgstr "Aprašymas"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Išsamus greitis 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Išsamus greitis 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Išsamus greitis 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Išsamus greitis 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Išsamus greitis 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Išsamus greitis 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Atsisiuntimo laikotarpio pradžia"
+
+msgid "Download Period End"
+msgstr "Atsisiuntimo laikotarpio pabaiga"
+
+msgid "End"
+msgstr "Pabaiga"
+
+msgid "End Time"
+msgstr "Pabaigos laikas"
+
+msgid "Entry Type"
+msgstr "Įrašo tipas"
+
+msgid "Event Type"
+msgstr "Įvykio tipas"
+
+msgid "Event Type Label"
+msgstr "Įvykio tipo žymė"
+
+msgid "Events Data"
+msgstr "Įvykių duomenys"
+
+msgid "Fault Purpose"
+msgstr "Gedimo tikslas"
+
+msgid "Fault Type"
+msgstr "Gedimo tipas"
+
+msgid "Faults Data"
+msgstr "Gedimų duomenys"
+
+msgid "First Overspeed Since"
+msgstr "Pirmasis greičio viršijimas nuo"
+
+msgid "Firstname"
+msgstr "Vardas"
+
+msgid "Format"
+msgstr "Formatas"
+
+msgid "Holder First Names"
+msgstr "Turėtojo vardai"
+
+msgid "Holder Surname"
+msgstr "Turėtojo pavardė"
+
+msgid "Inserted Drivers"
+msgstr "Įdėti vairuotojai"
+
+msgid "Insertion Time"
+msgstr "Įdėjimo laikas"
+
+msgid "K Constant"
+msgstr "K konstanta"
+
+msgid "KM"
+msgstr "km"
+
+msgid "L Tyre Circumference"
+msgstr "L padangos apskritimas"
+
+msgid "Last Control Time"
+msgstr "Paskutinis kontrolės laikas"
+
+msgid "Lock In Time"
+msgstr "Užrakinimo laikas"
+
+msgid "Lock Out Time"
+msgstr "Atrakinimo laikas"
+
+msgid "Manual Input"
+msgstr "Rankinis įvedimas"
+
+msgid "Manufacturer"
+msgstr "Gamintojas"
+
+msgid "Manufacturer Address"
+msgstr "Gamintojo adresas"
+
+msgid "Manufacturing Date"
+msgstr "Pagaminimo data"
+
+msgid "Max Speed KMH"
+msgstr "Didžiausias greitis KMH"
+
+msgid "Minutes"
+msgstr "Minutės"
+
+msgid "Msca→vu chain"
+msgstr "Msca→vu grandinė"
+
+msgid "Name"
+msgstr "Pavadinimas"
+
+msgid "Nation"
+msgstr "Šalis"
+
+msgid "Nation Code"
+msgstr "Šalies kodas"
+
+msgid "New Odometer"
+msgstr "Naujas odometras"
+
+msgid "New Time"
+msgstr "Naujas laikas"
+
+msgid "Next Calibration Date"
+msgstr "Kita kalibravimo data"
+
+msgid "Number Of Overspeed"
+msgstr "Greičio viršijimų skaičius"
+
+msgid "Odometer Insertion KM"
+msgstr "Odometras įdėjus km"
+
+msgid "Odometer KM"
+msgstr "Odometras km"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Odometras išėmus km"
+
+msgid "Old Time"
+msgstr "Senas laikas"
+
+msgid "Overspeeding Control"
+msgstr "Greičio viršijimo kontrolė"
+
+msgid "Overspeeding Events"
+msgstr "Greičio viršijimo įvykiai"
+
+msgid "Part Number"
+msgstr "Dalies numeris"
+
+msgid "Plate"
+msgstr "Valstybinis numeris"
+
+msgid "Public Key Remainder Hex"
+msgstr "Viešojo rakto likutis (hex)"
+
+msgid "Public Key Remainder Length"
+msgstr "Viešojo rakto likučio ilgis"
+
+msgid "Purpose"
+msgstr "Tikslas"
+
+msgid "Purpose Code"
+msgstr "Tikslo kodas"
+
+msgid "Record Purpose"
+msgstr "Įrašo tikslas"
+
+msgid "Record Purpose Label"
+msgstr "Įrašo tikslo žymė"
+
+msgid "Region"
+msgstr "Regionas"
+
+msgid "Registration Nation"
+msgstr "Registracijos šalis"
+
+msgid "Section"
+msgstr "Skirsnis"
+
+msgid "Sensor Approval Number"
+msgstr "Jutiklio patvirtinimo numeris"
+
+msgid "Sensor Pairing Date"
+msgstr "Jutiklio susiejimo data"
+
+msgid "Sensor Serial Number"
+msgstr "Jutiklio serijos numeris"
+
+msgid "Serial Number"
+msgstr "Serijos numeris"
+
+msgid "Signature Hex"
+msgstr "Parašas (hex)"
+
+msgid "Signature Length"
+msgstr "Parašo ilgis"
+
+msgid "Signature Valid"
+msgstr "Parašas galioja"
+
+msgid "Similar Events"
+msgstr "Panašūs įvykiai"
+
+msgid "Software Install Date"
+msgstr "Programinės įrangos įdiegimo data"
+
+msgid "Software Version"
+msgstr "Programinės įrangos versija"
+
+msgid "Specific Conditions"
+msgstr "Specialiosios sąlygos"
+
+msgid "Speed Limit"
+msgstr "Greičio apribojimas"
+
+msgid "Speeds Sample"
+msgstr "Greičio pavyzdžiai"
+
+msgid "Surname"
+msgstr "Pavardė"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Techninė informacija"
+
+msgid "Timestamp"
+msgstr "Laiko žyma"
+
+msgid "Total Size"
+msgstr "Bendras dydis"
+
+msgid "Type Code"
+msgstr "Tipo kodas"
+
+msgid "Tyre Size"
+msgstr "Padangos dydis"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Transporto priemonės identifikavimas"
+
+msgid "W Constant"
+msgstr "W konstanta"
+
+msgid "Withdrawal Time"
+msgstr "Išėmimo laikas"
+
+msgid "Workshop"
+msgstr "Dirbtuvės"
+
+msgid "Workshop Address"
+msgstr "Dirbtuvių adresas"
+
+msgid "Workshop Card"
+msgstr "Dirbtuvių kortelė"
+
+msgid "Workshop Card Expiry"
+msgstr "Dirbtuvių kortelės galiojimas"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  1 karta  [Priedas 1B]"

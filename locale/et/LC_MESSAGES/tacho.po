@@ -976,3 +976,501 @@ msgstr "🧩  Töötlemata toorandmed"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  KAARDI ANDMED"
+
+msgid "Additional Info"
+msgstr "Lisainfo"
+
+msgid "All trep signatures valid"
+msgstr "Kõik trep-allkirjad kehtivad"
+
+msgid "Anchored to erca root"
+msgstr "Ankurdunud erca juurele"
+
+msgid "Approval Number"
+msgstr "Kinnitusnumber"
+
+msgid "Average Speed KMH"
+msgstr "Keskmine kiirus KMH"
+
+msgid "Begin"
+msgstr "Algus"
+
+msgid "Begin Time"
+msgstr "Algusaeg"
+
+msgid "Ca Identifier"
+msgstr "Ca identifikaator"
+
+msgid "Calibration Data"
+msgstr "Kalibreerimisandmed"
+
+msgid "Calibration VINs"
+msgstr "Kalibreerimise VIN-id"
+
+msgid "Calibration Workshops"
+msgstr "Kalibreerimistöökojad"
+
+msgid "Card"
+msgstr "Kaart"
+
+msgid "Card Codriver Begin"
+msgstr "Kaardi kaasjuhi algus"
+
+msgid "Card Codriver End"
+msgstr "Kaardi kaasjuhi lõpp"
+
+msgid "Card Driver"
+msgstr "Kaardi juht"
+
+msgid "Card Driver Begin"
+msgstr "Kaardi juhi algus"
+
+msgid "Card Driver End"
+msgstr "Kaardi juhi lõpp"
+
+msgid "Card Expiry"
+msgstr "Kaardi kehtivus"
+
+msgid "Card IW Records"
+msgstr "Kaardi IW-kirjed"
+
+msgid "Card Number"
+msgstr "Kaardi number"
+
+msgid "Card Slot"
+msgstr "Kaardipesa"
+
+msgid "Company Address"
+msgstr "Ettevõtte aadress"
+
+msgid "Company Card"
+msgstr "Ettevõttekaart"
+
+msgid "Company Info"
+msgstr "Ettevõtte info"
+
+msgid "Company Locks"
+msgstr "Ettevõtte lukud"
+
+msgid "Company Name"
+msgstr "Ettevõtte nimi"
+
+msgid "Condition"
+msgstr "Tingimus"
+
+msgid "Control Activity Data"
+msgstr "Kontrollitegevuse andmed"
+
+msgid "Control Card"
+msgstr "Kontrollkaart"
+
+msgid "Control Time"
+msgstr "Kontrolli aeg"
+
+msgid "Control Type"
+msgstr "Kontrolli tüüp"
+
+msgid "Control Type Label"
+msgstr "Kontrolli tüübi silt"
+
+msgid "Current Usage"
+msgstr "Praegune kasutus"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Igapäevased tegevused 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Igapäevased tegevused 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Igapäevased tegevused 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Igapäevased tegevused 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Igapäevased tegevused 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Igapäevased tegevused 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Igapäevased tegevused 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Igapäevased tegevused 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Igapäevased tegevused 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Igapäevased tegevused 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Igapäevased tegevused 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Igapäevased tegevused 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Igapäevased tegevused 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Igapäevased tegevused 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Igapäevased tegevused 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Igapäevased tegevused 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Igapäevased tegevused 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Igapäevased tegevused 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Igapäevased tegevused 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Igapäevased tegevused 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Igapäevased tegevused 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Igapäevased tegevused 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Igapäevased tegevused 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Igapäevased tegevused 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Igapäevased tegevused 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Igapäevased tegevused 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Igapäevased tegevused 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Igapäevased tegevused 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Igapäevased tegevused 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Igapäevased tegevused 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Igapäevased tegevused 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Igapäevased tegevused 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Igapäevased tegevused 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Igapäevased tegevused 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Igapäevased tegevused 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Igapäevased tegevused 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Igapäevased tegevused 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Igapäevased tegevused 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Igapäevased tegevused 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Igapäevased tegevused 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Igapäevased tegevused 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Igapäevased tegevused 31/12/2024"
+
+msgid "Description"
+msgstr "Kirjeldus"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Üksikasjalik kiirus 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Üksikasjalik kiirus 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Üksikasjalik kiirus 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Üksikasjalik kiirus 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Üksikasjalik kiirus 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Üksikasjalik kiirus 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Allalaadimisperioodi algus"
+
+msgid "Download Period End"
+msgstr "Allalaadimisperioodi lõpp"
+
+msgid "End"
+msgstr "Lõpp"
+
+msgid "End Time"
+msgstr "Lõpuaeg"
+
+msgid "Entry Type"
+msgstr "Kande tüüp"
+
+msgid "Event Type"
+msgstr "Sündmuse tüüp"
+
+msgid "Event Type Label"
+msgstr "Sündmuse tüübi silt"
+
+msgid "Events Data"
+msgstr "Sündmuste andmed"
+
+msgid "Fault Purpose"
+msgstr "Rikke eesmärk"
+
+msgid "Fault Type"
+msgstr "Rikke tüüp"
+
+msgid "Faults Data"
+msgstr "Rikete andmed"
+
+msgid "First Overspeed Since"
+msgstr "Esimene kiiruseületus alates"
+
+msgid "Firstname"
+msgstr "Eesnimi"
+
+msgid "Format"
+msgstr "Formaat"
+
+msgid "Holder First Names"
+msgstr "Valdaja eesnimed"
+
+msgid "Holder Surname"
+msgstr "Valdaja perekonnanimi"
+
+msgid "Inserted Drivers"
+msgstr "Sisestatud juhid"
+
+msgid "Insertion Time"
+msgstr "Sisestamise aeg"
+
+msgid "K Constant"
+msgstr "K-konstant"
+
+msgid "KM"
+msgstr "km"
+
+msgid "L Tyre Circumference"
+msgstr "L rehvi ümbermõõt"
+
+msgid "Last Control Time"
+msgstr "Viimane kontrolli aeg"
+
+msgid "Lock In Time"
+msgstr "Sisselukustamise aeg"
+
+msgid "Lock Out Time"
+msgstr "Väljalukustamise aeg"
+
+msgid "Manual Input"
+msgstr "Käsitsi sisestus"
+
+msgid "Manufacturer"
+msgstr "Tootja"
+
+msgid "Manufacturer Address"
+msgstr "Tootja aadress"
+
+msgid "Manufacturing Date"
+msgstr "Tootmiskuupäev"
+
+msgid "Max Speed KMH"
+msgstr "Maksimaalne kiirus KMH"
+
+msgid "Minutes"
+msgstr "Minutid"
+
+msgid "Msca→vu chain"
+msgstr "Msca→vu ahel"
+
+msgid "Name"
+msgstr "Nimi"
+
+msgid "Nation"
+msgstr "Riik"
+
+msgid "Nation Code"
+msgstr "Riigikood"
+
+msgid "New Odometer"
+msgstr "Uus odomeeter"
+
+msgid "New Time"
+msgstr "Uus aeg"
+
+msgid "Next Calibration Date"
+msgstr "Järgmine kalibreerimiskuupäev"
+
+msgid "Number Of Overspeed"
+msgstr "Kiiruseületuste arv"
+
+msgid "Odometer Insertion KM"
+msgstr "Odomeeter sisestamisel km"
+
+msgid "Odometer KM"
+msgstr "Odomeeter km"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Odomeeter eemaldamisel km"
+
+msgid "Old Time"
+msgstr "Vana aeg"
+
+msgid "Overspeeding Control"
+msgstr "Kiiruseületamise kontroll"
+
+msgid "Overspeeding Events"
+msgstr "Kiiruseületamise sündmused"
+
+msgid "Part Number"
+msgstr "Osa number"
+
+msgid "Plate"
+msgstr "Numbrimärk"
+
+msgid "Public Key Remainder Hex"
+msgstr "Avaliku võtme jääk (hex)"
+
+msgid "Public Key Remainder Length"
+msgstr "Avaliku võtme jäägi pikkus"
+
+msgid "Purpose"
+msgstr "Eesmärk"
+
+msgid "Purpose Code"
+msgstr "Eesmärgi kood"
+
+msgid "Record Purpose"
+msgstr "Kande eesmärk"
+
+msgid "Record Purpose Label"
+msgstr "Kande eesmärgi silt"
+
+msgid "Region"
+msgstr "Piirkond"
+
+msgid "Registration Nation"
+msgstr "Registreerimisriik"
+
+msgid "Section"
+msgstr "Jaotis"
+
+msgid "Sensor Approval Number"
+msgstr "Anduri kinnitusnumber"
+
+msgid "Sensor Pairing Date"
+msgstr "Anduri sidumiskuupäev"
+
+msgid "Sensor Serial Number"
+msgstr "Anduri seerianumber"
+
+msgid "Serial Number"
+msgstr "Seerianumber"
+
+msgid "Signature Hex"
+msgstr "Allkiri (hex)"
+
+msgid "Signature Length"
+msgstr "Allkirja pikkus"
+
+msgid "Signature Valid"
+msgstr "Allkiri kehtiv"
+
+msgid "Similar Events"
+msgstr "Sarnased sündmused"
+
+msgid "Software Install Date"
+msgstr "Tarkvara paigalduskuupäev"
+
+msgid "Software Version"
+msgstr "Tarkvara versioon"
+
+msgid "Specific Conditions"
+msgstr "Eritingimused"
+
+msgid "Speed Limit"
+msgstr "Kiiruspiirang"
+
+msgid "Speeds Sample"
+msgstr "Kiiruse näidised"
+
+msgid "Surname"
+msgstr "Perekonnanimi"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Tehniline info"
+
+msgid "Timestamp"
+msgstr "Ajatempel"
+
+msgid "Total Size"
+msgstr "Kogusuurus"
+
+msgid "Type Code"
+msgstr "Tüübi kood"
+
+msgid "Tyre Size"
+msgstr "Rehvi suurus"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Sõiduki identifitseerimine"
+
+msgid "W Constant"
+msgstr "W-konstant"
+
+msgid "Withdrawal Time"
+msgstr "Eemaldamise aeg"
+
+msgid "Workshop"
+msgstr "Töökoda"
+
+msgid "Workshop Address"
+msgstr "Töökoja aadress"
+
+msgid "Workshop Card"
+msgstr "Töökojakaart"
+
+msgid "Workshop Card Expiry"
+msgstr "Töökojakaardi kehtivus"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Põlvkond 1  [Lisa 1B]"

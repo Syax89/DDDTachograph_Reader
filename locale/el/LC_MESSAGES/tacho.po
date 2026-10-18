@@ -976,3 +976,501 @@ msgstr "🧩  Ακατέργαστα / Μη αναλυμένα δεδομένα"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  ΣΤΟΙΧΕΙΑ ΚΑΡΤΑΣ"
+
+msgid "Additional Info"
+msgstr "Πρόσθετα στοιχεία"
+
+msgid "All trep signatures valid"
+msgstr "Όλες οι υπογραφές trep έγκυρες"
+
+msgid "Anchored to erca root"
+msgstr "Αγκυρωμένο στη ρίζα erca"
+
+msgid "Approval Number"
+msgstr "Αριθμός έγκρισης"
+
+msgid "Average Speed KMH"
+msgstr "Μέση ταχύτητα KMH"
+
+msgid "Begin"
+msgstr "Έναρξη"
+
+msgid "Begin Time"
+msgstr "Ώρα έναρξης"
+
+msgid "Ca Identifier"
+msgstr "Αναγνωριστικό Ca"
+
+msgid "Calibration Data"
+msgstr "Δεδομένα βαθμονόμησης"
+
+msgid "Calibration VINs"
+msgstr "VINs βαθμονόμησης"
+
+msgid "Calibration Workshops"
+msgstr "Συνεργεία βαθμονόμησης"
+
+msgid "Card"
+msgstr "Κάρτα"
+
+msgid "Card Codriver Begin"
+msgstr "Έναρξη κάρτας δεύτερου οδηγού"
+
+msgid "Card Codriver End"
+msgstr "Λήξη κάρτας δεύτερου οδηγού"
+
+msgid "Card Driver"
+msgstr "Κάρτα οδηγού"
+
+msgid "Card Driver Begin"
+msgstr "Έναρξη κάρτας οδηγού"
+
+msgid "Card Driver End"
+msgstr "Λήξη κάρτας οδηγού"
+
+msgid "Card Expiry"
+msgstr "Λήξη κάρτας"
+
+msgid "Card IW Records"
+msgstr "Εγγραφές IW κάρτας"
+
+msgid "Card Number"
+msgstr "Αριθμός κάρτας"
+
+msgid "Card Slot"
+msgstr "Υποδοχή κάρτας"
+
+msgid "Company Address"
+msgstr "Διεύθυνση εταιρείας"
+
+msgid "Company Card"
+msgstr "Κάρτα εταιρείας"
+
+msgid "Company Info"
+msgstr "Στοιχεία εταιρείας"
+
+msgid "Company Locks"
+msgstr "Κλειδώματα εταιρείας"
+
+msgid "Company Name"
+msgstr "Επωνυμία εταιρείας"
+
+msgid "Condition"
+msgstr "Συνθήκη"
+
+msgid "Control Activity Data"
+msgstr "Δεδομένα δραστηριότητας ελέγχου"
+
+msgid "Control Card"
+msgstr "Κάρτα ελέγχου"
+
+msgid "Control Time"
+msgstr "Ώρα ελέγχου"
+
+msgid "Control Type"
+msgstr "Τύπος ελέγχου"
+
+msgid "Control Type Label"
+msgstr "Ετικέτα τύπου ελέγχου"
+
+msgid "Current Usage"
+msgstr "Τρέχουσα χρήση"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Ημερήσιες δραστηριότητες 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Ημερήσιες δραστηριότητες 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Ημερήσιες δραστηριότητες 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Ημερήσιες δραστηριότητες 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Ημερήσιες δραστηριότητες 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Ημερήσιες δραστηριότητες 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Ημερήσιες δραστηριότητες 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Ημερήσιες δραστηριότητες 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Ημερήσιες δραστηριότητες 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Ημερήσιες δραστηριότητες 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Ημερήσιες δραστηριότητες 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Ημερήσιες δραστηριότητες 31/12/2024"
+
+msgid "Description"
+msgstr "Περιγραφή"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Αναλυτική ταχύτητα 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Αναλυτική ταχύτητα 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Αναλυτική ταχύτητα 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Αναλυτική ταχύτητα 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Αναλυτική ταχύτητα 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Αναλυτική ταχύτητα 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Έναρξη περιόδου λήψης"
+
+msgid "Download Period End"
+msgstr "Λήξη περιόδου λήψης"
+
+msgid "End"
+msgstr "Λήξη"
+
+msgid "End Time"
+msgstr "Ώρα λήξης"
+
+msgid "Entry Type"
+msgstr "Τύπος καταχώρισης"
+
+msgid "Event Type"
+msgstr "Τύπος συμβάντος"
+
+msgid "Event Type Label"
+msgstr "Ετικέτα τύπου συμβάντος"
+
+msgid "Events Data"
+msgstr "Δεδομένα συμβάντων"
+
+msgid "Fault Purpose"
+msgstr "Σκοπός βλάβης"
+
+msgid "Fault Type"
+msgstr "Τύπος βλάβης"
+
+msgid "Faults Data"
+msgstr "Δεδομένα βλαβών"
+
+msgid "First Overspeed Since"
+msgstr "Πρώτη υπερβολική ταχύτητα από"
+
+msgid "Firstname"
+msgstr "Όνομα"
+
+msgid "Format"
+msgstr "Μορφή"
+
+msgid "Holder First Names"
+msgstr "Ονόματα κατόχου"
+
+msgid "Holder Surname"
+msgstr "Επώνυμο κατόχου"
+
+msgid "Inserted Drivers"
+msgstr "Τοποθετημένοι οδηγοί"
+
+msgid "Insertion Time"
+msgstr "Ώρα τοποθέτησης"
+
+msgid "K Constant"
+msgstr "Σταθερά K"
+
+msgid "KM"
+msgstr "χλμ"
+
+msgid "L Tyre Circumference"
+msgstr "Περίμετρος ελαστικού L"
+
+msgid "Last Control Time"
+msgstr "Ώρα τελευταίου ελέγχου"
+
+msgid "Lock In Time"
+msgstr "Ώρα κλειδώματος"
+
+msgid "Lock Out Time"
+msgstr "Ώρα ξεκλειδώματος"
+
+msgid "Manual Input"
+msgstr "Χειροκίνητη εισαγωγή"
+
+msgid "Manufacturer"
+msgstr "Κατασκευαστής"
+
+msgid "Manufacturer Address"
+msgstr "Διεύθυνση κατασκευαστή"
+
+msgid "Manufacturing Date"
+msgstr "Ημερομηνία κατασκευής"
+
+msgid "Max Speed KMH"
+msgstr "Μέγιστη ταχύτητα KMH"
+
+msgid "Minutes"
+msgstr "Λεπτά"
+
+msgid "Msca→vu chain"
+msgstr "Αλυσίδα Msca→vu"
+
+msgid "Name"
+msgstr "Όνομα"
+
+msgid "Nation"
+msgstr "Χώρα"
+
+msgid "Nation Code"
+msgstr "Κωδικός χώρας"
+
+msgid "New Odometer"
+msgstr "Νέο οδόμετρο"
+
+msgid "New Time"
+msgstr "Νέα ώρα"
+
+msgid "Next Calibration Date"
+msgstr "Ημερομηνία επόμενης βαθμονόμησης"
+
+msgid "Number Of Overspeed"
+msgstr "Αριθμός υπερβάσεων ταχύτητας"
+
+msgid "Odometer Insertion KM"
+msgstr "Οδόμετρο κατά την τοποθέτηση KM"
+
+msgid "Odometer KM"
+msgstr "Οδόμετρο KM"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Οδόμετρο κατά την αφαίρεση KM"
+
+msgid "Old Time"
+msgstr "Παλιά ώρα"
+
+msgid "Overspeeding Control"
+msgstr "Έλεγχος υπερβολικής ταχύτητας"
+
+msgid "Overspeeding Events"
+msgstr "Συμβάντα υπερβολικής ταχύτητας"
+
+msgid "Part Number"
+msgstr "Αριθμός εξαρτήματος"
+
+msgid "Plate"
+msgstr "Πινακίδα κυκλοφορίας"
+
+msgid "Public Key Remainder Hex"
+msgstr "Υπόλοιπο δημόσιου κλειδιού Hex"
+
+msgid "Public Key Remainder Length"
+msgstr "Μήκος υπολοίπου δημόσιου κλειδιού"
+
+msgid "Purpose"
+msgstr "Σκοπός"
+
+msgid "Purpose Code"
+msgstr "Κωδικός σκοπού"
+
+msgid "Record Purpose"
+msgstr "Σκοπός εγγραφής"
+
+msgid "Record Purpose Label"
+msgstr "Ετικέτα σκοπού εγγραφής"
+
+msgid "Region"
+msgstr "Περιοχή"
+
+msgid "Registration Nation"
+msgstr "Χώρα κυκλοφορίας"
+
+msgid "Section"
+msgstr "Ενότητα"
+
+msgid "Sensor Approval Number"
+msgstr "Αριθμός έγκρισης αισθητήρα"
+
+msgid "Sensor Pairing Date"
+msgstr "Ημερομηνία αντιστοίχισης αισθητήρα"
+
+msgid "Sensor Serial Number"
+msgstr "Σειριακός αριθμός αισθητήρα"
+
+msgid "Serial Number"
+msgstr "Σειριακός αριθμός"
+
+msgid "Signature Hex"
+msgstr "Υπογραφή Hex"
+
+msgid "Signature Length"
+msgstr "Μήκος υπογραφής"
+
+msgid "Signature Valid"
+msgstr "Έγκυρη υπογραφή"
+
+msgid "Similar Events"
+msgstr "Παρόμοια συμβάντα"
+
+msgid "Software Install Date"
+msgstr "Ημερομηνία εγκατάστασης λογισμικού"
+
+msgid "Software Version"
+msgstr "Έκδοση λογισμικού"
+
+msgid "Specific Conditions"
+msgstr "Ειδικές συνθήκες"
+
+msgid "Speed Limit"
+msgstr "Όριο ταχύτητας"
+
+msgid "Speeds Sample"
+msgstr "Δείγμα ταχυτήτων"
+
+msgid "Surname"
+msgstr "Επώνυμο"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Τεχνικά στοιχεία"
+
+msgid "Timestamp"
+msgstr "Χρονική σήμανση"
+
+msgid "Total Size"
+msgstr "Συνολικό μέγεθος"
+
+msgid "Type Code"
+msgstr "Κωδικός τύπου"
+
+msgid "Tyre Size"
+msgstr "Μέγεθος ελαστικού"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Ταυτοποίηση οχήματος"
+
+msgid "W Constant"
+msgstr "Σταθερά W"
+
+msgid "Withdrawal Time"
+msgstr "Ώρα αφαίρεσης"
+
+msgid "Workshop"
+msgstr "Συνεργείο"
+
+msgid "Workshop Address"
+msgstr "Διεύθυνση συνεργείου"
+
+msgid "Workshop Card"
+msgstr "Κάρτα συνεργείου"
+
+msgid "Workshop Card Expiry"
+msgstr "Λήξη κάρτας συνεργείου"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Γενιά 1  [Παράρτημα 1B]"

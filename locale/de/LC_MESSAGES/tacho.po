@@ -976,3 +976,501 @@ msgstr "🧩  Rohdaten / nicht geparst"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  KARTENDETAILS"
+
+msgid "Additional Info"
+msgstr "Zusatzinformationen"
+
+msgid "All trep signatures valid"
+msgstr "Alle trep-Signaturen gültig"
+
+msgid "Anchored to erca root"
+msgstr "An erca-Root verankert"
+
+msgid "Approval Number"
+msgstr "Zulassungsnummer"
+
+msgid "Average Speed KMH"
+msgstr "Durchschnittsgeschwindigkeit KMH"
+
+msgid "Begin"
+msgstr "Beginn"
+
+msgid "Begin Time"
+msgstr "Startzeit"
+
+msgid "Ca Identifier"
+msgstr "Ca-Kennung"
+
+msgid "Calibration Data"
+msgstr "Kalibrierdaten"
+
+msgid "Calibration VINs"
+msgstr "Kalibrierungs-VINs"
+
+msgid "Calibration Workshops"
+msgstr "Kalibrierungswerkstätten"
+
+msgid "Card"
+msgstr "Karte"
+
+msgid "Card Codriver Begin"
+msgstr "Karte Beifahrer Beginn"
+
+msgid "Card Codriver End"
+msgstr "Karte Beifahrer Ende"
+
+msgid "Card Driver"
+msgstr "Karte Fahrer"
+
+msgid "Card Driver Begin"
+msgstr "Karte Fahrer Beginn"
+
+msgid "Card Driver End"
+msgstr "Karte Fahrer Ende"
+
+msgid "Card Expiry"
+msgstr "Karte gültig bis"
+
+msgid "Card IW Records"
+msgstr "Karte IW-Datensätze"
+
+msgid "Card Number"
+msgstr "Kartennummer"
+
+msgid "Card Slot"
+msgstr "Kartenschacht"
+
+msgid "Company Address"
+msgstr "Firmenanschrift"
+
+msgid "Company Card"
+msgstr "Firmenkarte"
+
+msgid "Company Info"
+msgstr "Firmeninfo"
+
+msgid "Company Locks"
+msgstr "Firmensperren"
+
+msgid "Company Name"
+msgstr "Firmenname"
+
+msgid "Condition"
+msgstr "Zustand"
+
+msgid "Control Activity Data"
+msgstr "Kontrolltätigkeitsdaten"
+
+msgid "Control Card"
+msgstr "Kontrollkarte"
+
+msgid "Control Time"
+msgstr "Kontrollzeit"
+
+msgid "Control Type"
+msgstr "Kontrollart"
+
+msgid "Control Type Label"
+msgstr "Bezeichnung Kontrollart"
+
+msgid "Current Usage"
+msgstr "Aktuelle Nutzung"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Tägliche Aktivitäten 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Tägliche Aktivitäten 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Tägliche Aktivitäten 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Tägliche Aktivitäten 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Tägliche Aktivitäten 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Tägliche Aktivitäten 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Tägliche Aktivitäten 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Tägliche Aktivitäten 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Tägliche Aktivitäten 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Tägliche Aktivitäten 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Tägliche Aktivitäten 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Tägliche Aktivitäten 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Tägliche Aktivitäten 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Tägliche Aktivitäten 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Tägliche Aktivitäten 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Tägliche Aktivitäten 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Tägliche Aktivitäten 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Tägliche Aktivitäten 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Tägliche Aktivitäten 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Tägliche Aktivitäten 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Tägliche Aktivitäten 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Tägliche Aktivitäten 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Tägliche Aktivitäten 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Tägliche Aktivitäten 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Tägliche Aktivitäten 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Tägliche Aktivitäten 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Tägliche Aktivitäten 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Tägliche Aktivitäten 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Tägliche Aktivitäten 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Tägliche Aktivitäten 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Tägliche Aktivitäten 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Tägliche Aktivitäten 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Tägliche Aktivitäten 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Tägliche Aktivitäten 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Tägliche Aktivitäten 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Tägliche Aktivitäten 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Tägliche Aktivitäten 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Tägliche Aktivitäten 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Tägliche Aktivitäten 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Tägliche Aktivitäten 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Tägliche Aktivitäten 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Tägliche Aktivitäten 31/12/2024"
+
+msgid "Description"
+msgstr "Beschreibung"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Detaillierte Geschwindigkeit 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Detaillierte Geschwindigkeit 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Detaillierte Geschwindigkeit 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Detaillierte Geschwindigkeit 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Detaillierte Geschwindigkeit 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Detaillierte Geschwindigkeit 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Downloadzeitraum Beginn"
+
+msgid "Download Period End"
+msgstr "Downloadzeitraum Ende"
+
+msgid "End"
+msgstr "Ende"
+
+msgid "End Time"
+msgstr "Endzeit"
+
+msgid "Entry Type"
+msgstr "Eintragsart"
+
+msgid "Event Type"
+msgstr "Ereignisart"
+
+msgid "Event Type Label"
+msgstr "Bezeichnung Ereignisart"
+
+msgid "Events Data"
+msgstr "Ereignisdaten"
+
+msgid "Fault Purpose"
+msgstr "Fehlerzweck"
+
+msgid "Fault Type"
+msgstr "Fehlerart"
+
+msgid "Faults Data"
+msgstr "Fehlerdaten"
+
+msgid "First Overspeed Since"
+msgstr "Erste Geschwindigkeitsüberschreitung seit"
+
+msgid "Firstname"
+msgstr "Vorname"
+
+msgid "Format"
+msgstr "Dateiformat"
+
+msgid "Holder First Names"
+msgstr "Vornamen des Inhabers"
+
+msgid "Holder Surname"
+msgstr "Nachname des Inhabers"
+
+msgid "Inserted Drivers"
+msgstr "Eingesteckte Fahrer"
+
+msgid "Insertion Time"
+msgstr "Einsteckzeit"
+
+msgid "K Constant"
+msgstr "K-Konstante"
+
+msgid "KM"
+msgstr "km"
+
+msgid "L Tyre Circumference"
+msgstr "Reifenumfang L"
+
+msgid "Last Control Time"
+msgstr "Letzte Kontrollzeit"
+
+msgid "Lock In Time"
+msgstr "Sperrzeit Ein"
+
+msgid "Lock Out Time"
+msgstr "Sperrzeit Aus"
+
+msgid "Manual Input"
+msgstr "Manuelle Eingabe"
+
+msgid "Manufacturer"
+msgstr "Hersteller"
+
+msgid "Manufacturer Address"
+msgstr "Herstelleranschrift"
+
+msgid "Manufacturing Date"
+msgstr "Herstellungsdatum"
+
+msgid "Max Speed KMH"
+msgstr "Höchstgeschwindigkeit KMH"
+
+msgid "Minutes"
+msgstr "Minuten"
+
+msgid "Msca→vu chain"
+msgstr "Msca→vu-Kette"
+
+msgid "Name"
+msgstr "Bezeichnung"
+
+msgid "Nation"
+msgstr "Land"
+
+msgid "Nation Code"
+msgstr "Ländercode"
+
+msgid "New Odometer"
+msgstr "Neuer Wegstreckenzähler"
+
+msgid "New Time"
+msgstr "Neue Zeit"
+
+msgid "Next Calibration Date"
+msgstr "Nächstes Kalibrierdatum"
+
+msgid "Number Of Overspeed"
+msgstr "Anzahl Geschwindigkeitsüberschreitungen"
+
+msgid "Odometer Insertion KM"
+msgstr "Wegstreckenzähler KM bei Einstecken"
+
+msgid "Odometer KM"
+msgstr "Wegstreckenzähler KM"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Wegstreckenzähler KM bei Entnahme"
+
+msgid "Old Time"
+msgstr "Alte Zeit"
+
+msgid "Overspeeding Control"
+msgstr "Kontrolle der Geschwindigkeitsüberschreitung"
+
+msgid "Overspeeding Events"
+msgstr "Geschwindigkeitsüberschreitungen"
+
+msgid "Part Number"
+msgstr "Teilenummer"
+
+msgid "Plate"
+msgstr "Kennzeichen"
+
+msgid "Public Key Remainder Hex"
+msgstr "Rest öffentlicher Schlüssel hex"
+
+msgid "Public Key Remainder Length"
+msgstr "Länge Rest öffentlicher Schlüssel"
+
+msgid "Purpose"
+msgstr "Zweck"
+
+msgid "Purpose Code"
+msgstr "Zweckcode"
+
+msgid "Record Purpose"
+msgstr "Aufzeichnungszweck"
+
+msgid "Record Purpose Label"
+msgstr "Bezeichnung Aufzeichnungszweck"
+
+msgid "Region"
+msgstr "Gebiet"
+
+msgid "Registration Nation"
+msgstr "Zulassungsland"
+
+msgid "Section"
+msgstr "Abschnitt"
+
+msgid "Sensor Approval Number"
+msgstr "Zulassungsnummer Sensor"
+
+msgid "Sensor Pairing Date"
+msgstr "Datum Sensorkopplung"
+
+msgid "Sensor Serial Number"
+msgstr "Seriennummer Sensor"
+
+msgid "Serial Number"
+msgstr "Seriennummer"
+
+msgid "Signature Hex"
+msgstr "Signatur hex"
+
+msgid "Signature Length"
+msgstr "Signaturlänge"
+
+msgid "Signature Valid"
+msgstr "Signatur gültig"
+
+msgid "Similar Events"
+msgstr "Ähnliche Ereignisse"
+
+msgid "Software Install Date"
+msgstr "Software-Installationsdatum"
+
+msgid "Software Version"
+msgstr "Softwareversion"
+
+msgid "Specific Conditions"
+msgstr "Besondere Bedingungen"
+
+msgid "Speed Limit"
+msgstr "Geschwindigkeitsbegrenzung"
+
+msgid "Speeds Sample"
+msgstr "Geschwindigkeitsprobe"
+
+msgid "Surname"
+msgstr "Nachname"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Technische Daten"
+
+msgid "Timestamp"
+msgstr "Zeitstempel"
+
+msgid "Total Size"
+msgstr "Gesamtgröße"
+
+msgid "Type Code"
+msgstr "Typcode"
+
+msgid "Tyre Size"
+msgstr "Reifengröße"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Fahrzeugidentifizierung"
+
+msgid "W Constant"
+msgstr "W-Konstante"
+
+msgid "Withdrawal Time"
+msgstr "Entnahmezeit"
+
+msgid "Workshop"
+msgstr "Werkstatt"
+
+msgid "Workshop Address"
+msgstr "Werkstattanschrift"
+
+msgid "Workshop Card"
+msgstr "Werkstattkarte"
+
+msgid "Workshop Card Expiry"
+msgstr "Werkstattkarte gültig bis"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Generation 1  [Anhang 1B]"

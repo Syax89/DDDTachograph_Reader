@@ -976,3 +976,501 @@ msgstr "🧩  Date brute / neanalizate"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  DETALII CARD"
+
+msgid "Additional Info"
+msgstr "Informații suplimentare"
+
+msgid "All trep signatures valid"
+msgstr "Toate semnăturile trep valide"
+
+msgid "Anchored to erca root"
+msgstr "Ancorat la rădăcina erca"
+
+msgid "Approval Number"
+msgstr "Număr de aprobare"
+
+msgid "Average Speed KMH"
+msgstr "Viteză medie KMH"
+
+msgid "Begin"
+msgstr "Început"
+
+msgid "Begin Time"
+msgstr "Ora de început"
+
+msgid "Ca Identifier"
+msgstr "Identificator Ca"
+
+msgid "Calibration Data"
+msgstr "Date de calibrare"
+
+msgid "Calibration VINs"
+msgstr "VIN de calibrare"
+
+msgid "Calibration Workshops"
+msgstr "Ateliere de calibrare"
+
+msgid "Card"
+msgstr "Cardul"
+
+msgid "Card Codriver Begin"
+msgstr "Început card al doilea conducător"
+
+msgid "Card Codriver End"
+msgstr "Sfârșit card al doilea conducător"
+
+msgid "Card Driver"
+msgstr "Card conducător"
+
+msgid "Card Driver Begin"
+msgstr "Început card conducător"
+
+msgid "Card Driver End"
+msgstr "Sfârșit card conducător"
+
+msgid "Card Expiry"
+msgstr "Expirare card"
+
+msgid "Card IW Records"
+msgstr "Înregistrări IW card"
+
+msgid "Card Number"
+msgstr "Număr card"
+
+msgid "Card Slot"
+msgstr "Slot card"
+
+msgid "Company Address"
+msgstr "Adresa companiei"
+
+msgid "Company Card"
+msgstr "Card companie"
+
+msgid "Company Info"
+msgstr "Info companie"
+
+msgid "Company Locks"
+msgstr "Blocări companie"
+
+msgid "Company Name"
+msgstr "Nume companie"
+
+msgid "Condition"
+msgstr "Stare"
+
+msgid "Control Activity Data"
+msgstr "Date activitate de control"
+
+msgid "Control Card"
+msgstr "Card de control"
+
+msgid "Control Time"
+msgstr "Ora controlului"
+
+msgid "Control Type"
+msgstr "Tip control"
+
+msgid "Control Type Label"
+msgstr "Etichetă tip control"
+
+msgid "Current Usage"
+msgstr "Utilizare curentă"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Activități zilnice 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Activități zilnice 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Activități zilnice 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Activități zilnice 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Activități zilnice 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Activități zilnice 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Activități zilnice 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Activități zilnice 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Activități zilnice 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Activități zilnice 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Activități zilnice 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Activități zilnice 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Activități zilnice 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Activități zilnice 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Activități zilnice 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Activități zilnice 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Activități zilnice 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Activități zilnice 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Activități zilnice 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Activități zilnice 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Activități zilnice 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Activități zilnice 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Activități zilnice 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Activități zilnice 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Activități zilnice 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Activități zilnice 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Activități zilnice 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Activități zilnice 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Activități zilnice 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Activități zilnice 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Activități zilnice 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Activități zilnice 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Activități zilnice 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Activități zilnice 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Activități zilnice 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Activități zilnice 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Activități zilnice 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Activități zilnice 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Activități zilnice 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Activități zilnice 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Activități zilnice 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Activități zilnice 31/12/2024"
+
+msgid "Description"
+msgstr "Descriere"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Viteză detaliată 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Viteză detaliată 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Viteză detaliată 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Viteză detaliată 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Viteză detaliată 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Viteză detaliată 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Început perioadă de descărcare"
+
+msgid "Download Period End"
+msgstr "Sfârșit perioadă de descărcare"
+
+msgid "End"
+msgstr "Sfârșit"
+
+msgid "End Time"
+msgstr "Ora de sfârșit"
+
+msgid "Entry Type"
+msgstr "Tip înregistrare"
+
+msgid "Event Type"
+msgstr "Tip eveniment"
+
+msgid "Event Type Label"
+msgstr "Etichetă tip eveniment"
+
+msgid "Events Data"
+msgstr "Date evenimente"
+
+msgid "Fault Purpose"
+msgstr "Scop defecțiune"
+
+msgid "Fault Type"
+msgstr "Tip defecțiune"
+
+msgid "Faults Data"
+msgstr "Date defecțiuni"
+
+msgid "First Overspeed Since"
+msgstr "Primul exces de viteză din"
+
+msgid "Firstname"
+msgstr "Prenume"
+
+msgid "Format"
+msgstr "Format fișier"
+
+msgid "Holder First Names"
+msgstr "Prenumele titularului"
+
+msgid "Holder Surname"
+msgstr "Numele titularului"
+
+msgid "Inserted Drivers"
+msgstr "Conducători introduși"
+
+msgid "Insertion Time"
+msgstr "Ora introducerii"
+
+msgid "K Constant"
+msgstr "Constanta K"
+
+msgid "KM"
+msgstr "km"
+
+msgid "L Tyre Circumference"
+msgstr "Circumferința anvelopei L"
+
+msgid "Last Control Time"
+msgstr "Ora ultimului control"
+
+msgid "Lock In Time"
+msgstr "Ora blocare intrare"
+
+msgid "Lock Out Time"
+msgstr "Ora blocare ieșire"
+
+msgid "Manual Input"
+msgstr "Introducere manuală"
+
+msgid "Manufacturer"
+msgstr "Producător"
+
+msgid "Manufacturer Address"
+msgstr "Adresa producătorului"
+
+msgid "Manufacturing Date"
+msgstr "Data fabricației"
+
+msgid "Max Speed KMH"
+msgstr "Viteză maximă KMH"
+
+msgid "Minutes"
+msgstr "Minute"
+
+msgid "Msca→vu chain"
+msgstr "Lanț Msca→vu"
+
+msgid "Name"
+msgstr "Nume"
+
+msgid "Nation"
+msgstr "Țară"
+
+msgid "Nation Code"
+msgstr "Cod țară"
+
+msgid "New Odometer"
+msgstr "Odometru nou"
+
+msgid "New Time"
+msgstr "Oră nouă"
+
+msgid "Next Calibration Date"
+msgstr "Data următoarei calibrări"
+
+msgid "Number Of Overspeed"
+msgstr "Număr de excese de viteză"
+
+msgid "Odometer Insertion KM"
+msgstr "Odometru KM la introducere"
+
+msgid "Odometer KM"
+msgstr "Odometru KM"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Odometru KM la extragere"
+
+msgid "Old Time"
+msgstr "Oră veche"
+
+msgid "Overspeeding Control"
+msgstr "Control excese de viteză"
+
+msgid "Overspeeding Events"
+msgstr "Evenimente de exces de viteză"
+
+msgid "Part Number"
+msgstr "Număr piesă"
+
+msgid "Plate"
+msgstr "Număr de înmatriculare"
+
+msgid "Public Key Remainder Hex"
+msgstr "Rest cheie publică hex"
+
+msgid "Public Key Remainder Length"
+msgstr "Lungime rest cheie publică"
+
+msgid "Purpose"
+msgstr "Scop"
+
+msgid "Purpose Code"
+msgstr "Cod scop"
+
+msgid "Record Purpose"
+msgstr "Scop înregistrare"
+
+msgid "Record Purpose Label"
+msgstr "Etichetă scop înregistrare"
+
+msgid "Region"
+msgstr "Regiune"
+
+msgid "Registration Nation"
+msgstr "Țara de înmatriculare"
+
+msgid "Section"
+msgstr "Secțiune"
+
+msgid "Sensor Approval Number"
+msgstr "Număr de aprobare senzor"
+
+msgid "Sensor Pairing Date"
+msgstr "Data împerecherii senzorului"
+
+msgid "Sensor Serial Number"
+msgstr "Număr de serie senzor"
+
+msgid "Serial Number"
+msgstr "Număr de serie"
+
+msgid "Signature Hex"
+msgstr "Semnătură hex"
+
+msgid "Signature Length"
+msgstr "Lungime semnătură"
+
+msgid "Signature Valid"
+msgstr "Semnătură validă"
+
+msgid "Similar Events"
+msgstr "Evenimente similare"
+
+msgid "Software Install Date"
+msgstr "Data instalării software"
+
+msgid "Software Version"
+msgstr "Versiune software"
+
+msgid "Specific Conditions"
+msgstr "Condiții specifice"
+
+msgid "Speed Limit"
+msgstr "Limită de viteză"
+
+msgid "Speeds Sample"
+msgstr "Eșantion de viteze"
+
+msgid "Surname"
+msgstr "Nume"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Info tehnice"
+
+msgid "Timestamp"
+msgstr "Marcă temporală"
+
+msgid "Total Size"
+msgstr "Dimensiune totală"
+
+msgid "Type Code"
+msgstr "Cod tip"
+
+msgid "Tyre Size"
+msgstr "Dimensiune anvelope"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Identificare vehicul"
+
+msgid "W Constant"
+msgstr "Constanta W"
+
+msgid "Withdrawal Time"
+msgstr "Ora extragerii"
+
+msgid "Workshop"
+msgstr "Atelier"
+
+msgid "Workshop Address"
+msgstr "Adresa atelierului"
+
+msgid "Workshop Card"
+msgstr "Card atelier"
+
+msgid "Workshop Card Expiry"
+msgstr "Expirare card atelier"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Generație 1  [Anexa 1B]"

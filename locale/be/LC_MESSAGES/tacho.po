@@ -976,3 +976,501 @@ msgstr "🧩  Неапрацаваныя / неразгледжаныя даны
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  ДАНЫЯ КАРТКІ"
+
+msgid "Additional Info"
+msgstr "Дадатковая інфармацыя"
+
+msgid "All trep signatures valid"
+msgstr "Усе подпісы TREP сапраўдныя"
+
+msgid "Anchored to erca root"
+msgstr "Прывязана да кораня ERCA"
+
+msgid "Approval Number"
+msgstr "Нумар зацвярджэння"
+
+msgid "Average Speed KMH"
+msgstr "Сярэдняя хуткасць KMH"
+
+msgid "Begin"
+msgstr "Пачатак"
+
+msgid "Begin Time"
+msgstr "Час пачатку"
+
+msgid "Ca Identifier"
+msgstr "Ідэнтыфікатар CA"
+
+msgid "Calibration Data"
+msgstr "Даныя каліброўкі"
+
+msgid "Calibration VINs"
+msgstr "VIN каліброўкі"
+
+msgid "Calibration Workshops"
+msgstr "Майстэрні каліброўкі"
+
+msgid "Card"
+msgstr "Картка"
+
+msgid "Card Codriver Begin"
+msgstr "Пачатак другога кіроўцы"
+
+msgid "Card Codriver End"
+msgstr "Канец другога кіроўцы"
+
+msgid "Card Driver"
+msgstr "Картка кіроўцы"
+
+msgid "Card Driver Begin"
+msgstr "Пачатак кіроўцы"
+
+msgid "Card Driver End"
+msgstr "Канец кіроўцы"
+
+msgid "Card Expiry"
+msgstr "Тэрмін дзеяння карткі"
+
+msgid "Card IW Records"
+msgstr "Запісы IW карткі"
+
+msgid "Card Number"
+msgstr "Нумар карткі"
+
+msgid "Card Slot"
+msgstr "Слот карткі"
+
+msgid "Company Address"
+msgstr "Адрас кампаніі"
+
+msgid "Company Card"
+msgstr "Картка кампаніі"
+
+msgid "Company Info"
+msgstr "Інфармацыя пра кампанію"
+
+msgid "Company Locks"
+msgstr "Блакіроўкі кампаніі"
+
+msgid "Company Name"
+msgstr "Назва кампаніі"
+
+msgid "Condition"
+msgstr "Умова"
+
+msgid "Control Activity Data"
+msgstr "Даныя кантролю"
+
+msgid "Control Card"
+msgstr "Картка кантралёра"
+
+msgid "Control Time"
+msgstr "Час кантролю"
+
+msgid "Control Type"
+msgstr "Тып кантролю"
+
+msgid "Control Type Label"
+msgstr "Назва тыпу кантролю"
+
+msgid "Current Usage"
+msgstr "Бягучае выкарыстанне"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Актыўнасць за дзень 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Актыўнасць за дзень 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Актыўнасць за дзень 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Актыўнасць за дзень 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Актыўнасць за дзень 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Актыўнасць за дзень 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Актыўнасць за дзень 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Актыўнасць за дзень 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Актыўнасць за дзень 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Актыўнасць за дзень 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Актыўнасць за дзень 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Актыўнасць за дзень 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Актыўнасць за дзень 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Актыўнасць за дзень 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Актыўнасць за дзень 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Актыўнасць за дзень 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Актыўнасць за дзень 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Актыўнасць за дзень 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Актыўнасць за дзень 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Актыўнасць за дзень 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Актыўнасць за дзень 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Актыўнасць за дзень 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Актыўнасць за дзень 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Актыўнасць за дзень 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Актыўнасць за дзень 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Актыўнасць за дзень 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Актыўнасць за дзень 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Актыўнасць за дзень 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Актыўнасць за дзень 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Актыўнасць за дзень 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Актыўнасць за дзень 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Актыўнасць за дзень 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Актыўнасць за дзень 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Актыўнасць за дзень 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Актыўнасць за дзень 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Актыўнасць за дзень 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Актыўнасць за дзень 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Актыўнасць за дзень 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Актыўнасць за дзень 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Актыўнасць за дзень 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Актыўнасць за дзень 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Актыўнасць за дзень 31/12/2024"
+
+msgid "Description"
+msgstr "Апісанне"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Дэталёвая хуткасць 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Дэталёвая хуткасць 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Дэталёвая хуткасць 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Дэталёвая хуткасць 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Дэталёвая хуткасць 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Дэталёвая хуткасць 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Пачатак перыяду загрузкі"
+
+msgid "Download Period End"
+msgstr "Канец перыяду загрузкі"
+
+msgid "End"
+msgstr "Канец"
+
+msgid "End Time"
+msgstr "Час заканчэння"
+
+msgid "Entry Type"
+msgstr "Тып запісу"
+
+msgid "Event Type"
+msgstr "Тып падзеі"
+
+msgid "Event Type Label"
+msgstr "Назва тыпу падзеі"
+
+msgid "Events Data"
+msgstr "Даныя падзей"
+
+msgid "Fault Purpose"
+msgstr "Прызначэнне няспраўнасці"
+
+msgid "Fault Type"
+msgstr "Тып няспраўнасці"
+
+msgid "Faults Data"
+msgstr "Даныя няспраўнасцяў"
+
+msgid "First Overspeed Since"
+msgstr "Першае перавышэнне з"
+
+msgid "Firstname"
+msgstr "Імя"
+
+msgid "Format"
+msgstr "Фармат"
+
+msgid "Holder First Names"
+msgstr "Імёны ўладальніка"
+
+msgid "Holder Surname"
+msgstr "Прозвішча ўладальніка"
+
+msgid "Inserted Drivers"
+msgstr "Устаўленыя кіроўцы"
+
+msgid "Insertion Time"
+msgstr "Час устаўкі"
+
+msgid "K Constant"
+msgstr "Канстанта K"
+
+msgid "KM"
+msgstr "Км"
+
+msgid "L Tyre Circumference"
+msgstr "Даўжыня кола шыны L"
+
+msgid "Last Control Time"
+msgstr "Апошні час кантролю"
+
+msgid "Lock In Time"
+msgstr "Час блакіроўкі"
+
+msgid "Lock Out Time"
+msgstr "Час разблакіроўкі"
+
+msgid "Manual Input"
+msgstr "Ручны ўвод"
+
+msgid "Manufacturer"
+msgstr "Вытворца"
+
+msgid "Manufacturer Address"
+msgstr "Адрас вытворцы"
+
+msgid "Manufacturing Date"
+msgstr "Дата вырабу"
+
+msgid "Max Speed KMH"
+msgstr "Максімальная хуткасць KMH"
+
+msgid "Minutes"
+msgstr "Хвіліны"
+
+msgid "Msca→vu chain"
+msgstr "Ланцуг MSCA→VU"
+
+msgid "Name"
+msgstr "Назва"
+
+msgid "Nation"
+msgstr "Краіна"
+
+msgid "Nation Code"
+msgstr "Код краіны"
+
+msgid "New Odometer"
+msgstr "Новы адаметр"
+
+msgid "New Time"
+msgstr "Новы час"
+
+msgid "Next Calibration Date"
+msgstr "Дата наступнай каліброўкі"
+
+msgid "Number Of Overspeed"
+msgstr "Колькасць перавышэнняў"
+
+msgid "Odometer Insertion KM"
+msgstr "Адаметр пры ўстаўцы KM"
+
+msgid "Odometer KM"
+msgstr "Адаметр KM"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Адаметр пры выманні KM"
+
+msgid "Old Time"
+msgstr "Стары час"
+
+msgid "Overspeeding Control"
+msgstr "Кантроль перавышэння хуткасці"
+
+msgid "Overspeeding Events"
+msgstr "Падзеі перавышэння хуткасці"
+
+msgid "Part Number"
+msgstr "Нумар дэталі"
+
+msgid "Plate"
+msgstr "Нумарны знак"
+
+msgid "Public Key Remainder Hex"
+msgstr "Рэшта адкрытага ключа hex"
+
+msgid "Public Key Remainder Length"
+msgstr "Даўжыня рэшты адкрытага ключа"
+
+msgid "Purpose"
+msgstr "Прызначэнне"
+
+msgid "Purpose Code"
+msgstr "Код прызначэння"
+
+msgid "Record Purpose"
+msgstr "Прызначэнне запісу"
+
+msgid "Record Purpose Label"
+msgstr "Назва прызначэння запісу"
+
+msgid "Region"
+msgstr "Рэгіён"
+
+msgid "Registration Nation"
+msgstr "Краіна рэгістрацыі"
+
+msgid "Section"
+msgstr "Раздзел"
+
+msgid "Sensor Approval Number"
+msgstr "Нумар зацвярджэння датчыка"
+
+msgid "Sensor Pairing Date"
+msgstr "Дата спалучэння датчыка"
+
+msgid "Sensor Serial Number"
+msgstr "Серыйны нумар датчыка"
+
+msgid "Serial Number"
+msgstr "Серыйны нумар"
+
+msgid "Signature Hex"
+msgstr "Подпіс hex"
+
+msgid "Signature Length"
+msgstr "Даўжыня подпісу"
+
+msgid "Signature Valid"
+msgstr "Подпіс сапраўдны"
+
+msgid "Similar Events"
+msgstr "Падобныя падзеі"
+
+msgid "Software Install Date"
+msgstr "Дата ўсталявання ПЗ"
+
+msgid "Software Version"
+msgstr "Версія ПЗ"
+
+msgid "Specific Conditions"
+msgstr "Асаблівыя ўмовы"
+
+msgid "Speed Limit"
+msgstr "Абмежаванне хуткасці"
+
+msgid "Speeds Sample"
+msgstr "Выбарка хуткасцей"
+
+msgid "Surname"
+msgstr "Прозвішча"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Тэхнічная інфармацыя"
+
+msgid "Timestamp"
+msgstr "Метка часу"
+
+msgid "Total Size"
+msgstr "Агульны памер"
+
+msgid "Type Code"
+msgstr "Код тыпу"
+
+msgid "Tyre Size"
+msgstr "Памер шын"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Ідэнтыфікацыя транспартнага сродку"
+
+msgid "W Constant"
+msgstr "Канстанта W"
+
+msgid "Withdrawal Time"
+msgstr "Час вымання"
+
+msgid "Workshop"
+msgstr "Майстэрня"
+
+msgid "Workshop Address"
+msgstr "Адрас майстэрні"
+
+msgid "Workshop Card"
+msgstr "Картка майстэрні"
+
+msgid "Workshop Card Expiry"
+msgstr "Тэрмін дзеяння карткі майстэрні"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Пакаленне 1  [Дадатак 1B]"

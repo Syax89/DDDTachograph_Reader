@@ -976,3 +976,501 @@ msgstr "🧩  Raaka / purkamaton data"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  KORTIN TIEDOT"
+
+msgid "Additional Info"
+msgstr "Lisätiedot"
+
+msgid "All trep signatures valid"
+msgstr "Kaikki trep-allekirjoitukset kelvollisia"
+
+msgid "Anchored to erca root"
+msgstr "Ankkuroitu erca-juureen"
+
+msgid "Approval Number"
+msgstr "Hyväksyntänumero"
+
+msgid "Average Speed KMH"
+msgstr "Keskinopeus KMH"
+
+msgid "Begin"
+msgstr "Alku"
+
+msgid "Begin Time"
+msgstr "Alkuaika"
+
+msgid "Ca Identifier"
+msgstr "Ca-tunniste"
+
+msgid "Calibration Data"
+msgstr "Kalibrointitiedot"
+
+msgid "Calibration VINs"
+msgstr "Kalibroinnin VIN-tunnukset"
+
+msgid "Calibration Workshops"
+msgstr "Kalibrointikorjaamot"
+
+msgid "Card"
+msgstr "Kortti"
+
+msgid "Card Codriver Begin"
+msgstr "Kortin toisen kuljettajan alku"
+
+msgid "Card Codriver End"
+msgstr "Kortin toisen kuljettajan loppu"
+
+msgid "Card Driver"
+msgstr "Kortin kuljettaja"
+
+msgid "Card Driver Begin"
+msgstr "Kortin kuljettajan alku"
+
+msgid "Card Driver End"
+msgstr "Kortin kuljettajan loppu"
+
+msgid "Card Expiry"
+msgstr "Kortin voimassaolo"
+
+msgid "Card IW Records"
+msgstr "Kortin IW-tietueet"
+
+msgid "Card Number"
+msgstr "Kortin numero"
+
+msgid "Card Slot"
+msgstr "Korttipaikka"
+
+msgid "Company Address"
+msgstr "Yrityksen osoite"
+
+msgid "Company Card"
+msgstr "Yrityskortti"
+
+msgid "Company Info"
+msgstr "Yritystiedot"
+
+msgid "Company Locks"
+msgstr "Yrityksen lukot"
+
+msgid "Company Name"
+msgstr "Yrityksen nimi"
+
+msgid "Condition"
+msgstr "Ehto"
+
+msgid "Control Activity Data"
+msgstr "Valvontatoiminnan tiedot"
+
+msgid "Control Card"
+msgstr "Valvontakortti"
+
+msgid "Control Time"
+msgstr "Valvonta-aika"
+
+msgid "Control Type"
+msgstr "Valvontatyyppi"
+
+msgid "Control Type Label"
+msgstr "Valvontatyypin selite"
+
+msgid "Current Usage"
+msgstr "Nykyinen käyttö"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Päivittäiset toiminnot 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Päivittäiset toiminnot 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Päivittäiset toiminnot 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Päivittäiset toiminnot 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Päivittäiset toiminnot 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Päivittäiset toiminnot 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Päivittäiset toiminnot 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Päivittäiset toiminnot 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Päivittäiset toiminnot 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Päivittäiset toiminnot 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Päivittäiset toiminnot 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Päivittäiset toiminnot 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Päivittäiset toiminnot 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Päivittäiset toiminnot 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Päivittäiset toiminnot 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Päivittäiset toiminnot 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Päivittäiset toiminnot 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Päivittäiset toiminnot 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Päivittäiset toiminnot 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Päivittäiset toiminnot 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Päivittäiset toiminnot 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Päivittäiset toiminnot 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Päivittäiset toiminnot 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Päivittäiset toiminnot 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Päivittäiset toiminnot 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Päivittäiset toiminnot 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Päivittäiset toiminnot 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Päivittäiset toiminnot 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Päivittäiset toiminnot 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Päivittäiset toiminnot 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Päivittäiset toiminnot 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Päivittäiset toiminnot 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Päivittäiset toiminnot 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Päivittäiset toiminnot 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Päivittäiset toiminnot 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Päivittäiset toiminnot 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Päivittäiset toiminnot 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Päivittäiset toiminnot 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Päivittäiset toiminnot 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Päivittäiset toiminnot 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Päivittäiset toiminnot 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Päivittäiset toiminnot 31/12/2024"
+
+msgid "Description"
+msgstr "Kuvaus"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Yksityiskohtainen nopeus 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Yksityiskohtainen nopeus 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Yksityiskohtainen nopeus 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Yksityiskohtainen nopeus 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Yksityiskohtainen nopeus 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Yksityiskohtainen nopeus 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Latausjakson alku"
+
+msgid "Download Period End"
+msgstr "Latausjakson loppu"
+
+msgid "End"
+msgstr "Loppu"
+
+msgid "End Time"
+msgstr "Loppuaika"
+
+msgid "Entry Type"
+msgstr "Merkintätyyppi"
+
+msgid "Event Type"
+msgstr "Tapahtumatyyppi"
+
+msgid "Event Type Label"
+msgstr "Tapahtumatyypin selite"
+
+msgid "Events Data"
+msgstr "Tapahtumatiedot"
+
+msgid "Fault Purpose"
+msgstr "Vian tarkoitus"
+
+msgid "Fault Type"
+msgstr "Vikatyyppi"
+
+msgid "Faults Data"
+msgstr "Vikatiedot"
+
+msgid "First Overspeed Since"
+msgstr "Ensimmäinen ylinopeus alkaen"
+
+msgid "Firstname"
+msgstr "Etunimi"
+
+msgid "Format"
+msgstr "Formaatti"
+
+msgid "Holder First Names"
+msgstr "Haltijan etunimet"
+
+msgid "Holder Surname"
+msgstr "Haltijan sukunimi"
+
+msgid "Inserted Drivers"
+msgstr "Asetetut kuljettajat"
+
+msgid "Insertion Time"
+msgstr "Asetusaika"
+
+msgid "K Constant"
+msgstr "K-vakio"
+
+msgid "KM"
+msgstr "km"
+
+msgid "L Tyre Circumference"
+msgstr "L Renkaan ympärysmitta"
+
+msgid "Last Control Time"
+msgstr "Viimeisin valvonta-aika"
+
+msgid "Lock In Time"
+msgstr "Sisäänlukitusaika"
+
+msgid "Lock Out Time"
+msgstr "Uloslukitusaika"
+
+msgid "Manual Input"
+msgstr "Manuaalinen syöttö"
+
+msgid "Manufacturer"
+msgstr "Valmistaja"
+
+msgid "Manufacturer Address"
+msgstr "Valmistajan osoite"
+
+msgid "Manufacturing Date"
+msgstr "Valmistuspäivä"
+
+msgid "Max Speed KMH"
+msgstr "Enimmäisnopeus KMH"
+
+msgid "Minutes"
+msgstr "Minuutit"
+
+msgid "Msca→vu chain"
+msgstr "Msca→vu-ketju"
+
+msgid "Name"
+msgstr "Nimi"
+
+msgid "Nation"
+msgstr "Maa"
+
+msgid "Nation Code"
+msgstr "Maakoodi"
+
+msgid "New Odometer"
+msgstr "Uusi matkamittari"
+
+msgid "New Time"
+msgstr "Uusi aika"
+
+msgid "Next Calibration Date"
+msgstr "Seuraava kalibrointipäivä"
+
+msgid "Number Of Overspeed"
+msgstr "Ylinopeuksien määrä"
+
+msgid "Odometer Insertion KM"
+msgstr "Matkamittari asetettaessa km"
+
+msgid "Odometer KM"
+msgstr "Matkamittari km"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Matkamittari poistettaessa km"
+
+msgid "Old Time"
+msgstr "Vanha aika"
+
+msgid "Overspeeding Control"
+msgstr "Ylinopeuden valvonta"
+
+msgid "Overspeeding Events"
+msgstr "Ylinopeustapahtumat"
+
+msgid "Part Number"
+msgstr "Osanumero"
+
+msgid "Plate"
+msgstr "Rekisterikilpi"
+
+msgid "Public Key Remainder Hex"
+msgstr "Julkisen avaimen jäännös (hex)"
+
+msgid "Public Key Remainder Length"
+msgstr "Julkisen avaimen jäännöksen pituus"
+
+msgid "Purpose"
+msgstr "Tarkoitus"
+
+msgid "Purpose Code"
+msgstr "Tarkoituskoodi"
+
+msgid "Record Purpose"
+msgstr "Merkinnän tarkoitus"
+
+msgid "Record Purpose Label"
+msgstr "Merkinnän tarkoituksen selite"
+
+msgid "Region"
+msgstr "Alue"
+
+msgid "Registration Nation"
+msgstr "Rekisteröintimaa"
+
+msgid "Section"
+msgstr "Osio"
+
+msgid "Sensor Approval Number"
+msgstr "Anturin hyväksyntänumero"
+
+msgid "Sensor Pairing Date"
+msgstr "Anturin parituspäivä"
+
+msgid "Sensor Serial Number"
+msgstr "Anturin sarjanumero"
+
+msgid "Serial Number"
+msgstr "Sarjanumero"
+
+msgid "Signature Hex"
+msgstr "Allekirjoitus (hex)"
+
+msgid "Signature Length"
+msgstr "Allekirjoituksen pituus"
+
+msgid "Signature Valid"
+msgstr "Allekirjoitus kelvollinen"
+
+msgid "Similar Events"
+msgstr "Samankaltaiset tapahtumat"
+
+msgid "Software Install Date"
+msgstr "Ohjelmiston asennuspäivä"
+
+msgid "Software Version"
+msgstr "Ohjelmistoversio"
+
+msgid "Specific Conditions"
+msgstr "Erityisehdot"
+
+msgid "Speed Limit"
+msgstr "Nopeusrajoitus"
+
+msgid "Speeds Sample"
+msgstr "Nopeusnäytteet"
+
+msgid "Surname"
+msgstr "Sukunimi"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Tekniset tiedot"
+
+msgid "Timestamp"
+msgstr "Aikaleima"
+
+msgid "Total Size"
+msgstr "Kokonaiskoko"
+
+msgid "Type Code"
+msgstr "Tyyppikoodi"
+
+msgid "Tyre Size"
+msgstr "Renkaan koko"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Ajoneuvon tunnistus"
+
+msgid "W Constant"
+msgstr "W-vakio"
+
+msgid "Withdrawal Time"
+msgstr "Poistoaika"
+
+msgid "Workshop"
+msgstr "Korjaamo"
+
+msgid "Workshop Address"
+msgstr "Korjaamon osoite"
+
+msgid "Workshop Card"
+msgstr "Korjaamokortti"
+
+msgid "Workshop Card Expiry"
+msgstr "Korjaamokortin voimassaolo"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Sukupolvi 1  [Liite 1B]"

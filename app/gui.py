@@ -3346,7 +3346,7 @@ class TachoExplorer(tk.Tk):
                     elif isinstance(item_data[0], dict):
                         cols, rows = _rows_for(item_data, None)
                     else:
-                        cols, rows = (["Value"], [[fmt_val(v)] for v in item_data])
+                        cols, rows = ([_("Value")], [[fmt_val(v)] for v in item_data])
                 elif isinstance(item_data, dict) and item_data:
                     if item_name == "ECDSA Signature Verification":
                         # certificate_temporal_validity has its own section

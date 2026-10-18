@@ -976,3 +976,501 @@ msgstr "🧩  Ham / çözülmemiş veri"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  KART AYRINTILARI"
+
+msgid "Additional Info"
+msgstr "Ek bilgi"
+
+msgid "All trep signatures valid"
+msgstr "Tüm TREP imzaları geçerli"
+
+msgid "Anchored to erca root"
+msgstr "ERCA köküne bağlı"
+
+msgid "Approval Number"
+msgstr "Onay numarası"
+
+msgid "Average Speed KMH"
+msgstr "Ortalama hız KMH"
+
+msgid "Begin"
+msgstr "Başlangıç"
+
+msgid "Begin Time"
+msgstr "Başlangıç zamanı"
+
+msgid "Ca Identifier"
+msgstr "CA tanımlayıcısı"
+
+msgid "Calibration Data"
+msgstr "Kalibrasyon verileri"
+
+msgid "Calibration VINs"
+msgstr "Kalibrasyon VIN"
+
+msgid "Calibration Workshops"
+msgstr "Kalibrasyon atölyeleri"
+
+msgid "Card"
+msgstr "Kart"
+
+msgid "Card Codriver Begin"
+msgstr "Yardımcı sürücü başlangıcı"
+
+msgid "Card Codriver End"
+msgstr "Yardımcı sürücü bitişi"
+
+msgid "Card Driver"
+msgstr "Sürücü kartı"
+
+msgid "Card Driver Begin"
+msgstr "Sürücü başlangıcı"
+
+msgid "Card Driver End"
+msgstr "Sürücü bitişi"
+
+msgid "Card Expiry"
+msgstr "Kart geçerliliği"
+
+msgid "Card IW Records"
+msgstr "Kart IW kayıtları"
+
+msgid "Card Number"
+msgstr "Kart numarası"
+
+msgid "Card Slot"
+msgstr "Kart yuvası"
+
+msgid "Company Address"
+msgstr "Şirket adresi"
+
+msgid "Company Card"
+msgstr "Şirket kartı"
+
+msgid "Company Info"
+msgstr "Şirket bilgileri"
+
+msgid "Company Locks"
+msgstr "Şirket kilitleri"
+
+msgid "Company Name"
+msgstr "Şirket adı"
+
+msgid "Condition"
+msgstr "Koşul"
+
+msgid "Control Activity Data"
+msgstr "Denetim etkinliği verileri"
+
+msgid "Control Card"
+msgstr "Denetim kartı"
+
+msgid "Control Time"
+msgstr "Denetim zamanı"
+
+msgid "Control Type"
+msgstr "Denetim türü"
+
+msgid "Control Type Label"
+msgstr "Denetim türü etiketi"
+
+msgid "Current Usage"
+msgstr "Mevcut kullanım"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Günlük etkinlikler 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Günlük etkinlikler 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Günlük etkinlikler 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Günlük etkinlikler 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Günlük etkinlikler 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Günlük etkinlikler 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Günlük etkinlikler 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Günlük etkinlikler 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Günlük etkinlikler 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Günlük etkinlikler 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Günlük etkinlikler 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Günlük etkinlikler 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Günlük etkinlikler 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Günlük etkinlikler 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Günlük etkinlikler 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Günlük etkinlikler 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Günlük etkinlikler 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Günlük etkinlikler 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Günlük etkinlikler 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Günlük etkinlikler 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Günlük etkinlikler 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Günlük etkinlikler 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Günlük etkinlikler 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Günlük etkinlikler 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Günlük etkinlikler 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Günlük etkinlikler 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Günlük etkinlikler 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Günlük etkinlikler 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Günlük etkinlikler 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Günlük etkinlikler 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Günlük etkinlikler 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Günlük etkinlikler 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Günlük etkinlikler 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Günlük etkinlikler 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Günlük etkinlikler 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Günlük etkinlikler 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Günlük etkinlikler 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Günlük etkinlikler 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Günlük etkinlikler 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Günlük etkinlikler 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Günlük etkinlikler 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Günlük etkinlikler 31/12/2024"
+
+msgid "Description"
+msgstr "Açıklama"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Ayrıntılı hız 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Ayrıntılı hız 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Ayrıntılı hız 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Ayrıntılı hız 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Ayrıntılı hız 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Ayrıntılı hız 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "İndirme dönemi başlangıcı"
+
+msgid "Download Period End"
+msgstr "İndirme dönemi bitişi"
+
+msgid "End"
+msgstr "Bitiş"
+
+msgid "End Time"
+msgstr "Bitiş zamanı"
+
+msgid "Entry Type"
+msgstr "Giriş türü"
+
+msgid "Event Type"
+msgstr "Olay türü"
+
+msgid "Event Type Label"
+msgstr "Olay türü etiketi"
+
+msgid "Events Data"
+msgstr "Olay verileri"
+
+msgid "Fault Purpose"
+msgstr "Arıza amacı"
+
+msgid "Fault Type"
+msgstr "Arıza türü"
+
+msgid "Faults Data"
+msgstr "Arıza verileri"
+
+msgid "First Overspeed Since"
+msgstr "İlk aşırı hız tarihi"
+
+msgid "Firstname"
+msgstr "Ad"
+
+msgid "Format"
+msgstr "Biçim"
+
+msgid "Holder First Names"
+msgstr "Kart sahibinin adları"
+
+msgid "Holder Surname"
+msgstr "Kart sahibinin soyadı"
+
+msgid "Inserted Drivers"
+msgstr "Takılı sürücüler"
+
+msgid "Insertion Time"
+msgstr "Takma zamanı"
+
+msgid "K Constant"
+msgstr "K sabiti"
+
+msgid "KM"
+msgstr "Km"
+
+msgid "L Tyre Circumference"
+msgstr "L lastik çevresi"
+
+msgid "Last Control Time"
+msgstr "Son denetim zamanı"
+
+msgid "Lock In Time"
+msgstr "Kilitlenme zamanı"
+
+msgid "Lock Out Time"
+msgstr "Kilit açılma zamanı"
+
+msgid "Manual Input"
+msgstr "Manuel giriş"
+
+msgid "Manufacturer"
+msgstr "Üretici"
+
+msgid "Manufacturer Address"
+msgstr "Üretici adresi"
+
+msgid "Manufacturing Date"
+msgstr "Üretim tarihi"
+
+msgid "Max Speed KMH"
+msgstr "Maks. hız KMH"
+
+msgid "Minutes"
+msgstr "Dakika"
+
+msgid "Msca→vu chain"
+msgstr "MSCA→VU zinciri"
+
+msgid "Name"
+msgstr "Ad"
+
+msgid "Nation"
+msgstr "Ülke"
+
+msgid "Nation Code"
+msgstr "Ülke kodu"
+
+msgid "New Odometer"
+msgstr "Yeni odometre"
+
+msgid "New Time"
+msgstr "Yeni zaman"
+
+msgid "Next Calibration Date"
+msgstr "Sonraki kalibrasyon tarihi"
+
+msgid "Number Of Overspeed"
+msgstr "Aşırı hız sayısı"
+
+msgid "Odometer Insertion KM"
+msgstr "Takma odometre KM"
+
+msgid "Odometer KM"
+msgstr "Odometre KM"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Çıkarma odometre KM"
+
+msgid "Old Time"
+msgstr "Eski zaman"
+
+msgid "Overspeeding Control"
+msgstr "Aşırı hız denetimi"
+
+msgid "Overspeeding Events"
+msgstr "Aşırı hız olayları"
+
+msgid "Part Number"
+msgstr "Parça numarası"
+
+msgid "Plate"
+msgstr "Plaka"
+
+msgid "Public Key Remainder Hex"
+msgstr "Ortak anahtar kalanı hex"
+
+msgid "Public Key Remainder Length"
+msgstr "Ortak anahtar kalanı uzunluğu"
+
+msgid "Purpose"
+msgstr "Amaç"
+
+msgid "Purpose Code"
+msgstr "Amaç kodu"
+
+msgid "Record Purpose"
+msgstr "Kayıt amacı"
+
+msgid "Record Purpose Label"
+msgstr "Kayıt amacı etiketi"
+
+msgid "Region"
+msgstr "Bölge"
+
+msgid "Registration Nation"
+msgstr "Tescil ülkesi"
+
+msgid "Section"
+msgstr "Bölüm"
+
+msgid "Sensor Approval Number"
+msgstr "Sensör onay numarası"
+
+msgid "Sensor Pairing Date"
+msgstr "Sensör eşleştirme tarihi"
+
+msgid "Sensor Serial Number"
+msgstr "Sensör seri numarası"
+
+msgid "Serial Number"
+msgstr "Seri numarası"
+
+msgid "Signature Hex"
+msgstr "İmza hex"
+
+msgid "Signature Length"
+msgstr "İmza uzunluğu"
+
+msgid "Signature Valid"
+msgstr "İmza geçerli"
+
+msgid "Similar Events"
+msgstr "Benzer olaylar"
+
+msgid "Software Install Date"
+msgstr "Yazılım kurulum tarihi"
+
+msgid "Software Version"
+msgstr "Yazılım sürümü"
+
+msgid "Specific Conditions"
+msgstr "Özel koşullar"
+
+msgid "Speed Limit"
+msgstr "Hız sınırı"
+
+msgid "Speeds Sample"
+msgstr "Hız örneği"
+
+msgid "Surname"
+msgstr "Soyadı"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Teknik bilgi"
+
+msgid "Timestamp"
+msgstr "Zaman damgası"
+
+msgid "Total Size"
+msgstr "Toplam boyut"
+
+msgid "Type Code"
+msgstr "Tür kodu"
+
+msgid "Tyre Size"
+msgstr "Lastik ebadı"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Araç tanımı"
+
+msgid "W Constant"
+msgstr "W sabiti"
+
+msgid "Withdrawal Time"
+msgstr "Çıkarma zamanı"
+
+msgid "Workshop"
+msgstr "Atölye"
+
+msgid "Workshop Address"
+msgstr "Atölye adresi"
+
+msgid "Workshop Card"
+msgstr "Atölye kartı"
+
+msgid "Workshop Card Expiry"
+msgstr "Atölye kartı geçerliliği"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Nesil 1  [Ek 1B]"

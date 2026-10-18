@@ -976,3 +976,501 @@ msgstr "🧩  Surové / nesparsované údaje"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  PODROBNOSTI KARTY"
+
+msgid "Additional Info"
+msgstr "Ďalšie informácie"
+
+msgid "All trep signatures valid"
+msgstr "Všetky podpisy trep platné"
+
+msgid "Anchored to erca root"
+msgstr "Ukotvené ku koreňu erca"
+
+msgid "Approval Number"
+msgstr "Číslo schválenia"
+
+msgid "Average Speed KMH"
+msgstr "Priemerná rýchlosť KMH"
+
+msgid "Begin"
+msgstr "Začiatok"
+
+msgid "Begin Time"
+msgstr "Čas začiatku"
+
+msgid "Ca Identifier"
+msgstr "Identifikátor Ca"
+
+msgid "Calibration Data"
+msgstr "Kalibračné údaje"
+
+msgid "Calibration VINs"
+msgstr "VINs kalibrácie"
+
+msgid "Calibration Workshops"
+msgstr "Servisy kalibrácie"
+
+msgid "Card"
+msgstr "Karta"
+
+msgid "Card Codriver Begin"
+msgstr "Začiatok karty druhého vodiča"
+
+msgid "Card Codriver End"
+msgstr "Koniec karty druhého vodiča"
+
+msgid "Card Driver"
+msgstr "Karta vodiča"
+
+msgid "Card Driver Begin"
+msgstr "Začiatok karty vodiča"
+
+msgid "Card Driver End"
+msgstr "Koniec karty vodiča"
+
+msgid "Card Expiry"
+msgstr "Platnosť karty"
+
+msgid "Card IW Records"
+msgstr "Záznamy IW karty"
+
+msgid "Card Number"
+msgstr "Číslo karty"
+
+msgid "Card Slot"
+msgstr "Zásuvka karty"
+
+msgid "Company Address"
+msgstr "Adresa spoločnosti"
+
+msgid "Company Card"
+msgstr "Karta spoločnosti"
+
+msgid "Company Info"
+msgstr "Informácie o spoločnosti"
+
+msgid "Company Locks"
+msgstr "Uzamknutia spoločnosti"
+
+msgid "Company Name"
+msgstr "Názov spoločnosti"
+
+msgid "Condition"
+msgstr "Podmienka"
+
+msgid "Control Activity Data"
+msgstr "Údaje o kontrolnej činnosti"
+
+msgid "Control Card"
+msgstr "Kontrolná karta"
+
+msgid "Control Time"
+msgstr "Čas kontroly"
+
+msgid "Control Type"
+msgstr "Typ kontroly"
+
+msgid "Control Type Label"
+msgstr "Označenie typu kontroly"
+
+msgid "Current Usage"
+msgstr "Aktuálne využitie"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Denné aktivity 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Denné aktivity 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Denné aktivity 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Denné aktivity 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Denné aktivity 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Denné aktivity 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Denné aktivity 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Denné aktivity 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Denné aktivity 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Denné aktivity 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Denné aktivity 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Denné aktivity 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Denné aktivity 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Denné aktivity 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Denné aktivity 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Denné aktivity 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Denné aktivity 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Denné aktivity 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Denné aktivity 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Denné aktivity 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Denné aktivity 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Denné aktivity 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Denné aktivity 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Denné aktivity 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Denné aktivity 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Denné aktivity 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Denné aktivity 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Denné aktivity 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Denné aktivity 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Denné aktivity 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Denné aktivity 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Denné aktivity 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Denné aktivity 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Denné aktivity 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Denné aktivity 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Denné aktivity 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Denné aktivity 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Denné aktivity 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Denné aktivity 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Denné aktivity 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Denné aktivity 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Denné aktivity 31/12/2024"
+
+msgid "Description"
+msgstr "Popis"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Podrobná rýchlosť 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Podrobná rýchlosť 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Podrobná rýchlosť 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Podrobná rýchlosť 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Podrobná rýchlosť 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Podrobná rýchlosť 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Začiatok obdobia sťahovania"
+
+msgid "Download Period End"
+msgstr "Koniec obdobia sťahovania"
+
+msgid "End"
+msgstr "Koniec"
+
+msgid "End Time"
+msgstr "Čas konca"
+
+msgid "Entry Type"
+msgstr "Typ záznamu"
+
+msgid "Event Type"
+msgstr "Typ udalosti"
+
+msgid "Event Type Label"
+msgstr "Označenie typu udalosti"
+
+msgid "Events Data"
+msgstr "Údaje o udalostiach"
+
+msgid "Fault Purpose"
+msgstr "Účel poruchy"
+
+msgid "Fault Type"
+msgstr "Typ poruchy"
+
+msgid "Faults Data"
+msgstr "Údaje o poruchách"
+
+msgid "First Overspeed Since"
+msgstr "Prvé prekročenie rýchlosti od"
+
+msgid "Firstname"
+msgstr "Krstné meno"
+
+msgid "Format"
+msgstr "Formát"
+
+msgid "Holder First Names"
+msgstr "Krstné mená držiteľa"
+
+msgid "Holder Surname"
+msgstr "Priezvisko držiteľa"
+
+msgid "Inserted Drivers"
+msgstr "Vložení vodiči"
+
+msgid "Insertion Time"
+msgstr "Čas vloženia"
+
+msgid "K Constant"
+msgstr "Konštanta K"
+
+msgid "KM"
+msgstr "km"
+
+msgid "L Tyre Circumference"
+msgstr "Obvod pneumatiky L"
+
+msgid "Last Control Time"
+msgstr "Čas poslednej kontroly"
+
+msgid "Lock In Time"
+msgstr "Čas uzamknutia"
+
+msgid "Lock Out Time"
+msgstr "Čas odomknutia"
+
+msgid "Manual Input"
+msgstr "Ručné zadanie"
+
+msgid "Manufacturer"
+msgstr "Výrobca"
+
+msgid "Manufacturer Address"
+msgstr "Adresa výrobcu"
+
+msgid "Manufacturing Date"
+msgstr "Dátum výroby"
+
+msgid "Max Speed KMH"
+msgstr "Maximálna rýchlosť KMH"
+
+msgid "Minutes"
+msgstr "Minúty"
+
+msgid "Msca→vu chain"
+msgstr "Reťazec Msca→vu"
+
+msgid "Name"
+msgstr "Meno"
+
+msgid "Nation"
+msgstr "Štát"
+
+msgid "Nation Code"
+msgstr "Kód štátu"
+
+msgid "New Odometer"
+msgstr "Nové počítadlo kilometrov"
+
+msgid "New Time"
+msgstr "Nový čas"
+
+msgid "Next Calibration Date"
+msgstr "Dátum ďalšej kalibrácie"
+
+msgid "Number Of Overspeed"
+msgstr "Počet prekročení rýchlosti"
+
+msgid "Odometer Insertion KM"
+msgstr "Počítadlo km pri vložení KM"
+
+msgid "Odometer KM"
+msgstr "Počítadlo km KM"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Počítadlo km pri vytiahnutí KM"
+
+msgid "Old Time"
+msgstr "Starý čas"
+
+msgid "Overspeeding Control"
+msgstr "Kontrola prekročenia rýchlosti"
+
+msgid "Overspeeding Events"
+msgstr "Udalosti prekročenia rýchlosti"
+
+msgid "Part Number"
+msgstr "Číslo dielu"
+
+msgid "Plate"
+msgstr "Evidenčné číslo"
+
+msgid "Public Key Remainder Hex"
+msgstr "Zvyšok verejného kľúča Hex"
+
+msgid "Public Key Remainder Length"
+msgstr "Dĺžka zvyšku verejného kľúča"
+
+msgid "Purpose"
+msgstr "Účel"
+
+msgid "Purpose Code"
+msgstr "Kód účelu"
+
+msgid "Record Purpose"
+msgstr "Účel záznamu"
+
+msgid "Record Purpose Label"
+msgstr "Označenie účelu záznamu"
+
+msgid "Region"
+msgstr "Región"
+
+msgid "Registration Nation"
+msgstr "Štát registrácie"
+
+msgid "Section"
+msgstr "Sekcia"
+
+msgid "Sensor Approval Number"
+msgstr "Číslo schválenia snímača"
+
+msgid "Sensor Pairing Date"
+msgstr "Dátum spárovania snímača"
+
+msgid "Sensor Serial Number"
+msgstr "Sériové číslo snímača"
+
+msgid "Serial Number"
+msgstr "Sériové číslo"
+
+msgid "Signature Hex"
+msgstr "Podpis Hex"
+
+msgid "Signature Length"
+msgstr "Dĺžka podpisu"
+
+msgid "Signature Valid"
+msgstr "Podpis platný"
+
+msgid "Similar Events"
+msgstr "Podobné udalosti"
+
+msgid "Software Install Date"
+msgstr "Dátum inštalácie softvéru"
+
+msgid "Software Version"
+msgstr "Verzia softvéru"
+
+msgid "Specific Conditions"
+msgstr "Osobitné podmienky"
+
+msgid "Speed Limit"
+msgstr "Obmedzenie rýchlosti"
+
+msgid "Speeds Sample"
+msgstr "Vzorka rýchlostí"
+
+msgid "Surname"
+msgstr "Priezvisko"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Technické informácie"
+
+msgid "Timestamp"
+msgstr "Časová značka"
+
+msgid "Total Size"
+msgstr "Celková veľkosť"
+
+msgid "Type Code"
+msgstr "Kód typu"
+
+msgid "Tyre Size"
+msgstr "Rozmer pneumatík"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Identifikácia vozidla"
+
+msgid "W Constant"
+msgstr "Konštanta W"
+
+msgid "Withdrawal Time"
+msgstr "Čas vytiahnutia"
+
+msgid "Workshop"
+msgstr "Servis"
+
+msgid "Workshop Address"
+msgstr "Adresa servisu"
+
+msgid "Workshop Card"
+msgstr "Servisná karta"
+
+msgid "Workshop Card Expiry"
+msgstr "Platnosť servisnej karty"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Generácia 1  [Dodatok 1B]"
