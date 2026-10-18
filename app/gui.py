@@ -2953,10 +2953,10 @@ class TachoExplorer(tk.Tk):
     def _build_ui(self):
         top = ttk.Frame(self, padding=(10, 8))
         top.pack(fill=tk.X)
-        self.btn_open = ttk.Button(top, text=_("\U0001f4c2  Open DDD file"),
+        self.btn_open = ttk.Button(top, text=_("Open DDD file"),
                                    command=self._open_file)
         self.btn_open.pack(side=tk.LEFT, padx=(0, 8))
-        self.btn_export = ttk.Menubutton(top, text=_("\U0001f4e4  Export"),
+        self.btn_export = ttk.Menubutton(top, text=_("Export"),
                                          state=tk.DISABLED)
         export_menu = tk.Menu(self.btn_export, tearoff=0,
                               background=WHITE, foreground=TEXT_PRIMARY,
@@ -2972,7 +2972,11 @@ class TachoExplorer(tk.Tk):
         # submenu (they are a long list and would otherwise bury the preference
         # below them), and the "translate file contents" choice sits under a
         # separator so the two decisions never read as one.
-        self.btn_lang = ttk.Menubutton(top, text="\U0001f310  " + LANGUAGES[self._language])
+        # The button carries the language's own name alone: a decorated glyph in
+        # front of it is drawn from a platform font, and a missing fallback
+        # leaves an empty box ahead of the name (same reason the Open/Export
+        # buttons are text-only).
+        self.btn_lang = ttk.Menubutton(top, text=LANGUAGES[self._language])
         lang_menu = tk.Menu(self.btn_lang, tearoff=0,
                             background=WHITE, foreground=TEXT_PRIMARY,
                             activebackground=ACCENT, activeforeground=WHITE,
@@ -3082,7 +3086,7 @@ class TachoExplorer(tk.Tk):
                           font=FONT_PAGE_TITLE, anchor=tk.CENTER,
                           justify=tk.CENTER, wraplength=_px(420))
         title.pack(fill=tk.X)
-        ttk.Button(centre, text=_("\U0001f4c2  Open DDD file"),
+        ttk.Button(centre, text=_("Open DDD file"),
                    command=self._open_file).pack(pady=(_px(12), _px(20)))
 
         # Advertised only when the drop target really registered: a hint that

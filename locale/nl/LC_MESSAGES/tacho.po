@@ -932,8 +932,8 @@ msgstr "👤  Bestuurder / kaarthouder"
 msgid "💻  VU INFO"
 msgstr "💻  VU-INFO"
 
-msgid "📂  Open DDD file"
-msgstr "📂  DDD-bestand openen"
+msgid "Open DDD file"
+msgstr "DDD-bestand openen"
 
 msgid "📄  File Info"
 msgstr "📄  Bestandsinfo"
@@ -956,8 +956,8 @@ msgstr "📡  BEWEGINGSSENSOR"
 msgid "📡  Sensor"
 msgstr "📡  Bewegingssensor"
 
-msgid "📤  Export"
-msgstr "📤  Exporteren"
+msgid "Export"
+msgstr "Exporteren"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"

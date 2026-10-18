@@ -932,8 +932,8 @@ msgstr "👤  Ökumaður / korthafi"
 msgid "💻  VU INFO"
 msgstr "💻  VU-UPPLÝSINGAR"
 
-msgid "📂  Open DDD file"
-msgstr "📂  Opna DDD-skrá"
+msgid "Open DDD file"
+msgstr "Opna DDD-skrá"
 
 msgid "📄  File Info"
 msgstr "📄  Upplýsingar um skrá"
@@ -956,8 +956,8 @@ msgstr "📡  SKYNJARI"
 msgid "📡  Sensor"
 msgstr "📡  Skynjari"
 
-msgid "📤  Export"
-msgstr "📤  Útflutningur"
+msgid "Export"
+msgstr "Útflutningur"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"

@@ -932,8 +932,8 @@ msgstr "👤  Vairuotojas / kortelės turėtojas"
 msgid "💻  VU INFO"
 msgstr "💻  VU INFORMACIJA"
 
-msgid "📂  Open DDD file"
-msgstr "📂  Atverti DDD failą"
+msgid "Open DDD file"
+msgstr "Atverti DDD failą"
 
 msgid "📄  File Info"
 msgstr "📄  Failo informacija"
@@ -956,8 +956,8 @@ msgstr "📡  JUTIKLIS"
 msgid "📡  Sensor"
 msgstr "📡  Jutiklis"
 
-msgid "📤  Export"
-msgstr "📤  Eksportas"
+msgid "Export"
+msgstr "Eksportas"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"

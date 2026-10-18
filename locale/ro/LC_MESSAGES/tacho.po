@@ -932,8 +932,8 @@ msgstr "👤  Conducător / Deținătorul cardului"
 msgid "💻  VU INFO"
 msgstr "💻  INFORMAȚII VU"
 
-msgid "📂  Open DDD file"
-msgstr "📂  Deschide fișier DDD"
+msgid "Open DDD file"
+msgstr "Deschide fișier DDD"
 
 msgid "📄  File Info"
 msgstr "📄  Informații fișier"
@@ -956,8 +956,8 @@ msgstr "📡  SENZOR"
 msgid "📡  Sensor"
 msgstr "📡  Senzor"
 
-msgid "📤  Export"
-msgstr "📤  Exportă"
+msgid "Export"
+msgstr "Exportă"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"
