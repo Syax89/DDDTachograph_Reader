@@ -16,7 +16,7 @@ separate-locales: false
 
 finish-args:
   # Tk has no Wayland backend: it always talks X11, via XWayland on a Wayland
-  # session. IPC is granted because X11 clients need a shared socket.
+  # session. IPC allows X11 shared-memory rendering.
   - --socket=x11
   - --share=ipc
   # Tk's own file dialogs must be able to open .ddd files and save exports

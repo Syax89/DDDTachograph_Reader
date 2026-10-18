@@ -9,33 +9,27 @@ inputs:
   bundle-name:
     description: File name for the produced .flatpak bundle.
     required: true
-  python-version:
-    description: Python version used for the frozen bundle.
-    required: false
-    default: '3.12'
 
-outputs:
-  bundle-path:
-    description: Path of the produced .flatpak bundle, relative to the workspace.
-    value: ${{ steps.bundle.outputs.path }}
 
 runs:
   using: composite
   steps:
-    - name: Set up Python ${{ inputs.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v7
       with:
-        python-version: ${{ inputs.python-version }}
+        python-version: '3.12'
         cache: 'pip'
 
     - name: Install build and Flatpak tooling
-      # python3-tk supplies the shared libtcl/libtk that the frozen bundle links
-      # against; xvfb + x11-utils drive the GUI smoke test below.
       shell: bash
       run: |
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends \
           flatpak flatpak-builder python3-tk xvfb x11-utils
+        # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor,
+        # which breaks the bwrap sandbox flatpak-builder needs. No-op on images
+        # without that sysctl.
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
 
     - name: Install Python dependencies
       shell: bash
@@ -45,12 +39,20 @@ runs:
 
     - name: Build frozen bundle with PyInstaller
       # build.spec stays the single source of truth for hidden imports, datas,
-      # windowed mode and app version.
+      # windowed mode and app version. python3-tk guarantees Tk is importable at
+      # freeze time; the assert below proves Tcl/Tk actually ended up *inside*
+      # the bundle, because the sandbox only provides X11 client libraries.
       shell: bash
       run: |
         pyinstaller --noconfirm build.spec
         test -x dist/TachoReader/TachoReader \
           || { echo "::error::dist/TachoReader/TachoReader missing after pyinstaller"; exit 1; }
+        for lib in libtcl8.6.so libtk8.6.so; do
+          if [ -z "$(find dist/TachoReader -maxdepth 2 -name "$lib" -print -quit)" ]; then
+            echo "::error::$lib missing from the frozen bundle: Tk cannot start in the sandbox"
+            exit 1
+          fi
+        done
 
     - name: Generate synthetic mock data
       shell: bash
@@ -65,8 +67,9 @@ runs:
           org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
 
     - name: Build Flatpak and export bundle
-      id: bundle
       shell: bash
+      env:
+        BUNDLE_NAME: ${{ inputs.bundle-name }}
       run: |
         set -euo pipefail
         flatpak-builder --user --force-clean --disable-rofiles-fuse \
@@ -76,37 +79,41 @@ runs:
         # from Flathub when it installs this bundle.
         flatpak build-bundle --arch=x86_64 \
           --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo \
-          flatpak-repo "${{ inputs.bundle-name }}" \
+          flatpak-repo "$BUNDLE_NAME" \
           io.github.Syax89.TachoReader master
-        test -s "${{ inputs.bundle-name }}"
-        echo "path=${{ inputs.bundle-name }}" >> "$GITHUB_OUTPUT"
+        test -s "$BUNDLE_NAME"
 
     - name: Install the produced bundle
       # Smoke-test what users get: the exported .flatpak, not the build dir.
       shell: bash
+      env:
+        BUNDLE_NAME: ${{ inputs.bundle-name }}
       run: |
-        flatpak install --user -y --noninteractive --bundle "${{ inputs.bundle-name }}"
+        flatpak install --user -y --noninteractive --bundle "$BUNDLE_NAME"
         flatpak info io.github.Syax89.TachoReader
 
     - name: Smoke test the installed Flatpak
+      # Composite-action steps cannot set timeout-minutes, so bound the runs
+      # here: a hung GUI-mode start must never eat the job budget.
+      # TACHO_SMOKE_LOG is passed with --env because the sandbox does not
+      # inherit the host environment.
       shell: bash
-      timeout-minutes: 5
-      env:
-        TACHO_SMOKE_LOG: smoke.log
+
       run: |
         set -euo pipefail
-        flatpak run io.github.Syax89.TachoReader --version
-        flatpak run io.github.Syax89.TachoReader --smoke "$PWD/tests/mock_data/mock_g2_card.ddd"
+        timeout 120 flatpak run --env=TACHO_SMOKE_LOG=smoke.log \
+          io.github.Syax89.TachoReader --version
+        timeout 180 flatpak run --env=TACHO_SMOKE_LOG=smoke.log \
+          io.github.Syax89.TachoReader --smoke "$PWD/tests/mock_data/mock_g2_card.ddd"
         cat smoke.log 2>/dev/null || true
 
     - name: GUI smoke test (real X11 window)
       # No window manager under Xvfb: just assert that the app maps its own
       # top-level window, then shut it down within a bounded timeout.
       shell: bash
-      timeout-minutes: 5
       run: |
         set -euo pipefail
-        xvfb-run -a -s "-screen 0 1280x1024x24" bash -euo pipefail -s <<'GUI'
+        timeout 300 xvfb-run -a -s "-screen 0 1280x1024x24" bash -euo pipefail -s <<'GUI'
         APP=io.github.Syax89.TachoReader
         flatpak run "$APP" > gui.log 2>&1 &
         run_pid=$!

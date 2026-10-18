@@ -99,6 +99,7 @@ jobs:
     # Sits outside the Windows/macOS matrix because the packaging steps (and the
     # base image, which must be a stable glibc for the bundle) are Linux-only.
     runs-on: ubuntu-24.04
+    timeout-minutes: 60
     steps:
     - uses: actions/checkout@v7
 
@@ -112,3 +113,4 @@ jobs:
       with:
         name: TachoReader-linux-x86_64
         path: TachoReader-linux-x86_64.flatpak
+        if-no-files-found: error

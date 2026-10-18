@@ -183,6 +183,7 @@ jobs:
   build-linux-flatpak:
     runs-on: ubuntu-24.04
     needs: test
+    timeout-minutes: 60
     steps:
     - uses: actions/checkout@v7
 
