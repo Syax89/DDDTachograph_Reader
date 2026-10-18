@@ -44,7 +44,8 @@ def test_dashboard_slot_view_keeps_slotless_changes():
     app._vu_slot_filter = "Slot 2"
     app._show_empty = Mock()
     captured = []
-    app._update_dashboard_in_place = Mock(side_effect=lambda *a: captured.append(a))
+    app._update_dashboard_in_place = Mock(
+        side_effect=lambda *a, **kw: captured.append(a))
 
     activities = [{
         "date": "01/05/2025",
@@ -70,7 +71,8 @@ def _slot_view(activities, slot_label):
     app._vu_slot_filter = slot_label
     app._show_empty = Mock()
     captured = []
-    app._update_dashboard_in_place = Mock(side_effect=lambda *a: captured.append(a))
+    app._update_dashboard_in_place = Mock(
+        side_effect=lambda *a, **kw: captured.append(a))
     app._show_daily_summary(activities, {"metadata": {"is_vu": True}},
                             _fast_refresh=True)
     return captured[0][2]  # table_rows
@@ -89,15 +91,18 @@ def test_dashboard_slot_view_does_not_leak_the_other_slot():
         ],
     }]
 
+    # Both slot views also break art. 7 (an unbroken 8 h / 14 h stretch), so the
+    # Drive cell carries the driving-rule marker; the value before it is what
+    # this test pins.
     row1 = next(r for r in _slot_view(activities, "Slot 1")
                 if r and r[0] == "01/05/2025")
-    assert row1[5] == "8h 00m"    # Drive  = First 00:00-08:00
+    assert row1[5] == "8h 00m \u26a0\ufe0f"    # Drive = First 00:00-08:00
     assert row1[6] == "0h 00m"    # Work   = none (Second's must NOT leak in)
 
     row2 = next(r for r in _slot_view(activities, "Slot 2")
                 if r and r[0] == "01/05/2025")
     assert row2[6] == "10h 00m"   # Work   = Second 00:00-10:00
-    assert row2[5] == "14h 00m"   # Drive  = Second 10:00-24:00
+    assert row2[5] == "14h 00m \u26a0\ufe0f"   # Drive = Second 10:00-24:00
 
 
 def test_day_detail_popup_receives_the_full_day_change_set(monkeypatch):

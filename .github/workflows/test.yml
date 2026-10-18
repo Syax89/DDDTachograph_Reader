@@ -62,6 +62,14 @@ jobs:
     - name: Run test suite
       run: pytest -q
 
+    - name: Real GUI render tests (Xvfb, Python 3.12 only)
+      # The suite above runs headless, where every test that needs a real Tk
+      # widget skips. This single leg re-runs one module with a virtual display
+      # so the row render, the tint tag and the hover tooltips are exercised in
+      # CI too. xvfb-run ships with the ubuntu-latest image.
+      if: matrix.python-version == '3.12'
+      run: xvfb-run -a python -m pytest tests/unit/test_gui_driving_rules.py -q
+
   coverage:
     runs-on: ubuntu-latest
     steps:

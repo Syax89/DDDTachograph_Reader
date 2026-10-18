@@ -2374,3 +2374,12 @@ msgstr "Nie sú zaznamenané žiadne vzorky"
 
 msgid "Speed range"
 msgstr "Rozsah rýchlosti"
+
+msgid "Days over {hours} h"
+msgstr "Dni nad {hours} h"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Denná jazda {driven} — limit {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Nepretržitá jazda {driven} bez prestávky {pause} min — limit {limit}"

@@ -76,6 +76,9 @@ from core.utils.version import __version__  # noqa: E402
 from core.utils.report_format import (  # noqa: E402
     NATION_COLS, VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
     fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
+from core.utils.activity_stats import (  # noqa: E402
+    DAILY_DRIVE_LIMIT_MIN, QUALIFYING_BREAK_MIN, RULE_CONTINUOUS_DRIVING,
+    RULE_DAILY_DRIVING, evaluate_driving_rules)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 from app.i18n import (  # noqa: E402
     LANGUAGES, _, add_recent_file, install, save_language, save_translate_data,
@@ -311,6 +314,31 @@ def _fmt_duration_minutes(mins):
     return f"{mins // 60}h {mins % 60:02d}m"
 
 
+def _driving_rule_explanation(breaches):
+    """One tooltip line per broken driving-time rule, with the measured value.
+
+    The rules come from Regulation (EC) 561/2006 — art. 6(1) (daily driving)
+    and art. 7 (continuous driving) — see
+    :func:`core.utils.activity_stats.evaluate_driving_rules`. Each line states
+    what was measured and against which limit, in the same duration format the
+    Drive column uses, so the flag can be checked against the numbers on
+    screen instead of being taken on trust.
+    """
+    lines = []
+    for breach in breaches:
+        if breach.rule == RULE_DAILY_DRIVING:
+            lines.append(_("Daily driving {driven} \u2014 limit {limit}").format(
+                driven=_fmt_duration_minutes(breach.measured_min),
+                limit=_fmt_duration_minutes(breach.limit_min)))
+        elif breach.rule == RULE_CONTINUOUS_DRIVING:
+            lines.append(_("Continuous driving {driven} without a {pause} min "
+                           "break \u2014 limit {limit}").format(
+                driven=_fmt_duration_minutes(breach.measured_min),
+                pause=QUALIFYING_BREAK_MIN,
+                limit=_fmt_duration_minutes(breach.limit_min)))
+    return "\n".join(lines)
+
+
 def _fmt_seconds_duration(seconds):
     """Render a whole-second count as a duration without truncating a
     non-zero value to "0 min" (GUI-SPEED-ROUNDING, G-F5).  Values under a
@@ -363,6 +391,28 @@ def detailed_speed_blocks_by_day(blocks):
 
 # ── Excel-style data table ─────────────────────────────────────────────────
 
+class _TableRow(list):
+    """One row's values, carrying what a sort or filter rebuild must keep.
+
+    ``DataTable._render`` re-inserts every row after a sort or a filter change
+    and stripes the rows ``even``/``odd`` by *display* position, so anything
+    that was attached to a row *position* used to be lost on the first header
+    click: the tint of a day that breaks a driving-time rule, the month-total
+    emphasis, and the tooltip that belongs to one specific day. Keeping the row
+    tag and a stable key on the row itself makes them travel with it — sorting
+    only reorders the list, filtering only drops entries.
+    """
+
+    __slots__ = ("tag", "key")
+
+    def __init__(self, values, tag=None, key=None):
+        super().__init__(values)
+        #: Row tag; ``None`` means "use the display-position zebra stripe".
+        self.tag = tag
+        #: Stable identity of the row, used to look up per-row tooltips.
+        self.key = key
+
+
 class DataTable(ttk.Frame):
     """Header-only treeview: grid with sortable columns and filter."""
 
@@ -405,6 +455,9 @@ class DataTable(ttk.Frame):
 
         self._cols = []
         self._all_rows = []
+        # Treeview iid -> stable row key, filled by _render for rows that have
+        # one (see _TableRow); the dashboard tooltips are looked up through it.
+        self._iid_keys = {}
         self._sort_state = {}
         self._fit_after_id = None
         self._filter_after_id = None
@@ -450,7 +503,6 @@ class DataTable(ttk.Frame):
         self.filter_var.set("")
 
         self._cols = list(columns)
-        self._all_rows = [list(r) for r in rows]
         self._sort_state = {}
         self._fitted = False
         self._summary_mode = False
@@ -463,7 +515,7 @@ class DataTable(ttk.Frame):
             min_w = max(len(str(c)) * _px(9) + _px(24), _px(60))
             self.tv.column(c, minwidth=min_w, anchor=tk.W, stretch=False)
 
-        self._render(self._all_rows)
+        self.set_rows(rows)
         self.tv.update_idletasks()
         self._fit_columns()
         self.tv.update()
@@ -512,8 +564,29 @@ class DataTable(ttk.Frame):
             self.tv.after_cancel(self._fit_after_id)
         self._fit_after_id = self.tv.after(300, self._fit_columns)
 
+    def set_rows(self, rows, tags=None, keys=None):
+        """Replace the content, keeping each row's tag and stable key.
+
+        ``tags`` and ``keys`` are parallel to ``rows`` and both optional. Both
+        live on the row (:class:`_TableRow`), so they survive the re-render a
+        sort or a filter change triggers: the tint of a flagged day and the
+        tooltip of that same day stay with it however the table is ordered.
+        """
+        self._all_rows = [
+            _TableRow(values,
+                      tag=tags[i] if tags is not None and i < len(tags) else None,
+                      key=keys[i] if keys is not None and i < len(keys) else None)
+            for i, values in enumerate(rows)
+        ]
+        self._render(self._all_rows)
+
+    def row_key(self, iid):
+        """Stable key of a displayed row (see :meth:`set_rows`), or ``None``."""
+        return self._iid_keys.get(iid)
+
     def _render(self, rows, summary=False):
         self.tv.delete(*self.tv.get_children())
+        self._iid_keys = {}
         for i, r in enumerate(rows):
             if summary and len(r) >= 3 and r[2]:
                 tag = "summary_header"
@@ -522,12 +595,21 @@ class DataTable(ttk.Frame):
                 tag = "even" if i % 2 == 0 else "odd"
                 vals = list(r[:2])   # the third field only marks a section row
             else:
-                tag = "even" if i % 2 == 0 else "odd"
+                # A row's own tag (violation tint, month total, separator) wins
+                # over the zebra stripe, and travels with the row through the
+                # re-render a sort or a filter change causes — see _TableRow.
+                tag = getattr(r, "tag", None) or ("even" if i % 2 == 0 else "odd")
                 vals = list(r)
             # Summary rows are built with raw values; a bool must not reach the
             # screen as Python's "True"/"False".
             vals = [_bool_text(v) if isinstance(v, bool) else v for v in vals]
-            self.tv.insert("", tk.END, values=vals, tags=(tag,))
+            key = getattr(r, "key", None)
+            if key is None:
+                self.tv.insert("", tk.END, values=vals, tags=(tag,))
+            else:
+                iid = self.tv.insert("", tk.END, values=vals, tags=(tag,),
+                                     iid=str(key))
+                self._iid_keys[iid] = key
 
     def _schedule_filter(self):
         if self._filter_after_id is not None:
@@ -4451,8 +4533,16 @@ class TachoExplorer(tk.Tk):
     # ── Dashboard views ──────────────────────────────────
 
     def _show_dashboard(self, title, date_range, kpis, columns, rows,
-                        row_tags=None, tooltips=None, ev_tooltips=None):
-        """Render a summary dashboard with KPI cards and sortable table."""
+                        row_tags=None, tooltips=None, ev_tooltips=None,
+                        rule_tips=None):
+        """Render a summary dashboard with KPI cards and sortable table.
+
+        ``tooltips`` (driver/vehicle column), ``ev_tooltips`` (Ev column) and
+        ``rule_tips`` (Drive column, the driving-time-rule explanation) are all
+        keyed by *row key*, not by display position: the table is sortable and
+        filterable, and a positional key handed the tooltip of the day that
+        happened to sit at that index after the reorder.
+        """
         self._cleanup_dashboard()
         self._hide_empty_state()
         self.speed_chart.pack_forget()
@@ -4471,7 +4561,6 @@ class TachoExplorer(tk.Tk):
         self.table.count_lbl.config(text=date_range)
         self.table.filter_var.set("")
         self.table._cols = list(columns)
-        self.table._all_rows = [list(r) for r in rows]
         self.table._sort_state = {}
         self.table._fitted = False
         self.table._summary_mode = False
@@ -4509,18 +4598,17 @@ class TachoExplorer(tk.Tk):
                                     foreground=ACCENT,
                                     background=HEADER_BG)
         self.table.tv.tag_configure("separator", background=SURFACE_SUNKEN)
+        # A day that breaks a driving-time rule (Reg. (EC) 561/2006 art. 6(1)
+        # or art. 7). ttk.Treeview can only style a whole row, so the violation
+        # tints the row; the Drive cell additionally carries the warning glyph
+        # so the day is recognisable without relying on colour.
+        self.table.tv.tag_configure("flagged", background=DANGER_BAND)
 
-        # Render with row tags
-        row_tags = row_tags or [None] * len(rows)
-        self.table.tv.delete(*self.table.tv.get_children())
-        for i, r in enumerate(self.table._all_rows):
-            tag = "even" if i % 2 == 0 else "odd"
-            rt = row_tags[i] if i < len(row_tags) else None
-            if rt == "total":
-                tag = "total"
-            elif rt == "separator":
-                tag = "separator"
-            self.table.tv.insert("", tk.END, values=r, tags=(tag,))
+        # Render with row tags. The rows carry their tag and a stable key from
+        # here on, so a header click or a filter change cannot drop the tint of
+        # a flagged day, the month-total emphasis, or a row's tooltip.
+        self.table.set_rows(rows, tags=row_tags,
+                            keys=list(range(len(rows))))
 
         # Tooltips for # Drivers / # Vehicles column
         self._dashboard_tooltips = tooltips or {}
@@ -4533,6 +4621,13 @@ class TachoExplorer(tk.Tk):
         ev_column = _("Ev")
         self._dashboard_ev_col = columns.index(ev_column) if ev_column in columns else -1
         self._dashboard_ev_tips = ev_tooltips or {}
+        # Tooltips for the Drive column: the ⚠ marker sits in that cell, so the
+        # explanation of what it means has to be reachable there and not only
+        # on the driver/vehicle cell.
+        drive_column = _("Drive")
+        self._dashboard_drive_col = (columns.index(drive_column)
+                                     if drive_column in columns else -1)
+        self._dashboard_rule_tips = rule_tips or {}
         self._dashboard_motion_bind = self.table.tv.bind(
             "<Motion>", self._on_dashboard_motion, add="+")
         self._tooltip_lbl = tk.Label(self.table.tv, text="", bg=DASHBOARD_TOOLTIP_BG,
@@ -4678,29 +4773,32 @@ class TachoExplorer(tk.Tk):
     def _on_dashboard_motion(self, event):
         drv_col = getattr(self, "_dashboard_drv_col", -1)
         ev_col = getattr(self, "_dashboard_ev_col", -1)
-        if drv_col < 0 and ev_col < 0:
+        drive_col = getattr(self, "_dashboard_drive_col", -1)
+        if drv_col < 0 and ev_col < 0 and drive_col < 0:
             return
         row_id = self.table.tv.identify_row(event.y)
         col_id = self.table.tv.identify_column(event.x)
         col_idx = int(col_id.replace("#", "")) - 1 if col_id else -1
-        if not row_id or (col_idx != drv_col and col_idx != ev_col):
+        if not row_id or col_idx not in (drv_col, ev_col, drive_col):
             self._tooltip_lbl.place_forget()
             return
-        for i, iid in enumerate(self.table.tv.get_children("")):
-            if iid == row_id:
-                if col_idx == drv_col:
-                    tip = self._dashboard_tooltips.get(i, "")
-                else:
-                    ev_tips = getattr(self, "_dashboard_ev_tips", {}) or {}
-                    tip = ev_tips.get(i, "")
-                if tip:
-                    self._tooltip_lbl.config(text=tip, justify=tk.LEFT,
-                                             wraplength=380)
-                    self._tooltip_lbl.place(x=event.x + 16, y=event.y + 16)
-                else:
-                    self._tooltip_lbl.place_forget()
-                return
-        self._tooltip_lbl.place_forget()
+        # Look the row up by its stable key, never by its display position: the
+        # table is sortable and filterable, so position i after a header click
+        # is a different day than position i when the tooltips were built.
+        key = self.table.row_key(row_id)
+        if col_idx == drv_col:
+            tip = self._dashboard_tooltips.get(key, "")
+        elif col_idx == ev_col:
+            ev_tips = getattr(self, "_dashboard_ev_tips", {}) or {}
+            tip = ev_tips.get(key, "")
+        else:
+            rule_tips = getattr(self, "_dashboard_rule_tips", {}) or {}
+            tip = rule_tips.get(key, "")
+        if tip:
+            self._tooltip_lbl.config(text=tip, justify=tk.LEFT, wraplength=380)
+            self._tooltip_lbl.place(x=event.x + 16, y=event.y + 16)
+        else:
+            self._tooltip_lbl.place_forget()
 
     def _cleanup_dashboard(self):
         """Destroy any KPI card frame left over from a previous dashboard view."""
@@ -4970,10 +5068,15 @@ class TachoExplorer(tk.Tk):
 
         totals_global = {"DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0}
         max_drive = 0
+        # Days of the file that break a driving-time rule (see day_rules below).
+        flagged_days = 0
         table_rows = []
         row_tags = []
         tooltips = {}
         ev_tooltips = {}
+        # Drive-cell tooltips: the driving-time-rule explanation, keyed like the
+        # others by row key so it follows the day through sorting/filtering.
+        rule_tips = {}
         row_idx = 0
 
         for month_key in reversed(list(months.keys())):
@@ -4996,6 +5099,12 @@ class TachoExplorer(tk.Tk):
                     day_km = card_day_km.get(id(day_data), 0)
                     odo = 0
                 day_tots = _compute_activity_totals(changes)
+                # Driving-time rules of Reg. (EC) 561/2006: art. 6(1) (more than
+                # 9 h of daily driving) and art. 7 (more than 4 h 30 min of
+                # continuous driving without a qualifying break). A crew day is
+                # judged per driver inside the helper, so the flag never comes
+                # from summing two drivers' independent driving time.
+                day_rules = evaluate_driving_rules(changes)
                 for act in totals_global:
                     totals_global[act] += day_tots[act]
                 for act in m_tot:
@@ -5014,11 +5123,18 @@ class TachoExplorer(tk.Tk):
 
                 km_str = f"{day_km:,}".replace(",", " ") if day_km else ""
                 ev_str = "\u26a0\ufe0f" if iso_date in event_dates else ""
+                # A broken driving-time rule is marked in the Drive cell with the
+                # same ⚠ glyph the Ev column uses, so the day stands out without
+                # relying on the row tint (ttk.Treeview has no per-cell colour).
+                drive_str = _fmt_duration_minutes(day_tots["DRIVE"])
+                if day_rules.flagged:
+                    drive_str += " \u26a0\ufe0f"
+                    flagged_days += 1
                 if is_vu:
                     odo_str = f"{odo:,}".replace(",", " ") if odo else ""
                     table_rows.append([
                         date_str, f"{n_drv}\u2002\u25be", ev_str, km_str, odo_str,
-                        _fmt_duration_minutes(day_tots["DRIVE"]),
+                        drive_str,
                         _fmt_duration_minutes(day_tots["WORK"]),
                         _fmt_duration_minutes(day_tots["REST"]),
                         _fmt_duration_minutes(day_tots["AVAILABLE"]),
@@ -5028,16 +5144,26 @@ class TachoExplorer(tk.Tk):
                     n_day_veh = len(day_vehicles) or n_veh
                     table_rows.append([
                         date_str, f"{n_day_veh}\u2002\u25be", ev_str, km_str,
-                        _fmt_duration_minutes(day_tots["DRIVE"]),
+                        drive_str,
                         _fmt_duration_minutes(day_tots["WORK"]),
                         _fmt_duration_minutes(day_tots["REST"]),
                         _fmt_duration_minutes(day_tots["AVAILABLE"]),
                     ])
-                row_tags.append(None)
+                row_tags.append("flagged" if day_rules.flagged else None)
                 if is_vu and names:
                     tooltips[row_idx] = names
                 elif not is_vu and card_vehicle_tip:
                     tooltips[row_idx] = card_vehicle_tip
+                if day_rules.flagged:
+                    # Say which rule and by how much, on the row's own tooltip
+                    # (driver/vehicle column) and on the Drive cell that carries
+                    # the ⚠ marker: a red row alone tells the user nothing they
+                    # can verify.
+                    explanation = _driving_rule_explanation(day_rules.breaches)
+                    rule_tips[row_idx] = explanation
+                    existing_tip = tooltips.get(row_idx)
+                    tooltips[row_idx] = (f"{existing_tip}\n\n{explanation}"
+                                         if existing_tip else explanation)
                 if iso_date in event_dates:
                     ev_list = events_by_date.get(iso_date, [])
                     ev_text = "\n".join(ev_list)
@@ -5096,6 +5222,14 @@ class TachoExplorer(tk.Tk):
             (_("Days"), str(day_count), TEXT_SECONDARY),
             (_("Avg Drive / day"), _fmt_duration_minutes(avg_drive), ACTIVITY_DRIVE),
             (_("Max Drive / day"), _fmt_duration_minutes(max_drive), ACTIVITY_DRIVE),
+            # Days over the daily driving limit of Reg. (EC) 561/2006 art. 6(1).
+            # The count is of every *flagged* day, so a day flagged by art. 7
+            # alone (continuous driving, with a daily total under 9 h) is
+            # counted too: it broke the driving-time rules, and its own tooltip
+            # names the rule that fired rather than this caption.
+            (_("Days over {hours} h").format(hours=DAILY_DRIVE_LIMIT_MIN // 60),
+             str(flagged_days),
+             DANGER if flagged_days else TEXT_SECONDARY),
         ]
         if is_vu:
             kpis.append((_("Drivers"), str(driver_count), TEXT_SECONDARY))
@@ -5114,12 +5248,13 @@ class TachoExplorer(tk.Tk):
         if _fast_refresh:
             self._update_dashboard_in_place(
                 date_range, kpis, table_rows, row_tags,
-                columns, tooltips, ev_tooltips, activity_list, data)
+                columns, tooltips, ev_tooltips, activity_list, data,
+                rule_tips=rule_tips)
         else:
             self._show_dashboard(_("Daily Activities"),
                                  date_range, kpis, columns, table_rows,
                                  row_tags=row_tags, tooltips=tooltips,
-                                 ev_tooltips=ev_tooltips)
+                                 ev_tooltips=ev_tooltips, rule_tips=rule_tips)
 
             self._dashboard_activity_list = activity_list
             self._dashboard_data = data
@@ -5134,7 +5269,8 @@ class TachoExplorer(tk.Tk):
 
     def _update_dashboard_in_place(
             self, date_range, kpis, table_rows, row_tags,
-            columns, tooltips, ev_tooltips, activity_list, data):
+            columns, tooltips, ev_tooltips, activity_list, data,
+            rule_tips=None):
         """Update just the table rows, KPI labels, and toggle without destroying layout."""
         self.table.count_lbl.config(text=date_range)
 
@@ -5146,26 +5282,23 @@ class TachoExplorer(tk.Tk):
                     labels = [w for w in child.winfo_children() if isinstance(w, tk.Label)]
                     if len(labels) >= 2:
                         label_text = labels[0].cget("text")
-                        for lbl, val, _accent in kpis:
+                        for lbl, val, accent in kpis:
                             if lbl == label_text:
-                                labels[1].config(text=val)
+                                # The value colour can depend on the value ("Days
+                                # over 9 h" is DANGER only while a day is
+                                # flagged), so keep both in sync.
+                                labels[1].config(text=val, fg=accent)
                                 break
 
-        # Refresh table
-        self.table._all_rows = [list(r) for r in table_rows]
-        self.table.tv.delete(*self.table.tv.get_children())
-        for i, r in enumerate(self.table._all_rows):
-            tag = "even" if i % 2 == 0 else "odd"
-            rt = row_tags[i] if i < len(row_tags) else None
-            if rt == "total":
-                tag = "total"
-            elif rt == "separator":
-                tag = "separator"
-            self.table.tv.insert("", tk.END, values=r, tags=(tag,))
+        # Refresh table (tags and stable row keys travel with the rows, so the
+        # tint and the tooltips survive a later sort or filter)
+        self.table.set_rows(table_rows, tags=row_tags,
+                            keys=list(range(len(table_rows))))
 
         # Tooltips
         self._dashboard_tooltips = tooltips or {}
         self._dashboard_ev_tips = ev_tooltips or {}
+        self._dashboard_rule_tips = rule_tips or {}
 
         # Update slot label in toggle bar
         slot_frame = getattr(self, "_slot_toggle_frame", None)

@@ -2374,3 +2374,12 @@ msgstr "L-ebda kampjun irreġistrat"
 
 msgid "Speed range"
 msgstr "Firxa tal-veloċità"
+
+msgid "Days over {hours} h"
+msgstr "Ġranet fuq {hours} sigħat"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Sewqan ta’ kuljum {driven} — limitu {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Sewqan kontinwu {driven} mingħajr pawża ta’ {pause} min — limitu {limit}"

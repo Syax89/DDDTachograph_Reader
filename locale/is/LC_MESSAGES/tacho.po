@@ -2374,3 +2374,12 @@ msgstr "Engar mælingar skráðar"
 
 msgid "Speed range"
 msgstr "Hraðabil"
+
+msgid "Days over {hours} h"
+msgstr "Dagar yfir {hours} klst."
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Daglegur akstur {driven} — hámark {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Samfelldur akstur {driven} án {pause} mín. hvíldar — hámark {limit}"

@@ -2374,3 +2374,12 @@ msgstr "Ingen målinger registrert"
 
 msgid "Speed range"
 msgstr "Hastighetsområde"
+
+msgid "Days over {hours} h"
+msgstr "Dager over {hours} t"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Daglig kjøring {driven} — grense {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Sammenhengende kjøring {driven} uten pause på {pause} min — grense {limit}"

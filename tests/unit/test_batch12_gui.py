@@ -67,7 +67,8 @@ def _fast_dashboard(activities, data, slot_label="Slot 1"):
     app._vu_slot_filter = slot_label
     app._show_empty = Mock()
     captured = []
-    app._update_dashboard_in_place = Mock(side_effect=lambda *a: captured.append(a))
+    app._update_dashboard_in_place = Mock(
+        side_effect=lambda *a, **kw: captured.append(a))
     app._show_daily_summary(activities, data, _fast_refresh=True)
     return app, captured
 

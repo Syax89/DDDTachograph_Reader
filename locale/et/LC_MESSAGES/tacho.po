@@ -2374,3 +2374,12 @@ msgstr "Salvestatud mõõtmisi ei ole"
 
 msgid "Speed range"
 msgstr "Kiiruse vahemik"
+
+msgid "Days over {hours} h"
+msgstr "Päevi üle {hours} h"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Päevane sõit {driven} — piir {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Katkematu sõit {driven} ilma {pause} min pausita — piir {limit}"
