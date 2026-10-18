@@ -66,7 +66,8 @@ jobs:
       # The suite above runs headless, where every test that needs a real Tk
       # widget skips. This single leg re-runs those modules with a virtual
       # display so the row render, the tint tag, the hover tooltips, the
-      # toolbar's text-only labels and the file overview a parse lands on are
+      # toolbar's labels and icons, the file overview a parse lands on, the
+      # progress bar's re-entrancy guard and the hidden-infraction switch are
       # exercised in CI too. xvfb-run ships with the ubuntu-latest image.
       if: matrix.python-version == '3.12'
       run: >
@@ -74,6 +75,10 @@ jobs:
         tests/unit/test_gui_driving_rules.py
         tests/unit/test_gui_toolbar_buttons.py
         tests/unit/test_gui_summary_default.py
+        tests/unit/test_gui_icons.py
+        tests/unit/test_gui_icon_scale.py
+        tests/unit/test_gui_busy_bar.py
+        tests/unit/test_gui_infractions_hidden.py
         -q
 
   coverage:
