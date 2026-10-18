@@ -156,7 +156,7 @@ DDDTachograph_Reader/
 ├── tests/                       # Test suite
 ├── scripts/                     # Specifications and audits
 ├── docs/                        # Documentation
-└── .github/workflows/           # CI/CD (lint, tests, Windows/macOS builds)
+└── .github/workflows/           # CI/CD (lint, tests, Windows/macOS/Linux builds)
 ```
 
 ---
@@ -200,6 +200,22 @@ python -m pytest tests/ -v
 The suite covers multi-generation detection, G1/G2/G2.2 parsing, byte coverage,
 fuzzing, and digital signatures. Tests requiring private DDD samples skip when
 those fixtures are unavailable.
+
+### Continuous Integration
+
+CI builds **all three platforms on every branch push, every pull request and
+every manual (`workflow_dispatch`) run**: a PyInstaller bundle is frozen and
+smoke-tested on Windows and macOS (matrix without `fail-fast`, so one platform
+failing never hides the other), and on Linux the same frozen bundle is packaged
+into a Flatpak, installed, run head-less (parser smoke test) and started under
+Xvfb to prove a real GUI window maps. The build workflow ends with a single
+**All platforms verified** job that passes only when Windows, macOS *and* the
+Linux Flatpak all succeeded — a failed, cancelled or skipped platform fails that
+gate. Tagged releases (`v*`) run the release workflow: each platform uploads its
+package as an artifact, and one final `publish-release` job downloads all three,
+asserts all three filenames are present and only then publishes them together,
+so a tag never produces a partial release. Badge above tracks the build
+workflow.
 
 ---
 
