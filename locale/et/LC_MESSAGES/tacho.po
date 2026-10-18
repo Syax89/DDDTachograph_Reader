@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: et\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (ei midagi)"
+
+msgid "  Ability"
+msgstr "  Võime"
+
+msgid "  Activity changes"
+msgstr "  Aktiivsuse muutused"
+
+msgid "  Actual range"
+msgstr "  Tegelik vahemaa"
+
+msgid "  Address"
+msgstr "  Aadress"
+
+msgid "  Approval"
+msgstr "  Heakskiit"
+
+msgid "  Authorised speed"
+msgstr "  Lubatud kiirus"
+
+msgid "  Avg speed"
+msgstr "  Keskmine kiirus"
+
+msgid "  Birth date"
+msgstr "  Sünniaeg"
+
+msgid "  Card downloads"
+msgstr "  Kaardi allalaadimised"
+
+msgid "  Card number"
+msgstr "  Kaardi number"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Kaart kohal: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Ettevõte"
+
+msgid "  Days recorded"
+msgstr "  Salvestatud päevad"
+
+msgid "  Days with activities"
+msgstr "  Aktiivsustega päevad"
+
+msgid "  Days with activity"
+msgstr "  Aktiivsusega päevad"
+
+msgid "  Digital map"
+msgstr "  Digitaalne kaart"
+
+msgid "  Distance"
+msgstr "  Vahemaa"
+
+msgid "  EF verification"
+msgstr "  EF-kontroll"
+
+msgid "  Events"
+msgstr "  Sündmused"
+
+msgid "  Expiry date"
+msgstr "  Kehtivuse lõpp"
+
+msgid "  Faults"
+msgstr "  Riked"
+
+msgid "  File structure"
+msgstr "  Faili struktuur"
+
+msgid "  First date"
+msgstr "  Esimene kuupäev"
+
+msgid "  GNSS Serial"
+msgstr "  GNSS-seerianumber"
+
+msgid "  Generation"
+msgstr "  Põlvkond"
+
+msgid "  Issue date"
+msgstr "  Väljaandmise kuupäev"
+
+msgid "  Issuing authority"
+msgstr "  Väljaandja asutus"
+
+msgid "  Issuing nation"
+msgstr "  Väljaandja riik"
+
+msgid "  Language"
+msgstr "  Keel"
+
+msgid "  Last date"
+msgstr "  Viimane kuupäev"
+
+msgid "  Licence number"
+msgstr "  Juhiloa number"
+
+msgid "  Lock card"
+msgstr "  Lukusta kaart"
+
+msgid "  Locked since"
+msgstr "  Lukustatud alates"
+
+msgid "  Low-confidence recovery"
+msgstr "  Madala kindlusega taaste"
+
+msgid "  Make"
+msgstr "  Mark"
+
+msgid "  Mandatory sections read"
+msgstr "  Kohustuslikud jaotised loetud"
+
+msgid "  Manufactured"
+msgstr "  Tootmisaeg"
+
+msgid "  Manufacturer"
+msgstr "  Tootja"
+
+msgid "  Max speed"
+msgstr "  Suurim kiirus"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Puuduvad või rikutud andmed EI ole kuvatud."
+
+msgid "  Name"
+msgstr "  Nimi"
+
+msgid "  Nation"
+msgstr "  Riik"
+
+msgid "  Next calibration"
+msgstr "  Järgmine kalibreerimine"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Lugeda õnnestus ainult allpool loetletud jaotised."
+
+msgid "  Paired"
+msgstr "  Paaritatud"
+
+msgid "  Part number"
+msgstr "  Osa number"
+
+msgid "  Plate"
+msgstr "  Registreerimismärk"
+
+msgid "  Prefix"
+msgstr "  Eesliide"
+
+msgid "  Registration"
+msgstr "  Registreering"
+
+msgid "  SW installed"
+msgstr "  Paigaldatud tarkvara"
+
+msgid "  Sensor approval"
+msgstr "  Anduri heakskiit"
+
+msgid "  Sensor paired"
+msgstr "  Andur paaritatud"
+
+msgid "  Sensor serial"
+msgstr "  Anduri seerianumber"
+
+msgid "  Serial"
+msgstr "  Seerianumber"
+
+msgid "  Serial number"
+msgstr "  Seerianumber"
+
+msgid "  Software version"
+msgstr "  Tarkvara versioon"
+
+msgid "  Status"
+msgstr "  Olek"
+
+msgid "  Tyre size"
+msgstr "  Rehvi suurus"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Kehtib alates"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% failist"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Aegub {days} päeva pärast"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ AEGUNUD ({days} päeva tagasi)"
+
+msgid "# Drivers"
+msgstr "# Juhte"
+
+msgid "# Vehicles"
+msgstr "# Sõidukeid"
+
+msgid "(no changes)"
+msgstr "(muudatusi pole)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(ei ole semantiline dekodeerimismäär)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Aktiivsus"
+
+msgid "Activity Timeline\n"
+msgstr "Aktiivsuse ajatelg\n"
+
+msgid "All Files"
+msgstr "Kõik failid"
+
+msgid "All TREP signatures valid"
+msgstr "Kõik TREP-allkirjad kehtivad"
+
+msgid "All signatures verified"
+msgstr "Kõik allkirjad kontrollitud"
+
+msgid "Anchored to ERCA root"
+msgstr "Ankurdatud ERCA juurele"
+
+msgid "Annex 1B"
+msgstr "Lisa 1B"
+
+msgid "Annex 1C"
+msgstr "Lisa 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Lisa 1C · 2023/980"
+
+msgid "App version"
+msgstr "Rakenduse versioon"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Lisa 11 · CAR=väljaandja asutus, CHR=valdaja, kehtivus TimeRealist"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "Aug"
+msgstr "Aug"
+
+msgid "Available"
+msgstr "Saadaval"
+
+msgid "Avg Drive / day"
+msgstr "Keskm. sõit / päev"
+
+msgid "Avg km/h"
+msgstr "Keskm. km/h"
+
+msgid "Avg speed"
+msgstr "Keskmine kiirus"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Keskm. {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "BER-TLV läbimine · spetsi lisa 11 ei ole avalik"
+
+msgid "Border crossing"
+msgstr "Piiriületus"
+
+msgid "Border crossings"
+msgstr "Piiriületused"
+
+msgid "Byte-accounted coverage"
+msgstr "Baidipõhine kaetus"
+
+msgid "CSV (.csv)"
+msgstr "CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "CSV-failid"
+
+msgid "CVC Certificates (decoded)"
+msgstr "CVC-sertifikaadid (dekodeeritud)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Kaart puudub sõidumeerikust alates {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Kaardi andmete allkiri ei klapi"
+
+msgid "Card inserted"
+msgstr "Kaart sisestatud"
+
+msgid "Card not inserted"
+msgstr "Kaart pole sisestatud"
+
+msgid "Card signing key not trusted"
+msgstr "Kaardi allkirjastamisvõtit ei usaldata"
+
+msgid "Card withdrawn"
+msgstr "Kaart eemaldatud"
+
+msgid "Cardholder"
+msgstr "Kaardiomanik"
+
+msgid "Certificate chain invalid"
+msgstr "Sertifikaadiahel on vigane"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Sertifikaadiahel pole ankurdatud usaldusväärsele juurele"
+
+msgid "Certificates"
+msgstr "Sertifikaadid"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Tingimus: {condition}"
+
+msgid "Conditions"
+msgstr "Tingimused"
+
+msgid "Could not save the language setting."
+msgstr "Keele seadet ei õnnestunud salvestada."
+
+msgid "Crew"
+msgstr "Meeskond"
+
+msgid "DDD Files"
+msgstr "DDD-failid"
+
+msgid "Daily Activities"
+msgstr "Päeva aktiivsused"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Päeva aktiivsused - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Päeva aktiivsused {date}"
+
+msgid "Daily Detail"
+msgstr "Päeva detailid"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Päeva detailid — {day} (UTC)"
+
+msgid "Date"
+msgstr "Kuupäev"
+
+msgid "Days"
+msgstr "Päevad"
+
+msgid "Dec"
+msgstr "Dets"
+
+msgid "Decoder failures"
+msgstr "Dekooderi tõrked"
+
+msgid "Detailed Speed"
+msgstr "Üksikasjalik kiirus"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Üksikasjalik kiirus - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Üksikasjalik kiirus {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Vahemaa: {km} km"
+
+msgid "Drive"
+msgstr "Sõit"
+
+msgid "Driver Card"
+msgstr "Juhikaart"
+
+msgid "Driver Card (from VU download)"
+msgstr "Juhikaart (VU allalaadimisest)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Juht: {name}"
+
+msgid "Drivers"
+msgstr "Juhid"
+
+msgid "EF Signature Details"
+msgstr "EF-allkirja detailid"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "EF-allkirjad (kaardi andmete terviklikkus)"
+
+msgid "EF signature verification failed"
+msgstr "EF-allkirja kontroll ebaõnnestus"
+
+msgid "EF signatures incomplete"
+msgstr "EF-allkirjad on puudulikud"
+
+msgid "ERCA root not available"
+msgstr "ERCA juur pole saadaval"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Sisenes: {country}"
+
+msgid "Ev"
+msgstr "Sündm."
+
+msgid "Event"
+msgstr "Sündmus"
+
+msgid "Events"
+msgstr "Sündmused"
+
+msgid "Excel (.xlsx)"
+msgstr "Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Exceli töövihik"
+
+msgid "Export Complete"
+msgstr "Eksport valmis"
+
+msgid "Export Error"
+msgstr "Ekspordi viga"
+
+msgid "Export Unavailable"
+msgstr "Eksport pole saadaval"
+
+msgid "Export failed"
+msgstr "Eksport ebaõnnestus"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Eksporditud: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Eksportimine JSON-vormingusse…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Eksportimine vormingusse {kind}…"
+
+msgid "Failed"
+msgstr "Ebaõnnestus"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Faili kuvamine ebaõnnestus:\n{detail}"
+
+msgid "Fault"
+msgstr "Rike"
+
+msgid "Faults"
+msgstr "Riked"
+
+msgid "Feb"
+msgstr "Veebr"
+
+msgid "Ferry / Train crossing"
+msgstr "Praami- / rongiületus"
+
+msgid "Ferry / Train — Begin"
+msgstr "Praam / rong — algus"
+
+msgid "Ferry / Train — End"
+msgstr "Praam / rong — lõpp"
+
+msgid "Field"
+msgstr "Väli"
+
+msgid "File Integrity"
+msgstr "Faili terviklikkus"
+
+msgid "File Integrity Warning"
+msgstr "Faili terviklikkuse hoiatus"
+
+msgid "Filename"
+msgstr "Failinimi"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "GNSS autentimine (0x960F)"
+
+msgid "Generation"
+msgstr "Põlvkond"
+
+msgid "Generation 1"
+msgstr "Põlvkond 1"
+
+msgid "Generation 2"
+msgstr "Põlvkond 2"
+
+msgid "Generation 2.2"
+msgstr "Põlvkond 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "IC-kiip (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "ICC identifitseerimine"
+
+msgid "Incomplete certificates"
+msgstr "Puudulikud sertifikaadid"
+
+msgid "Integrity"
+msgstr "Terviklikkus"
+
+msgid "JSON (.json)"
+msgstr "JSON (.json)"
+
+msgid "JSON Files"
+msgstr "JSON-failid"
+
+msgid "Jan"
+msgstr "Jaan"
+
+msgid "Jul"
+msgstr "Juuli"
+
+msgid "Jun"
+msgstr "Juuni"
+
+msgid "Km"
+msgstr "Km"
+
+msgid "Language"
+msgstr "Keel"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Lahkus: {country}"
+
+msgid "Load/Unload"
+msgstr "Peale-/mahalaadimine"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Peale-/mahalaadimise autentimine (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Peale-/mahalaadimine: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Laaditud: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Laadimine…"
+
+msgid "MSCA→VU chain"
+msgstr "MSCA→VU ahel"
+
+msgid "Manual entries"
+msgstr "Käsitsi sisestused"
+
+msgid "Manual entry"
+msgstr "Käsitsi sisestus"
+
+msgid "Mar"
+msgstr "Märts"
+
+msgid "Max Drive / day"
+msgstr "Maks. sõit / päev"
+
+msgid "Max avg / day"
+msgstr "Maks. keskm. / päev"
+
+msgid "Max km/h"
+msgstr "Maks. km/h"
+
+msgid "Max speed"
+msgstr "Suurim kiirus"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Maks. {speed} km/h"
+
+msgid "May"
+msgstr "Mai"
+
+msgid "Min avg / day"
+msgstr "Min. keskm. / päev"
+
+msgid "No EF signatures verified"
+msgstr "Kinnitatud EF-allkirju pole"
+
+msgid "No activity data available."
+msgstr "Aktiivsusandmed pole saadaval."
+
+msgid "No card present"
+msgstr "Kaart pole kohal"
+
+msgid "No data for this day.\n"
+msgstr "Selle päeva kohta andmed puuduvad.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Üksikasjalikke kiirusnäidiseid pole saadaval."
+
+msgid "No file loaded"
+msgstr "Faili pole laaditud"
+
+msgid "No sections to display."
+msgstr "Kuvatavaid jaotisi pole."
+
+msgid "No valid speed samples"
+msgstr "Kehtivaid kiirusnäidiseid pole"
+
+msgid "Not locked"
+msgstr "Pole lukustatud"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Oct"
+msgstr "Okt"
+
+msgid "Odometer"
+msgstr "Odomeeter"
+
+msgid "Odometer km"
+msgstr "Odomeeter km"
+
+msgid "Origin"
+msgstr "Päritolu"
+
+msgid "Origin details"
+msgstr "Päritolu detailid"
+
+msgid "Out of scope — Begin"
+msgstr "Reguleerimisalast väljas — algus"
+
+msgid "Out of scope — End"
+msgstr "Reguleerimisalast väljas — lõpp"
+
+msgid "Overspeed events"
+msgstr "Ülekiiruse sündmused"
+
+msgid "Overspeeding"
+msgstr "Ülekiirus"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Ülekiirus: {start} → {end} | maks {max_speed} | keskm {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "PDF-dokument"
+
+msgid "Parsed at"
+msgstr "Dekodeeritud"
+
+msgid "Parsing Error"
+msgstr "Dekodeerimise viga"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Dekodeerimise viga — kuvatakse eelmine fail: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Dekodeerimine {filename}…"
+
+msgid "Partial verification"
+msgstr "Osaline kontroll"
+
+msgid "Place"
+msgstr "Koht"
+
+msgid "Place: Begin"
+msgstr "Koht: algus"
+
+msgid "Place: End"
+msgstr "Koht: lõpp"
+
+msgid "Places"
+msgstr "Kohad"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Registreerimismärk: {plate}"
+
+msgid "Power interruption"
+msgstr "Toitekatkestus"
+
+msgid "Power interruptions"
+msgstr "Toitekatkestused"
+
+msgid "Ready — open a .ddd file"
+msgstr "Valmis — ava .ddd fail"
+
+msgid "Rendering Error"
+msgstr "Kuvamise viga"
+
+msgid "Rest"
+msgstr "Puhkus"
+
+msgid "Restart the application to apply the new language."
+msgstr "Uue keele rakendamiseks taaskäivitage rakendus."
+
+msgid "Samples"
+msgstr "Näidised"
+
+msgid "Section Signatures (TREP)"
+msgstr "Jaotiste allkirjad (TREP)"
+
+msgid "Sep"
+msgstr "Sept"
+
+msgid "Signature Verification"
+msgstr "Allkirja kontroll"
+
+msgid "Size"
+msgstr "Suurus"
+
+msgid "Skipped"
+msgstr "Vahele jäetud"
+
+msgid "Slot"
+msgstr "Pesa"
+
+msgid "Slot 1"
+msgstr "Pesa 1"
+
+msgid "Slot 2"
+msgstr "Pesa 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Pesa {number}"
+
+msgid "Speed (km/h)"
+msgstr "Kiirus (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Struktuurselt tuvastatud kaetus"
+
+msgid "Sub-section"
+msgstr "Alajaotis"
+
+msgid "Summary"
+msgstr "Kokkuvõte"
+
+msgid "Summary\n"
+msgstr "Kokkuvõte\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Fail võib olla puudulik või rikutud.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Aeg"
+
+msgid "Time >90 km/h"
+msgstr "Aeg >90 km/h"
+
+msgid "Total"
+msgstr "Kokku"
+
+msgid "Unknown bytes"
+msgstr "Tundmatud baidid"
+
+msgid "Unknown event"
+msgstr "Tundmatu sündmus"
+
+msgid "Unknown fault"
+msgstr "Tundmatu rike"
+
+msgid "Unknown parsing error"
+msgstr "Tundmatu dekodeerimise viga"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "VU TREP allkirjad kehtivad (ahelat pole kontrollitud)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "VU TREP allkirjad kontrollitud (ahel osaline)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "VU allkirjad kontrollitud (juur ankurdatud)"
+
+msgid "Value"
+msgstr "Väärtus"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Sõidumeeriku üksus (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Sõiduk: {plates}"
+
+msgid "Vehicles"
+msgstr "Sõidukid"
+
+msgid "Verification error"
+msgstr "Kontrolli viga"
+
+msgid "Verified"
+msgstr "Kontrollitud"
+
+msgid "Work"
+msgstr "Töö"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} aktiivsuse muutust"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} baiti"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} baiti dekodeerimata"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} muudatust"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} juhti"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nTerviklikkusega seotud probleeme ei leitud."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} päeva"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "{kind} eksport ei ole saadaval. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "{kind} eksport nõuab lisapaketti:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} salvestatud:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s salvestatud | maks {max_speed} km/h | keskm {avg_speed:.1f} km/h | {above} üle {limit} km/h | {moving} liikumises | {gaps} sisemist lünka"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} rida · {columns} veergu"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Kõigi andmete jaoks tee topeltklõps"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Eemaldamine"
+
+msgid "▼ Insertion"
+msgstr "▼ Sisestamine"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  RIKUTUD / PUUDULIK FAIL"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  RIKUTUD JAOTISED (andmed kõrvale jäetud)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Dekooderi tõrked"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  SEE FAIL ON PUUDULIK VÕI RIKUTUD"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} terviklikkuse hoiatust — klõpsa detailide jaoks"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  JAOTISED OLEMAS"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  KOHUSTUSLIKUD JAOTISED PUUDUVAD"
+
+msgid "❌  Parse error"
+msgstr "❌  Dekodeerimise viga"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Katkestatud (faili lõpuni ei jõutud)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Puudulikud sertifikaadid"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  KAARDIOMANIK"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Juht / kaardiomanik"
+
+msgid "💻  VU INFO"
+msgstr "💻  VU TEAVE"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Ava DDD-fail"
+
+msgid "📄  File Info"
+msgstr "📄  Faili teave"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  KUUPÄEVAVAHEMIK"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  TÄIELIKKUS"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  PARAMEETRID"
+
+msgid "📊  STATISTICS"
+msgstr "📊  STATISTIKA"
+
+msgid "📡  SENSOR"
+msgstr "📡  ANDUR"
+
+msgid "📡  Sensor"
+msgstr "📡  Andur"
+
+msgid "📤  Export"
+msgstr "📤  Eksport"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation}{annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  ALLKIRJAD"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Turvalisus ja sertifikaadid"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  PRAEGUNE LUKUSTUS"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  PRAEGUNE LUKUSTUS"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  SEOTUD SÕIDUK"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  SÕIDUK"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Sõiduk"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  TAASTATUD KAHJUSTATUD ANDMETEST"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Töötlemata toorandmed"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  KAARDI ANDMED"

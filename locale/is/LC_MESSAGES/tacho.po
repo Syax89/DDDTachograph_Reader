@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: is\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (ekkert)"
+
+msgid "  Ability"
+msgstr "  Hæfni"
+
+msgid "  Activity changes"
+msgstr "  Breytingar á virkni"
+
+msgid "  Actual range"
+msgstr "  Raunveruleg drægni"
+
+msgid "  Address"
+msgstr "  Heimilisfang"
+
+msgid "  Approval"
+msgstr "  Samþykki"
+
+msgid "  Authorised speed"
+msgstr "  Leyfður hraði"
+
+msgid "  Avg speed"
+msgstr "  Meðalhraði"
+
+msgid "  Birth date"
+msgstr "  Fæðingardagur"
+
+msgid "  Card downloads"
+msgstr "  Niðurhöl korts"
+
+msgid "  Card number"
+msgstr "  Kortanúmer"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Kort til staðar: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Fyrirtæki"
+
+msgid "  Days recorded"
+msgstr "  Skráðir dagar"
+
+msgid "  Days with activities"
+msgstr "  Dagar með virkniskráningar"
+
+msgid "  Days with activity"
+msgstr "  Dagar með virkni"
+
+msgid "  Digital map"
+msgstr "  Stafrænt kort"
+
+msgid "  Distance"
+msgstr "  Vegalengd"
+
+msgid "  EF verification"
+msgstr "  EF-staðfesting"
+
+msgid "  Events"
+msgstr "  Atburðir"
+
+msgid "  Expiry date"
+msgstr "  Gildisdagur"
+
+msgid "  Faults"
+msgstr "  Bilanir"
+
+msgid "  File structure"
+msgstr "  Skráarbygging"
+
+msgid "  First date"
+msgstr "  Fyrsta dagsetning"
+
+msgid "  GNSS Serial"
+msgstr "  GNSS raðnúmer"
+
+msgid "  Generation"
+msgstr "  Kynslóð"
+
+msgid "  Issue date"
+msgstr "  Útgáfudagur"
+
+msgid "  Issuing authority"
+msgstr "  Útgáfuaðili"
+
+msgid "  Issuing nation"
+msgstr "  Útgáfuland"
+
+msgid "  Language"
+msgstr "  Tungumál"
+
+msgid "  Last date"
+msgstr "  Síðasta dagsetning"
+
+msgid "  Licence number"
+msgstr "  Ökuréttindanúmer"
+
+msgid "  Lock card"
+msgstr "  Læsa korti"
+
+msgid "  Locked since"
+msgstr "  Læst síðan"
+
+msgid "  Low-confidence recovery"
+msgstr "  Endurheimt með lágri vissu"
+
+msgid "  Make"
+msgstr "  Tegund"
+
+msgid "  Mandatory sections read"
+msgstr "  Skylduhlutar lesnir"
+
+msgid "  Manufactured"
+msgstr "  Framleitt"
+
+msgid "  Manufacturer"
+msgstr "  Framleiðandi"
+
+msgid "  Max speed"
+msgstr "  Hámarkshraði"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Vantað eða skemmt gögn eru EKKI sýnd."
+
+msgid "  Name"
+msgstr "  Nafn"
+
+msgid "  Nation"
+msgstr "  Þjóð"
+
+msgid "  Next calibration"
+msgstr "  Næsta kvörðun"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Aðeins var hægt að lesa hlutana sem taldir eru hér fyrir neðan."
+
+msgid "  Paired"
+msgstr "  Parað"
+
+msgid "  Part number"
+msgstr "  Hlutarnúmer"
+
+msgid "  Plate"
+msgstr "  Númeraplata"
+
+msgid "  Prefix"
+msgstr "  Forskeyti"
+
+msgid "  Registration"
+msgstr "  Skráning"
+
+msgid "  SW installed"
+msgstr "  Uppsettur hugbúnaður"
+
+msgid "  Sensor approval"
+msgstr "  Samþykki skynjara"
+
+msgid "  Sensor paired"
+msgstr "  Skynjari paraður"
+
+msgid "  Sensor serial"
+msgstr "  Raðnúmer skynjara"
+
+msgid "  Serial"
+msgstr "  Raðnúmer"
+
+msgid "  Serial number"
+msgstr "  Raðnúmer"
+
+msgid "  Software version"
+msgstr "  Hugbúnaðarútgáfa"
+
+msgid "  Status"
+msgstr "  Staða"
+
+msgid "  Tyre size"
+msgstr "  Dekkstærð"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Gilt frá"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% af skránni"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Gjalddagi eftir {days} daga"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ ÚTRUNNIÐ ({days} dögum síðan)"
+
+msgid "# Drivers"
+msgstr "# Ökumenn"
+
+msgid "# Vehicles"
+msgstr "# Ökutæki"
+
+msgid "(no changes)"
+msgstr "(engar breytingar)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(ekki afkóðunarhlutfall að merkingu)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Virkni"
+
+msgid "Activity Timeline\n"
+msgstr "Tímalína virkni\n"
+
+msgid "All Files"
+msgstr "Allar skrár"
+
+msgid "All TREP signatures valid"
+msgstr "Allar TREP-undirskriftir gildar"
+
+msgid "All signatures verified"
+msgstr "Allar undirskriftir staðfestar"
+
+msgid "Anchored to ERCA root"
+msgstr "Festa í ERCA-rót"
+
+msgid "Annex 1B"
+msgstr "Viðauki 1B"
+
+msgid "Annex 1C"
+msgstr "Viðauki 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Viðauki 1C · 2023/980"
+
+msgid "App version"
+msgstr "Útgáfa apps"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Viðbót 11 · CAR=útgáfuaðili, CHR=handhafi, gildi frá TimeReal"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "Aug"
+msgstr "Ágú"
+
+msgid "Available"
+msgstr "Fáanlegur"
+
+msgid "Avg Drive / day"
+msgstr "Meðalakstur / dag"
+
+msgid "Avg km/h"
+msgstr "Meðal km/h"
+
+msgid "Avg speed"
+msgstr "Meðalhraði"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Meðal {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "BER-TLV yfirferð · viðbót 11 við forskriftina er ekki opinber"
+
+msgid "Border crossing"
+msgstr "Landamærayfirferð"
+
+msgid "Border crossings"
+msgstr "Landamærayfirferðir"
+
+msgid "Byte-accounted coverage"
+msgstr "Þekja reiknuð í bætum"
+
+msgid "CSV (.csv)"
+msgstr "CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "CSV-skrár"
+
+msgid "CVC Certificates (decoded)"
+msgstr "CVC-skirteini (afkóðuð)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Kort ekki í akstursritanum frá {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Undirskrift kortagagna stenst ekki"
+
+msgid "Card inserted"
+msgstr "Kort sett í"
+
+msgid "Card not inserted"
+msgstr "Kort ekki sett í"
+
+msgid "Card signing key not trusted"
+msgstr "Undirskriftarlykill korts ekki treyst"
+
+msgid "Card withdrawn"
+msgstr "Kort tekið út"
+
+msgid "Cardholder"
+msgstr "Korthafi"
+
+msgid "Certificate chain invalid"
+msgstr "Skírteinakeðja ógild"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Skírteinakeðja ekki fest í treystri rót"
+
+msgid "Certificates"
+msgstr "Skírteini"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Skilyrði: {condition}"
+
+msgid "Conditions"
+msgstr "Skilyrði"
+
+msgid "Could not save the language setting."
+msgstr "Ekki tókst að vista tungumálastillinguna."
+
+msgid "Crew"
+msgstr "Áhöfn"
+
+msgid "DDD Files"
+msgstr "DDD-skrár"
+
+msgid "Daily Activities"
+msgstr "Dagleg virkni"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Dagleg virkni - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Dagleg virkni {date}"
+
+msgid "Daily Detail"
+msgstr "Dagleg smáatriði"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Dagleg smáatriði — {day} (UTC)"
+
+msgid "Date"
+msgstr "Dagsetning"
+
+msgid "Days"
+msgstr "Dagar"
+
+msgid "Dec"
+msgstr "Des"
+
+msgid "Decoder failures"
+msgstr "Afkóðunarbilanir"
+
+msgid "Detailed Speed"
+msgstr "Nákvæmur hraði"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Nákvæmur hraði - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Nákvæmur hraði {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Vegalengd: {km} km"
+
+msgid "Drive"
+msgstr "Akstur"
+
+msgid "Driver Card"
+msgstr "Ökumannskort"
+
+msgid "Driver Card (from VU download)"
+msgstr "Ökumannskort (úr VU-niðurhali)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Ökumaður: {name}"
+
+msgid "Drivers"
+msgstr "Ökumenn"
+
+msgid "EF Signature Details"
+msgstr "Smáatriði EF-undirskriftar"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "EF-undirskriftir (heilindi kortagagna)"
+
+msgid "EF signature verification failed"
+msgstr "Staðfesting EF-undirskriftar mistókst"
+
+msgid "EF signatures incomplete"
+msgstr "EF-undirskriftir ófullnægjandi"
+
+msgid "ERCA root not available"
+msgstr "ERCA-rót ekki tiltæk"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Kom inn: {country}"
+
+msgid "Ev"
+msgstr "Atb."
+
+msgid "Event"
+msgstr "Atburður"
+
+msgid "Events"
+msgstr "Atburðir"
+
+msgid "Excel (.xlsx)"
+msgstr "Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Excel-vinnubók"
+
+msgid "Export Complete"
+msgstr "Útflutningi lokið"
+
+msgid "Export Error"
+msgstr "Villa í útflutningi"
+
+msgid "Export Unavailable"
+msgstr "Útflutningur ekki tiltækur"
+
+msgid "Export failed"
+msgstr "Útflutningur mistókst"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Flutt út: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Flyt út í JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Flyt út í {kind}…"
+
+msgid "Failed"
+msgstr "Mistókst"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Ekki tókst að sýna skrána:\n{detail}"
+
+msgid "Fault"
+msgstr "Bilun"
+
+msgid "Faults"
+msgstr "Bilanir"
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "Ferry / Train crossing"
+msgstr "Ferju- / lestaryfirferð"
+
+msgid "Ferry / Train — Begin"
+msgstr "Ferja / lest — upphaf"
+
+msgid "Ferry / Train — End"
+msgstr "Ferja / lest — endir"
+
+msgid "Field"
+msgstr "Reitur"
+
+msgid "File Integrity"
+msgstr "Heilindi skráar"
+
+msgid "File Integrity Warning"
+msgstr "Viðvörun um heilindi skráar"
+
+msgid "Filename"
+msgstr "Skráarnafn"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "GNSS-auðkenning (0x960F)"
+
+msgid "Generation"
+msgstr "Kynslóð"
+
+msgid "Generation 1"
+msgstr "Kynslóð 1"
+
+msgid "Generation 2"
+msgstr "Kynslóð 2"
+
+msgid "Generation 2.2"
+msgstr "Kynslóð 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "IC-flaga (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "ICC-auðkenning"
+
+msgid "Incomplete certificates"
+msgstr "Ófullnægjandi skírteini"
+
+msgid "Integrity"
+msgstr "Heilindi"
+
+msgid "JSON (.json)"
+msgstr "JSON (.json)"
+
+msgid "JSON Files"
+msgstr "JSON-skrár"
+
+msgid "Jan"
+msgstr "Jan"
+
+msgid "Jul"
+msgstr "Júl"
+
+msgid "Jun"
+msgstr "Jún"
+
+msgid "Km"
+msgstr "Km"
+
+msgid "Language"
+msgstr "Tungumál"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Fór: {country}"
+
+msgid "Load/Unload"
+msgstr "Hleðsla/lossun"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Auðkenning hleðslu/lossunar (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Hleðsla/lossun: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Hlaðið: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Hleð…"
+
+msgid "MSCA→VU chain"
+msgstr "MSCA→VU keðja"
+
+msgid "Manual entries"
+msgstr "Handvirkar færslur"
+
+msgid "Manual entry"
+msgstr "Handvirk færsla"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "Max Drive / day"
+msgstr "Hámarksakstur / dag"
+
+msgid "Max avg / day"
+msgstr "Hámarksmeðal / dag"
+
+msgid "Max km/h"
+msgstr "Hámark km/h"
+
+msgid "Max speed"
+msgstr "Hámarkshraði"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Hám. {speed} km/h"
+
+msgid "May"
+msgstr "Maí"
+
+msgid "Min avg / day"
+msgstr "Lágmarksmeðal / dag"
+
+msgid "No EF signatures verified"
+msgstr "Engar EF-undirskriftir staðfestar"
+
+msgid "No activity data available."
+msgstr "Engin virknigögn tiltæk."
+
+msgid "No card present"
+msgstr "Ekkert kort til staðar"
+
+msgid "No data for this day.\n"
+msgstr "Engin gögn fyrir þennan dag.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Engin nákvæm hraðasýni tiltæk."
+
+msgid "No file loaded"
+msgstr "Engin skrá hlaðin"
+
+msgid "No sections to display."
+msgstr "Engir hlutar til að sýna."
+
+msgid "No valid speed samples"
+msgstr "Engin gild hraðasýni"
+
+msgid "Not locked"
+msgstr "Ekki læst"
+
+msgid "Nov"
+msgstr "Nóv"
+
+msgid "Oct"
+msgstr "Okt"
+
+msgid "Odometer"
+msgstr "Akstursmælir"
+
+msgid "Odometer km"
+msgstr "Akstursmælir km"
+
+msgid "Origin"
+msgstr "Uppruni"
+
+msgid "Origin details"
+msgstr "Smáatriði uppruna"
+
+msgid "Out of scope — Begin"
+msgstr "Utan gildissviðs — upphaf"
+
+msgid "Out of scope — End"
+msgstr "Utan gildissviðs — endir"
+
+msgid "Overspeed events"
+msgstr "Ofhraðaatburðir"
+
+msgid "Overspeeding"
+msgstr "Ofhraði"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Ofhraði: {start} → {end} | hámark {max_speed} | meðal {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "PDF-skjal"
+
+msgid "Parsed at"
+msgstr "Afkóðað"
+
+msgid "Parsing Error"
+msgstr "Afkóðunarvilla"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Afkóðunarvilla — sýni fyrri skrá: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Afkóða {filename}…"
+
+msgid "Partial verification"
+msgstr "Staðfesting að hluta"
+
+msgid "Place"
+msgstr "Staður"
+
+msgid "Place: Begin"
+msgstr "Staður: upphaf"
+
+msgid "Place: End"
+msgstr "Staður: endir"
+
+msgid "Places"
+msgstr "Staðir"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Númeraplata: {plate}"
+
+msgid "Power interruption"
+msgstr "Rof í rafveitu"
+
+msgid "Power interruptions"
+msgstr "Rof í rafveitu"
+
+msgid "Ready — open a .ddd file"
+msgstr "Tilbúið — opnaðu .ddd skrá"
+
+msgid "Rendering Error"
+msgstr "Villa við birtingu"
+
+msgid "Rest"
+msgstr "Hvíld"
+
+msgid "Restart the application to apply the new language."
+msgstr "Endurræstu appið til að taka nýja tungumálið í gildi."
+
+msgid "Samples"
+msgstr "Sýni"
+
+msgid "Section Signatures (TREP)"
+msgstr "Undirskriftir hluta (TREP)"
+
+msgid "Sep"
+msgstr "Sep"
+
+msgid "Signature Verification"
+msgstr "Staðfesting undirskriftar"
+
+msgid "Size"
+msgstr "Stærð"
+
+msgid "Skipped"
+msgstr "Sleppt"
+
+msgid "Slot"
+msgstr "Rauf"
+
+msgid "Slot 1"
+msgstr "Rauf 1"
+
+msgid "Slot 2"
+msgstr "Rauf 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Rauf {number}"
+
+msgid "Speed (km/h)"
+msgstr "Hraði (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Þekja greind af byggingu"
+
+msgid "Sub-section"
+msgstr "Undirhluti"
+
+msgid "Summary"
+msgstr "Samantekt"
+
+msgid "Summary\n"
+msgstr "Samantekt\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Skráin gæti verið ófullnægjandi eða skemmd.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Tími"
+
+msgid "Time >90 km/h"
+msgstr "Tími >90 km/h"
+
+msgid "Total"
+msgstr "Samtals"
+
+msgid "Unknown bytes"
+msgstr "Óþekkt bæt"
+
+msgid "Unknown event"
+msgstr "Óþekktur atburður"
+
+msgid "Unknown fault"
+msgstr "Óþekkt bilun"
+
+msgid "Unknown parsing error"
+msgstr "Óþekkt afkóðunarvilla"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "VU TREP-undirskriftir gildar (keðja óstaðfest)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "VU TREP-undirskriftir staðfestar (keðja að hluta)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "VU-undirskriftir staðfestar (rót fest)"
+
+msgid "Value"
+msgstr "Gildi"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Ökutækiseining (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Ökutæki: {plates}"
+
+msgid "Vehicles"
+msgstr "Ökutæki"
+
+msgid "Verification error"
+msgstr "Staðfestingarvilla"
+
+msgid "Verified"
+msgstr "Staðfest"
+
+msgid "Work"
+msgstr "Vinna"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} breytingar á virkni"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} bæt"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} bæt óafkóðuð"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} breytingar"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} ökumenn"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nEngin vandamál með heilindi fundust."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} dagar"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "Útflutningur {kind} er ekki tiltækur. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "Útflutningur {kind} krefst viðbótarpakka:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} vistað í:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s skráð | hámark {max_speed} km/h | meðal {avg_speed:.1f} km/h | {above} yfir {limit} km/h | {moving} á hreyfingu | {gaps} innri eyður"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} raðir · {columns} dálkar"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Tvísmelltu fyrir öll smáatriði"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Úttekt"
+
+msgid "▼ Insertion"
+msgstr "▼ Ísetning"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  SKEMMD / ÓFULLNÆGJANDI SKRÁ"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  SKEMMDIR HLUTAR (gögnum hafnað)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Afkóðunarbilanir"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  ÞESSI SKRÁ ER ÓFULLNÆGJANDI EÐA SKEMMD"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} viðvaranir um heilindi — smella fyrir smáatriði"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  HLUTAR TIL STAÐAR"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  SKYLDUM HLUTUM VANNTAR"
+
+msgid "❌  Parse error"
+msgstr "❌  Afkóðunarvilla"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Klippt (náði ekki enda skráarinnar)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Ófullnægjandi skírteini"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  KORTHAFI"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Ökumaður / korthafi"
+
+msgid "💻  VU INFO"
+msgstr "💻  VU-UPPLÝSINGAR"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Opna DDD-skrá"
+
+msgid "📄  File Info"
+msgstr "📄  Upplýsingar um skrá"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  DAGSETNINGABIL"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  HEILD"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  FÆRIBREYTUR"
+
+msgid "📊  STATISTICS"
+msgstr "📊  TÖLFRÆÐI"
+
+msgid "📡  SENSOR"
+msgstr "📡  SKYNJARI"
+
+msgid "📡  Sensor"
+msgstr "📡  Skynjari"
+
+msgid "📤  Export"
+msgstr "📤  Útflutningur"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation}{annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  UNDIRSKRIFTIR"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Öryggi og skírteini"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  NÚVERANDI LÆSING"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  NÚVERANDI LÆSING"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  TENGD ÖKUTÆKI"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  ÖKUTÆKI"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Ökutæki"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  ENDURHEIMT ÚR SKEMMDUM GÖGNUM"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Hrá / óafkóðuð gögn"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  KORTASMÁATRIÐI"

@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: ro\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (niciunul)"
+
+msgid "  Ability"
+msgstr "  Capacitate"
+
+msgid "  Activity changes"
+msgstr "  Modificări de activitate"
+
+msgid "  Actual range"
+msgstr "  Interval efectiv"
+
+msgid "  Address"
+msgstr "  Adresă"
+
+msgid "  Approval"
+msgstr "  Omologare"
+
+msgid "  Authorised speed"
+msgstr "  Viteză autorizată"
+
+msgid "  Avg speed"
+msgstr "  Viteză medie"
+
+msgid "  Birth date"
+msgstr "  Data nașterii"
+
+msgid "  Card downloads"
+msgstr "  Descărcări card"
+
+msgid "  Card number"
+msgstr "  Număr card"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Card prezent: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Companie"
+
+msgid "  Days recorded"
+msgstr "  Zile înregistrate"
+
+msgid "  Days with activities"
+msgstr "  Zile cu activități"
+
+msgid "  Days with activity"
+msgstr "  Zile cu activitate"
+
+msgid "  Digital map"
+msgstr "  Hartă digitală"
+
+msgid "  Distance"
+msgstr "  Distanță"
+
+msgid "  EF verification"
+msgstr "  Verificare EF"
+
+msgid "  Events"
+msgstr "  Evenimente"
+
+msgid "  Expiry date"
+msgstr "  Data expirării"
+
+msgid "  Faults"
+msgstr "  Defecțiuni"
+
+msgid "  File structure"
+msgstr "  Structura fișierului"
+
+msgid "  First date"
+msgstr "  Prima dată"
+
+msgid "  GNSS Serial"
+msgstr "  Serie GNSS"
+
+msgid "  Generation"
+msgstr "  Generație"
+
+msgid "  Issue date"
+msgstr "  Data emiterii"
+
+msgid "  Issuing authority"
+msgstr "  Autoritate emitentă"
+
+msgid "  Issuing nation"
+msgstr "  Țară emitentă"
+
+msgid "  Language"
+msgstr "  Limbă"
+
+msgid "  Last date"
+msgstr "  Ultima dată"
+
+msgid "  Licence number"
+msgstr "  Număr permis"
+
+msgid "  Lock card"
+msgstr "  Blocare card"
+
+msgid "  Locked since"
+msgstr "  Blocat din"
+
+msgid "  Low-confidence recovery"
+msgstr "  Recuperare cu încredere redusă"
+
+msgid "  Make"
+msgstr "  Marcă"
+
+msgid "  Mandatory sections read"
+msgstr "  Secțiuni obligatorii citite"
+
+msgid "  Manufactured"
+msgstr "  Data fabricației"
+
+msgid "  Manufacturer"
+msgstr "  Producător"
+
+msgid "  Max speed"
+msgstr "  Viteză maximă"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Datele lipsă sau corupte NU sunt afișate."
+
+msgid "  Name"
+msgstr "  Nume"
+
+msgid "  Nation"
+msgstr "  Țară"
+
+msgid "  Next calibration"
+msgstr "  Următoarea calibrare"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Au putut fi citite doar secțiunile enumerate mai jos."
+
+msgid "  Paired"
+msgstr "  Împerecheat"
+
+msgid "  Part number"
+msgstr "  Număr piesă"
+
+msgid "  Plate"
+msgstr "  Număr înmatriculare"
+
+msgid "  Prefix"
+msgstr "  Prefix"
+
+msgid "  Registration"
+msgstr "  Înmatriculare"
+
+msgid "  SW installed"
+msgstr "  SW instalat"
+
+msgid "  Sensor approval"
+msgstr "  Omologare senzor"
+
+msgid "  Sensor paired"
+msgstr "  Senzor împerecheat"
+
+msgid "  Sensor serial"
+msgstr "  Serie senzor"
+
+msgid "  Serial"
+msgstr "  Serie"
+
+msgid "  Serial number"
+msgstr "  Număr de serie"
+
+msgid "  Software version"
+msgstr "  Versiune software"
+
+msgid "  Status"
+msgstr "  Stare"
+
+msgid "  Tyre size"
+msgstr "  Dimensiune anvelope"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Valabil din"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% din fișier"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Scadent în {days} zile"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ EXPIRAT ({days} zile în urmă)"
+
+msgid "# Drivers"
+msgstr "# Conducători"
+
+msgid "# Vehicles"
+msgstr "# Vehicule"
+
+msgid "(no changes)"
+msgstr "(nicio modificare)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(nu este o rată de decodare semantică)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Activitate"
+
+msgid "Activity Timeline\n"
+msgstr "Cronologie activitate\n"
+
+msgid "All Files"
+msgstr "Toate fișierele"
+
+msgid "All TREP signatures valid"
+msgstr "Toate semnăturile TREP valide"
+
+msgid "All signatures verified"
+msgstr "Toate semnăturile verificate"
+
+msgid "Anchored to ERCA root"
+msgstr "Ancorat la rădăcina ERCA"
+
+msgid "Annex 1B"
+msgstr "Anexa 1B"
+
+msgid "Annex 1C"
+msgstr "Anexa 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Anexa 1C · 2023/980"
+
+msgid "App version"
+msgstr "Versiune aplicație"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Appendix 11 · CAR=autoritate emitentă, CHR=deținător, valabilitate de la TimeReal"
+
+msgid "Apr"
+msgstr "apr."
+
+msgid "Aug"
+msgstr "aug."
+
+msgid "Available"
+msgstr "Disponibilitate"
+
+msgid "Avg Drive / day"
+msgstr "Conducere medie / zi"
+
+msgid "Avg km/h"
+msgstr "Medie km/h"
+
+msgid "Avg speed"
+msgstr "Viteză medie"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Medie {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "Parcurgere BER-TLV · specificația Appendix 11 nu este publică"
+
+msgid "Border crossing"
+msgstr "Traversare de frontieră"
+
+msgid "Border crossings"
+msgstr "Traversări de frontieră"
+
+msgid "Byte-accounted coverage"
+msgstr "Acoperire contabilizată în octeți"
+
+msgid "CSV (.csv)"
+msgstr "Fișier CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "Fișiere CSV"
+
+msgid "CVC Certificates (decoded)"
+msgstr "Certificate CVC (decodificate)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Card absent din tahograf începând cu {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Semnătura datelor cardului nu corespunde"
+
+msgid "Card inserted"
+msgstr "Card introdus"
+
+msgid "Card not inserted"
+msgstr "Card neintrodus"
+
+msgid "Card signing key not trusted"
+msgstr "Cheia de semnare a cardului nu este de încredere"
+
+msgid "Card withdrawn"
+msgstr "Card retras"
+
+msgid "Cardholder"
+msgstr "Deținătorul cardului"
+
+msgid "Certificate chain invalid"
+msgstr "Lanț de certificate invalid"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Lanțul de certificate nu este ancorat la o rădăcină de încredere"
+
+msgid "Certificates"
+msgstr "Certificate"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Condiție: {condition}"
+
+msgid "Conditions"
+msgstr "Condiții"
+
+msgid "Could not save the language setting."
+msgstr "Setarea limbii nu a putut fi salvată."
+
+msgid "Crew"
+msgstr "Echipaj"
+
+msgid "DDD Files"
+msgstr "Fișiere DDD"
+
+msgid "Daily Activities"
+msgstr "Activități zilnice"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Activități zilnice - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Activități zilnice {date}"
+
+msgid "Daily Detail"
+msgstr "Detaliu zilnic"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Detaliu zilnic — {day} (UTC)"
+
+msgid "Date"
+msgstr "Dată"
+
+msgid "Days"
+msgstr "Zile"
+
+msgid "Dec"
+msgstr "dec."
+
+msgid "Decoder failures"
+msgstr "Defecțiuni ale decodorului"
+
+msgid "Detailed Speed"
+msgstr "Viteză detaliată"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Viteză detaliată - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Viteză detaliată {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Distanță: {km} km"
+
+msgid "Drive"
+msgstr "Conducere"
+
+msgid "Driver Card"
+msgstr "Card de conducător"
+
+msgid "Driver Card (from VU download)"
+msgstr "Card de conducător (din descărcarea VU)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Conducător: {name}"
+
+msgid "Drivers"
+msgstr "Conducători"
+
+msgid "EF Signature Details"
+msgstr "Detalii semnături EF"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "Semnături EF (integritatea datelor cardului)"
+
+msgid "EF signature verification failed"
+msgstr "Verificarea semnăturilor EF a eșuat"
+
+msgid "EF signatures incomplete"
+msgstr "Semnături EF incomplete"
+
+msgid "ERCA root not available"
+msgstr "Rădăcina ERCA nu este disponibilă"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Intrare: {country}"
+
+msgid "Ev"
+msgstr "Ev."
+
+msgid "Event"
+msgstr "Eveniment"
+
+msgid "Events"
+msgstr "Evenimente"
+
+msgid "Excel (.xlsx)"
+msgstr "Fișier Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Registru Excel"
+
+msgid "Export Complete"
+msgstr "Export finalizat"
+
+msgid "Export Error"
+msgstr "Eroare la export"
+
+msgid "Export Unavailable"
+msgstr "Export indisponibil"
+
+msgid "Export failed"
+msgstr "Exportul a eșuat"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Exportat: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Se exportă în JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Se exportă în {kind}…"
+
+msgid "Failed"
+msgstr "Eșuat"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Fișierul nu a putut fi afișat:\n{detail}"
+
+msgid "Fault"
+msgstr "Defecțiune"
+
+msgid "Faults"
+msgstr "Defecțiuni"
+
+msgid "Feb"
+msgstr "feb."
+
+msgid "Ferry / Train crossing"
+msgstr "Traversare cu feribotul / trenul"
+
+msgid "Ferry / Train — Begin"
+msgstr "Feribot / Tren — Început"
+
+msgid "Ferry / Train — End"
+msgstr "Feribot / Tren — Sfârșit"
+
+msgid "Field"
+msgstr "Câmp"
+
+msgid "File Integrity"
+msgstr "Integritatea fișierului"
+
+msgid "File Integrity Warning"
+msgstr "Avertisment privind integritatea fișierului"
+
+msgid "Filename"
+msgstr "Nume fișier"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "Autentificare GNSS (0x960F)"
+
+msgid "Generation"
+msgstr "Generație"
+
+msgid "Generation 1"
+msgstr "Generația 1"
+
+msgid "Generation 2"
+msgstr "Generația 2"
+
+msgid "Generation 2.2"
+msgstr "Generația 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "Cip IC (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "Identificare ICC"
+
+msgid "Incomplete certificates"
+msgstr "Certificate incomplete"
+
+msgid "Integrity"
+msgstr "Integritate"
+
+msgid "JSON (.json)"
+msgstr "Fișier JSON (.json)"
+
+msgid "JSON Files"
+msgstr "Fișiere JSON"
+
+msgid "Jan"
+msgstr "ian."
+
+msgid "Jul"
+msgstr "iul."
+
+msgid "Jun"
+msgstr "iun."
+
+msgid "Km"
+msgstr "km"
+
+msgid "Language"
+msgstr "Limbă"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Ieșire: {country}"
+
+msgid "Load/Unload"
+msgstr "Încărcare/Descărcare"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Autentificare încărcare/descărcare (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Încărcare/Descărcare: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Încărcat: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Se încarcă…"
+
+msgid "MSCA→VU chain"
+msgstr "Lanț MSCA→VU"
+
+msgid "Manual entries"
+msgstr "Introduceri manuale"
+
+msgid "Manual entry"
+msgstr "Introducere manuală"
+
+msgid "Mar"
+msgstr "mar."
+
+msgid "Max Drive / day"
+msgstr "Conducere maximă / zi"
+
+msgid "Max avg / day"
+msgstr "Medie maximă / zi"
+
+msgid "Max km/h"
+msgstr "Maxim km/h"
+
+msgid "Max speed"
+msgstr "Viteză maximă"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Maxim {speed} km/h"
+
+msgid "May"
+msgstr "mai"
+
+msgid "Min avg / day"
+msgstr "Medie minimă / zi"
+
+msgid "No EF signatures verified"
+msgstr "Nicio semnătură EF verificată"
+
+msgid "No activity data available."
+msgstr "Nu există date de activitate disponibile."
+
+msgid "No card present"
+msgstr "Niciun card prezent"
+
+msgid "No data for this day.\n"
+msgstr "Nu există date pentru această zi.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Nu există eșantioane de viteză detaliată disponibile."
+
+msgid "No file loaded"
+msgstr "Niciun fișier încărcat"
+
+msgid "No sections to display."
+msgstr "Nu există secțiuni de afișat."
+
+msgid "No valid speed samples"
+msgstr "Niciun eșantion de viteză valid"
+
+msgid "Not locked"
+msgstr "Neblocat"
+
+msgid "Nov"
+msgstr "nov."
+
+msgid "Oct"
+msgstr "oct."
+
+msgid "Odometer"
+msgstr "Odometru"
+
+msgid "Odometer km"
+msgstr "Odometru km"
+
+msgid "Origin"
+msgstr "Origine"
+
+msgid "Origin details"
+msgstr "Detalii origine"
+
+msgid "Out of scope — Begin"
+msgstr "În afara domeniului — Început"
+
+msgid "Out of scope — End"
+msgstr "În afara domeniului — Sfârșit"
+
+msgid "Overspeed events"
+msgstr "Evenimente de depășire a vitezei"
+
+msgid "Overspeeding"
+msgstr "Depășire viteză"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Depășire viteză: {start} → {end} | max {max_speed} | medie {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "Fișier PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "Document PDF"
+
+msgid "Parsed at"
+msgstr "Analizat la"
+
+msgid "Parsing Error"
+msgstr "Eroare de analiză"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Eroare de analiză — se afișează fișierul anterior: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Se analizează {filename}…"
+
+msgid "Partial verification"
+msgstr "Verificare parțială"
+
+msgid "Place"
+msgstr "Loc"
+
+msgid "Place: Begin"
+msgstr "Loc: Început"
+
+msgid "Place: End"
+msgstr "Loc: Sfârșit"
+
+msgid "Places"
+msgstr "Locuri"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Număr înmatriculare: {plate}"
+
+msgid "Power interruption"
+msgstr "Întrerupere alimentare"
+
+msgid "Power interruptions"
+msgstr "Întreruperi alimentare"
+
+msgid "Ready — open a .ddd file"
+msgstr "Pregătit — deschideți un fișier .ddd"
+
+msgid "Rendering Error"
+msgstr "Eroare de afișare"
+
+msgid "Rest"
+msgstr "Repaus"
+
+msgid "Restart the application to apply the new language."
+msgstr "Reporniți aplicația pentru a aplica noua limbă."
+
+msgid "Samples"
+msgstr "Eșantioane"
+
+msgid "Section Signatures (TREP)"
+msgstr "Semnături de secțiune (TREP)"
+
+msgid "Sep"
+msgstr "sept."
+
+msgid "Signature Verification"
+msgstr "Verificarea semnăturilor"
+
+msgid "Size"
+msgstr "Dimensiune"
+
+msgid "Skipped"
+msgstr "Omis"
+
+msgid "Slot"
+msgstr "Slot"
+
+msgid "Slot 1"
+msgstr "Slot nr. 1"
+
+msgid "Slot 2"
+msgstr "Slot nr. 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Slot nr. {number}"
+
+msgid "Speed (km/h)"
+msgstr "Viteză (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Acoperire identificată structural"
+
+msgid "Sub-section"
+msgstr "Subsecțiune"
+
+msgid "Summary"
+msgstr "Rezumat"
+
+msgid "Summary\n"
+msgstr "Rezumat\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Fișierul poate fi incomplet sau corupt.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Oră"
+
+msgid "Time >90 km/h"
+msgstr "Timp >90 km/h"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Unknown bytes"
+msgstr "Octeți necunoscuți"
+
+msgid "Unknown event"
+msgstr "Eveniment necunoscut"
+
+msgid "Unknown fault"
+msgstr "Defecțiune necunoscută"
+
+msgid "Unknown parsing error"
+msgstr "Eroare de analiză necunoscută"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "Semnături TREP VU valide (lanț neverificat)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "Semnături TREP VU verificate (lanț parțial)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "Semnături VU verificate (rădăcină ancorată)"
+
+msgid "Value"
+msgstr "Valoare"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Unitate de vehicul (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Vehicul: {plates}"
+
+msgid "Vehicles"
+msgstr "Vehicule"
+
+msgid "Verification error"
+msgstr "Eroare de verificare"
+
+msgid "Verified"
+msgstr "Verificat"
+
+msgid "Work"
+msgstr "Altă muncă"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} modificări de activitate"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} octeți"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} octeți nedecodificați"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} modificări"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} conducători"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (ora UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nNu au fost detectate probleme de integritate."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} zile"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "Exportul {kind} nu este disponibil. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "Exportul {kind} necesită un pachet suplimentar:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} salvat în:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s înregistrate | max {max_speed} km/h | medie {avg_speed:.1f} km/h | {above} peste {limit} km/h | {moving} în mișcare | {gaps} goluri interne"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} rânduri · {columns} coloane"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Dublu clic pentru detalii complete"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Retragere"
+
+msgid "▼ Insertion"
+msgstr "▼ Inserare"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  FIȘIER CORUPT / PARȚIAL"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  SECȚIUNI CORUPTE (date eliminate)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Defecțiuni ale decodorului"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  ACEST FIȘIER ESTE INCOMPLET SAU CORUPT"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} avertismente de integritate — clic pentru detalii"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  SECȚIUNI PREZENTE"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  LIPSESC SECȚIUNI OBLIGATORII"
+
+msgid "❌  Parse error"
+msgstr "❌  Eroare de analiză"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Trunchiat (nu s-a ajuns la sfârșitul fișierului)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Certificate incomplete"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  DEȚINĂTORUL CARDULUI"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Conducător / Deținătorul cardului"
+
+msgid "💻  VU INFO"
+msgstr "💻  INFORMAȚII VU"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Deschide fișier DDD"
+
+msgid "📄  File Info"
+msgstr "📄  Informații fișier"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  INTERVAL DE DATE"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  COMPLETEȚE"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  PARAMETRI"
+
+msgid "📊  STATISTICS"
+msgstr "📊  STATISTICI"
+
+msgid "📡  SENSOR"
+msgstr "📡  SENZOR"
+
+msgid "📡  Sensor"
+msgstr "📡  Senzor"
+
+msgid "📤  Export"
+msgstr "📤  Exportă"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation} {annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  SEMNĂTURI"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Securitate și certificate"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  BLOCARE ACTIVĂ"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  BLOCARE ACTIVĂ"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  VEHICUL ASOCIAT"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  VEHICUL"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Vehicul"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  RECUPERAT DIN DATE DETERIORATE"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Date brute / neanalizate"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  DETALII CARD"

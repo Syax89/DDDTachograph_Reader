@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: el\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (κανένα)"
+
+msgid "  Ability"
+msgstr "  Ικανότητα"
+
+msgid "  Activity changes"
+msgstr "  Αλλαγές δραστηριότητας"
+
+msgid "  Actual range"
+msgstr "  Πραγματική εμβέλεια"
+
+msgid "  Address"
+msgstr "  Διεύθυνση"
+
+msgid "  Approval"
+msgstr "  Έγκριση"
+
+msgid "  Authorised speed"
+msgstr "  Εγκεκριμένη ταχύτητα"
+
+msgid "  Avg speed"
+msgstr "  Μέση ταχύτητα"
+
+msgid "  Birth date"
+msgstr "  Ημερομηνία γέννησης"
+
+msgid "  Card downloads"
+msgstr "  Λήψεις κάρτας"
+
+msgid "  Card number"
+msgstr "  Αριθμός κάρτας"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Κάρτα παρούσα: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Εταιρεία"
+
+msgid "  Days recorded"
+msgstr "  Καταγεγραμμένες ημέρες"
+
+msgid "  Days with activities"
+msgstr "  Ημέρες με δραστηριότητες"
+
+msgid "  Days with activity"
+msgstr "  Ημέρες με δραστηριότητα"
+
+msgid "  Digital map"
+msgstr "  Ψηφιακός χάρτης"
+
+msgid "  Distance"
+msgstr "  Απόσταση"
+
+msgid "  EF verification"
+msgstr "  Επαλήθευση EF"
+
+msgid "  Events"
+msgstr "  Συμβάντα"
+
+msgid "  Expiry date"
+msgstr "  Ημερομηνία λήξης"
+
+msgid "  Faults"
+msgstr "  Βλάβες"
+
+msgid "  File structure"
+msgstr "  Δομή αρχείου"
+
+msgid "  First date"
+msgstr "  Πρώτη ημερομηνία"
+
+msgid "  GNSS Serial"
+msgstr "  Σειριακός GNSS"
+
+msgid "  Generation"
+msgstr "  Γενιά"
+
+msgid "  Issue date"
+msgstr "  Ημερομηνία έκδοσης"
+
+msgid "  Issuing authority"
+msgstr "  Αρχή έκδοσης"
+
+msgid "  Issuing nation"
+msgstr "  Χώρα έκδοσης"
+
+msgid "  Language"
+msgstr "  Γλώσσα"
+
+msgid "  Last date"
+msgstr "  Τελευταία ημερομηνία"
+
+msgid "  Licence number"
+msgstr "  Αριθμός άδειας"
+
+msgid "  Lock card"
+msgstr "  Κλείδωμα κάρτας"
+
+msgid "  Locked since"
+msgstr "  Κλειδωμένη από"
+
+msgid "  Low-confidence recovery"
+msgstr "  Ανάκτηση χαμηλής αξιοπιστίας"
+
+msgid "  Make"
+msgstr "  Μάρκα"
+
+msgid "  Mandatory sections read"
+msgstr "  Υποχρεωτικές ενότητες που διαβάστηκαν"
+
+msgid "  Manufactured"
+msgstr "  Ημερομηνία κατασκευής"
+
+msgid "  Manufacturer"
+msgstr "  Κατασκευαστής"
+
+msgid "  Max speed"
+msgstr "  Μέγιστη ταχύτητα"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Τα ελλιπή ή κατεστραμμένα δεδομένα ΔΕΝ εμφανίζονται."
+
+msgid "  Name"
+msgstr "  Όνομα"
+
+msgid "  Nation"
+msgstr "  Χώρα"
+
+msgid "  Next calibration"
+msgstr "  Επόμενη βαθμονόμηση"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Μπόρεσαν να διαβαστούν μόνο οι ενότητες που αναφέρονται παρακάτω."
+
+msgid "  Paired"
+msgstr "  Αντιστοιχισμένο"
+
+msgid "  Part number"
+msgstr "  Αριθμός εξαρτήματος"
+
+msgid "  Plate"
+msgstr "  Πινακίδα"
+
+msgid "  Prefix"
+msgstr "  Πρόθεμα"
+
+msgid "  Registration"
+msgstr "  Αριθμός κυκλοφορίας"
+
+msgid "  SW installed"
+msgstr "  Εγκατεστημένο λογισμικό"
+
+msgid "  Sensor approval"
+msgstr "  Έγκριση αισθητήρα"
+
+msgid "  Sensor paired"
+msgstr "  Αισθητήρας αντιστοιχισμένος"
+
+msgid "  Sensor serial"
+msgstr "  Σειριακός αισθητήρα"
+
+msgid "  Serial"
+msgstr "  Σειριακός"
+
+msgid "  Serial number"
+msgstr "  Σειριακός αριθμός"
+
+msgid "  Software version"
+msgstr "  Έκδοση λογισμικού"
+
+msgid "  Status"
+msgstr "  Κατάσταση"
+
+msgid "  Tyre size"
+msgstr "  Μέγεθος ελαστικού"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Ισχύει από"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% του αρχείου"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Λήγει σε {days} ημέρες"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ ΕΛΗΞΕ ({days} ημέρες πριν)"
+
+msgid "# Drivers"
+msgstr "# Οδηγοί"
+
+msgid "# Vehicles"
+msgstr "# Οχήματα"
+
+msgid "(no changes)"
+msgstr "(καμία αλλαγή)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(όχι ποσοστό σημασιολογικής αποκωδικοποίησης)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Δραστηριότητα"
+
+msgid "Activity Timeline\n"
+msgstr "Χρονολόγιο δραστηριότητας\n"
+
+msgid "All Files"
+msgstr "Όλα τα αρχεία"
+
+msgid "All TREP signatures valid"
+msgstr "Όλες οι υπογραφές TREP έγκυρες"
+
+msgid "All signatures verified"
+msgstr "Όλες οι υπογραφές επαληθεύτηκαν"
+
+msgid "Anchored to ERCA root"
+msgstr "Αγκυρωμένο στη ρίζα ERCA"
+
+msgid "Annex 1B"
+msgstr "Παράρτημα 1B"
+
+msgid "Annex 1C"
+msgstr "Παράρτημα 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Παράρτημα 1C · 2023/980"
+
+msgid "App version"
+msgstr "Έκδοση εφαρμογής"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Παράρτημα 11 · CAR=αρχή έκδοσης, CHR=κάτοχος, ισχύς από TimeReal"
+
+msgid "Apr"
+msgstr "Απρ"
+
+msgid "Aug"
+msgstr "Αύγ"
+
+msgid "Available"
+msgstr "Διαθεσιμότητα"
+
+msgid "Avg Drive / day"
+msgstr "Μέση οδήγηση / ημέρα"
+
+msgid "Avg km/h"
+msgstr "Μέση km/h"
+
+msgid "Avg speed"
+msgstr "Μέση ταχύτητα"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Μέση {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "Περιήγηση BER-TLV · το Παράρτημα 11 της προδιαγραφής δεν είναι δημόσιο"
+
+msgid "Border crossing"
+msgstr "Διέλευση συνόρων"
+
+msgid "Border crossings"
+msgstr "Διελεύσεις συνόρων"
+
+msgid "Byte-accounted coverage"
+msgstr "Κάλυψη υπολογισμένη σε byte"
+
+msgid "CSV (.csv)"
+msgstr "Μορφότυπο CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "Αρχεία CSV"
+
+msgid "CVC Certificates (decoded)"
+msgstr "Πιστοποιητικά CVC (αποκωδικοποιημένα)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Η κάρτα απουσιάζει από τον ταχογράφο από τις {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Ασυμφωνία υπογραφής δεδομένων κάρτας"
+
+msgid "Card inserted"
+msgstr "Κάρτα τοποθετημένη"
+
+msgid "Card not inserted"
+msgstr "Κάρτα δεν έχει τοποθετηθεί"
+
+msgid "Card signing key not trusted"
+msgstr "Μη αξιόπιστο κλειδί υπογραφής κάρτας"
+
+msgid "Card withdrawn"
+msgstr "Κάρτα αφαιρέθηκε"
+
+msgid "Cardholder"
+msgstr "Κάτοχος κάρτας"
+
+msgid "Certificate chain invalid"
+msgstr "Μη έγκυρη αλυσίδα πιστοποιητικών"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Η αλυσίδα πιστοποιητικών δεν είναι αγκυρωμένη σε αξιόπιστη ρίζα"
+
+msgid "Certificates"
+msgstr "Πιστοποιητικά"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Συνθήκη: {condition}"
+
+msgid "Conditions"
+msgstr "Συνθήκες"
+
+msgid "Could not save the language setting."
+msgstr "Δεν ήταν δυνατή η αποθήκευση της ρύθμισης γλώσσας."
+
+msgid "Crew"
+msgstr "Πλήρωμα"
+
+msgid "DDD Files"
+msgstr "Αρχεία DDD"
+
+msgid "Daily Activities"
+msgstr "Ημερήσιες δραστηριότητες"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Ημερήσιες δραστηριότητες - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Ημερήσιες δραστηριότητες {date}"
+
+msgid "Daily Detail"
+msgstr "Ημερήσια λεπτομέρεια"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Ημερήσια λεπτομέρεια — {day} (UTC)"
+
+msgid "Date"
+msgstr "Ημερομηνία"
+
+msgid "Days"
+msgstr "Ημέρες"
+
+msgid "Dec"
+msgstr "Δεκ"
+
+msgid "Decoder failures"
+msgstr "Αποτυχίες αποκωδικοποιητή"
+
+msgid "Detailed Speed"
+msgstr "Αναλυτική ταχύτητα"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Αναλυτική ταχύτητα - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Αναλυτική ταχύτητα {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Απόσταση: {km} km"
+
+msgid "Drive"
+msgstr "Οδήγηση"
+
+msgid "Driver Card"
+msgstr "Κάρτα οδηγού"
+
+msgid "Driver Card (from VU download)"
+msgstr "Κάρτα οδηγού (από λήψη VU)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Οδηγός: {name}"
+
+msgid "Drivers"
+msgstr "Οδηγοί"
+
+msgid "EF Signature Details"
+msgstr "Λεπτομέρειες υπογραφής EF"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "Υπογραφές EF (ακεραιότητα δεδομένων κάρτας)"
+
+msgid "EF signature verification failed"
+msgstr "Η επαλήθευση υπογραφής EF απέτυχε"
+
+msgid "EF signatures incomplete"
+msgstr "Ελλιπείς υπογραφές EF"
+
+msgid "ERCA root not available"
+msgstr "Η ρίζα ERCA δεν είναι διαθέσιμη"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Είσοδος: {country}"
+
+msgid "Ev"
+msgstr "Συμβ."
+
+msgid "Event"
+msgstr "Συμβάν"
+
+msgid "Events"
+msgstr "Συμβάντα"
+
+msgid "Excel (.xlsx)"
+msgstr "Μορφότυπο Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Βιβλίο εργασίας Excel"
+
+msgid "Export Complete"
+msgstr "Η εξαγωγή ολοκληρώθηκε"
+
+msgid "Export Error"
+msgstr "Σφάλμα εξαγωγής"
+
+msgid "Export Unavailable"
+msgstr "Η εξαγωγή δεν είναι διαθέσιμη"
+
+msgid "Export failed"
+msgstr "Η εξαγωγή απέτυχε"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Εξήχθη: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Εξαγωγή σε JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Εξαγωγή σε {kind}…"
+
+msgid "Failed"
+msgstr "Απέτυχε"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Αποτυχία εμφάνισης αρχείου:\n{detail}"
+
+msgid "Fault"
+msgstr "Βλάβη"
+
+msgid "Faults"
+msgstr "Βλάβες"
+
+msgid "Feb"
+msgstr "Φεβ"
+
+msgid "Ferry / Train crossing"
+msgstr "Διέλευση με πλοίο / τρένο"
+
+msgid "Ferry / Train — Begin"
+msgstr "Πλοίο / Τρένο — Έναρξη"
+
+msgid "Ferry / Train — End"
+msgstr "Πλοίο / Τρένο — Λήξη"
+
+msgid "Field"
+msgstr "Πεδίο"
+
+msgid "File Integrity"
+msgstr "Ακεραιότητα αρχείου"
+
+msgid "File Integrity Warning"
+msgstr "Προειδοποίηση ακεραιότητας αρχείου"
+
+msgid "Filename"
+msgstr "Όνομα αρχείου"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "Πιστοποίηση GNSS (0x960F)"
+
+msgid "Generation"
+msgstr "Γενιά"
+
+msgid "Generation 1"
+msgstr "Γενιά 1"
+
+msgid "Generation 2"
+msgstr "Γενιά 2"
+
+msgid "Generation 2.2"
+msgstr "Γενιά 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "Τσιπ IC (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "Ταυτοποίηση ICC"
+
+msgid "Incomplete certificates"
+msgstr "Ελλιπή πιστοποιητικά"
+
+msgid "Integrity"
+msgstr "Ακεραιότητα"
+
+msgid "JSON (.json)"
+msgstr "Μορφότυπο JSON (.json)"
+
+msgid "JSON Files"
+msgstr "Αρχεία JSON"
+
+msgid "Jan"
+msgstr "Ιαν"
+
+msgid "Jul"
+msgstr "Ιούλ"
+
+msgid "Jun"
+msgstr "Ιούν"
+
+msgid "Km"
+msgstr "km"
+
+msgid "Language"
+msgstr "Γλώσσα"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Έξοδος: {country}"
+
+msgid "Load/Unload"
+msgstr "Φόρτωση/Εκφόρτωση"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Πιστοποίηση φόρτωσης/εκφόρτωσης (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Φόρτωση/Εκφόρτωση: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Φορτώθηκε: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Φόρτωση…"
+
+msgid "MSCA→VU chain"
+msgstr "Αλυσίδα MSCA→VU"
+
+msgid "Manual entries"
+msgstr "Χειροκίνητες καταχωρίσεις"
+
+msgid "Manual entry"
+msgstr "Χειροκίνητη καταχώριση"
+
+msgid "Mar"
+msgstr "Μαρ"
+
+msgid "Max Drive / day"
+msgstr "Μέγιστη οδήγηση / ημέρα"
+
+msgid "Max avg / day"
+msgstr "Μέγιστος μ.ό. / ημέρα"
+
+msgid "Max km/h"
+msgstr "Μέγιστη km/h"
+
+msgid "Max speed"
+msgstr "Μέγιστη ταχύτητα"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Μέγιστη {speed} km/h"
+
+msgid "May"
+msgstr "Μάι"
+
+msgid "Min avg / day"
+msgstr "Ελάχιστος μ.ό. / ημέρα"
+
+msgid "No EF signatures verified"
+msgstr "Δεν επαληθεύτηκε καμία υπογραφή EF"
+
+msgid "No activity data available."
+msgstr "Δεν υπάρχουν διαθέσιμα δεδομένα δραστηριότητας."
+
+msgid "No card present"
+msgstr "Δεν υπάρχει κάρτα"
+
+msgid "No data for this day.\n"
+msgstr "Δεν υπάρχουν δεδομένα για αυτή την ημέρα.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Δεν υπάρχουν διαθέσιμα αναλυτικά δείγματα ταχύτητας."
+
+msgid "No file loaded"
+msgstr "Δεν έχει φορτωθεί αρχείο"
+
+msgid "No sections to display."
+msgstr "Δεν υπάρχουν ενότητες προς εμφάνιση."
+
+msgid "No valid speed samples"
+msgstr "Δεν υπάρχουν έγκυρα δείγματα ταχύτητας"
+
+msgid "Not locked"
+msgstr "Μη κλειδωμένη"
+
+msgid "Nov"
+msgstr "Νοέ"
+
+msgid "Oct"
+msgstr "Οκτ"
+
+msgid "Odometer"
+msgstr "Οδόμετρο"
+
+msgid "Odometer km"
+msgstr "Οδόμετρο km"
+
+msgid "Origin"
+msgstr "Προέλευση"
+
+msgid "Origin details"
+msgstr "Λεπτομέρειες προέλευσης"
+
+msgid "Out of scope — Begin"
+msgstr "Εκτός πεδίου — Έναρξη"
+
+msgid "Out of scope — End"
+msgstr "Εκτός πεδίου — Λήξη"
+
+msgid "Overspeed events"
+msgstr "Συμβάντα υπερβολικής ταχύτητας"
+
+msgid "Overspeeding"
+msgstr "Υπερβολική ταχύτητα"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Υπερβολική ταχύτητα: {start} → {end} | μέγ. {max_speed} | μέση {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "Μορφότυπο PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "Έγγραφο PDF"
+
+msgid "Parsed at"
+msgstr "Αναλύθηκε στις"
+
+msgid "Parsing Error"
+msgstr "Σφάλμα ανάλυσης"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Σφάλμα ανάλυσης — εμφάνιση προηγούμενου αρχείου: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Ανάλυση {filename}…"
+
+msgid "Partial verification"
+msgstr "Μερική επαλήθευση"
+
+msgid "Place"
+msgstr "Τόπος"
+
+msgid "Place: Begin"
+msgstr "Τόπος: Έναρξη"
+
+msgid "Place: End"
+msgstr "Τόπος: Λήξη"
+
+msgid "Places"
+msgstr "Τόποι"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Πινακίδα: {plate}"
+
+msgid "Power interruption"
+msgstr "Διακοπή τροφοδοσίας"
+
+msgid "Power interruptions"
+msgstr "Διακοπές τροφοδοσίας"
+
+msgid "Ready — open a .ddd file"
+msgstr "Έτοιμο — ανοίξτε αρχείο .ddd"
+
+msgid "Rendering Error"
+msgstr "Σφάλμα απόδοσης"
+
+msgid "Rest"
+msgstr "Ανάπαυση"
+
+msgid "Restart the application to apply the new language."
+msgstr "Επανεκκινήστε την εφαρμογή για να εφαρμοστεί η νέα γλώσσα."
+
+msgid "Samples"
+msgstr "Δείγματα"
+
+msgid "Section Signatures (TREP)"
+msgstr "Υπογραφές ενοτήτων (TREP)"
+
+msgid "Sep"
+msgstr "Σεπ"
+
+msgid "Signature Verification"
+msgstr "Επαλήθευση υπογραφών"
+
+msgid "Size"
+msgstr "Μέγεθος"
+
+msgid "Skipped"
+msgstr "Παραλείφθηκε"
+
+msgid "Slot"
+msgstr "Υποδοχή"
+
+msgid "Slot 1"
+msgstr "Υποδοχή 1"
+
+msgid "Slot 2"
+msgstr "Υποδοχή 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Υποδοχή {number}"
+
+msgid "Speed (km/h)"
+msgstr "Ταχύτητα (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Δομικά αναγνωρισμένη κάλυψη"
+
+msgid "Sub-section"
+msgstr "Υποενότητα"
+
+msgid "Summary"
+msgstr "Σύνοψη"
+
+msgid "Summary\n"
+msgstr "Σύνοψη\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Το αρχείο μπορεί να είναι ελλιπές ή κατεστραμμένο.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Ώρα"
+
+msgid "Time >90 km/h"
+msgstr "Χρόνος >90 km/h"
+
+msgid "Total"
+msgstr "Σύνολο"
+
+msgid "Unknown bytes"
+msgstr "Άγνωστα byte"
+
+msgid "Unknown event"
+msgstr "Άγνωστο συμβάν"
+
+msgid "Unknown fault"
+msgstr "Άγνωστη βλάβη"
+
+msgid "Unknown parsing error"
+msgstr "Άγνωστο σφάλμα ανάλυσης"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "Οι υπογραφές TREP της VU είναι έγκυρες (αλυσίδα μη επαληθευμένη)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "Οι υπογραφές TREP της VU επαληθεύτηκαν (αλυσίδα μερική)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "Οι υπογραφές VU επαληθεύτηκαν (ρίζα αγκυρωμένη)"
+
+msgid "Value"
+msgstr "Τιμή"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Μονάδα οχήματος (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Όχημα: {plates}"
+
+msgid "Vehicles"
+msgstr "Οχήματα"
+
+msgid "Verification error"
+msgstr "Σφάλμα επαλήθευσης"
+
+msgid "Verified"
+msgstr "Επαληθεύτηκε"
+
+msgid "Work"
+msgstr "Εργασία"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} αλλαγές δραστηριότητας"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} byte"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} byte μη αποκωδικοποιημένα"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} αλλαγές"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} οδηγοί"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (ώρα UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nΔεν εντοπίστηκαν προβλήματα ακεραιότητας."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} ημέρες"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "Η εξαγωγή {kind} δεν είναι διαθέσιμη. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "Η εξαγωγή {kind} απαιτεί πρόσθετο πακέτο:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "Το αρχείο {kind} αποθηκεύτηκε στο:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s καταγεγραμμένα | μέγ. {max_speed} km/h | μέση {avg_speed:.1f} km/h | {above} άνω των {limit} km/h | {moving} σε κίνηση | {gaps} εσωτερικά κενά"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} γραμμές · {columns} στήλες"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Διπλό κλικ για πλήρεις λεπτομέρειες"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Αφαίρεση"
+
+msgid "▼ Insertion"
+msgstr "▼ Εισαγωγή"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  ΚΑΤΕΣΤΡΑΜΜΕΝΟ / ΜΕΡΙΚΟ ΑΡΧΕΙΟ"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  ΚΑΤΕΣΤΡΑΜΜΕΝΕΣ ΕΝΟΤΗΤΕΣ (δεδομένα απορρίφθηκαν)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Αποτυχίες αποκωδικοποιητή"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  ΤΟ ΑΡΧΕΙΟ ΕΙΝΑΙ ΕΛΛΙΠΕΣ Ή ΚΑΤΕΣΤΡΑΜΜΕΝΟ"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} προειδοποιήσεις ακεραιότητας — κλικ για λεπτομέρειες"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  ΕΝΟΤΗΤΕΣ ΠΑΡΟΥΣΕΣ"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  ΛΕΙΠΟΥΝ ΥΠΟΧΡΕΩΤΙΚΕΣ ΕΝΟΤΗΤΕΣ"
+
+msgid "❌  Parse error"
+msgstr "❌  Σφάλμα ανάλυσης"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Κολοβό (δεν έφτασε στο τέλος του αρχείου)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Ελλιπή πιστοποιητικά"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  ΚΑΤΟΧΟΣ ΚΑΡΤΑΣ"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Οδηγός / Κάτοχος κάρτας"
+
+msgid "💻  VU INFO"
+msgstr "💻  ΣΤΟΙΧΕΙΑ VU"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Άνοιγμα αρχείου DDD"
+
+msgid "📄  File Info"
+msgstr "📄  Στοιχεία αρχείου"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  ΕΥΡΟΣ ΗΜΕΡΟΜΗΝΙΩΝ"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  ΠΛΗΡΟΤΗΤΑ"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  ΠΑΡΑΜΕΤΡΟΙ"
+
+msgid "📊  STATISTICS"
+msgstr "📊  ΣΤΑΤΙΣΤΙΚΑ"
+
+msgid "📡  SENSOR"
+msgstr "📡  ΑΙΣΘΗΤΗΡΑΣ"
+
+msgid "📡  Sensor"
+msgstr "📡  Αισθητήρας"
+
+msgid "📤  Export"
+msgstr "📤  Εξαγωγή"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation} {annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  ΥΠΟΓΡΑΦΕΣ"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Ασφάλεια & Πιστοποιητικά"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  ΤΡΕΧΟΝ ΚΛΕΙΔΩΜΑ"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  ΤΡΕΧΟΝ ΚΛΕΙΔΩΜΑ"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  ΣΥΝΔΕΔΕΜΕΝΟ ΟΧΗΜΑ"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  ΟΧΗΜΑ"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Όχημα"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  ΑΝΑΚΤΗΘΗΚΕ ΑΠΟ ΚΑΤΕΣΤΡΑΜΜΕΝΑ ΔΕΔΟΜΕΝΑ"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Ακατέργαστα / Μη αναλυμένα δεδομένα"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  ΣΤΟΙΧΕΙΑ ΚΑΡΤΑΣ"

@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: mt\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (xejn)"
+
+msgid "  Ability"
+msgstr "  Kapaċità"
+
+msgid "  Activity changes"
+msgstr "  Bidliet fl-attività"
+
+msgid "  Actual range"
+msgstr "  Firxa attwali"
+
+msgid "  Address"
+msgstr "  Indirizz"
+
+msgid "  Approval"
+msgstr "  Approvazzjoni"
+
+msgid "  Authorised speed"
+msgstr "  Veloċità awtorizzata"
+
+msgid "  Avg speed"
+msgstr "  Veloċità medja"
+
+msgid "  Birth date"
+msgstr "  Data tat-twelid"
+
+msgid "  Card downloads"
+msgstr "  Downloads tal-karta"
+
+msgid "  Card number"
+msgstr "  Numru tal-karta"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Karta preżenti: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Kumpanija"
+
+msgid "  Days recorded"
+msgstr "  Ġranet irreġistrati"
+
+msgid "  Days with activities"
+msgstr "  Ġranet b'attivitajiet"
+
+msgid "  Days with activity"
+msgstr "  Ġranet bl-attività"
+
+msgid "  Digital map"
+msgstr "  Mappa diġitali"
+
+msgid "  Distance"
+msgstr "  Distanza"
+
+msgid "  EF verification"
+msgstr "  Verifika EF"
+
+msgid "  Events"
+msgstr "  Avvenimenti"
+
+msgid "  Expiry date"
+msgstr "  Data ta' skadenza"
+
+msgid "  Faults"
+msgstr "  Ħsarat"
+
+msgid "  File structure"
+msgstr "  Struttura tal-fajl"
+
+msgid "  First date"
+msgstr "  L-ewwel data"
+
+msgid "  GNSS Serial"
+msgstr "  Numru tas-serje GNSS"
+
+msgid "  Generation"
+msgstr "  Ġenerazzjoni"
+
+msgid "  Issue date"
+msgstr "  Data tal-ħruġ"
+
+msgid "  Issuing authority"
+msgstr "  Awtorità tal-ħruġ"
+
+msgid "  Issuing nation"
+msgstr "  Nazzjon tal-ħruġ"
+
+msgid "  Language"
+msgstr "  Lingwa"
+
+msgid "  Last date"
+msgstr "  L-aħħar data"
+
+msgid "  Licence number"
+msgstr "  Numru tal-liċenzja"
+
+msgid "  Lock card"
+msgstr "  Issakkar il-karta"
+
+msgid "  Locked since"
+msgstr "  Imsakkra mill-"
+
+msgid "  Low-confidence recovery"
+msgstr "  Irkupru b'kunfidenza baxxa"
+
+msgid "  Make"
+msgstr "  Marka"
+
+msgid "  Mandatory sections read"
+msgstr "  Sezzjonijiet obbligatorji moqrija"
+
+msgid "  Manufactured"
+msgstr "  Prodott"
+
+msgid "  Manufacturer"
+msgstr "  Produttur"
+
+msgid "  Max speed"
+msgstr "  Veloċità massima"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Data nieqsa jew korrotta MHIX murija."
+
+msgid "  Name"
+msgstr "  Isem"
+
+msgid "  Nation"
+msgstr "  Nazzjon"
+
+msgid "  Next calibration"
+msgstr "  Kalibrar li jmiss"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Setgħu jinqraw biss is-sezzjonijiet elenkati hawn taħt."
+
+msgid "  Paired"
+msgstr "  Ipparjat"
+
+msgid "  Part number"
+msgstr "  Numru tal-parti"
+
+msgid "  Plate"
+msgstr "  Pjanċa"
+
+msgid "  Prefix"
+msgstr "  Prefiss"
+
+msgid "  Registration"
+msgstr "  Reġistrazzjoni"
+
+msgid "  SW installed"
+msgstr "  SW installat"
+
+msgid "  Sensor approval"
+msgstr "  Approvazzjoni tas-sensor"
+
+msgid "  Sensor paired"
+msgstr "  Sensor ipparjat"
+
+msgid "  Sensor serial"
+msgstr "  Numru tas-serje tas-sensor"
+
+msgid "  Serial"
+msgstr "  Numru tas-serje"
+
+msgid "  Serial number"
+msgstr "  Numru tas-serje"
+
+msgid "  Software version"
+msgstr "  Verżjoni tas-software"
+
+msgid "  Status"
+msgstr "  Status"
+
+msgid "  Tyre size"
+msgstr "  Daqs tat-tajer"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Validu mill-"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% tal-fajl"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Dovut fi {days} jum"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ SKADUT ({days} ġranet ilu)"
+
+msgid "# Drivers"
+msgstr "# Sewwieqa"
+
+msgid "# Vehicles"
+msgstr "# Vetturi"
+
+msgid "(no changes)"
+msgstr "(l-ebda bidla)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(mhix rata semantika ta' dekodifikazzjoni)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Attività"
+
+msgid "Activity Timeline\n"
+msgstr "Kronoloġija tal-attività\n"
+
+msgid "All Files"
+msgstr "Il-fajls kollha"
+
+msgid "All TREP signatures valid"
+msgstr "Firem TREP kollha validi"
+
+msgid "All signatures verified"
+msgstr "Firem kollha vverifikati"
+
+msgid "Anchored to ERCA root"
+msgstr "Ankorat għall-għerq ERCA"
+
+msgid "Annex 1B"
+msgstr "Anness 1B"
+
+msgid "Annex 1C"
+msgstr "Anness 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Anness 1C · 2023/980"
+
+msgid "App version"
+msgstr "Verżjoni tal-app"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Appendiċi 11 · CAR=awtorità tal-ħruġ, CHR=detentur, validità minn TimeReal"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "Aug"
+msgstr "Aww"
+
+msgid "Available"
+msgstr "Disponibbli"
+
+msgid "Avg Drive / day"
+msgstr "Medja sewqan / jum"
+
+msgid "Avg km/h"
+msgstr "Medja km/h"
+
+msgid "Avg speed"
+msgstr "Veloċità medja"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Medja {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "Mixja BER-TLV · l-appendiċi 11 tal-ispeċifikazzjoni mhux pubbliku"
+
+msgid "Border crossing"
+msgstr "Qsim tal-fruntiera"
+
+msgid "Border crossings"
+msgstr "Qsim tal-fruntieri"
+
+msgid "Byte-accounted coverage"
+msgstr "Kopertura skont il-bytes"
+
+msgid "CSV (.csv)"
+msgstr "CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "Fajls CSV"
+
+msgid "CVC Certificates (decoded)"
+msgstr "Ċertifikati CVC (dekodifikati)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Il-karta mhix fit-takografu minn {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Firma tad-data tal-karta ma taqbilx"
+
+msgid "Card inserted"
+msgstr "Karta mdaħħla"
+
+msgid "Card not inserted"
+msgstr "Karta mhix mdaħħla"
+
+msgid "Card signing key not trusted"
+msgstr "Ċavetta tal-firma tal-karta mhix fdata"
+
+msgid "Card withdrawn"
+msgstr "Karta mneħħija"
+
+msgid "Cardholder"
+msgstr "Detentur tal-karta"
+
+msgid "Certificate chain invalid"
+msgstr "Katina taċ-ċertifikati invalida"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Katina taċ-ċertifikati mhix ankorata ma' għerq fdati"
+
+msgid "Certificates"
+msgstr "Ċertifikati"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Kundizzjoni: {condition}"
+
+msgid "Conditions"
+msgstr "Kundizzjonijiet"
+
+msgid "Could not save the language setting."
+msgstr "Ma setgħetx tiġi salvata l-lingwa."
+
+msgid "Crew"
+msgstr "Ekwipaġġ"
+
+msgid "DDD Files"
+msgstr "Fajls DDD"
+
+msgid "Daily Activities"
+msgstr "Attivitajiet ta' kuljum"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Attivitajiet ta' kuljum - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Attivitajiet ta' kuljum {date}"
+
+msgid "Daily Detail"
+msgstr "Dettall ta' kuljum"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Dettall ta' kuljum — {day} (UTC)"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Days"
+msgstr "Ġranet"
+
+msgid "Dec"
+msgstr "Diċ"
+
+msgid "Decoder failures"
+msgstr "Fallimenti tad-dekodifikatur"
+
+msgid "Detailed Speed"
+msgstr "Veloċità fid-dettall"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Veloċità fid-dettall - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Veloċità fid-dettall {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Distanza: {km} km"
+
+msgid "Drive"
+msgstr "Sewqan"
+
+msgid "Driver Card"
+msgstr "Karta tas-sewwieq"
+
+msgid "Driver Card (from VU download)"
+msgstr "Karta tas-sewwieq (minn download VU)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Sewwieq: {name}"
+
+msgid "Drivers"
+msgstr "Sewwieqa"
+
+msgid "EF Signature Details"
+msgstr "Dettalji tal-firma EF"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "Firem EF (integrità tad-data tal-karta)"
+
+msgid "EF signature verification failed"
+msgstr "Verifika tal-firma EF falliet"
+
+msgid "EF signatures incomplete"
+msgstr "Firem EF mhux kompleti"
+
+msgid "ERCA root not available"
+msgstr "Għerq ERCA mhux disponibbli"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Daħal: {country}"
+
+msgid "Ev"
+msgstr "Avv."
+
+msgid "Event"
+msgstr "Avveniment"
+
+msgid "Events"
+msgstr "Avvenimenti"
+
+msgid "Excel (.xlsx)"
+msgstr "Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Ktieb tax-xogħol Excel"
+
+msgid "Export Complete"
+msgstr "Esportazzjoni kompluta"
+
+msgid "Export Error"
+msgstr "Żball fl-esportazzjoni"
+
+msgid "Export Unavailable"
+msgstr "Esportazzjoni mhix disponibbli"
+
+msgid "Export failed"
+msgstr "Esportazzjoni falliet"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Esportat: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Qed jesporta għal JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Qed jesporta għal {kind}…"
+
+msgid "Failed"
+msgstr "Falliet"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Ma rnexxiex jintwera l-fajl:\n{detail}"
+
+msgid "Fault"
+msgstr "Ħsara"
+
+msgid "Faults"
+msgstr "Ħsarat"
+
+msgid "Feb"
+msgstr "Fra"
+
+msgid "Ferry / Train crossing"
+msgstr "Qsim bil-lanċa / bil-ferrovija"
+
+msgid "Ferry / Train — Begin"
+msgstr "Lanċa / ferrovija — Bidu"
+
+msgid "Ferry / Train — End"
+msgstr "Lanċa / ferrovija — Tmiem"
+
+msgid "Field"
+msgstr "Qasam"
+
+msgid "File Integrity"
+msgstr "Integrità tal-fajl"
+
+msgid "File Integrity Warning"
+msgstr "Twissija dwar l-integrità tal-fajl"
+
+msgid "Filename"
+msgstr "Isem tal-fajl"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "Awtentikazzjoni GNSS (0x960F)"
+
+msgid "Generation"
+msgstr "Ġenerazzjoni"
+
+msgid "Generation 1"
+msgstr "Ġenerazzjoni 1"
+
+msgid "Generation 2"
+msgstr "Ġenerazzjoni 2"
+
+msgid "Generation 2.2"
+msgstr "Ġenerazzjoni 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "Ċippa IC (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "Identifikazzjoni ICC"
+
+msgid "Incomplete certificates"
+msgstr "Ċertifikati mhux kompleti"
+
+msgid "Integrity"
+msgstr "Integrità"
+
+msgid "JSON (.json)"
+msgstr "JSON (.json)"
+
+msgid "JSON Files"
+msgstr "Fajls JSON"
+
+msgid "Jan"
+msgstr "Jan"
+
+msgid "Jul"
+msgstr "Lul"
+
+msgid "Jun"
+msgstr "Ġun"
+
+msgid "Km"
+msgstr "Km"
+
+msgid "Language"
+msgstr "Lingwa"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Ħareġ: {country}"
+
+msgid "Load/Unload"
+msgstr "Tagħbija/Ħatt"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Awtentikazzjoni tat-tagħbija/ħatt (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Tagħbija/Ħatt: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Mgħobbi: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Qed jgħobbi…"
+
+msgid "MSCA→VU chain"
+msgstr "Katina MSCA→VU"
+
+msgid "Manual entries"
+msgstr "Dħuliet manwali"
+
+msgid "Manual entry"
+msgstr "Dħul manwali"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "Max Drive / day"
+msgstr "Mass. sewqan / jum"
+
+msgid "Max avg / day"
+msgstr "Mass. medja / jum"
+
+msgid "Max km/h"
+msgstr "Mass. km/h"
+
+msgid "Max speed"
+msgstr "Veloċità massima"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Mass. {speed} km/h"
+
+msgid "May"
+msgstr "Mej"
+
+msgid "Min avg / day"
+msgstr "Min. medja / jum"
+
+msgid "No EF signatures verified"
+msgstr "L-ebda firma EF vverifikata"
+
+msgid "No activity data available."
+msgstr "L-ebda data tal-attività disponibbli."
+
+msgid "No card present"
+msgstr "L-ebda karta preżenti"
+
+msgid "No data for this day.\n"
+msgstr "L-ebda data għal dan il-jum.\n"
+
+msgid "No detailed speed samples available."
+msgstr "L-ebda kampjun ta' veloċità fid-dettall disponibbli."
+
+msgid "No file loaded"
+msgstr "L-ebda fajl mgħobbi"
+
+msgid "No sections to display."
+msgstr "L-ebda sezzjoni x'turi."
+
+msgid "No valid speed samples"
+msgstr "L-ebda kampjun validu ta' veloċità"
+
+msgid "Not locked"
+msgstr "Mhix imsakkra"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Oct"
+msgstr "Ott"
+
+msgid "Odometer"
+msgstr "Odometru"
+
+msgid "Odometer km"
+msgstr "Odometru km"
+
+msgid "Origin"
+msgstr "Oriġini"
+
+msgid "Origin details"
+msgstr "Dettalji tal-oriġini"
+
+msgid "Out of scope — Begin"
+msgstr "Barra mill-kamp — Bidu"
+
+msgid "Out of scope — End"
+msgstr "Barra mill-kamp — Tmiem"
+
+msgid "Overspeed events"
+msgstr "Avvenimenti ta' veloċità eċċessiva"
+
+msgid "Overspeeding"
+msgstr "Veloċità eċċessiva"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Veloċità eċċessiva: {start} → {end} | mass {max_speed} | medja {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "Dokument PDF"
+
+msgid "Parsed at"
+msgstr "Dekodifikat"
+
+msgid "Parsing Error"
+msgstr "Żball ta' dekodifikazzjoni"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Żball ta' dekodifikazzjoni — qed jintwera l-fajl preċedenti: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Qed jiddekodifika {filename}…"
+
+msgid "Partial verification"
+msgstr "Verifika parzjali"
+
+msgid "Place"
+msgstr "Post"
+
+msgid "Place: Begin"
+msgstr "Post: Bidu"
+
+msgid "Place: End"
+msgstr "Post: Tmiem"
+
+msgid "Places"
+msgstr "Postijiet"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Pjanċa: {plate}"
+
+msgid "Power interruption"
+msgstr "Interruzzjoni tal-enerġija"
+
+msgid "Power interruptions"
+msgstr "Interruzzjonijiet tal-enerġija"
+
+msgid "Ready — open a .ddd file"
+msgstr "Lest — iftaħ fajl .ddd"
+
+msgid "Rendering Error"
+msgstr "Żball fl-irrendering"
+
+msgid "Rest"
+msgstr "Mistrieħ"
+
+msgid "Restart the application to apply the new language."
+msgstr "Erġa' ibda l-app biex il-lingwa l-ġdida tidħol fis-seħħ."
+
+msgid "Samples"
+msgstr "Kampjuni"
+
+msgid "Section Signatures (TREP)"
+msgstr "Firem tas-sezzjonijiet (TREP)"
+
+msgid "Sep"
+msgstr "Set"
+
+msgid "Signature Verification"
+msgstr "Verifika tal-firma"
+
+msgid "Size"
+msgstr "Daqs"
+
+msgid "Skipped"
+msgstr "Maqbuża"
+
+msgid "Slot"
+msgstr "Slot"
+
+msgid "Slot 1"
+msgstr "Slot 1"
+
+msgid "Slot 2"
+msgstr "Slot 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Slot {number}"
+
+msgid "Speed (km/h)"
+msgstr "Veloċità (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Kopertura identifikata strutturalment"
+
+msgid "Sub-section"
+msgstr "Subsezzjoni"
+
+msgid "Summary"
+msgstr "Sommarju"
+
+msgid "Summary\n"
+msgstr "Sommarju\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Il-fajl jista' jkun mhux komplet jew korrott.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Ħin"
+
+msgid "Time >90 km/h"
+msgstr "Ħin >90 km/h"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Unknown bytes"
+msgstr "Bajts mhux magħrufa"
+
+msgid "Unknown event"
+msgstr "Avveniment mhux magħruf"
+
+msgid "Unknown fault"
+msgstr "Ħsara mhux magħrufa"
+
+msgid "Unknown parsing error"
+msgstr "Żball ta' dekodifikazzjoni mhux magħruf"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "Firem VU TREP validi (katina mhux vverifikata)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "Firem VU TREP vverifikati (katina parzjali)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "Firem VU vverifikati (għerq ankorat)"
+
+msgid "Value"
+msgstr "Valur"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Unità tal-vettura (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Vettura: {plates}"
+
+msgid "Vehicles"
+msgstr "Vetturi"
+
+msgid "Verification error"
+msgstr "Żball ta' verifika"
+
+msgid "Verified"
+msgstr "Vverifikat"
+
+msgid "Work"
+msgstr "Xogħol"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} bidla fl-attività"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} bajts"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} bytes mhux dekodifikati"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} bidliet"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} sewwieqa"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nL-ebda problema ta' integrità ma nstabet."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} ġranet"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "L-esportazzjoni {kind} mhix disponibbli. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "L-esportazzjoni {kind} teħtieġ pakkett addizzjonali:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} salvata fi:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s irreġistrati | mass {max_speed} km/h | medja {avg_speed:.1f} km/h | {above} fuq {limit} km/h | {moving} miexi | {gaps} distakki interni"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} ringieli · {columns} kolonni"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Ikklikkja darbtejn għad-dettalji kollha"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Tneħħija"
+
+msgid "▼ Insertion"
+msgstr "▼ Daħlien"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  FAJL KORROTT / PARZJALI"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  SEZZJONIJIET KORROTTI (data mwarrba)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Fallimenti tad-dekodifikatur"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  DAN IL-FAJL MHUX KOMPLET JEW KORROTT"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} twissija dwar l-integrità — ikklikkja għad-dettalji"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  SEZZJONIJIET PREŻENTI"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  SEZZJONIJIET OBBLIGATORJI NIEQSA"
+
+msgid "❌  Parse error"
+msgstr "❌  Żball ta' dekodifikazzjoni"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Maqtugħ (ma wasalx għall-aħħar tal-fajl)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Ċertifikati mhux kompleti"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  DETENTUR TAL-KARTA"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Sewwieq / detentur tal-karta"
+
+msgid "💻  VU INFO"
+msgstr "💻  INFORMAZZJONI VU"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Iftaħ fajl DDD"
+
+msgid "📄  File Info"
+msgstr "📄  Informazzjoni tal-fajl"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  FIRXA TA' DATI"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  KOMPLETEZZA"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  PARAMETRI"
+
+msgid "📊  STATISTICS"
+msgstr "📊  STATISTIKA"
+
+msgid "📡  SENSOR"
+msgstr "📡  SENSUR"
+
+msgid "📡  Sensor"
+msgstr "📡  Sensur"
+
+msgid "📤  Export"
+msgstr "📤  Esportazzjoni"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation}{annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  FIREM"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Sigurtà u ċertifikati"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  IL-LOCK ATTWALI"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  IL-LOCK ATTWALI"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  VETTURA ASSOĊJATA"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  VETTURA"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Vettura"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  IRKUPRAT MINN DATA KORROTTA"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Data mhux maħduma / mhux dekodifikata"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  DETTALJI TAL-KARTA"

@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: tr\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (yok)"
+
+msgid "  Ability"
+msgstr "  Yetenek"
+
+msgid "  Activity changes"
+msgstr "  Etkinlik değişiklikleri"
+
+msgid "  Actual range"
+msgstr "  Gerçek menzil"
+
+msgid "  Address"
+msgstr "  Adres"
+
+msgid "  Approval"
+msgstr "  Onay"
+
+msgid "  Authorised speed"
+msgstr "  İzin verilen hız"
+
+msgid "  Avg speed"
+msgstr "  Ort. hız"
+
+msgid "  Birth date"
+msgstr "  Doğum tarihi"
+
+msgid "  Card downloads"
+msgstr "  Kart indirmeleri"
+
+msgid "  Card number"
+msgstr "  Kart numarası"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Kart takılı: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Şirket"
+
+msgid "  Days recorded"
+msgstr "  Kayıtlı günler"
+
+msgid "  Days with activities"
+msgstr "  Etkinlik bulunan günler"
+
+msgid "  Days with activity"
+msgstr "  Aktivite bulunan günler"
+
+msgid "  Digital map"
+msgstr "  Dijital harita"
+
+msgid "  Distance"
+msgstr "  Mesafe"
+
+msgid "  EF verification"
+msgstr "  EF doğrulama"
+
+msgid "  Events"
+msgstr "  Olaylar"
+
+msgid "  Expiry date"
+msgstr "  Son kullanma tarihi"
+
+msgid "  Faults"
+msgstr "  Arızalar"
+
+msgid "  File structure"
+msgstr "  Dosya yapısı"
+
+msgid "  First date"
+msgstr "  İlk tarih"
+
+msgid "  GNSS Serial"
+msgstr "  GNSS seri no"
+
+msgid "  Generation"
+msgstr "  Nesil"
+
+msgid "  Issue date"
+msgstr "  Düzenlenme tarihi"
+
+msgid "  Issuing authority"
+msgstr "  Düzenleyen makam"
+
+msgid "  Issuing nation"
+msgstr "  Düzenleyen ülke"
+
+msgid "  Language"
+msgstr "  Dil"
+
+msgid "  Last date"
+msgstr "  Son tarih"
+
+msgid "  Licence number"
+msgstr "  Ehliyet numarası"
+
+msgid "  Lock card"
+msgstr "  Kartı kilitle"
+
+msgid "  Locked since"
+msgstr "  Kilitli olduğu tarih"
+
+msgid "  Low-confidence recovery"
+msgstr "  Düşük güvenilirlikte kurtarma"
+
+msgid "  Make"
+msgstr "  Marka"
+
+msgid "  Mandatory sections read"
+msgstr "  Zorunlu bölümler okundu"
+
+msgid "  Manufactured"
+msgstr "  Üretim tarihi"
+
+msgid "  Manufacturer"
+msgstr "  Üretici"
+
+msgid "  Max speed"
+msgstr "  Maks. hız"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Eksik veya bozuk veriler GÖSTERİLMEZ."
+
+msgid "  Name"
+msgstr "  Ad"
+
+msgid "  Nation"
+msgstr "  Ülke"
+
+msgid "  Next calibration"
+msgstr "  Sonraki kalibrasyon"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Yalnızca aşağıda listelenen bölümler okunabildi."
+
+msgid "  Paired"
+msgstr "  Eşleştirildi"
+
+msgid "  Part number"
+msgstr "  Parça numarası"
+
+msgid "  Plate"
+msgstr "  Plaka"
+
+msgid "  Prefix"
+msgstr "  Önek"
+
+msgid "  Registration"
+msgstr "  Tescil"
+
+msgid "  SW installed"
+msgstr "  Yüklü yazılım"
+
+msgid "  Sensor approval"
+msgstr "  Sensör onayı"
+
+msgid "  Sensor paired"
+msgstr "  Sensör eşleştirildi"
+
+msgid "  Sensor serial"
+msgstr "  Sensör seri no"
+
+msgid "  Serial"
+msgstr "  Seri no"
+
+msgid "  Serial number"
+msgstr "  Seri numarası"
+
+msgid "  Software version"
+msgstr "  Yazılım sürümü"
+
+msgid "  Status"
+msgstr "  Durum"
+
+msgid "  Tyre size"
+msgstr "  Lastik ebadı"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Geçerlilik başlangıcı"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  dosyanın %{percent:.2f} kadarı"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  {days} gün içinde vadesi doluyor"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ SÜRESİ DOLDU ({days} gün önce)"
+
+msgid "# Drivers"
+msgstr "# Sürücüler"
+
+msgid "# Vehicles"
+msgstr "# Araçlar"
+
+msgid "(no changes)"
+msgstr "(değişiklik yok)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(anlamsal kod çözme oranı değil)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Etkinlik"
+
+msgid "Activity Timeline\n"
+msgstr "Etkinlik zaman çizelgesi\n"
+
+msgid "All Files"
+msgstr "Tüm dosyalar"
+
+msgid "All TREP signatures valid"
+msgstr "Tüm TREP imzaları geçerli"
+
+msgid "All signatures verified"
+msgstr "Tüm imzalar doğrulandı"
+
+msgid "Anchored to ERCA root"
+msgstr "ERCA köküne bağlı"
+
+msgid "Annex 1B"
+msgstr "Ek 1B"
+
+msgid "Annex 1C"
+msgstr "Ek 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Ek 1C · 2023/980"
+
+msgid "App version"
+msgstr "Uygulama sürümü"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Ek 11 · CAR=düzenleyen makam, CHR=sahip, geçerlilik TimeReal'den"
+
+msgid "Apr"
+msgstr "Nis"
+
+msgid "Aug"
+msgstr "Ağu"
+
+msgid "Available"
+msgstr "Müsait"
+
+msgid "Avg Drive / day"
+msgstr "Ort. sürüş / gün"
+
+msgid "Avg km/h"
+msgstr "Ort. km/h"
+
+msgid "Avg speed"
+msgstr "Ort. hız"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Ort. {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "BER-TLV taraması · spesifikasyonun Ek 11'i kamuya açık değil"
+
+msgid "Border crossing"
+msgstr "Sınır geçişi"
+
+msgid "Border crossings"
+msgstr "Sınır geçişleri"
+
+msgid "Byte-accounted coverage"
+msgstr "Bayt bazında kapsam"
+
+msgid "CSV (.csv)"
+msgstr "CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "CSV dosyaları"
+
+msgid "CVC Certificates (decoded)"
+msgstr "CVC sertifikaları (çözüldü)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Kart {time} itibarıyla takografda yok"
+
+msgid "Card data signature mismatch"
+msgstr "Kart verisi imzası uyuşmuyor"
+
+msgid "Card inserted"
+msgstr "Kart takıldı"
+
+msgid "Card not inserted"
+msgstr "Kart takılı değil"
+
+msgid "Card signing key not trusted"
+msgstr "Kart imzalama anahtarı güvenilir değil"
+
+msgid "Card withdrawn"
+msgstr "Kart çıkarıldı"
+
+msgid "Cardholder"
+msgstr "Kart sahibi"
+
+msgid "Certificate chain invalid"
+msgstr "Sertifika zinciri geçersiz"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Sertifika zinciri güvenilir bir köke bağlı değil"
+
+msgid "Certificates"
+msgstr "Sertifikalar"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Koşul: {condition}"
+
+msgid "Conditions"
+msgstr "Koşullar"
+
+msgid "Could not save the language setting."
+msgstr "Dil ayarı kaydedilemedi."
+
+msgid "Crew"
+msgstr "Ekip"
+
+msgid "DDD Files"
+msgstr "DDD dosyaları"
+
+msgid "Daily Activities"
+msgstr "Günlük etkinlikler"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Günlük etkinlikler - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Günlük etkinlikler {date}"
+
+msgid "Daily Detail"
+msgstr "Günlük ayrıntı"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Günlük ayrıntı — {day} (UTC)"
+
+msgid "Date"
+msgstr "Tarih"
+
+msgid "Days"
+msgstr "Günler"
+
+msgid "Dec"
+msgstr "Ara"
+
+msgid "Decoder failures"
+msgstr "Kod çözücü hataları"
+
+msgid "Detailed Speed"
+msgstr "Ayrıntılı hız"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Ayrıntılı hız - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Ayrıntılı hız {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Mesafe: {km} km"
+
+msgid "Drive"
+msgstr "Sürüş"
+
+msgid "Driver Card"
+msgstr "Sürücü kartı"
+
+msgid "Driver Card (from VU download)"
+msgstr "Sürücü kartı (VU indirmesinden)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Sürücü: {name}"
+
+msgid "Drivers"
+msgstr "Sürücüler"
+
+msgid "EF Signature Details"
+msgstr "EF imza ayrıntıları"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "EF imzaları (kart verisi bütünlüğü)"
+
+msgid "EF signature verification failed"
+msgstr "EF imza doğrulaması başarısız"
+
+msgid "EF signatures incomplete"
+msgstr "EF imzaları eksik"
+
+msgid "ERCA root not available"
+msgstr "ERCA kökü mevcut değil"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Giriş: {country}"
+
+msgid "Ev"
+msgstr "Olay"
+
+msgid "Event"
+msgstr "Olay"
+
+msgid "Events"
+msgstr "Olaylar"
+
+msgid "Excel (.xlsx)"
+msgstr "Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Excel çalışma kitabı"
+
+msgid "Export Complete"
+msgstr "Dışa aktarma tamamlandı"
+
+msgid "Export Error"
+msgstr "Dışa aktarma hatası"
+
+msgid "Export Unavailable"
+msgstr "Dışa aktarma kullanılamıyor"
+
+msgid "Export failed"
+msgstr "Dışa aktarma başarısız"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Dışa aktarıldı: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "JSON'a aktarılıyor…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "{kind} biçimine aktarılıyor…"
+
+msgid "Failed"
+msgstr "Başarısız"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Dosya gösterilemedi:\n{detail}"
+
+msgid "Fault"
+msgstr "Arıza"
+
+msgid "Faults"
+msgstr "Arızalar"
+
+msgid "Feb"
+msgstr "Şub"
+
+msgid "Ferry / Train crossing"
+msgstr "Feribot / tren geçişi"
+
+msgid "Ferry / Train — Begin"
+msgstr "Feribot / tren — Başlangıç"
+
+msgid "Ferry / Train — End"
+msgstr "Feribot / tren — Bitiş"
+
+msgid "Field"
+msgstr "Alan"
+
+msgid "File Integrity"
+msgstr "Dosya bütünlüğü"
+
+msgid "File Integrity Warning"
+msgstr "Dosya bütünlüğü uyarısı"
+
+msgid "Filename"
+msgstr "Dosya adı"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "GNSS kimlik doğrulama (0x960F)"
+
+msgid "Generation"
+msgstr "Nesil"
+
+msgid "Generation 1"
+msgstr "Nesil 1"
+
+msgid "Generation 2"
+msgstr "Nesil 2"
+
+msgid "Generation 2.2"
+msgstr "Nesil 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "IC yongası (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "ICC tanımlama"
+
+msgid "Incomplete certificates"
+msgstr "Eksik sertifikalar"
+
+msgid "Integrity"
+msgstr "Bütünlük"
+
+msgid "JSON (.json)"
+msgstr "JSON (.json)"
+
+msgid "JSON Files"
+msgstr "JSON dosyaları"
+
+msgid "Jan"
+msgstr "Oca"
+
+msgid "Jul"
+msgstr "Tem"
+
+msgid "Jun"
+msgstr "Haz"
+
+msgid "Km"
+msgstr "Km"
+
+msgid "Language"
+msgstr "Dil"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Çıkış: {country}"
+
+msgid "Load/Unload"
+msgstr "Yükleme/Boşaltma"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Yükleme/boşaltma kimlik doğrulama (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Yükleme/Boşaltma: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Yüklendi: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Yükleniyor…"
+
+msgid "MSCA→VU chain"
+msgstr "MSCA→VU zinciri"
+
+msgid "Manual entries"
+msgstr "Manuel girişler"
+
+msgid "Manual entry"
+msgstr "Manuel giriş"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "Max Drive / day"
+msgstr "Maks. sürüş / gün"
+
+msgid "Max avg / day"
+msgstr "Maks. ort. / gün"
+
+msgid "Max km/h"
+msgstr "Maks. km/h"
+
+msgid "Max speed"
+msgstr "Maks. hız"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Maks. {speed} km/h"
+
+msgid "May"
+msgstr "May"
+
+msgid "Min avg / day"
+msgstr "Min. ort. / gün"
+
+msgid "No EF signatures verified"
+msgstr "Doğrulanmış EF imzası yok"
+
+msgid "No activity data available."
+msgstr "Etkinlik verisi yok."
+
+msgid "No card present"
+msgstr "Kart takılı değil"
+
+msgid "No data for this day.\n"
+msgstr "Bu gün için veri yok.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Ayrıntılı hız örneği yok."
+
+msgid "No file loaded"
+msgstr "Dosya yüklenmedi"
+
+msgid "No sections to display."
+msgstr "Gösterilecek bölüm yok."
+
+msgid "No valid speed samples"
+msgstr "Geçerli hız örneği yok"
+
+msgid "Not locked"
+msgstr "Kilitli değil"
+
+msgid "Nov"
+msgstr "Kas"
+
+msgid "Oct"
+msgstr "Eki"
+
+msgid "Odometer"
+msgstr "Odometre"
+
+msgid "Odometer km"
+msgstr "Odometre km"
+
+msgid "Origin"
+msgstr "Kaynak"
+
+msgid "Origin details"
+msgstr "Kaynak ayrıntıları"
+
+msgid "Out of scope — Begin"
+msgstr "Kapsam dışı — Başlangıç"
+
+msgid "Out of scope — End"
+msgstr "Kapsam dışı — Bitiş"
+
+msgid "Overspeed events"
+msgstr "Aşırı hız olayları"
+
+msgid "Overspeeding"
+msgstr "Aşırı hız"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Aşırı hız: {start} → {end} | maks {max_speed} | ort {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "PDF belgesi"
+
+msgid "Parsed at"
+msgstr "Çözümleme zamanı"
+
+msgid "Parsing Error"
+msgstr "Ayrıştırma hatası"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Ayrıştırma hatası — önceki dosya gösteriliyor: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "{filename} ayrıştırılıyor…"
+
+msgid "Partial verification"
+msgstr "Kısmi doğrulama"
+
+msgid "Place"
+msgstr "Yer"
+
+msgid "Place: Begin"
+msgstr "Yer: Başlangıç"
+
+msgid "Place: End"
+msgstr "Yer: Bitiş"
+
+msgid "Places"
+msgstr "Yerler"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Plaka: {plate}"
+
+msgid "Power interruption"
+msgstr "Güç kesintisi"
+
+msgid "Power interruptions"
+msgstr "Güç kesintileri"
+
+msgid "Ready — open a .ddd file"
+msgstr "Hazır — bir .ddd dosyası açın"
+
+msgid "Rendering Error"
+msgstr "Görüntüleme hatası"
+
+msgid "Rest"
+msgstr "Dinlenme"
+
+msgid "Restart the application to apply the new language."
+msgstr "Yeni dili uygulamak için uygulamayı yeniden başlatın."
+
+msgid "Samples"
+msgstr "Örnekler"
+
+msgid "Section Signatures (TREP)"
+msgstr "Bölüm imzaları (TREP)"
+
+msgid "Sep"
+msgstr "Eyl"
+
+msgid "Signature Verification"
+msgstr "İmza doğrulama"
+
+msgid "Size"
+msgstr "Boyut"
+
+msgid "Skipped"
+msgstr "Atlandı"
+
+msgid "Slot"
+msgstr "Yuva"
+
+msgid "Slot 1"
+msgstr "Yuva 1"
+
+msgid "Slot 2"
+msgstr "Yuva 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Yuva {number}"
+
+msgid "Speed (km/h)"
+msgstr "Hız (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Yapısal olarak tanımlanan kapsam"
+
+msgid "Sub-section"
+msgstr "Alt bölüm"
+
+msgid "Summary"
+msgstr "Özet"
+
+msgid "Summary\n"
+msgstr "Özet\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Dosya eksik veya bozuk olabilir.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Zaman"
+
+msgid "Time >90 km/h"
+msgstr "Zaman >90 km/h"
+
+msgid "Total"
+msgstr "Toplam"
+
+msgid "Unknown bytes"
+msgstr "Bilinmeyen baytlar"
+
+msgid "Unknown event"
+msgstr "Bilinmeyen olay"
+
+msgid "Unknown fault"
+msgstr "Bilinmeyen arıza"
+
+msgid "Unknown parsing error"
+msgstr "Bilinmeyen ayrıştırma hatası"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "VU TREP imzaları geçerli (zincir doğrulanmadı)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "VU TREP imzaları doğrulandı (zincir kısmi)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "VU imzaları doğrulandı (kök bağlı)"
+
+msgid "Value"
+msgstr "Değer"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Araç ünitesi (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Araç: {plates}"
+
+msgid "Vehicles"
+msgstr "Araçlar"
+
+msgid "Verification error"
+msgstr "Doğrulama hatası"
+
+msgid "Verified"
+msgstr "Doğrulandı"
+
+msgid "Work"
+msgstr "Çalışma"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} etkinlik değişikliği"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} bayt"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} bayt çözülmedi"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} değişiklik"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} sürücü"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nBütünlük sorunu bulunamadı."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} gün"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "{kind} dışa aktarma kullanılamıyor. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "{kind} dışa aktarma ek paket gerektiriyor:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} kaydedildi:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s kayıtlı | maks {max_speed} km/h | ort {avg_speed:.1f} km/h | {above} {limit} km/h üzerinde | {moving} hareketli | {gaps} dahili boşluk"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} satır · {columns} sütun"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Tüm ayrıntılar için çift tıklayın"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Çıkarma"
+
+msgid "▼ Insertion"
+msgstr "▼ Takma"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  BOZUK / EKSİK DOSYA"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  BOZUK BÖLÜMLER (veri atıldı)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Kod çözücü hataları"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  BU DOSYA EKSİK VEYA BOZUK"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} bütünlük uyarısı — ayrıntılar için tıklayın"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  BÖLÜMLER MEVCUT"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  ZORUNLU BÖLÜMLER EKSİK"
+
+msgid "❌  Parse error"
+msgstr "❌  Ayrıştırma hatası"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Kesildi (dosya sonuna ulaşılmadı)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Eksik sertifikalar"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  KART SAHİBİ"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Sürücü / kart sahibi"
+
+msgid "💻  VU INFO"
+msgstr "💻  VU BİLGİLERİ"
+
+msgid "📂  Open DDD file"
+msgstr "📂  DDD dosyası aç"
+
+msgid "📄  File Info"
+msgstr "📄  Dosya bilgisi"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  TARİH ARALIĞI"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  TAMLIK"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  PARAMETRELER"
+
+msgid "📊  STATISTICS"
+msgstr "📊  İSTATİSTİK"
+
+msgid "📡  SENSOR"
+msgstr "📡  SENSÖR"
+
+msgid "📡  Sensor"
+msgstr "📡  Sensör"
+
+msgid "📤  Export"
+msgstr "📤  Dışa aktar"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation}{annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  İMZALAR"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Güvenlik ve sertifikalar"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  MEVCUT KİLİT"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  MEVCUT KİLİT"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  İLİŞKİLİ ARAÇ"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  ARAÇ"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Araç"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  HASARLI VERİDEN KURTARILDI"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Ham / çözülmemiş veri"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  KART AYRINTILARI"

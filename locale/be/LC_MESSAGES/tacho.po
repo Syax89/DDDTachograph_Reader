@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: be\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (няма)"
+
+msgid "  Ability"
+msgstr "  Магчымасць"
+
+msgid "  Activity changes"
+msgstr "  Змены актыўнасці"
+
+msgid "  Actual range"
+msgstr "  Фактычная адлегласць"
+
+msgid "  Address"
+msgstr "  Адрас"
+
+msgid "  Approval"
+msgstr "  Зацвярджэнне"
+
+msgid "  Authorised speed"
+msgstr "  Дазволеная хуткасць"
+
+msgid "  Avg speed"
+msgstr "  Сярэдняя хуткасць"
+
+msgid "  Birth date"
+msgstr "  Дата нараджэння"
+
+msgid "  Card downloads"
+msgstr "  Загрузкі карткі"
+
+msgid "  Card number"
+msgstr "  Нумар карткі"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Картка прысутнічае: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Кампанія"
+
+msgid "  Days recorded"
+msgstr "  Запісаных дзён"
+
+msgid "  Days with activities"
+msgstr "  Дні з актыўнасцямі"
+
+msgid "  Days with activity"
+msgstr "  Дні з актыўнасцю"
+
+msgid "  Digital map"
+msgstr "  Лічбавая карта"
+
+msgid "  Distance"
+msgstr "  Адлегласць"
+
+msgid "  EF verification"
+msgstr "  Праверка EF"
+
+msgid "  Events"
+msgstr "  Падзеі"
+
+msgid "  Expiry date"
+msgstr "  Дата заканчэння"
+
+msgid "  Faults"
+msgstr "  Няспраўнасці"
+
+msgid "  File structure"
+msgstr "  Структура файла"
+
+msgid "  First date"
+msgstr "  Першая дата"
+
+msgid "  GNSS Serial"
+msgstr "  Серыйны нумар GNSS"
+
+msgid "  Generation"
+msgstr "  Пакаленне"
+
+msgid "  Issue date"
+msgstr "  Дата выдачы"
+
+msgid "  Issuing authority"
+msgstr "  Орган выдачы"
+
+msgid "  Issuing nation"
+msgstr "  Краіна выдачы"
+
+msgid "  Language"
+msgstr "  Мова"
+
+msgid "  Last date"
+msgstr "  Апошняя дата"
+
+msgid "  Licence number"
+msgstr "  Нумар пасведчання кіроўцы"
+
+msgid "  Lock card"
+msgstr "  Заблакаваць картку"
+
+msgid "  Locked since"
+msgstr "  Заблакаваная з"
+
+msgid "  Low-confidence recovery"
+msgstr "  Аднаўленне з нізкай пэўнасцю"
+
+msgid "  Make"
+msgstr "  Марка"
+
+msgid "  Mandatory sections read"
+msgstr "  Абавязковыя раздзелы прачытаны"
+
+msgid "  Manufactured"
+msgstr "  Выраблена"
+
+msgid "  Manufacturer"
+msgstr "  Вытворца"
+
+msgid "  Max speed"
+msgstr "  Максімальная хуткасць"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Адсутныя або пашкоджаныя даныя НЕ паказваюцца."
+
+msgid "  Name"
+msgstr "  Імя"
+
+msgid "  Nation"
+msgstr "  Краіна"
+
+msgid "  Next calibration"
+msgstr "  Наступная каліброўка"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Прачытаць удалося толькі пералічаныя ніжэй раздзелы."
+
+msgid "  Paired"
+msgstr "  Спалучана"
+
+msgid "  Part number"
+msgstr "  Нумар дэталі"
+
+msgid "  Plate"
+msgstr "  Нумарны знак"
+
+msgid "  Prefix"
+msgstr "  Прэфікс"
+
+msgid "  Registration"
+msgstr "  Рэгістрацыя"
+
+msgid "  SW installed"
+msgstr "  Усталяванае ПЗ"
+
+msgid "  Sensor approval"
+msgstr "  Зацвярджэнне датчыка"
+
+msgid "  Sensor paired"
+msgstr "  Датчык спалучаны"
+
+msgid "  Sensor serial"
+msgstr "  Серыйны нумар датчыка"
+
+msgid "  Serial"
+msgstr "  Серыйны нумар"
+
+msgid "  Serial number"
+msgstr "  Серыйны нумар"
+
+msgid "  Software version"
+msgstr "  Версія ПЗ"
+
+msgid "  Status"
+msgstr "  Стан"
+
+msgid "  Tyre size"
+msgstr "  Памер шын"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Дзейнічае з"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% файла"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Тэрмін праз {days} дзён"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ ПРАТЭРМІНАВАНА ({days} дзён таму)"
+
+msgid "# Drivers"
+msgstr "# Кіроўцаў"
+
+msgid "# Vehicles"
+msgstr "# Транспартных сродкаў"
+
+msgid "(no changes)"
+msgstr "(няма змен)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(не семантычная доля дэкадавання)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Актыўнасць"
+
+msgid "Activity Timeline\n"
+msgstr "Храналогія актыўнасці\n"
+
+msgid "All Files"
+msgstr "Усе файлы"
+
+msgid "All TREP signatures valid"
+msgstr "Усе подпісы TREP сапраўдныя"
+
+msgid "All signatures verified"
+msgstr "Усе подпісы правераны"
+
+msgid "Anchored to ERCA root"
+msgstr "Прывязана да кораня ERCA"
+
+msgid "Annex 1B"
+msgstr "Дадатак 1B"
+
+msgid "Annex 1C"
+msgstr "Дадатак 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Дадатак 1C · 2023/980"
+
+msgid "App version"
+msgstr "Версія праграмы"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Дапаўненне 11 · CAR=орган выдачы, CHR=уладальнік, сапраўднасць з TimeReal"
+
+msgid "Apr"
+msgstr "Кра"
+
+msgid "Aug"
+msgstr "Жні"
+
+msgid "Available"
+msgstr "Даступны"
+
+msgid "Avg Drive / day"
+msgstr "Сярэдн. кіраванне / дзень"
+
+msgid "Avg km/h"
+msgstr "Сярэдн. km/h"
+
+msgid "Avg speed"
+msgstr "Сярэдняя хуткасць"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Сярэдн. {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "Праход BER-TLV · дапаўненне 11 да спецыфікацыі не публічнае"
+
+msgid "Border crossing"
+msgstr "Перасячэнне мяжы"
+
+msgid "Border crossings"
+msgstr "Перасячэнні межаў"
+
+msgid "Byte-accounted coverage"
+msgstr "Пакрыццё з улікам байтаў"
+
+msgid "CSV (.csv)"
+msgstr "CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "Файлы CSV"
+
+msgid "CVC Certificates (decoded)"
+msgstr "Сертыфікаты CVC (дэкадавана)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Картка адсутнічае ў тахографе з {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Подпіс даных карткі не супадае"
+
+msgid "Card inserted"
+msgstr "Картка ўстаўлена"
+
+msgid "Card not inserted"
+msgstr "Картка не ўстаўлена"
+
+msgid "Card signing key not trusted"
+msgstr "Ключ подпісу карткі не з'яўляецца давераным"
+
+msgid "Card withdrawn"
+msgstr "Картка вынята"
+
+msgid "Cardholder"
+msgstr "Уладальнік карткі"
+
+msgid "Certificate chain invalid"
+msgstr "Ланцуг сертыфікатаў несапраўдны"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Ланцуг сертыфікатаў не прывязаны да даверанага кораня"
+
+msgid "Certificates"
+msgstr "Сертыфікаты"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Умова: {condition}"
+
+msgid "Conditions"
+msgstr "Умовы"
+
+msgid "Could not save the language setting."
+msgstr "Не ўдалося захаваць наладу мовы."
+
+msgid "Crew"
+msgstr "Экіпаж"
+
+msgid "DDD Files"
+msgstr "Файлы DDD"
+
+msgid "Daily Activities"
+msgstr "Актыўнасць за дзень"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Актыўнасць за дзень - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Актыўнасць за дзень {date}"
+
+msgid "Daily Detail"
+msgstr "Дэталізацыя за дзень"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Дэталізацыя за дзень — {day} (UTC)"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Days"
+msgstr "Дні"
+
+msgid "Dec"
+msgstr "Сне"
+
+msgid "Decoder failures"
+msgstr "Памылкі дэкадара"
+
+msgid "Detailed Speed"
+msgstr "Дэталёвая хуткасць"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Дэталёвая хуткасць - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Дэталёвая хуткасць {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Адлегласць: {km} km"
+
+msgid "Drive"
+msgstr "Кіраванне"
+
+msgid "Driver Card"
+msgstr "Картка кіроўцы"
+
+msgid "Driver Card (from VU download)"
+msgstr "Картка кіроўцы (з выгрузкі VU)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Кіроўца: {name}"
+
+msgid "Drivers"
+msgstr "Кіроўцы"
+
+msgid "EF Signature Details"
+msgstr "Дэталі подпісу EF"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "Подпісы EF (цэласнасць даных карткі)"
+
+msgid "EF signature verification failed"
+msgstr "Памылка праверкі подпісу EF"
+
+msgid "EF signatures incomplete"
+msgstr "Подпісы EF няпоўныя"
+
+msgid "ERCA root not available"
+msgstr "Корань ERCA недаступны"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Уезд: {country}"
+
+msgid "Ev"
+msgstr "Падз."
+
+msgid "Event"
+msgstr "Падзея"
+
+msgid "Events"
+msgstr "Падзеі"
+
+msgid "Excel (.xlsx)"
+msgstr "Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Кніга Excel"
+
+msgid "Export Complete"
+msgstr "Экспарт завершаны"
+
+msgid "Export Error"
+msgstr "Памылка экспарту"
+
+msgid "Export Unavailable"
+msgstr "Экспарт недаступны"
+
+msgid "Export failed"
+msgstr "Экспарт не ўдаўся"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Экспартавана: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Экспарт у JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Экспарт у {kind}…"
+
+msgid "Failed"
+msgstr "Не ўдалося"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Не ўдалося паказаць файл:\n{detail}"
+
+msgid "Fault"
+msgstr "Няспраўнасць"
+
+msgid "Faults"
+msgstr "Няспраўнасці"
+
+msgid "Feb"
+msgstr "Лют"
+
+msgid "Ferry / Train crossing"
+msgstr "Перасячэнне паромам / цягніком"
+
+msgid "Ferry / Train — Begin"
+msgstr "Паром / цягнік — пачатак"
+
+msgid "Ferry / Train — End"
+msgstr "Паром / цягнік — канец"
+
+msgid "Field"
+msgstr "Поле"
+
+msgid "File Integrity"
+msgstr "Цэласнасць файла"
+
+msgid "File Integrity Warning"
+msgstr "Папярэджанне пра цэласнасць файла"
+
+msgid "Filename"
+msgstr "Імя файла"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "Аўтэнтыфікацыя GNSS (0x960F)"
+
+msgid "Generation"
+msgstr "Пакаленне"
+
+msgid "Generation 1"
+msgstr "Пакаленне 1"
+
+msgid "Generation 2"
+msgstr "Пакаленне 2"
+
+msgid "Generation 2.2"
+msgstr "Пакаленне 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "Мікрасхема IC (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "Ідэнтыфікацыя ICC"
+
+msgid "Incomplete certificates"
+msgstr "Няпоўныя сертыфікаты"
+
+msgid "Integrity"
+msgstr "Цэласнасць"
+
+msgid "JSON (.json)"
+msgstr "JSON (.json)"
+
+msgid "JSON Files"
+msgstr "Файлы JSON"
+
+msgid "Jan"
+msgstr "Сту"
+
+msgid "Jul"
+msgstr "Ліп"
+
+msgid "Jun"
+msgstr "Чэр"
+
+msgid "Km"
+msgstr "Км"
+
+msgid "Language"
+msgstr "Мова"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Выезд: {country}"
+
+msgid "Load/Unload"
+msgstr "Пагрузка/разгрузка"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Аўтэнтыфікацыя пагрузкі/разгрузкі (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Пагрузка/разгрузка: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Загружана: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Загрузка…"
+
+msgid "MSCA→VU chain"
+msgstr "Ланцуг MSCA→VU"
+
+msgid "Manual entries"
+msgstr "Ручныя запісы"
+
+msgid "Manual entry"
+msgstr "Ручны запіс"
+
+msgid "Mar"
+msgstr "Сак"
+
+msgid "Max Drive / day"
+msgstr "Макс. кіраванне / дзень"
+
+msgid "Max avg / day"
+msgstr "Макс. сярэдн. / дзень"
+
+msgid "Max km/h"
+msgstr "Макс. km/h"
+
+msgid "Max speed"
+msgstr "Максімальная хуткасць"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Макс. {speed} km/h"
+
+msgid "May"
+msgstr "Май"
+
+msgid "Min avg / day"
+msgstr "Мін. сярэдн. / дзень"
+
+msgid "No EF signatures verified"
+msgstr "Подпісы EF не правераны"
+
+msgid "No activity data available."
+msgstr "Даныя пра актыўнасць недаступныя."
+
+msgid "No card present"
+msgstr "Картка адсутнічае"
+
+msgid "No data for this day.\n"
+msgstr "Няма даных за гэты дзень.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Дэталёвыя выбаркі хуткасці недаступныя."
+
+msgid "No file loaded"
+msgstr "Файл не загружаны"
+
+msgid "No sections to display."
+msgstr "Няма раздзелаў для паказу."
+
+msgid "No valid speed samples"
+msgstr "Няма сапраўдных выбарак хуткасці"
+
+msgid "Not locked"
+msgstr "Не заблакавана"
+
+msgid "Nov"
+msgstr "Ліс"
+
+msgid "Oct"
+msgstr "Кас"
+
+msgid "Odometer"
+msgstr "Адаметр"
+
+msgid "Odometer km"
+msgstr "Адаметр км"
+
+msgid "Origin"
+msgstr "Крыніца"
+
+msgid "Origin details"
+msgstr "Дэталі крыніцы"
+
+msgid "Out of scope — Begin"
+msgstr "Па-за сферай дзеяння — пачатак"
+
+msgid "Out of scope — End"
+msgstr "Па-за сферай дзеяння — канец"
+
+msgid "Overspeed events"
+msgstr "Падзеі перавышэння хуткасці"
+
+msgid "Overspeeding"
+msgstr "Перавышэнне хуткасці"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Перавышэнне хуткасці: {start} → {end} | макс. {max_speed} | сярэдн. {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "Дакумент PDF"
+
+msgid "Parsed at"
+msgstr "Дэкадавана"
+
+msgid "Parsing Error"
+msgstr "Памылка разбору"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Памылка разбору — паказаны папярэдні файл: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Разбор {filename}…"
+
+msgid "Partial verification"
+msgstr "Частковая праверка"
+
+msgid "Place"
+msgstr "Месца"
+
+msgid "Place: Begin"
+msgstr "Месца: пачатак"
+
+msgid "Place: End"
+msgstr "Месца: канец"
+
+msgid "Places"
+msgstr "Месцы"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Нумарны знак: {plate}"
+
+msgid "Power interruption"
+msgstr "Перапынак сілкавання"
+
+msgid "Power interruptions"
+msgstr "Перапынкі сілкавання"
+
+msgid "Ready — open a .ddd file"
+msgstr "Гатова — адкрыйце файл .ddd"
+
+msgid "Rendering Error"
+msgstr "Памылка адлюстравання"
+
+msgid "Rest"
+msgstr "Адпачынак"
+
+msgid "Restart the application to apply the new language."
+msgstr "Перазапусціце праграму, каб ужыць новую мову."
+
+msgid "Samples"
+msgstr "Выбаркі"
+
+msgid "Section Signatures (TREP)"
+msgstr "Подпісы раздзелаў (TREP)"
+
+msgid "Sep"
+msgstr "Вер"
+
+msgid "Signature Verification"
+msgstr "Праверка подпісу"
+
+msgid "Size"
+msgstr "Памер"
+
+msgid "Skipped"
+msgstr "Прапушчана"
+
+msgid "Slot"
+msgstr "Слот"
+
+msgid "Slot 1"
+msgstr "Слот 1"
+
+msgid "Slot 2"
+msgstr "Слот 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Слот {number}"
+
+msgid "Speed (km/h)"
+msgstr "Хуткасць (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Структурна вызначанае пакрыццё"
+
+msgid "Sub-section"
+msgstr "Падраздзел"
+
+msgid "Summary"
+msgstr "Зводка"
+
+msgid "Summary\n"
+msgstr "Зводка\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Файл можа быць няпоўным або пашкоджаным.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Час"
+
+msgid "Time >90 km/h"
+msgstr "Час >90 km/h"
+
+msgid "Total"
+msgstr "Усяго"
+
+msgid "Unknown bytes"
+msgstr "Невядомыя байты"
+
+msgid "Unknown event"
+msgstr "Невядомая падзея"
+
+msgid "Unknown fault"
+msgstr "Невядомая няспраўнасць"
+
+msgid "Unknown parsing error"
+msgstr "Невядомая памылка разбору"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "Подпісы VU TREP сапраўдныя (ланцуг не правераны)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "Подпісы VU TREP правераны (ланцуг частковы)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "Подпісы VU правераны (корань прывязаны)"
+
+msgid "Value"
+msgstr "Значэнне"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Блок транспартнага сродку (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Транспартны сродак: {plates}"
+
+msgid "Vehicles"
+msgstr "Транспартныя сродкі"
+
+msgid "Verification error"
+msgstr "Памылка праверкі"
+
+msgid "Verified"
+msgstr "Праверана"
+
+msgid "Work"
+msgstr "Праца"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} змен актыўнасці"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} байтаў"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} байтаў не дэкадавана"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} змен"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} кіроўцаў"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nПраблем цэласнасці не выяўлена."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} дзён"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "Экспарт {kind} недаступны. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "Для экспарту {kind} патрэбны дадатковы пакет:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} захавана ў:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} с запісана | макс. {max_speed} km/h | сярэдн. {avg_speed:.1f} km/h | {above} вышэй {limit} km/h | {moving} у руху | {gaps} унутраных разрываў"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} радкоў · {columns} слупкоў"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Падвойны пстрык для поўнай інфармацыі"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Выманне"
+
+msgid "▼ Insertion"
+msgstr "▼ Устаўка"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  ПАШКОДЖАНЫ / НЯПОЎНЫ ФАЙЛ"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  ПАШКОДЖАНЫЯ РАЗДЗЕЛЫ (даныя адкінуты)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Памылкі дэкадара"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  ГЭТЫ ФАЙЛ НЯПОЎНЫ АБО ПАШКОДЖАНЫ"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} папярэджанняў пра цэласнасць — націсніце для падрабязнасцей"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  РАЗДЗЕЛЫ ПРЫСУТНІЯ"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  АДСУТНІЧАЮЦЬ АБАВЯЗКОВЫЯ РАЗДЗЕЛЫ"
+
+msgid "❌  Parse error"
+msgstr "❌  Памылка разбору"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Абрэзана (не дасягнуты канец файла)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Няпоўныя сертыфікаты"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  УЛАДАЛЬНІК КАРТКІ"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Кіроўца / уладальнік карткі"
+
+msgid "💻  VU INFO"
+msgstr "💻  ІНФА ПРА VU"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Адкрыць файл DDD"
+
+msgid "📄  File Info"
+msgstr "📄  Інфармацыя пра файл"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  ДЫЯПАЗОН ДАТ"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  ПАЎНАТА"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  ПАРАМЕТРЫ"
+
+msgid "📊  STATISTICS"
+msgstr "📊  СТАТЫСТЫКА"
+
+msgid "📡  SENSOR"
+msgstr "📡  ДАТЧЫК"
+
+msgid "📡  Sensor"
+msgstr "📡  Датчык"
+
+msgid "📤  Export"
+msgstr "📤  Экспарт"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation}{annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  ПОДПІСЫ"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Бяспека і сертыфікаты"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  БЯГУЧАЕ БЛАКАВАННЕ"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  БЯГУЧАЕ БЛАКАВАННЕ"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  ЗВЯЗАНЫ ТРАНСПАРТНЫ СРОДАК"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  ТРАНСПАРТНЫ СРОДАК"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Транспартны сродак"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  АДНОЎЛЕНА З ПАШКОДЖАНЫХ ДАНЫХ"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Неапрацаваныя / неразгледжаныя даныя"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  ДАНЫЯ КАРТКІ"

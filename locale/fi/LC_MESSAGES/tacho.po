@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: fi\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (ei mitään)"
+
+msgid "  Ability"
+msgstr "  Kyky"
+
+msgid "  Activity changes"
+msgstr "  Aktiivisuusmuutokset"
+
+msgid "  Actual range"
+msgstr "  Todellinen matka"
+
+msgid "  Address"
+msgstr "  Osoite"
+
+msgid "  Approval"
+msgstr "  Hyväksyntä"
+
+msgid "  Authorised speed"
+msgstr "  Sallittu nopeus"
+
+msgid "  Avg speed"
+msgstr "  Keskinopeus"
+
+msgid "  Birth date"
+msgstr "  Syntymäaika"
+
+msgid "  Card downloads"
+msgstr "  Kortin lataukset"
+
+msgid "  Card number"
+msgstr "  Kortin numero"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Kortti paikalla: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Yritys"
+
+msgid "  Days recorded"
+msgstr "  Tallennetut päivät"
+
+msgid "  Days with activities"
+msgstr "  Päivät, joilla aktiviteetteja"
+
+msgid "  Days with activity"
+msgstr "  Päivät, joilla aktiviteettia"
+
+msgid "  Digital map"
+msgstr "  Digitaalinen kartta"
+
+msgid "  Distance"
+msgstr "  Matka"
+
+msgid "  EF verification"
+msgstr "  EF-varmennus"
+
+msgid "  Events"
+msgstr "  Tapahtumat"
+
+msgid "  Expiry date"
+msgstr "  Vanhenemispäivä"
+
+msgid "  Faults"
+msgstr "  Viat"
+
+msgid "  File structure"
+msgstr "  Tiedostorakenne"
+
+msgid "  First date"
+msgstr "  Ensimmäinen päivämäärä"
+
+msgid "  GNSS Serial"
+msgstr "  GNSS-sarjanumero"
+
+msgid "  Generation"
+msgstr "  Sukupolvi"
+
+msgid "  Issue date"
+msgstr "  Myöntämispäivä"
+
+msgid "  Issuing authority"
+msgstr "  Myöntävä viranomainen"
+
+msgid "  Issuing nation"
+msgstr "  Myöntävä maa"
+
+msgid "  Language"
+msgstr "  Kieli"
+
+msgid "  Last date"
+msgstr "  Viimeinen päivämäärä"
+
+msgid "  Licence number"
+msgstr "  Ajokortin numero"
+
+msgid "  Lock card"
+msgstr "  Lukitse kortti"
+
+msgid "  Locked since"
+msgstr "  Lukittu alkaen"
+
+msgid "  Low-confidence recovery"
+msgstr "  Matalan varmuuden palautus"
+
+msgid "  Make"
+msgstr "  Merkki"
+
+msgid "  Mandatory sections read"
+msgstr "  Pakolliset osiot luettu"
+
+msgid "  Manufactured"
+msgstr "  Valmistettu"
+
+msgid "  Manufacturer"
+msgstr "  Valmistaja"
+
+msgid "  Max speed"
+msgstr "  Enimmäisnopeus"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Puuttuvia tai vioittuneita tietoja EI näytetä."
+
+msgid "  Name"
+msgstr "  Nimi"
+
+msgid "  Nation"
+msgstr "  Maa"
+
+msgid "  Next calibration"
+msgstr "  Seuraava kalibrointi"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Vain alla luetellut osiot voitiin lukea."
+
+msgid "  Paired"
+msgstr "  Paritettu"
+
+msgid "  Part number"
+msgstr "  Osanumero"
+
+msgid "  Plate"
+msgstr "  Rekisterikilpi"
+
+msgid "  Prefix"
+msgstr "  Etuliite"
+
+msgid "  Registration"
+msgstr "  Rekisteröinti"
+
+msgid "  SW installed"
+msgstr "  Asennettu ohjelmisto"
+
+msgid "  Sensor approval"
+msgstr "  Anturin hyväksyntä"
+
+msgid "  Sensor paired"
+msgstr "  Anturi paritettu"
+
+msgid "  Sensor serial"
+msgstr "  Anturin sarjanumero"
+
+msgid "  Serial"
+msgstr "  Sarjanumero"
+
+msgid "  Serial number"
+msgstr "  Sarjanumero"
+
+msgid "  Software version"
+msgstr "  Ohjelmistoversio"
+
+msgid "  Status"
+msgstr "  Tila"
+
+msgid "  Tyre size"
+msgstr "  Renkaan koko"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Voimassa alkaen"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% tiedostosta"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Erääntyy {days} päivän kuluttua"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ VANHENTUNUT ({days} päivää sitten)"
+
+msgid "# Drivers"
+msgstr "# Kuljettajia"
+
+msgid "# Vehicles"
+msgstr "# Ajoneuvoja"
+
+msgid "(no changes)"
+msgstr "(ei muutoksia)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(ei ole semanttinen purkuaste)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Aktiviteetti"
+
+msgid "Activity Timeline\n"
+msgstr "Aktiviteettiaikajana\n"
+
+msgid "All Files"
+msgstr "Kaikki tiedostot"
+
+msgid "All TREP signatures valid"
+msgstr "Kaikki TREP-allekirjoitukset kelvollisia"
+
+msgid "All signatures verified"
+msgstr "Kaikki allekirjoitukset varmennettu"
+
+msgid "Anchored to ERCA root"
+msgstr "Ankkuroitu ERCA-juureen"
+
+msgid "Annex 1B"
+msgstr "Liite 1B"
+
+msgid "Annex 1C"
+msgstr "Liite 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Liite 1C · 2023/980"
+
+msgid "App version"
+msgstr "Sovellusversio"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Lisäys 11 · CAR=myöntävä viranomainen, CHR=haltija, voimassaolo TimeRealista"
+
+msgid "Apr"
+msgstr "Huh"
+
+msgid "Aug"
+msgstr "Elo"
+
+msgid "Available"
+msgstr "Valmiudessa"
+
+msgid "Avg Drive / day"
+msgstr "Keskim. ajoa / päivä"
+
+msgid "Avg km/h"
+msgstr "Keskim. km/h"
+
+msgid "Avg speed"
+msgstr "Keskinopeus"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Keskim. {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "BER-TLV-läpikäynti · spesifikaation lisäys 11 ei ole julkinen"
+
+msgid "Border crossing"
+msgstr "Rajan ylitys"
+
+msgid "Border crossings"
+msgstr "Rajan ylitykset"
+
+msgid "Byte-accounted coverage"
+msgstr "Tavukohtainen kattavuus"
+
+msgid "CSV (.csv)"
+msgstr "CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "CSV-tiedostot"
+
+msgid "CVC Certificates (decoded)"
+msgstr "CVC-varmenteet (purettu)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Kortti ei ole ajopiirturissa {time} alkaen"
+
+msgid "Card data signature mismatch"
+msgstr "Kortin tietojen allekirjoitus ei täsmää"
+
+msgid "Card inserted"
+msgstr "Kortti asetettu"
+
+msgid "Card not inserted"
+msgstr "Korttia ei asetettu"
+
+msgid "Card signing key not trusted"
+msgstr "Kortin allekirjoitusavaimeen ei luoteta"
+
+msgid "Card withdrawn"
+msgstr "Kortti poistettu"
+
+msgid "Cardholder"
+msgstr "Kortinhaltija"
+
+msgid "Certificate chain invalid"
+msgstr "Varmenneketju virheellinen"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Varmenneketjua ei ole ankkuroitu luotettuun juureen"
+
+msgid "Certificates"
+msgstr "Varmenteet"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Ehto: {condition}"
+
+msgid "Conditions"
+msgstr "Ehdot"
+
+msgid "Could not save the language setting."
+msgstr "Kieliasetusta ei voitu tallentaa."
+
+msgid "Crew"
+msgstr "Miehistö"
+
+msgid "DDD Files"
+msgstr "DDD-tiedostot"
+
+msgid "Daily Activities"
+msgstr "Päivän aktiviteetit"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Päivän aktiviteetit - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Päivän aktiviteetit {date}"
+
+msgid "Daily Detail"
+msgstr "Päivän yksityiskohdat"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Päivän yksityiskohdat — {day} (UTC)"
+
+msgid "Date"
+msgstr "Päivämäärä"
+
+msgid "Days"
+msgstr "Päivät"
+
+msgid "Dec"
+msgstr "Jou"
+
+msgid "Decoder failures"
+msgstr "Purkuvirheet"
+
+msgid "Detailed Speed"
+msgstr "Yksityiskohtainen nopeus"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Yksityiskohtainen nopeus - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Yksityiskohtainen nopeus {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Matka: {km} km"
+
+msgid "Drive"
+msgstr "Ajo"
+
+msgid "Driver Card"
+msgstr "Kuljettajakortti"
+
+msgid "Driver Card (from VU download)"
+msgstr "Kuljettajakortti (VU-latauksesta)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Kuljettaja: {name}"
+
+msgid "Drivers"
+msgstr "Kuljettajat"
+
+msgid "EF Signature Details"
+msgstr "EF-allekirjoituksen tiedot"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "EF-allekirjoitukset (kortin tietojen eheys)"
+
+msgid "EF signature verification failed"
+msgstr "EF-allekirjoituksen varmennus epäonnistui"
+
+msgid "EF signatures incomplete"
+msgstr "EF-allekirjoitukset puutteelliset"
+
+msgid "ERCA root not available"
+msgstr "ERCA-juuri ei ole saatavilla"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Saapui: {country}"
+
+msgid "Ev"
+msgstr "Tap."
+
+msgid "Event"
+msgstr "Tapahtuma"
+
+msgid "Events"
+msgstr "Tapahtumat"
+
+msgid "Excel (.xlsx)"
+msgstr "Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Excel-työkirja"
+
+msgid "Export Complete"
+msgstr "Vienti valmis"
+
+msgid "Export Error"
+msgstr "Vientivirhe"
+
+msgid "Export Unavailable"
+msgstr "Vienti ei käytettävissä"
+
+msgid "Export failed"
+msgstr "Vienti epäonnistui"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Viety: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Viedään muotoon JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Viedään muotoon {kind}…"
+
+msgid "Failed"
+msgstr "Epäonnistui"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Tiedoston näyttäminen epäonnistui:\n{detail}"
+
+msgid "Fault"
+msgstr "Vika"
+
+msgid "Faults"
+msgstr "Viat"
+
+msgid "Feb"
+msgstr "Hel"
+
+msgid "Ferry / Train crossing"
+msgstr "Lautta- / junaylitys"
+
+msgid "Ferry / Train — Begin"
+msgstr "Lautta / juna — alku"
+
+msgid "Ferry / Train — End"
+msgstr "Lautta / juna — loppu"
+
+msgid "Field"
+msgstr "Kenttä"
+
+msgid "File Integrity"
+msgstr "Tiedoston eheys"
+
+msgid "File Integrity Warning"
+msgstr "Tiedoston eheysvaroitus"
+
+msgid "Filename"
+msgstr "Tiedostonimi"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "GNSS-todennus (0x960F)"
+
+msgid "Generation"
+msgstr "Sukupolvi"
+
+msgid "Generation 1"
+msgstr "Sukupolvi 1"
+
+msgid "Generation 2"
+msgstr "Sukupolvi 2"
+
+msgid "Generation 2.2"
+msgstr "Sukupolvi 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "IC-siru (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "ICC-tunnistus"
+
+msgid "Incomplete certificates"
+msgstr "Puutteelliset varmenteet"
+
+msgid "Integrity"
+msgstr "Eheys"
+
+msgid "JSON (.json)"
+msgstr "JSON (.json)"
+
+msgid "JSON Files"
+msgstr "JSON-tiedostot"
+
+msgid "Jan"
+msgstr "Tam"
+
+msgid "Jul"
+msgstr "Hei"
+
+msgid "Jun"
+msgstr "Kes"
+
+msgid "Km"
+msgstr "Km"
+
+msgid "Language"
+msgstr "Kieli"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Poistui: {country}"
+
+msgid "Load/Unload"
+msgstr "Kuormaus/purku"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Kuormauksen/purun todennus (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Kuormaus/purku: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Ladattu: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Ladataan…"
+
+msgid "MSCA→VU chain"
+msgstr "MSCA→VU-ketju"
+
+msgid "Manual entries"
+msgstr "Manuaaliset merkinnät"
+
+msgid "Manual entry"
+msgstr "Manuaalinen merkintä"
+
+msgid "Mar"
+msgstr "Maa"
+
+msgid "Max Drive / day"
+msgstr "Enint. ajoa / päivä"
+
+msgid "Max avg / day"
+msgstr "Enint. keskiarvo / päivä"
+
+msgid "Max km/h"
+msgstr "Enint. km/h"
+
+msgid "Max speed"
+msgstr "Enimmäisnopeus"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Enint. {speed} km/h"
+
+msgid "May"
+msgstr "Tou"
+
+msgid "Min avg / day"
+msgstr "Väh. keskiarvo / päivä"
+
+msgid "No EF signatures verified"
+msgstr "Ei varmennettuja EF-allekirjoituksia"
+
+msgid "No activity data available."
+msgstr "Aktiviteettitietoja ei ole saatavilla."
+
+msgid "No card present"
+msgstr "Kortti ei ole paikalla"
+
+msgid "No data for this day.\n"
+msgstr "Tälle päivälle ei ole tietoja.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Yksityiskohtaisia nopeusnäytteitä ei ole saatavilla."
+
+msgid "No file loaded"
+msgstr "Tiedostoa ei ole ladattu"
+
+msgid "No sections to display."
+msgstr "Näytettäviä osioita ei ole."
+
+msgid "No valid speed samples"
+msgstr "Ei kelvollisia nopeusnäytteitä"
+
+msgid "Not locked"
+msgstr "Ei lukittu"
+
+msgid "Nov"
+msgstr "Mar"
+
+msgid "Oct"
+msgstr "Lok"
+
+msgid "Odometer"
+msgstr "Matkamittari"
+
+msgid "Odometer km"
+msgstr "Matkamittari km"
+
+msgid "Origin"
+msgstr "Alkuperä"
+
+msgid "Origin details"
+msgstr "Alkuperän tiedot"
+
+msgid "Out of scope — Begin"
+msgstr "Soveltamisalan ulkopuolella — alku"
+
+msgid "Out of scope — End"
+msgstr "Soveltamisalan ulkopuolella — loppu"
+
+msgid "Overspeed events"
+msgstr "Ylinopeustapahtumat"
+
+msgid "Overspeeding"
+msgstr "Ylinopeus"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Ylinopeus: {start} → {end} | enint. {max_speed} | keskim. {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "PDF-asiakirja"
+
+msgid "Parsed at"
+msgstr "Purettu"
+
+msgid "Parsing Error"
+msgstr "Purkuvirhe"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Purkuvirhe — näytetään edellinen tiedosto: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Puretaan {filename}…"
+
+msgid "Partial verification"
+msgstr "Osittainen varmennus"
+
+msgid "Place"
+msgstr "Paikka"
+
+msgid "Place: Begin"
+msgstr "Paikka: alku"
+
+msgid "Place: End"
+msgstr "Paikka: loppu"
+
+msgid "Places"
+msgstr "Paikat"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Kilpi: {plate}"
+
+msgid "Power interruption"
+msgstr "Sähkökatko"
+
+msgid "Power interruptions"
+msgstr "Sähkökatkot"
+
+msgid "Ready — open a .ddd file"
+msgstr "Valmis — avaa .ddd-tiedosto"
+
+msgid "Rendering Error"
+msgstr "Näyttövirhe"
+
+msgid "Rest"
+msgstr "Lepo"
+
+msgid "Restart the application to apply the new language."
+msgstr "Käynnistä sovellus uudelleen, jotta uusi kieli tulee voimaan."
+
+msgid "Samples"
+msgstr "Näytteet"
+
+msgid "Section Signatures (TREP)"
+msgstr "Osioiden allekirjoitukset (TREP)"
+
+msgid "Sep"
+msgstr "Syy"
+
+msgid "Signature Verification"
+msgstr "Allekirjoituksen varmennus"
+
+msgid "Size"
+msgstr "Koko"
+
+msgid "Skipped"
+msgstr "Ohitettu"
+
+msgid "Slot"
+msgstr "Paikka"
+
+msgid "Slot 1"
+msgstr "Paikka 1"
+
+msgid "Slot 2"
+msgstr "Paikka 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Paikka {number}"
+
+msgid "Speed (km/h)"
+msgstr "Nopeus (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Rakenteellisesti tunnistettu kattavuus"
+
+msgid "Sub-section"
+msgstr "Alaosio"
+
+msgid "Summary"
+msgstr "Yhteenveto"
+
+msgid "Summary\n"
+msgstr "Yhteenveto\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Tiedosto voi olla puutteellinen tai vioittunut.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Aika"
+
+msgid "Time >90 km/h"
+msgstr "Aika >90 km/h"
+
+msgid "Total"
+msgstr "Yhteensä"
+
+msgid "Unknown bytes"
+msgstr "Tuntemattomat tavut"
+
+msgid "Unknown event"
+msgstr "Tuntematon tapahtuma"
+
+msgid "Unknown fault"
+msgstr "Tuntematon vika"
+
+msgid "Unknown parsing error"
+msgstr "Tuntematon purkuvirhe"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "VU TREP -allekirjoitukset kelvollisia (ketjua ei varmennettu)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "VU TREP -allekirjoitukset varmennettu (ketju osittainen)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "VU-allekirjoitukset varmennettu (juuri ankkuroitu)"
+
+msgid "Value"
+msgstr "Arvo"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Ajoneuvoyksikkö (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Ajoneuvo: {plates}"
+
+msgid "Vehicles"
+msgstr "Ajoneuvot"
+
+msgid "Verification error"
+msgstr "Varmennusvirhe"
+
+msgid "Verified"
+msgstr "Varmennettu"
+
+msgid "Work"
+msgstr "Työ"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} aktiviteettimuutosta"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} tavua"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} tavua purkamatta"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} muutosta"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} kuljettajaa"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nEheysongelmia ei havaittu."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} päivää"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "{kind}-vienti ei ole käytettävissä. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "{kind}-vienti vaatii lisäpaketin:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} tallennettu:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s tallennettu | enint. {max_speed} km/h | keskim. {avg_speed:.1f} km/h | {above} yli {limit} km/h | {moving} liikkeessä | {gaps} sisäistä aukkoa"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} riviä · {columns} saraketta"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Kaksoisnapsauta, niin näet kaikki tiedot"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Poisto"
+
+msgid "▼ Insertion"
+msgstr "▼ Asetus"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  VIOITTUNUT / PUUTTEELLINEN TIEDOSTO"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  VIOITTUNEET OSIOT (tiedot hylätty)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Purkuvirheet"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  TÄMÄ TIEDOSTO ON PUUTTEELLINEN TAI VIOITTUNUT"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} eheysvaroitusta — napsauta, niin näet tiedot"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  OSIOT OLEMASSA"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  PAKOLLISET OSIOT PUUTTUVAT"
+
+msgid "❌  Parse error"
+msgstr "❌  Purkuvirhe"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Katkaistu (tiedoston loppuun ei päästy)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Puutteelliset varmenteet"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  KORTINHALTIJA"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Kuljettaja / kortinhaltija"
+
+msgid "💻  VU INFO"
+msgstr "💻  VU-TIEDOT"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Avaa DDD-tiedosto"
+
+msgid "📄  File Info"
+msgstr "📄  Tiedoston tiedot"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  AIKAVÄLI"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  KATTAVUUS"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  PARAMETRIT"
+
+msgid "📊  STATISTICS"
+msgstr "📊  TILASTOT"
+
+msgid "📡  SENSOR"
+msgstr "📡  ANTURI"
+
+msgid "📡  Sensor"
+msgstr "📡  Anturi"
+
+msgid "📤  Export"
+msgstr "📤  Vienti"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation}{annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  ALLEKIRJOITUKSET"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Turvallisuus ja varmenteet"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  NYKYINEN LUKITUS"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  NYKYINEN LUKITUS"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  LIITETTY AJONEUVO"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  AJONEUVO"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Ajoneuvo"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  PALAUTETTU VAURIOITUNEISTA TIEDOISTA"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Raaka / purkamaton data"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  KORTIN TIEDOT"

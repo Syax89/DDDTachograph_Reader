@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: sl\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (nič)"
+
+msgid "  Ability"
+msgstr "  Sposobnost"
+
+msgid "  Activity changes"
+msgstr "  Spremembe dejavnosti"
+
+msgid "  Actual range"
+msgstr "  Dejanski obseg"
+
+msgid "  Address"
+msgstr "  Naslov"
+
+msgid "  Approval"
+msgstr "  Odobritev"
+
+msgid "  Authorised speed"
+msgstr "  Dovoljena hitrost"
+
+msgid "  Avg speed"
+msgstr "  Povpr. hitrost"
+
+msgid "  Birth date"
+msgstr "  Datum rojstva"
+
+msgid "  Card downloads"
+msgstr "  Prenosi kartice"
+
+msgid "  Card number"
+msgstr "  Številka kartice"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Kartica prisotna: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Podjetje"
+
+msgid "  Days recorded"
+msgstr "  Zabeleženi dnevi"
+
+msgid "  Days with activities"
+msgstr "  Dnevi z dejavnostmi"
+
+msgid "  Days with activity"
+msgstr "  Dnevi z dejavnostjo"
+
+msgid "  Digital map"
+msgstr "  Digitalni zemljevid"
+
+msgid "  Distance"
+msgstr "  Razdalja"
+
+msgid "  EF verification"
+msgstr "  Preverjanje EF"
+
+msgid "  Events"
+msgstr "  Dogodki"
+
+msgid "  Expiry date"
+msgstr "  Datum poteka"
+
+msgid "  Faults"
+msgstr "  Okvare"
+
+msgid "  File structure"
+msgstr "  Struktura datoteke"
+
+msgid "  First date"
+msgstr "  Prvi datum"
+
+msgid "  GNSS Serial"
+msgstr "  Serijska št. GNSS"
+
+msgid "  Generation"
+msgstr "  Generacija"
+
+msgid "  Issue date"
+msgstr "  Datum izdaje"
+
+msgid "  Issuing authority"
+msgstr "  Organ izdaje"
+
+msgid "  Issuing nation"
+msgstr "  Država izdaje"
+
+msgid "  Language"
+msgstr "  Jezik"
+
+msgid "  Last date"
+msgstr "  Zadnji datum"
+
+msgid "  Licence number"
+msgstr "  Številka vozniškega dovoljenja"
+
+msgid "  Lock card"
+msgstr "  Zakleni kartico"
+
+msgid "  Locked since"
+msgstr "  Zaklenjeno od"
+
+msgid "  Low-confidence recovery"
+msgstr "  Obnovitev z nizkim zaupanjem"
+
+msgid "  Make"
+msgstr "  Znamka"
+
+msgid "  Mandatory sections read"
+msgstr "  Obvezni razdelki prebrani"
+
+msgid "  Manufactured"
+msgstr "  Izdelano"
+
+msgid "  Manufacturer"
+msgstr "  Proizvajalec"
+
+msgid "  Max speed"
+msgstr "  Najv. hitrost"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Manjkajoči ali poškodovani podatki SE NE PRIKAŽEJO."
+
+msgid "  Name"
+msgstr "  Ime"
+
+msgid "  Nation"
+msgstr "  Država"
+
+msgid "  Next calibration"
+msgstr "  Naslednja kalibracija"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Prebrani so bili le spodaj navedeni razdelki."
+
+msgid "  Paired"
+msgstr "  Seznanjeno"
+
+msgid "  Part number"
+msgstr "  Številka dela"
+
+msgid "  Plate"
+msgstr "  Registrska oznaka"
+
+msgid "  Prefix"
+msgstr "  Predpona"
+
+msgid "  Registration"
+msgstr "  Registracija"
+
+msgid "  SW installed"
+msgstr "  Nameščena programska oprema"
+
+msgid "  Sensor approval"
+msgstr "  Odobritev senzorja"
+
+msgid "  Sensor paired"
+msgstr "  Senzor seznanjen"
+
+msgid "  Sensor serial"
+msgstr "  Serijska št. senzorja"
+
+msgid "  Serial"
+msgstr "  Serijska št."
+
+msgid "  Serial number"
+msgstr "  Serijska številka"
+
+msgid "  Software version"
+msgstr "  Različica programske opreme"
+
+msgid "  Status"
+msgstr "  Status"
+
+msgid "  Tyre size"
+msgstr "  Dimenzija pnevmatik"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Veljavno od"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% datoteke"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Zapade čez {days} dni"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ POTECKLO (pred {days} dnevi)"
+
+msgid "# Drivers"
+msgstr "# Vozniki"
+
+msgid "# Vehicles"
+msgstr "# Vozila"
+
+msgid "(no changes)"
+msgstr "(brez sprememb)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(ni stopnja semantičnega dekodiranja)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Dejavnost"
+
+msgid "Activity Timeline\n"
+msgstr "Časovnica dejavnosti\n"
+
+msgid "All Files"
+msgstr "Vse datoteke"
+
+msgid "All TREP signatures valid"
+msgstr "Vsi podpisi TREP veljavni"
+
+msgid "All signatures verified"
+msgstr "Vsi podpisi preverjeni"
+
+msgid "Anchored to ERCA root"
+msgstr "Sidrano na koren ERCA"
+
+msgid "Annex 1B"
+msgstr "Priloga 1B"
+
+msgid "Annex 1C"
+msgstr "Priloga 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Priloga 1C · 2023/980"
+
+msgid "App version"
+msgstr "Različica aplikacije"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Dodatek 11 · CAR=organ izdaje, CHR=imetnik, veljavnost iz TimeReal"
+
+msgid "Apr"
+msgstr "apr"
+
+msgid "Aug"
+msgstr "avg"
+
+msgid "Available"
+msgstr "Razpoložljivost"
+
+msgid "Avg Drive / day"
+msgstr "Povpr. vožnja / dan"
+
+msgid "Avg km/h"
+msgstr "Povpr. km/h"
+
+msgid "Avg speed"
+msgstr "Povpr. hitrost"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Povpr. {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "Pregled BER-TLV · specifikacija Dodatek 11 ni javna"
+
+msgid "Border crossing"
+msgstr "Prehod meje"
+
+msgid "Border crossings"
+msgstr "Prehodi meje"
+
+msgid "Byte-accounted coverage"
+msgstr "Pokritost po bajtih"
+
+msgid "CSV (.csv)"
+msgstr "Datoteka CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "Datoteke CSV"
+
+msgid "CVC Certificates (decoded)"
+msgstr "Certifikati CVC (dekodirani)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Kartica od {time} ni v tahografu"
+
+msgid "Card data signature mismatch"
+msgstr "Neujemanje podpisa podatkov kartice"
+
+msgid "Card inserted"
+msgstr "Kartica vstavljena"
+
+msgid "Card not inserted"
+msgstr "Kartica ni vstavljena"
+
+msgid "Card signing key not trusted"
+msgstr "Podpisni ključ kartice ni zaupanja vreden"
+
+msgid "Card withdrawn"
+msgstr "Kartica izvlečena"
+
+msgid "Cardholder"
+msgstr "Imetnik kartice"
+
+msgid "Certificate chain invalid"
+msgstr "Veriga potrdil je neveljavna"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Veriga potrdil ni sidrana na zaupanja vreden koren"
+
+msgid "Certificates"
+msgstr "Potrdila"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Pogoj: {condition}"
+
+msgid "Conditions"
+msgstr "Pogoji"
+
+msgid "Could not save the language setting."
+msgstr "Nastavitve jezika ni bilo mogoče shraniti."
+
+msgid "Crew"
+msgstr "Posadka"
+
+msgid "DDD Files"
+msgstr "Datoteke DDD"
+
+msgid "Daily Activities"
+msgstr "Dnevne dejavnosti"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Dnevne dejavnosti - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Dnevne dejavnosti {date}"
+
+msgid "Daily Detail"
+msgstr "Dnevne podrobnosti"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Dnevne podrobnosti — {day} (UTC)"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Days"
+msgstr "Dnevi"
+
+msgid "Dec"
+msgstr "dec"
+
+msgid "Decoder failures"
+msgstr "Napake dekoderja"
+
+msgid "Detailed Speed"
+msgstr "Podrobna hitrost"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Podrobna hitrost - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Podrobna hitrost {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Razdalja: {km} km"
+
+msgid "Drive"
+msgstr "Vožnja"
+
+msgid "Driver Card"
+msgstr "Kartica voznika"
+
+msgid "Driver Card (from VU download)"
+msgstr "Kartica voznika (iz prenosa VU)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Voznik: {name}"
+
+msgid "Drivers"
+msgstr "Vozniki"
+
+msgid "EF Signature Details"
+msgstr "Podrobnosti podpisov EF"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "Podpisi EF (celovitost podatkov kartice)"
+
+msgid "EF signature verification failed"
+msgstr "Preverjanje podpisa EF ni uspelo"
+
+msgid "EF signatures incomplete"
+msgstr "Podpisi EF so nepopolni"
+
+msgid "ERCA root not available"
+msgstr "Koren ERCA ni na voljo"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Vstop: {country}"
+
+msgid "Ev"
+msgstr "Dog."
+
+msgid "Event"
+msgstr "Dogodek"
+
+msgid "Events"
+msgstr "Dogodki"
+
+msgid "Excel (.xlsx)"
+msgstr "Preglednica Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Delovni zvezek Excel"
+
+msgid "Export Complete"
+msgstr "Izvoz dokončan"
+
+msgid "Export Error"
+msgstr "Napaka pri izvozu"
+
+msgid "Export Unavailable"
+msgstr "Izvoz ni na voljo"
+
+msgid "Export failed"
+msgstr "Izvoz ni uspel"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Izvoženo: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Izvažanje v JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Izvažanje v {kind}…"
+
+msgid "Failed"
+msgstr "Neuspešno"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Datoteke ni bilo mogoče prikazati:\n{detail}"
+
+msgid "Fault"
+msgstr "Okvara"
+
+msgid "Faults"
+msgstr "Okvare"
+
+msgid "Feb"
+msgstr "feb"
+
+msgid "Ferry / Train crossing"
+msgstr "Prehod s trajektom / vlakom"
+
+msgid "Ferry / Train — Begin"
+msgstr "Trajekt / vlak — začetek"
+
+msgid "Ferry / Train — End"
+msgstr "Trajekt / vlak — konec"
+
+msgid "Field"
+msgstr "Polje"
+
+msgid "File Integrity"
+msgstr "Celovitost datoteke"
+
+msgid "File Integrity Warning"
+msgstr "Opozorilo o celovitosti datoteke"
+
+msgid "Filename"
+msgstr "Ime datoteke"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "Preverjanje pristnosti GNSS (0x960F)"
+
+msgid "Generation"
+msgstr "Generacija"
+
+msgid "Generation 1"
+msgstr "Generacija 1"
+
+msgid "Generation 2"
+msgstr "Generacija 2"
+
+msgid "Generation 2.2"
+msgstr "Generacija 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "Čip IC (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "Identifikacija ICC"
+
+msgid "Incomplete certificates"
+msgstr "Nepopolna potrdila"
+
+msgid "Integrity"
+msgstr "Celovitost"
+
+msgid "JSON (.json)"
+msgstr "Datoteka JSON (.json)"
+
+msgid "JSON Files"
+msgstr "Datoteke JSON"
+
+msgid "Jan"
+msgstr "jan"
+
+msgid "Jul"
+msgstr "jul"
+
+msgid "Jun"
+msgstr "jun"
+
+msgid "Km"
+msgstr "km"
+
+msgid "Language"
+msgstr "Jezik"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Izstop: {country}"
+
+msgid "Load/Unload"
+msgstr "Nakladanje/Razkladanje"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Preverjanje pristnosti nakladanja/razkladanja (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Nakladanje/Razkladanje: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Naloženo: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Nalaganje…"
+
+msgid "MSCA→VU chain"
+msgstr "Veriga MSCA→VU"
+
+msgid "Manual entries"
+msgstr "Ročni vnosi"
+
+msgid "Manual entry"
+msgstr "Ročni vnos"
+
+msgid "Mar"
+msgstr "mar"
+
+msgid "Max Drive / day"
+msgstr "Najv. vožnja / dan"
+
+msgid "Max avg / day"
+msgstr "Najv. povprečje / dan"
+
+msgid "Max km/h"
+msgstr "Najv. km/h"
+
+msgid "Max speed"
+msgstr "Najv. hitrost"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Najv. {speed} km/h"
+
+msgid "May"
+msgstr "maj"
+
+msgid "Min avg / day"
+msgstr "Najm. povprečje / dan"
+
+msgid "No EF signatures verified"
+msgstr "Noben podpis EF ni preverjen"
+
+msgid "No activity data available."
+msgstr "Na voljo ni podatkov o dejavnostih."
+
+msgid "No card present"
+msgstr "Kartica ni prisotna"
+
+msgid "No data for this day.\n"
+msgstr "Za ta dan ni podatkov.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Na voljo ni vzorcev podrobne hitrosti."
+
+msgid "No file loaded"
+msgstr "Nobena datoteka ni naložena"
+
+msgid "No sections to display."
+msgstr "Ni razdelkov za prikaz."
+
+msgid "No valid speed samples"
+msgstr "Ni veljavnih vzorcev hitrosti"
+
+msgid "Not locked"
+msgstr "Ni zaklenjeno"
+
+msgid "Nov"
+msgstr "nov"
+
+msgid "Oct"
+msgstr "okt"
+
+msgid "Odometer"
+msgstr "Števec kilometrov"
+
+msgid "Odometer km"
+msgstr "Števec km"
+
+msgid "Origin"
+msgstr "Izvor"
+
+msgid "Origin details"
+msgstr "Podrobnosti izvora"
+
+msgid "Out of scope — Begin"
+msgstr "Zunaj obsega — začetek"
+
+msgid "Out of scope — End"
+msgstr "Zunaj obsega — konec"
+
+msgid "Overspeed events"
+msgstr "Dogodki prekoračitve hitrosti"
+
+msgid "Overspeeding"
+msgstr "Prekoračitev hitrosti"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Prekoračitev hitrosti: {start} → {end} | najv. {max_speed} | povpr. {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "Dokument PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "Dokument PDF"
+
+msgid "Parsed at"
+msgstr "Razčlenjeno ob"
+
+msgid "Parsing Error"
+msgstr "Napaka pri razčlenjevanju"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Napaka pri razčlenjevanju — prikazana je prejšnja datoteka: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Razčlenjevanje {filename}…"
+
+msgid "Partial verification"
+msgstr "Delno preverjanje"
+
+msgid "Place"
+msgstr "Kraj"
+
+msgid "Place: Begin"
+msgstr "Kraj: začetek"
+
+msgid "Place: End"
+msgstr "Kraj: konec"
+
+msgid "Places"
+msgstr "Kraji"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Registrska oznaka: {plate}"
+
+msgid "Power interruption"
+msgstr "Prekinitev napajanja"
+
+msgid "Power interruptions"
+msgstr "Prekinitve napajanja"
+
+msgid "Ready — open a .ddd file"
+msgstr "Pripravljeno — odprite datoteko .ddd"
+
+msgid "Rendering Error"
+msgstr "Napaka pri izrisu"
+
+msgid "Rest"
+msgstr "Počitek"
+
+msgid "Restart the application to apply the new language."
+msgstr "Znova zaženite aplikacijo, da uveljavite nov jezik."
+
+msgid "Samples"
+msgstr "Vzorci"
+
+msgid "Section Signatures (TREP)"
+msgstr "Podpisi razdelkov (TREP)"
+
+msgid "Sep"
+msgstr "sep"
+
+msgid "Signature Verification"
+msgstr "Preverjanje podpisov"
+
+msgid "Size"
+msgstr "Velikost"
+
+msgid "Skipped"
+msgstr "Preskočeno"
+
+msgid "Slot"
+msgstr "Reža"
+
+msgid "Slot 1"
+msgstr "Reža 1"
+
+msgid "Slot 2"
+msgstr "Reža 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Reža {number}"
+
+msgid "Speed (km/h)"
+msgstr "Hitrost (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Strukturno ugotovljena pokritost"
+
+msgid "Sub-section"
+msgstr "Podrazdelek"
+
+msgid "Summary"
+msgstr "Povzetek"
+
+msgid "Summary\n"
+msgstr "Povzetek\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Datoteka je morda nepopolna ali poškodovana.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Čas"
+
+msgid "Time >90 km/h"
+msgstr "Čas >90 km/h"
+
+msgid "Total"
+msgstr "Skupaj"
+
+msgid "Unknown bytes"
+msgstr "Neznani bajti"
+
+msgid "Unknown event"
+msgstr "Neznan dogodek"
+
+msgid "Unknown fault"
+msgstr "Neznana okvara"
+
+msgid "Unknown parsing error"
+msgstr "Neznana napaka pri razčlenjevanju"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "Podpisi VU TREP veljavni (veriga ni preverjena)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "Podpisi VU TREP preverjeni (veriga delna)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "Podpisi VU preverjeni (koren sidran)"
+
+msgid "Value"
+msgstr "Vrednost"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Enota vozila (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Vozilo: {plates}"
+
+msgid "Vehicles"
+msgstr "Vozila"
+
+msgid "Verification error"
+msgstr "Napaka pri preverjanju"
+
+msgid "Verified"
+msgstr "Preverjeno"
+
+msgid "Work"
+msgstr "Delo"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} sprememb dejavnosti"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} bajtov"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} bajtov nedekodiranih"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} sprememb"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} voznikov"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (čas UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nNi zaznanih težav s celovitostjo."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} dni"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "Izvoz {kind} ni na voljo. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "Izvoz {kind} zahteva dodatni paket:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} shranjeno v:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s zabeleženih | najv. {max_speed} km/h | povpr. {avg_speed:.1f} km/h | {above} nad {limit} km/h | {moving} v gibanju | {gaps} notranjih vrzeli"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} vrstic · {columns} stolpcev"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Dvokliknite za vse podrobnosti"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Izvlek"
+
+msgid "▼ Insertion"
+msgstr "▼ Vstavitev"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  POŠKODOVANA / DELNA DATOTEKA"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  POŠKODOVANI RAZDELKI (podatki zavrženi)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Napake dekoderja"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  TA DATOTEKA JE NEPOPOLNA ALI POŠKODOVANA"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} opozoril o celovitosti — kliknite za podrobnosti"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  RAZDELKI PRISOTNI"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  MANJKAJO OBVEZNI RAZDELKI"
+
+msgid "❌  Parse error"
+msgstr "❌  Napaka pri razčlenjevanju"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Odrezano (konec datoteke ni dosežen)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Nepopolna potrdila"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  IMETNIK KARTICE"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Voznik / imetnik kartice"
+
+msgid "💻  VU INFO"
+msgstr "💻  PODATKI O VU"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Odpri datoteko DDD"
+
+msgid "📄  File Info"
+msgstr "📄  Podatki o datoteki"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  RAZPON DATUMOV"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  POPOLNOST"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  PARAMETRI"
+
+msgid "📊  STATISTICS"
+msgstr "📊  STATISTIKA"
+
+msgid "📡  SENSOR"
+msgstr "📡  SENZOR"
+
+msgid "📡  Sensor"
+msgstr "📡  Senzor"
+
+msgid "📤  Export"
+msgstr "📤  Izvozi"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation} {annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  PODPISI"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Varnost in potrdila"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  TRENUTNO ZAKLENJENO"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  TRENUTNO ODKLENJENO"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  POVEZANO VOZILO"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  VOZILO"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Vozilo"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  OBNOVLJENO IZ POŠKODOVANIH PODATKOV"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Surovi / nerazčlenjeni podatki"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  PODROBNOSTI KARTICE"

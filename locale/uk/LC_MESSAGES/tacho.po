@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: uk\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (немає)"
+
+msgid "  Ability"
+msgstr "  Можливість"
+
+msgid "  Activity changes"
+msgstr "  Зміни активності"
+
+msgid "  Actual range"
+msgstr "  Фактична відстань"
+
+msgid "  Address"
+msgstr "  Адреса"
+
+msgid "  Approval"
+msgstr "  Схвалення"
+
+msgid "  Authorised speed"
+msgstr "  Дозволена швидкість"
+
+msgid "  Avg speed"
+msgstr "  Середня швидкість"
+
+msgid "  Birth date"
+msgstr "  Дата народження"
+
+msgid "  Card downloads"
+msgstr "  Завантаження картки"
+
+msgid "  Card number"
+msgstr "  Номер картки"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Картка присутня: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Компанія"
+
+msgid "  Days recorded"
+msgstr "  Записаних днів"
+
+msgid "  Days with activities"
+msgstr "  Дні з активностями"
+
+msgid "  Days with activity"
+msgstr "  Дні з активністю"
+
+msgid "  Digital map"
+msgstr "  Цифрова карта"
+
+msgid "  Distance"
+msgstr "  Відстань"
+
+msgid "  EF verification"
+msgstr "  Перевірка EF"
+
+msgid "  Events"
+msgstr "  Події"
+
+msgid "  Expiry date"
+msgstr "  Дата закінчення"
+
+msgid "  Faults"
+msgstr "  Несправності"
+
+msgid "  File structure"
+msgstr "  Структура файлу"
+
+msgid "  First date"
+msgstr "  Перша дата"
+
+msgid "  GNSS Serial"
+msgstr "  Серійний номер GNSS"
+
+msgid "  Generation"
+msgstr "  Покоління"
+
+msgid "  Issue date"
+msgstr "  Дата видачі"
+
+msgid "  Issuing authority"
+msgstr "  Орган видачі"
+
+msgid "  Issuing nation"
+msgstr "  Країна видачі"
+
+msgid "  Language"
+msgstr "  Мова"
+
+msgid "  Last date"
+msgstr "  Остання дата"
+
+msgid "  Licence number"
+msgstr "  Номер посвідчення водія"
+
+msgid "  Lock card"
+msgstr "  Заблокувати картку"
+
+msgid "  Locked since"
+msgstr "  Заблокована з"
+
+msgid "  Low-confidence recovery"
+msgstr "  Відновлення з низькою достовірністю"
+
+msgid "  Make"
+msgstr "  Марка"
+
+msgid "  Mandatory sections read"
+msgstr "  Обов'язкові розділи прочитано"
+
+msgid "  Manufactured"
+msgstr "  Виготовлено"
+
+msgid "  Manufacturer"
+msgstr "  Виробник"
+
+msgid "  Max speed"
+msgstr "  Максимальна швидкість"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Відсутні або пошкоджені дані НЕ показуються."
+
+msgid "  Name"
+msgstr "  Ім'я"
+
+msgid "  Nation"
+msgstr "  Країна"
+
+msgid "  Next calibration"
+msgstr "  Наступне калібрування"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Прочитати вдалося лише перелічені нижче розділи."
+
+msgid "  Paired"
+msgstr "  Сполучено"
+
+msgid "  Part number"
+msgstr "  Номер деталі"
+
+msgid "  Plate"
+msgstr "  Номерний знак"
+
+msgid "  Prefix"
+msgstr "  Префікс"
+
+msgid "  Registration"
+msgstr "  Реєстрація"
+
+msgid "  SW installed"
+msgstr "  Встановлене ПЗ"
+
+msgid "  Sensor approval"
+msgstr "  Схвалення датчика"
+
+msgid "  Sensor paired"
+msgstr "  Датчик сполучено"
+
+msgid "  Sensor serial"
+msgstr "  Серійний номер датчика"
+
+msgid "  Serial"
+msgstr "  Серійний номер"
+
+msgid "  Serial number"
+msgstr "  Серійний номер"
+
+msgid "  Software version"
+msgstr "  Версія ПЗ"
+
+msgid "  Status"
+msgstr "  Стан"
+
+msgid "  Tyre size"
+msgstr "  Розмір шин"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Діє з"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% файлу"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Термін через {days} дн."
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ ПРОСТРОЧЕНО ({days} дн. тому)"
+
+msgid "# Drivers"
+msgstr "# Водіїв"
+
+msgid "# Vehicles"
+msgstr "# Транспортних засобів"
+
+msgid "(no changes)"
+msgstr "(немає змін)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(не семантична частка декодування)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Активність"
+
+msgid "Activity Timeline\n"
+msgstr "Хронологія активності\n"
+
+msgid "All Files"
+msgstr "Усі файли"
+
+msgid "All TREP signatures valid"
+msgstr "Усі підписи TREP дійсні"
+
+msgid "All signatures verified"
+msgstr "Усі підписи перевірено"
+
+msgid "Anchored to ERCA root"
+msgstr "Прив'язано до кореня ERCA"
+
+msgid "Annex 1B"
+msgstr "Додаток 1B"
+
+msgid "Annex 1C"
+msgstr "Додаток 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Додаток 1C · 2023/980"
+
+msgid "App version"
+msgstr "Версія програми"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Доповнення 11 · CAR=орган видачі, CHR=власник, чинність із TimeReal"
+
+msgid "Apr"
+msgstr "Кві"
+
+msgid "Aug"
+msgstr "Сер"
+
+msgid "Available"
+msgstr "Доступний"
+
+msgid "Avg Drive / day"
+msgstr "Середн. водіння / день"
+
+msgid "Avg km/h"
+msgstr "Середн. km/h"
+
+msgid "Avg speed"
+msgstr "Середня швидкість"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Середн. {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "Прохід BER-TLV · доповнення 11 до специфікації не є публічним"
+
+msgid "Border crossing"
+msgstr "Перетин кордону"
+
+msgid "Border crossings"
+msgstr "Перетини кордонів"
+
+msgid "Byte-accounted coverage"
+msgstr "Покриття з урахуванням байтів"
+
+msgid "CSV (.csv)"
+msgstr "CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "Файли CSV"
+
+msgid "CVC Certificates (decoded)"
+msgstr "Сертифікати CVC (декодовано)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Картка відсутня в тахографі з {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Підпис даних картки не збігається"
+
+msgid "Card inserted"
+msgstr "Картку вставлено"
+
+msgid "Card not inserted"
+msgstr "Картку не вставлено"
+
+msgid "Card signing key not trusted"
+msgstr "Ключ підпису картки не є довіреним"
+
+msgid "Card withdrawn"
+msgstr "Картку вийнято"
+
+msgid "Cardholder"
+msgstr "Власник картки"
+
+msgid "Certificate chain invalid"
+msgstr "Ланцюжок сертифікатів недійсний"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Ланцюжок сертифікатів не прив'язаний до довіреного кореня"
+
+msgid "Certificates"
+msgstr "Сертифікати"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Умова: {condition}"
+
+msgid "Conditions"
+msgstr "Умови"
+
+msgid "Could not save the language setting."
+msgstr "Не вдалося зберегти налаштування мови."
+
+msgid "Crew"
+msgstr "Екіпаж"
+
+msgid "DDD Files"
+msgstr "Файли DDD"
+
+msgid "Daily Activities"
+msgstr "Активність за день"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Активність за день - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Активність за день {date}"
+
+msgid "Daily Detail"
+msgstr "Деталізація за день"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Деталізація за день — {day} (UTC)"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Days"
+msgstr "Дні"
+
+msgid "Dec"
+msgstr "Гру"
+
+msgid "Decoder failures"
+msgstr "Помилки декодера"
+
+msgid "Detailed Speed"
+msgstr "Детальна швидкість"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Детальна швидкість - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Детальна швидкість {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Відстань: {km} km"
+
+msgid "Drive"
+msgstr "Водіння"
+
+msgid "Driver Card"
+msgstr "Картка водія"
+
+msgid "Driver Card (from VU download)"
+msgstr "Картка водія (з вивантаження VU)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Водій: {name}"
+
+msgid "Drivers"
+msgstr "Водії"
+
+msgid "EF Signature Details"
+msgstr "Деталі підпису EF"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "Підписи EF (цілісність даних картки)"
+
+msgid "EF signature verification failed"
+msgstr "Помилка перевірки підпису EF"
+
+msgid "EF signatures incomplete"
+msgstr "Підписи EF неповні"
+
+msgid "ERCA root not available"
+msgstr "Корінь ERCA недоступний"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "В'їзд: {country}"
+
+msgid "Ev"
+msgstr "Под."
+
+msgid "Event"
+msgstr "Подія"
+
+msgid "Events"
+msgstr "Події"
+
+msgid "Excel (.xlsx)"
+msgstr "Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Книга Excel"
+
+msgid "Export Complete"
+msgstr "Експорт завершено"
+
+msgid "Export Error"
+msgstr "Помилка експорту"
+
+msgid "Export Unavailable"
+msgstr "Експорт недоступний"
+
+msgid "Export failed"
+msgstr "Експорт не вдався"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Експортовано: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Експорт у JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Експорт у {kind}…"
+
+msgid "Failed"
+msgstr "Не вдалося"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Не вдалося показати файл:\n{detail}"
+
+msgid "Fault"
+msgstr "Несправність"
+
+msgid "Faults"
+msgstr "Несправності"
+
+msgid "Feb"
+msgstr "Лют"
+
+msgid "Ferry / Train crossing"
+msgstr "Перетин поромом / поїздом"
+
+msgid "Ferry / Train — Begin"
+msgstr "Пором / поїзд — початок"
+
+msgid "Ferry / Train — End"
+msgstr "Пором / поїзд — кінець"
+
+msgid "Field"
+msgstr "Поле"
+
+msgid "File Integrity"
+msgstr "Цілісність файлу"
+
+msgid "File Integrity Warning"
+msgstr "Попередження про цілісність файлу"
+
+msgid "Filename"
+msgstr "Ім'я файлу"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "Автентифікація GNSS (0x960F)"
+
+msgid "Generation"
+msgstr "Покоління"
+
+msgid "Generation 1"
+msgstr "Покоління 1"
+
+msgid "Generation 2"
+msgstr "Покоління 2"
+
+msgid "Generation 2.2"
+msgstr "Покоління 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "Мікросхема IC (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "Ідентифікація ICC"
+
+msgid "Incomplete certificates"
+msgstr "Неповні сертифікати"
+
+msgid "Integrity"
+msgstr "Цілісність"
+
+msgid "JSON (.json)"
+msgstr "JSON (.json)"
+
+msgid "JSON Files"
+msgstr "Файли JSON"
+
+msgid "Jan"
+msgstr "Січ"
+
+msgid "Jul"
+msgstr "Лип"
+
+msgid "Jun"
+msgstr "Чер"
+
+msgid "Km"
+msgstr "Км"
+
+msgid "Language"
+msgstr "Мова"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Виїзд: {country}"
+
+msgid "Load/Unload"
+msgstr "Навантаження/розвантаження"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Автентифікація навантаження/розвантаження (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Навантаження/розвантаження: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Завантажено: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Завантаження…"
+
+msgid "MSCA→VU chain"
+msgstr "Ланцюжок MSCA→VU"
+
+msgid "Manual entries"
+msgstr "Ручні записи"
+
+msgid "Manual entry"
+msgstr "Ручний запис"
+
+msgid "Mar"
+msgstr "Бер"
+
+msgid "Max Drive / day"
+msgstr "Макс. водіння / день"
+
+msgid "Max avg / day"
+msgstr "Макс. середн. / день"
+
+msgid "Max km/h"
+msgstr "Макс. km/h"
+
+msgid "Max speed"
+msgstr "Максимальна швидкість"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Макс. {speed} km/h"
+
+msgid "May"
+msgstr "Трав"
+
+msgid "Min avg / day"
+msgstr "Мін. середн. / день"
+
+msgid "No EF signatures verified"
+msgstr "Підписи EF не перевірено"
+
+msgid "No activity data available."
+msgstr "Дані про активність недоступні."
+
+msgid "No card present"
+msgstr "Картка відсутня"
+
+msgid "No data for this day.\n"
+msgstr "Немає даних за цей день.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Детальні вибірки швидкості недоступні."
+
+msgid "No file loaded"
+msgstr "Файл не завантажено"
+
+msgid "No sections to display."
+msgstr "Немає розділів для показу."
+
+msgid "No valid speed samples"
+msgstr "Немає дійсних вибірок швидкості"
+
+msgid "Not locked"
+msgstr "Не заблоковано"
+
+msgid "Nov"
+msgstr "Лис"
+
+msgid "Oct"
+msgstr "Жов"
+
+msgid "Odometer"
+msgstr "Одометр"
+
+msgid "Odometer km"
+msgstr "Одометр км"
+
+msgid "Origin"
+msgstr "Джерело"
+
+msgid "Origin details"
+msgstr "Деталі джерела"
+
+msgid "Out of scope — Begin"
+msgstr "Поза сферою дії — початок"
+
+msgid "Out of scope — End"
+msgstr "Поза сферою дії — кінець"
+
+msgid "Overspeed events"
+msgstr "Події перевищення швидкості"
+
+msgid "Overspeeding"
+msgstr "Перевищення швидкості"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Перевищення швидкості: {start} → {end} | макс. {max_speed} | середн. {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "Документ PDF"
+
+msgid "Parsed at"
+msgstr "Декодовано"
+
+msgid "Parsing Error"
+msgstr "Помилка розбору"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Помилка розбору — показано попередній файл: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Розбір {filename}…"
+
+msgid "Partial verification"
+msgstr "Часткова перевірка"
+
+msgid "Place"
+msgstr "Місце"
+
+msgid "Place: Begin"
+msgstr "Місце: початок"
+
+msgid "Place: End"
+msgstr "Місце: кінець"
+
+msgid "Places"
+msgstr "Місця"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Номерний знак: {plate}"
+
+msgid "Power interruption"
+msgstr "Переривання живлення"
+
+msgid "Power interruptions"
+msgstr "Переривання живлення"
+
+msgid "Ready — open a .ddd file"
+msgstr "Готово — відкрийте файл .ddd"
+
+msgid "Rendering Error"
+msgstr "Помилка відображення"
+
+msgid "Rest"
+msgstr "Відпочинок"
+
+msgid "Restart the application to apply the new language."
+msgstr "Перезапустіть програму, щоб застосувати нову мову."
+
+msgid "Samples"
+msgstr "Вибірки"
+
+msgid "Section Signatures (TREP)"
+msgstr "Підписи розділів (TREP)"
+
+msgid "Sep"
+msgstr "Вер"
+
+msgid "Signature Verification"
+msgstr "Перевірка підпису"
+
+msgid "Size"
+msgstr "Розмір"
+
+msgid "Skipped"
+msgstr "Пропущено"
+
+msgid "Slot"
+msgstr "Слот"
+
+msgid "Slot 1"
+msgstr "Слот 1"
+
+msgid "Slot 2"
+msgstr "Слот 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Слот {number}"
+
+msgid "Speed (km/h)"
+msgstr "Швидкість (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Структурно визначене покриття"
+
+msgid "Sub-section"
+msgstr "Підрозділ"
+
+msgid "Summary"
+msgstr "Підсумок"
+
+msgid "Summary\n"
+msgstr "Підсумок\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Файл може бути неповним або пошкодженим.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Час"
+
+msgid "Time >90 km/h"
+msgstr "Час >90 km/h"
+
+msgid "Total"
+msgstr "Усього"
+
+msgid "Unknown bytes"
+msgstr "Невідомі байти"
+
+msgid "Unknown event"
+msgstr "Невідома подія"
+
+msgid "Unknown fault"
+msgstr "Невідома несправність"
+
+msgid "Unknown parsing error"
+msgstr "Невідома помилка розбору"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "Підписи VU TREP дійсні (ланцюжок не перевірено)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "Підписи VU TREP перевірено (ланцюжок частковий)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "Підписи VU перевірено (корінь прив'язано)"
+
+msgid "Value"
+msgstr "Значення"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Блок транспортного засобу (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Транспортний засіб: {plates}"
+
+msgid "Vehicles"
+msgstr "Транспортні засоби"
+
+msgid "Verification error"
+msgstr "Помилка перевірки"
+
+msgid "Verified"
+msgstr "Перевірено"
+
+msgid "Work"
+msgstr "Робота"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} змін активності"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} байтів"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} байтів не декодовано"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} змін"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} водіїв"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nПроблем цілісності не виявлено."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} дн."
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "Експорт {kind} недоступний. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "Для експорту {kind} потрібен додатковий пакет:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} збережено в:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} с записано | макс. {max_speed} km/h | середн. {avg_speed:.1f} km/h | {above} вище {limit} km/h | {moving} у русі | {gaps} внутрішніх розривів"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} рядків · {columns} стовпців"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Подвійний клац для повної інформації"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Вилучення"
+
+msgid "▼ Insertion"
+msgstr "▼ Вставлення"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  ПОШКОДЖЕНИЙ / НЕПОВНИЙ ФАЙЛ"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  ПОШКОДЖЕНІ РОЗДІЛИ (дані відкинуто)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Помилки декодера"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  ЦЕЙ ФАЙЛ НЕПОВНИЙ АБО ПОШКОДЖЕНИЙ"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} попереджень про цілісність — натисніть для подробиць"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  РОЗДІЛИ ПРИСУТНІ"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  ВІДСУТНІ ОБОВ'ЯЗКОВІ РОЗДІЛИ"
+
+msgid "❌  Parse error"
+msgstr "❌  Помилка розбору"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Обрізано (не досягнуто кінця файлу)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Неповні сертифікати"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  ВЛАСНИК КАРТКИ"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Водій / власник картки"
+
+msgid "💻  VU INFO"
+msgstr "💻  ІНФО ПРО VU"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Відкрити файл DDD"
+
+msgid "📄  File Info"
+msgstr "📄  Інформація про файл"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  ДІАПАЗОН ДАТ"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  ПОВНОТА"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  ПАРАМЕТРИ"
+
+msgid "📊  STATISTICS"
+msgstr "📊  СТАТИСТИКА"
+
+msgid "📡  SENSOR"
+msgstr "📡  ДАТЧИК"
+
+msgid "📡  Sensor"
+msgstr "📡  Датчик"
+
+msgid "📤  Export"
+msgstr "📤  Експорт"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation}{annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  ПІДПИСИ"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Безпека та сертифікати"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  ПОТОЧНЕ БЛОКУВАННЯ"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  ПОТОЧНЕ БЛОКУВАННЯ"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  ПОВ'ЯЗАНИЙ ТРАНСПОРТНИЙ ЗАСІБ"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  ТРАНСПОРТНИЙ ЗАСІБ"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Транспортний засіб"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  ВІДНОВЛЕНО З ПОШКОДЖЕНИХ ДАНИХ"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Необроблені / нерозібрані дані"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  ДАНІ КАРТКИ"
