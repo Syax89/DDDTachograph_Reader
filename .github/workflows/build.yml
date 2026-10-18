@@ -1,15 +1,20 @@
 name: Build TachoReader
 
+# Build all three platforms on every branch push and pull request.
+# Version tags are handled by release.yml, hence the branch-only push filter.
 on:
   push:
-    branches: [ "master", "main" ]
+    branches: [ "**" ]
   pull_request:
-    branches: [ "master", "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      # A Windows failure must never cancel the macOS build: the aggregate
+      # 'All platforms verified' gate reports on both results.
+      fail-fast: false
       matrix:
         os: [windows-latest, macos-latest]
 
@@ -21,12 +26,12 @@ jobs:
       with:
         python-version: '3.11'
         cache: 'pip'
-        
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        
+
     - name: Build with PyInstaller
       run: |
         pyinstaller build.spec
@@ -93,6 +98,7 @@ jobs:
           dist/TachoReader.exe
           dist/TachoReader.app
           dist/TachoReader
+        if-no-files-found: error
 
   build-linux-flatpak:
     # Linux packaging: the frozen bundle from build.spec, wrapped in a Flatpak.
@@ -114,3 +120,25 @@ jobs:
         name: TachoReader-linux-x86_64
         path: TachoReader-linux-x86_64.flatpak
         if-no-files-found: error
+
+  all-platforms-verified:
+    # Single aggregate status for "every platform built and passed its smoke
+    # test". The matrix job above is 'success' only when BOTH Windows and macOS
+    # succeeded, so the two checks below cover all three platforms.
+    name: All platforms verified
+    needs: [build, build-linux-flatpak]
+    # always(): a failed, cancelled or skipped dependency must still reach the
+    # two checks below and fail — never silently pass.
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Require Windows + macOS and Linux Flatpak builds to succeed
+      env:
+        WINDOWS_MACOS_RESULT: ${{ needs.build.result }}
+        LINUX_FLATPAK_RESULT: ${{ needs['build-linux-flatpak'].result }}
+      run: |
+        set -euo pipefail
+        echo "Windows/macOS matrix result: $WINDOWS_MACOS_RESULT"
+        echo "Linux Flatpak result: $LINUX_FLATPAK_RESULT"
+        test "$WINDOWS_MACOS_RESULT" = "success"
+        test "$LINUX_FLATPAK_RESULT" = "success"

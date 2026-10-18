@@ -5,8 +5,10 @@ on:
     tags:
       - 'v*'
 
+# Only the publishing job needs write access; every build job downloads sources
+# and uploads artifacts, so read is enough.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   check-version:
@@ -117,21 +119,14 @@ jobs:
       run: |
         Compress-Archive -Path dist/TachoReader/* -DestinationPath TachoReader-${{ github.ref_name }}-windows-x64.zip
 
-    - name: Extract release notes from CHANGELOG
-      shell: bash
-      run: |
-        VERSION="${GITHUB_REF_NAME#v}"
-        awk -v ver="$VERSION" '
-          $0 ~ "^## \\[" ver "\\]" {flag=1; next}
-          /^## \[/ {flag=0}
-          flag' CHANGELOG.md > release_notes.md
-        test -s release_notes.md || echo "Release $GITHUB_REF_NAME" > release_notes.md
-
-    - name: Upload to release
-      uses: softprops/action-gh-release@v3
+    - name: Upload Windows package
+      # Nothing reaches the release here: publish-release owns publication, so a
+      # failing sibling platform cannot leave a half-published release behind.
+      uses: actions/upload-artifact@v7
       with:
-        files: TachoReader-${{ github.ref_name }}-windows-x64.zip
-        body_path: release_notes.md
+        name: release-windows
+        path: TachoReader-${{ github.ref_name }}-windows-x64.zip
+        if-no-files-found: error
 
   build-macos:
     runs-on: macos-latest
@@ -165,20 +160,12 @@ jobs:
       run: |
         hdiutil create -volname "TachoReader" -srcfolder dist/TachoReader.app -ov -format UDZO TachoReader-${{ github.ref_name }}-macos.dmg
 
-    - name: Extract release notes from CHANGELOG
-      run: |
-        VERSION="${GITHUB_REF_NAME#v}"
-        awk -v ver="$VERSION" '
-          $0 ~ "^## \\[" ver "\\]" {flag=1; next}
-          /^## \[/ {flag=0}
-          flag' CHANGELOG.md > release_notes.md
-        test -s release_notes.md || echo "Release $GITHUB_REF_NAME" > release_notes.md
-
-    - name: Upload to release
-      uses: softprops/action-gh-release@v3
+    - name: Upload macOS package
+      uses: actions/upload-artifact@v7
       with:
-        files: TachoReader-${{ github.ref_name }}-macos.dmg
-        body_path: release_notes.md
+        name: release-macos
+        path: TachoReader-${{ github.ref_name }}-macos.dmg
+        if-no-files-found: error
 
   build-linux-flatpak:
     runs-on: ubuntu-24.04
@@ -192,7 +179,51 @@ jobs:
       with:
         bundle-name: TachoReader-${{ github.ref_name }}-linux-x86_64.flatpak
 
+    - name: Upload Linux package
+      uses: actions/upload-artifact@v7
+      with:
+        name: release-linux
+        path: TachoReader-${{ github.ref_name }}-linux-x86_64.flatpak
+        if-no-files-found: error
+
+  publish-release:
+    # The one and only publisher: it runs only after Windows, macOS and the
+    # Linux Flatpak all built and smoke-tested their package successfully.
+    name: Publish release
+    needs: [build-windows, build-macos, build-linux-flatpak]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Download all three platform packages
+      uses: actions/download-artifact@v8
+      with:
+        pattern: release-*
+        merge-multiple: true
+        path: release-assets
+
+    - name: Verify all three packages are present
+      # Explicit filenames: an artifact that silently went missing must abort
+      # the release instead of publishing a partial one.
+      env:
+        TAG: ${{ github.ref_name }}
+      run: |
+        set -euo pipefail
+        for file in \
+          "TachoReader-${TAG}-windows-x64.zip" \
+          "TachoReader-${TAG}-macos.dmg" \
+          "TachoReader-${TAG}-linux-x86_64.flatpak"; do
+          test -s "release-assets/$file" || {
+            echo "::error::missing or empty release package: $file"
+            exit 1
+          }
+          echo "ok: $file ($(wc -c < "release-assets/$file") bytes)"
+        done
+
     - name: Extract release notes from CHANGELOG
+      # Extracted once here, not on every platform, so all platforms agree.
       run: |
         VERSION="${GITHUB_REF_NAME#v}"
         awk -v ver="$VERSION" '
@@ -201,9 +232,12 @@ jobs:
           flag' CHANGELOG.md > release_notes.md
         test -s release_notes.md || echo "Release $GITHUB_REF_NAME" > release_notes.md
 
-    - name: Upload to release
+    - name: Publish GitHub release
       uses: softprops/action-gh-release@v3
       with:
-        files: TachoReader-${{ github.ref_name }}-linux-x86_64.flatpak
+        files: |
+          release-assets/TachoReader-${{ github.ref_name }}-windows-x64.zip
+          release-assets/TachoReader-${{ github.ref_name }}-macos.dmg
+          release-assets/TachoReader-${{ github.ref_name }}-linux-x86_64.flatpak
         body_path: release_notes.md
         fail_on_unmatched_files: true
