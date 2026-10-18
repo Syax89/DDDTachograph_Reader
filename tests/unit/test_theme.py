@@ -163,3 +163,101 @@ def test_every_colour_constant_is_used_by_the_gui(name):
     alias_users = {alias for alias, alias_value in _colour_constants().items()
                    if alias_value == value}
     assert any(re.search(rf"\b{alias}\b", source) for alias in alias_users), name
+
+
+# ── activity colours are not the accent ───────────────────────────────────
+
+#: Activity code → the palette name that means "this is that activity".
+ACTIVITY_CONSTANTS = {
+    "DRIVE": "ACTIVITY_DRIVE",
+    "WORK": "ACTIVITY_WORK",
+    "REST": "ACTIVITY_REST",
+    "AVAILABLE": "ACTIVITY_AVAILABLE",
+}
+
+
+def test_activity_constants_exist_and_are_valid_hex():
+    """Every activity has its own name; the value is a plain ``#rrggbb``."""
+    for code, name in ACTIVITY_CONSTANTS.items():
+        value = getattr(theme, name, None)
+        assert isinstance(value, str), f"app.theme.{name} is missing ({code})"
+        assert HEX_VALUE_RE.match(value), f"{name} = {value!r}"
+
+
+def test_activity_colours_come_from_the_activity_constants():
+    import app.gui as gui
+
+    for code, name in ACTIVITY_CONSTANTS.items():
+        assert gui.ACTIVITY_COLORS[code] == getattr(theme, name), code
+
+
+def test_day_detail_map_uses_the_activity_constants():
+    """The day-detail colour map names the activity, not the accent."""
+    import app.gui as gui
+
+    assert gui.DayDetailWindow.COLORS["DRIVE"] == theme.ACTIVITY_DRIVE
+    assert gui.DayDetailWindow.COLORS["REST"] == theme.ACTIVITY_REST
+
+
+def _colours_dict_values(path, target):
+    """Return the dict literal assigned to ``target`` as ``{key: ast node}``."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and any(
+                isinstance(t, ast.Name) and t.id == target for t in node.targets):
+            assert isinstance(node.value, ast.Dict), target
+            return {key.value: value for key, value in zip(
+                node.value.keys, node.value.values, strict=True)}
+        if isinstance(node, ast.ClassDef) and node.name == "DayDetailWindow":
+            for inner in node.body:
+                if isinstance(inner, ast.Assign) and any(
+                        isinstance(t, ast.Name) and t.id == target
+                        for t in inner.targets):
+                    return {key.value: value for key, value in zip(
+                        inner.value.keys, inner.value.values, strict=True)}
+    raise AssertionError(f"{target} not found in {path}")
+
+
+def test_activity_colour_maps_reference_the_activity_names():
+    """Source-level guard: the maps must *name* ACTIVITY_*, not ACCENT.
+
+    The two share a hex value today, so comparing values cannot tell
+    "this is Drive" from "this is selected"; the assignment can.
+    """
+    colours = _colours_dict_values(GUI_PATH, "ACTIVITY_COLORS")
+    assert sorted(colours) == sorted(ACTIVITY_CONSTANTS)
+    for code, value in colours.items():
+        assert isinstance(value, ast.Name), (code, ast.dump(value))
+        assert value.id.startswith("ACTIVITY_"), code
+
+    detail = _colours_dict_values(GUI_PATH, "COLORS")
+    for code in ("DRIVE", "REST"):
+        assert isinstance(detail[code], ast.Name), code
+        assert detail[code].id.startswith("ACTIVITY_"), code
+
+
+def test_dashboard_drive_cards_use_the_activity_colours():
+    """The dashboard KPI cards name the activity too (Drive/Rest cards)."""
+    from unittest.mock import Mock
+
+    import app.gui as gui
+
+    app = object.__new__(gui.TachoExplorer)
+    app._vu_slot_filter = "Slot 1"
+    app._show_empty = Mock()
+    captured = {}
+    app._update_dashboard_in_place = Mock(
+        side_effect=lambda _range, kpis, *args: captured.setdefault("kpis", kpis))
+
+    app._show_daily_summary(
+        [{"date": "01/05/2025", "changes": [
+            {"activity": "DRIVE", "time": "08:00", "slot": "First"},
+            {"activity": "REST", "time": "12:00", "slot": "First"}]}],
+        {"metadata": {"is_vu": True}}, _fast_refresh=True)
+
+    colours = {label: colour for label, _value, colour in captured["kpis"]}
+    assert colours["Drive"] == theme.ACTIVITY_DRIVE
+    assert colours["Rest"] == theme.ACTIVITY_REST
+    assert colours["Avg Drive / day"] == theme.ACTIVITY_DRIVE
+    assert colours["Max Drive / day"] == theme.ACTIVITY_DRIVE
+

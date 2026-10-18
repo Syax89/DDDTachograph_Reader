@@ -74,15 +74,18 @@ def test_fmt_seconds_duration_never_truncates_a_non_zero_value():
 
 
 def test_speed_summary_shows_seconds_below_a_minute(root):
-    """G-F5: 30 samples above the limit (and 30 moving) is 30 s, not "0 min"."""
+    """G-F5: 30 samples above the limit (and 30 moving) is 30 s, not "0 min".
+
+    Since the summary moved to the KPI cards ("Time above N km/h" / "Time
+    moving") the invariant is asserted there — same fix, new home.
+    """
     chart = DetailedSpeedChart(root)
     chart.pack(fill=tk.BOTH, expand=True)
     chart.show(DAY, [(second, 120) for second in range(30)])
 
-    summary = chart.summary_lbl.cget("text")
-    assert "30 s above 90 km/h" in summary
-    assert "30 s moving" in summary
-    assert "0 min" not in summary
+    assert chart.kpi["above"]["value"].cget("text") == "30 s"
+    assert chart.kpi["moving"]["value"].cget("text") == "30 s"
+    assert "0 min" not in chart.summary_lbl.cget("text")
 
 
 def test_speed_summary_keeps_whole_minutes(root):
@@ -91,9 +94,8 @@ def test_speed_summary_keeps_whole_minutes(root):
     chart.pack(fill=tk.BOTH, expand=True)
     chart.show(DAY, [(second, 120) for second in range(1800)])
 
-    summary = chart.summary_lbl.cget("text")
-    assert "30 min above 90 km/h" in summary
-    assert "30 min moving" in summary
+    assert chart.kpi["above"]["value"].cget("text") == "30 min"
+    assert chart.kpi["moving"]["value"].cget("text") == "30 min"
 
 
 def test_speed_summary_overspeed_column_is_not_zeroed(monkeypatch):

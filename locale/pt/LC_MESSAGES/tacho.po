@@ -656,6 +656,9 @@ msgstr "Excesso de velocidade"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Excesso de velocidade: {start} → {end} | máx {max_speed} | méd {avg_speed}"
 
+msgid "Overspeeding event (recorded by the unit)"
+msgstr "Excesso de velocidade (registado pela unidade)"
+
 msgid "Open a DDD file"
 msgstr "Abrir um ficheiro DDD"
 
@@ -775,6 +778,13 @@ msgstr "Hora"
 msgid "Time >90 km/h"
 msgstr "Tempo >90 km/h"
 
+#, python-brace-format
+msgid "Time above {limit} km/h"
+msgstr "Tempo acima de {limit} km/h"
+
+msgid "Time moving"
+msgstr "Tempo em movimento"
+
 msgid "Total"
 msgstr "Total"
 
@@ -866,8 +876,8 @@ msgid "{kind} saved to:\n{path}"
 msgstr "{kind} guardado em:\n{path}"
 
 #, python-brace-format
-msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
-msgstr "{recorded:,} s registados | máx {max_speed} km/h | méd {avg_speed:.1f} km/h | {above} acima de {limit} km/h | {moving} em movimento | {gaps} lacunas internas"
+msgid "{recorded:,} s recorded | {gaps} internal gaps"
+msgstr "{recorded:,} s registados | {gaps} lacunas internas"
 
 #, python-brace-format
 msgid "{rows} rows · {columns} columns"
