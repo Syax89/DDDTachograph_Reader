@@ -22,6 +22,7 @@ import traceback
 import logging
 from bisect import bisect_left
 from datetime import datetime, timedelta, timezone
+from typing import NamedTuple
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -81,10 +82,11 @@ from app.i18n import (  # noqa: E402
     saved_language, saved_recent_files, saved_translate_data)
 from app import ui_text  # noqa: E402
 from app.theme import (  # noqa: E402  (re-exported: GEN_COLORS/ROW_*/HEADER_BG)
-    ACCENT, ACCENT_PURPLE, ACTIVITY_AVAILABLE, ACTIVITY_DRIVE, ACTIVITY_EVENT,
+    ACCENT, ACCENT_PURPLE, ACTIVITY_AVAILABLE, ACTIVITY_DRIVE, ACTIVITY_DRIVE_TINT,
+    ACTIVITY_EVENT,
     ACTIVITY_FERRY, ACTIVITY_REST, ACTIVITY_UNKNOWN, ACTIVITY_WORK,
     ACTIVITY_WORK_MUTED, ACTIVE_BG, BORDER,
-    BUTTON_PRESSED_BG, CAUTION, CARD_BORDER, CHART_GRID_MAJOR, CHART_GRID_MINOR,
+    BUTTON_PRESSED_BG, CAUTION, CARD_BORDER, CHART_GRID_MAJOR, CHART_GRID_MINOR, GAP_BAND,
     CONTROL_HOVER_BG, DANGER, DANGER_BAND, DANGER_DARK, DANGER_STRONG,
     DASHBOARD_TOOLTIP_BG, FIELD_BG, FONT_BADGE, FONT_BODY, FONT_CANVAS_TITLE,
     FONT_CAPTION, FONT_CAPTION_BOLD, FONT_HEADING, FONT_KPI_VALUE, FONT_MONO,
@@ -625,6 +627,138 @@ def _kpi_card(parent, caption, value, colour):
     return card, caption_lbl, value_lbl
 
 
+# ── Detailed-speed series (pure geometry, no Tk) ───────────────────────
+#: Seconds in a UTC day, and the narrowest window the speed plot opens on
+#: (15 minutes): one isolated sample still gets a readable neighbourhood.
+SPEED_DAY_SECONDS = 86400
+SPEED_MIN_VIEW_SECONDS = 900
+#: Shortest hole in the recording the plot marks with a band (two minutes):
+#: at the zoom the plot opens on, a shorter hole is a few pixels wide and the
+#: bands became vertical slivers that read as noise.
+SPEED_GAP_SECONDS = 120
+
+
+class SpeedBin(NamedTuple):
+    """One screen column of the detailed-speed trace.
+
+    ``column`` is the pixel column inside the plot (0 at its left edge),
+    ``low``/``high`` the slowest and fastest sample that landed in it, ``mean``
+    their arithmetic mean and ``over_limit`` whether any of them is above the
+    speed limit — i.e. whether the column is drawn in the red DANGER colour.
+    """
+
+    column: int
+    low: int
+    high: int
+    mean: float
+    over_limit: bool
+
+
+def speed_envelope_runs(samples, view_start, span, columns, speed_limit):
+    """Aggregate ``samples`` into screen columns, split into contiguous runs.
+
+    One pass over the (time-sorted) ``(second, speed)`` samples of the visible
+    window, exactly like the per-pixel bins the chart always used: a sample
+    belongs to column ``int((second - view_start) * columns / span)``. A column
+    no sample lands in stays *absent*, so a hole in the recording remains a
+    hole — nothing is interpolated across it.
+
+    The columns are then cut into runs of adjacent columns (``column`` =
+    previous + 1): a run is one piece of the signal that can be stroked as a
+    single polyline and filled without bridging a gap. (Filling may need
+    :func:`envelope_fill_pieces` to cut a run further, because a steep jump
+    makes a single polygon self-intersect.)
+
+    Args:
+        samples: ``[(second_of_day, speed_kmh), ...]``, ordered by second.
+        view_start: First second of the view window.
+        span: Width of the view window in seconds.
+        columns: Width of the plot area in pixels.
+        speed_limit: Speed above which a column is flagged as over the limit.
+
+    Returns:
+        ``[[SpeedBin, ...], ...]`` — one list per contiguous run.
+    """
+    if span <= 0 or columns <= 0:
+        return []
+    totals = {}
+    for second, speed in samples:
+        column = int((second - view_start) * columns / span)
+        if not 0 <= column < columns:
+            continue
+        total, count, low, high = totals.get(column, (0, 0, speed, speed))
+        totals[column] = (total + speed, count + 1, min(low, speed), max(high, speed))
+    runs = []
+    previous = None
+    for column in sorted(totals):
+        total, count, low, high = totals[column]
+        entry = SpeedBin(column=column, low=low, high=high,
+                         mean=total / count, over_limit=high > speed_limit)
+        if previous is None or column != previous + 1:
+            runs.append([])
+        runs[-1].append(entry)
+        previous = column
+    return runs
+
+
+def envelope_fill_pieces(run):
+    """Split a run into the pieces that can each be filled as one polygon.
+
+    The envelope is drawn as a polygon that walks the upper edge left→right
+    and the lower edge right→left. That polygon is only *simple* while two
+    neighbouring columns' min–max bands overlap: when the signal jumps further
+    than the band is tall (a column at 60–65 km/h followed by one at 0–5), the
+    two edges cross and Tk's even-odd fill silently cancels the area — the
+    envelope vanished exactly where the trace is steep. Cutting the run where
+    the bands stop overlapping keeps every piece a simple polygon; the pieces
+    touch at the shared column, so the fill still looks continuous.
+
+    Args:
+        run: One contiguous run of :class:`SpeedBin`, ordered by column.
+
+    Returns:
+        ``[[SpeedBin, ...], ...]`` — one list per fillable piece.
+    """
+    pieces = []
+    for entry in run:
+        if pieces and min(pieces[-1][-1].high, entry.high) >= max(pieces[-1][-1].low,
+                                                                  entry.low):
+            pieces[-1].append(entry)
+        else:
+            pieces.append([entry])
+    return pieces
+
+
+def default_speed_view(sample_seconds):
+    """Return the UTC view window ``(start, end)`` that frames the samples.
+
+    A day is not a full 24 h of driving: opening on 00:00–24:00 spent most of
+    the plot on empty hours, so the trace was squeezed into a band a few
+    minutes wide. The chart therefore opens on the span the samples actually
+    cover, padded by 5 % on each side (the same ratio expressed as a
+    ``×1.10`` window width), clamped to ``[0, 86400)`` and never narrower than
+    :data:`SPEED_MIN_VIEW_SECONDS`.
+
+    A day recorded across (almost) the whole 24 h still gets the full day,
+    because the 10 % padding alone exceeds it; a day with no samples at all
+    keeps the full day too. The zoom buttons keep working from here and can
+    still reach the full day.
+
+    Args:
+        sample_seconds: The day's sample times, in seconds from UTC midnight.
+
+    Returns:
+        ``(start, end)`` as floats, ``0 <= start < end <= 86400``.
+    """
+    day = float(SPEED_DAY_SECONDS)
+    if not sample_seconds:
+        return 0.0, day
+    first, last = float(min(sample_seconds)), float(max(sample_seconds))
+    span = min(day, max(float(SPEED_MIN_VIEW_SECONDS), (last - first) * 1.10))
+    start = max(0.0, min((first + last) / 2 - span / 2, day - span))
+    return start, start + span
+
+
 class DetailedSpeedChart(ttk.Frame):
     """Canvas chart for one UTC day of per-second speed samples."""
 
@@ -678,6 +812,8 @@ class DetailedSpeedChart(ttk.Frame):
         self._draw_after_id = None
         self._overspeeding_events = []
         self._oes_dots = []
+        #: The bins the last draw painted (``[(SpeedBin, ...), ...]``).
+        self._series = []
         self._speed_limit = SPEED_LIMIT_KMH
 
     def show(self, day, samples, overspeeding_events=None, speed_limit=None):
@@ -685,7 +821,10 @@ class DetailedSpeedChart(ttk.Frame):
         self._speed_limit = speed_limit or SPEED_LIMIT_KMH
         self._samples = samples
         self._sample_seconds = [second for second, _speed in samples]
-        self._view_start, self._view_end = 0, 86400
+        # Open on the data, not on the empty hours of the day: zoom -/+ and
+        # drag-to-zoom work from this window, and zooming out still reaches
+        # the whole day.
+        self._view_start, self._view_end = default_speed_view(self._sample_seconds)
         self._selection_start = None
         self._selection_moved = False
         self._overspeeding_events = overspeeding_events or []
@@ -693,12 +832,23 @@ class DetailedSpeedChart(ttk.Frame):
         recorded = len(speeds)
         moving = sum(speed > 0 for speed in speeds)
         above_limit = sum(speed > self._speed_limit for speed in speeds)
-        internal_gaps = sum(max(0, second - previous - 1)
-                            for (previous, _prev), (second, _cur) in zip(samples, samples[1:], strict=False))
+        # Only a real hole counts: the seconds between two ordinary samples are
+        # the sampling interval, not missing data. Summing them reported "193
+        # min internal gaps" for a day with one ten-minute hole, and the number
+        # disagreed with the bands the plot draws.
+        internal_gaps = sum(second - previous - 1
+                            for (previous, _prev), (second, _cur)
+                            in zip(samples, samples[1:], strict=False)
+                            if second - previous > SPEED_GAP_SECONDS)
         self.title_lbl.config(text=_("Detailed Speed - {day} (UTC)").format(day=day))
         self._render_kpis(max(speeds) if speeds else None,
                           sum(speeds) / recorded if recorded else 0.0,
                           above_limit, moving)
+        # A gap shorter than a minute is invisible at any zoom the plot opens
+        # on; only a real hole in the recording earns a band and a legend item.
+        self._has_gap = any(second - previous > SPEED_GAP_SECONDS
+                            for (previous, _prev), (second, _cur)
+                            in zip(samples, samples[1:], strict=False))
         self._render_legend(bool(speeds))
         self.summary_lbl.config(text=(
             _("{recorded:,} s recorded | {gaps} internal gaps").format(
@@ -723,7 +873,11 @@ class DetailedSpeedChart(ttk.Frame):
         if max_speed is None:
             return
         self._kpi_specs = [
-            ("max", _("Max speed"), f"{max_speed:.0f} km/h", ACCENT),
+            # Blue is the trace's colour: a KPI painted the same blue reads as
+            # part of the series. Red only when the peak really broke the
+            # limit, neutral otherwise.
+            ("max", _("Max speed"), f"{max_speed:.0f} km/h",
+             DANGER if max_speed > self._speed_limit else TEXT_PRIMARY),
             ("avg", _("Avg speed"), f"{avg_speed:.1f} km/h", TEXT_SECONDARY),
             ("above", _("Time above {limit} km/h").format(limit=self._speed_limit),
              _fmt_seconds_duration(above_limit),
@@ -792,10 +946,13 @@ class DetailedSpeedChart(ttk.Frame):
         self._legend_glyphs = []
         if not has_samples:
             return
-        self._legend_items = [(False, _("Speed Limit"))]
+        self._legend_items = [("line", _("Speed Limit")),
+                              ("range", _("Speed range"))]
         if self._overspeeding_events:
             self._legend_items.append(
-                (True, _("Overspeeding event (recorded by the unit)")))
+                ("dot", _("Overspeeding event (recorded by the unit)")))
+        if getattr(self, "_has_gap", False):
+            self._legend_items.append(("band", _("No samples recorded")))
         self._layout_legend()
 
     def _layout_legend(self, _event=None):
@@ -804,7 +961,7 @@ class DetailedSpeedChart(ttk.Frame):
         if not items:
             return
         widths = [_LEGEND_GLYPH_WIDTH + 4 + self._text_width(text, FONT_SMALL)
-                  + 12 + _KPI_WIDTH_SLACK for _is_dot, text in items]
+                  + 12 + _KPI_WIDTH_SLACK for _kind, text in items]
         rows = _flow_rows(widths, self._row_width(self.legend_frame, _event))
         if rows == self._legend_rows:
             return
@@ -816,22 +973,32 @@ class DetailedSpeedChart(ttk.Frame):
             row_frame = tk.Frame(self.legend_frame, bg=SURFACE)
             row_frame.pack(fill=tk.X)
             for column, index in enumerate(indexes):
-                is_dot, text = items[index]
+                kind, text = items[index]
                 glyph = tk.Canvas(row_frame, width=_LEGEND_GLYPH_WIDTH, height=10,
                                   bg=SURFACE, highlightthickness=0, borderwidth=0)
-                if is_dot:
+                if kind == "dot":
                     glyph.create_oval(6, 2, 12, 8, fill=DANGER_STRONG, outline=WHITE)
+                elif kind == "band":
+                    glyph.create_rectangle(1, 1, _LEGEND_GLYPH_WIDTH - 1, 9,
+                                           fill=GAP_BAND, outline=BORDER)
+                elif kind == "range":
+                    glyph.create_rectangle(1, 1, _LEGEND_GLYPH_WIDTH - 1, 9,
+                                           fill=ACTIVITY_DRIVE_TINT, outline="")
                 else:
+                    # Same dash and width as the rule on the plot, so the
+                    # swatch is the line rather than a lookalike.
                     glyph.create_line(1, 5, _LEGEND_GLYPH_WIDTH - 1, 5,
-                                      fill=DANGER_STRONG, dash=(4, 3))
+                                      fill=DANGER_STRONG, dash=(6, 4), width=2)
                 glyph.grid(row=0, column=column * 2, sticky="w", padx=(0, 4))
                 label = tk.Label(row_frame, text=text, font=FONT_SMALL,
                                  fg=TEXT_MUTED, bg=SURFACE, anchor=tk.W,
                                  justify=tk.LEFT)
                 label.grid(row=0, column=column * 2 + 1, sticky="w", padx=(0, 12))
-                row_frame.columnconfigure(column * 2 + 1, weight=1)
                 self._legend_glyphs.append(glyph)
                 self._legend_labels.append(label)
+            # Only the last column takes the leftover width, so the items stay
+            # grouped on the left instead of being spread across the pane.
+            row_frame.columnconfigure(len(indexes) * 2 - 1, weight=1)
 
     def _row_width(self, frame, event=None):
         """Usable width of a row container.
@@ -916,16 +1083,30 @@ class DetailedSpeedChart(ttk.Frame):
         self._plot = (left, right, top, bottom, plot_width, self._view_start, self._view_end)
         self._y_scale = (bottom, ceiling, plot_height)
 
+        # Axes and gridlines. The light horizontal gridlines go behind
+        # everything; the 0 / ceiling lines and every axis label below the
+        # trace; the dashed red limit line is drawn on top of it (see below),
+        # because the envelope fill would otherwise bury it where the profile
+        # runs at the limit.
+        grid_step = self._grid_step(ceiling, plot_height)
+        for value in range(grid_step, ceiling, grid_step):
+            if value == self._speed_limit:
+                continue  # the limit keeps its own, stronger label below
+            y = y_for(value)
+            canvas.create_line(left, y, width - right, y, fill=CHART_GRID_MINOR)
+            canvas.create_text(left - 7, y, text=str(value), anchor=tk.E,
+                               fill=TEXT_MUTED)
+
         for value in (0, self._speed_limit, ceiling):
             y = y_for(value)
             color = DANGER_STRONG if value == self._speed_limit else CHART_GRID_MAJOR
-            dash = (4, 3) if value == self._speed_limit else None
-            canvas.create_line(left, y, width - right, y, fill=color, dash=dash)
+            if value != self._speed_limit:
+                canvas.create_line(left, y, width - right, y, fill=color)
             label = f"{value} km/h" if value == self._speed_limit else str(value)
             canvas.create_text(left - 7, y, text=label, anchor=tk.E, fill=color)
 
         span = self._view_end - self._view_start
-        tick_step = self._tick_step(span)
+        tick_step = self._tick_step(span, plot_width)
         first_tick = int(self._view_start // tick_step) * tick_step
         for second in range(first_tick, int(self._view_end) + tick_step, tick_step):
             if second < self._view_start or second > self._view_end:
@@ -936,23 +1117,16 @@ class DetailedSpeedChart(ttk.Frame):
                                fill=TEXT_MUTED)
         canvas.create_text(left, 10, text=_("Speed (km/h)"), anchor=tk.W, fill=TEXT_MUTED)
 
-        # Aggregate to screen pixels. Missing pixels remain blank, so chart
-        # resolution never invents a continuous speed trace across a gap.
-        bins = {}
-        for second, speed in visible_samples:
-            x = int(left + (second - self._view_start) * plot_width / span)
-            total, count, low, high = bins.get(x, (0, 0, speed, speed))
-            bins[x] = (total + speed, count + 1, min(low, speed), max(high, speed))
-        previous_x = None
-        previous_y = None
-        for x in sorted(bins):
-            total, count, low, high = bins[x]
-            average_y = y_for(total / count)
-            color = DANGER if high > self._speed_limit else ACCENT
-            canvas.create_line(x, y_for(low), x, y_for(high), fill=color)
-            if previous_x is not None and x == previous_x + 1:
-                canvas.create_line(previous_x, previous_y, x, average_y, fill=ACCENT)
-            previous_x, previous_y = x, average_y
+        # Aggregate to screen pixels, then paint the result as a signal: the
+        # min–max envelope as a filled area and the column mean as a line. A
+        # column no sample lands in stays blank, so chart resolution never
+        # invents a continuous speed trace across a gap — and a gap also breaks
+        # the fill into a new run instead of being bridged by the polygon.
+        self._draw_gaps(visible_samples, left, y_for, plot_width, span, top, bottom)
+        runs = speed_envelope_runs(visible_samples, self._view_start, span,
+                                   plot_width, self._speed_limit)
+        self._series = runs
+        self._draw_envelope_fills(runs, left, y_for)
 
         # Overspeed zone shading (stipple)
         overspeed_runs = []
@@ -975,6 +1149,18 @@ class DetailedSpeedChart(ttk.Frame):
             canvas.create_rectangle(x0, top, x1, bottom,
                                     fill=DANGER_BAND, outline="", stipple="gray25",
                                     tags="speed_overspeed")
+
+        # The mean line and the over-limit part of the envelope go on top of
+        # the stippled band: under it, the band's 25 % veil turned the red area
+        # into a pink checkerboard and cut the line into dashes.
+        self._draw_envelope_marks(runs, left, y_for)
+
+        # Dashed red limit line on top of the trace (and of its red overlay),
+        # so "the profile crossed the limit" is always readable.
+        limit_y = y_for(self._speed_limit)
+        canvas.create_line(left, limit_y, width - right, limit_y,
+                           fill=DANGER_STRONG, dash=(6, 4), width=2,
+                           tags="speed_limit_line")
 
         # Overspeeding event markers (red dots from file data)
         self._oes_dots = []
@@ -999,8 +1185,160 @@ class DetailedSpeedChart(ttk.Frame):
                                tags="speed_oes")
             self._oes_dots.append((x, y_center, evt))
 
+    def _draw_envelope_fills(self, runs, left, y_for):
+        """Fill the min–max envelope of every contiguous run.
+
+        Each run is filled piece by piece (see :func:`envelope_fill_pieces`)
+        in the light :data:`ACTIVITY_DRIVE_TINT` with no outline. A gap in the
+        samples produced a new run, so the fill is never drawn across it.
+
+        Args:
+            runs: The :func:`speed_envelope_runs` result for this view.
+            left: Canvas x of the plot's left edge (column 0).
+            y_for: Callable mapping a speed in km/h to a canvas y.
+        """
+        for run in runs:
+            for piece in envelope_fill_pieces(run):
+                # The envelope of a *column* is the whole one-pixel column, not
+                # a point: each column contributes its band from x to x+1, so
+                # the fill reads as an area instead of a ribbon that hides
+                # under the mean line where the profile is steep.
+                xs = [left + entry.column for entry in piece]
+                outline = []
+                for x, entry in zip(xs, piece, strict=False):
+                    y = y_for(entry.high)
+                    outline.extend((x, y, x + 1, y))
+                for x, entry in zip(reversed(xs), reversed(piece), strict=False):
+                    y = y_for(entry.low)
+                    outline.extend((x + 1, y, x, y))
+                self.canvas.create_polygon(*outline, fill=ACTIVITY_DRIVE_TINT,
+                                           outline="", tags="speed_envelope")
+
+    def _draw_gaps(self, samples, left, y_for, plot_width, span, top, bottom):
+        """Shade the stretches the unit recorded nothing in.
+
+        Zero speed and missing data look identical on a speed plot until one
+        of them is shaded: a vehicle standing still draws a flat line on the
+        baseline, a hole draws nothing at all. Only holes of at least
+        :data:`SPEED_GAP_SECONDS` get a band, so per-second sampling jitter
+        never speckles the plot.
+        """
+        for (previous, _prev), (second, _cur) in zip(samples, samples[1:], strict=False):
+            if second - previous <= SPEED_GAP_SECONDS:
+                continue
+            x0 = left + (previous - self._view_start) * plot_width / span
+            x1 = left + (second - self._view_start) * plot_width / span
+            if x1 - x0 < 2:
+                continue
+            self.canvas.create_rectangle(x0, top, x1, bottom, fill=GAP_BAND,
+                                         outline="", tags="speed_gap")
+
+    def _draw_envelope_marks(self, runs, left, y_for):
+        """Draw what has to stay readable on top of the fill and the band.
+
+        Per run: the part of the envelope above the speed limit as a solid
+        :data:`DANGER` overlay clipped at the limit line, then the column means
+        as a 2 px line — :data:`DANGER` where the mean itself is over the
+        limit, :data:`ACCENT` otherwise. A column that merely *contains* a peak
+        stays blue: colouring it red painted red streaks down to 50 km/h on a
+        steep minute, which read as "50 km/h is over the limit". The red
+        sliver above the line is what says the profile crossed it. One colour
+        change is one canvas item: a full day fills every column, and one
+        segment per column would be thousands of items.
+
+        Args:
+            runs: The :func:`speed_envelope_runs` result for this view.
+            left: Canvas x of the plot's left edge (column 0).
+            y_for: Callable mapping a speed in km/h to a canvas y.
+        """
+        canvas = self.canvas
+        limit_y = y_for(self._speed_limit)
+        for run in runs:
+            xs = [left + entry.column for entry in run]
+            ys_mean = [y_for(entry.mean) for entry in run]
+            if len(run) == 1:
+                # One isolated column: zoomed in far enough that samples are
+                # pixels apart, the mean dot is what keeps the sample visible.
+                colour = DANGER if run[0].mean > self._speed_limit else ACCENT
+                canvas.create_line(xs[0], y_for(run[0].low), xs[0],
+                                   y_for(run[0].high), fill=colour, width=2,
+                                   tags="speed_sample")
+                canvas.create_oval(xs[0] - 2, ys_mean[0] - 2, xs[0] + 2,
+                                   ys_mean[0] + 2, fill=colour, outline="",
+                                   tags="speed_mean")
+                continue
+            if any(entry.over_limit for entry in run):
+                # Only the sliver above the limit: the upper edge clipped to
+                # the limit line, so a column that dips below the limit adds no
+                # red at all, and nothing under the limit turns red.
+                over = []
+                for x, entry in zip(xs, run, strict=False):
+                    over.extend((x, y_for(max(entry.high, self._speed_limit))))
+                over.extend((xs[-1], limit_y, xs[0], limit_y))
+                canvas.create_polygon(*over, fill=DANGER, outline="",
+                                      tags="speed_over_limit")
+            # The mean line is red only where it is above the limit, and a
+            # segment that crosses the line is split at the crossing: colouring
+            # the whole segment red painted a red diagonal down to 50 km/h
+            # after every overspeed spike.
+            segments = []  # [(colour, [x1, y1, x2, y2, ...]), ...]
+            for index in range(len(run) - 1):
+                x1, y1 = xs[index], ys_mean[index]
+                x2, y2 = xs[index + 1], ys_mean[index + 1]
+                m1, m2 = run[index].mean, run[index + 1].mean
+                if (m1 > self._speed_limit) == (m2 > self._speed_limit):
+                    colour = DANGER if m1 > self._speed_limit else ACCENT
+                    current = segments[-1] if segments and segments[-1][0] == colour else None
+                    if current is None:
+                        segments.append([colour, [x1, y1, x2, y2]])
+                    else:
+                        current[1].extend((x2, y2))
+                    continue
+                # One endpoint above the line: cut the segment where it is.
+                ratio = ((self._speed_limit - m1) / (m2 - m1))
+                cross_x = x1 + (x2 - x1) * ratio
+                above_first = m1 > self._speed_limit
+                first_colour = DANGER if above_first else ACCENT
+                second_colour = ACCENT if above_first else DANGER
+                segments.append([first_colour, [x1, y1, cross_x, limit_y]])
+                segments.append([second_colour, [cross_x, limit_y, x2, y2]])
+            for colour, coords in segments:
+                if len(coords) < 4:
+                    continue
+                canvas.create_line(*coords, fill=colour, width=2,
+                                   tags="speed_mean")
+
     @staticmethod
-    def _tick_step(span):
+    def _grid_step(ceiling, plot_height):
+        """Horizontal gridline step in km/h for a plot ``plot_height`` tall.
+
+        20 km/h is the readable default; 25 (then 50) is used when the plot is
+        too short to carry that many lines — roughly 30 px between two
+        gridlines. The ceiling is always a multiple of 20 and at least 100, so
+        a normal window gets 20 and a squeezed one gets 25 or 50.
+        """
+        budget = max(3, plot_height // 30)
+        for step in (20, 25, 50):
+            if ceiling / step <= budget:
+                return step
+        return 50
+
+    @staticmethod
+    def _tick_step(span, plot_width=None):
+        """Seconds between two time labels.
+
+        Picked from the span, then doubled while the labels would sit closer
+        than ~70 px: at the minimum window an hourly grid put twelve labels in
+        six hundred pixels and read as a smear.
+        """
+        step = DetailedSpeedChart._tick_step_for_span(span)
+        if plot_width:
+            while plot_width * step / span < 70 and step < 86400:
+                step *= 2
+        return step
+
+    @staticmethod
+    def _tick_step_for_span(span):
         if span >= 43200:
             return 10800
         if span >= 14400:

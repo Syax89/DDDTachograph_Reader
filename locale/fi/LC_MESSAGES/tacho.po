@@ -2368,3 +2368,9 @@ msgstr "IC-sarjanumero"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "IC-valmistusviite"
+
+msgid "No samples recorded"
+msgstr "Ei tallennettuja mittauksia"
+
+msgid "Speed range"
+msgstr "Nopeusalue"

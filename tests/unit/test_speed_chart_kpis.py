@@ -101,7 +101,9 @@ def test_the_cards_are_coloured_by_what_they_mean(root):
     assert _colour(chart, "above") == theme.DANGER
     assert _colour(chart, "events") == theme.DANGER
     assert _colour(chart, "moving") == theme.TEXT_PRIMARY
-    assert _colour(chart, "max") == theme.ACCENT
+    # Max speed is red only when the peak really broke the limit (100 here);
+    # blue belongs to the trace, not to a KPI value.
+    assert _colour(chart, "max") == theme.DANGER
     assert _colour(chart, "avg") == theme.TEXT_SECONDARY
 
 
@@ -196,17 +198,20 @@ def _glyph_items(chart):
 def test_the_limit_line_is_always_explained(root):
     chart = _chart(root, events=None)
 
-    assert [label.cget("text") for label in chart._legend_labels] == ["Speed Limit"]
-    assert _glyph_items(chart) == [("line", theme.DANGER_STRONG, "4 3")]
+    assert [label.cget("text") for label in chart._legend_labels] == [
+        "Speed Limit", "Speed range"]
+    assert _glyph_items(chart) == [("line", theme.DANGER_STRONG, "6 4"),
+                                   ("rectangle", theme.ACTIVITY_DRIVE_TINT, "")]
 
 
 def test_the_event_dot_is_explained_only_when_the_day_has_events(root):
     chart = _chart(root, events=EVENTS)
 
     assert [label.cget("text") for label in chart._legend_labels] == [
-        "Speed Limit", "Overspeeding event (recorded by the unit)"]
+        "Speed Limit", "Speed range", "Overspeeding event (recorded by the unit)"]
     assert _glyph_items(chart) == [
-        ("line", theme.DANGER_STRONG, "4 3"),
+        ("line", theme.DANGER_STRONG, "6 4"),
+        ("rectangle", theme.ACTIVITY_DRIVE_TINT, ""),
         ("oval", theme.DANGER_STRONG, ""),
     ]
 
@@ -219,4 +224,5 @@ def test_the_legend_follows_the_language_of_the_ui(root, monkeypatch):
     chart = _chart(root, events=EVENTS)
 
     assert [label.cget("text") for label in chart._legend_labels] == [
-        "<Speed Limit>", "<Overspeeding event (recorded by the unit)>"]
+        "<Speed Limit>", "<Speed range>",
+        "<Overspeeding event (recorded by the unit)>"]

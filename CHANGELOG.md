@@ -1,4 +1,13 @@
 # Unreleased
+- **Detailed-speed plot reads as a signal**: the min–max envelope is a filled
+  band under a 2 px mean line instead of a picket fence of bars, the plot opens
+  on the hours the day actually has samples in (zoom still reaches the full
+  day), horizontal gridlines carry the km/h scale, and time labels thin out on
+  a narrow window instead of crowding. Stretches the unit recorded nothing in
+  are shaded (and explained in the legend), so a hole is no longer confused
+  with a vehicle standing still; the "internal gaps" figure now counts those
+  holes rather than the sampling interval. Red marks only what is above the
+  speed limit: a segment crossing the limit is cut at the crossing.
 - **Linux Flatpak release**: the Linux x86_64 build now ships as a Flatpak
   bundle (`io.github.Syax89.TachoReader`) using the same PyInstaller build spec
   as the native Windows and macOS builds, and CI installs the exported bundle
