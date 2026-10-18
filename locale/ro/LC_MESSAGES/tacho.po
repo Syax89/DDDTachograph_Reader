@@ -2324,3 +2324,47 @@ msgstr "Da"
 
 msgid "No"
 msgstr "Nu"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Primul"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Al doilea"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normal"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Oprire ceas"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Număr de serie extins"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "ID personalizator"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "ID asamblor IC încorporat"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "Identificator IC"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Informații istorice"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "Număr de serie IC"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "Referință de fabricație IC"

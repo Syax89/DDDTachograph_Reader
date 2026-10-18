@@ -2324,3 +2324,47 @@ msgstr "Po"
 
 msgid "No"
 msgstr "Jo"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "I pari"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "I dyti"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normal"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Ndalim i orës"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Numri serial i zgjeruar"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "ID e personalizuesit"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "ID e assembluesit të IC-së të integruar"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "Identifikuesi i IC-së"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Informacioni historik"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "Numri serial i IC-së"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "Referenca e prodhimit të IC-së"

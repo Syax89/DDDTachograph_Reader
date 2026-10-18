@@ -136,8 +136,8 @@ def test_decoder_vocabulary_follows_the_preference(monkeypatch):
             ui_text.configure_translate_data(False)
 
 
-def test_free_text_is_never_translated(monkeypatch):
-    """A name, a plate or an address is data, not a label — in both states."""
+def test_free_text_is_unchanged_in_both_states(monkeypatch):
+    """A name, a plate or an address has no catalog entry: it never changes."""
     _install_italian(monkeypatch)
     import app.gui as gui
 
@@ -148,14 +148,35 @@ def test_free_text_is_never_translated(monkeypatch):
     ui_text.configure_translate_data(False)
 
 
-def test_booleans_are_words_not_python(monkeypatch):
-    """Summary rows carry raw bools: they must reach the screen as Sì/No."""
+def test_any_cell_with_a_catalog_word_follows_the_preference(monkeypatch):
+    """Inside the table the source of the text does not matter: only the tick."""
     _install_italian(monkeypatch)
     import app.gui as gui
 
-    assert gui.fmt_val(True) == "Sì"
+    ui_text.configure_translate_data(False)
+    assert gui.fmt_val("Drive", key="workshop_name") == "Drive"
+    ui_text.configure_translate_data(True)
+    try:
+        assert gui.fmt_val("Drive", key="workshop_name") == i18n._("Drive")
+    finally:
+        ui_text.configure_translate_data(False)
+
+
+def test_booleans_are_words_not_python(monkeypatch):
+    """Summary rows carry raw bools: never Python's True/False on screen."""
+    _install_italian(monkeypatch)
+    import app.gui as gui
+
+    ui_text.configure_translate_data(False)
+    assert gui.fmt_val(True) == "Yes"
     assert gui.fmt_val(False) == "No"
     assert gui.fmt_val(1) == "1"          # an int is a value, not a flag
+    ui_text.configure_translate_data(True)
+    try:
+        assert gui.fmt_val(True) == i18n._("Yes")
+        assert gui.fmt_val(False) == i18n._("No")
+    finally:
+        ui_text.configure_translate_data(False)
 
 
 def test_activity_cells_use_the_same_word_as_the_chart(monkeypatch):

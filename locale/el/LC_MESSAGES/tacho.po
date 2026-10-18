@@ -2324,3 +2324,47 @@ msgstr "Ναι"
 
 msgid "No"
 msgstr "Όχι"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Πρώτο"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Δεύτερο"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Κανονικό"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Σταμάτημα ρολογιού"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Εκτεταμένος σειριακός αριθμός"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "ID εξατομικευτή"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "ID συναρμολογητή ενσωματωμένου IC"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "Αναγνωριστικό IC"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Ιστορικές πληροφορίες"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "Σειριακός αριθμός IC"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "Αναφορά κατασκευής IC"

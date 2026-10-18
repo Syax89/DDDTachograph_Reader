@@ -2324,3 +2324,47 @@ msgstr "Ano"
 
 msgid "No"
 msgstr "Ne"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "První"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Druhý"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normální"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Zastavení hodin"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Rozšířené sériové číslo"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "ID personalizátoru"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "ID assembleru vestavěného IC"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "Identifikátor IC"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Historické údaje"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "Sériové číslo IC"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "Výrobní reference IC"

@@ -14,14 +14,16 @@
   in the top bar switches language; the choice is remembered in the per-user
   settings file and applied at the next start. English stays the default and the
   msgid language, so a missing translation always falls back to English.
-- **Optional translation of file-decoded labels**: section names, table headers
-  and record field names are translated with the rest of the UI, while labels
-  decoded from the file itself (activity names, event and fault descriptions,
-  record purposes, specific conditions, country names, signature statuses) stay
-  exactly as the decoder names them unless *Translate file contents* in the
-  Language menu is ticked. The preference is stored next to the language and
-  applies immediately. Free text carried by the file, raw identifiers and
-  exported reports are never translated.
+- **Optional translation of file-decoded labels**: the window around the table —
+  window title, section names, table title, column headers, filter bar, menus and
+  buttons — always follows the selected language. Everything drawn *inside* the
+  table (every cell, whatever produced it: activity names, event and fault
+  descriptions, record purposes, specific conditions, country names, signature
+  statuses, card and chip labels, slot names) is translated only while
+  *Translate file contents* in the Language menu is ticked; untick it and the
+  cells show exactly what the decoder produced. The preference is stored next to
+  the language and applies immediately. Free text carried by the file, raw
+  identifiers, timestamps and exported reports are never translated.
 - **Packaged gettext catalogs**: `scripts/compile_translations.py` compiles
   `locale/<code>/LC_MESSAGES/tacho.po` to `.mo` using only the standard library,
   validates every entry (placeholders, format specs, duplicates, no empty

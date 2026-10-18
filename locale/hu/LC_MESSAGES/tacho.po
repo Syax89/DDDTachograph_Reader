@@ -2324,3 +2324,47 @@ msgstr "Igen"
 
 msgid "No"
 msgstr "Nem"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Első"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Második"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normál"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Óra leállítás"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Kiterjesztett sorozatszám"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "Personalizáló azonosító"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "Beágyazott IC-összeszerelő azonosító"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "IC-azonosító"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Előzményadatok"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "IC sorozatszám"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "IC gyártási referencia"

@@ -2324,3 +2324,47 @@ msgstr "Так"
 
 msgid "No"
 msgstr "Ні"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Перший"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Другий"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Нормально"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Зупинка годинника"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Розширений серійний номер"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "ID персоналізатора"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "ID складальника вбудованої ІС"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "Ідентифікатор ІС"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Історична інформація"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "Серійний номер ІС"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "Виробниче посилання ІС"

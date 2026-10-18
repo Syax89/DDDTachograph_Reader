@@ -2324,3 +2324,47 @@ msgstr "Da"
 
 msgid "No"
 msgstr "Ne"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Prvi"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Drugi"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normalno"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Zaustavljanje sata"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Prošireni serijski broj"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "ID personalizatora"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "ID sastavljača ugrađenog IC-a"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "Identifikator IC-a"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Povijesni podaci"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "Serijski broj IC-a"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "Referenca proizvodnje IC-a"

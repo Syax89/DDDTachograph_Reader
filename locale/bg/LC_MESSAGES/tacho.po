@@ -2324,3 +2324,47 @@ msgstr "Да"
 
 msgid "No"
 msgstr "Не"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Първи"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Втори"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Нормално"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Спиране на часовника"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Разширен сериен номер"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "ID на персонализатора"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "ID на асемблера на вградения IC"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "Идентификатор на IC"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Историческа информация"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "Сериен номер на IC"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "Производствена референция на IC"

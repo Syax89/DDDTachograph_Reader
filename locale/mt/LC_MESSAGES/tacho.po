@@ -2324,3 +2324,47 @@ msgstr "Iva"
 
 msgid "No"
 msgstr "Le"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "L-Ewwel"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "It-Tieni"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normali"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Waqf tal-arloġġ"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Numru tas-serje estiż"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "ID tal-personalizzatur"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "ID tal-assembler tal-IC inkorporat"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "Identifikatur tal-IC"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Informazzjoni storika"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "Numru tas-serje tal-IC"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "Referenza tal-manifattura tal-IC"

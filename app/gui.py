@@ -73,7 +73,7 @@ from core.utils.encoding import BytesEncoder  # noqa: E402
 
 from core.utils.version import __version__  # noqa: E402
 from core.utils.report_format import (  # noqa: E402
-    VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
+    NATION_COLS, VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
     fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 from app.i18n import (  # noqa: E402
@@ -135,17 +135,16 @@ def _fmt_dict(d):
     return items if len(items) <= 120 else items[:120] + "\u2026"
 
 
-#: Record keys whose value is a label the decoder derived from a numeric code
-#: (event/fault description, record purpose, specific condition, TREP section,
-#: signature status). ``*_label`` keys are covered by the suffix. These are the
-#: only cells the "translate file contents" preference may translate — free text
-#: (names, plates, addresses) and raw identifiers never are.
-DATA_TEXT_KEYS = frozenset({"description", "condition", "section", "status", "purpose"})
+#: Chrome around the table (titles, column headers, section names) is always
+#: translated. What sits *inside* the table — every cell, whatever produced it —
+#: follows the "translate file contents" preference instead.
 
 
 def _bool_text(value):
-    """A boolean as the word the UI shows (``Yes``/``No``, translated)."""
-    return _("Yes") if value else _("No")
+    """A boolean as the word the UI shows: a cell, so the tick decides."""
+    if ui_text.translate_data_enabled():
+        return _("Yes") if value else _("No")
+    return "Yes" if value else "No"
 
 
 def fmt_val(v, key=None):
@@ -169,10 +168,17 @@ def fmt_val(v, key=None):
         if all(not isinstance(x, (dict, list)) for x in v):
             return ", ".join(fmt_val(x) for x in v)
         return f"[{len(v)} items]"
-    if isinstance(v, str) and (key in DATA_TEXT_KEYS or str(key).endswith("_label")):
-        return ui_text.data_text(v)
-    if isinstance(v, str) and key == "activity":
-        return ui_text.activity(v)
+    if isinstance(v, str) and key in NATION_COLS:
+        # The nation cell expands "I" to "Italy": that is fmt_scalar's job.
+        return fmt_scalar(v, key=key, label_translator=ui_text.data_text)
+    if isinstance(v, str):
+        # Anything shown in a cell is translated only when the preference is on;
+        # a string with no catalog entry (a name, a plate, an address, a code)
+        # falls through unchanged. Formatting still has to happen: fmt_scalar
+        # turns ISO timestamps into the display form.
+        text = ui_text.activity(v) if key == "activity" else ui_text.data_text(v)
+        return fmt_scalar(text, key=key, include_code_label=True,
+                          label_translator=ui_text.data_text)
     return fmt_scalar(v, key=key, include_code_label=True,
                       label_translator=ui_text.data_text)
 
@@ -492,6 +498,9 @@ class DataTable(ttk.Frame):
             if summary and len(r) >= 3 and r[2]:
                 tag = "summary_header"
                 vals = list(r[:2])
+            elif summary:
+                tag = "even" if i % 2 == 0 else "odd"
+                vals = list(r[:2])   # the third field only marks a section row
             else:
                 tag = "even" if i % 2 == 0 else "odd"
                 vals = list(r)
