@@ -2368,3 +2368,9 @@ msgstr "Număr de serie IC"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "Referință de fabricație IC"
+
+msgid "No samples recorded"
+msgstr "Nu există eșantioane înregistrate"
+
+msgid "Speed range"
+msgstr "Interval de viteză"

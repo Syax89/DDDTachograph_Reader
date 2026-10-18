@@ -30,7 +30,14 @@ SHIPPED_COLOURS = {
     "#1565c0", "#17212b", "#1c2733", "#263238", "#2e7d32", "#37474f",
     "#536273", "#546e7a", "#5d4037", "#607d8b", "#6a1b9a", "#6b7280",
     "#757575", "#78909c", "#7b1fa2", "#90a4ae", "#9e9e9e", "#b6c3d6",
-    "#b71c1c", "#bbdefb", "#bdbdbd", "#c3d1e6", "#c5cfdb", "#c62828",
+    "#b71c1c", "#bbdefb", "#bdbdbd", "#c3d1e6", "#c5cfdb",
+    # Added after the refactor: GAP_BAND, the band that marks a stretch the
+    # unit recorded no sample in, then ACTIVITY_DRIVE_TINT, the 25 % tint of
+    # ACTIVITY_DRIVE that fills the detailed-speed envelope. No existing value
+    # was a light tint of the drive blue in a fill's role, and reusing the
+    # hover blue would have conflated two roles the palette keeps apart.
+    "#c4d8ef", "#e0d9cf",
+    "#c62828",
     "#cdd7e4", "#d0d0d0", "#d2ddec", "#d32f2f", "#d9e1ea", "#dbe4f0",
     "#e3e9f2", "#e3f2fd", "#e65100", "#e8edf2", "#edf1f5", "#ef6c00",
     "#f0f0f0", "#f2f6fb", "#f4f6f9", "#f57c00", "#f8f9fa", "#f9a825",

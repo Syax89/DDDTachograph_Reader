@@ -2368,3 +2368,9 @@ msgstr "Raðnúmer IC"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "Framleiðslutilvísun IC"
+
+msgid "No samples recorded"
+msgstr "Engar mælingar skráðar"
+
+msgid "Speed range"
+msgstr "Hraðabil"

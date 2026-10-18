@@ -2368,3 +2368,9 @@ msgstr "Серыйны нумар ІС"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "Вытворчае спасыланне ІС"
+
+msgid "No samples recorded"
+msgstr "Няма запісаных адлікаў"
+
+msgid "Speed range"
+msgstr "Дыяпазон хуткасці"

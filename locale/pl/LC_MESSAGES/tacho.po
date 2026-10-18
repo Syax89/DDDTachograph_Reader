@@ -2368,3 +2368,9 @@ msgstr "Numer seryjny układu"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "Oznaczenie producenta układu"
+
+msgid "No samples recorded"
+msgstr "Brak zarejestrowanych próbek"
+
+msgid "Speed range"
+msgstr "Zakres prędkości"
