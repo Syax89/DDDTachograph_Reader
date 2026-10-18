@@ -53,9 +53,15 @@ Belarusian, Turkish, Serbian, Bosnian, Albanian and Macedonian (34 in total).
 ### Translation rules
 
 - Write plain strings, never f-strings: `_("Parsing {filename}…").format(...)`.
-- Do **not** translate decoded field names, raw values, certificate/key data,
-  file formats or parser diagnostics — technical output stays English.
-- UI labels and messages only; never translate values that come from the file.
+- UI chrome — menus, messages, section names, table headers, record field names —
+  is translated. Section names and record keys go through `app/ui_text.label()`,
+  which humanises the raw key and then translates it.
+- Values *decoded from the file* (activity names, country names) go through
+  `app/ui_text.data_text()`: they stay exactly as the decoder names them unless
+  the user ticks **Translate file contents** in the Language menu.
+- Never translate free text carried by the file (driver names, plates,
+  addresses, company and workshop names), certificate/key data, file formats or
+  parser diagnostics; exported reports stay English.
 - Machine-assisted translations are welcome as a starting point, but a native
   speaker must review them before they are committed: a mistranslated activity
   label or warning is worse than English.
