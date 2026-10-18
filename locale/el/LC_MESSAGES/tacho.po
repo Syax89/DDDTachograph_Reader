@@ -2374,3 +2374,12 @@ msgstr "Δεν καταγράφηκαν δείγματα"
 
 msgid "Speed range"
 msgstr "Εύρος ταχύτητας"
+
+msgid "Days over {hours} h"
+msgstr "Ημέρες άνω των {hours} ωρών"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Ημερήσια οδήγηση {driven} — όριο {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Συνεχής οδήγηση {driven} χωρίς διάλειμμα {pause} λεπ. — όριο {limit}"

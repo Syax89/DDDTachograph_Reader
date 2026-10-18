@@ -2374,3 +2374,12 @@ msgstr "Nu există eșantioane înregistrate"
 
 msgid "Speed range"
 msgstr "Interval de viteză"
+
+msgid "Days over {hours} h"
+msgstr "Zile peste {hours} h"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Conducere zilnică {driven} — limită {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Conducere continuă {driven} fără o pauză de {pause} min — limită {limit}"

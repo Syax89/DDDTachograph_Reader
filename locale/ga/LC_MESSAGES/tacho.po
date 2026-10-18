@@ -2374,3 +2374,12 @@ msgstr "Ní taifeadadh aon samplaí"
 
 msgid "Speed range"
 msgstr "Raon luais"
+
+msgid "Days over {hours} h"
+msgstr "Laethanta thar {hours} uair"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Tiomáint laethúil {driven} — teorainn {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Tiomáint leanúnach {driven} gan sos {pause} nóim — teorainn {limit}"

@@ -254,7 +254,7 @@ def test_dashboard_drive_cards_use_the_activity_colours():
     app._show_empty = Mock()
     captured = {}
     app._update_dashboard_in_place = Mock(
-        side_effect=lambda _range, kpis, *args: captured.setdefault("kpis", kpis))
+        side_effect=lambda _range, kpis, *args, **kw: captured.setdefault("kpis", kpis))
 
     app._show_daily_summary(
         [{"date": "01/05/2025", "changes": [

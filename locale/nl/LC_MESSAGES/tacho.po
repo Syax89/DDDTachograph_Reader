@@ -2374,3 +2374,12 @@ msgstr "Geen metingen geregistreerd"
 
 msgid "Speed range"
 msgstr "Snelheidsbereik"
+
+msgid "Days over {hours} h"
+msgstr "Dagen boven {hours} u"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Dagelijkse rijtijd {driven} — limiet {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Ononderbroken rijtijd {driven} zonder pauze van {pause} min — limiet {limit}"

@@ -2374,3 +2374,12 @@ msgstr "Няма запісаных адлікаў"
 
 msgid "Speed range"
 msgstr "Дыяпазон хуткасці"
+
+msgid "Days over {hours} h"
+msgstr "Дзён звыш {hours} г"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Штодзённае кіраванне {driven} — мяжа {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Бесперапыннае кіраванне {driven} без перапынку {pause} хв — мяжа {limit}"

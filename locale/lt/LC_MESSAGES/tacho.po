@@ -2374,3 +2374,12 @@ msgstr "Nėra užregistruotų matavimų"
 
 msgid "Speed range"
 msgstr "Greičio diapazonas"
+
+msgid "Days over {hours} h"
+msgstr "Dienos virš {hours} val."
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Kasdienis vairavimas {driven} — riba {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Nepertraukiamas vairavimas {driven} be {pause} min. pertraukos — riba {limit}"

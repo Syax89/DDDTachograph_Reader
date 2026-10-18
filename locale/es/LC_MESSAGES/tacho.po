@@ -2374,3 +2374,12 @@ msgstr "Sin muestras registradas"
 
 msgid "Speed range"
 msgstr "Rango de velocidad"
+
+msgid "Days over {hours} h"
+msgstr "Días por encima de {hours} h"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Conducción diaria {driven} — límite {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Conducción continua {driven} sin una pausa de {pause} min — límite {limit}"

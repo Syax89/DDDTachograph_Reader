@@ -2374,3 +2374,12 @@ msgstr "Keine Messwerte aufgezeichnet"
 
 msgid "Speed range"
 msgstr "Geschwindigkeitsbereich"
+
+msgid "Days over {hours} h"
+msgstr "Tage über {hours} h"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Tägliche Lenkzeit {driven} — Grenze {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Ununterbrochene Lenkzeit {driven} ohne {pause} Min. Pause — Grenze {limit}"

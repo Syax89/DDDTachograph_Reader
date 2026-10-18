@@ -2374,3 +2374,12 @@ msgstr "Няма записани проби"
 
 msgid "Speed range"
 msgstr "Диапазон на скоростта"
+
+msgid "Days over {hours} h"
+msgstr "Дни над {hours} ч"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Дневно шофиране {driven} — ограничение {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Непрекъснато шофиране {driven} без почивка от {pause} мин — ограничение {limit}"

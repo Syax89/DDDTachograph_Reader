@@ -2374,3 +2374,12 @@ msgstr "Nuk ka mostra të regjistruara"
 
 msgid "Speed range"
 msgstr "Diapazoni i shpejtësisë"
+
+msgid "Days over {hours} h"
+msgstr "Ditë mbi {hours} orë"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Drejtimi ditor {driven} — kufiri {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Drejtim i pandërprerë {driven} pa pushim {pause} min — kufiri {limit}"
