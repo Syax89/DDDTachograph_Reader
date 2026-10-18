@@ -21,6 +21,45 @@ python3 -m pytest tests/ -v
 4. Add tests in `tests/`
 5. Update spec documentation in `scripts/`
 
+## UI Translations (gettext)
+
+The GUI is translated with `gettext`. English is the source language: every
+user-visible string is wrapped in `_("...")` in `app/gui.py`, and the English
+text **is** the msgid, so a missing translation falls back to English instead of
+leaving the UI empty.
+
+Scope: English plus 24 EU languages, Norwegian, Icelandic, Russian, Ukrainian,
+Belarusian, Turkish, Serbian, Bosnian, Albanian and Macedonian (34 in total).
+
+### Adding or updating a language
+
+1. Register the language in `app/i18n.py` (`LANGUAGES`, native name — the menu
+   shows each language in its own script).
+2. Add `locale/<code>/LC_MESSAGES/tacho.po`. It must translate every msgid the
+   UI uses (singular messages only: no `msgctxt`, no `msgid_plural`), keep the
+   `{placeholders}` and their format specs unchanged (`{percent:.2f}` stays
+   `{percent:.2f}`), and leave no empty `msgstr`.
+3. Compile and commit the binary catalog:
+
+   ```bash
+   python3 scripts/compile_translations.py          # writes tacho.mo next to each .po
+   python3 scripts/compile_translations.py --check  # what CI runs
+   ```
+
+   `--check` fails when a `.mo` does not match its `.po`, when a language is
+   missing a catalog, or when an entry is invalid. The compiled `.mo` files are
+   what PyInstaller bundles.
+
+### Translation rules
+
+- Write plain strings, never f-strings: `_("Parsing {filename}…").format(...)`.
+- Do **not** translate decoded field names, raw values, certificate/key data,
+  file formats or parser diagnostics — technical output stays English.
+- UI labels and messages only; never translate values that come from the file.
+- Machine-assisted translations are welcome as a starting point, but a native
+  speaker must review them before they are committed: a mistranslated activity
+  label or warning is worse than English.
+
 ## Code Conventions
 - Google-style docstrings on all public functions/classes
 - Specific exception handling (no bare `except: pass`)

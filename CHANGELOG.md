@@ -1,3 +1,22 @@
+# Unreleased
+
+### ✨ New Features
+
+- **Multilingual UI (34 languages)**: the desktop application can be used in
+  English, the 24 EU languages, Norwegian, Icelandic, Russian, Ukrainian,
+  Belarusian, Turkish, Serbian, Bosnian, Albanian and Macedonian. A Language menu
+  in the top bar switches language; the choice is remembered in the per-user
+  settings file and applied at the next start. English stays the default and the
+  msgid language, so a missing translation always falls back to English.
+- **Packaged gettext catalogs**: `scripts/compile_translations.py` compiles
+  `locale/<code>/LC_MESSAGES/tacho.po` to `.mo` using only the standard library,
+  validates every entry (placeholders, format specs, duplicates, no empty
+  translations) and `--check` fails when a `.mo` is stale. The compiled catalogs
+  are included in the PyInstaller bundle and a CI step verifies they are current.
+- **Tests/docs**: `tests/unit/test_i18n.py` covers the translator, settings
+  handling, PO/MO tooling, the language menu and the restart path; CONTRIBUTING
+  documents how to add or update a language.
+
 # v2.7.0 (2026-10-03)
 
 ## 🎉 Major Release: Batch 6-20 Campaign Complete
