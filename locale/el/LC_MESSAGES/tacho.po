@@ -656,6 +656,9 @@ msgstr "Υπερβολική ταχύτητα"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Υπερβολική ταχύτητα: {start} → {end} | μέγ. {max_speed} | μέση {avg_speed}"
 
+msgid "Overspeeding event (recorded by the unit)"
+msgstr "Υπερβολική ταχύτητα (καταγράφηκε από τη συσκευή)"
+
 msgid "Open a DDD file"
 msgstr "Άνοιγμα αρχείου DDD"
 
@@ -775,6 +778,13 @@ msgstr "Ώρα"
 msgid "Time >90 km/h"
 msgstr "Χρόνος >90 km/h"
 
+#, python-brace-format
+msgid "Time above {limit} km/h"
+msgstr "Χρόνος άνω των {limit} km/h"
+
+msgid "Time moving"
+msgstr "Χρόνος σε κίνηση"
+
 msgid "Total"
 msgstr "Σύνολο"
 
@@ -866,8 +876,8 @@ msgid "{kind} saved to:\n{path}"
 msgstr "Το αρχείο {kind} αποθηκεύτηκε στο:\n{path}"
 
 #, python-brace-format
-msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
-msgstr "{recorded:,} s καταγεγραμμένα | μέγ. {max_speed} km/h | μέση {avg_speed:.1f} km/h | {above} άνω των {limit} km/h | {moving} σε κίνηση | {gaps} εσωτερικά κενά"
+msgid "{recorded:,} s recorded | {gaps} internal gaps"
+msgstr "{recorded:,} s καταγεγραμμένα | {gaps} εσωτερικά κενά"
 
 #, python-brace-format
 msgid "{rows} rows · {columns} columns"

@@ -656,6 +656,9 @@ msgstr "Превишена скорост"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Превишена скорост: {start} → {end} | макс. {max_speed} | средно {avg_speed}"
 
+msgid "Overspeeding event (recorded by the unit)"
+msgstr "Превишена скорост (записано от устройството)"
+
 msgid "Open a DDD file"
 msgstr "Отваряне на DDD файл"
 
@@ -775,6 +778,13 @@ msgstr "Време"
 msgid "Time >90 km/h"
 msgstr "Време >90 km/h"
 
+#, python-brace-format
+msgid "Time above {limit} km/h"
+msgstr "Време над {limit} km/h"
+
+msgid "Time moving"
+msgstr "Време в движение"
+
 msgid "Total"
 msgstr "Общо"
 
@@ -866,8 +876,8 @@ msgid "{kind} saved to:\n{path}"
 msgstr "{kind} е запазен в:\n{path}"
 
 #, python-brace-format
-msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
-msgstr "{recorded:,} s записани | макс. {max_speed} km/h | средно {avg_speed:.1f} km/h | {above} над {limit} km/h | {moving} в движение | {gaps} вътрешни пропуска"
+msgid "{recorded:,} s recorded | {gaps} internal gaps"
+msgstr "{recorded:,} s записани | {gaps} вътрешни пропуска"
 
 #, python-brace-format
 msgid "{rows} rows · {columns} columns"

@@ -656,6 +656,9 @@ msgstr "Przekroczenie prędkości"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Przekroczenie prędkości: {start} → {end} | maks. {max_speed} | śr. {avg_speed}"
 
+msgid "Overspeeding event (recorded by the unit)"
+msgstr "Przekroczenie prędkości (zarejestrowane przez urządzenie)"
+
 msgid "Open a DDD file"
 msgstr "Otwórz plik DDD"
 
@@ -775,6 +778,13 @@ msgstr "Czas"
 msgid "Time >90 km/h"
 msgstr "Czas >90 km/h"
 
+#, python-brace-format
+msgid "Time above {limit} km/h"
+msgstr "Czas powyżej {limit} km/h"
+
+msgid "Time moving"
+msgstr "Czas w ruchu"
+
 msgid "Total"
 msgstr "Razem"
 
@@ -866,8 +876,8 @@ msgid "{kind} saved to:\n{path}"
 msgstr "{kind} zapisano w:\n{path}"
 
 #, python-brace-format
-msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
-msgstr "{recorded:,} s zarejestrowanych | maks. {max_speed} km/h | śr. {avg_speed:.1f} km/h | {above} powyżej {limit} km/h | {moving} w ruchu | {gaps} luk wewnętrznych"
+msgid "{recorded:,} s recorded | {gaps} internal gaps"
+msgstr "{recorded:,} s zarejestrowanych | {gaps} luk wewnętrznych"
 
 #, python-brace-format
 msgid "{rows} rows · {columns} columns"

@@ -82,7 +82,8 @@ CONTROL_HOVER_BG = "#d2ddec"
 BUTTON_PRESSED_BG = "#c3d1e6"
 
 # ── Accents ────────────────────────────────────────────────────────────────
-#: Primary accent: selection, links, drive, G2 files, primary buttons.
+#: Primary accent: selection, links, G2 files, primary buttons. Activity
+#: colours are separate (see the ``ACTIVITY_*`` block below).
 ACCENT = "#1565c0"
 #: Secondary accent: G2.2 files and manual entries.
 ACCENT_PURPLE = "#6a1b9a"
@@ -108,6 +109,12 @@ WARNING = "#e65100"
 CAUTION = "#f57c00"
 
 # ── Activities ─────────────────────────────────────────────────────────────
+#: Drive bar/marker. The value is :data:`ACCENT`'s today — the two roles are
+#: distinct on purpose ("this is Drive" vs "this is selected/interactive"), so
+#: the activity colour can be retuned later without touching the selection.
+ACTIVITY_DRIVE = "#1565c0"
+#: Rest bar/marker. Same value as :data:`SLATE` today, for the same reason.
+ACTIVITY_REST = "#78909c"
 #: Work bar.
 ACTIVITY_WORK = "#ef6c00"
 #: Work marker in the day-detail log (deliberately duller than the bar).

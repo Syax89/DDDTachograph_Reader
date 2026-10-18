@@ -81,8 +81,9 @@ from app.i18n import (  # noqa: E402
     saved_language, saved_recent_files, saved_translate_data)
 from app import ui_text  # noqa: E402
 from app.theme import (  # noqa: E402  (re-exported: GEN_COLORS/ROW_*/HEADER_BG)
-    ACCENT, ACCENT_PURPLE, ACTIVITY_AVAILABLE, ACTIVITY_EVENT, ACTIVITY_FERRY,
-    ACTIVITY_UNKNOWN, ACTIVITY_WORK, ACTIVITY_WORK_MUTED, ACTIVE_BG, BORDER,
+    ACCENT, ACCENT_PURPLE, ACTIVITY_AVAILABLE, ACTIVITY_DRIVE, ACTIVITY_EVENT,
+    ACTIVITY_FERRY, ACTIVITY_REST, ACTIVITY_UNKNOWN, ACTIVITY_WORK,
+    ACTIVITY_WORK_MUTED, ACTIVE_BG, BORDER,
     BUTTON_PRESSED_BG, CAUTION, CARD_BORDER, CHART_GRID_MAJOR, CHART_GRID_MINOR,
     CONTROL_HOVER_BG, DANGER, DANGER_BAND, DANGER_DARK, DANGER_STRONG,
     DASHBOARD_TOOLTIP_BG, FIELD_BG, FONT_BADGE, FONT_BODY, FONT_CANVAS_TITLE,
@@ -542,6 +543,61 @@ class DataTable(ttk.Frame):
         self._apply_filter()
 
 
+#: Card geometry, shared by the dashboard cards and the speed chart's row so
+#: the two panels are built from the same numbers (see :func:`_kpi_card`).
+_KPI_CARD_PADX = 14
+_KPI_CARD_PADY = 10
+_KPI_CARD_BORDER = 1
+_KPI_GRID_PAD = 5
+#: Slack added to every measured row item: Tk's own requested width can differ
+#: from the font measurement by a pixel or two, and a row must never be packed
+#: so tightly that the grid has to squeeze it.
+_KPI_WIDTH_SLACK = 4
+#: Width of the small legend glyphs (the dot and the dashed line sample).
+_LEGEND_GLYPH_WIDTH = 18
+
+
+def _flow_rows(widths, available):
+    """Pack ``widths`` into as few rows as ``available`` pixels allow.
+
+    Returns a list of rows, each a list of indexes into ``widths``. Used by the
+    speed chart's KPI cards and legend so a narrow window (or a long
+    translation) adds a *row* instead of clipping a label.
+    """
+    rows = []
+    current = []
+    used = 0
+    for index, width in enumerate(widths):
+        if current and used + width > available:
+            rows.append(current)
+            current, used = [], 0
+        current.append(index)
+        used += width
+    if current:
+        rows.append(current)
+    return rows
+
+
+def _kpi_card(parent, caption, value, colour):
+    """Build one dashboard-style KPI card: raised frame, caption, bold value.
+
+    Shared by the daily-activities dashboard grid and the detailed-speed
+    summary row, so both panels are built — and look — exactly the same. The
+    caller positions the returned frame and owns the returned labels.
+    """
+    card = tk.Frame(parent, bg=SURFACE_RAISED,
+                    highlightbackground=CARD_BORDER,
+                    highlightthickness=_KPI_CARD_BORDER,
+                    padx=_KPI_CARD_PADX, pady=_KPI_CARD_PADY)
+    caption_lbl = tk.Label(card, text=caption, font=FONT_SMALL, fg=TEXT_LABEL,
+                           bg=SURFACE_RAISED, anchor=tk.W)
+    caption_lbl.pack(anchor=tk.W)
+    value_lbl = tk.Label(card, text=value, font=FONT_KPI_VALUE, fg=colour,
+                         bg=SURFACE_RAISED, anchor=tk.W)
+    value_lbl.pack(anchor=tk.W)
+    return card, caption_lbl, value_lbl
+
+
 class DetailedSpeedChart(ttk.Frame):
     """Canvas chart for one UTC day of per-second speed samples."""
 
@@ -555,6 +611,24 @@ class DetailedSpeedChart(ttk.Frame):
         self.zoom_in_btn.pack(side=tk.RIGHT)
         self.zoom_out_btn = ttk.Button(header, text="-", width=3, command=self._zoom_out)
         self.zoom_out_btn.pack(side=tk.RIGHT, padx=(0, 4))
+        # The day's key facts as KPI cards (the dashboard's card style) instead
+        # of one dense grey line; the grey line keeps only what they omit.
+        self.kpi = {}
+        self._kpi_specs = []
+        self._kpi_rows = None
+        self._measure_fonts = {}
+        self._legend_items = []
+        self._legend_rows = None
+        self._legend_labels = []
+        self._legend_glyphs = []
+        self.kpi_frame = tk.Frame(self, bg=SURFACE_SUNKEN)
+        self.kpi_frame.pack(fill=tk.X, padx=8, pady=(2, 0))
+        self.kpi_frame.bind("<Configure>", self._layout_kpis)
+        # What the red marks of the plot mean. Widgets (not canvas items) so a
+        # long translation wraps instead of running off the plot.
+        self.legend_frame = tk.Frame(self, bg=SURFACE)
+        self.legend_frame.pack(fill=tk.X, padx=8, pady=(2, 0))
+        self.legend_frame.bind("<Configure>", self._layout_legend)
         self.canvas = tk.Canvas(self, background=WHITE, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=8, pady=(2, 2))
         self.canvas.bind("<Configure>", lambda _event: self._schedule_draw())
@@ -595,18 +669,165 @@ class DetailedSpeedChart(ttk.Frame):
         internal_gaps = sum(max(0, second - previous - 1)
                             for (previous, _prev), (second, _cur) in zip(samples, samples[1:], strict=False))
         self.title_lbl.config(text=_("Detailed Speed - {day} (UTC)").format(day=day))
+        self._render_kpis(max(speeds) if speeds else None,
+                          sum(speeds) / recorded if recorded else 0.0,
+                          above_limit, moving)
+        self._render_legend(bool(speeds))
         self.summary_lbl.config(text=(
-            _("{recorded:,} s recorded | max {max_speed} km/h | "
-              "avg {avg_speed:.1f} km/h | {above} above {limit} km/h | "
-              "{moving} moving | {gaps} internal gaps").format(
-                  recorded=recorded, max_speed=max(speeds),
-                  avg_speed=sum(speeds) / recorded,
-                  above=_fmt_seconds_duration(above_limit),
-                  limit=self._speed_limit,
-                  moving=_fmt_seconds_duration(moving),
-                  gaps=_fmt_seconds_duration(internal_gaps))
+            _("{recorded:,} s recorded | {gaps} internal gaps").format(
+                recorded=recorded,
+                gaps=_fmt_seconds_duration(internal_gaps))
             if speeds else _("No valid speed samples")))
         self._schedule_draw()
+
+    def _render_kpis(self, max_speed, avg_speed, above_limit, moving):
+        """Rebuild the summary cards above the plot in the dashboard style.
+
+        They carry what the old grey line packed into one dense string: peak
+        and average speed, the time spent above the limit, the time actually
+        moving and — only when the day has any — the number of overspeeding
+        events the unit recorded. ``max_speed is None`` means the day has no
+        samples at all: then there is nothing to summarise.
+        """
+        self._clear(self.kpi_frame)
+        self.kpi = {}
+        self._kpi_specs = []
+        self._kpi_rows = None
+        if max_speed is None:
+            return
+        self._kpi_specs = [
+            ("max", _("Max speed"), f"{max_speed:.0f} km/h", ACCENT),
+            ("avg", _("Avg speed"), f"{avg_speed:.1f} km/h", TEXT_SECONDARY),
+            ("above", _("Time above {limit} km/h").format(limit=self._speed_limit),
+             _fmt_seconds_duration(above_limit),
+             DANGER if above_limit else TEXT_PRIMARY),
+            ("moving", _("Time moving"), _fmt_seconds_duration(moving),
+             TEXT_PRIMARY),
+        ]
+        if self._overspeeding_events:
+            self._kpi_specs.append(("events", _("Overspeed events"),
+                                    str(len(self._overspeeding_events)), DANGER))
+        self._layout_kpis()
+
+    def _layout_kpis(self, _event=None):
+        """Place the cards in as many rows as the available width needs.
+
+        One row of five at the default window; more rows once the right pane is
+        as narrow as the minimum window allows (≈430 px at 900x560) or once a
+        translation is wide. Each row is its own frame, so a wide card only
+        ever widens its own row — it can never squeeze its neighbour's caption
+        — and every card keeps its natural width, so no text is clipped.
+        """
+        specs = self._kpi_specs
+        if not specs:
+            return
+        widths = [
+            max(self._text_width(caption, FONT_SMALL),
+                self._text_width(value, FONT_KPI_VALUE))
+            + 2 * _KPI_CARD_PADX + 2 * _KPI_CARD_BORDER + 2 * _KPI_GRID_PAD
+            + _KPI_WIDTH_SLACK
+            for _key, caption, value, _colour in specs]
+        rows = _flow_rows(widths, self._row_width(self.kpi_frame, _event))
+        if rows == self._kpi_rows:
+            return
+        self._kpi_rows = rows
+        self._clear(self.kpi_frame)
+        self.kpi = {}
+        # A full row stretches its cards evenly; a short last row keeps the
+        # cards at their natural width, left aligned, instead of blowing the
+        # lone card up across the whole pane. Uniform columns are not an
+        # option: equal widths clip a long translation in a narrow window.
+        for indexes in rows:
+            row_frame = tk.Frame(self.kpi_frame, bg=SURFACE_SUNKEN)
+            row_frame.pack(fill=tk.X)
+            stretch = "nsew" if len(indexes) == max(map(len, rows)) else "nw"
+            for column, index in enumerate(indexes):
+                key, caption, value, colour = specs[index]
+                card, caption_lbl, value_lbl = _kpi_card(row_frame, caption,
+                                                         value, colour)
+                card.grid(row=0, column=column, padx=_KPI_GRID_PAD,
+                          pady=_KPI_GRID_PAD, sticky=stretch)
+                row_frame.columnconfigure(column, weight=1)
+                self.kpi[key] = {"card": card, "caption": caption_lbl,
+                                 "value": value_lbl}
+
+    def _render_legend(self, has_samples):
+        """Explain the red marks of the plot: the limit line and the events.
+
+        Drawn only when there is something to explain — a day without samples
+        shows no legend at all, and the event item appears only for a day that
+        really has overspeeding events in the file.
+        """
+        self._clear(self.legend_frame)
+        self._legend_items = []
+        self._legend_rows = None
+        self._legend_labels = []
+        self._legend_glyphs = []
+        if not has_samples:
+            return
+        self._legend_items = [(False, _("Speed Limit"))]
+        if self._overspeeding_events:
+            self._legend_items.append(
+                (True, _("Overspeeding event (recorded by the unit)")))
+        self._layout_legend()
+
+    def _layout_legend(self, _event=None):
+        """Lay the legend out like the cards: a long one wraps to a new line."""
+        items = self._legend_items
+        if not items:
+            return
+        widths = [_LEGEND_GLYPH_WIDTH + 4 + self._text_width(text, FONT_SMALL)
+                  + 12 + _KPI_WIDTH_SLACK for _is_dot, text in items]
+        rows = _flow_rows(widths, self._row_width(self.legend_frame, _event))
+        if rows == self._legend_rows:
+            return
+        self._legend_rows = rows
+        self._clear(self.legend_frame)
+        self._legend_labels = []
+        self._legend_glyphs = []
+        for indexes in rows:
+            row_frame = tk.Frame(self.legend_frame, bg=SURFACE)
+            row_frame.pack(fill=tk.X)
+            for column, index in enumerate(indexes):
+                is_dot, text = items[index]
+                glyph = tk.Canvas(row_frame, width=_LEGEND_GLYPH_WIDTH, height=10,
+                                  bg=SURFACE, highlightthickness=0, borderwidth=0)
+                if is_dot:
+                    glyph.create_oval(6, 2, 12, 8, fill=DANGER_STRONG, outline=WHITE)
+                else:
+                    glyph.create_line(1, 5, _LEGEND_GLYPH_WIDTH - 1, 5,
+                                      fill=DANGER_STRONG, dash=(4, 3))
+                glyph.grid(row=0, column=column * 2, sticky="w", padx=(0, 4))
+                label = tk.Label(row_frame, text=text, font=FONT_SMALL,
+                                 fg=TEXT_MUTED, bg=SURFACE, anchor=tk.W,
+                                 justify=tk.LEFT)
+                label.grid(row=0, column=column * 2 + 1, sticky="w", padx=(0, 12))
+                row_frame.columnconfigure(column * 2 + 1, weight=1)
+                self._legend_glyphs.append(glyph)
+                self._legend_labels.append(label)
+
+    def _row_width(self, frame, event=None):
+        """Usable width of a row container.
+
+        A ``<Configure>`` handler must use the event's width: ``winfo_width()``
+        can still report the size the frame is leaving, and a row packed for a
+        wider pane is then squeezed (and its captions clipped) by the narrower
+        one.
+        """
+        width = getattr(event, "width", None) or frame.winfo_width()
+        return width if width > 1 else max(1, self.winfo_width() - 16)
+
+    def _text_width(self, text, spec):
+        """Natural pixel width of ``text`` in the font ``spec``."""
+        font = self._measure_fonts.get(spec)
+        if font is None:
+            font = self._measure_fonts[spec] = tkfont.Font(font=spec)
+        return font.measure(text)
+
+    @staticmethod
+    def _clear(frame):
+        for child in frame.winfo_children():
+            child.destroy()
 
     def _zoom_in(self):
         self._set_zoom((self._view_start + self._view_end) / 2, (self._view_end - self._view_start) / 2)
@@ -893,9 +1114,9 @@ class DetailedSpeedChart(ttk.Frame):
 
 # ── Activity timeline chart ─────────────────────────────────────────────
 ACTIVITY_COLORS = {
-    "DRIVE": ACCENT,
+    "DRIVE": ACTIVITY_DRIVE,
     "WORK": ACTIVITY_WORK,
-    "REST": SLATE,
+    "REST": ACTIVITY_REST,
     "AVAILABLE": ACTIVITY_AVAILABLE,
 }
 ACTIVITY_LABEL = {"DRIVE": "Drive", "WORK": "Work", "REST": "Rest",
@@ -1356,9 +1577,9 @@ class DayDetailWindow(tk.Toplevel):
     _open_windows: dict[tuple, "DayDetailWindow"] = {}
 
     COLORS = {
-        "DRIVE":      ACCENT,
+        "DRIVE":      ACTIVITY_DRIVE,
         "WORK":       ACTIVITY_WORK_MUTED,
-        "REST":       SLATE,
+        "REST":       ACTIVITY_REST,
         "AVAILABLE":  TEXT_FAINT,
         "UNKNOWN":    SLATE,
         "CARD_IN":    SUCCESS,
@@ -3900,15 +4121,9 @@ class TachoExplorer(tk.Tk):
         for i, (label, value, accent) in enumerate(kpis):
             row_idx = i // num_cols
             col_idx = i % num_cols
-            card = tk.Frame(kpi_frame, bg=SURFACE_RAISED,
-                            highlightbackground=CARD_BORDER,
-                            highlightthickness=1, padx=14, pady=10)
+            card, _caption, _value = _kpi_card(kpi_frame, label, value, accent)
             card.grid(row=row_idx, column=col_idx, padx=5, pady=5,
                       sticky="nsew")
-            tk.Label(card, text=label, font=FONT_SMALL, fg=TEXT_LABEL,
-                     bg=SURFACE_RAISED, anchor=tk.W).pack(anchor=tk.W)
-            tk.Label(card, text=value, font=FONT_KPI_VALUE, fg=accent,
-                     bg=SURFACE_RAISED, anchor=tk.W).pack(anchor=tk.W)
 
         for c in range(num_cols):
             kpi_frame.columnconfigure(c, weight=1, uniform="kpi")
@@ -4507,13 +4722,13 @@ class TachoExplorer(tk.Tk):
             last=sorted_asc[-1].get("date", "?"), days=day_count)
 
         kpis = [
-            (_("Drive"), _fmt_duration_minutes(totals_global["DRIVE"]), ACCENT),
+            (_("Drive"), _fmt_duration_minutes(totals_global["DRIVE"]), ACTIVITY_DRIVE),
             (_("Work"), _fmt_duration_minutes(totals_global["WORK"]), ACTIVITY_WORK),
-            (_("Rest"), _fmt_duration_minutes(totals_global["REST"]), SLATE),
+            (_("Rest"), _fmt_duration_minutes(totals_global["REST"]), ACTIVITY_REST),
             (_("Available"), _fmt_duration_minutes(totals_global["AVAILABLE"]), ACTIVITY_AVAILABLE),
             (_("Days"), str(day_count), TEXT_SECONDARY),
-            (_("Avg Drive / day"), _fmt_duration_minutes(avg_drive), ACCENT),
-            (_("Max Drive / day"), _fmt_duration_minutes(max_drive), ACCENT),
+            (_("Avg Drive / day"), _fmt_duration_minutes(avg_drive), ACTIVITY_DRIVE),
+            (_("Max Drive / day"), _fmt_duration_minutes(max_drive), ACTIVITY_DRIVE),
         ]
         if is_vu:
             kpis.append((_("Drivers"), str(driver_count), TEXT_SECONDARY))
