@@ -2374,3 +2374,12 @@ msgstr "Nav reģistrētu mērījumu"
 
 msgid "Speed range"
 msgstr "Ātruma diapazons"
+
+msgid "Days over {hours} h"
+msgstr "Dienas virs {hours} h"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Dienas brauciens {driven} — limits {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Nepārtraukts brauciens {driven} bez {pause} min pārtraukuma — limits {limit}"

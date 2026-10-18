@@ -2374,3 +2374,12 @@ msgstr "Ei tallennettuja mittauksia"
 
 msgid "Speed range"
 msgstr "Nopeusalue"
+
+msgid "Days over {hours} h"
+msgstr "Päiviä yli {hours} h"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Päivittäinen ajo {driven} — raja {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Yhtäjaksoinen ajo {driven} ilman {pause} min taukoa — raja {limit}"

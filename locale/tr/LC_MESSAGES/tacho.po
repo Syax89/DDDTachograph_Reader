@@ -2374,3 +2374,12 @@ msgstr "Kayıtlı örnek yok"
 
 msgid "Speed range"
 msgstr "Hız aralığı"
+
+msgid "Days over {hours} h"
+msgstr "{hours} saati aşan günler"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Günlük sürüş {driven} — sınır {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Kesintisiz sürüş {driven}, {pause} dk mola yok — sınır {limit}"

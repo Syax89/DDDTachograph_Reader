@@ -2374,3 +2374,12 @@ msgstr "Nessun campione registrato"
 
 msgid "Speed range"
 msgstr "Intervallo di velocità"
+
+msgid "Days over {hours} h"
+msgstr "Giorni oltre {hours} h"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Guida giornaliera {driven} — limite {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Guida continua {driven} senza una pausa di {pause} min — limite {limit}"

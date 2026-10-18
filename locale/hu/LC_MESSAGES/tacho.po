@@ -2374,3 +2374,12 @@ msgstr "Nincsenek rögzített minták"
 
 msgid "Speed range"
 msgstr "Sebességtartomány"
+
+msgid "Days over {hours} h"
+msgstr "Nap {hours} óra felett"
+
+msgid "Daily driving {driven} — limit {limit}"
+msgstr "Napi vezetés {driven} — határ {limit}"
+
+msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
+msgstr "Folyamatos vezetés {driven} {pause} perc szünet nélkül — határ {limit}"
