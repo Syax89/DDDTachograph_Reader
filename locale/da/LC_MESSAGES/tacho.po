@@ -1474,3 +1474,414 @@ msgstr "Værkstedskortets udløb"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  1. generation  [Bilag 1B]"
+
+msgid "Activity Chart"
+msgstr "Aktivitetsgraf"
+
+msgid "Authenticated"
+msgstr "Autentificeret"
+
+msgid "Authentication Status"
+msgstr "Autentificeringsstatus"
+
+msgid "Authorised Speed KMH"
+msgstr "Godkendt hastighed KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Gns. hastighed KMH"
+
+msgid "Border Crossings"
+msgstr "Grænseoverskridelser"
+
+msgid "By Default Load Type"
+msgstr "Standardlæsningstype"
+
+msgid "By Default Load Type Label"
+msgstr "Etiket for standardlæsningstype"
+
+msgid "Calibration Country"
+msgstr "Kalibreringsland"
+
+msgid "Calibration Country Timestamp"
+msgstr "Tidsstempel for kalibreringsland"
+
+msgid "Calibration Purpose"
+msgstr "Kalibreringsformål"
+
+msgid "Calibration Purpose Label"
+msgstr "Etiket for kalibreringsformål"
+
+msgid "Card Border Crossings"
+msgstr "Kortets grænseoverskridelser"
+
+msgid "Card Codriver"
+msgstr "Medfører på kortet"
+
+msgid "Card Download"
+msgstr "Kortdownload"
+
+msgid "Card Download Records"
+msgstr "Kortdownload-poster"
+
+msgid "Card Extended Serial"
+msgstr "Kortets udvidede serienummer"
+
+msgid "Card ICC Identification"
+msgstr "Kortets ICC-identifikation"
+
+msgid "Card Identification"
+msgstr "Kortidentifikation"
+
+msgid "Card Issuer Identification"
+msgstr "Kortudstederidentifikation"
+
+msgid "Card Load Type Entries"
+msgstr "Kortets læsningstypeposter"
+
+msgid "Card Load Unload Operations"
+msgstr "Kortets læsse- og lossehandlinger"
+
+msgid "Card Nation"
+msgstr "Kortets land"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Kortets sted og autentificering for daglig arbejdsperiode"
+
+msgid "Card Records"
+msgstr "Kortets poster"
+
+msgid "Card Structure Version"
+msgstr "Kortstrukturversion"
+
+msgid "Card Type"
+msgstr "Korttype"
+
+msgid "Certificate Temporal Validity"
+msgstr "Certifikatets tidsmæssige gyldighed"
+
+msgid "Company Holder Data"
+msgstr "Indehaverdata (virksomhed)"
+
+msgid "Company Or Workshop Name"
+msgstr "Virksomheds- eller værkstednavn"
+
+msgid "Consent"
+msgstr "Samtykke"
+
+msgid "Country Entered"
+msgstr "Indrejseland"
+
+msgid "Country Left"
+msgstr "Forladt land"
+
+msgid "Curve"
+msgstr "Kurve"
+
+msgid "Curve Oid"
+msgstr "Kurve-OID"
+
+msgid "Daily Summary"
+msgstr "Dagligt resumé"
+
+msgid "Data Size"
+msgstr "Datastørrelse"
+
+msgid "Device ID"
+msgstr "Enheds-ID"
+
+msgid "Distance"
+msgstr "Afstand"
+
+msgid "Download Activities"
+msgstr "Downloadaktiviteter"
+
+msgid "Download Time"
+msgstr "Downloadtid"
+
+msgid "Downloadable Periods"
+msgstr "Downloadbare perioder"
+
+msgid "Downloading Time"
+msgstr "Downloadvarighed"
+
+msgid "Driver Card Application Identification"
+msgstr "Førerkortapplikationsidentifikation"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Førerkortapplikationsidentifikation V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Førerkortindehaveridentifikation"
+
+msgid "Driving Licence Info"
+msgstr "Kørekortoplysninger"
+
+msgid "ECDSA Signature Verification"
+msgstr "ECDSA-signaturverifikation"
+
+msgid "Event Type Code"
+msgstr "Hændelsestypekode"
+
+msgid "Fault Type Code"
+msgstr "Fejltypekode"
+
+msgid "First Event"
+msgstr "Første hændelse"
+
+msgid "GNSS Accumulated Driving"
+msgstr "GNSS-akkumuleret køretid"
+
+msgid "GNSS Accuracy"
+msgstr "GNSS-nøjagtighed"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Autentificeret GNSS-akkumuleret køretid"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS autentificeret"
+
+msgid "GNSS Authentication Status"
+msgstr "GNSS-autentificeringsstatus"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS GNSS-nøjagtighed"
+
+msgid "GNSS Latitude"
+msgstr "GNSS-breddegrad"
+
+msgid "GNSS Longitude"
+msgstr "GNSS-længdegrad"
+
+msgid "GNSS Place"
+msgstr "GNSS-sted"
+
+msgid "GNSS Timestamp"
+msgstr "GNSS-tidsstempel"
+
+msgid "Gen"
+msgstr "Generation"
+
+msgid "Hex"
+msgstr "HEX"
+
+msgid "ICC Chip Identification"
+msgstr "ICC-chipidentifikation"
+
+msgid "ITS Consents"
+msgstr "ITS-samtykker"
+
+msgid "Identification"
+msgstr "Identifikation"
+
+msgid "Is Newest"
+msgstr "Nyeste"
+
+msgid "Latitude"
+msgstr "Breddegrad"
+
+msgid "Length"
+msgstr "Længde"
+
+msgid "Load Type"
+msgstr "Læsningstype"
+
+msgid "Longitude"
+msgstr "Længdegrad"
+
+msgid "Manufacturer Code"
+msgstr "Producentkode"
+
+msgid "Max Downloadable Time"
+msgstr "Maksimal downloadbar tid"
+
+msgid "Min Downloadable Time"
+msgstr "Minimal downloadbar tid"
+
+msgid "Min Speed KMH"
+msgstr "Minimumshastighed KMH"
+
+msgid "Nation At Calibration"
+msgstr "Land ved kalibrering"
+
+msgid "Nation From"
+msgstr "Land fra"
+
+msgid "Nation To"
+msgstr "Land til"
+
+msgid "New Odometer KM"
+msgstr "Ny kilometertæller KM"
+
+msgid "Odometer Begin"
+msgstr "Kilometertæller ved begyndelse"
+
+msgid "Odometer End"
+msgstr "Kilometertæller ved afslutning"
+
+msgid "Offset"
+msgstr "Forskydning"
+
+msgid "Old Odometer"
+msgstr "Gammel kilometertæller"
+
+msgid "Old Odometer KM"
+msgstr "Gammel kilometertæller KM"
+
+msgid "Operation"
+msgstr "Handling"
+
+msgid "Pairing Date"
+msgstr "Parringsdato"
+
+msgid "Plate At Calibration"
+msgstr "Nummerplade ved kalibrering"
+
+msgid "Power Interruptions"
+msgstr "Strømafbrydelser"
+
+msgid "Public Key X"
+msgstr "Offentlig nøgle X"
+
+msgid "Public Key Y"
+msgstr "Offentlig nøgle Y"
+
+msgid "Raw Text"
+msgstr "Rå tekst"
+
+msgid "Rcm Serial Number"
+msgstr "RCM-serienummer"
+
+msgid "Reason"
+msgstr "Årsag"
+
+msgid "Record Counts"
+msgstr "Postantal"
+
+msgid "Record Index"
+msgstr "Postindeks"
+
+msgid "Record Type"
+msgstr "Posttype"
+
+msgid "Role"
+msgstr "Rolle"
+
+msgid "Seal Data VU"
+msgstr "VU-plombedata"
+
+msgid "Sensor Approval"
+msgstr "Sensorgodkendelse"
+
+msgid "Sensor Daily Records"
+msgstr "Sensorens daglige poster"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Sensorens GNSS-serienummer"
+
+msgid "Sensor Info"
+msgstr "Sensoroplysninger"
+
+msgid "Sensor Pairings"
+msgstr "Sensorparringer"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Sensorparringer (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Sensor-serienummer"
+
+msgid "Sig Size"
+msgstr "Signaturstørrelse"
+
+msgid "Signature R"
+msgstr "Signatur R"
+
+msgid "Signature S"
+msgstr "Signatur S"
+
+msgid "Similar Events Number"
+msgstr "Antal lignende hændelser"
+
+msgid "Speed Avg"
+msgstr "Gns. hastighed"
+
+msgid "Speed Chart"
+msgstr "Hastighedsgraf"
+
+msgid "Speed Max"
+msgstr "Maks. hastighed"
+
+msgid "Speed Min"
+msgstr "Min. hastighed"
+
+msgid "Speed Samples"
+msgstr "Hastighedsprøver"
+
+msgid "Speed Summary"
+msgstr "Hastighedsresumé"
+
+msgid "Speed Valid Count"
+msgstr "Antal gyldige prøver"
+
+msgid "Start"
+msgstr "Begyndelse"
+
+msgid "Status"
+msgstr "Tilstand"
+
+msgid "Tag"
+msgstr "Mærkat"
+
+msgid "VIN At Calibration"
+msgstr "VIN ved kalibrering"
+
+msgid "VU Certificates (CVC)"
+msgstr "VU-certifikater (CVC)"
+
+msgid "VU Identifications"
+msgstr "VU-identifikationer"
+
+msgid "VU Record Array Summary"
+msgstr "VU-postmatrixresumé"
+
+msgid "VU Software Version"
+msgstr "VU-softwareversion"
+
+msgid "Valid From"
+msgstr "Gyldig fra"
+
+msgid "Valid To"
+msgstr "Gyldig til"
+
+msgid "Vehicle Nation"
+msgstr "Køretøjets land"
+
+msgid "Vehicle Odometer Value"
+msgstr "Køretøjets kilometertællerværdi"
+
+msgid "Vehicle Plate"
+msgstr "Køretøjets nummerplade"
+
+msgid "Vehicle Registration"
+msgstr "Køretøjsregistrering"
+
+msgid "Vehicle Units Used"
+msgstr "Anvendte køretøjsenheder"
+
+msgid "Vehicles Used"
+msgstr "Anvendte køretøjer"
+
+msgid "W Characteristic Constant"
+msgstr "W-karakteristikkonstant"
+
+msgid "W Vehicle Constant"
+msgstr "Køretøjets W-konstant"
+
+msgid "Workshop Name"
+msgstr "Værkstednavn"
+
+msgid "CAR Authority"
+msgstr "CAR-myndighed"
+
+msgid "CAR Serial"
+msgstr "CAR-serienummer"

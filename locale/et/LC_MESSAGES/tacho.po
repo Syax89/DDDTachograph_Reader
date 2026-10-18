@@ -1474,3 +1474,414 @@ msgstr "Töökojakaardi kehtivus"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Põlvkond 1  [Lisa 1B]"
+
+msgid "Activity Chart"
+msgstr "Aktiivsuse diagramm"
+
+msgid "Authenticated"
+msgstr "Autenditud"
+
+msgid "Authentication Status"
+msgstr "Autentimise olek"
+
+msgid "Authorised Speed KMH"
+msgstr "Lubatud kiirus KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Keskmine kiirus KMH"
+
+msgid "Border Crossings"
+msgstr "Piiriületused"
+
+msgid "By Default Load Type"
+msgstr "Vaikimisi veose tüüp"
+
+msgid "By Default Load Type Label"
+msgstr "Vaikimisi veose tüübi silt"
+
+msgid "Calibration Country"
+msgstr "Kalibreerimisriik"
+
+msgid "Calibration Country Timestamp"
+msgstr "Kalibreerimisriigi ajatempel"
+
+msgid "Calibration Purpose"
+msgstr "Kalibreerimise eesmärk"
+
+msgid "Calibration Purpose Label"
+msgstr "Kalibreerimise eesmärgi silt"
+
+msgid "Card Border Crossings"
+msgstr "Kaardi piiriületused"
+
+msgid "Card Codriver"
+msgstr "Kaardi kaasjuht"
+
+msgid "Card Download"
+msgstr "Kaardi allalaadimine"
+
+msgid "Card Download Records"
+msgstr "Kaardi allalaadimise kirjed"
+
+msgid "Card Extended Serial"
+msgstr "Kaardi laiendatud seerianumber"
+
+msgid "Card ICC Identification"
+msgstr "Kaardi ICC identifitseerimine"
+
+msgid "Card Identification"
+msgstr "Kaardi identifitseerimine"
+
+msgid "Card Issuer Identification"
+msgstr "Kaardi väljaandja identifitseerimine"
+
+msgid "Card Load Type Entries"
+msgstr "Kaardi veose tüübi kanded"
+
+msgid "Card Load Unload Operations"
+msgstr "Kaardi peale- ja mahalaadimistoimingud"
+
+msgid "Card Nation"
+msgstr "Kaardi riik"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Kaardi autenditud igapäevase tööperioodi koht"
+
+msgid "Card Records"
+msgstr "Kaardi kirjed"
+
+msgid "Card Structure Version"
+msgstr "Kaardi struktuuri versioon"
+
+msgid "Card Type"
+msgstr "Kaardi tüüp"
+
+msgid "Certificate Temporal Validity"
+msgstr "Sertifikaadi kehtivusaeg"
+
+msgid "Company Holder Data"
+msgstr "Ettevõtte valdaja andmed"
+
+msgid "Company Or Workshop Name"
+msgstr "Ettevõtte või töökoja nimi"
+
+msgid "Consent"
+msgstr "Nõusolek"
+
+msgid "Country Entered"
+msgstr "Sisenemise riik"
+
+msgid "Country Left"
+msgstr "Lahkumise riik"
+
+msgid "Curve"
+msgstr "Kõver"
+
+msgid "Curve Oid"
+msgstr "Kõvera OID"
+
+msgid "Daily Summary"
+msgstr "Päeva kokkuvõte"
+
+msgid "Data Size"
+msgstr "Andmete suurus"
+
+msgid "Device ID"
+msgstr "Seadme ID"
+
+msgid "Distance"
+msgstr "Vahemaa"
+
+msgid "Download Activities"
+msgstr "Allalaadimise aktiivsused"
+
+msgid "Download Time"
+msgstr "Allalaadimise aeg"
+
+msgid "Downloadable Periods"
+msgstr "Allalaaditavad perioodid"
+
+msgid "Downloading Time"
+msgstr "Allalaadimise hetk"
+
+msgid "Driver Card Application Identification"
+msgstr "Juhikaardi rakenduse identifitseerimine"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Juhikaardi rakenduse identifitseerimine V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Juhikaardi valdaja identifitseerimine"
+
+msgid "Driving Licence Info"
+msgstr "Juhiloa andmed"
+
+msgid "ECDSA Signature Verification"
+msgstr "ECDSA allkirja kontroll"
+
+msgid "Event Type Code"
+msgstr "Sündmuse tüübi kood"
+
+msgid "Fault Type Code"
+msgstr "Rikke tüübi kood"
+
+msgid "First Event"
+msgstr "Esimene sündmus"
+
+msgid "GNSS Accumulated Driving"
+msgstr "GNSS kogutud sõiduaeg"
+
+msgid "GNSS Accuracy"
+msgstr "GNSS täpsus"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "GNSS-autenditud kogutud sõiduaeg"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS autenditud"
+
+msgid "GNSS Authentication Status"
+msgstr "GNSS autentimise olek"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS GNSS täpsus"
+
+msgid "GNSS Latitude"
+msgstr "GNSS laiuskraad"
+
+msgid "GNSS Longitude"
+msgstr "GNSS pikkuskraad"
+
+msgid "GNSS Place"
+msgstr "GNSS koht"
+
+msgid "GNSS Timestamp"
+msgstr "GNSS ajatempel"
+
+msgid "Gen"
+msgstr "Põlvkond"
+
+msgid "Hex"
+msgstr "Hex-väärtus"
+
+msgid "ICC Chip Identification"
+msgstr "ICC-kiibi identifitseerimine"
+
+msgid "ITS Consents"
+msgstr "ITS nõusolekud"
+
+msgid "Identification"
+msgstr "Identifitseerimine"
+
+msgid "Is Newest"
+msgstr "Uusim"
+
+msgid "Latitude"
+msgstr "Laiuskraad"
+
+msgid "Length"
+msgstr "Pikkus"
+
+msgid "Load Type"
+msgstr "Veose tüüp"
+
+msgid "Longitude"
+msgstr "Pikkuskraad"
+
+msgid "Manufacturer Code"
+msgstr "Tootja kood"
+
+msgid "Max Downloadable Time"
+msgstr "Pikim allalaaditav aeg"
+
+msgid "Min Downloadable Time"
+msgstr "Lühim allalaaditav aeg"
+
+msgid "Min Speed KMH"
+msgstr "Minimaalne kiirus KMH"
+
+msgid "Nation At Calibration"
+msgstr "Riik kalibreerimisel"
+
+msgid "Nation From"
+msgstr "Riik kust"
+
+msgid "Nation To"
+msgstr "Riik kuhu"
+
+msgid "New Odometer KM"
+msgstr "Uus odomeeter km"
+
+msgid "Odometer Begin"
+msgstr "Odomeeter algus"
+
+msgid "Odometer End"
+msgstr "Odomeeter lõpp"
+
+msgid "Offset"
+msgstr "Nihe"
+
+msgid "Old Odometer"
+msgstr "Vana odomeeter"
+
+msgid "Old Odometer KM"
+msgstr "Vana odomeeter km"
+
+msgid "Operation"
+msgstr "Toiming"
+
+msgid "Pairing Date"
+msgstr "Sidumiskuupäev"
+
+msgid "Plate At Calibration"
+msgstr "Registreerimismärk kalibreerimisel"
+
+msgid "Power Interruptions"
+msgstr "Toitekatkestused"
+
+msgid "Public Key X"
+msgstr "Avalik võti X"
+
+msgid "Public Key Y"
+msgstr "Avalik võti Y"
+
+msgid "Raw Text"
+msgstr "Toortekst"
+
+msgid "Rcm Serial Number"
+msgstr "RCM-seerianumber"
+
+msgid "Reason"
+msgstr "Põhjus"
+
+msgid "Record Counts"
+msgstr "Kirjete arvud"
+
+msgid "Record Index"
+msgstr "Kirje indeks"
+
+msgid "Record Type"
+msgstr "Kirje tüüp"
+
+msgid "Role"
+msgstr "Roll"
+
+msgid "Seal Data VU"
+msgstr "VU plomm"
+
+msgid "Sensor Approval"
+msgstr "Anduri heakskiit"
+
+msgid "Sensor Daily Records"
+msgstr "Anduri päevakirjed"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Anduri GNSS-seerianumber"
+
+msgid "Sensor Info"
+msgstr "Anduri info"
+
+msgid "Sensor Pairings"
+msgstr "Andurite sidumised"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Andurite sidumised (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Anduri seerianumber"
+
+msgid "Sig Size"
+msgstr "Allkirja suurus"
+
+msgid "Signature R"
+msgstr "Allkiri R"
+
+msgid "Signature S"
+msgstr "Allkiri S"
+
+msgid "Similar Events Number"
+msgstr "Sarnaste sündmuste arv"
+
+msgid "Speed Avg"
+msgstr "Keskmine kiirus"
+
+msgid "Speed Chart"
+msgstr "Kiiruse diagramm"
+
+msgid "Speed Max"
+msgstr "Maksimaalne kiirus"
+
+msgid "Speed Min"
+msgstr "Minimaalne kiirus"
+
+msgid "Speed Samples"
+msgstr "Kiiruse näidised"
+
+msgid "Speed Summary"
+msgstr "Kiiruse kokkuvõte"
+
+msgid "Speed Valid Count"
+msgstr "Kehtivate kiiruste arv"
+
+msgid "Start"
+msgstr "Algus"
+
+msgid "Status"
+msgstr "Olek"
+
+msgid "Tag"
+msgstr "Silt"
+
+msgid "VIN At Calibration"
+msgstr "VIN kalibreerimisel"
+
+msgid "VU Certificates (CVC)"
+msgstr "VU-sertifikaadid (CVC)"
+
+msgid "VU Identifications"
+msgstr "VU identifitseerimised"
+
+msgid "VU Record Array Summary"
+msgstr "VU kirjete massiivi kokkuvõte"
+
+msgid "VU Software Version"
+msgstr "VU tarkvara versioon"
+
+msgid "Valid From"
+msgstr "Kehtib alates"
+
+msgid "Valid To"
+msgstr "Kehtib kuni"
+
+msgid "Vehicle Nation"
+msgstr "Sõiduki riik"
+
+msgid "Vehicle Odometer Value"
+msgstr "Sõiduki odomeetri väärtus"
+
+msgid "Vehicle Plate"
+msgstr "Sõiduki registreerimismärk"
+
+msgid "Vehicle Registration"
+msgstr "Sõiduki registreerimine"
+
+msgid "Vehicle Units Used"
+msgstr "Kasutatud sõidumeeriku üksused"
+
+msgid "Vehicles Used"
+msgstr "Kasutatud sõidukid"
+
+msgid "W Characteristic Constant"
+msgstr "W iseloomulik konstant"
+
+msgid "W Vehicle Constant"
+msgstr "W sõiduki konstant"
+
+msgid "Workshop Name"
+msgstr "Töökoja nimi"
+
+msgid "CAR Authority"
+msgstr "CAR-asutus"
+
+msgid "CAR Serial"
+msgstr "CAR-seerianumber"

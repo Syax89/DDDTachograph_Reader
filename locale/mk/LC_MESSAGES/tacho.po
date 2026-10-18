@@ -1474,3 +1474,414 @@ msgstr "Важност на картичката на работилницата
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Генерација 1  [Анекс 1B]"
+
+msgid "Activity Chart"
+msgstr "Графикон на активност"
+
+msgid "Authenticated"
+msgstr "Автентификувано"
+
+msgid "Authentication Status"
+msgstr "Статус на автентикација"
+
+msgid "Authorised Speed KMH"
+msgstr "Дозволена брзина KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Просечна брзина KMH"
+
+msgid "Border Crossings"
+msgstr "Премини на граница"
+
+msgid "By Default Load Type"
+msgstr "Стандарден тип на товар"
+
+msgid "By Default Load Type Label"
+msgstr "Назив на стандардниот тип на товар"
+
+msgid "Calibration Country"
+msgstr "Земја на калибрација"
+
+msgid "Calibration Country Timestamp"
+msgstr "Временска ознака на земјата на калибрација"
+
+msgid "Calibration Purpose"
+msgstr "Цел на калибрација"
+
+msgid "Calibration Purpose Label"
+msgstr "Назив на целта на калибрација"
+
+msgid "Card Border Crossings"
+msgstr "Премини на граница на картичката"
+
+msgid "Card Codriver"
+msgstr "Картичка на втор возач"
+
+msgid "Card Download"
+msgstr "Преземање на картичката"
+
+msgid "Card Download Records"
+msgstr "Записи за преземање на картичката"
+
+msgid "Card Extended Serial"
+msgstr "Проширен сериски број на картичката"
+
+msgid "Card ICC Identification"
+msgstr "Идентификација ICC на картичката"
+
+msgid "Card Identification"
+msgstr "Идентификација на картичката"
+
+msgid "Card Issuer Identification"
+msgstr "Идентификација на издавачот на картичката"
+
+msgid "Card Load Type Entries"
+msgstr "Записи на типови на товар на картичката"
+
+msgid "Card Load Unload Operations"
+msgstr "Операции на товарење/истовар на картичката"
+
+msgid "Card Nation"
+msgstr "Земја на картичката"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Место на потврда на дневниот работен период"
+
+msgid "Card Records"
+msgstr "Записи на картичката"
+
+msgid "Card Structure Version"
+msgstr "Верзија на структурата на картичката"
+
+msgid "Card Type"
+msgstr "Тип на картичка"
+
+msgid "Certificate Temporal Validity"
+msgstr "Рок на важност на сертификатот"
+
+msgid "Company Holder Data"
+msgstr "Податоци за носителот-компанија"
+
+msgid "Company Or Workshop Name"
+msgstr "Назив на компанијата или работилницата"
+
+msgid "Consent"
+msgstr "Согласност"
+
+msgid "Country Entered"
+msgstr "Земја на влез"
+
+msgid "Country Left"
+msgstr "Земја на излез"
+
+msgid "Curve"
+msgstr "Крива"
+
+msgid "Curve Oid"
+msgstr "Oid на кривата"
+
+msgid "Daily Summary"
+msgstr "Дневно резиме"
+
+msgid "Data Size"
+msgstr "Големина на податоците"
+
+msgid "Device ID"
+msgstr "ID на уредот"
+
+msgid "Distance"
+msgstr "Растојание"
+
+msgid "Download Activities"
+msgstr "Активности на преземање"
+
+msgid "Download Time"
+msgstr "Време на преземање"
+
+msgid "Downloadable Periods"
+msgstr "Периоди за преземање"
+
+msgid "Downloading Time"
+msgstr "Времетраење на преземањето"
+
+msgid "Driver Card Application Identification"
+msgstr "Идентификација на апликацијата на возачката картичка"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Идентификација на апликацијата на возачката картичка V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Идентификација на носителот на возачката картичка"
+
+msgid "Driving Licence Info"
+msgstr "Податоци за возачката дозвола"
+
+msgid "ECDSA Signature Verification"
+msgstr "Проверка на ECDSA потпис"
+
+msgid "Event Type Code"
+msgstr "Код на типот на настан"
+
+msgid "Fault Type Code"
+msgstr "Код на типот на дефект"
+
+msgid "First Event"
+msgstr "Прв настан"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Акумулирано возење GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Точност на GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Акумулирано потврдено возење GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS автентификувано"
+
+msgid "GNSS Authentication Status"
+msgstr "Статус на автентикација на GNSS"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "Точност на GNSS GNSS"
+
+msgid "GNSS Latitude"
+msgstr "Географска ширина GNSS"
+
+msgid "GNSS Longitude"
+msgstr "Географска должина GNSS"
+
+msgid "GNSS Place"
+msgstr "Место GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Временска ознака GNSS"
+
+msgid "Gen"
+msgstr "Ген."
+
+msgid "Hex"
+msgstr "HEX"
+
+msgid "ICC Chip Identification"
+msgstr "Идентификација на ICC чипот"
+
+msgid "ITS Consents"
+msgstr "Согласности ITS"
+
+msgid "Identification"
+msgstr "Идентификација"
+
+msgid "Is Newest"
+msgstr "Најнов"
+
+msgid "Latitude"
+msgstr "Географска ширина"
+
+msgid "Length"
+msgstr "Должина"
+
+msgid "Load Type"
+msgstr "Тип на товар"
+
+msgid "Longitude"
+msgstr "Географска должина"
+
+msgid "Manufacturer Code"
+msgstr "Код на производителот"
+
+msgid "Max Downloadable Time"
+msgstr "Максимално време за преземање"
+
+msgid "Min Downloadable Time"
+msgstr "Минимално време за преземање"
+
+msgid "Min Speed KMH"
+msgstr "Минимална брзина KMH"
+
+msgid "Nation At Calibration"
+msgstr "Земја при калибрација"
+
+msgid "Nation From"
+msgstr "Земја од"
+
+msgid "Nation To"
+msgstr "Земја до"
+
+msgid "New Odometer KM"
+msgstr "Нов одометар KM"
+
+msgid "Odometer Begin"
+msgstr "Одометар почеток"
+
+msgid "Odometer End"
+msgstr "Одометар крај"
+
+msgid "Offset"
+msgstr "Поместување"
+
+msgid "Old Odometer"
+msgstr "Стар одометар"
+
+msgid "Old Odometer KM"
+msgstr "Стар одометар KM"
+
+msgid "Operation"
+msgstr "Операција"
+
+msgid "Pairing Date"
+msgstr "Датум на спарување"
+
+msgid "Plate At Calibration"
+msgstr "Регистарска табличка при калибрација"
+
+msgid "Power Interruptions"
+msgstr "Прекини на напојување"
+
+msgid "Public Key X"
+msgstr "Јавен клуч X"
+
+msgid "Public Key Y"
+msgstr "Јавен клуч Y"
+
+msgid "Raw Text"
+msgstr "Необработен текст"
+
+msgid "Rcm Serial Number"
+msgstr "Сериски број Rcm"
+
+msgid "Reason"
+msgstr "Причина"
+
+msgid "Record Counts"
+msgstr "Број на записи"
+
+msgid "Record Index"
+msgstr "Индекс на запис"
+
+msgid "Record Type"
+msgstr "Тип на запис"
+
+msgid "Role"
+msgstr "Улога"
+
+msgid "Seal Data VU"
+msgstr "Податоци за пломбата VU"
+
+msgid "Sensor Approval"
+msgstr "Одобрување на сензорот"
+
+msgid "Sensor Daily Records"
+msgstr "Дневни записи на сензорот"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Сериски број GNSS на сензорот"
+
+msgid "Sensor Info"
+msgstr "Податоци за сензорот"
+
+msgid "Sensor Pairings"
+msgstr "Спарувања на сензорот"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Спарување на сензорот (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Сериски број на сензорот"
+
+msgid "Sig Size"
+msgstr "Големина на потписот"
+
+msgid "Signature R"
+msgstr "Потпис R"
+
+msgid "Signature S"
+msgstr "Потпис S"
+
+msgid "Similar Events Number"
+msgstr "Број на слични настани"
+
+msgid "Speed Avg"
+msgstr "Брзина просек"
+
+msgid "Speed Chart"
+msgstr "Графикон на брзина"
+
+msgid "Speed Max"
+msgstr "Брзина максимум"
+
+msgid "Speed Min"
+msgstr "Брзина минимум"
+
+msgid "Speed Samples"
+msgstr "Примероци на брзина"
+
+msgid "Speed Summary"
+msgstr "Резиме на брзината"
+
+msgid "Speed Valid Count"
+msgstr "Број на важечки примероци на брзина"
+
+msgid "Start"
+msgstr "Почеток"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Tag"
+msgstr "Ознака"
+
+msgid "VIN At Calibration"
+msgstr "VIN при калибрација"
+
+msgid "VU Certificates (CVC)"
+msgstr "Сертификати VU (CVC)"
+
+msgid "VU Identifications"
+msgstr "Идентификации VU"
+
+msgid "VU Record Array Summary"
+msgstr "Резиме на низата записи VU"
+
+msgid "VU Software Version"
+msgstr "Верзија на софтверот VU"
+
+msgid "Valid From"
+msgstr "Важи од"
+
+msgid "Valid To"
+msgstr "Важи до"
+
+msgid "Vehicle Nation"
+msgstr "Земја на возилото"
+
+msgid "Vehicle Odometer Value"
+msgstr "Вредност на одометарот на возилото"
+
+msgid "Vehicle Plate"
+msgstr "Регистарска табличка на возилото"
+
+msgid "Vehicle Registration"
+msgstr "Регистрација на возилото"
+
+msgid "Vehicle Units Used"
+msgstr "Користени единици на возилата"
+
+msgid "Vehicles Used"
+msgstr "Користени возила"
+
+msgid "W Characteristic Constant"
+msgstr "Константа на карактеристиката W"
+
+msgid "W Vehicle Constant"
+msgstr "Константа на возилото W"
+
+msgid "Workshop Name"
+msgstr "Назив на работилницата"
+
+msgid "CAR Authority"
+msgstr "Орган CAR"
+
+msgid "CAR Serial"
+msgstr "Сериски број CAR"

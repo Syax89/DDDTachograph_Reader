@@ -1474,3 +1474,414 @@ msgstr "Срок действия карты мастерской"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Поколение 1  [Приложение 1B]"
+
+msgid "Activity Chart"
+msgstr "График активности"
+
+msgid "Authenticated"
+msgstr "Аутентифицировано"
+
+msgid "Authentication Status"
+msgstr "Статус аутентификации"
+
+msgid "Authorised Speed KMH"
+msgstr "Разрешённая скорость KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Средняя скорость KMH"
+
+msgid "Border Crossings"
+msgstr "Пересечения границ"
+
+msgid "By Default Load Type"
+msgstr "Тип загрузки по умолчанию"
+
+msgid "By Default Load Type Label"
+msgstr "Название типа загрузки по умолчанию"
+
+msgid "Calibration Country"
+msgstr "Страна калибровки"
+
+msgid "Calibration Country Timestamp"
+msgstr "Метка времени страны калибровки"
+
+msgid "Calibration Purpose"
+msgstr "Цель калибровки"
+
+msgid "Calibration Purpose Label"
+msgstr "Название цели калибровки"
+
+msgid "Card Border Crossings"
+msgstr "Пересечения границ карты"
+
+msgid "Card Codriver"
+msgstr "Карта второго водителя"
+
+msgid "Card Download"
+msgstr "Выгрузка карты"
+
+msgid "Card Download Records"
+msgstr "Записи выгрузки карты"
+
+msgid "Card Extended Serial"
+msgstr "Расширенный серийный номер карты"
+
+msgid "Card ICC Identification"
+msgstr "Идентификация ICC карты"
+
+msgid "Card Identification"
+msgstr "Идентификация карты"
+
+msgid "Card Issuer Identification"
+msgstr "Идентификация эмитента карты"
+
+msgid "Card Load Type Entries"
+msgstr "Записи типов загрузки карты"
+
+msgid "Card Load Unload Operations"
+msgstr "Операции погрузки/разгрузки карты"
+
+msgid "Card Nation"
+msgstr "Страна карты"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Место подтверждения ежедневного рабочего периода"
+
+msgid "Card Records"
+msgstr "Записи карты"
+
+msgid "Card Structure Version"
+msgstr "Версия структуры карты"
+
+msgid "Card Type"
+msgstr "Тип карты"
+
+msgid "Certificate Temporal Validity"
+msgstr "Срок действия сертификата"
+
+msgid "Company Holder Data"
+msgstr "Данные владельца-компании"
+
+msgid "Company Or Workshop Name"
+msgstr "Название компании или мастерской"
+
+msgid "Consent"
+msgstr "Согласие"
+
+msgid "Country Entered"
+msgstr "Страна въезда"
+
+msgid "Country Left"
+msgstr "Страна выезда"
+
+msgid "Curve"
+msgstr "Кривая"
+
+msgid "Curve Oid"
+msgstr "Oid кривой"
+
+msgid "Daily Summary"
+msgstr "Сводка за день"
+
+msgid "Data Size"
+msgstr "Размер данных"
+
+msgid "Device ID"
+msgstr "ID устройства"
+
+msgid "Distance"
+msgstr "Расстояние"
+
+msgid "Download Activities"
+msgstr "Активность выгрузки"
+
+msgid "Download Time"
+msgstr "Время выгрузки"
+
+msgid "Downloadable Periods"
+msgstr "Периоды для выгрузки"
+
+msgid "Downloading Time"
+msgstr "Время скачивания"
+
+msgid "Driver Card Application Identification"
+msgstr "Идентификация приложения карты водителя"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Идентификация приложения карты водителя V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Идентификация владельца карты водителя"
+
+msgid "Driving Licence Info"
+msgstr "Сведения о водительском удостоверении"
+
+msgid "ECDSA Signature Verification"
+msgstr "Проверка подписи ECDSA"
+
+msgid "Event Type Code"
+msgstr "Код типа события"
+
+msgid "Fault Type Code"
+msgstr "Код типа неисправности"
+
+msgid "First Event"
+msgstr "Первое событие"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Накопленное вождение GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Точность GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Накопленное подтверждённое вождение GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS аутентифицировано"
+
+msgid "GNSS Authentication Status"
+msgstr "Статус аутентификации GNSS"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "Точность GNSS GNSS"
+
+msgid "GNSS Latitude"
+msgstr "Широта GNSS"
+
+msgid "GNSS Longitude"
+msgstr "Долгота GNSS"
+
+msgid "GNSS Place"
+msgstr "Место GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Метка времени GNSS"
+
+msgid "Gen"
+msgstr "Пок."
+
+msgid "Hex"
+msgstr "HEX"
+
+msgid "ICC Chip Identification"
+msgstr "Идентификация чипа ICC"
+
+msgid "ITS Consents"
+msgstr "Согласия ITS"
+
+msgid "Identification"
+msgstr "Идентификация"
+
+msgid "Is Newest"
+msgstr "Новейшая"
+
+msgid "Latitude"
+msgstr "Широта"
+
+msgid "Length"
+msgstr "Длина"
+
+msgid "Load Type"
+msgstr "Тип загрузки"
+
+msgid "Longitude"
+msgstr "Долгота"
+
+msgid "Manufacturer Code"
+msgstr "Код производителя"
+
+msgid "Max Downloadable Time"
+msgstr "Максимальное время выгрузки"
+
+msgid "Min Downloadable Time"
+msgstr "Минимальное время выгрузки"
+
+msgid "Min Speed KMH"
+msgstr "Минимальная скорость KMH"
+
+msgid "Nation At Calibration"
+msgstr "Страна при калибровке"
+
+msgid "Nation From"
+msgstr "Страна откуда"
+
+msgid "Nation To"
+msgstr "Страна куда"
+
+msgid "New Odometer KM"
+msgstr "Новый одометр KM"
+
+msgid "Odometer Begin"
+msgstr "Одометр начало"
+
+msgid "Odometer End"
+msgstr "Одометр конец"
+
+msgid "Offset"
+msgstr "Смещение"
+
+msgid "Old Odometer"
+msgstr "Старый одометр"
+
+msgid "Old Odometer KM"
+msgstr "Старый одометр KM"
+
+msgid "Operation"
+msgstr "Операция"
+
+msgid "Pairing Date"
+msgstr "Дата сопряжения"
+
+msgid "Plate At Calibration"
+msgstr "Номерной знак при калибровке"
+
+msgid "Power Interruptions"
+msgstr "Прерывания питания"
+
+msgid "Public Key X"
+msgstr "Открытый ключ X"
+
+msgid "Public Key Y"
+msgstr "Открытый ключ Y"
+
+msgid "Raw Text"
+msgstr "Необработанный текст"
+
+msgid "Rcm Serial Number"
+msgstr "Серийный номер Rcm"
+
+msgid "Reason"
+msgstr "Причина"
+
+msgid "Record Counts"
+msgstr "Количество записей"
+
+msgid "Record Index"
+msgstr "Индекс записи"
+
+msgid "Record Type"
+msgstr "Тип записи"
+
+msgid "Role"
+msgstr "Роль"
+
+msgid "Seal Data VU"
+msgstr "Данные пломбы VU"
+
+msgid "Sensor Approval"
+msgstr "Одобрение датчика"
+
+msgid "Sensor Daily Records"
+msgstr "Ежедневные записи датчика"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Серийный номер GNSS датчика"
+
+msgid "Sensor Info"
+msgstr "Информация о датчике"
+
+msgid "Sensor Pairings"
+msgstr "Сопряжения датчика"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Сопряжения датчика (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Серийный номер датчика"
+
+msgid "Sig Size"
+msgstr "Размер подписи"
+
+msgid "Signature R"
+msgstr "Подпись R"
+
+msgid "Signature S"
+msgstr "Подпись S"
+
+msgid "Similar Events Number"
+msgstr "Число похожих событий"
+
+msgid "Speed Avg"
+msgstr "Скорость сред."
+
+msgid "Speed Chart"
+msgstr "График скорости"
+
+msgid "Speed Max"
+msgstr "Скорость макс."
+
+msgid "Speed Min"
+msgstr "Скорость мин."
+
+msgid "Speed Samples"
+msgstr "Выборки скорости"
+
+msgid "Speed Summary"
+msgstr "Сводка скорости"
+
+msgid "Speed Valid Count"
+msgstr "Количество действительных замеров скорости"
+
+msgid "Start"
+msgstr "Начало"
+
+msgid "Status"
+msgstr "Состояние"
+
+msgid "Tag"
+msgstr "Метка"
+
+msgid "VIN At Calibration"
+msgstr "VIN при калибровке"
+
+msgid "VU Certificates (CVC)"
+msgstr "Сертификаты VU (CVC)"
+
+msgid "VU Identifications"
+msgstr "Идентификации VU"
+
+msgid "VU Record Array Summary"
+msgstr "Сводка массива записей VU"
+
+msgid "VU Software Version"
+msgstr "Версия ПО VU"
+
+msgid "Valid From"
+msgstr "Действует с"
+
+msgid "Valid To"
+msgstr "Действует по"
+
+msgid "Vehicle Nation"
+msgstr "Страна транспортного средства"
+
+msgid "Vehicle Odometer Value"
+msgstr "Значение одометра транспортного средства"
+
+msgid "Vehicle Plate"
+msgstr "Номерной знак транспортного средства"
+
+msgid "Vehicle Registration"
+msgstr "Регистрация транспортного средства"
+
+msgid "Vehicle Units Used"
+msgstr "Использованные блоки транспортных средств"
+
+msgid "Vehicles Used"
+msgstr "Использованные транспортные средства"
+
+msgid "W Characteristic Constant"
+msgstr "Постоянная характеристики W"
+
+msgid "W Vehicle Constant"
+msgstr "Постоянная транспортного средства W"
+
+msgid "Workshop Name"
+msgstr "Название мастерской"
+
+msgid "CAR Authority"
+msgstr "Орган CAR"
+
+msgid "CAR Serial"
+msgstr "Серийный номер CAR"

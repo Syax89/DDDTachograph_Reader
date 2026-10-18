@@ -1474,3 +1474,414 @@ msgstr "Éag an chárta cheártain"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Glúin 1  [Iarscríbhinn 1B]"
+
+msgid "Activity Chart"
+msgstr "Cairt ghníomhaíochta"
+
+msgid "Authenticated"
+msgstr "Fíordheimhnithe"
+
+msgid "Authentication Status"
+msgstr "Stádas fíordheimhnithe"
+
+msgid "Authorised Speed KMH"
+msgstr "Luas údaraithe KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Meánluas KMH"
+
+msgid "Border Crossings"
+msgstr "Trasnithe teorann"
+
+msgid "By Default Load Type"
+msgstr "Cineál ualaigh réamhshocraithe"
+
+msgid "By Default Load Type Label"
+msgstr "Lipéad cineáil ualaigh réamhshocraithe"
+
+msgid "Calibration Country"
+msgstr "Tír calabraithe"
+
+msgid "Calibration Country Timestamp"
+msgstr "Stampa ama thír calabraithe"
+
+msgid "Calibration Purpose"
+msgstr "Cuspóir calabraithe"
+
+msgid "Calibration Purpose Label"
+msgstr "Lipéad cuspóra calabraithe"
+
+msgid "Card Border Crossings"
+msgstr "Trasnithe teorann an chárta"
+
+msgid "Card Codriver"
+msgstr "Comhthiománaí an chárta"
+
+msgid "Card Download"
+msgstr "Íoslódáil cárta"
+
+msgid "Card Download Records"
+msgstr "Taifid íoslódála an chárta"
+
+msgid "Card Extended Serial"
+msgstr "Sraithuimhir leathnaithe an chárta"
+
+msgid "Card ICC Identification"
+msgstr "Aithint ICC an chárta"
+
+msgid "Card Identification"
+msgstr "Aithint an chárta"
+
+msgid "Card Issuer Identification"
+msgstr "Aithint eisitheoir an chárta"
+
+msgid "Card Load Type Entries"
+msgstr "Iontrálacha cineáil ualaigh an chárta"
+
+msgid "Card Load Unload Operations"
+msgstr "Oibríochtaí luchtúcháin/díluchtaithe an chárta"
+
+msgid "Card Nation"
+msgstr "Tír an chárta"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Áit fhíordheimhnithe thréimhse oibre laethúil an chárta"
+
+msgid "Card Records"
+msgstr "Taifid an chárta"
+
+msgid "Card Structure Version"
+msgstr "Leagan struchtúir an chárta"
+
+msgid "Card Type"
+msgstr "Cineál an chárta"
+
+msgid "Certificate Temporal Validity"
+msgstr "Bailíocht ama an teastais"
+
+msgid "Company Holder Data"
+msgstr "Sonraí sealbhóra na cuideachta"
+
+msgid "Company Or Workshop Name"
+msgstr "Ainm na cuideachta nó na ceártain"
+
+msgid "Consent"
+msgstr "Toiliú"
+
+msgid "Country Entered"
+msgstr "Tír iontrála"
+
+msgid "Country Left"
+msgstr "Tír imeachta"
+
+msgid "Curve"
+msgstr "Cuar"
+
+msgid "Curve Oid"
+msgstr "OID cuair"
+
+msgid "Daily Summary"
+msgstr "Achoimre laethúil"
+
+msgid "Data Size"
+msgstr "Méid na sonraí"
+
+msgid "Device ID"
+msgstr "ID an ghléis"
+
+msgid "Distance"
+msgstr "Fad"
+
+msgid "Download Activities"
+msgstr "Gníomhaíochtaí íoslódála"
+
+msgid "Download Time"
+msgstr "Am íoslódála"
+
+msgid "Downloadable Periods"
+msgstr "Tréimhsí íoslódála"
+
+msgid "Downloading Time"
+msgstr "Tráth an íoslódála"
+
+msgid "Driver Card Application Identification"
+msgstr "Aithint fheidhmchláir an chárta tiománaí"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Aithint fheidhmchláir an chárta tiománaí V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Aithint sealbhóir an chárta tiománaí"
+
+msgid "Driving Licence Info"
+msgstr "Eolas faoin gceadúnas tiomána"
+
+msgid "ECDSA Signature Verification"
+msgstr "Fíorú sínithe ECDSA"
+
+msgid "Event Type Code"
+msgstr "Cód cineáil teagmhais"
+
+msgid "Fault Type Code"
+msgstr "Cód cineáil fabht"
+
+msgid "First Event"
+msgstr "An chéad teagmhas"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Tiomáint charnaithe GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Cruinneas GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Tiomáint charnaithe fhíordheimhnithe GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS fíordheimhnithe"
+
+msgid "GNSS Authentication Status"
+msgstr "Stádas fíordheimhnithe GNSS"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS cruinneas GNSS"
+
+msgid "GNSS Latitude"
+msgstr "Domhanleithead GNSS"
+
+msgid "GNSS Longitude"
+msgstr "Domhanfhad GNSS"
+
+msgid "GNSS Place"
+msgstr "Áit GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Stampa ama GNSS"
+
+msgid "Gen"
+msgstr "Glúin"
+
+msgid "Hex"
+msgstr "Luach heics"
+
+msgid "ICC Chip Identification"
+msgstr "Aithint sliseanna ICC"
+
+msgid "ITS Consents"
+msgstr "Toilithe ITS"
+
+msgid "Identification"
+msgstr "Aithint"
+
+msgid "Is Newest"
+msgstr "Is nuaí"
+
+msgid "Latitude"
+msgstr "Domhanleithead"
+
+msgid "Length"
+msgstr "Fad"
+
+msgid "Load Type"
+msgstr "Cineál ualaigh"
+
+msgid "Longitude"
+msgstr "Domhanfhad"
+
+msgid "Manufacturer Code"
+msgstr "Cód an mhonaróra"
+
+msgid "Max Downloadable Time"
+msgstr "An t-am is faide is féidir a íoslódáil"
+
+msgid "Min Downloadable Time"
+msgstr "An t-am is giorra is féidir a íoslódáil"
+
+msgid "Min Speed KMH"
+msgstr "Íosluas KMH"
+
+msgid "Nation At Calibration"
+msgstr "Tír ag calabrú"
+
+msgid "Nation From"
+msgstr "Tír ó"
+
+msgid "Nation To"
+msgstr "Tír go"
+
+msgid "New Odometer KM"
+msgstr "Odaiméadar nua km"
+
+msgid "Odometer Begin"
+msgstr "Odaiméadar tús"
+
+msgid "Odometer End"
+msgstr "Odaiméadar deireadh"
+
+msgid "Offset"
+msgstr "Fritháireamh"
+
+msgid "Old Odometer"
+msgstr "Seanodaiméadar"
+
+msgid "Old Odometer KM"
+msgstr "Seanodaiméadar km"
+
+msgid "Operation"
+msgstr "Oibríocht"
+
+msgid "Pairing Date"
+msgstr "Dáta péireála"
+
+msgid "Plate At Calibration"
+msgstr "Pláta ag calabrú"
+
+msgid "Power Interruptions"
+msgstr "Scoiteanna cumhachta"
+
+msgid "Public Key X"
+msgstr "Eochair phoiblí X"
+
+msgid "Public Key Y"
+msgstr "Eochair phoiblí Y"
+
+msgid "Raw Text"
+msgstr "Amhthéacs"
+
+msgid "Rcm Serial Number"
+msgstr "Sraithuimhir RCM"
+
+msgid "Reason"
+msgstr "Cúis"
+
+msgid "Record Counts"
+msgstr "Líonta taifead"
+
+msgid "Record Index"
+msgstr "Innéacs taifid"
+
+msgid "Record Type"
+msgstr "Cineál taifid"
+
+msgid "Role"
+msgstr "Ról"
+
+msgid "Seal Data VU"
+msgstr "Séala VU"
+
+msgid "Sensor Approval"
+msgstr "Faomhadh an tsensor"
+
+msgid "Sensor Daily Records"
+msgstr "Taifid laethúla an tsensor"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Sraithuimhir GNSS an tsensor"
+
+msgid "Sensor Info"
+msgstr "Eolas an tsensor"
+
+msgid "Sensor Pairings"
+msgstr "Péireálacha an tsensor"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Péireálacha an tsensor (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Sraithuimhir an tsensor"
+
+msgid "Sig Size"
+msgstr "Méid an tsínithe"
+
+msgid "Signature R"
+msgstr "Síniú R"
+
+msgid "Signature S"
+msgstr "Síniú S"
+
+msgid "Similar Events Number"
+msgstr "Líon imeachtaí comhchosúla"
+
+msgid "Speed Avg"
+msgstr "Meánluas"
+
+msgid "Speed Chart"
+msgstr "Cairt luais"
+
+msgid "Speed Max"
+msgstr "Uasluas"
+
+msgid "Speed Min"
+msgstr "Íosluas"
+
+msgid "Speed Samples"
+msgstr "Samplaí luais"
+
+msgid "Speed Summary"
+msgstr "Achoimre luais"
+
+msgid "Speed Valid Count"
+msgstr "Líon na luasanna bailí"
+
+msgid "Start"
+msgstr "Tús"
+
+msgid "Status"
+msgstr "Stádas"
+
+msgid "Tag"
+msgstr "Clib"
+
+msgid "VIN At Calibration"
+msgstr "VIN ag calabrú"
+
+msgid "VU Certificates (CVC)"
+msgstr "Teastais VU (CVC)"
+
+msgid "VU Identifications"
+msgstr "Aithint VU"
+
+msgid "VU Record Array Summary"
+msgstr "Achoimre ar eagar taifead VU"
+
+msgid "VU Software Version"
+msgstr "Leagan bogearraí VU"
+
+msgid "Valid From"
+msgstr "Bailí ó"
+
+msgid "Valid To"
+msgstr "Bailí go"
+
+msgid "Vehicle Nation"
+msgstr "Tír na feithicle"
+
+msgid "Vehicle Odometer Value"
+msgstr "Luach odaiméadar na feithicle"
+
+msgid "Vehicle Plate"
+msgstr "Pláta na feithicle"
+
+msgid "Vehicle Registration"
+msgstr "Clárú na feithicle"
+
+msgid "Vehicle Units Used"
+msgstr "Aonaid feithicle a úsáideadh"
+
+msgid "Vehicles Used"
+msgstr "Feithiclí a úsáideadh"
+
+msgid "W Characteristic Constant"
+msgstr "Tairiseach saintréithe W"
+
+msgid "W Vehicle Constant"
+msgstr "Tairiseach feithicle W"
+
+msgid "Workshop Name"
+msgstr "Ainm na ceártain"
+
+msgid "CAR Authority"
+msgstr "Údarás CAR"
+
+msgid "CAR Serial"
+msgstr "Sraithuimhir CAR"

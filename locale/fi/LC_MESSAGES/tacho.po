@@ -1474,3 +1474,414 @@ msgstr "Korjaamokortin voimassaolo"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Sukupolvi 1  [Liite 1B]"
+
+msgid "Activity Chart"
+msgstr "Aktiivisuuskaavio"
+
+msgid "Authenticated"
+msgstr "Todennettu"
+
+msgid "Authentication Status"
+msgstr "Todennuksen tila"
+
+msgid "Authorised Speed KMH"
+msgstr "Sallittu nopeus KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Keskinopeus KMH"
+
+msgid "Border Crossings"
+msgstr "Rajan ylitykset"
+
+msgid "By Default Load Type"
+msgstr "Oletuskuormatyyppi"
+
+msgid "By Default Load Type Label"
+msgstr "Oletuskuormatyypin selite"
+
+msgid "Calibration Country"
+msgstr "Kalibrointimaa"
+
+msgid "Calibration Country Timestamp"
+msgstr "Kalibrointimaan aikaleima"
+
+msgid "Calibration Purpose"
+msgstr "Kalibroinnin tarkoitus"
+
+msgid "Calibration Purpose Label"
+msgstr "Kalibroinnin tarkoituksen selite"
+
+msgid "Card Border Crossings"
+msgstr "Kortin rajanylitykset"
+
+msgid "Card Codriver"
+msgstr "Kortin toinen kuljettaja"
+
+msgid "Card Download"
+msgstr "Kortin lataus"
+
+msgid "Card Download Records"
+msgstr "Kortin lataustietueet"
+
+msgid "Card Extended Serial"
+msgstr "Kortin laajennettu sarjanumero"
+
+msgid "Card ICC Identification"
+msgstr "Kortin ICC-tunnistus"
+
+msgid "Card Identification"
+msgstr "Kortin tunnistus"
+
+msgid "Card Issuer Identification"
+msgstr "Kortin myöntäjän tunnistus"
+
+msgid "Card Load Type Entries"
+msgstr "Kortin kuormatyyppimerkinnät"
+
+msgid "Card Load Unload Operations"
+msgstr "Kortin kuormaus-/purkutoiminnot"
+
+msgid "Card Nation"
+msgstr "Kortin maa"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Kortin todennetun päivittäisen työjakson sijainti"
+
+msgid "Card Records"
+msgstr "Kortin tietueet"
+
+msgid "Card Structure Version"
+msgstr "Kortin rakenneversio"
+
+msgid "Card Type"
+msgstr "Kortin tyyppi"
+
+msgid "Certificate Temporal Validity"
+msgstr "Varmenteen voimassaoloaika"
+
+msgid "Company Holder Data"
+msgstr "Yrityksen haltijatiedot"
+
+msgid "Company Or Workshop Name"
+msgstr "Yrityksen tai korjaamon nimi"
+
+msgid "Consent"
+msgstr "Suostumus"
+
+msgid "Country Entered"
+msgstr "Saapumismaa"
+
+msgid "Country Left"
+msgstr "Poistumismaa"
+
+msgid "Curve"
+msgstr "Käyrä"
+
+msgid "Curve Oid"
+msgstr "Käyrän OID"
+
+msgid "Daily Summary"
+msgstr "Päivän yhteenveto"
+
+msgid "Data Size"
+msgstr "Tietojen koko"
+
+msgid "Device ID"
+msgstr "Laitteen ID"
+
+msgid "Distance"
+msgstr "Matka"
+
+msgid "Download Activities"
+msgstr "Latausaktiviteetit"
+
+msgid "Download Time"
+msgstr "Latausaika"
+
+msgid "Downloadable Periods"
+msgstr "Ladattavat jaksot"
+
+msgid "Downloading Time"
+msgstr "Latausajankohta"
+
+msgid "Driver Card Application Identification"
+msgstr "Kuljettajakortin sovelluksen tunnistus"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Kuljettajakortin sovelluksen tunnistus V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Kuljettajakortin haltijan tunnistus"
+
+msgid "Driving Licence Info"
+msgstr "Ajokortin tiedot"
+
+msgid "ECDSA Signature Verification"
+msgstr "ECDSA-allekirjoituksen varmennus"
+
+msgid "Event Type Code"
+msgstr "Tapahtumatyypin koodi"
+
+msgid "Fault Type Code"
+msgstr "Vikatyypin koodi"
+
+msgid "First Event"
+msgstr "Ensimmäinen tapahtuma"
+
+msgid "GNSS Accumulated Driving"
+msgstr "GNSS-kertytynyt ajoaika"
+
+msgid "GNSS Accuracy"
+msgstr "GNSS-tarkkuus"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "GNSS-todennettu kertytynyt ajoaika"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS-todennettu"
+
+msgid "GNSS Authentication Status"
+msgstr "GNSS-todennuksen tila"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS GNSS-tarkkuus"
+
+msgid "GNSS Latitude"
+msgstr "GNSS-leveysaste"
+
+msgid "GNSS Longitude"
+msgstr "GNSS-pituusaste"
+
+msgid "GNSS Place"
+msgstr "GNSS-paikka"
+
+msgid "GNSS Timestamp"
+msgstr "GNSS-aikaleima"
+
+msgid "Gen"
+msgstr "Sukupolvi"
+
+msgid "Hex"
+msgstr "Hex-arvo"
+
+msgid "ICC Chip Identification"
+msgstr "ICC-sirun tunnistus"
+
+msgid "ITS Consents"
+msgstr "ITS-suostumukset"
+
+msgid "Identification"
+msgstr "Tunnistus"
+
+msgid "Is Newest"
+msgstr "Uusin"
+
+msgid "Latitude"
+msgstr "Leveysaste"
+
+msgid "Length"
+msgstr "Pituus"
+
+msgid "Load Type"
+msgstr "Kuormaustyyppi"
+
+msgid "Longitude"
+msgstr "Pituusaste"
+
+msgid "Manufacturer Code"
+msgstr "Valmistajakoodi"
+
+msgid "Max Downloadable Time"
+msgstr "Pisin ladattava aika"
+
+msgid "Min Downloadable Time"
+msgstr "Lyhin ladattava aika"
+
+msgid "Min Speed KMH"
+msgstr "Vähimmäisnopeus KMH"
+
+msgid "Nation At Calibration"
+msgstr "Maa kalibroinnissa"
+
+msgid "Nation From"
+msgstr "Maa mistä"
+
+msgid "Nation To"
+msgstr "Maa mihin"
+
+msgid "New Odometer KM"
+msgstr "Uusi matkamittari km"
+
+msgid "Odometer Begin"
+msgstr "Matkamittari alku"
+
+msgid "Odometer End"
+msgstr "Matkamittari loppu"
+
+msgid "Offset"
+msgstr "Siirtymä"
+
+msgid "Old Odometer"
+msgstr "Vanha matkamittari"
+
+msgid "Old Odometer KM"
+msgstr "Vanha matkamittari km"
+
+msgid "Operation"
+msgstr "Toiminto"
+
+msgid "Pairing Date"
+msgstr "Parituspäivä"
+
+msgid "Plate At Calibration"
+msgstr "Rekisterikilpi kalibroinnissa"
+
+msgid "Power Interruptions"
+msgstr "Sähkökatkot"
+
+msgid "Public Key X"
+msgstr "Julkinen avain X"
+
+msgid "Public Key Y"
+msgstr "Julkinen avain Y"
+
+msgid "Raw Text"
+msgstr "Raakateksti"
+
+msgid "Rcm Serial Number"
+msgstr "RCM-sarjanumero"
+
+msgid "Reason"
+msgstr "Syy"
+
+msgid "Record Counts"
+msgstr "Tietuemäärät"
+
+msgid "Record Index"
+msgstr "Tietueindeksi"
+
+msgid "Record Type"
+msgstr "Tietuetyyppi"
+
+msgid "Role"
+msgstr "Rooli"
+
+msgid "Seal Data VU"
+msgstr "VU-sinetti"
+
+msgid "Sensor Approval"
+msgstr "Anturin hyväksyntä"
+
+msgid "Sensor Daily Records"
+msgstr "Anturin päivittäistietueet"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Anturin GNSS-sarjanumero"
+
+msgid "Sensor Info"
+msgstr "Anturin tiedot"
+
+msgid "Sensor Pairings"
+msgstr "Anturiparitukset"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Anturiparitukset (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Anturin sarjanumero"
+
+msgid "Sig Size"
+msgstr "Allekirjoituksen koko"
+
+msgid "Signature R"
+msgstr "Allekirjoitus R"
+
+msgid "Signature S"
+msgstr "Allekirjoitus S"
+
+msgid "Similar Events Number"
+msgstr "Samankaltaisten tapahtumien määrä"
+
+msgid "Speed Avg"
+msgstr "Keskinopeus"
+
+msgid "Speed Chart"
+msgstr "Nopeuskaavio"
+
+msgid "Speed Max"
+msgstr "Enimmäisnopeus"
+
+msgid "Speed Min"
+msgstr "Vähimmäisnopeus"
+
+msgid "Speed Samples"
+msgstr "Nopeusnäytteet"
+
+msgid "Speed Summary"
+msgstr "Nopeuden yhteenveto"
+
+msgid "Speed Valid Count"
+msgstr "Kelvollisten nopeuksien määrä"
+
+msgid "Start"
+msgstr "Alku"
+
+msgid "Status"
+msgstr "Tila"
+
+msgid "Tag"
+msgstr "Tagi"
+
+msgid "VIN At Calibration"
+msgstr "VIN kalibroinnissa"
+
+msgid "VU Certificates (CVC)"
+msgstr "VU-varmenteet (CVC)"
+
+msgid "VU Identifications"
+msgstr "VU-tunnistukset"
+
+msgid "VU Record Array Summary"
+msgstr "VU-tietuematriisin yhteenveto"
+
+msgid "VU Software Version"
+msgstr "VU-ohjelmistoversio"
+
+msgid "Valid From"
+msgstr "Voimassa alkaen"
+
+msgid "Valid To"
+msgstr "Voimassa asti"
+
+msgid "Vehicle Nation"
+msgstr "Ajoneuvon maa"
+
+msgid "Vehicle Odometer Value"
+msgstr "Ajoneuvon matkamittarin arvo"
+
+msgid "Vehicle Plate"
+msgstr "Ajoneuvon rekisterikilpi"
+
+msgid "Vehicle Registration"
+msgstr "Ajoneuvon rekisteröinti"
+
+msgid "Vehicle Units Used"
+msgstr "Käytetyt ajoneuvoyksiköt"
+
+msgid "Vehicles Used"
+msgstr "Käytetyt ajoneuvot"
+
+msgid "W Characteristic Constant"
+msgstr "W-ominaisuusvakio"
+
+msgid "W Vehicle Constant"
+msgstr "W-ajoneuvovakio"
+
+msgid "Workshop Name"
+msgstr "Korjaamon nimi"
+
+msgid "CAR Authority"
+msgstr "CAR-viranomainen"
+
+msgid "CAR Serial"
+msgstr "CAR-sarjanumero"

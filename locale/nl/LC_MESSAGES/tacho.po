@@ -1474,3 +1474,414 @@ msgstr "Vervaldatum werkplaatskaart"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Generatie 1  [Bijlage 1B]"
+
+msgid "Activity Chart"
+msgstr "Activiteitsgrafiek"
+
+msgid "Authenticated"
+msgstr "Geauthenticeerd"
+
+msgid "Authentication Status"
+msgstr "Authenticatiestatus"
+
+msgid "Authorised Speed KMH"
+msgstr "Toegestane snelheid KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Gem. snelheid KMH"
+
+msgid "Border Crossings"
+msgstr "Grensoverschrijdingen"
+
+msgid "By Default Load Type"
+msgstr "Standaard ladingtype"
+
+msgid "By Default Load Type Label"
+msgstr "Label standaard ladingtype"
+
+msgid "Calibration Country"
+msgstr "Kalibratieland"
+
+msgid "Calibration Country Timestamp"
+msgstr "Tijdstempel kalibratieland"
+
+msgid "Calibration Purpose"
+msgstr "Doel van kalibratie"
+
+msgid "Calibration Purpose Label"
+msgstr "Label doel van kalibratie"
+
+msgid "Card Border Crossings"
+msgstr "Kaart grensoverschrijdingen"
+
+msgid "Card Codriver"
+msgstr "Tweede bestuurder kaart"
+
+msgid "Card Download"
+msgstr "Kaartdownload"
+
+msgid "Card Download Records"
+msgstr "Kaartdownloadrecords"
+
+msgid "Card Extended Serial"
+msgstr "Uitgebreid serienummer kaart"
+
+msgid "Card ICC Identification"
+msgstr "Kaart ICC-identificatie"
+
+msgid "Card Identification"
+msgstr "Kaartidentificatie"
+
+msgid "Card Issuer Identification"
+msgstr "Kaartuitgever-identificatie"
+
+msgid "Card Load Type Entries"
+msgstr "Kaart ladingtype-items"
+
+msgid "Card Load Unload Operations"
+msgstr "Kaart laad-/loshandelingen"
+
+msgid "Card Nation"
+msgstr "Land van kaart"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Kaart plaats/authenticatie dagelijkse werkperiode"
+
+msgid "Card Records"
+msgstr "Kaartrecords"
+
+msgid "Card Structure Version"
+msgstr "Kaartstructuurversie"
+
+msgid "Card Type"
+msgstr "Kaarttype"
+
+msgid "Certificate Temporal Validity"
+msgstr "Tijdelijke geldigheid certificaat"
+
+msgid "Company Holder Data"
+msgstr "Gegevens bedrijfshouder"
+
+msgid "Company Or Workshop Name"
+msgstr "Naam bedrijf of werkplaats"
+
+msgid "Consent"
+msgstr "Toestemming"
+
+msgid "Country Entered"
+msgstr "Inkomensland"
+
+msgid "Country Left"
+msgstr "Vertrekkingsland"
+
+msgid "Curve"
+msgstr "Kromme"
+
+msgid "Curve Oid"
+msgstr "OID van kromme"
+
+msgid "Daily Summary"
+msgstr "Dagsamenvatting"
+
+msgid "Data Size"
+msgstr "Grootte gegevens"
+
+msgid "Device ID"
+msgstr "Apparaat-ID"
+
+msgid "Distance"
+msgstr "Afstand"
+
+msgid "Download Activities"
+msgstr "Downloadactiviteiten"
+
+msgid "Download Time"
+msgstr "Downloadtijd"
+
+msgid "Downloadable Periods"
+msgstr "Downloadbare periodes"
+
+msgid "Downloading Time"
+msgstr "Downloadduur"
+
+msgid "Driver Card Application Identification"
+msgstr "Applicatie-identificatie bestuurderskaart"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Applicatie-identificatie bestuurderskaart V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Identificatie houder bestuurderskaart"
+
+msgid "Driving Licence Info"
+msgstr "Info rijbewijs"
+
+msgid "ECDSA Signature Verification"
+msgstr "ECDSA-handtekeningverificatie"
+
+msgid "Event Type Code"
+msgstr "Code gebeurtenistype"
+
+msgid "Fault Type Code"
+msgstr "Code storingstype"
+
+msgid "First Event"
+msgstr "Eerste gebeurtenis"
+
+msgid "GNSS Accumulated Driving"
+msgstr "GNSS-geaccumuleerde rijtijd"
+
+msgid "GNSS Accuracy"
+msgstr "GNSS-nauwkeurigheid"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "GNSS-geauthenticeerde geaccumuleerde rijtijd"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS geauthenticeerd"
+
+msgid "GNSS Authentication Status"
+msgstr "GNSS-authenticatiestatus"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS GNSS-nauwkeurigheid"
+
+msgid "GNSS Latitude"
+msgstr "GNSS-breedtegraad"
+
+msgid "GNSS Longitude"
+msgstr "GNSS-lengtegraad"
+
+msgid "GNSS Place"
+msgstr "GNSS-plaats"
+
+msgid "GNSS Timestamp"
+msgstr "GNSS-tijdstempel"
+
+msgid "Gen"
+msgstr "Generatie"
+
+msgid "Hex"
+msgstr "Hexadecimaal"
+
+msgid "ICC Chip Identification"
+msgstr "ICC-chipidentificatie"
+
+msgid "ITS Consents"
+msgstr "ITS-toestemmingen"
+
+msgid "Identification"
+msgstr "Identificatie"
+
+msgid "Is Newest"
+msgstr "Is de nieuwste"
+
+msgid "Latitude"
+msgstr "Breedtegraad"
+
+msgid "Length"
+msgstr "Lengte"
+
+msgid "Load Type"
+msgstr "Ladingtype"
+
+msgid "Longitude"
+msgstr "Lengtegraad"
+
+msgid "Manufacturer Code"
+msgstr "Fabrikantcode"
+
+msgid "Max Downloadable Time"
+msgstr "Max. downloadbare tijd"
+
+msgid "Min Downloadable Time"
+msgstr "Min. downloadbare tijd"
+
+msgid "Min Speed KMH"
+msgstr "Min. snelheid KMH"
+
+msgid "Nation At Calibration"
+msgstr "Land bij kalibratie"
+
+msgid "Nation From"
+msgstr "Land van"
+
+msgid "Nation To"
+msgstr "Land naar"
+
+msgid "New Odometer KM"
+msgstr "Nieuwe kilometerteller KM"
+
+msgid "Odometer Begin"
+msgstr "Kilometerteller begin"
+
+msgid "Odometer End"
+msgstr "Kilometerteller einde"
+
+msgid "Offset"
+msgstr "Verschuiving"
+
+msgid "Old Odometer"
+msgstr "Oude kilometerteller"
+
+msgid "Old Odometer KM"
+msgstr "Oude kilometerteller KM"
+
+msgid "Operation"
+msgstr "Handeling"
+
+msgid "Pairing Date"
+msgstr "Koppeldatum"
+
+msgid "Plate At Calibration"
+msgstr "Kenteken bij kalibratie"
+
+msgid "Power Interruptions"
+msgstr "Spanningsonderbrekingen"
+
+msgid "Public Key X"
+msgstr "Openbare sleutel X"
+
+msgid "Public Key Y"
+msgstr "Openbare sleutel Y"
+
+msgid "Raw Text"
+msgstr "Ruwe tekst"
+
+msgid "Rcm Serial Number"
+msgstr "RCM-serienummer"
+
+msgid "Reason"
+msgstr "Reden"
+
+msgid "Record Counts"
+msgstr "Aantal records"
+
+msgid "Record Index"
+msgstr "Recordindex"
+
+msgid "Record Type"
+msgstr "Recordtype"
+
+msgid "Role"
+msgstr "Rol"
+
+msgid "Seal Data VU"
+msgstr "Verzegelingsgegevens VU"
+
+msgid "Sensor Approval"
+msgstr "Sensorgoedkeuring"
+
+msgid "Sensor Daily Records"
+msgstr "Dagelijkse sensorrecords"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "GNSS-serienummer van sensor"
+
+msgid "Sensor Info"
+msgstr "Sensorinfo"
+
+msgid "Sensor Pairings"
+msgstr "Sensorkoppelingen"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Sensorkoppelingen (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Sensor-serienummer"
+
+msgid "Sig Size"
+msgstr "Grootte handtekening"
+
+msgid "Signature R"
+msgstr "Handtekening R"
+
+msgid "Signature S"
+msgstr "Handtekening S"
+
+msgid "Similar Events Number"
+msgstr "Aantal vergelijkbare gebeurtenissen"
+
+msgid "Speed Avg"
+msgstr "Gem. snelheid"
+
+msgid "Speed Chart"
+msgstr "Snelheidsgrafiek"
+
+msgid "Speed Max"
+msgstr "Max. snelheid"
+
+msgid "Speed Min"
+msgstr "Min. snelheid"
+
+msgid "Speed Samples"
+msgstr "Snelheidsmetingen"
+
+msgid "Speed Summary"
+msgstr "Samenvatting snelheid"
+
+msgid "Speed Valid Count"
+msgstr "Aantal geldige metingen"
+
+msgid "Start"
+msgstr "Begin"
+
+msgid "Status"
+msgstr "Toestand"
+
+msgid "Tag"
+msgstr "TLV-tag"
+
+msgid "VIN At Calibration"
+msgstr "VIN bij kalibratie"
+
+msgid "VU Certificates (CVC)"
+msgstr "VU-certificaten (CVC)"
+
+msgid "VU Identifications"
+msgstr "VU-identificaties"
+
+msgid "VU Record Array Summary"
+msgstr "Samenvatting VU-recordarray"
+
+msgid "VU Software Version"
+msgstr "VU-softwareversie"
+
+msgid "Valid From"
+msgstr "Geldig vanaf"
+
+msgid "Valid To"
+msgstr "Geldig tot"
+
+msgid "Vehicle Nation"
+msgstr "Land van voertuig"
+
+msgid "Vehicle Odometer Value"
+msgstr "Kilometertellerwaarde voertuig"
+
+msgid "Vehicle Plate"
+msgstr "Kenteken van het voertuig"
+
+msgid "Vehicle Registration"
+msgstr "Voertuigregistratie"
+
+msgid "Vehicle Units Used"
+msgstr "Gebruikte voertuigeenheden"
+
+msgid "Vehicles Used"
+msgstr "Gebruikte voertuigen"
+
+msgid "W Characteristic Constant"
+msgstr "W-karakteristieke constante"
+
+msgid "W Vehicle Constant"
+msgstr "W-voertuigconstante"
+
+msgid "Workshop Name"
+msgstr "Naam werkplaats"
+
+msgid "CAR Authority"
+msgstr "CAR-instantie"
+
+msgid "CAR Serial"
+msgstr "CAR-serienummer"

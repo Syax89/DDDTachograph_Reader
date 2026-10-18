@@ -1474,3 +1474,414 @@ msgstr "Verkstadskortets utgångsdatum"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Generation 1  [Bilaga 1B]"
+
+msgid "Activity Chart"
+msgstr "Aktivitetsdiagram"
+
+msgid "Authenticated"
+msgstr "Autentiserad"
+
+msgid "Authentication Status"
+msgstr "Autentiseringsstatus"
+
+msgid "Authorised Speed KMH"
+msgstr "Tillåten hastighet KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Medelhastighet KMH"
+
+msgid "Border Crossings"
+msgstr "Gränspassager"
+
+msgid "By Default Load Type"
+msgstr "Standardlasttyp"
+
+msgid "By Default Load Type Label"
+msgstr "Etikett för standardlasttyp"
+
+msgid "Calibration Country"
+msgstr "Kalibreringsland"
+
+msgid "Calibration Country Timestamp"
+msgstr "Tidsstämpel för kalibreringsland"
+
+msgid "Calibration Purpose"
+msgstr "Kalibreringsändamål"
+
+msgid "Calibration Purpose Label"
+msgstr "Etikett för kalibreringsändamål"
+
+msgid "Card Border Crossings"
+msgstr "Kortets gränspassager"
+
+msgid "Card Codriver"
+msgstr "Kortmedförare"
+
+msgid "Card Download"
+msgstr "Kortnedladdning"
+
+msgid "Card Download Records"
+msgstr "Kortnedladdningsposter"
+
+msgid "Card Extended Serial"
+msgstr "Kortets utökade serienummer"
+
+msgid "Card ICC Identification"
+msgstr "Kortets ICC-identifiering"
+
+msgid "Card Identification"
+msgstr "Kortidentifiering"
+
+msgid "Card Issuer Identification"
+msgstr "Kortutgivaridentifiering"
+
+msgid "Card Load Type Entries"
+msgstr "Kortets lasttypsposter"
+
+msgid "Card Load Unload Operations"
+msgstr "Kortets lastnings-/lossningsåtgärder"
+
+msgid "Card Nation"
+msgstr "Kortets land"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Kortplats för autentiserad daglig arbetsperiod"
+
+msgid "Card Records"
+msgstr "Kortposter"
+
+msgid "Card Structure Version"
+msgstr "Kortstrukturversion"
+
+msgid "Card Type"
+msgstr "Korttyp"
+
+msgid "Certificate Temporal Validity"
+msgstr "Certifikatets tidsmässiga giltighet"
+
+msgid "Company Holder Data"
+msgstr "Företagsinnehavarens uppgifter"
+
+msgid "Company Or Workshop Name"
+msgstr "Företags- eller verkstadsnamn"
+
+msgid "Consent"
+msgstr "Samtycke"
+
+msgid "Country Entered"
+msgstr "Inrest land"
+
+msgid "Country Left"
+msgstr "Utrest land"
+
+msgid "Curve"
+msgstr "Kurva"
+
+msgid "Curve Oid"
+msgstr "Kurva-OID"
+
+msgid "Daily Summary"
+msgstr "Daglig sammanfattning"
+
+msgid "Data Size"
+msgstr "Datastorlek"
+
+msgid "Device ID"
+msgstr "Enhets-ID"
+
+msgid "Distance"
+msgstr "Sträcka"
+
+msgid "Download Activities"
+msgstr "Nedladdningsaktiviteter"
+
+msgid "Download Time"
+msgstr "Nedladdningstid"
+
+msgid "Downloadable Periods"
+msgstr "Nedladdningsbara perioder"
+
+msgid "Downloading Time"
+msgstr "Nedladdningstillfälle"
+
+msgid "Driver Card Application Identification"
+msgstr "Förarkortets applikationsidentifiering"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Förarkortets applikationsidentifiering V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Förarkortsinnehavarens identifiering"
+
+msgid "Driving Licence Info"
+msgstr "Körkortsinfo"
+
+msgid "ECDSA Signature Verification"
+msgstr "ECDSA-signaturverifiering"
+
+msgid "Event Type Code"
+msgstr "Händelsetypkod"
+
+msgid "Fault Type Code"
+msgstr "Störningstypkod"
+
+msgid "First Event"
+msgstr "Första händelsen"
+
+msgid "GNSS Accumulated Driving"
+msgstr "GNSS-ackumulerad körtid"
+
+msgid "GNSS Accuracy"
+msgstr "GNSS-noggrannhet"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "GNSS-autentiserad ackumulerad körtid"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS-autentiserad"
+
+msgid "GNSS Authentication Status"
+msgstr "GNSS-autentiseringsstatus"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS GNSS-noggrannhet"
+
+msgid "GNSS Latitude"
+msgstr "GNSS-latitud"
+
+msgid "GNSS Longitude"
+msgstr "GNSS-longitud"
+
+msgid "GNSS Place"
+msgstr "GNSS-plats"
+
+msgid "GNSS Timestamp"
+msgstr "GNSS-tidsstämpel"
+
+msgid "Gen"
+msgstr "Gen."
+
+msgid "Hex"
+msgstr "Hex-värde"
+
+msgid "ICC Chip Identification"
+msgstr "ICC-chipidentifiering"
+
+msgid "ITS Consents"
+msgstr "ITS-samtycken"
+
+msgid "Identification"
+msgstr "Identifiering"
+
+msgid "Is Newest"
+msgstr "Är nyast"
+
+msgid "Latitude"
+msgstr "Latitud"
+
+msgid "Length"
+msgstr "Längd"
+
+msgid "Load Type"
+msgstr "Lasttyp"
+
+msgid "Longitude"
+msgstr "Longitud"
+
+msgid "Manufacturer Code"
+msgstr "Tillverkarkod"
+
+msgid "Max Downloadable Time"
+msgstr "Längsta nedladdningsbara tid"
+
+msgid "Min Downloadable Time"
+msgstr "Kortaste nedladdningsbara tid"
+
+msgid "Min Speed KMH"
+msgstr "Minhastighet KMH"
+
+msgid "Nation At Calibration"
+msgstr "Land vid kalibrering"
+
+msgid "Nation From"
+msgstr "Land från"
+
+msgid "Nation To"
+msgstr "Land till"
+
+msgid "New Odometer KM"
+msgstr "Ny vägmätarställning km"
+
+msgid "Odometer Begin"
+msgstr "Vägmätare början"
+
+msgid "Odometer End"
+msgstr "Vägmätare slut"
+
+msgid "Offset"
+msgstr "Förskjutning"
+
+msgid "Old Odometer"
+msgstr "Gammal vägmätarställning"
+
+msgid "Old Odometer KM"
+msgstr "Gammal vägmätarställning km"
+
+msgid "Operation"
+msgstr "Åtgärd"
+
+msgid "Pairing Date"
+msgstr "Parkopplingsdatum"
+
+msgid "Plate At Calibration"
+msgstr "Reg.nr vid kalibrering"
+
+msgid "Power Interruptions"
+msgstr "Strömavbrott"
+
+msgid "Public Key X"
+msgstr "Publik nyckel X"
+
+msgid "Public Key Y"
+msgstr "Publik nyckel Y"
+
+msgid "Raw Text"
+msgstr "Råtext"
+
+msgid "Rcm Serial Number"
+msgstr "RCM-serienummer"
+
+msgid "Reason"
+msgstr "Orsak"
+
+msgid "Record Counts"
+msgstr "Postantal"
+
+msgid "Record Index"
+msgstr "Postindex"
+
+msgid "Record Type"
+msgstr "Posttyp"
+
+msgid "Role"
+msgstr "Roll"
+
+msgid "Seal Data VU"
+msgstr "VU-försegling"
+
+msgid "Sensor Approval"
+msgstr "Sensorgodkännande"
+
+msgid "Sensor Daily Records"
+msgstr "Sensorns dagposter"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Sensorns GNSS-serienummer"
+
+msgid "Sensor Info"
+msgstr "Sensorinfo"
+
+msgid "Sensor Pairings"
+msgstr "Sensorparkopplingar"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Sensorparkopplingar (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Sensor-serienummer"
+
+msgid "Sig Size"
+msgstr "Signaturstorlek"
+
+msgid "Signature R"
+msgstr "Signatur R"
+
+msgid "Signature S"
+msgstr "Signatur S"
+
+msgid "Similar Events Number"
+msgstr "Antal liknande händelser"
+
+msgid "Speed Avg"
+msgstr "Medelhastighet"
+
+msgid "Speed Chart"
+msgstr "Hastighetsdiagram"
+
+msgid "Speed Max"
+msgstr "Maxhastighet"
+
+msgid "Speed Min"
+msgstr "Minhastighet"
+
+msgid "Speed Samples"
+msgstr "Hastighetsprover"
+
+msgid "Speed Summary"
+msgstr "Hastighetssammanfattning"
+
+msgid "Speed Valid Count"
+msgstr "Antal giltiga hastigheter"
+
+msgid "Start"
+msgstr "Starttid"
+
+msgid "Status"
+msgstr "Tillstånd"
+
+msgid "Tag"
+msgstr "Tagg"
+
+msgid "VIN At Calibration"
+msgstr "VIN vid kalibrering"
+
+msgid "VU Certificates (CVC)"
+msgstr "VU-certifikat (CVC)"
+
+msgid "VU Identifications"
+msgstr "VU-identifieringar"
+
+msgid "VU Record Array Summary"
+msgstr "Sammanfattning av VU-postmatris"
+
+msgid "VU Software Version"
+msgstr "VU-programvaruversion"
+
+msgid "Valid From"
+msgstr "Giltig från"
+
+msgid "Valid To"
+msgstr "Giltig till"
+
+msgid "Vehicle Nation"
+msgstr "Fordonsland"
+
+msgid "Vehicle Odometer Value"
+msgstr "Fordonsvägmätarvärde"
+
+msgid "Vehicle Plate"
+msgstr "Fordonets reg.nr"
+
+msgid "Vehicle Registration"
+msgstr "Fordonsregistrering"
+
+msgid "Vehicle Units Used"
+msgstr "Använda fordonsenheter"
+
+msgid "Vehicles Used"
+msgstr "Använda fordon"
+
+msgid "W Characteristic Constant"
+msgstr "W-karakteristisk konstant"
+
+msgid "W Vehicle Constant"
+msgstr "W-fordonskonstant"
+
+msgid "Workshop Name"
+msgstr "Verkstadsnamn"
+
+msgid "CAR Authority"
+msgstr "CAR-utfärdare"
+
+msgid "CAR Serial"
+msgstr "CAR-serienummer"

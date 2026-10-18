@@ -1474,3 +1474,414 @@ msgstr "Dirbtuvių kortelės galiojimas"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  1 karta  [Priedas 1B]"
+
+msgid "Activity Chart"
+msgstr "Veiklos diagrama"
+
+msgid "Authenticated"
+msgstr "Autentifikuota"
+
+msgid "Authentication Status"
+msgstr "Autentifikavimo būsena"
+
+msgid "Authorised Speed KMH"
+msgstr "Leidžiamas greitis KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Vidutinis greitis KMH"
+
+msgid "Border Crossings"
+msgstr "Sienos kirtimai"
+
+msgid "By Default Load Type"
+msgstr "Numatytasis krovinio tipas"
+
+msgid "By Default Load Type Label"
+msgstr "Numatytojo krovinio tipo žymė"
+
+msgid "Calibration Country"
+msgstr "Kalibravimo šalis"
+
+msgid "Calibration Country Timestamp"
+msgstr "Kalibravimo šalies laiko žyma"
+
+msgid "Calibration Purpose"
+msgstr "Kalibravimo tikslas"
+
+msgid "Calibration Purpose Label"
+msgstr "Kalibravimo tikslo žymė"
+
+msgid "Card Border Crossings"
+msgstr "Kortelės sienos kirtimai"
+
+msgid "Card Codriver"
+msgstr "Kortelės antrasis vairuotojas"
+
+msgid "Card Download"
+msgstr "Kortelės atsisiuntimas"
+
+msgid "Card Download Records"
+msgstr "Kortelės atsisiuntimo įrašai"
+
+msgid "Card Extended Serial"
+msgstr "Kortelės išplėstinis serijos numeris"
+
+msgid "Card ICC Identification"
+msgstr "Kortelės ICC identifikavimas"
+
+msgid "Card Identification"
+msgstr "Kortelės identifikavimas"
+
+msgid "Card Issuer Identification"
+msgstr "Kortelės išdavėjo identifikavimas"
+
+msgid "Card Load Type Entries"
+msgstr "Kortelės krovinio tipo įrašai"
+
+msgid "Card Load Unload Operations"
+msgstr "Kortelės pakrovimo/iškrovimo operacijos"
+
+msgid "Card Nation"
+msgstr "Kortelės šalis"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Kortelės autentifikuoto kasdienio darbo laikotarpio vieta"
+
+msgid "Card Records"
+msgstr "Kortelės įrašai"
+
+msgid "Card Structure Version"
+msgstr "Kortelės struktūros versija"
+
+msgid "Card Type"
+msgstr "Kortelės tipas"
+
+msgid "Certificate Temporal Validity"
+msgstr "Sertifikato galiojimo laikas"
+
+msgid "Company Holder Data"
+msgstr "Įmonės turėtojo duomenys"
+
+msgid "Company Or Workshop Name"
+msgstr "Įmonės ar dirbtuvių pavadinimas"
+
+msgid "Consent"
+msgstr "Sutikimas"
+
+msgid "Country Entered"
+msgstr "Įvažiavimo šalis"
+
+msgid "Country Left"
+msgstr "Išvykimo šalis"
+
+msgid "Curve"
+msgstr "Kreivė"
+
+msgid "Curve Oid"
+msgstr "Kreivės OID"
+
+msgid "Daily Summary"
+msgstr "Dienos suvestinė"
+
+msgid "Data Size"
+msgstr "Duomenų dydis"
+
+msgid "Device ID"
+msgstr "Įrenginio ID"
+
+msgid "Distance"
+msgstr "Atstumas"
+
+msgid "Download Activities"
+msgstr "Atsisiuntimo veikla"
+
+msgid "Download Time"
+msgstr "Atsisiuntimo laikas"
+
+msgid "Downloadable Periods"
+msgstr "Atsisiunčiami laikotarpiai"
+
+msgid "Downloading Time"
+msgstr "Atsisiuntimo momentas"
+
+msgid "Driver Card Application Identification"
+msgstr "Vairuotojo kortelės programos identifikavimas"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Vairuotojo kortelės programos identifikavimas V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Vairuotojo kortelės turėtojo identifikavimas"
+
+msgid "Driving Licence Info"
+msgstr "Vairuotojo pažymėjimo informacija"
+
+msgid "ECDSA Signature Verification"
+msgstr "ECDSA parašo patikra"
+
+msgid "Event Type Code"
+msgstr "Įvykio tipo kodas"
+
+msgid "Fault Type Code"
+msgstr "Gedimo tipo kodas"
+
+msgid "First Event"
+msgstr "Pirmasis įvykis"
+
+msgid "GNSS Accumulated Driving"
+msgstr "GNSS sukauptas vairavimas"
+
+msgid "GNSS Accuracy"
+msgstr "GNSS tikslumas"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "GNSS autentifikuotas sukauptas vairavimas"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS autentifikuota"
+
+msgid "GNSS Authentication Status"
+msgstr "GNSS autentifikavimo būsena"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS GNSS tikslumas"
+
+msgid "GNSS Latitude"
+msgstr "GNSS platuma"
+
+msgid "GNSS Longitude"
+msgstr "GNSS ilguma"
+
+msgid "GNSS Place"
+msgstr "GNSS vieta"
+
+msgid "GNSS Timestamp"
+msgstr "GNSS laiko žyma"
+
+msgid "Gen"
+msgstr "Karta"
+
+msgid "Hex"
+msgstr "Hex reikšmė"
+
+msgid "ICC Chip Identification"
+msgstr "ICC lusto identifikavimas"
+
+msgid "ITS Consents"
+msgstr "ITS sutikimai"
+
+msgid "Identification"
+msgstr "Identifikavimas"
+
+msgid "Is Newest"
+msgstr "Naujausias"
+
+msgid "Latitude"
+msgstr "Platuma"
+
+msgid "Length"
+msgstr "Ilgis"
+
+msgid "Load Type"
+msgstr "Krovinio tipas"
+
+msgid "Longitude"
+msgstr "Ilguma"
+
+msgid "Manufacturer Code"
+msgstr "Gamintojo kodas"
+
+msgid "Max Downloadable Time"
+msgstr "Ilgiausias atsisiunčiamas laikas"
+
+msgid "Min Downloadable Time"
+msgstr "Trumpiausias atsisiunčiamas laikas"
+
+msgid "Min Speed KMH"
+msgstr "Mažiausias greitis KMH"
+
+msgid "Nation At Calibration"
+msgstr "Šalis kalibravimo metu"
+
+msgid "Nation From"
+msgstr "Šalis iš"
+
+msgid "Nation To"
+msgstr "Šalis į"
+
+msgid "New Odometer KM"
+msgstr "Naujas odometras km"
+
+msgid "Odometer Begin"
+msgstr "Odometras pradžia"
+
+msgid "Odometer End"
+msgstr "Odometras pabaiga"
+
+msgid "Offset"
+msgstr "Poslinkis"
+
+msgid "Old Odometer"
+msgstr "Senas odometras"
+
+msgid "Old Odometer KM"
+msgstr "Senas odometras km"
+
+msgid "Operation"
+msgstr "Operacija"
+
+msgid "Pairing Date"
+msgstr "Susiejimo data"
+
+msgid "Plate At Calibration"
+msgstr "Valstybinis numeris kalibravimo metu"
+
+msgid "Power Interruptions"
+msgstr "Maitinimo sutrikimai"
+
+msgid "Public Key X"
+msgstr "Viešasis raktas X"
+
+msgid "Public Key Y"
+msgstr "Viešasis raktas Y"
+
+msgid "Raw Text"
+msgstr "Neapdorotas tekstas"
+
+msgid "Rcm Serial Number"
+msgstr "RCM serijos numeris"
+
+msgid "Reason"
+msgstr "Priežastis"
+
+msgid "Record Counts"
+msgstr "Įrašų skaičiai"
+
+msgid "Record Index"
+msgstr "Įrašo indeksas"
+
+msgid "Record Type"
+msgstr "Įrašo tipas"
+
+msgid "Role"
+msgstr "Vaidmuo"
+
+msgid "Seal Data VU"
+msgstr "VU plomba"
+
+msgid "Sensor Approval"
+msgstr "Jutiklio patvirtinimas"
+
+msgid "Sensor Daily Records"
+msgstr "Jutiklio dienos įrašai"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Jutiklio GNSS serijos numeris"
+
+msgid "Sensor Info"
+msgstr "Jutiklio informacija"
+
+msgid "Sensor Pairings"
+msgstr "Jutiklių susiejimai"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Jutiklių susiejimai (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Jutiklio serijos numeris"
+
+msgid "Sig Size"
+msgstr "Parašo dydis"
+
+msgid "Signature R"
+msgstr "Parašas R"
+
+msgid "Signature S"
+msgstr "Parašas S"
+
+msgid "Similar Events Number"
+msgstr "Panašių įvykių skaičius"
+
+msgid "Speed Avg"
+msgstr "Vidutinis greitis"
+
+msgid "Speed Chart"
+msgstr "Greičio diagrama"
+
+msgid "Speed Max"
+msgstr "Didžiausias greitis"
+
+msgid "Speed Min"
+msgstr "Mažiausias greitis"
+
+msgid "Speed Samples"
+msgstr "Greičio pavyzdžiai"
+
+msgid "Speed Summary"
+msgstr "Greičio suvestinė"
+
+msgid "Speed Valid Count"
+msgstr "Galiojančių greičių skaičius"
+
+msgid "Start"
+msgstr "Pradžia"
+
+msgid "Status"
+msgstr "Būsena"
+
+msgid "Tag"
+msgstr "Žyma"
+
+msgid "VIN At Calibration"
+msgstr "VIN kalibravimo metu"
+
+msgid "VU Certificates (CVC)"
+msgstr "VU sertifikatai (CVC)"
+
+msgid "VU Identifications"
+msgstr "VU identifikavimai"
+
+msgid "VU Record Array Summary"
+msgstr "VU įrašų masyvo suvestinė"
+
+msgid "VU Software Version"
+msgstr "VU programinės įrangos versija"
+
+msgid "Valid From"
+msgstr "Galioja nuo"
+
+msgid "Valid To"
+msgstr "Galioja iki"
+
+msgid "Vehicle Nation"
+msgstr "Transporto priemonės šalis"
+
+msgid "Vehicle Odometer Value"
+msgstr "Transporto priemonės odometro reikšmė"
+
+msgid "Vehicle Plate"
+msgstr "Transporto priemonės valstybinis numeris"
+
+msgid "Vehicle Registration"
+msgstr "Transporto priemonės registracija"
+
+msgid "Vehicle Units Used"
+msgstr "Naudoti transporto priemonės blokai"
+
+msgid "Vehicles Used"
+msgstr "Naudotos transporto priemonės"
+
+msgid "W Characteristic Constant"
+msgstr "W charakteristikos konstanta"
+
+msgid "W Vehicle Constant"
+msgstr "W transporto priemonės konstanta"
+
+msgid "Workshop Name"
+msgstr "Dirbtuvių pavadinimas"
+
+msgid "CAR Authority"
+msgstr "CAR institucija"
+
+msgid "CAR Serial"
+msgstr "CAR serijos numeris"

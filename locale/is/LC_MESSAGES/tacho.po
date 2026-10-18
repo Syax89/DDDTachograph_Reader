@@ -1474,3 +1474,414 @@ msgstr "Gildistími verkstæðiskorts"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Kynslóð 1  [Viðauki 1B]"
+
+msgid "Activity Chart"
+msgstr "Virknigraf"
+
+msgid "Authenticated"
+msgstr "Auðkennt"
+
+msgid "Authentication Status"
+msgstr "Staða auðkeningar"
+
+msgid "Authorised Speed KMH"
+msgstr "Leyfður hraði KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Meðalhraði KMH"
+
+msgid "Border Crossings"
+msgstr "Landamærayfirferðir"
+
+msgid "By Default Load Type"
+msgstr "Sjálfgefin hleðslutegund"
+
+msgid "By Default Load Type Label"
+msgstr "Heiti sjálfgefinnar hleðslutegundar"
+
+msgid "Calibration Country"
+msgstr "Kvörðunarland"
+
+msgid "Calibration Country Timestamp"
+msgstr "Tímastimpill kvörðunarlands"
+
+msgid "Calibration Purpose"
+msgstr "Tilgangur kvörðunar"
+
+msgid "Calibration Purpose Label"
+msgstr "Heiti tilgangs kvörðunar"
+
+msgid "Card Border Crossings"
+msgstr "Landamærayfirferðir korts"
+
+msgid "Card Codriver"
+msgstr "Kort aðstoðarökumanns"
+
+msgid "Card Download"
+msgstr "Niðurhal korts"
+
+msgid "Card Download Records"
+msgstr "Niðurhalfærslur korts"
+
+msgid "Card Extended Serial"
+msgstr "Lengt raðnúmer korts"
+
+msgid "Card ICC Identification"
+msgstr "ICC-auðkenning korts"
+
+msgid "Card Identification"
+msgstr "Auðkenning korts"
+
+msgid "Card Issuer Identification"
+msgstr "Auðkenning útgefanda korts"
+
+msgid "Card Load Type Entries"
+msgstr "Hleðslutegundafærslur korts"
+
+msgid "Card Load Unload Operations"
+msgstr "Hleðslu- og lossunaraðgerðir korts"
+
+msgid "Card Nation"
+msgstr "Þjóð korts"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Staður staðfestingar daglegs vinnutíma"
+
+msgid "Card Records"
+msgstr "Færslur korts"
+
+msgid "Card Structure Version"
+msgstr "Útgáfa kortauppbyggingar"
+
+msgid "Card Type"
+msgstr "Kortategund"
+
+msgid "Certificate Temporal Validity"
+msgstr "Tímabundið gildi skírteinis"
+
+msgid "Company Holder Data"
+msgstr "Gögn fyrirtækishafa"
+
+msgid "Company Or Workshop Name"
+msgstr "Heiti fyrirtækis eða verkstæðis"
+
+msgid "Consent"
+msgstr "Samþykki"
+
+msgid "Country Entered"
+msgstr "Innferðarland"
+
+msgid "Country Left"
+msgstr "Útferðarland"
+
+msgid "Curve"
+msgstr "Ferill"
+
+msgid "Curve Oid"
+msgstr "Oid ferils"
+
+msgid "Daily Summary"
+msgstr "Dagleg samantekt"
+
+msgid "Data Size"
+msgstr "Stærð gagna"
+
+msgid "Device ID"
+msgstr "Tækja-ID"
+
+msgid "Distance"
+msgstr "Vegalengd"
+
+msgid "Download Activities"
+msgstr "Niðurhalsvirkni"
+
+msgid "Download Time"
+msgstr "Niðurhalstími"
+
+msgid "Downloadable Periods"
+msgstr "Niðurhalanleg tímabil"
+
+msgid "Downloading Time"
+msgstr "Tími niðurhals"
+
+msgid "Driver Card Application Identification"
+msgstr "Auðkenning ökumannskortaforrits"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Auðkenning ökumannskortaforrits V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Auðkenning korthafa ökumannskorts"
+
+msgid "Driving Licence Info"
+msgstr "Upplýsingar um ökuréttindi"
+
+msgid "ECDSA Signature Verification"
+msgstr "Staðfesting ECDSA-undirskriftar"
+
+msgid "Event Type Code"
+msgstr "Kóði atburðartegundar"
+
+msgid "Fault Type Code"
+msgstr "Kóði bilunartegundar"
+
+msgid "First Event"
+msgstr "Fyrsti atburður"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Uppsafnaður akstur GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Nákvæmni GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Uppsafnaður staðfestur akstur GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS auðkennt"
+
+msgid "GNSS Authentication Status"
+msgstr "Staða GNSS-auðkeningar"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "Nákvæmni GNSS GNSS"
+
+msgid "GNSS Latitude"
+msgstr "Breiddargráða GNSS"
+
+msgid "GNSS Longitude"
+msgstr "Lengdargráða GNSS"
+
+msgid "GNSS Place"
+msgstr "Staður GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Tímastimpill GNSS"
+
+msgid "Gen"
+msgstr "Kynsl."
+
+msgid "Hex"
+msgstr "HEX"
+
+msgid "ICC Chip Identification"
+msgstr "Auðkenning ICC-flögu"
+
+msgid "ITS Consents"
+msgstr "Samþykki ITS"
+
+msgid "Identification"
+msgstr "Auðkenning"
+
+msgid "Is Newest"
+msgstr "Er nýjast"
+
+msgid "Latitude"
+msgstr "Breiddargráða"
+
+msgid "Length"
+msgstr "Lengd"
+
+msgid "Load Type"
+msgstr "Hleðslutegund"
+
+msgid "Longitude"
+msgstr "Lengdargráða"
+
+msgid "Manufacturer Code"
+msgstr "Framleiðandakóði"
+
+msgid "Max Downloadable Time"
+msgstr "Hámarksniðurhalstími"
+
+msgid "Min Downloadable Time"
+msgstr "Lágmarksniðurhalstími"
+
+msgid "Min Speed KMH"
+msgstr "Lágmarkshraði KMH"
+
+msgid "Nation At Calibration"
+msgstr "Þjóð við kvörðun"
+
+msgid "Nation From"
+msgstr "Þjóð frá"
+
+msgid "Nation To"
+msgstr "Þjóð til"
+
+msgid "New Odometer KM"
+msgstr "Nýr akstursmælir KM"
+
+msgid "Odometer Begin"
+msgstr "Akstursmælir upphaf"
+
+msgid "Odometer End"
+msgstr "Akstursmælir endir"
+
+msgid "Offset"
+msgstr "Hliðrun"
+
+msgid "Old Odometer"
+msgstr "Gamall akstursmælir"
+
+msgid "Old Odometer KM"
+msgstr "Gamall akstursmælir KM"
+
+msgid "Operation"
+msgstr "Aðgerð"
+
+msgid "Pairing Date"
+msgstr "Pörunardagsetning"
+
+msgid "Plate At Calibration"
+msgstr "Númeraplata við kvörðun"
+
+msgid "Power Interruptions"
+msgstr "Rof í rafveitu"
+
+msgid "Public Key X"
+msgstr "Opinber lykill X"
+
+msgid "Public Key Y"
+msgstr "Opinber lykill Y"
+
+msgid "Raw Text"
+msgstr "Hrátexti"
+
+msgid "Rcm Serial Number"
+msgstr "Raðnúmer Rcm"
+
+msgid "Reason"
+msgstr "Ástæða"
+
+msgid "Record Counts"
+msgstr "Fjöldi færslna"
+
+msgid "Record Index"
+msgstr "Færsluvísir"
+
+msgid "Record Type"
+msgstr "Færslutegund"
+
+msgid "Role"
+msgstr "Hlutverk"
+
+msgid "Seal Data VU"
+msgstr "Innsiglunargögn VU"
+
+msgid "Sensor Approval"
+msgstr "Samþykki skynjara"
+
+msgid "Sensor Daily Records"
+msgstr "Daglegar færslur skynjara"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Raðnúmer GNSS skynjara"
+
+msgid "Sensor Info"
+msgstr "Upplýsingar um skynjara"
+
+msgid "Sensor Pairings"
+msgstr "Pörun skynjara"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Pörun skynjara (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Raðnúmer skynjara"
+
+msgid "Sig Size"
+msgstr "Stærð undirskriftar"
+
+msgid "Signature R"
+msgstr "Undirskrift R"
+
+msgid "Signature S"
+msgstr "Undirskrift S"
+
+msgid "Similar Events Number"
+msgstr "Fjöldi sambærilegra atburða"
+
+msgid "Speed Avg"
+msgstr "Hraði meðal"
+
+msgid "Speed Chart"
+msgstr "Hraðagraf"
+
+msgid "Speed Max"
+msgstr "Hraði hámark"
+
+msgid "Speed Min"
+msgstr "Hraði lágmark"
+
+msgid "Speed Samples"
+msgstr "Hraðasýni"
+
+msgid "Speed Summary"
+msgstr "Hraðasamantekt"
+
+msgid "Speed Valid Count"
+msgstr "Fjöldi gildra hraðasýna"
+
+msgid "Start"
+msgstr "Upphaf"
+
+msgid "Status"
+msgstr "Staða"
+
+msgid "Tag"
+msgstr "Merki"
+
+msgid "VIN At Calibration"
+msgstr "VIN við kvörðun"
+
+msgid "VU Certificates (CVC)"
+msgstr "VU-skirteini (CVC)"
+
+msgid "VU Identifications"
+msgstr "VU-auðkenningar"
+
+msgid "VU Record Array Summary"
+msgstr "Samantekt VU-færslufylkis"
+
+msgid "VU Software Version"
+msgstr "Hugbúnaðarútgáfa VU"
+
+msgid "Valid From"
+msgstr "Gilt frá"
+
+msgid "Valid To"
+msgstr "Gilt til"
+
+msgid "Vehicle Nation"
+msgstr "Þjóð ökutækis"
+
+msgid "Vehicle Odometer Value"
+msgstr "Akstursmælirgildi ökutækis"
+
+msgid "Vehicle Plate"
+msgstr "Númeraplata ökutækis"
+
+msgid "Vehicle Registration"
+msgstr "Skráning ökutækis"
+
+msgid "Vehicle Units Used"
+msgstr "Notaðar ökutækiseiningar"
+
+msgid "Vehicles Used"
+msgstr "Notuð ökutæki"
+
+msgid "W Characteristic Constant"
+msgstr "Einkennandi fasti W"
+
+msgid "W Vehicle Constant"
+msgstr "Fasti ökutækis W"
+
+msgid "Workshop Name"
+msgstr "Heiti verkstæðis"
+
+msgid "CAR Authority"
+msgstr "CAR yfirvald"
+
+msgid "CAR Serial"
+msgstr "CAR raðnúmer"

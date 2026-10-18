@@ -1474,3 +1474,414 @@ msgstr "Darbnīcas kartes derīguma termiņš"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  1. paaudze  [Pielikums 1B]"
+
+msgid "Activity Chart"
+msgstr "Aktivitātes diagramma"
+
+msgid "Authenticated"
+msgstr "Autentificēts"
+
+msgid "Authentication Status"
+msgstr "Autentifikācijas statuss"
+
+msgid "Authorised Speed KMH"
+msgstr "Atļautais ātrums KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Vidējais ātrums KMH"
+
+msgid "Border Crossings"
+msgstr "Robežas šķērsošanas"
+
+msgid "By Default Load Type"
+msgstr "Noklusējuma kravas veids"
+
+msgid "By Default Load Type Label"
+msgstr "Noklusējuma kravas veida apzīmējums"
+
+msgid "Calibration Country"
+msgstr "Kalibrēšanas valsts"
+
+msgid "Calibration Country Timestamp"
+msgstr "Kalibrēšanas valsts laika zīmogs"
+
+msgid "Calibration Purpose"
+msgstr "Kalibrēšanas nolūks"
+
+msgid "Calibration Purpose Label"
+msgstr "Kalibrēšanas nolūka apzīmējums"
+
+msgid "Card Border Crossings"
+msgstr "Kartes robežas šķērsošanas"
+
+msgid "Card Codriver"
+msgstr "Kartes otrais vadītājs"
+
+msgid "Card Download"
+msgstr "Kartes lejupielāde"
+
+msgid "Card Download Records"
+msgstr "Kartes lejupielādes ieraksti"
+
+msgid "Card Extended Serial"
+msgstr "Kartes paplašinātais sērijas numurs"
+
+msgid "Card ICC Identification"
+msgstr "Kartes ICC identifikācija"
+
+msgid "Card Identification"
+msgstr "Kartes identifikācija"
+
+msgid "Card Issuer Identification"
+msgstr "Kartes izdevēja identifikācija"
+
+msgid "Card Load Type Entries"
+msgstr "Kartes kravas veida ieraksti"
+
+msgid "Card Load Unload Operations"
+msgstr "Kartes iekraušanas/izkraušanas darbības"
+
+msgid "Card Nation"
+msgstr "Kartes valsts"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Kartes autentificētā ikdienas darba perioda vieta"
+
+msgid "Card Records"
+msgstr "Kartes ieraksti"
+
+msgid "Card Structure Version"
+msgstr "Kartes struktūras versija"
+
+msgid "Card Type"
+msgstr "Kartes veids"
+
+msgid "Certificate Temporal Validity"
+msgstr "Sertifikāta derīguma laiks"
+
+msgid "Company Holder Data"
+msgstr "Uzņēmuma turētāja dati"
+
+msgid "Company Or Workshop Name"
+msgstr "Uzņēmuma vai darbnīcas nosaukums"
+
+msgid "Consent"
+msgstr "Piekrišana"
+
+msgid "Country Entered"
+msgstr "Iebraukšanas valsts"
+
+msgid "Country Left"
+msgstr "Izbraukšanas valsts"
+
+msgid "Curve"
+msgstr "Līkne"
+
+msgid "Curve Oid"
+msgstr "Līknes OID"
+
+msgid "Daily Summary"
+msgstr "Dienas kopsavilkums"
+
+msgid "Data Size"
+msgstr "Datu izmērs"
+
+msgid "Device ID"
+msgstr "Ierīces ID"
+
+msgid "Distance"
+msgstr "Attālums"
+
+msgid "Download Activities"
+msgstr "Lejupielādes aktivitātes"
+
+msgid "Download Time"
+msgstr "Lejupielādes laiks"
+
+msgid "Downloadable Periods"
+msgstr "Lejupielādējamie periodi"
+
+msgid "Downloading Time"
+msgstr "Lejupielādes brīdis"
+
+msgid "Driver Card Application Identification"
+msgstr "Vadītāja kartes lietojumprogrammas identifikācija"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Vadītāja kartes lietojumprogrammas identifikācija V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Vadītāja kartes turētāja identifikācija"
+
+msgid "Driving Licence Info"
+msgstr "Vadītāja apliecības informācija"
+
+msgid "ECDSA Signature Verification"
+msgstr "ECDSA paraksta pārbaude"
+
+msgid "Event Type Code"
+msgstr "Notikuma veida kods"
+
+msgid "Fault Type Code"
+msgstr "Kļūdas veida kods"
+
+msgid "First Event"
+msgstr "Pirmais notikums"
+
+msgid "GNSS Accumulated Driving"
+msgstr "GNSS uzkrātā braukšana"
+
+msgid "GNSS Accuracy"
+msgstr "GNSS precizitāte"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "GNSS autentificētā uzkrātā braukšana"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS autentificēts"
+
+msgid "GNSS Authentication Status"
+msgstr "GNSS autentifikācijas statuss"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS GNSS precizitāte"
+
+msgid "GNSS Latitude"
+msgstr "GNSS platuma grāds"
+
+msgid "GNSS Longitude"
+msgstr "GNSS garuma grāds"
+
+msgid "GNSS Place"
+msgstr "GNSS vieta"
+
+msgid "GNSS Timestamp"
+msgstr "GNSS laika zīmogs"
+
+msgid "Gen"
+msgstr "Paaudze"
+
+msgid "Hex"
+msgstr "Hex vērtība"
+
+msgid "ICC Chip Identification"
+msgstr "ICC mikroshēmas identifikācija"
+
+msgid "ITS Consents"
+msgstr "ITS piekrišanas"
+
+msgid "Identification"
+msgstr "Identifikācija"
+
+msgid "Is Newest"
+msgstr "Jaunākais"
+
+msgid "Latitude"
+msgstr "Platuma grāds"
+
+msgid "Length"
+msgstr "Garums"
+
+msgid "Load Type"
+msgstr "Kravas veids"
+
+msgid "Longitude"
+msgstr "Garuma grāds"
+
+msgid "Manufacturer Code"
+msgstr "Ražotāja kods"
+
+msgid "Max Downloadable Time"
+msgstr "Maksimālais lejupielādējamais laiks"
+
+msgid "Min Downloadable Time"
+msgstr "Minimālais lejupielādējamais laiks"
+
+msgid "Min Speed KMH"
+msgstr "Minimālais ātrums KMH"
+
+msgid "Nation At Calibration"
+msgstr "Valsts kalibrēšanas brīdī"
+
+msgid "Nation From"
+msgstr "Valsts no"
+
+msgid "Nation To"
+msgstr "Valsts uz"
+
+msgid "New Odometer KM"
+msgstr "Jauns odometrs km"
+
+msgid "Odometer Begin"
+msgstr "Odometrs sākums"
+
+msgid "Odometer End"
+msgstr "Odometrs beigas"
+
+msgid "Offset"
+msgstr "Nobīde"
+
+msgid "Old Odometer"
+msgstr "Vecais odometrs"
+
+msgid "Old Odometer KM"
+msgstr "Vecais odometrs km"
+
+msgid "Operation"
+msgstr "Darbība"
+
+msgid "Pairing Date"
+msgstr "Savienošanas datums"
+
+msgid "Plate At Calibration"
+msgstr "Numura zīme kalibrēšanas brīdī"
+
+msgid "Power Interruptions"
+msgstr "Barošanas pārtraukumi"
+
+msgid "Public Key X"
+msgstr "Publiskā atslēga X"
+
+msgid "Public Key Y"
+msgstr "Publiskā atslēga Y"
+
+msgid "Raw Text"
+msgstr "Neapstrādāts teksts"
+
+msgid "Rcm Serial Number"
+msgstr "RCM sērijas numurs"
+
+msgid "Reason"
+msgstr "Iemesls"
+
+msgid "Record Counts"
+msgstr "Ierakstu skaits"
+
+msgid "Record Index"
+msgstr "Ieraksta indekss"
+
+msgid "Record Type"
+msgstr "Ieraksta veids"
+
+msgid "Role"
+msgstr "Loma"
+
+msgid "Seal Data VU"
+msgstr "VU zīmogs"
+
+msgid "Sensor Approval"
+msgstr "Sensora apstiprinājums"
+
+msgid "Sensor Daily Records"
+msgstr "Sensora dienas ieraksti"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Sensora GNSS sērijas numurs"
+
+msgid "Sensor Info"
+msgstr "Sensora informācija"
+
+msgid "Sensor Pairings"
+msgstr "Sensoru savienojumi"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Sensoru savienojumi (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Sensora sērijas numurs"
+
+msgid "Sig Size"
+msgstr "Paraksta izmērs"
+
+msgid "Signature R"
+msgstr "Paraksts R"
+
+msgid "Signature S"
+msgstr "Paraksts S"
+
+msgid "Similar Events Number"
+msgstr "Līdzīgu notikumu skaits"
+
+msgid "Speed Avg"
+msgstr "Vidējais ātrums"
+
+msgid "Speed Chart"
+msgstr "Ātruma diagramma"
+
+msgid "Speed Max"
+msgstr "Maksimālais ātrums"
+
+msgid "Speed Min"
+msgstr "Minimālais ātrums"
+
+msgid "Speed Samples"
+msgstr "Ātruma paraugi"
+
+msgid "Speed Summary"
+msgstr "Ātruma kopsavilkums"
+
+msgid "Speed Valid Count"
+msgstr "Derīgo ātrumu skaits"
+
+msgid "Start"
+msgstr "Sākums"
+
+msgid "Status"
+msgstr "Statuss"
+
+msgid "Tag"
+msgstr "Tags"
+
+msgid "VIN At Calibration"
+msgstr "VIN kalibrēšanas brīdī"
+
+msgid "VU Certificates (CVC)"
+msgstr "VU sertifikāti (CVC)"
+
+msgid "VU Identifications"
+msgstr "VU identifikācijas"
+
+msgid "VU Record Array Summary"
+msgstr "VU ierakstu masīva kopsavilkums"
+
+msgid "VU Software Version"
+msgstr "VU programmatūras versija"
+
+msgid "Valid From"
+msgstr "Derīga no"
+
+msgid "Valid To"
+msgstr "Derīga līdz"
+
+msgid "Vehicle Nation"
+msgstr "Transportlīdzekļa valsts"
+
+msgid "Vehicle Odometer Value"
+msgstr "Transportlīdzekļa odometra vērtība"
+
+msgid "Vehicle Plate"
+msgstr "Transportlīdzekļa numura zīme"
+
+msgid "Vehicle Registration"
+msgstr "Transportlīdzekļa reģistrācija"
+
+msgid "Vehicle Units Used"
+msgstr "Izmantotās transportlīdzekļa vienības"
+
+msgid "Vehicles Used"
+msgstr "Izmantotie transportlīdzekļi"
+
+msgid "W Characteristic Constant"
+msgstr "W raksturlieluma konstante"
+
+msgid "W Vehicle Constant"
+msgstr "W transportlīdzekļa konstante"
+
+msgid "Workshop Name"
+msgstr "Darbnīcas nosaukums"
+
+msgid "CAR Authority"
+msgstr "CAR iestāde"
+
+msgid "CAR Serial"
+msgstr "CAR sērijas numurs"

@@ -81,7 +81,10 @@ _CODE_LABEL_KEYS = {"trep", "tag_id", "data_type"}
 
 # Acronyms kept upper-case when humanising keys.
 _ACRONYMS = {"vin", "gnss", "vu", "its", "id", "km", "kmh", "iw", "ic", "icc",
-             "rsa", "ecdsa", "msca", "erca", "trep", "ad", "g1", "g2"}
+             "rsa", "ecdsa", "msca", "erca", "trep", "ad", "g1", "g2",
+             # Certificate references: CAR = Certificate Authority Reference,
+             # CHR = Certificate Holder Reference; ALGO = algorithm identifier.
+             "car", "chr", "algo"}
 
 # Section key → export label, in presentation order. Shared by Excel/CSV/PDF.
 EXPORT_SECTIONS = [

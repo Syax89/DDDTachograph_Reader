@@ -1474,3 +1474,414 @@ msgstr "Istek kartice radionice"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Generacija 1  [Dodatak 1B]"
+
+msgid "Activity Chart"
+msgstr "Grafikon aktivnosti"
+
+msgid "Authenticated"
+msgstr "Autentificirano"
+
+msgid "Authentication Status"
+msgstr "Status autentifikacije"
+
+msgid "Authorised Speed KMH"
+msgstr "Dopuštena brzina KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Prosječna brzina KMH"
+
+msgid "Border Crossings"
+msgstr "Prelasci granice"
+
+msgid "By Default Load Type"
+msgstr "Zadana vrsta utovara"
+
+msgid "By Default Load Type Label"
+msgstr "Oznaka zadane vrste utovara"
+
+msgid "Calibration Country"
+msgstr "Država kalibracije"
+
+msgid "Calibration Country Timestamp"
+msgstr "Vremenska oznaka države kalibracije"
+
+msgid "Calibration Purpose"
+msgstr "Namjena kalibracije"
+
+msgid "Calibration Purpose Label"
+msgstr "Oznaka namjene kalibracije"
+
+msgid "Card Border Crossings"
+msgstr "Prelasci granice kartice"
+
+msgid "Card Codriver"
+msgstr "Drugi vozač na kartici"
+
+msgid "Card Download"
+msgstr "Preuzimanje kartice"
+
+msgid "Card Download Records"
+msgstr "Zapisi preuzimanja kartice"
+
+msgid "Card Extended Serial"
+msgstr "Prošireni serijski broj kartice"
+
+msgid "Card ICC Identification"
+msgstr "ICC identifikacija kartice"
+
+msgid "Card Identification"
+msgstr "Identifikacija kartice"
+
+msgid "Card Issuer Identification"
+msgstr "Identifikacija izdavatelja kartice"
+
+msgid "Card Load Type Entries"
+msgstr "Unosi vrste utovara kartice"
+
+msgid "Card Load Unload Operations"
+msgstr "Radnje utovara i istovara kartice"
+
+msgid "Card Nation"
+msgstr "Država kartice"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Mjesto kartice i autentifikacija za dnevno radno razdoblje"
+
+msgid "Card Records"
+msgstr "Zapisi kartice"
+
+msgid "Card Structure Version"
+msgstr "Verzija strukture kartice"
+
+msgid "Card Type"
+msgstr "Vrsta kartice"
+
+msgid "Certificate Temporal Validity"
+msgstr "Vremenska valjanost certifikata"
+
+msgid "Company Holder Data"
+msgstr "Podaci imatelja (tvrtka)"
+
+msgid "Company Or Workshop Name"
+msgstr "Naziv tvrtke ili radionice"
+
+msgid "Consent"
+msgstr "Privola"
+
+msgid "Country Entered"
+msgstr "Država ulaska"
+
+msgid "Country Left"
+msgstr "Država izlaska"
+
+msgid "Curve"
+msgstr "Krivulja"
+
+msgid "Curve Oid"
+msgstr "OID krivulje"
+
+msgid "Daily Summary"
+msgstr "Dnevni sažetak"
+
+msgid "Data Size"
+msgstr "Veličina podataka"
+
+msgid "Device ID"
+msgstr "ID uređaja"
+
+msgid "Distance"
+msgstr "Udaljenost"
+
+msgid "Download Activities"
+msgstr "Aktivnosti preuzimanja"
+
+msgid "Download Time"
+msgstr "Vrijeme preuzimanja"
+
+msgid "Downloadable Periods"
+msgstr "Razdoblja za preuzimanje"
+
+msgid "Downloading Time"
+msgstr "Trajanje preuzimanja"
+
+msgid "Driver Card Application Identification"
+msgstr "Identifikacija aplikacije kartice vozača"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Identifikacija aplikacije kartice vozača V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Identifikacija imatelja kartice vozača"
+
+msgid "Driving Licence Info"
+msgstr "Podaci o vozačkoj dozvoli"
+
+msgid "ECDSA Signature Verification"
+msgstr "Provjera potpisa ECDSA"
+
+msgid "Event Type Code"
+msgstr "Kôd vrste događaja"
+
+msgid "Fault Type Code"
+msgstr "Kôd vrste kvara"
+
+msgid "First Event"
+msgstr "Prvi događaj"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Akumulirano vrijeme vožnje po GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Točnost GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Autentificirano akumulirano vrijeme vožnje po GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS autentificirano"
+
+msgid "GNSS Authentication Status"
+msgstr "Status autentifikacije GNSS"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS točnost GNSS"
+
+msgid "GNSS Latitude"
+msgstr "GNSS geografska širina"
+
+msgid "GNSS Longitude"
+msgstr "GNSS geografska dužina"
+
+msgid "GNSS Place"
+msgstr "Mjesto GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Vremenska oznaka GNSS"
+
+msgid "Gen"
+msgstr "Generacija"
+
+msgid "Hex"
+msgstr "Heks"
+
+msgid "ICC Chip Identification"
+msgstr "ICC identifikacija čipa"
+
+msgid "ITS Consents"
+msgstr "ITS privole"
+
+msgid "Identification"
+msgstr "Identifikacija"
+
+msgid "Is Newest"
+msgstr "Najnoviji"
+
+msgid "Latitude"
+msgstr "Geografska širina"
+
+msgid "Length"
+msgstr "Duljina"
+
+msgid "Load Type"
+msgstr "Vrsta utovara"
+
+msgid "Longitude"
+msgstr "Geografska dužina"
+
+msgid "Manufacturer Code"
+msgstr "Kôd proizvođača"
+
+msgid "Max Downloadable Time"
+msgstr "Najdulje vrijeme za preuzimanje"
+
+msgid "Min Downloadable Time"
+msgstr "Najkraće vrijeme za preuzimanje"
+
+msgid "Min Speed KMH"
+msgstr "Najmanja brzina KMH"
+
+msgid "Nation At Calibration"
+msgstr "Država pri kalibraciji"
+
+msgid "Nation From"
+msgstr "Država od"
+
+msgid "Nation To"
+msgstr "Država do"
+
+msgid "New Odometer KM"
+msgstr "Novi odometar KM"
+
+msgid "Odometer Begin"
+msgstr "Odometar na početku"
+
+msgid "Odometer End"
+msgstr "Odometar na kraju"
+
+msgid "Offset"
+msgstr "Pomak"
+
+msgid "Old Odometer"
+msgstr "Stari odometar"
+
+msgid "Old Odometer KM"
+msgstr "Stari odometar KM"
+
+msgid "Operation"
+msgstr "Radnja"
+
+msgid "Pairing Date"
+msgstr "Datum uparivanja"
+
+msgid "Plate At Calibration"
+msgstr "Registarska oznaka pri kalibraciji"
+
+msgid "Power Interruptions"
+msgstr "Prekidi napajanja"
+
+msgid "Public Key X"
+msgstr "Javni ključ X"
+
+msgid "Public Key Y"
+msgstr "Javni ključ Y"
+
+msgid "Raw Text"
+msgstr "Neobrađeni tekst"
+
+msgid "Rcm Serial Number"
+msgstr "Serijski broj RCM"
+
+msgid "Reason"
+msgstr "Razlog"
+
+msgid "Record Counts"
+msgstr "Brojevi zapisa"
+
+msgid "Record Index"
+msgstr "Indeks zapisa"
+
+msgid "Record Type"
+msgstr "Vrsta zapisa"
+
+msgid "Role"
+msgstr "Uloga"
+
+msgid "Seal Data VU"
+msgstr "Podaci plombe VU"
+
+msgid "Sensor Approval"
+msgstr "Homologacija senzora"
+
+msgid "Sensor Daily Records"
+msgstr "Dnevni zapisi senzora"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Serijski broj GNSS senzora"
+
+msgid "Sensor Info"
+msgstr "Podaci o senzoru"
+
+msgid "Sensor Pairings"
+msgstr "Uparivanja senzora"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Uparivanja senzora (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Serijski broj senzora"
+
+msgid "Sig Size"
+msgstr "Veličina potpisa"
+
+msgid "Signature R"
+msgstr "Potpis R"
+
+msgid "Signature S"
+msgstr "Potpis S"
+
+msgid "Similar Events Number"
+msgstr "Broj sličnih događaja"
+
+msgid "Speed Avg"
+msgstr "Prosječna brzina"
+
+msgid "Speed Chart"
+msgstr "Grafikon brzine"
+
+msgid "Speed Max"
+msgstr "Najveća brzina"
+
+msgid "Speed Min"
+msgstr "Najmanja brzina"
+
+msgid "Speed Samples"
+msgstr "Uzorci brzine"
+
+msgid "Speed Summary"
+msgstr "Sažetak brzine"
+
+msgid "Speed Valid Count"
+msgstr "Broj valjanih uzoraka"
+
+msgid "Start"
+msgstr "Početak"
+
+msgid "Status"
+msgstr "Stanje"
+
+msgid "Tag"
+msgstr "Oznaka"
+
+msgid "VIN At Calibration"
+msgstr "VIN pri kalibraciji"
+
+msgid "VU Certificates (CVC)"
+msgstr "Certifikati VU (CVC)"
+
+msgid "VU Identifications"
+msgstr "Identifikacije VU"
+
+msgid "VU Record Array Summary"
+msgstr "Sažetak polja zapisa VU"
+
+msgid "VU Software Version"
+msgstr "Verzija softvera VU"
+
+msgid "Valid From"
+msgstr "Valjano od"
+
+msgid "Valid To"
+msgstr "Valjano do"
+
+msgid "Vehicle Nation"
+msgstr "Država vozila"
+
+msgid "Vehicle Odometer Value"
+msgstr "Vrijednost odometra vozila"
+
+msgid "Vehicle Plate"
+msgstr "Registarska oznaka vozila"
+
+msgid "Vehicle Registration"
+msgstr "Registracija vozila"
+
+msgid "Vehicle Units Used"
+msgstr "Korištene jedinice vozila"
+
+msgid "Vehicles Used"
+msgstr "Korištena vozila"
+
+msgid "W Characteristic Constant"
+msgstr "Konstanta karakteristike W"
+
+msgid "W Vehicle Constant"
+msgstr "Konstanta W vozila"
+
+msgid "Workshop Name"
+msgstr "Naziv radionice"
+
+msgid "CAR Authority"
+msgstr "Tijelo CAR"
+
+msgid "CAR Serial"
+msgstr "Serijski broj CAR"

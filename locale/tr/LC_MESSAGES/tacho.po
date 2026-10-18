@@ -1474,3 +1474,414 @@ msgstr "Atölye kartı geçerliliği"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Nesil 1  [Ek 1B]"
+
+msgid "Activity Chart"
+msgstr "Etkinlik grafiği"
+
+msgid "Authenticated"
+msgstr "Kimliği doğrulandı"
+
+msgid "Authentication Status"
+msgstr "Kimlik doğrulama durumu"
+
+msgid "Authorised Speed KMH"
+msgstr "İzin verilen hız KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Ortalama hız KMH"
+
+msgid "Border Crossings"
+msgstr "Sınır geçişleri"
+
+msgid "By Default Load Type"
+msgstr "Varsayılan yük tipi"
+
+msgid "By Default Load Type Label"
+msgstr "Varsayılan yük tipi etiketi"
+
+msgid "Calibration Country"
+msgstr "Kalibrasyon ülkesi"
+
+msgid "Calibration Country Timestamp"
+msgstr "Kalibrasyon ülkesi zaman damgası"
+
+msgid "Calibration Purpose"
+msgstr "Kalibrasyon amacı"
+
+msgid "Calibration Purpose Label"
+msgstr "Kalibrasyon amacı etiketi"
+
+msgid "Card Border Crossings"
+msgstr "Kart sınır geçişleri"
+
+msgid "Card Codriver"
+msgstr "İkinci sürücü kartı"
+
+msgid "Card Download"
+msgstr "Kart indirme"
+
+msgid "Card Download Records"
+msgstr "Kart indirme kayıtları"
+
+msgid "Card Extended Serial"
+msgstr "Genişletilmiş kart seri numarası"
+
+msgid "Card ICC Identification"
+msgstr "Kart ICC kimliği"
+
+msgid "Card Identification"
+msgstr "Kart kimliği"
+
+msgid "Card Issuer Identification"
+msgstr "Kart düzenleyici kimliği"
+
+msgid "Card Load Type Entries"
+msgstr "Kart yük tipi girişleri"
+
+msgid "Card Load Unload Operations"
+msgstr "Kart yükleme/boşaltma işlemleri"
+
+msgid "Card Nation"
+msgstr "Kart ülkesi"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Günlük çalışma dönemi onay yeri"
+
+msgid "Card Records"
+msgstr "Kart kayıtları"
+
+msgid "Card Structure Version"
+msgstr "Kart yapısı sürümü"
+
+msgid "Card Type"
+msgstr "Kart tipi"
+
+msgid "Certificate Temporal Validity"
+msgstr "Sertifika geçerlilik süresi"
+
+msgid "Company Holder Data"
+msgstr "Şirket sahibi verileri"
+
+msgid "Company Or Workshop Name"
+msgstr "Şirket veya atölye adı"
+
+msgid "Consent"
+msgstr "Onay"
+
+msgid "Country Entered"
+msgstr "Girilen ülke"
+
+msgid "Country Left"
+msgstr "Çıkılan ülke"
+
+msgid "Curve"
+msgstr "Eğri"
+
+msgid "Curve Oid"
+msgstr "Eğri Oid"
+
+msgid "Daily Summary"
+msgstr "Günlük özet"
+
+msgid "Data Size"
+msgstr "Veri boyutu"
+
+msgid "Device ID"
+msgstr "Cihaz ID"
+
+msgid "Distance"
+msgstr "Mesafe"
+
+msgid "Download Activities"
+msgstr "İndirme etkinlikleri"
+
+msgid "Download Time"
+msgstr "İndirme zamanı"
+
+msgid "Downloadable Periods"
+msgstr "İndirilebilir dönemler"
+
+msgid "Downloading Time"
+msgstr "İndirme süresi"
+
+msgid "Driver Card Application Identification"
+msgstr "Sürücü kartı uygulama kimliği"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Sürücü kartı uygulama kimliği V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Sürücü kartı sahibi kimliği"
+
+msgid "Driving Licence Info"
+msgstr "Sürücü belgesi bilgileri"
+
+msgid "ECDSA Signature Verification"
+msgstr "ECDSA imza doğrulaması"
+
+msgid "Event Type Code"
+msgstr "Olay tipi kodu"
+
+msgid "Fault Type Code"
+msgstr "Arıza tipi kodu"
+
+msgid "First Event"
+msgstr "İlk olay"
+
+msgid "GNSS Accumulated Driving"
+msgstr "GNSS birikimli sürüş"
+
+msgid "GNSS Accuracy"
+msgstr "GNSS doğruluğu"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "GNSS doğrulanmış birikimli sürüş"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS kimliği doğrulandı"
+
+msgid "GNSS Authentication Status"
+msgstr "GNSS kimlik doğrulama durumu"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS GNSS doğruluğu"
+
+msgid "GNSS Latitude"
+msgstr "GNSS enlemi"
+
+msgid "GNSS Longitude"
+msgstr "GNSS boylamı"
+
+msgid "GNSS Place"
+msgstr "GNSS yeri"
+
+msgid "GNSS Timestamp"
+msgstr "GNSS zaman damgası"
+
+msgid "Gen"
+msgstr "Nesil"
+
+msgid "Hex"
+msgstr "HEX"
+
+msgid "ICC Chip Identification"
+msgstr "ICC çip kimliği"
+
+msgid "ITS Consents"
+msgstr "ITS onayları"
+
+msgid "Identification"
+msgstr "Kimlik"
+
+msgid "Is Newest"
+msgstr "En yeni"
+
+msgid "Latitude"
+msgstr "Enlem"
+
+msgid "Length"
+msgstr "Uzunluk"
+
+msgid "Load Type"
+msgstr "Yük tipi"
+
+msgid "Longitude"
+msgstr "Boylam"
+
+msgid "Manufacturer Code"
+msgstr "Üretici kodu"
+
+msgid "Max Downloadable Time"
+msgstr "En uzun indirilebilir süre"
+
+msgid "Min Downloadable Time"
+msgstr "En kısa indirilebilir süre"
+
+msgid "Min Speed KMH"
+msgstr "Minimum hız KMH"
+
+msgid "Nation At Calibration"
+msgstr "Kalibrasyondaki ülke"
+
+msgid "Nation From"
+msgstr "Kaynak ülke"
+
+msgid "Nation To"
+msgstr "Hedef ülke"
+
+msgid "New Odometer KM"
+msgstr "Yeni odometre KM"
+
+msgid "Odometer Begin"
+msgstr "Odometre başlangıcı"
+
+msgid "Odometer End"
+msgstr "Odometre bitişi"
+
+msgid "Offset"
+msgstr "Ofset"
+
+msgid "Old Odometer"
+msgstr "Eski odometre"
+
+msgid "Old Odometer KM"
+msgstr "Eski odometre KM"
+
+msgid "Operation"
+msgstr "İşlem"
+
+msgid "Pairing Date"
+msgstr "Eşleştirme tarihi"
+
+msgid "Plate At Calibration"
+msgstr "Kalibrasyondaki plaka"
+
+msgid "Power Interruptions"
+msgstr "Elektrik kesintileri"
+
+msgid "Public Key X"
+msgstr "Açık anahtar X"
+
+msgid "Public Key Y"
+msgstr "Açık anahtar Y"
+
+msgid "Raw Text"
+msgstr "Ham metin"
+
+msgid "Rcm Serial Number"
+msgstr "Rcm seri numarası"
+
+msgid "Reason"
+msgstr "Neden"
+
+msgid "Record Counts"
+msgstr "Kayıt sayıları"
+
+msgid "Record Index"
+msgstr "Kayıt dizini"
+
+msgid "Record Type"
+msgstr "Kayıt tipi"
+
+msgid "Role"
+msgstr "Rol"
+
+msgid "Seal Data VU"
+msgstr "VU mühür verileri"
+
+msgid "Sensor Approval"
+msgstr "Sensör onayı"
+
+msgid "Sensor Daily Records"
+msgstr "Sensör günlük kayıtları"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Sensör GNSS seri numarası"
+
+msgid "Sensor Info"
+msgstr "Sensör bilgileri"
+
+msgid "Sensor Pairings"
+msgstr "Sensör eşleştirmeleri"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Sensör eşleştirmeleri (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Sensör seri numarası"
+
+msgid "Sig Size"
+msgstr "İmza boyutu"
+
+msgid "Signature R"
+msgstr "İmza R"
+
+msgid "Signature S"
+msgstr "İmza S"
+
+msgid "Similar Events Number"
+msgstr "Benzer olay sayısı"
+
+msgid "Speed Avg"
+msgstr "Hız ortalama"
+
+msgid "Speed Chart"
+msgstr "Hız grafiği"
+
+msgid "Speed Max"
+msgstr "Hız maksimum"
+
+msgid "Speed Min"
+msgstr "Hız minimum"
+
+msgid "Speed Samples"
+msgstr "Hız örnekleri"
+
+msgid "Speed Summary"
+msgstr "Hız özeti"
+
+msgid "Speed Valid Count"
+msgstr "Geçerli hız örneği sayısı"
+
+msgid "Start"
+msgstr "Başlangıç"
+
+msgid "Status"
+msgstr "Durum"
+
+msgid "Tag"
+msgstr "Etiket"
+
+msgid "VIN At Calibration"
+msgstr "Kalibrasyondaki VIN"
+
+msgid "VU Certificates (CVC)"
+msgstr "VU sertifikaları (CVC)"
+
+msgid "VU Identifications"
+msgstr "VU kimlikleri"
+
+msgid "VU Record Array Summary"
+msgstr "VU kayıt dizisi özeti"
+
+msgid "VU Software Version"
+msgstr "VU yazılım sürümü"
+
+msgid "Valid From"
+msgstr "Geçerlilik başlangıcı"
+
+msgid "Valid To"
+msgstr "Geçerlilik bitişi"
+
+msgid "Vehicle Nation"
+msgstr "Araç ülkesi"
+
+msgid "Vehicle Odometer Value"
+msgstr "Araç odometre değeri"
+
+msgid "Vehicle Plate"
+msgstr "Araç plakası"
+
+msgid "Vehicle Registration"
+msgstr "Araç tescil"
+
+msgid "Vehicle Units Used"
+msgstr "Kullanılan araç birimleri"
+
+msgid "Vehicles Used"
+msgstr "Kullanılan araçlar"
+
+msgid "W Characteristic Constant"
+msgstr "W karakteristik sabiti"
+
+msgid "W Vehicle Constant"
+msgstr "W araç sabiti"
+
+msgid "Workshop Name"
+msgstr "Atölye adı"
+
+msgid "CAR Authority"
+msgstr "CAR otoritesi"
+
+msgid "CAR Serial"
+msgstr "CAR seri numarası"
