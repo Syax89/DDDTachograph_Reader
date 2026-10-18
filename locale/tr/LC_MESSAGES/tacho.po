@@ -656,6 +656,9 @@ msgstr "Aşırı hız"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Aşırı hız: {start} → {end} | maks {max_speed} | ort {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "DDD dosyası aç"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Güç kesintileri"
 
 msgid "Ready — open a .ddd file"
 msgstr "Hazır — bir .ddd dosyası açın"
+
+msgid "Recent files"
+msgstr "Son dosyalar"
 
 msgid "Rendering Error"
 msgstr "Görüntüleme hatası"
@@ -2003,6 +2009,9 @@ msgstr "Kuzey Makedonya"
 msgid "Norway"
 msgstr "Norveç"
 
+msgid "Nothing to open in that drop"
+msgstr "Bu bırakmada açılacak bir şey yok"
+
 msgid "Poland"
 msgstr "Polonya"
 
@@ -2020,6 +2029,9 @@ msgstr "San Marino"
 
 msgid "Serbia"
 msgstr "Sırbistan"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Birden fazla dosya bırakıldı — ilki açıldı"
 
 msgid "Slovakia"
 msgstr "Slovakya"
@@ -2056,3 +2068,6 @@ msgstr "Dünya"
 
 msgid "Yugoslavia"
 msgstr "Yugoslavya"
+
+msgid "or drop it here"
+msgstr "veya dosyayı buraya bırakın"

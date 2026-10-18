@@ -656,6 +656,9 @@ msgstr "Пречекорување на брзината"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Пречекорување на брзината: {start} → {end} | макс. {max_speed} | просек {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Отвори DDD-датотека"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Прекини на напојување"
 
 msgid "Ready — open a .ddd file"
 msgstr "Подготвено — отворете .ddd датотека"
+
+msgid "Recent files"
+msgstr "Неодамнешни датотеки"
 
 msgid "Rendering Error"
 msgstr "Грешка при прикажување"
@@ -2003,6 +2009,9 @@ msgstr "Северна Македонија"
 msgid "Norway"
 msgstr "Норвешка"
 
+msgid "Nothing to open in that drop"
+msgstr "Нема што да се отвори во ова пуштање"
+
 msgid "Poland"
 msgstr "Полска"
 
@@ -2020,6 +2029,9 @@ msgstr "Сан Марино"
 
 msgid "Serbia"
 msgstr "Србија"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Пуштени се повеќе датотеки — отворена е првата"
 
 msgid "Slovakia"
 msgstr "Словачка"
@@ -2056,3 +2068,6 @@ msgstr "Свет"
 
 msgid "Yugoslavia"
 msgstr "Југославија"
+
+msgid "or drop it here"
+msgstr "или пуштете ја датотеката тука"

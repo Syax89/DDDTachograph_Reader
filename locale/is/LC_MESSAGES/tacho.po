@@ -656,6 +656,9 @@ msgstr "Ofhraði"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Ofhraði: {start} → {end} | hámark {max_speed} | meðal {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Opna DDD-skrá"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Rof í rafveitu"
 
 msgid "Ready — open a .ddd file"
 msgstr "Tilbúið — opnaðu .ddd skrá"
+
+msgid "Recent files"
+msgstr "Nýlegar skrár"
 
 msgid "Rendering Error"
 msgstr "Villa við birtingu"
@@ -2003,6 +2009,9 @@ msgstr "Norður-Makedónía"
 msgid "Norway"
 msgstr "Noregur"
 
+msgid "Nothing to open in that drop"
+msgstr "Ekkert til að opna í þessari sleppingu"
+
 msgid "Poland"
 msgstr "Pólland"
 
@@ -2020,6 +2029,9 @@ msgstr "San Marínó"
 
 msgid "Serbia"
 msgstr "Serbía"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Nokkrum skrám sleppt — fyrsta var opnuð"
 
 msgid "Slovakia"
 msgstr "Slóvakía"
@@ -2056,3 +2068,6 @@ msgstr "Heimur"
 
 msgid "Yugoslavia"
 msgstr "Júgóslavía"
+
+msgid "or drop it here"
+msgstr "eða slepptu skránni hér"

@@ -656,6 +656,9 @@ msgstr "Depășire viteză"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Depășire viteză: {start} → {end} | max {max_speed} | medie {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Deschide un fișier DDD"
+
 msgid "PDF (.pdf)"
 msgstr "Fișier PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Întreruperi alimentare"
 
 msgid "Ready — open a .ddd file"
 msgstr "Pregătit — deschideți un fișier .ddd"
+
+msgid "Recent files"
+msgstr "Fișiere recente"
 
 msgid "Rendering Error"
 msgstr "Eroare de afișare"
@@ -2003,6 +2009,9 @@ msgstr "Macedonia de Nord"
 msgid "Norway"
 msgstr "Norvegia"
 
+msgid "Nothing to open in that drop"
+msgstr "Nimic de deschis în această plasare"
+
 msgid "Poland"
 msgstr "Polonia"
 
@@ -2020,6 +2029,9 @@ msgstr "San Marino"
 
 msgid "Serbia"
 msgstr "Serbia"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Au fost plasate mai multe fișiere — a fost deschis primul"
 
 msgid "Slovakia"
 msgstr "Slovacia"
@@ -2056,3 +2068,6 @@ msgstr "Lumea"
 
 msgid "Yugoslavia"
 msgstr "Iugoslavia"
+
+msgid "or drop it here"
+msgstr "sau plasați fișierul aici"

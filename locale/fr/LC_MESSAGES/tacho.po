@@ -656,6 +656,9 @@ msgstr "Excès de vitesse"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Excès de vitesse : {start} → {end} | max {max_speed} | moy. {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Ouvrir un fichier DDD"
+
 msgid "PDF (.pdf)"
 msgstr "Format PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Coupures d'alimentation"
 
 msgid "Ready — open a .ddd file"
 msgstr "Prêt — ouvrez un fichier .ddd"
+
+msgid "Recent files"
+msgstr "Fichiers récents"
 
 msgid "Rendering Error"
 msgstr "Erreur d'affichage"
@@ -2003,6 +2009,9 @@ msgstr "Macédoine du Nord"
 msgid "Norway"
 msgstr "Norvège"
 
+msgid "Nothing to open in that drop"
+msgstr "Rien à ouvrir dans ce dépôt"
+
 msgid "Poland"
 msgstr "Pologne"
 
@@ -2020,6 +2029,9 @@ msgstr "Saint-Marin"
 
 msgid "Serbia"
 msgstr "Serbie"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Plusieurs fichiers déposés — le premier a été ouvert"
 
 msgid "Slovakia"
 msgstr "Slovaquie"
@@ -2056,3 +2068,6 @@ msgstr "Monde"
 
 msgid "Yugoslavia"
 msgstr "Yougoslavie"
+
+msgid "or drop it here"
+msgstr "ou déposez le fichier ici"

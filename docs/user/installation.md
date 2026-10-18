@@ -36,10 +36,11 @@ pip install -r requirements.txt
 | `cryptography` | Digital signature verification (ERCA/MSCA certificate chain) |
 | `reportlab` | PDF report generation |
 | `openpyxl` | Excel file export (.xlsx) |
+| `tkinterdnd2` | Dropping a `.ddd` file onto the window (optional: the GUI starts without it, DnD disabled) |
 | `pytest` | Test suite (development only) |
 | `pyinstaller` | Building the standalone executable (development only) |
 
-The GUI uses Python's built-in `tkinter` — no extra GUI package is required. Parsing itself has **no third-party dependencies**: `cryptography`, `reportlab`, and `openpyxl` are only needed for signature verification and PDF/Excel export.
+The GUI is built on Python's built-in `tkinter`; the only extra GUI package is the optional `tkinterdnd2`, which adds drag & drop of a file onto the window and is disabled silently when it (or its platform binary) is unavailable. Parsing itself has **no third-party dependencies**: `cryptography`, `reportlab`, and `openpyxl` are only needed for signature verification and PDF/Excel export.
 
 **Python 3.10 or later is required.**
 

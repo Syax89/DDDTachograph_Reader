@@ -656,6 +656,9 @@ msgstr "Υπερβολική ταχύτητα"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Υπερβολική ταχύτητα: {start} → {end} | μέγ. {max_speed} | μέση {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Άνοιγμα αρχείου DDD"
+
 msgid "PDF (.pdf)"
 msgstr "Μορφότυπο PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Διακοπές τροφοδοσίας"
 
 msgid "Ready — open a .ddd file"
 msgstr "Έτοιμο — ανοίξτε αρχείο .ddd"
+
+msgid "Recent files"
+msgstr "Πρόσφατα αρχεία"
 
 msgid "Rendering Error"
 msgstr "Σφάλμα απόδοσης"
@@ -2003,6 +2009,9 @@ msgstr "Βόρεια Μακεδονία"
 msgid "Norway"
 msgstr "Νορβηγία"
 
+msgid "Nothing to open in that drop"
+msgstr "Δεν υπάρχει αρχείο για άνοιγμα σε αυτή την απόθεση"
+
 msgid "Poland"
 msgstr "Πολωνία"
 
@@ -2020,6 +2029,9 @@ msgstr "Σαν Μαρίνο"
 
 msgid "Serbia"
 msgstr "Σερβία"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Αποθέσηκαν πολλά αρχεία — άνοιξε το πρώτο"
 
 msgid "Slovakia"
 msgstr "Σλοβακία"
@@ -2056,3 +2068,6 @@ msgstr "Κόσμος"
 
 msgid "Yugoslavia"
 msgstr "Γιουγκοσλαβία"
+
+msgid "or drop it here"
+msgstr "ή σύρετε το αρχείο εδώ"

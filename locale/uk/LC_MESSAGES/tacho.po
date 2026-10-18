@@ -656,6 +656,9 @@ msgstr "Перевищення швидкості"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Перевищення швидкості: {start} → {end} | макс. {max_speed} | середн. {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Відкрити файл DDD"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Переривання живлення"
 
 msgid "Ready — open a .ddd file"
 msgstr "Готово — відкрийте файл .ddd"
+
+msgid "Recent files"
+msgstr "Останні файли"
 
 msgid "Rendering Error"
 msgstr "Помилка відображення"
@@ -2003,6 +2009,9 @@ msgstr "Північна Македонія"
 msgid "Norway"
 msgstr "Норвегія"
 
+msgid "Nothing to open in that drop"
+msgstr "У цьому перетягуванні немає файлу для відкриття"
+
 msgid "Poland"
 msgstr "Польща"
 
@@ -2020,6 +2029,9 @@ msgstr "Сан-Марино"
 
 msgid "Serbia"
 msgstr "Сербія"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Перетягнуто кілька файлів — відкрито перший"
 
 msgid "Slovakia"
 msgstr "Словаччина"
@@ -2056,3 +2068,6 @@ msgstr "Світ"
 
 msgid "Yugoslavia"
 msgstr "Югославія"
+
+msgid "or drop it here"
+msgstr "або перетягніть файл сюди"
