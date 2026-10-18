@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: lt\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (nėra)"
+
+msgid "  Ability"
+msgstr "  Gebėjimas"
+
+msgid "  Activity changes"
+msgstr "  Aktyvumo pokyčiai"
+
+msgid "  Actual range"
+msgstr "  Faktinis atstumas"
+
+msgid "  Address"
+msgstr "  Adresas"
+
+msgid "  Approval"
+msgstr "  Patvirtinimas"
+
+msgid "  Authorised speed"
+msgstr "  Leidžiamas greitis"
+
+msgid "  Avg speed"
+msgstr "  Vidutinis greitis"
+
+msgid "  Birth date"
+msgstr "  Gimimo data"
+
+msgid "  Card downloads"
+msgstr "  Kortelės atsisiuntimai"
+
+msgid "  Card number"
+msgstr "  Kortelės numeris"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Kortelė įdėta: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Įmonė"
+
+msgid "  Days recorded"
+msgstr "  Įrašytos dienos"
+
+msgid "  Days with activities"
+msgstr "  Dienos su veiklos įrašais"
+
+msgid "  Days with activity"
+msgstr "  Dienos su veikla"
+
+msgid "  Digital map"
+msgstr "  Skaitmeninis žemėlapis"
+
+msgid "  Distance"
+msgstr "  Atstumas"
+
+msgid "  EF verification"
+msgstr "  EF patikra"
+
+msgid "  Events"
+msgstr "  Įvykiai"
+
+msgid "  Expiry date"
+msgstr "  Galiojimo pabaigos data"
+
+msgid "  Faults"
+msgstr "  Gedimai"
+
+msgid "  File structure"
+msgstr "  Failo struktūra"
+
+msgid "  First date"
+msgstr "  Pirmoji data"
+
+msgid "  GNSS Serial"
+msgstr "  GNSS serijos numeris"
+
+msgid "  Generation"
+msgstr "  Karta"
+
+msgid "  Issue date"
+msgstr "  Išdavimo data"
+
+msgid "  Issuing authority"
+msgstr "  Išdavusi institucija"
+
+msgid "  Issuing nation"
+msgstr "  Išdavusi šalis"
+
+msgid "  Language"
+msgstr "  Kalba"
+
+msgid "  Last date"
+msgstr "  Paskutinė data"
+
+msgid "  Licence number"
+msgstr "  Vairuotojo pažymėjimo numeris"
+
+msgid "  Lock card"
+msgstr "  Užrakinti kortelę"
+
+msgid "  Locked since"
+msgstr "  Užrakinta nuo"
+
+msgid "  Low-confidence recovery"
+msgstr "  Mažo patikimumo atkūrimas"
+
+msgid "  Make"
+msgstr "  Markė"
+
+msgid "  Mandatory sections read"
+msgstr "  Privalomi skyriai nuskaityti"
+
+msgid "  Manufactured"
+msgstr "  Pagaminta"
+
+msgid "  Manufacturer"
+msgstr "  Gamintojas"
+
+msgid "  Max speed"
+msgstr "  Didžiausias greitis"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Trūkstami arba sugadinti duomenys NERODOMI."
+
+msgid "  Name"
+msgstr "  Pavadinimas"
+
+msgid "  Nation"
+msgstr "  Šalis"
+
+msgid "  Next calibration"
+msgstr "  Kita kalibracija"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Nuskaityti pavyko tik žemiau išvardytus skyrius."
+
+msgid "  Paired"
+msgstr "  Susieta pora"
+
+msgid "  Part number"
+msgstr "  Dalies numeris"
+
+msgid "  Plate"
+msgstr "  Valstybinis numeris"
+
+msgid "  Prefix"
+msgstr "  Priešdėlis"
+
+msgid "  Registration"
+msgstr "  Registracija"
+
+msgid "  SW installed"
+msgstr "  Įdiegta programinė įranga"
+
+msgid "  Sensor approval"
+msgstr "  Jutiklio patvirtinimas"
+
+msgid "  Sensor paired"
+msgstr "  Jutiklis susietas"
+
+msgid "  Sensor serial"
+msgstr "  Jutiklio serijos numeris"
+
+msgid "  Serial"
+msgstr "  Serijos numeris"
+
+msgid "  Serial number"
+msgstr "  Serijos numeris"
+
+msgid "  Software version"
+msgstr "  Programinės įrangos versija"
+
+msgid "  Status"
+msgstr "  Būsena"
+
+msgid "  Tyre size"
+msgstr "  Padangos dydis"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Galioja nuo"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% failo"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Terminas po {days} d."
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ NEGALIOJA (prieš {days} d.)"
+
+msgid "# Drivers"
+msgstr "# Vairuotojai"
+
+msgid "# Vehicles"
+msgstr "# Transporto priemonės"
+
+msgid "(no changes)"
+msgstr "(pakeitimų nėra)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(ne semantinis dekodavimo lygis)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Veikla"
+
+msgid "Activity Timeline\n"
+msgstr "Veiklos laiko juosta\n"
+
+msgid "All Files"
+msgstr "Visi failai"
+
+msgid "All TREP signatures valid"
+msgstr "Visi TREP parašai galioja"
+
+msgid "All signatures verified"
+msgstr "Visi parašai patikrinti"
+
+msgid "Anchored to ERCA root"
+msgstr "Susieta su ERCA šaknimi"
+
+msgid "Annex 1B"
+msgstr "Priedas 1B"
+
+msgid "Annex 1C"
+msgstr "Priedas 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Priedas 1C · 2023/980"
+
+msgid "App version"
+msgstr "Programos versija"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "11 priedėlis · CAR=išdavusi institucija, CHR=turėtojas, galiojimas nuo TimeReal"
+
+msgid "Apr"
+msgstr "Bal"
+
+msgid "Aug"
+msgstr "Rugp"
+
+msgid "Available"
+msgstr "Prieinama"
+
+msgid "Avg Drive / day"
+msgstr "Vid. vairavimas / d."
+
+msgid "Avg km/h"
+msgstr "Vid. km/h"
+
+msgid "Avg speed"
+msgstr "Vidutinis greitis"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Vid. {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "BER-TLV peržiūra · spec. 11 priedėlis neskelbiamas"
+
+msgid "Border crossing"
+msgstr "Sienos kirtimas"
+
+msgid "Border crossings"
+msgstr "Sienos kirtimai"
+
+msgid "Byte-accounted coverage"
+msgstr "Baitų apskaitos aprėptis"
+
+msgid "CSV (.csv)"
+msgstr "CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "CSV failai"
+
+msgid "CVC Certificates (decoded)"
+msgstr "CVC sertifikatai (dekoduoti)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Kortelės nėra tachografe nuo {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Kortelės duomenų parašas nesutampa"
+
+msgid "Card inserted"
+msgstr "Kortelė įdėta"
+
+msgid "Card not inserted"
+msgstr "Kortelė neįdėta"
+
+msgid "Card signing key not trusted"
+msgstr "Kortelės pasirašymo raktas nepatikimas"
+
+msgid "Card withdrawn"
+msgstr "Kortelė išimta"
+
+msgid "Cardholder"
+msgstr "Kortelės turėtojas"
+
+msgid "Certificate chain invalid"
+msgstr "Sertifikatų grandinė negalioja"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Sertifikatų grandinė nesusieta su patikima šaknimi"
+
+msgid "Certificates"
+msgstr "Sertifikatai"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Sąlyga: {condition}"
+
+msgid "Conditions"
+msgstr "Sąlygos"
+
+msgid "Could not save the language setting."
+msgstr "Kalbos nuostatos išsaugoti nepavyko."
+
+msgid "Crew"
+msgstr "Įgula"
+
+msgid "DDD Files"
+msgstr "DDD failai"
+
+msgid "Daily Activities"
+msgstr "Dienos veikla"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Dienos veikla - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Dienos veikla {date}"
+
+msgid "Daily Detail"
+msgstr "Dienos detalės"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Dienos detalės — {day} (UTC)"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Days"
+msgstr "Dienos"
+
+msgid "Dec"
+msgstr "Gruod"
+
+msgid "Decoder failures"
+msgstr "Dekoderio klaidos"
+
+msgid "Detailed Speed"
+msgstr "Išsamus greitis"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Išsamus greitis - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Išsamus greitis {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Atstumas: {km} km"
+
+msgid "Drive"
+msgstr "Vairavimas"
+
+msgid "Driver Card"
+msgstr "Vairuotojo kortelė"
+
+msgid "Driver Card (from VU download)"
+msgstr "Vairuotojo kortelė (iš VU atsisiuntimo)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Vairuotojas: {name}"
+
+msgid "Drivers"
+msgstr "Vairuotojai"
+
+msgid "EF Signature Details"
+msgstr "EF parašo detalės"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "EF parašai (kortelės duomenų vientisumas)"
+
+msgid "EF signature verification failed"
+msgstr "EF parašo patikra nepavyko"
+
+msgid "EF signatures incomplete"
+msgstr "EF parašai nepilni"
+
+msgid "ERCA root not available"
+msgstr "ERCA šaknis nepasiekiama"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Įvažiavo: {country}"
+
+msgid "Ev"
+msgstr "Įvyk."
+
+msgid "Event"
+msgstr "Įvykis"
+
+msgid "Events"
+msgstr "Įvykiai"
+
+msgid "Excel (.xlsx)"
+msgstr "Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Excel darbaknygė"
+
+msgid "Export Complete"
+msgstr "Eksportas baigtas"
+
+msgid "Export Error"
+msgstr "Eksporto klaida"
+
+msgid "Export Unavailable"
+msgstr "Eksportas nepasiekiamas"
+
+msgid "Export failed"
+msgstr "Eksportas nepavyko"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Eksportuota: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Eksportuojama į JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Eksportuojama į {kind}…"
+
+msgid "Failed"
+msgstr "Nepavyko"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Nepavyko parodyti failo:\n{detail}"
+
+msgid "Fault"
+msgstr "Gedimas"
+
+msgid "Faults"
+msgstr "Gedimai"
+
+msgid "Feb"
+msgstr "Vas"
+
+msgid "Ferry / Train crossing"
+msgstr "Keltų / traukinių kirtimas"
+
+msgid "Ferry / Train — Begin"
+msgstr "Keltas / traukinys — pradžia"
+
+msgid "Ferry / Train — End"
+msgstr "Keltas / traukinys — pabaiga"
+
+msgid "Field"
+msgstr "Laukas"
+
+msgid "File Integrity"
+msgstr "Failo vientisumas"
+
+msgid "File Integrity Warning"
+msgstr "Failo vientisumo įspėjimas"
+
+msgid "Filename"
+msgstr "Failo pavadinimas"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "GNSS autentifikavimas (0x960F)"
+
+msgid "Generation"
+msgstr "Karta"
+
+msgid "Generation 1"
+msgstr "1 karta"
+
+msgid "Generation 2"
+msgstr "2 karta"
+
+msgid "Generation 2.2"
+msgstr "2.2 karta"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "IC lustas (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "ICC identifikavimas"
+
+msgid "Incomplete certificates"
+msgstr "Nepilni sertifikatai"
+
+msgid "Integrity"
+msgstr "Vientisumas"
+
+msgid "JSON (.json)"
+msgstr "JSON (.json)"
+
+msgid "JSON Files"
+msgstr "JSON failai"
+
+msgid "Jan"
+msgstr "Sau"
+
+msgid "Jul"
+msgstr "Liep"
+
+msgid "Jun"
+msgstr "Birž"
+
+msgid "Km"
+msgstr "Km"
+
+msgid "Language"
+msgstr "Kalba"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Išvyko: {country}"
+
+msgid "Load/Unload"
+msgstr "Pakrovimas/iškrovimas"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Pakrovimo/iškrovimo autentifikavimas (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Pakrovimas/iškrovimas: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Įkelta: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Įkeliama…"
+
+msgid "MSCA→VU chain"
+msgstr "MSCA→VU grandinė"
+
+msgid "Manual entries"
+msgstr "Rankiniai įrašai"
+
+msgid "Manual entry"
+msgstr "Rankinis įrašas"
+
+msgid "Mar"
+msgstr "Kov"
+
+msgid "Max Drive / day"
+msgstr "Maks. vairavimas / d."
+
+msgid "Max avg / day"
+msgstr "Maks. vid. / d."
+
+msgid "Max km/h"
+msgstr "Maks. km/h"
+
+msgid "Max speed"
+msgstr "Didžiausias greitis"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Maks. {speed} km/h"
+
+msgid "May"
+msgstr "Geg"
+
+msgid "Min avg / day"
+msgstr "Min. vid. / d."
+
+msgid "No EF signatures verified"
+msgstr "Nėra patikrintų EF parašų"
+
+msgid "No activity data available."
+msgstr "Nėra veiklos duomenų."
+
+msgid "No card present"
+msgstr "Kortelė neįdėta"
+
+msgid "No data for this day.\n"
+msgstr "Šiai dienai duomenų nėra.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Nėra išsamių greičio imčių."
+
+msgid "No file loaded"
+msgstr "Failas neįkeltas"
+
+msgid "No sections to display."
+msgstr "Nėra skyrių, kuriuos rodyti."
+
+msgid "No valid speed samples"
+msgstr "Nėra galiojančių greičio imčių"
+
+msgid "Not locked"
+msgstr "Neužrakinta"
+
+msgid "Nov"
+msgstr "Lapkr"
+
+msgid "Oct"
+msgstr "Spal"
+
+msgid "Odometer"
+msgstr "Odometras"
+
+msgid "Odometer km"
+msgstr "Odometras km"
+
+msgid "Origin"
+msgstr "Kilmė"
+
+msgid "Origin details"
+msgstr "Kilmės detalės"
+
+msgid "Out of scope — Begin"
+msgstr "Už taikymo srities — pradžia"
+
+msgid "Out of scope — End"
+msgstr "Už taikymo srities — pabaiga"
+
+msgid "Overspeed events"
+msgstr "Greičio viršijimo įvykiai"
+
+msgid "Overspeeding"
+msgstr "Greičio viršijimas"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Greičio viršijimas: {start} → {end} | maks {max_speed} | vid. {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "PDF dokumentas"
+
+msgid "Parsed at"
+msgstr "Dekoduota"
+
+msgid "Parsing Error"
+msgstr "Dekodavimo klaida"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Dekodavimo klaida — rodomas ankstesnis failas: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Dekoduojama {filename}…"
+
+msgid "Partial verification"
+msgstr "Dalinė patikra"
+
+msgid "Place"
+msgstr "Vieta"
+
+msgid "Place: Begin"
+msgstr "Vieta: pradžia"
+
+msgid "Place: End"
+msgstr "Vieta: pabaiga"
+
+msgid "Places"
+msgstr "Vietos"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Valstybinis numeris: {plate}"
+
+msgid "Power interruption"
+msgstr "Maitinimo sutrikimas"
+
+msgid "Power interruptions"
+msgstr "Maitinimo sutrikimai"
+
+msgid "Ready — open a .ddd file"
+msgstr "Paruošta — atverkite .ddd failą"
+
+msgid "Rendering Error"
+msgstr "Atvaizdavimo klaida"
+
+msgid "Rest"
+msgstr "Poilsis"
+
+msgid "Restart the application to apply the new language."
+msgstr "Kad pritaikytumėte naują kalbą, paleiskite programą iš naujo."
+
+msgid "Samples"
+msgstr "Imtys"
+
+msgid "Section Signatures (TREP)"
+msgstr "Skyrių parašai (TREP)"
+
+msgid "Sep"
+msgstr "Rugs"
+
+msgid "Signature Verification"
+msgstr "Parašo patikra"
+
+msgid "Size"
+msgstr "Dydis"
+
+msgid "Skipped"
+msgstr "Praleista"
+
+msgid "Slot"
+msgstr "Lizdas"
+
+msgid "Slot 1"
+msgstr "1 lizdas"
+
+msgid "Slot 2"
+msgstr "2 lizdas"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "{number} lizdas"
+
+msgid "Speed (km/h)"
+msgstr "Greitis (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Struktūriškai identifikuota aprėptis"
+
+msgid "Sub-section"
+msgstr "Poskyris"
+
+msgid "Summary"
+msgstr "Suvestinė"
+
+msgid "Summary\n"
+msgstr "Suvestinė\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Failas gali būti nepilnas arba sugadintas.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Laikas"
+
+msgid "Time >90 km/h"
+msgstr "Laikas >90 km/h"
+
+msgid "Total"
+msgstr "Iš viso"
+
+msgid "Unknown bytes"
+msgstr "Nežinomi baitai"
+
+msgid "Unknown event"
+msgstr "Nežinomas įvykis"
+
+msgid "Unknown fault"
+msgstr "Nežinomas gedimas"
+
+msgid "Unknown parsing error"
+msgstr "Nežinoma dekodavimo klaida"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "VU TREP parašai galioja (grandinė nepatikrinta)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "VU TREP parašai patikrinti (grandinė dalinė)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "VU parašai patikrinti (šaknis susieta)"
+
+msgid "Value"
+msgstr "Reikšmė"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Transporto priemonės blokas (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Transporto priemonė: {plates}"
+
+msgid "Vehicles"
+msgstr "Transporto priemonės"
+
+msgid "Verification error"
+msgstr "Patikros klaida"
+
+msgid "Verified"
+msgstr "Patikrinta"
+
+msgid "Work"
+msgstr "Darbas"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} veiklos pokyčiai"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} baitai"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} baitų nekoduota"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} pakeitimai"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} vairuotojai"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nVientisumo problemų nerasta."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} dienos"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "{kind} eksportas nepasiekiamas. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "{kind} eksportui reikia papildomo paketo:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} išsaugota:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s įrašyta | maks {max_speed} km/h | vid. {avg_speed:.1f} km/h | {above} virš {limit} km/h | {moving} judėjo | {gaps} vidinių tarpų"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} eilutės · {columns} stulpeliai"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Dukart spustelėkite, kad matytumėte visą informaciją"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Išėmimas"
+
+msgid "▼ Insertion"
+msgstr "▼ Įdėjimas"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  SUGADINTAS / NEPILNAS FAILAS"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  SUGADINTI SKYRIAI (duomenys atmesti)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Dekoderio klaidos"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  ŠIS FAILAS NEPILNAS ARBA SUGADINTAS"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} vientisumo įspėjimai — spustelėkite, kad matytumėte detales"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  SKYRIAI YRA"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  TRŪKSTA PRIVALOMŲ SKYRIŲ"
+
+msgid "❌  Parse error"
+msgstr "❌  Dekodavimo klaida"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Nutraukta (nepasiekta failo pabaiga)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Nepilni sertifikatai"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  KORTELĖS TURĖTOJAS"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Vairuotojas / kortelės turėtojas"
+
+msgid "💻  VU INFO"
+msgstr "💻  VU INFORMACIJA"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Atverti DDD failą"
+
+msgid "📄  File Info"
+msgstr "📄  Failo informacija"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  DATŲ INTERVALAS"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  IŠSAMUMAS"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  PARAMETRAI"
+
+msgid "📊  STATISTICS"
+msgstr "📊  STATISTIKA"
+
+msgid "📡  SENSOR"
+msgstr "📡  JUTIKLIS"
+
+msgid "📡  Sensor"
+msgstr "📡  Jutiklis"
+
+msgid "📤  Export"
+msgstr "📤  Eksportas"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation}{annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  PARAŠAI"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Sauga ir sertifikatai"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  DABARTINIS UŽRAKINIMAS"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  DABARTINIS UŽRAKINIMAS"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  SUSIJUSI TRANSPORTO PRIEMONĖ"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  TRANSPORTO PRIEMONĖ"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Transporto priemonė"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  ATKURTA IŠ SUGADINTŲ DUOMENŲ"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Neapdoroti / nekoduoti duomenys"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  KORTELĖS DUOMENYS"

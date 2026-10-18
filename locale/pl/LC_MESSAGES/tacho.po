@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: pl\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (brak)"
+
+msgid "  Ability"
+msgstr "  Zdolność"
+
+msgid "  Activity changes"
+msgstr "  Zmiany aktywności"
+
+msgid "  Actual range"
+msgstr "  Rzeczywisty zasięg"
+
+msgid "  Address"
+msgstr "  Adres"
+
+msgid "  Approval"
+msgstr "  Homologacja"
+
+msgid "  Authorised speed"
+msgstr "  Prędkość dopuszczalna"
+
+msgid "  Avg speed"
+msgstr "  Śr. prędkość"
+
+msgid "  Birth date"
+msgstr "  Data urodzenia"
+
+msgid "  Card downloads"
+msgstr "  Pobrania karty"
+
+msgid "  Card number"
+msgstr "  Numer karty"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Karta obecna: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Firma"
+
+msgid "  Days recorded"
+msgstr "  Zarejestrowane dni"
+
+msgid "  Days with activities"
+msgstr "  Dni z aktywnościami"
+
+msgid "  Days with activity"
+msgstr "  Dni z aktywnością"
+
+msgid "  Digital map"
+msgstr "  Mapa cyfrowa"
+
+msgid "  Distance"
+msgstr "  Odległość"
+
+msgid "  EF verification"
+msgstr "  Weryfikacja EF"
+
+msgid "  Events"
+msgstr "  Zdarzenia"
+
+msgid "  Expiry date"
+msgstr "  Data ważności"
+
+msgid "  Faults"
+msgstr "  Usterki"
+
+msgid "  File structure"
+msgstr "  Struktura pliku"
+
+msgid "  First date"
+msgstr "  Pierwsza data"
+
+msgid "  GNSS Serial"
+msgstr "  Numer seryjny GNSS"
+
+msgid "  Generation"
+msgstr "  Generacja"
+
+msgid "  Issue date"
+msgstr "  Data wydania"
+
+msgid "  Issuing authority"
+msgstr "  Organ wydający"
+
+msgid "  Issuing nation"
+msgstr "  Kraj wydania"
+
+msgid "  Language"
+msgstr "  Język"
+
+msgid "  Last date"
+msgstr "  Ostatnia data"
+
+msgid "  Licence number"
+msgstr "  Numer prawa jazdy"
+
+msgid "  Lock card"
+msgstr "  Zablokuj kartę"
+
+msgid "  Locked since"
+msgstr "  Zablokowana od"
+
+msgid "  Low-confidence recovery"
+msgstr "  Odzyskiwanie o niskiej pewności"
+
+msgid "  Make"
+msgstr "  Marka"
+
+msgid "  Mandatory sections read"
+msgstr "  Odczytane sekcje obowiązkowe"
+
+msgid "  Manufactured"
+msgstr "  Wyprodukowano"
+
+msgid "  Manufacturer"
+msgstr "  Producent"
+
+msgid "  Max speed"
+msgstr "  Prędkość maks."
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Brakujące lub uszkodzone dane NIE są wyświetlane."
+
+msgid "  Name"
+msgstr "  Nazwa"
+
+msgid "  Nation"
+msgstr "  Kraj"
+
+msgid "  Next calibration"
+msgstr "  Następna kalibracja"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Odczytano tylko sekcje wymienione poniżej."
+
+msgid "  Paired"
+msgstr "  Sparowany"
+
+msgid "  Part number"
+msgstr "  Numer części"
+
+msgid "  Plate"
+msgstr "  Tablica"
+
+msgid "  Prefix"
+msgstr "  Prefiks"
+
+msgid "  Registration"
+msgstr "  Rejestracja"
+
+msgid "  SW installed"
+msgstr "  Zainstalowane oprogramowanie"
+
+msgid "  Sensor approval"
+msgstr "  Homologacja czujnika"
+
+msgid "  Sensor paired"
+msgstr "  Czujnik sparowany"
+
+msgid "  Sensor serial"
+msgstr "  Numer seryjny czujnika"
+
+msgid "  Serial"
+msgstr "  Numer seryjny"
+
+msgid "  Serial number"
+msgstr "  Numer seryjny"
+
+msgid "  Software version"
+msgstr "  Wersja oprogramowania"
+
+msgid "  Status"
+msgstr "  Status"
+
+msgid "  Tyre size"
+msgstr "  Rozmiar opony"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Ważne od"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% pliku"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Termin za {days} dni"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ PRZETERMINOWANA ({days} dni temu)"
+
+msgid "# Drivers"
+msgstr "# Kierowcy"
+
+msgid "# Vehicles"
+msgstr "# Pojazdy"
+
+msgid "(no changes)"
+msgstr "(brak zmian)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(to nie jest współczynnik dekodowania semantycznego)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Aktywność"
+
+msgid "Activity Timeline\n"
+msgstr "Oś czasu aktywności\n"
+
+msgid "All Files"
+msgstr "Wszystkie pliki"
+
+msgid "All TREP signatures valid"
+msgstr "Wszystkie podpisy TREP prawidłowe"
+
+msgid "All signatures verified"
+msgstr "Wszystkie podpisy zweryfikowane"
+
+msgid "Anchored to ERCA root"
+msgstr "Zakotwiczony w korzeniu ERCA"
+
+msgid "Annex 1B"
+msgstr "Załącznik 1B"
+
+msgid "Annex 1C"
+msgstr "Załącznik 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Załącznik 1C · 2023/980"
+
+msgid "App version"
+msgstr "Wersja aplikacji"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Appendix 11 · CAR=organ wydający, CHR=posiadacz, ważność od TimeReal"
+
+msgid "Apr"
+msgstr "kwi"
+
+msgid "Aug"
+msgstr "sie"
+
+msgid "Available"
+msgstr "Dyspozycyjność"
+
+msgid "Avg Drive / day"
+msgstr "Śr. jazda / dzień"
+
+msgid "Avg km/h"
+msgstr "Śr. km/h"
+
+msgid "Avg speed"
+msgstr "Śr. prędkość"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Śr. {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "Przejście BER-TLV · spec. Appendix 11 niepubliczna"
+
+msgid "Border crossing"
+msgstr "Przekroczenie granicy"
+
+msgid "Border crossings"
+msgstr "Przekroczenia granicy"
+
+msgid "Byte-accounted coverage"
+msgstr "Pokrycie rozliczone bajtowo"
+
+msgid "CSV (.csv)"
+msgstr "Format CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "Pliki CSV"
+
+msgid "CVC Certificates (decoded)"
+msgstr "Certyfikaty CVC (zdekodowane)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Karta nieobecna w tachografie od {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Niezgodność podpisu danych karty"
+
+msgid "Card inserted"
+msgstr "Karta włożona"
+
+msgid "Card not inserted"
+msgstr "Karta niewłożona"
+
+msgid "Card signing key not trusted"
+msgstr "Klucz podpisujący kartę niezaufany"
+
+msgid "Card withdrawn"
+msgstr "Karta wyjęta"
+
+msgid "Cardholder"
+msgstr "Posiadacz karty"
+
+msgid "Certificate chain invalid"
+msgstr "Łańcuch certyfikatów nieprawidłowy"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Łańcuch certyfikatów niezakotwiczony w zaufanym korzeniu"
+
+msgid "Certificates"
+msgstr "Certyfikaty"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Warunek: {condition}"
+
+msgid "Conditions"
+msgstr "Warunki"
+
+msgid "Could not save the language setting."
+msgstr "Nie udało się zapisać ustawienia języka."
+
+msgid "Crew"
+msgstr "Załoga"
+
+msgid "DDD Files"
+msgstr "Pliki DDD"
+
+msgid "Daily Activities"
+msgstr "Aktywności dzienne"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Aktywności dzienne - {day} (czas UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Aktywności dzienne {date}"
+
+msgid "Daily Detail"
+msgstr "Szczegóły dzienne"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Szczegóły dzienne — {day} (czas UTC)"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Days"
+msgstr "Dni"
+
+msgid "Dec"
+msgstr "gru"
+
+msgid "Decoder failures"
+msgstr "Błędy dekodera"
+
+msgid "Detailed Speed"
+msgstr "Szczegółowa prędkość"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Szczegółowa prędkość - {day} (czas UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Szczegółowa prędkość {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Odległość: {km} km"
+
+msgid "Drive"
+msgstr "Jazda"
+
+msgid "Driver Card"
+msgstr "Karta kierowcy"
+
+msgid "Driver Card (from VU download)"
+msgstr "Karta kierowcy (z pobrania VU)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Kierowca: {name}"
+
+msgid "Drivers"
+msgstr "Kierowcy"
+
+msgid "EF Signature Details"
+msgstr "Szczegóły podpisów EF"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "Podpisy EF (integralność danych karty)"
+
+msgid "EF signature verification failed"
+msgstr "Weryfikacja podpisu EF nie powiodła się"
+
+msgid "EF signatures incomplete"
+msgstr "Podpisy EF niekompletne"
+
+msgid "ERCA root not available"
+msgstr "Korzeń ERCA niedostępny"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Wjazd: {country}"
+
+msgid "Ev"
+msgstr "Zdz."
+
+msgid "Event"
+msgstr "Zdarzenie"
+
+msgid "Events"
+msgstr "Zdarzenia"
+
+msgid "Excel (.xlsx)"
+msgstr "Format Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Skoroszyt Excel"
+
+msgid "Export Complete"
+msgstr "Eksport zakończony"
+
+msgid "Export Error"
+msgstr "Błąd eksportu"
+
+msgid "Export Unavailable"
+msgstr "Eksport niedostępny"
+
+msgid "Export failed"
+msgstr "Eksport nie powiódł się"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Wyeksportowano: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Eksportowanie do JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Eksportowanie do {kind}…"
+
+msgid "Failed"
+msgstr "Niepowodzenie"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Nie udało się wyświetlić pliku:\n{detail}"
+
+msgid "Fault"
+msgstr "Usterka"
+
+msgid "Faults"
+msgstr "Usterki"
+
+msgid "Feb"
+msgstr "lut"
+
+msgid "Ferry / Train crossing"
+msgstr "Przeprawa promem / pociągiem"
+
+msgid "Ferry / Train — Begin"
+msgstr "Prom / pociąg — początek"
+
+msgid "Ferry / Train — End"
+msgstr "Prom / pociąg — koniec"
+
+msgid "Field"
+msgstr "Pole"
+
+msgid "File Integrity"
+msgstr "Integralność pliku"
+
+msgid "File Integrity Warning"
+msgstr "Ostrzeżenie o integralności pliku"
+
+msgid "Filename"
+msgstr "Nazwa pliku"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "Uwierzytelnianie GNSS (0x960F)"
+
+msgid "Generation"
+msgstr "Generacja"
+
+msgid "Generation 1"
+msgstr "Generacja 1"
+
+msgid "Generation 2"
+msgstr "Generacja 2"
+
+msgid "Generation 2.2"
+msgstr "Generacja 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "Chip IC (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "Identyfikacja ICC"
+
+msgid "Incomplete certificates"
+msgstr "Niekompletne certyfikaty"
+
+msgid "Integrity"
+msgstr "Integralność"
+
+msgid "JSON (.json)"
+msgstr "Format JSON (.json)"
+
+msgid "JSON Files"
+msgstr "Pliki JSON"
+
+msgid "Jan"
+msgstr "sty"
+
+msgid "Jul"
+msgstr "lip"
+
+msgid "Jun"
+msgstr "cze"
+
+msgid "Km"
+msgstr "km"
+
+msgid "Language"
+msgstr "Język"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Wyjazd: {country}"
+
+msgid "Load/Unload"
+msgstr "Załadunek/Rozładunek"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Uwierzytelnianie załadunku/rozładunku (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Załadunek/Rozładunek: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Wczytano: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Wczytywanie…"
+
+msgid "MSCA→VU chain"
+msgstr "Łańcuch MSCA→VU"
+
+msgid "Manual entries"
+msgstr "Wpisy ręczne"
+
+msgid "Manual entry"
+msgstr "Wpis ręczny"
+
+msgid "Mar"
+msgstr "mar"
+
+msgid "Max Drive / day"
+msgstr "Maks. jazda / dzień"
+
+msgid "Max avg / day"
+msgstr "Maks. średnia / dzień"
+
+msgid "Max km/h"
+msgstr "Maks. km/h"
+
+msgid "Max speed"
+msgstr "Prędkość maks."
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Maks. {speed} km/h"
+
+msgid "May"
+msgstr "maj"
+
+msgid "Min avg / day"
+msgstr "Min. średnia / dzień"
+
+msgid "No EF signatures verified"
+msgstr "Nie zweryfikowano podpisów EF"
+
+msgid "No activity data available."
+msgstr "Brak dostępnych danych o aktywności."
+
+msgid "No card present"
+msgstr "Brak karty"
+
+msgid "No data for this day.\n"
+msgstr "Brak danych dla tego dnia.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Brak dostępnych próbek szczegółowej prędkości."
+
+msgid "No file loaded"
+msgstr "Nie wczytano pliku"
+
+msgid "No sections to display."
+msgstr "Brak sekcji do wyświetlenia."
+
+msgid "No valid speed samples"
+msgstr "Brak prawidłowych próbek prędkości"
+
+msgid "Not locked"
+msgstr "Niezablokowana"
+
+msgid "Nov"
+msgstr "lis"
+
+msgid "Oct"
+msgstr "paź"
+
+msgid "Odometer"
+msgstr "Licznik kilometrów"
+
+msgid "Odometer km"
+msgstr "Licznik km"
+
+msgid "Origin"
+msgstr "Pochodzenie"
+
+msgid "Origin details"
+msgstr "Szczegóły pochodzenia"
+
+msgid "Out of scope — Begin"
+msgstr "Poza zakresem — początek"
+
+msgid "Out of scope — End"
+msgstr "Poza zakresem — koniec"
+
+msgid "Overspeed events"
+msgstr "Zdarzenia przekroczenia prędkości"
+
+msgid "Overspeeding"
+msgstr "Przekroczenie prędkości"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Przekroczenie prędkości: {start} → {end} | maks. {max_speed} | śr. {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "Format PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "Dokument PDF"
+
+msgid "Parsed at"
+msgstr "Przetworzono"
+
+msgid "Parsing Error"
+msgstr "Błąd przetwarzania"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Błąd przetwarzania — wyświetlany poprzedni plik: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Przetwarzanie {filename}…"
+
+msgid "Partial verification"
+msgstr "Weryfikacja częściowa"
+
+msgid "Place"
+msgstr "Miejsce"
+
+msgid "Place: Begin"
+msgstr "Miejsce: początek"
+
+msgid "Place: End"
+msgstr "Miejsce: koniec"
+
+msgid "Places"
+msgstr "Miejsca"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Tablica: {plate}"
+
+msgid "Power interruption"
+msgstr "Przerwa w zasilaniu"
+
+msgid "Power interruptions"
+msgstr "Przerwy w zasilaniu"
+
+msgid "Ready — open a .ddd file"
+msgstr "Gotowe — otwórz plik .ddd"
+
+msgid "Rendering Error"
+msgstr "Błąd renderowania"
+
+msgid "Rest"
+msgstr "Odpoczynek"
+
+msgid "Restart the application to apply the new language."
+msgstr "Uruchom ponownie aplikację, aby zastosować nowy język."
+
+msgid "Samples"
+msgstr "Próbki"
+
+msgid "Section Signatures (TREP)"
+msgstr "Podpisy sekcji (TREP)"
+
+msgid "Sep"
+msgstr "wrz"
+
+msgid "Signature Verification"
+msgstr "Weryfikacja podpisów"
+
+msgid "Size"
+msgstr "Rozmiar"
+
+msgid "Skipped"
+msgstr "Pominięto"
+
+msgid "Slot"
+msgstr "Gniazdo"
+
+msgid "Slot 1"
+msgstr "Gniazdo 1"
+
+msgid "Slot 2"
+msgstr "Gniazdo 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Gniazdo {number}"
+
+msgid "Speed (km/h)"
+msgstr "Prędkość (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Pokrycie zidentyfikowane strukturalnie"
+
+msgid "Sub-section"
+msgstr "Podsekcja"
+
+msgid "Summary"
+msgstr "Podsumowanie"
+
+msgid "Summary\n"
+msgstr "Podsumowanie\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Plik może być niekompletny lub uszkodzony.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Czas"
+
+msgid "Time >90 km/h"
+msgstr "Czas >90 km/h"
+
+msgid "Total"
+msgstr "Razem"
+
+msgid "Unknown bytes"
+msgstr "Nieznane bajty"
+
+msgid "Unknown event"
+msgstr "Nieznane zdarzenie"
+
+msgid "Unknown fault"
+msgstr "Nieznana usterka"
+
+msgid "Unknown parsing error"
+msgstr "Nieznany błąd przetwarzania"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "Podpisy TREP VU prawidłowe (łańcuch niezweryfikowany)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "Podpisy TREP VU zweryfikowane (łańcuch częściowy)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "Podpisy VU zweryfikowane (korzeń zakotwiczony)"
+
+msgid "Value"
+msgstr "Wartość"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Jednostka pojazdowa (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Pojazd: {plates}"
+
+msgid "Vehicles"
+msgstr "Pojazdy"
+
+msgid "Verification error"
+msgstr "Błąd weryfikacji"
+
+msgid "Verified"
+msgstr "Zweryfikowano"
+
+msgid "Work"
+msgstr "Praca"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} zmian aktywności"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} bajtów"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} bajtów niezdekodowanych"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} zmian"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} kierowców"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (czas UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nNie wykryto problemów z integralnością."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} dni"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "Eksport {kind} jest niedostępny. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "Eksport {kind} wymaga dodatkowego pakietu:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} zapisano w:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s zarejestrowanych | maks. {max_speed} km/h | śr. {avg_speed:.1f} km/h | {above} powyżej {limit} km/h | {moving} w ruchu | {gaps} luk wewnętrznych"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} wierszy · {columns} kolumn"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Kliknij dwukrotnie, aby zobaczyć pełne szczegóły"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Wyjęcie karty"
+
+msgid "▼ Insertion"
+msgstr "▼ Włożenie karty"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  PLIK USZKODZONY / CZĘŚCIOWY"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  USZKODZONE SEKCJE (dane odrzucone)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Błędy dekodera"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  TEN PLIK JEST NIEKOMPLETNY LUB USZKODZONY"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} ostrzeżeń o integralności — kliknij, aby zobaczyć szczegóły"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  SEKCJE OBECNE"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  BRAK SEKCJI OBOWIĄZKOWYCH"
+
+msgid "❌  Parse error"
+msgstr "❌  Błąd przetwarzania"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Ucięty (nie osiągnięto końca pliku)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Niekompletne certyfikaty"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  POSIADACZ KARTY"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Kierowca / Posiadacz karty"
+
+msgid "💻  VU INFO"
+msgstr "💻  INFORMACJE O VU"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Otwórz plik DDD"
+
+msgid "📄  File Info"
+msgstr "📄  Informacje o pliku"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  ZAKRES DAT"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  KOMPLETNOŚĆ"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  PARAMETRY"
+
+msgid "📊  STATISTICS"
+msgstr "📊  STATYSTYKI"
+
+msgid "📡  SENSOR"
+msgstr "📡  CZUJNIK"
+
+msgid "📡  Sensor"
+msgstr "📡  Czujnik"
+
+msgid "📤  Export"
+msgstr "📤  Eksport"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation} {annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  PODPISY"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Bezpieczeństwo i certyfikaty"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  BIEŻĄCA BLOKADA"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  BIEŻĄCA BLOKADA"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  POWIĄZANY POJAZD"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  POJAZD"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Pojazd"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  ODZYSKANE Z USZKODZONYCH DANYCH"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Dane surowe / nieprzetworzone"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  SZCZEGÓŁY KARTY"

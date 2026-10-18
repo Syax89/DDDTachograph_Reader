@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: ru\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (нет)"
+
+msgid "  Ability"
+msgstr "  Возможность"
+
+msgid "  Activity changes"
+msgstr "  Изменения активности"
+
+msgid "  Actual range"
+msgstr "  Фактическое расстояние"
+
+msgid "  Address"
+msgstr "  Адрес"
+
+msgid "  Approval"
+msgstr "  Одобрение"
+
+msgid "  Authorised speed"
+msgstr "  Разрешённая скорость"
+
+msgid "  Avg speed"
+msgstr "  Средняя скорость"
+
+msgid "  Birth date"
+msgstr "  Дата рождения"
+
+msgid "  Card downloads"
+msgstr "  Загрузки карты"
+
+msgid "  Card number"
+msgstr "  Номер карты"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Карта присутствует: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Компания"
+
+msgid "  Days recorded"
+msgstr "  Записанных дней"
+
+msgid "  Days with activities"
+msgstr "  Дни с активностями"
+
+msgid "  Days with activity"
+msgstr "  Дни с активностью"
+
+msgid "  Digital map"
+msgstr "  Цифровая карта"
+
+msgid "  Distance"
+msgstr "  Расстояние"
+
+msgid "  EF verification"
+msgstr "  Проверка EF"
+
+msgid "  Events"
+msgstr "  События"
+
+msgid "  Expiry date"
+msgstr "  Дата истечения"
+
+msgid "  Faults"
+msgstr "  Неисправности"
+
+msgid "  File structure"
+msgstr "  Структура файла"
+
+msgid "  First date"
+msgstr "  Первая дата"
+
+msgid "  GNSS Serial"
+msgstr "  Серийный номер GNSS"
+
+msgid "  Generation"
+msgstr "  Поколение"
+
+msgid "  Issue date"
+msgstr "  Дата выдачи"
+
+msgid "  Issuing authority"
+msgstr "  Орган выдачи"
+
+msgid "  Issuing nation"
+msgstr "  Страна выдачи"
+
+msgid "  Language"
+msgstr "  Язык"
+
+msgid "  Last date"
+msgstr "  Последняя дата"
+
+msgid "  Licence number"
+msgstr "  Номер водительского удостоверения"
+
+msgid "  Lock card"
+msgstr "  Заблокировать карту"
+
+msgid "  Locked since"
+msgstr "  Заблокирована с"
+
+msgid "  Low-confidence recovery"
+msgstr "  Восстановление с низкой достоверностью"
+
+msgid "  Make"
+msgstr "  Марка"
+
+msgid "  Mandatory sections read"
+msgstr "  Обязательные разделы прочитаны"
+
+msgid "  Manufactured"
+msgstr "  Изготовлено"
+
+msgid "  Manufacturer"
+msgstr "  Производитель"
+
+msgid "  Max speed"
+msgstr "  Максимальная скорость"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Отсутствующие или повреждённые данные НЕ отображаются."
+
+msgid "  Name"
+msgstr "  Имя"
+
+msgid "  Nation"
+msgstr "  Страна"
+
+msgid "  Next calibration"
+msgstr "  Следующая калибровка"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Прочитать удалось только перечисленные ниже разделы."
+
+msgid "  Paired"
+msgstr "  Сопряжено"
+
+msgid "  Part number"
+msgstr "  Номер детали"
+
+msgid "  Plate"
+msgstr "  Номерной знак"
+
+msgid "  Prefix"
+msgstr "  Префикс"
+
+msgid "  Registration"
+msgstr "  Регистрация"
+
+msgid "  SW installed"
+msgstr "  Установленное ПО"
+
+msgid "  Sensor approval"
+msgstr "  Одобрение датчика"
+
+msgid "  Sensor paired"
+msgstr "  Датчик сопряжён"
+
+msgid "  Sensor serial"
+msgstr "  Серийный номер датчика"
+
+msgid "  Serial"
+msgstr "  Серийный номер"
+
+msgid "  Serial number"
+msgstr "  Серийный номер"
+
+msgid "  Software version"
+msgstr "  Версия ПО"
+
+msgid "  Status"
+msgstr "  Состояние"
+
+msgid "  Tyre size"
+msgstr "  Размер шин"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Действует с"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% файла"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Срок через {days} дн."
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ ПРОСРОЧЕНО ({days} дн. назад)"
+
+msgid "# Drivers"
+msgstr "# Водителей"
+
+msgid "# Vehicles"
+msgstr "# Транспортных средств"
+
+msgid "(no changes)"
+msgstr "(нет изменений)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(не семантическая доля декодирования)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Активность"
+
+msgid "Activity Timeline\n"
+msgstr "Хронология активности\n"
+
+msgid "All Files"
+msgstr "Все файлы"
+
+msgid "All TREP signatures valid"
+msgstr "Все подписи TREP действительны"
+
+msgid "All signatures verified"
+msgstr "Все подписи проверены"
+
+msgid "Anchored to ERCA root"
+msgstr "Привязано к корню ERCA"
+
+msgid "Annex 1B"
+msgstr "Приложение 1B"
+
+msgid "Annex 1C"
+msgstr "Приложение 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Приложение 1C · 2023/980"
+
+msgid "App version"
+msgstr "Версия приложения"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Дополнение 11 · CAR=орган выдачи, CHR=владелец, срок действия из TimeReal"
+
+msgid "Apr"
+msgstr "Апр"
+
+msgid "Aug"
+msgstr "Авг"
+
+msgid "Available"
+msgstr "Доступен"
+
+msgid "Avg Drive / day"
+msgstr "Средн. вождение / день"
+
+msgid "Avg km/h"
+msgstr "Средн. km/h"
+
+msgid "Avg speed"
+msgstr "Средняя скорость"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Средн. {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "Обход BER-TLV · дополнение 11 к спецификации не опубликовано"
+
+msgid "Border crossing"
+msgstr "Пересечение границы"
+
+msgid "Border crossings"
+msgstr "Пересечения границ"
+
+msgid "Byte-accounted coverage"
+msgstr "Покрытие с учётом байтов"
+
+msgid "CSV (.csv)"
+msgstr "CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "Файлы CSV"
+
+msgid "CVC Certificates (decoded)"
+msgstr "Сертификаты CVC (декодировано)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Карта отсутствует в тахографе с {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Подпись данных карты не совпадает"
+
+msgid "Card inserted"
+msgstr "Карта вставлена"
+
+msgid "Card not inserted"
+msgstr "Карта не вставлена"
+
+msgid "Card signing key not trusted"
+msgstr "Ключ подписи карты не является доверенным"
+
+msgid "Card withdrawn"
+msgstr "Карта извлечена"
+
+msgid "Cardholder"
+msgstr "Владелец карты"
+
+msgid "Certificate chain invalid"
+msgstr "Цепочка сертификатов недействительна"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Цепочка сертификатов не привязана к доверенному корню"
+
+msgid "Certificates"
+msgstr "Сертификаты"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Условие: {condition}"
+
+msgid "Conditions"
+msgstr "Условия"
+
+msgid "Could not save the language setting."
+msgstr "Не удалось сохранить настройку языка."
+
+msgid "Crew"
+msgstr "Экипаж"
+
+msgid "DDD Files"
+msgstr "Файлы DDD"
+
+msgid "Daily Activities"
+msgstr "Активность за день"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Активность за день - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Активность за день {date}"
+
+msgid "Daily Detail"
+msgstr "Детализация за день"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Детализация за день — {day} (UTC)"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Days"
+msgstr "Дни"
+
+msgid "Dec"
+msgstr "Дек"
+
+msgid "Decoder failures"
+msgstr "Ошибки декодера"
+
+msgid "Detailed Speed"
+msgstr "Детальная скорость"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Детальная скорость - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Детальная скорость {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Расстояние: {km} km"
+
+msgid "Drive"
+msgstr "Вождение"
+
+msgid "Driver Card"
+msgstr "Карта водителя"
+
+msgid "Driver Card (from VU download)"
+msgstr "Карта водителя (из выгрузки VU)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Водитель: {name}"
+
+msgid "Drivers"
+msgstr "Водители"
+
+msgid "EF Signature Details"
+msgstr "Детали подписи EF"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "Подписи EF (целостность данных карты)"
+
+msgid "EF signature verification failed"
+msgstr "Проверка подписи EF не удалась"
+
+msgid "EF signatures incomplete"
+msgstr "Подписи EF неполны"
+
+msgid "ERCA root not available"
+msgstr "Корень ERCA недоступен"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Въезд: {country}"
+
+msgid "Ev"
+msgstr "Соб."
+
+msgid "Event"
+msgstr "Событие"
+
+msgid "Events"
+msgstr "События"
+
+msgid "Excel (.xlsx)"
+msgstr "Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Книга Excel"
+
+msgid "Export Complete"
+msgstr "Экспорт завершён"
+
+msgid "Export Error"
+msgstr "Ошибка экспорта"
+
+msgid "Export Unavailable"
+msgstr "Экспорт недоступен"
+
+msgid "Export failed"
+msgstr "Экспорт не удался"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Экспортировано: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Экспорт в JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Экспорт в {kind}…"
+
+msgid "Failed"
+msgstr "Не удалось"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Не удалось отобразить файл:\n{detail}"
+
+msgid "Fault"
+msgstr "Неисправность"
+
+msgid "Faults"
+msgstr "Неисправности"
+
+msgid "Feb"
+msgstr "Фев"
+
+msgid "Ferry / Train crossing"
+msgstr "Пересечение паромом / поездом"
+
+msgid "Ferry / Train — Begin"
+msgstr "Паром / поезд — начало"
+
+msgid "Ferry / Train — End"
+msgstr "Паром / поезд — конец"
+
+msgid "Field"
+msgstr "Поле"
+
+msgid "File Integrity"
+msgstr "Целостность файла"
+
+msgid "File Integrity Warning"
+msgstr "Предупреждение о целостности файла"
+
+msgid "Filename"
+msgstr "Имя файла"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "Аутентификация GNSS (0x960F)"
+
+msgid "Generation"
+msgstr "Поколение"
+
+msgid "Generation 1"
+msgstr "Поколение 1"
+
+msgid "Generation 2"
+msgstr "Поколение 2"
+
+msgid "Generation 2.2"
+msgstr "Поколение 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "Микросхема IC (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "Идентификация ICC"
+
+msgid "Incomplete certificates"
+msgstr "Неполные сертификаты"
+
+msgid "Integrity"
+msgstr "Целостность"
+
+msgid "JSON (.json)"
+msgstr "JSON (.json)"
+
+msgid "JSON Files"
+msgstr "Файлы JSON"
+
+msgid "Jan"
+msgstr "Янв"
+
+msgid "Jul"
+msgstr "Июл"
+
+msgid "Jun"
+msgstr "Июн"
+
+msgid "Km"
+msgstr "Км"
+
+msgid "Language"
+msgstr "Язык"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Выезд: {country}"
+
+msgid "Load/Unload"
+msgstr "Погрузка/разгрузка"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Аутентификация погрузки/разгрузки (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Погрузка/разгрузка: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Загружено: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Загрузка…"
+
+msgid "MSCA→VU chain"
+msgstr "Цепочка MSCA→VU"
+
+msgid "Manual entries"
+msgstr "Ручные записи"
+
+msgid "Manual entry"
+msgstr "Ручная запись"
+
+msgid "Mar"
+msgstr "Мар"
+
+msgid "Max Drive / day"
+msgstr "Макс. вождение / день"
+
+msgid "Max avg / day"
+msgstr "Макс. средн. / день"
+
+msgid "Max km/h"
+msgstr "Макс. km/h"
+
+msgid "Max speed"
+msgstr "Максимальная скорость"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Макс. {speed} km/h"
+
+msgid "May"
+msgstr "Май"
+
+msgid "Min avg / day"
+msgstr "Мин. средн. / день"
+
+msgid "No EF signatures verified"
+msgstr "Подписи EF не проверены"
+
+msgid "No activity data available."
+msgstr "Данные об активности недоступны."
+
+msgid "No card present"
+msgstr "Карта отсутствует"
+
+msgid "No data for this day.\n"
+msgstr "Нет данных за этот день.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Детальные выборки скорости недоступны."
+
+msgid "No file loaded"
+msgstr "Файл не загружен"
+
+msgid "No sections to display."
+msgstr "Нет разделов для отображения."
+
+msgid "No valid speed samples"
+msgstr "Нет действительных выборок скорости"
+
+msgid "Not locked"
+msgstr "Не заблокирована"
+
+msgid "Nov"
+msgstr "Ноя"
+
+msgid "Oct"
+msgstr "Окт"
+
+msgid "Odometer"
+msgstr "Одометр"
+
+msgid "Odometer km"
+msgstr "Одометр км"
+
+msgid "Origin"
+msgstr "Источник"
+
+msgid "Origin details"
+msgstr "Детали источника"
+
+msgid "Out of scope — Begin"
+msgstr "Вне области действия — начало"
+
+msgid "Out of scope — End"
+msgstr "Вне области действия — конец"
+
+msgid "Overspeed events"
+msgstr "События превышения скорости"
+
+msgid "Overspeeding"
+msgstr "Превышение скорости"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Превышение скорости: {start} → {end} | макс. {max_speed} | средн. {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "Документ PDF"
+
+msgid "Parsed at"
+msgstr "Декодировано"
+
+msgid "Parsing Error"
+msgstr "Ошибка разбора"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Ошибка разбора — показан предыдущий файл: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Разбор {filename}…"
+
+msgid "Partial verification"
+msgstr "Частичная проверка"
+
+msgid "Place"
+msgstr "Место"
+
+msgid "Place: Begin"
+msgstr "Место: начало"
+
+msgid "Place: End"
+msgstr "Место: конец"
+
+msgid "Places"
+msgstr "Места"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Номерной знак: {plate}"
+
+msgid "Power interruption"
+msgstr "Прерывание питания"
+
+msgid "Power interruptions"
+msgstr "Прерывания питания"
+
+msgid "Ready — open a .ddd file"
+msgstr "Готово — откройте файл .ddd"
+
+msgid "Rendering Error"
+msgstr "Ошибка отрисовки"
+
+msgid "Rest"
+msgstr "Отдых"
+
+msgid "Restart the application to apply the new language."
+msgstr "Перезапустите приложение, чтобы применить новый язык."
+
+msgid "Samples"
+msgstr "Выборки"
+
+msgid "Section Signatures (TREP)"
+msgstr "Подписи разделов (TREP)"
+
+msgid "Sep"
+msgstr "Сен"
+
+msgid "Signature Verification"
+msgstr "Проверка подписи"
+
+msgid "Size"
+msgstr "Размер"
+
+msgid "Skipped"
+msgstr "Пропущено"
+
+msgid "Slot"
+msgstr "Слот"
+
+msgid "Slot 1"
+msgstr "Слот 1"
+
+msgid "Slot 2"
+msgstr "Слот 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Слот {number}"
+
+msgid "Speed (km/h)"
+msgstr "Скорость (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Структурно определённое покрытие"
+
+msgid "Sub-section"
+msgstr "Подраздел"
+
+msgid "Summary"
+msgstr "Сводка"
+
+msgid "Summary\n"
+msgstr "Сводка\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Файл может быть неполным или повреждённым.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Время"
+
+msgid "Time >90 km/h"
+msgstr "Время >90 km/h"
+
+msgid "Total"
+msgstr "Итого"
+
+msgid "Unknown bytes"
+msgstr "Неизвестные байты"
+
+msgid "Unknown event"
+msgstr "Неизвестное событие"
+
+msgid "Unknown fault"
+msgstr "Неизвестная неисправность"
+
+msgid "Unknown parsing error"
+msgstr "Неизвестная ошибка разбора"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "Подписи VU TREP действительны (цепочка не проверена)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "Подписи VU TREP проверены (цепочка частична)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "Подписи VU проверены (корень привязан)"
+
+msgid "Value"
+msgstr "Значение"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Блок транспортного средства (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Транспортное средство: {plates}"
+
+msgid "Vehicles"
+msgstr "Транспортные средства"
+
+msgid "Verification error"
+msgstr "Ошибка проверки"
+
+msgid "Verified"
+msgstr "Проверено"
+
+msgid "Work"
+msgstr "Работа"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} изменений активности"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} байт"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} байт не декодировано"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} изменений"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} водителей"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nПроблем целостности не обнаружено."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} дн."
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "Экспорт {kind} недоступен. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "Для экспорта {kind} требуется дополнительный пакет:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} сохранено в:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} с записано | макс. {max_speed} km/h | средн. {avg_speed:.1f} km/h | {above} выше {limit} km/h | {moving} в движении | {gaps} внутренних разрывов"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} строк · {columns} столбцов"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Двойной щелчок для полной информации"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Извлечение"
+
+msgid "▼ Insertion"
+msgstr "▼ Установка"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  ПОВРЕЖДЁННЫЙ / НЕПОЛНЫЙ ФАЙЛ"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  ПОВРЕЖДЁННЫЕ РАЗДЕЛЫ (данные отброшены)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Ошибки декодера"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  ЭТОТ ФАЙЛ НЕПОЛНЫЙ ИЛИ ПОВРЕЖДЁННЫЙ"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} предупреждений о целостности — нажмите для подробностей"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  РАЗДЕЛЫ ПРИСУТСТВУЮТ"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  ОТСУТСТВУЮТ ОБЯЗАТЕЛЬНЫЕ РАЗДЕЛЫ"
+
+msgid "❌  Parse error"
+msgstr "❌  Ошибка разбора"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Усечён (не достигнут конец файла)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Неполные сертификаты"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  ВЛАДЕЛЕЦ КАРТЫ"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Водитель / владелец карты"
+
+msgid "💻  VU INFO"
+msgstr "💻  ИНФО О VU"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Открыть файл DDD"
+
+msgid "📄  File Info"
+msgstr "📄  Информация о файле"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  ДИАПАЗОН ДАТ"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  ПОЛНОТА"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  ПАРАМЕТРЫ"
+
+msgid "📊  STATISTICS"
+msgstr "📊  СТАТИСТИКА"
+
+msgid "📡  SENSOR"
+msgstr "📡  ДАТЧИК"
+
+msgid "📡  Sensor"
+msgstr "📡  Датчик"
+
+msgid "📤  Export"
+msgstr "📤  Экспорт"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation}{annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  ПОДПИСИ"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Безопасность и сертификаты"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  ТЕКУЩАЯ БЛОКИРОВКА"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  ТЕКУЩАЯ БЛОКИРОВКА"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  СВЯЗАННОЕ ТРАНСПОРТНОЕ СРЕДСТВО"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  ТРАНСПОРТНОЕ СРЕДСТВО"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Транспортное средство"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  ВОССТАНОВЛЕНО ИЗ ПОВРЕЖДЁННЫХ ДАННЫХ"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Необработанные / неразобранные данные"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  ДАННЫЕ КАРТЫ"

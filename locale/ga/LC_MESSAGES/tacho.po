@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: ga\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (dada)"
+
+msgid "  Ability"
+msgstr "  Cumas"
+
+msgid "  Activity changes"
+msgstr "  Athruithe gníomhaíochta"
+
+msgid "  Actual range"
+msgstr "  Fíor-raon"
+
+msgid "  Address"
+msgstr "  Seoladh"
+
+msgid "  Approval"
+msgstr "  Faomhadh"
+
+msgid "  Authorised speed"
+msgstr "  Luas údaraithe"
+
+msgid "  Avg speed"
+msgstr "  Meánluas"
+
+msgid "  Birth date"
+msgstr "  Dáta breithe"
+
+msgid "  Card downloads"
+msgstr "  Íoslódálacha cárta"
+
+msgid "  Card number"
+msgstr "  Uimhir chárta"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Cárta i láthair: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Cuideachta"
+
+msgid "  Days recorded"
+msgstr "  Laethanta a taifeadadh"
+
+msgid "  Days with activities"
+msgstr "  Laethanta le gníomhaíochtaí"
+
+msgid "  Days with activity"
+msgstr "  Laethanta le gníomhaíocht"
+
+msgid "  Digital map"
+msgstr "  Léarscáil dhigiteach"
+
+msgid "  Distance"
+msgstr "  Fad"
+
+msgid "  EF verification"
+msgstr "  Fíorú EF"
+
+msgid "  Events"
+msgstr "  Teagmhais"
+
+msgid "  Expiry date"
+msgstr "  Dáta éaga"
+
+msgid "  Faults"
+msgstr "  Fabhtanna"
+
+msgid "  File structure"
+msgstr "  Struchtúr an chomhaid"
+
+msgid "  First date"
+msgstr "  Céad dáta"
+
+msgid "  GNSS Serial"
+msgstr "  Sraithuimhir GNSS"
+
+msgid "  Generation"
+msgstr "  Glúin"
+
+msgid "  Issue date"
+msgstr "  Dáta eisithe"
+
+msgid "  Issuing authority"
+msgstr "  Údarás eisithe"
+
+msgid "  Issuing nation"
+msgstr "  Náisiún eisithe"
+
+msgid "  Language"
+msgstr "  Teanga"
+
+msgid "  Last date"
+msgstr "  Dáta deiridh"
+
+msgid "  Licence number"
+msgstr "  Uimhir cheadúnais"
+
+msgid "  Lock card"
+msgstr "  Cuir glas ar an gcárta"
+
+msgid "  Locked since"
+msgstr "  Faoi ghlas ó"
+
+msgid "  Low-confidence recovery"
+msgstr "  Aisghabháil ar mhuinín íseal"
+
+msgid "  Make"
+msgstr "  Déantús"
+
+msgid "  Mandatory sections read"
+msgstr "  Príomh-rannóga léite"
+
+msgid "  Manufactured"
+msgstr "  Déanta"
+
+msgid "  Manufacturer"
+msgstr "  Monaróir"
+
+msgid "  Max speed"
+msgstr "  Uasluas"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  NÍ thaispeántar sonraí atá ar iarraidh nó truaillithe."
+
+msgid "  Name"
+msgstr "  Ainm"
+
+msgid "  Nation"
+msgstr "  Náisiún"
+
+msgid "  Next calibration"
+msgstr "  An chéad chalabrú eile"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Níorbh fhéidir ach na rannóga thíos a léamh."
+
+msgid "  Paired"
+msgstr "  Péireáilte"
+
+msgid "  Part number"
+msgstr "  Uimhir pháirte"
+
+msgid "  Plate"
+msgstr "  Pláta"
+
+msgid "  Prefix"
+msgstr "  Réimír"
+
+msgid "  Registration"
+msgstr "  Clárú"
+
+msgid "  SW installed"
+msgstr "  Bogearraí suiteáilte"
+
+msgid "  Sensor approval"
+msgstr "  Faomhadh an tsensor"
+
+msgid "  Sensor paired"
+msgstr "  Sensor péireáilte"
+
+msgid "  Sensor serial"
+msgstr "  Sraithuimhir an tsensor"
+
+msgid "  Serial"
+msgstr "  Sraithuimhir"
+
+msgid "  Serial number"
+msgstr "  Sraithuimhir"
+
+msgid "  Software version"
+msgstr "  Leagan bogearraí"
+
+msgid "  Status"
+msgstr "  Stádas"
+
+msgid "  Tyre size"
+msgstr "  Méid boinn"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Bailí ó"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% den chomhad"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Dlite i {days} lá"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ ÉAGTHA ({days} lá ó shin)"
+
+msgid "# Drivers"
+msgstr "# Tiománaithe"
+
+msgid "# Vehicles"
+msgstr "# Feithiclí"
+
+msgid "(no changes)"
+msgstr "(gan athruithe)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(ní ráta díchódaithe shémantach é)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Gníomhaíocht"
+
+msgid "Activity Timeline\n"
+msgstr "Amlíne gníomhaíochta\n"
+
+msgid "All Files"
+msgstr "Gach comhad"
+
+msgid "All TREP signatures valid"
+msgstr "Tá gach síniú TREP bailí"
+
+msgid "All signatures verified"
+msgstr "Fíoraíodh gach síniú"
+
+msgid "Anchored to ERCA root"
+msgstr "Anchóraithe le fréamh ERCA"
+
+msgid "Annex 1B"
+msgstr "Iarscríbhinn 1B"
+
+msgid "Annex 1C"
+msgstr "Iarscríbhinn 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Iarscríbhinn 1C · 2023/980"
+
+msgid "App version"
+msgstr "Leagan an aipe"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Aguisín 11 · CAR=údarás eisithe, CHR=sealbhóir, bailíocht ó TimeReal"
+
+msgid "Apr"
+msgstr "Aib"
+
+msgid "Aug"
+msgstr "Lún"
+
+msgid "Available"
+msgstr "Ar fáil"
+
+msgid "Avg Drive / day"
+msgstr "Meán-tiomáint / lá"
+
+msgid "Avg km/h"
+msgstr "Meán km/h"
+
+msgid "Avg speed"
+msgstr "Meánluas"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Meán {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "Siúlóid BER-TLV · níl aguisín 11 den tsonraíocht poiblí"
+
+msgid "Border crossing"
+msgstr "Trasnú teorann"
+
+msgid "Border crossings"
+msgstr "Trasnithe teorann"
+
+msgid "Byte-accounted coverage"
+msgstr "Clúdach de réir na mbeart"
+
+msgid "CSV (.csv)"
+msgstr "CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "Comhaid CSV"
+
+msgid "CVC Certificates (decoded)"
+msgstr "Teastais CVC (díchódaithe)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Níl an cárta sa tacógraf ó {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Míthagairt i síniú shonraí an chárta"
+
+msgid "Card inserted"
+msgstr "Cárta curtha isteach"
+
+msgid "Card not inserted"
+msgstr "Níl cárta curtha isteach"
+
+msgid "Card signing key not trusted"
+msgstr "Ní bhfuil iontaoibh le heochair shínithe an chárta"
+
+msgid "Card withdrawn"
+msgstr "Cárta tarraingthe amach"
+
+msgid "Cardholder"
+msgstr "Sealbhóir an chárta"
+
+msgid "Certificate chain invalid"
+msgstr "Slabhra teastas neamhbhailí"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Níl an slabhra teastas anchóraithe le fréamh iontaofa"
+
+msgid "Certificates"
+msgstr "Teastais"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Coinníoll: {condition}"
+
+msgid "Conditions"
+msgstr "Coinníollacha"
+
+msgid "Could not save the language setting."
+msgstr "Níorbh fhéidir an socrú teanga a shábháil."
+
+msgid "Crew"
+msgstr "Criú"
+
+msgid "DDD Files"
+msgstr "Comhaid DDD"
+
+msgid "Daily Activities"
+msgstr "Gníomhaíochtaí laethúla"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Gníomhaíochtaí laethúla - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Gníomhaíochtaí laethúla {date}"
+
+msgid "Daily Detail"
+msgstr "Mionsonraí laethúla"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Mionsonraí laethúla — {day} (UTC)"
+
+msgid "Date"
+msgstr "Dáta"
+
+msgid "Days"
+msgstr "Laethanta"
+
+msgid "Dec"
+msgstr "Noll"
+
+msgid "Decoder failures"
+msgstr "Teipeanna díchódóra"
+
+msgid "Detailed Speed"
+msgstr "Luas mionsonraithe"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Luas mionsonraithe - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Luas mionsonraithe {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Fad: {km} km"
+
+msgid "Drive"
+msgstr "Tiomáint"
+
+msgid "Driver Card"
+msgstr "Cárta tiománaí"
+
+msgid "Driver Card (from VU download)"
+msgstr "Cárta tiománaí (ó íoslódáil VU)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Tiománaí: {name}"
+
+msgid "Drivers"
+msgstr "Tiománaithe"
+
+msgid "EF Signature Details"
+msgstr "Sonraí síniú EF"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "Sínithe EF (sláine shonraí an chárta)"
+
+msgid "EF signature verification failed"
+msgstr "Theip ar fhíorú síniú EF"
+
+msgid "EF signatures incomplete"
+msgstr "Sínithe EF neamhiomlána"
+
+msgid "ERCA root not available"
+msgstr "Níl fréamh ERCA ar fáil"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Isteach: {country}"
+
+msgid "Ev"
+msgstr "Teagmh."
+
+msgid "Event"
+msgstr "Teagmhas"
+
+msgid "Events"
+msgstr "Teagmhais"
+
+msgid "Excel (.xlsx)"
+msgstr "Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Leabhar oibre Excel"
+
+msgid "Export Complete"
+msgstr "Easpórtáil críochnaithe"
+
+msgid "Export Error"
+msgstr "Earráid easpórtála"
+
+msgid "Export Unavailable"
+msgstr "Níl easpórtáil ar fáil"
+
+msgid "Export failed"
+msgstr "Theip ar an easpórtáil"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Easpórtáilte: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Ag easpórtáil go JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Ag easpórtáil go {kind}…"
+
+msgid "Failed"
+msgstr "Theip"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Theip ar thaispeáint an chomhaid:\n{detail}"
+
+msgid "Fault"
+msgstr "Fabht"
+
+msgid "Faults"
+msgstr "Fabhtanna"
+
+msgid "Feb"
+msgstr "Feabh"
+
+msgid "Ferry / Train crossing"
+msgstr "Trasnú farantóireachta / traenach"
+
+msgid "Ferry / Train — Begin"
+msgstr "Farantóireacht / traein — Tús"
+
+msgid "Ferry / Train — End"
+msgstr "Farantóireacht / traein — Deireadh"
+
+msgid "Field"
+msgstr "Réimse"
+
+msgid "File Integrity"
+msgstr "Sláine an chomhaid"
+
+msgid "File Integrity Warning"
+msgstr "Rabhadh sláine comhaid"
+
+msgid "Filename"
+msgstr "Ainm comhaid"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "Fíordheimhniú GNSS (0x960F)"
+
+msgid "Generation"
+msgstr "Glúin"
+
+msgid "Generation 1"
+msgstr "Glúin 1"
+
+msgid "Generation 2"
+msgstr "Glúin 2"
+
+msgid "Generation 2.2"
+msgstr "Glúin 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "Slios IC (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "Aithint ICC"
+
+msgid "Incomplete certificates"
+msgstr "Teastais neamhiomlána"
+
+msgid "Integrity"
+msgstr "Sláine"
+
+msgid "JSON (.json)"
+msgstr "JSON (.json)"
+
+msgid "JSON Files"
+msgstr "Comhaid JSON"
+
+msgid "Jan"
+msgstr "Ean"
+
+msgid "Jul"
+msgstr "Iúil"
+
+msgid "Jun"
+msgstr "Meith"
+
+msgid "Km"
+msgstr "Km"
+
+msgid "Language"
+msgstr "Teanga"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Amach: {country}"
+
+msgid "Load/Unload"
+msgstr "Luchtú/Díluchtú"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Fíordheimhniú luchtú/díluchtaithe (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Luchtú/Díluchtú: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Lódáilte: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Ag lódáil…"
+
+msgid "MSCA→VU chain"
+msgstr "Slabhra MSCA→VU"
+
+msgid "Manual entries"
+msgstr "Iontrálacha láimhe"
+
+msgid "Manual entry"
+msgstr "Iontráil láimhe"
+
+msgid "Mar"
+msgstr "Márta"
+
+msgid "Max Drive / day"
+msgstr "Uas-tiomáint / lá"
+
+msgid "Max avg / day"
+msgstr "Uasmheán / lá"
+
+msgid "Max km/h"
+msgstr "Uas km/h"
+
+msgid "Max speed"
+msgstr "Uasluas"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Uas {speed} km/h"
+
+msgid "May"
+msgstr "Beal"
+
+msgid "Min avg / day"
+msgstr "Íosmheán / lá"
+
+msgid "No EF signatures verified"
+msgstr "Níl aon síniú EF fíoraithe"
+
+msgid "No activity data available."
+msgstr "Níl aon sonraí gníomhaíochta ar fáil."
+
+msgid "No card present"
+msgstr "Níl cárta i láthair"
+
+msgid "No data for this day.\n"
+msgstr "Níl aon sonraí don lá seo.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Níl aon samplaí mionsonraithe luais ar fáil."
+
+msgid "No file loaded"
+msgstr "Níl aon chomhad lódáilte"
+
+msgid "No sections to display."
+msgstr "Níl aon rannóga le taispeáint."
+
+msgid "No valid speed samples"
+msgstr "Níl aon samplaí bailí luais"
+
+msgid "Not locked"
+msgstr "Gan ghlas"
+
+msgid "Nov"
+msgstr "Samh"
+
+msgid "Oct"
+msgstr "DFómh"
+
+msgid "Odometer"
+msgstr "Odaiméadar"
+
+msgid "Odometer km"
+msgstr "Odaiméadar km"
+
+msgid "Origin"
+msgstr "Bunús"
+
+msgid "Origin details"
+msgstr "Sonraí an bhunúis"
+
+msgid "Out of scope — Begin"
+msgstr "Lasmuigh den raon — Tús"
+
+msgid "Out of scope — End"
+msgstr "Lasmuigh den raon — Deireadh"
+
+msgid "Overspeed events"
+msgstr "Teagmhais róluais"
+
+msgid "Overspeeding"
+msgstr "Róluas"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Róluas: {start} → {end} | uas {max_speed} | meán {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "Doiciméad PDF"
+
+msgid "Parsed at"
+msgstr "Díchódaithe ag"
+
+msgid "Parsing Error"
+msgstr "Earráid pharsála"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Earráid pharsála — ag taispeáint an chomhaid roimhe: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Ag parsáil {filename}…"
+
+msgid "Partial verification"
+msgstr "Fíorú páirteach"
+
+msgid "Place"
+msgstr "Áit"
+
+msgid "Place: Begin"
+msgstr "Áit: Tús"
+
+msgid "Place: End"
+msgstr "Áit: Deireadh"
+
+msgid "Places"
+msgstr "Áiteanna"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Pláta: {plate}"
+
+msgid "Power interruption"
+msgstr "Scoith cumhachta"
+
+msgid "Power interruptions"
+msgstr "Scoiteanna cumhachta"
+
+msgid "Ready — open a .ddd file"
+msgstr "Réidh — oscail comhad .ddd"
+
+msgid "Rendering Error"
+msgstr "Earráid rindreála"
+
+msgid "Rest"
+msgstr "Scíth"
+
+msgid "Restart the application to apply the new language."
+msgstr "Atosaigh an aip chun an teanga nua a chur i bhfeidhm."
+
+msgid "Samples"
+msgstr "Samplaí"
+
+msgid "Section Signatures (TREP)"
+msgstr "Sínithe rannóg (TREP)"
+
+msgid "Sep"
+msgstr "MFómh"
+
+msgid "Signature Verification"
+msgstr "Fíorú sínithe"
+
+msgid "Size"
+msgstr "Méid"
+
+msgid "Skipped"
+msgstr "Scipeáilte"
+
+msgid "Slot"
+msgstr "Sliotán"
+
+msgid "Slot 1"
+msgstr "Sliotán 1"
+
+msgid "Slot 2"
+msgstr "Sliotán 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Sliotán {number}"
+
+msgid "Speed (km/h)"
+msgstr "Luas (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Clúdach aithnithe go struchtúrach"
+
+msgid "Sub-section"
+msgstr "Fo-rannóg"
+
+msgid "Summary"
+msgstr "Achoimre"
+
+msgid "Summary\n"
+msgstr "Achoimre\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "D'fhéadfadh an comhad a bheith neamhiomlán nó truaillithe.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Am"
+
+msgid "Time >90 km/h"
+msgstr "Am >90 km/h"
+
+msgid "Total"
+msgstr "Iomlán"
+
+msgid "Unknown bytes"
+msgstr "Bearta anaithnide"
+
+msgid "Unknown event"
+msgstr "Teagmhas anaithnid"
+
+msgid "Unknown fault"
+msgstr "Fabht anaithnid"
+
+msgid "Unknown parsing error"
+msgstr "Earráid pharsála anaithnid"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "Sínithe VU TREP bailí (slabhra gan fhíorú)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "Sínithe VU TREP fíoraithe (slabhra páirteach)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "Sínithe VU fíoraithe (fréamh anchóraithe)"
+
+msgid "Value"
+msgstr "Luach"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Aonad feithicle (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Feithicil: {plates}"
+
+msgid "Vehicles"
+msgstr "Feithiclí"
+
+msgid "Verification error"
+msgstr "Earráid fíoraithe"
+
+msgid "Verified"
+msgstr "Fíoraithe"
+
+msgid "Work"
+msgstr "Obair"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} athrú gníomhaíochta"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} beart"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} beart gan díchódú"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} athrú"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} tiománaí"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nNíor aimsíodh aon fhadhb sláine."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} lá"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "Níl easpórtáil {kind} ar fáil. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "Teastaíonn pacáiste breise le haghaidh easpórtála {kind}:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} sábháilte i:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s taifeadta | uas {max_speed} km/h | meán {avg_speed:.1f} km/h | {above} os cionn {limit} km/h | {moving} ag gluaiseacht | {gaps} bhearna inmheánacha"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} sraith · {columns} colún"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Cliceáil faoi dhó le haghaidh na sonraí iomlána"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Tarraingt amach"
+
+msgid "▼ Insertion"
+msgstr "▼ Cur isteach"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  COMHAD TRUAILLITHE / NEAMHIOMLÁN"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  RANNÓGA TRUAILLITHE (sonraí curtha ar ceal)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Teipeanna díchódóra"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  TÁ AN COMHAD SEO NEAMHIOMLÁN NÓ TRUAILLITHE"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} rabhadh sláine — cliceáil le haghaidh sonraí"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  RANNÓGA I LÁTHAIR"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  PRÍOMH-RANNÓGA AR IARRAIDH"
+
+msgid "❌  Parse error"
+msgstr "❌  Earráid pharsála"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Gearrtha (níor sroicheadh deireadh an chomhaid)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Teastais neamhiomlána"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  SEALBHÓIR AN CHÁRTA"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Tiománaí / sealbhóir an chárta"
+
+msgid "💻  VU INFO"
+msgstr "💻  EOLAS VU"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Oscail comhad DDD"
+
+msgid "📄  File Info"
+msgstr "📄  Eolas comhaid"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  RAON DÁTAÍ"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  IOMLÁINE"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  PARAMAIRÉADAIR"
+
+msgid "📊  STATISTICS"
+msgstr "📊  STAITISTIC"
+
+msgid "📡  SENSOR"
+msgstr "📡  BRAITEOIR"
+
+msgid "📡  Sensor"
+msgstr "📡  Braiteoir"
+
+msgid "📤  Export"
+msgstr "📤  Easpórtáil"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation}{annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  SÍNITHE"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Slándáil agus teastais"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  GLAS REATHA"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  GLAS REATHA"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  FEITHICIL GHAOLMHAR"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  FEITHICIL"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Feithicil"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  AISGHABHTHA Ó SHONRAÍ MILLTE"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Sonraí amha / neamhpharsáilte"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  SONRAÍ AN CHÁRTA"

@@ -1,0 +1,978 @@
+# Machine-assisted UI translation; native review welcome.
+# Technical data, field identifiers and parser diagnostics remain English.
+msgid ""
+msgstr "Project-Id-Version: TachoReader\nLanguage: nb\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\n"
+
+msgid "  (none)"
+msgstr "  (ingen)"
+
+msgid "  Ability"
+msgstr "  Evne"
+
+msgid "  Activity changes"
+msgstr "  Aktivitetsendringer"
+
+msgid "  Actual range"
+msgstr "  Faktisk rekkevidde"
+
+msgid "  Address"
+msgstr "  Adresse"
+
+msgid "  Approval"
+msgstr "  Godkjenning"
+
+msgid "  Authorised speed"
+msgstr "  Tillatt hastighet"
+
+msgid "  Avg speed"
+msgstr "  Gjennomsnittshastighet"
+
+msgid "  Birth date"
+msgstr "  Fødselsdato"
+
+msgid "  Card downloads"
+msgstr "  Kortnedlastinger"
+
+msgid "  Card number"
+msgstr "  Kortnummer"
+
+#, python-brace-format
+msgid "  Card present: {from_time} – {to_time}\n"
+msgstr "  Kort til stede: {from_time} – {to_time}\n"
+
+msgid "  Company"
+msgstr "  Selskap"
+
+msgid "  Days recorded"
+msgstr "  Registrerte dager"
+
+msgid "  Days with activities"
+msgstr "  Dager med aktiviteter"
+
+msgid "  Days with activity"
+msgstr "  Dager med aktivitet"
+
+msgid "  Digital map"
+msgstr "  Digitalt kart"
+
+msgid "  Distance"
+msgstr "  Avstand"
+
+msgid "  EF verification"
+msgstr "  EF-kontroll"
+
+msgid "  Events"
+msgstr "  Hendelser"
+
+msgid "  Expiry date"
+msgstr "  Utløpsdato"
+
+msgid "  Faults"
+msgstr "  Feil"
+
+msgid "  File structure"
+msgstr "  Filstruktur"
+
+msgid "  First date"
+msgstr "  Første dato"
+
+msgid "  GNSS Serial"
+msgstr "  GNSS-serienummer"
+
+msgid "  Generation"
+msgstr "  Generasjon"
+
+msgid "  Issue date"
+msgstr "  Utstedelsesdato"
+
+msgid "  Issuing authority"
+msgstr "  Utstedende myndighet"
+
+msgid "  Issuing nation"
+msgstr "  Utstedende land"
+
+msgid "  Language"
+msgstr "  Språk"
+
+msgid "  Last date"
+msgstr "  Siste dato"
+
+msgid "  Licence number"
+msgstr "  Førerkortnummer"
+
+msgid "  Lock card"
+msgstr "  Lås kortet"
+
+msgid "  Locked since"
+msgstr "  Låst siden"
+
+msgid "  Low-confidence recovery"
+msgstr "  Gjenoppretting med lav sikkerhet"
+
+msgid "  Make"
+msgstr "  Merke"
+
+msgid "  Mandatory sections read"
+msgstr "  Påkrevde seksjoner lest"
+
+msgid "  Manufactured"
+msgstr "  Produsert"
+
+msgid "  Manufacturer"
+msgstr "  Produsent"
+
+msgid "  Max speed"
+msgstr "  Maks hastighet"
+
+msgid "  Missing or corrupted data is NOT shown."
+msgstr "  Manglende eller ødelagte data vises IKKE."
+
+msgid "  Name"
+msgstr "  Navn"
+
+msgid "  Nation"
+msgstr "  Land"
+
+msgid "  Next calibration"
+msgstr "  Neste kalibrering"
+
+msgid "  Only the sections listed below could be read."
+msgstr "  Bare seksjonene nedenfor kunne leses."
+
+msgid "  Paired"
+msgstr "  Paret"
+
+msgid "  Part number"
+msgstr "  Delenummer"
+
+msgid "  Plate"
+msgstr "  Skilt"
+
+msgid "  Prefix"
+msgstr "  Prefiks"
+
+msgid "  Registration"
+msgstr "  Registrering"
+
+msgid "  SW installed"
+msgstr "  Installert programvare"
+
+msgid "  Sensor approval"
+msgstr "  Sensorgodkjenning"
+
+msgid "  Sensor paired"
+msgstr "  Sensor paret"
+
+msgid "  Sensor serial"
+msgstr "  Sensorens serienummer"
+
+msgid "  Serial"
+msgstr "  Serienummer"
+
+msgid "  Serial number"
+msgstr "  Serienummer"
+
+msgid "  Software version"
+msgstr "  Programvareversjon"
+
+msgid "  Status"
+msgstr "  Status"
+
+msgid "  Tyre size"
+msgstr "  Dekkstørrelse"
+
+msgid "  VIN"
+msgstr "  VIN"
+
+msgid "  Valid from"
+msgstr "  Gyldig fra"
+
+#, python-brace-format
+msgid "  ·  {percent:.2f}% of file"
+msgstr "  ·  {percent:.2f}% av filen"
+
+#, python-brace-format
+msgid "  ⚠️  Due in {days} days"
+msgstr "  ⚠️  Forfall om {days} dager"
+
+#, python-brace-format
+msgid "  ❌ EXPIRED ({days} days ago)"
+msgstr "  ❌ UTLØPT ({days} dager siden)"
+
+msgid "# Drivers"
+msgstr "# Sjåfører"
+
+msgid "# Vehicles"
+msgstr "# Kjøretøy"
+
+msgid "(no changes)"
+msgstr "(ingen endringer)"
+
+msgid "(not a semantic decoding rate)"
+msgstr "(ikke en semantisk dekodingsgrad)"
+
+msgid ">90 km/h"
+msgstr ">90 km/h"
+
+msgid "Activity"
+msgstr "Aktivitet"
+
+msgid "Activity Timeline\n"
+msgstr "Aktivitetstidslinje\n"
+
+msgid "All Files"
+msgstr "Alle filer"
+
+msgid "All TREP signatures valid"
+msgstr "Alle TREP-signaturer er gyldige"
+
+msgid "All signatures verified"
+msgstr "Alle signaturer verifisert"
+
+msgid "Anchored to ERCA root"
+msgstr "Forankret til ERCA-rot"
+
+msgid "Annex 1B"
+msgstr "Vedlegg 1B"
+
+msgid "Annex 1C"
+msgstr "Vedlegg 1C"
+
+msgid "Annex 1C · 2023/980"
+msgstr "Vedlegg 1C · 2023/980"
+
+msgid "App version"
+msgstr "Appversjon"
+
+msgid "Appendix 11 · CAR=issuing authority, CHR=holder, validity from TimeReal"
+msgstr "Tillegg 11 · CAR=utstedende myndighet, CHR=innehaver, gyldighet fra TimeReal"
+
+msgid "Apr"
+msgstr "Apr"
+
+msgid "Aug"
+msgstr "Aug"
+
+msgid "Available"
+msgstr "Tilgjengelig"
+
+msgid "Avg Drive / day"
+msgstr "Snitt kjøring / dag"
+
+msgid "Avg km/h"
+msgstr "Snitt km/h"
+
+msgid "Avg speed"
+msgstr "Snitthastighet"
+
+#, python-brace-format
+msgid "Avg {speed} km/h"
+msgstr "Snitt {speed} km/h"
+
+msgid "BER-TLV walk · spec Appendix 11 not public"
+msgstr "BER-TLV-gjennomgang · spesifikasjonens tillegg 11 er ikke offentlig"
+
+msgid "Border crossing"
+msgstr "Grensepassering"
+
+msgid "Border crossings"
+msgstr "Grensepasseringer"
+
+msgid "Byte-accounted coverage"
+msgstr "Bytebasert dekning"
+
+msgid "CSV (.csv)"
+msgstr "CSV (.csv)"
+
+msgid "CSV Files"
+msgstr "CSV-filer"
+
+msgid "CVC Certificates (decoded)"
+msgstr "CVC-sertifikater (dekodet)"
+
+#, python-brace-format
+msgid "Card absent from the tachograph as of {time}"
+msgstr "Kortet er ikke i fartsskriveren fra {time}"
+
+msgid "Card data signature mismatch"
+msgstr "Kortdatasignatur stemmer ikke"
+
+msgid "Card inserted"
+msgstr "Kort satt inn"
+
+msgid "Card not inserted"
+msgstr "Kort ikke satt inn"
+
+msgid "Card signing key not trusted"
+msgstr "Kortets signeringsnøkkel er ikke klarert"
+
+msgid "Card withdrawn"
+msgstr "Kort tatt ut"
+
+msgid "Cardholder"
+msgstr "Kortholder"
+
+msgid "Certificate chain invalid"
+msgstr "Sertifikatkjeden er ugyldig"
+
+msgid "Certificate chain not anchored to a trusted root"
+msgstr "Sertifikatkjeden er ikke forankret i en klarert rot"
+
+msgid "Certificates"
+msgstr "Sertifikater"
+
+#, python-brace-format
+msgid "Condition: {condition}"
+msgstr "Vilkår: {condition}"
+
+msgid "Conditions"
+msgstr "Vilkår"
+
+msgid "Could not save the language setting."
+msgstr "Kunne ikke lagre språkinnstillingen."
+
+msgid "Crew"
+msgstr "Mannskap"
+
+msgid "DDD Files"
+msgstr "DDD-filer"
+
+msgid "Daily Activities"
+msgstr "Daglige aktiviteter"
+
+#, python-brace-format
+msgid "Daily Activities - {day} (UTC)"
+msgstr "Daglige aktiviteter - {day} (UTC)"
+
+#, python-brace-format
+msgid "Daily Activities {date}"
+msgstr "Daglige aktiviteter {date}"
+
+msgid "Daily Detail"
+msgstr "Daglig detalj"
+
+#, python-brace-format
+msgid "Daily Detail — {day} (UTC)"
+msgstr "Daglig detalj — {day} (UTC)"
+
+msgid "Date"
+msgstr "Dato"
+
+msgid "Days"
+msgstr "Dager"
+
+msgid "Dec"
+msgstr "Des"
+
+msgid "Decoder failures"
+msgstr "Dekoderfeil"
+
+msgid "Detailed Speed"
+msgstr "Detaljert hastighet"
+
+#, python-brace-format
+msgid "Detailed Speed - {day} (UTC)"
+msgstr "Detaljert hastighet - {day} (UTC)"
+
+#, python-brace-format
+msgid "Detailed Speed {day}"
+msgstr "Detaljert hastighet {day}"
+
+#, python-brace-format
+msgid "Distance: {km} km"
+msgstr "Avstand: {km} km"
+
+msgid "Drive"
+msgstr "Kjøring"
+
+msgid "Driver Card"
+msgstr "Førerkort"
+
+msgid "Driver Card (from VU download)"
+msgstr "Førerkort (fra VU-nedlasting)"
+
+#, python-brace-format
+msgid "Driver: {name}"
+msgstr "Sjåfør: {name}"
+
+msgid "Drivers"
+msgstr "Sjåfører"
+
+msgid "EF Signature Details"
+msgstr "EF-signaturdetaljer"
+
+msgid "EF Signatures (Card Data Integrity)"
+msgstr "EF-signaturer (kortdataintegritet)"
+
+msgid "EF signature verification failed"
+msgstr "EF-signaturverifisering mislyktes"
+
+msgid "EF signatures incomplete"
+msgstr "EF-signaturer ufullstendige"
+
+msgid "ERCA root not available"
+msgstr "ERCA-rot er ikke tilgjengelig"
+
+#, python-brace-format
+msgid "Entered: {country}"
+msgstr "Innreist: {country}"
+
+msgid "Ev"
+msgstr "Hend."
+
+msgid "Event"
+msgstr "Hendelse"
+
+msgid "Events"
+msgstr "Hendelser"
+
+msgid "Excel (.xlsx)"
+msgstr "Excel (.xlsx)"
+
+msgid "Excel Workbook"
+msgstr "Excel-arbeidsbok"
+
+msgid "Export Complete"
+msgstr "Eksport fullført"
+
+msgid "Export Error"
+msgstr "Eksportfeil"
+
+msgid "Export Unavailable"
+msgstr "Eksport utilgjengelig"
+
+msgid "Export failed"
+msgstr "Eksport mislyktes"
+
+#, python-brace-format
+msgid "Exported: {filename}"
+msgstr "Eksportert: {filename}"
+
+msgid "Exporting to JSON…"
+msgstr "Eksporterer til JSON…"
+
+#, python-brace-format
+msgid "Exporting to {kind}…"
+msgstr "Eksporterer til {kind}…"
+
+msgid "Failed"
+msgstr "Mislyktes"
+
+#, python-brace-format
+msgid "Failed to display file:\n{detail}"
+msgstr "Kunne ikke vise filen:\n{detail}"
+
+msgid "Fault"
+msgstr "Feil"
+
+msgid "Faults"
+msgstr "Feil"
+
+msgid "Feb"
+msgstr "Feb"
+
+msgid "Ferry / Train crossing"
+msgstr "Ferje-/togpassering"
+
+msgid "Ferry / Train — Begin"
+msgstr "Ferje / tog — start"
+
+msgid "Ferry / Train — End"
+msgstr "Ferje / tog — slutt"
+
+msgid "Field"
+msgstr "Felt"
+
+msgid "File Integrity"
+msgstr "Filintegritet"
+
+msgid "File Integrity Warning"
+msgstr "Advarsel om filintegritet"
+
+msgid "Filename"
+msgstr "Filnavn"
+
+msgid "GNSS Authentication (0x960F)"
+msgstr "GNSS-autentisering (0x960F)"
+
+msgid "Generation"
+msgstr "Generasjon"
+
+msgid "Generation 1"
+msgstr "Generasjon 1"
+
+msgid "Generation 2"
+msgstr "Generasjon 2"
+
+msgid "Generation 2.2"
+msgstr "Generasjon 2.2"
+
+msgid "IC Chip (EF_ICC / EF_IC)"
+msgstr "IC-brikke (EF_ICC / EF_IC)"
+
+msgid "ICC Identification"
+msgstr "ICC-identifikasjon"
+
+msgid "Incomplete certificates"
+msgstr "Ufullstendige sertifikater"
+
+msgid "Integrity"
+msgstr "Integritet"
+
+msgid "JSON (.json)"
+msgstr "JSON (.json)"
+
+msgid "JSON Files"
+msgstr "JSON-filer"
+
+msgid "Jan"
+msgstr "Jan"
+
+msgid "Jul"
+msgstr "Jul"
+
+msgid "Jun"
+msgstr "Jun"
+
+msgid "Km"
+msgstr "Km"
+
+msgid "Language"
+msgstr "Språk"
+
+#, python-brace-format
+msgid "Left: {country}"
+msgstr "Ut: {country}"
+
+msgid "Load/Unload"
+msgstr "Laste/losse"
+
+msgid "Load/Unload Authentication (0x6399)"
+msgstr "Autentisering av lasting/lossing (0x6399)"
+
+#, python-brace-format
+msgid "Load/Unload: {operation}"
+msgstr "Laste/losse: {operation}"
+
+#, python-brace-format
+msgid "Loaded: {filename}  |  {generation}"
+msgstr "Lastet: {filename}  |  {generation}"
+
+msgid "Loading…"
+msgstr "Laster…"
+
+msgid "MSCA→VU chain"
+msgstr "MSCA→VU-kjede"
+
+msgid "Manual entries"
+msgstr "Manuelle registreringer"
+
+msgid "Manual entry"
+msgstr "Manuell registrering"
+
+msgid "Mar"
+msgstr "Mar"
+
+msgid "Max Drive / day"
+msgstr "Maks kjøring / dag"
+
+msgid "Max avg / day"
+msgstr "Maks snitt / dag"
+
+msgid "Max km/h"
+msgstr "Maks km/h"
+
+msgid "Max speed"
+msgstr "Maks hastighet"
+
+#, python-brace-format
+msgid "Max {speed} km/h"
+msgstr "Maks {speed} km/h"
+
+msgid "May"
+msgstr "Mai"
+
+msgid "Min avg / day"
+msgstr "Min snitt / dag"
+
+msgid "No EF signatures verified"
+msgstr "Ingen EF-signaturer verifisert"
+
+msgid "No activity data available."
+msgstr "Ingen aktivitetsdata tilgjengelig."
+
+msgid "No card present"
+msgstr "Ingen kort til stede"
+
+msgid "No data for this day.\n"
+msgstr "Ingen data for denne dagen.\n"
+
+msgid "No detailed speed samples available."
+msgstr "Ingen detaljerte hastighetsprøver tilgjengelig."
+
+msgid "No file loaded"
+msgstr "Ingen fil lastet"
+
+msgid "No sections to display."
+msgstr "Ingen seksjoner å vise."
+
+msgid "No valid speed samples"
+msgstr "Ingen gyldige hastighetsprøver"
+
+msgid "Not locked"
+msgstr "Ikke låst"
+
+msgid "Nov"
+msgstr "Nov"
+
+msgid "Oct"
+msgstr "Okt"
+
+msgid "Odometer"
+msgstr "Kilometerteller"
+
+msgid "Odometer km"
+msgstr "Kilometerteller km"
+
+msgid "Origin"
+msgstr "Opphav"
+
+msgid "Origin details"
+msgstr "Opphavsdetaljer"
+
+msgid "Out of scope — Begin"
+msgstr "Utenfor virkeområdet — start"
+
+msgid "Out of scope — End"
+msgstr "Utenfor virkeområdet — slutt"
+
+msgid "Overspeed events"
+msgstr "Fartsovertredelser"
+
+msgid "Overspeeding"
+msgstr "Fartsovertredelse"
+
+#, python-brace-format
+msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
+msgstr "Fartsovertredelse: {start} → {end} | maks {max_speed} | snitt {avg_speed}"
+
+msgid "PDF (.pdf)"
+msgstr "PDF (.pdf)"
+
+msgid "PDF Document"
+msgstr "PDF-dokument"
+
+msgid "Parsed at"
+msgstr "Dekodet"
+
+msgid "Parsing Error"
+msgstr "Dekodingsfeil"
+
+#, python-brace-format
+msgid "Parsing error — showing previous file: {filename}"
+msgstr "Dekodingsfeil — viser forrige fil: {filename}"
+
+#, python-brace-format
+msgid "Parsing {filename}…"
+msgstr "Dekoder {filename}…"
+
+msgid "Partial verification"
+msgstr "Delvis verifisering"
+
+msgid "Place"
+msgstr "Sted"
+
+msgid "Place: Begin"
+msgstr "Sted: start"
+
+msgid "Place: End"
+msgstr "Sted: slutt"
+
+msgid "Places"
+msgstr "Steder"
+
+#, python-brace-format
+msgid "Plate: {plate}"
+msgstr "Skilt: {plate}"
+
+msgid "Power interruption"
+msgstr "Strømbrudd"
+
+msgid "Power interruptions"
+msgstr "Strømbrudd"
+
+msgid "Ready — open a .ddd file"
+msgstr "Klar — åpne en .ddd-fil"
+
+msgid "Rendering Error"
+msgstr "Visningsfeil"
+
+msgid "Rest"
+msgstr "Hvile"
+
+msgid "Restart the application to apply the new language."
+msgstr "Start appen på nytt for å ta i bruk det nye språket."
+
+msgid "Samples"
+msgstr "Prøver"
+
+msgid "Section Signatures (TREP)"
+msgstr "Seksjonssignaturer (TREP)"
+
+msgid "Sep"
+msgstr "Sep"
+
+msgid "Signature Verification"
+msgstr "Signaturverifisering"
+
+msgid "Size"
+msgstr "Størrelse"
+
+msgid "Skipped"
+msgstr "Hoppet over"
+
+msgid "Slot"
+msgstr "Spor"
+
+msgid "Slot 1"
+msgstr "Spor 1"
+
+msgid "Slot 2"
+msgstr "Spor 2"
+
+#, python-brace-format
+msgid "Slot {number}"
+msgstr "Spor {number}"
+
+msgid "Speed (km/h)"
+msgstr "Hastighet (km/h)"
+
+msgid "Structurally identified coverage"
+msgstr "Strukturelt identifisert dekning"
+
+msgid "Sub-section"
+msgstr "Underseksjon"
+
+msgid "Summary"
+msgstr "Sammendrag"
+
+msgid "Summary\n"
+msgstr "Sammendrag\n"
+
+#, python-brace-format
+msgid "The file may be incomplete or corrupted.\n\n{filename}\n\n"
+msgstr "Filen kan være ufullstendig eller ødelagt.\n\n{filename}\n\n"
+
+msgid "Time"
+msgstr "Tid"
+
+msgid "Time >90 km/h"
+msgstr "Tid >90 km/h"
+
+msgid "Total"
+msgstr "Totalt"
+
+msgid "Unknown bytes"
+msgstr "Ukjente bytes"
+
+msgid "Unknown event"
+msgstr "Ukjent hendelse"
+
+msgid "Unknown fault"
+msgstr "Ukjent feil"
+
+msgid "Unknown parsing error"
+msgstr "Ukjent dekodingsfeil"
+
+msgid "VU TREP signatures valid (chain unverified)"
+msgstr "VU TREP-signaturer gyldige (kjede ikke verifisert)"
+
+msgid "VU TREP signatures verified (chain partial)"
+msgstr "VU TREP-signaturer verifisert (kjede delvis)"
+
+msgid "VU signatures verified (root anchored)"
+msgstr "VU-signaturer verifisert (rot forankret)"
+
+msgid "Value"
+msgstr "Verdi"
+
+msgid "Vehicle Unit (VU)"
+msgstr "Kjøretøyenhet (VU)"
+
+#, python-brace-format
+msgid "Vehicle: {plates}"
+msgstr "Kjøretøy: {plates}"
+
+msgid "Vehicles"
+msgstr "Kjøretøy"
+
+msgid "Verification error"
+msgstr "Verifiseringsfeil"
+
+msgid "Verified"
+msgstr "Verifisert"
+
+msgid "Work"
+msgstr "Arbeid"
+
+#, python-brace-format
+msgid "{count} activity changes"
+msgstr "{count} aktivitetsendringer"
+
+#, python-brace-format
+msgid "{count} bytes"
+msgstr "{count} bytes"
+
+#, python-brace-format
+msgid "{count} bytes undecoded"
+msgstr "{count} bytes udekodet"
+
+#, python-brace-format
+msgid "{count} changes"
+msgstr "{count} endringer"
+
+#, python-brace-format
+msgid "{count} drivers"
+msgstr "{count} sjåfører"
+
+#, python-brace-format
+msgid "{day} (UTC)"
+msgstr "{day} (UTC)"
+
+#, python-brace-format
+msgid "{filename}\n\nNo integrity issues detected."
+msgstr "{filename}\n\nIngen integritetsproblemer funnet."
+
+#, python-brace-format
+msgid "{first}  →  {last}  ·  {days} days"
+msgstr "{first}  →  {last}  ·  {days} dager"
+
+#, python-brace-format
+msgid "{kind} export is unavailable. {requirement}"
+msgstr "{kind}-eksport er utilgjengelig. {requirement}"
+
+#, python-brace-format
+msgid "{kind} export requires an extra package:\n{error}\n{requirement}"
+msgstr "{kind}-eksport krever en ekstra pakke:\n{error}\n{requirement}"
+
+#, python-brace-format
+msgid "{kind} saved to:\n{path}"
+msgstr "{kind} lagret i:\n{path}"
+
+#, python-brace-format
+msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
+msgstr "{recorded:,} s registrert | maks {max_speed} km/h | snitt {avg_speed:.1f} km/h | {above} over {limit} km/h | {moving} i bevegelse | {gaps} interne hull"
+
+#, python-brace-format
+msgid "{rows} rows · {columns} columns"
+msgstr "{rows} rader · {columns} kolonner"
+
+msgid "ℹ️  Double-click for full details"
+msgstr "ℹ️  Dobbeltklikk for alle detaljer"
+
+msgid "▲ Withdrawal"
+msgstr "▲ Uttak"
+
+msgid "▼ Insertion"
+msgstr "▼ Innsetting"
+
+msgid "⚠️  CORRUPTED / PARTIAL FILE"
+msgstr "⚠️  ØDELAGT / UFULLSTENDIG FIL"
+
+msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
+msgstr "⚠️  ØDELAGTE SEKSJONER (data forkastet)"
+
+msgid "⚠️  Decoder Failures"
+msgstr "⚠️  Dekoderfeil"
+
+msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "⚠️  DENNE FILEN ER UFULLSTENDIG ELLER ØDELAGT"
+
+#, python-brace-format
+msgid "⚠️  {count} integrity warning(s) — click for details"
+msgstr "⚠️  {count} integritetsadvarsler — klikk for detaljer"
+
+msgid "✅  SECTIONS PRESENT"
+msgstr "✅  SEKSJONER TIL STEDE"
+
+msgid "❌  MISSING MANDATORY SECTIONS"
+msgstr "❌  PÅKREVDE SEKSJONER MANGLER"
+
+msgid "❌  Parse error"
+msgstr "❌  Dekodingsfeil"
+
+msgid "❌  Truncated (did not reach end of file)"
+msgstr "❌  Avkortet (nådde ikke slutten av filen)"
+
+msgid "❓  Incomplete certificates"
+msgstr "❓  Ufullstendige sertifikater"
+
+msgid "👤  CARDHOLDER"
+msgstr "👤  KORTHOLDER"
+
+msgid "👤  Driver / Cardholder"
+msgstr "👤  Sjåfør / kortholder"
+
+msgid "💻  VU INFO"
+msgstr "💻  VU-INFORMASJON"
+
+msgid "📂  Open DDD file"
+msgstr "📂  Åpne DDD-fil"
+
+msgid "📄  File Info"
+msgstr "📄  Filinformasjon"
+
+msgid "📅  DATE RANGE"
+msgstr "📅  DATOPERIODE"
+
+msgid "📊  COMPLETENESS"
+msgstr "📊  FULLSTENDIGHET"
+
+msgid "📊  PARAMETERS"
+msgstr "📊  PARAMETERE"
+
+msgid "📊  STATISTICS"
+msgstr "📊  STATISTIKK"
+
+msgid "📡  SENSOR"
+msgstr "📡  SENSOR"
+
+msgid "📡  Sensor"
+msgstr "📡  Sensor"
+
+msgid "📤  Export"
+msgstr "📤  Eksport"
+
+#, python-brace-format
+msgid "📦  {generation}{annex}"
+msgstr "📦  {generation}{annex}"
+
+msgid "🔐  SIGNATURES"
+msgstr "🔐  SIGNATURER"
+
+msgid "🔐  Security & Certificates"
+msgstr "🔐  Sikkerhet og sertifikater"
+
+msgid "🔒  CURRENT LOCK"
+msgstr "🔒  GJELDENDE LÅS"
+
+msgid "🔓  CURRENT LOCK"
+msgstr "🔓  GJELDENDE LÅS"
+
+msgid "🚗  ASSOCIATED VEHICLE"
+msgstr "🚗  TILKNYTTET KJØRETØY"
+
+msgid "🚗  VEHICLE"
+msgstr "🚗  KJØRETØY"
+
+msgid "🚚  Vehicle"
+msgstr "🚚  Kjøretøy"
+
+msgid "🛠️  RECOVERED FROM DAMAGED DATA"
+msgstr "🛠️  GJENOPPRETTET FRA SKADEDE DATA"
+
+msgid "🧩  Raw / Unparsed Data"
+msgstr "🧩  Rådata / udekodede data"
+
+msgid "🪪  CARD DETAILS"
+msgstr "🪪  KORTDETALJER"
