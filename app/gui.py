@@ -1195,6 +1195,36 @@ class ActivityTimelineChart(ttk.Frame):
 
         self.summary_lbl.config(text="\n".join(totals_lines))
 
+    def _draw_hover_tip(self, text, event, reserve):
+        """Draw a hover tooltip that always stays inside the canvas.
+
+        ``reserve`` is the old fixed guess at the room the text needs; it keeps
+        tooltips that already fit exactly where they were. The real bounding
+        box is then measured, so a translated (longer) string is moved back
+        inside the canvas instead of losing its tail, and one that is wider
+        than the whole canvas is wrapped to the available width.
+        """
+        canvas = self.canvas
+        width = canvas.winfo_width()
+        pad = 5
+        margin = pad + 1
+        text_id = canvas.create_text(
+            min(event.x + 12, width - reserve), max(event.y - 24, 4), text=text,
+            anchor=tk.NW, fill="#17212b", tags="act_hover")
+        x1, y1, x2, y2 = canvas.bbox(text_id)
+        if x2 > width - margin:
+            canvas.move(text_id, width - margin - x2, 0)
+            x1, y1, x2, y2 = canvas.bbox(text_id)
+        if x1 < margin:
+            canvas.itemconfigure(text_id, width=max(1, width - 2 * margin))
+            x1, y1, x2, y2 = canvas.bbox(text_id)
+            canvas.move(text_id, margin - x1, 0)
+            x1, y1, x2, y2 = canvas.bbox(text_id)
+        bg = canvas.create_rectangle(
+            x1 - pad, y1 - 3, x2 + pad, y2 + 3,
+            fill="#fffde7", outline="#9e9e9e", tags="act_hover")
+        canvas.tag_lower(bg, text_id)
+
     def _show_hover(self, event):
         if not self._layout or not self._slots:
             return
@@ -1207,16 +1237,7 @@ class ActivityTimelineChart(ttk.Frame):
             if abs(event.x - mx) <= 10 and abs(event.y - my) <= 10:
                 kind = _("\u25bc Insertion") if is_ins else _("\u25b2 Withdrawal")
                 text = f"{kind}: {m_name} ({_(m_slot)})"
-                label_x = min(event.x + 12, self.canvas.winfo_width() - 260)
-                label_y = max(event.y - 24, 4)
-                text_id = self.canvas.create_text(
-                    label_x, label_y, text=text, anchor=tk.NW,
-                    fill="#17212b", tags="act_hover")
-                x1, yb1, x2, yb2 = self.canvas.bbox(text_id)
-                bg = self.canvas.create_rectangle(
-                    x1 - 5, yb1 - 3, x2 + 5, yb2 + 3,
-                    fill="#fffde7", outline="#9e9e9e", tags="act_hover")
-                self.canvas.tag_lower(bg, text_id)
+                self._draw_hover_tip(text, event, 260)
                 return
 
         # Check OOS markers
@@ -1224,16 +1245,7 @@ class ActivityTimelineChart(ttk.Frame):
             if abs(event.x - ox) <= 10 and abs(event.y - oy) <= 10:
                 ts_str = ts.strftime("%H:%M") if ts else "?"
                 text = f"{cond}: {ts_str}"
-                label_x = min(event.x + 12, self.canvas.winfo_width() - 260)
-                label_y = max(event.y - 24, 4)
-                text_id = self.canvas.create_text(
-                    label_x, label_y, text=text, anchor=tk.NW,
-                    fill="#17212b", tags="act_hover")
-                x1, yb1, x2, yb2 = self.canvas.bbox(text_id)
-                bg = self.canvas.create_rectangle(
-                    x1 - 5, yb1 - 3, x2 + 5, yb2 + 3,
-                    fill="#fffde7", outline="#9e9e9e", tags="act_hover")
-                self.canvas.tag_lower(bg, text_id)
+                self._draw_hover_tip(text, event, 260)
                 return
 
         has_multi = self._layout.get("has_multi", False)
@@ -1260,16 +1272,7 @@ class ActivityTimelineChart(ttk.Frame):
                 text = (f"{_act_label(act)}  "
                         f"[{sh:02d}:{sm:02d} \u2014 {eh:02d}:{em:02d}]  "
                         f"\u00b7  {dh}h {dm:02d}m")
-            label_x = min(event.x + 12, self.canvas.winfo_width() - 300)
-            label_y = max(event.y - 24, 4)
-            text_id = self.canvas.create_text(
-                label_x, label_y, text=text, anchor=tk.NW,
-                fill="#17212b", tags="act_hover")
-            x1, yb1, x2, yb2 = self.canvas.bbox(text_id)
-            bg = self.canvas.create_rectangle(
-                x1 - 5, yb1 - 3, x2 + 5, yb2 + 3,
-                fill="#fffde7", outline="#9e9e9e", tags="act_hover")
-            self.canvas.tag_lower(bg, text_id)
+            self._draw_hover_tip(text, event, 300)
             return
 
 
