@@ -294,8 +294,8 @@ msgstr "Certificate CVC (decodificate)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Card absent din tahograf începând cu {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Semnătura datelor cardului nu corespunde"
+msgid "Signature mismatch"
+msgstr "Semnătura diferă"
 
 msgid "Card inserted"
 msgstr "Card introdus"
@@ -2427,7 +2427,7 @@ msgid "🔒  INTEGRITY"
 msgstr "🔒  INTEGRITATE"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Acoperire contabilizată în octeți"
+msgstr "  Acoperire în octeți"
 
 msgid "  Daily driving limit"
 msgstr "  Limită conducere zilnică"

@@ -294,8 +294,8 @@ msgstr "Сертифікати CVC (декодовано)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Картка відсутня в тахографі з {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Підпис даних картки не збігається"
+msgid "Signature mismatch"
+msgstr "Підпис не збігається"
 
 msgid "Card inserted"
 msgstr "Картку вставлено"
@@ -2427,7 +2427,7 @@ msgid "🔒  INTEGRITY"
 msgstr "🔒  ЦІЛІСНІСТЬ"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Покриття з урахуванням байтів"
+msgstr "  Покриття за байтами"
 
 msgid "  Daily driving limit"
 msgstr "  Щоденна межа"

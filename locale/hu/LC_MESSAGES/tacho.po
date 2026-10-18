@@ -294,8 +294,8 @@ msgstr "CVC-tanúsítványok (dekódolva)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "A kártya {time} óta nincs a tachográfban"
 
-msgid "Card data signature mismatch"
-msgstr "A kártyaadatok aláírása nem egyezik"
+msgid "Signature mismatch"
+msgstr "Az aláírás nem egyezik"
 
 msgid "Card inserted"
 msgstr "Kártya behelyezve"

@@ -294,8 +294,8 @@ msgstr "Teastais CVC (díchódaithe)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Níl an cárta sa tacógraf ó {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Míthagairt i síniú shonraí an chárta"
+msgid "Signature mismatch"
+msgstr "Míthagairt sa síniú"
 
 msgid "Card inserted"
 msgstr "Cárta curtha isteach"

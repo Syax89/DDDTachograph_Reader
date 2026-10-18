@@ -20,6 +20,14 @@ display is available, the same pattern as ``test_gui_driving_rules.py``):
   ``core.utils.activity_stats`` constants (moving them moves the rows) and
   measured against the panel's own value column at the minimum window
   (900x560), where the single-sentence row this replaced was clipped;
+* **every** row the panel renders is measured, in **every** one of the 34
+  catalogs and in every state of the INTEGRITY block, against the widths the
+  panel really lays out — and the rows that still cannot fit are named, with
+  their measured widths, and proven readable in full through the panel's hover
+  reveal (``test_every_row_of_the_summary_panel_fits_its_column_in_every_language``);
+* the two rows that were measured too wide in the review of the commit that
+  introduced this panel — the byte-accounted coverage value and the card
+  signature verdict — now fit in all 34 catalogs;
 * a file whose driver fields are all the ``N/A`` sentinel gains no empty driver
   block, and one that recorded no vehicle gains no vehicle block;
 * the section that used to be auto-selected still exists and still renders its
@@ -34,6 +42,7 @@ display is available, the same pattern as ``test_gui_driving_rules.py``):
 whole directory, so no real user settings are read or written.
 """
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -167,6 +176,128 @@ def vu_data(**overrides):
     return data
 
 
+def card_with(integrity="Verified", ef=None):
+    """A card fixture whose INTEGRITY verdict is switched to *integrity*/*ef*.
+
+    ``_integrity_label`` picks the Status row's wording from the file's
+    verification data, so the row cannot be measured with one fixture: these
+    helpers rebuild the same card with each verdict's input.
+    """
+    data = card_data()
+    data["metadata"] = dict(data["metadata"], integrity_check=integrity)
+    data.pop("ef_signature_verification", None)
+    if ef is not None:
+        data["ef_signature_verification"] = ef
+    return data
+
+
+def vu_with(sv=None, integrity="Partial (VU - chain ok)"):
+    """A vehicle-unit fixture whose signature report is switched."""
+    data = vu_data()
+    data["metadata"] = dict(data["metadata"], integrity_check=integrity)
+    data.pop("signature_verification", None)
+    if sv is not None:
+        data["signature_verification"] = sv
+    return data
+
+
+#: One fixture per verdict ``TachoExplorer._integrity_label`` can return — the
+#: branches of the card mapping and of the vehicle-unit one, each with the input
+#: that reaches it (the VU fallbacks reuse the card mapping's messages). The fit
+#: sweep below renders all of them in all 34 catalogs, because the Status row's
+#: width is a property of the *value*, not the row.
+STATUS_CASES = (
+    ("card: all verified", card_with(ef={"verified": 3})),
+    ("card: ef mismatch", card_with(integrity="Invalid", ef={"failed": 1})),
+    ("card: ef skipped", card_with(ef={"skipped": 2})),
+    ("card: chain invalid",
+     card_with(integrity="Invalid Certificate Chain", ef={})),
+    ("card: chain unanchored", card_with(integrity="Missing ERCA root", ef={})),
+    ("card: key untrusted",
+     card_with(integrity="card signing key not trusted", ef={})),
+    ("card: ef verification failed",
+     card_with(integrity="EF Signature Verification Failed", ef={})),
+    ("card: verification error", card_with(integrity="Error: decoder stop", ef={})),
+    ("card: no ef results", card_data()),
+    # A non-empty ef_results keeps the "No EF signatures verified" branch (which
+    # precedes these two) from swallowing them.
+    ("card: partial verification",
+     card_with(integrity="Partial (chain ok)", ef={"ef_results": [{"ok": True}]})),
+    ("card: incomplete certificates",
+     card_with(integrity="Incomplete certificates",
+               ef={"ef_results": [{"ok": True}]})),
+    ("vu: root anchored", vu_with({"all_treps_valid": True, "msca_to_vu": True,
+                                   "root_anchored": True},
+                                  integrity="Verified")),
+    ("vu: chain partial", vu_with({"all_treps_valid": True, "msca_to_vu": True})),
+    ("vu: chain unverified", vu_with({"all_treps_valid": True})),
+    ("vu: erca missing", vu_with(integrity="Missing ERCA root")),
+)
+
+#: The panel states "No activity data available." in the period row when the
+#: file carries no days: a second message whose translated width is not the
+#: date range's, so the row is measured in this state too.
+NO_DAYS_CASE = ("card: no activity days", card_data(activities=[]))
+
+#: The verdict each fixture must put in the Status row. Asserted by the sweep, so
+#: a fixture edited into reaching a *different* branch (the branches share their
+#: input shape: an empty ``ef_results`` swallows the Partial/Incomplete cases)
+#: cannot quietly measure another verdict's width and still pass.
+CASE_VERDICTS = {
+    "card: all verified": "All signatures verified",
+    "card: ef mismatch": "Signature mismatch",
+    "card: ef skipped": "EF signatures incomplete",
+    "card: chain invalid": "Certificate chain invalid",
+    "card: chain unanchored": "Certificate chain not anchored to a trusted root",
+    "card: key untrusted": "Card signing key not trusted",
+    "card: ef verification failed": "EF signature verification failed",
+    "card: verification error": "Verification error",
+    "card: no ef results": "No EF signatures verified",
+    "card: partial verification": "Partial verification",
+    "card: incomplete certificates": "Incomplete certificates",
+    "vu: root anchored": "VU signatures verified (root anchored)",
+    "vu: chain partial": "VU TREP signatures verified (chain partial)",
+    "vu: chain unverified": "VU TREP signatures valid (chain unverified)",
+    "vu: erca missing": "ERCA root not available",
+    "card: no activity days": "No EF signatures verified",
+}
+
+#: The only rows of the overview allowed to be wider than the panel's columns,
+#: named here with their measured widths at 900x560 (Linux, TkDefaultFont,
+#: 187 px value column / 220 px field column), because the panel does not get to
+#: shorten them — the wording belongs to the code that owns the fact:
+#:
+#: ``Status`` — ``_integrity_label``'s 15 verdicts. 11 of them exceed 187 px in
+#:   at least one catalog and 5 exceed it in all 34 (the fully-verified VU
+#:   verdict is 372 px in bg, the unverified-chain one 471 px in el, the
+#:   untrusted-key one 378 px in mk). Two were shortened because the length
+#:   bought nothing — "Signature mismatch" (164 px worst) and the coverage
+#:   percentage above — but the rest are security verdicts whose wording is not
+#:   this panel's to trade away, and no single short form fits all 34 catalogs.
+#: ``Period covered`` — the catalogs' "No activity data available." in the 29
+#:   languages where it is wider than the column (354 px in el); the date range
+#:   "01/05/2025 → 03/05/2025" fits everywhere (168 px, 19 px spare).
+#: ``Origin`` — the catalogs' "Vehicle Unit (VU)", which a VU file's overview
+#:   states in the FILE block: 238 px in ru, 229 px in lt, and over the column
+#:   in be, bg, lv and uk as well. It is the same string the File Info section
+#:   and the dashboards show, so it is not this panel's wording to cut either.
+#: ``\u23f1\ufe0f  DRIVING-TIME RULES`` (a block *header*, not a value) — the
+#:   translated title clips the 220 px Field column in 15 catalogs (303 px in
+#:   ro); the other five headers fit everywhere.
+#:
+#: None of them is a silent pass: ``test_an_over_wide_cell_is_readable_in_full_on_hover``
+#: pins the panel's hover reveal, and the sweep below measures that reveal on
+#: every one of those cells, in every catalog, as it goes. Any *other* row that
+#: stops fitting fails the sweep with its width, its language and its text.
+OVER_WIDE_ROWS = ("  Status", "  Period covered", "  Origin",
+                  "\u23f1\ufe0f  DRIVING-TIME RULES")
+
+#: The value the defect reported as clipped, and which the overview now states
+#: short enough to fit every catalog: 187 px is the whole budget, so this row is
+#: not allowed into :data:`OVER_WIDE_ROWS` at all.
+MUST_FIT_ROWS = ("  Byte-accounted coverage",)
+
+
 class _Dialogs:
     """Message boxes would block a headless run: record them instead."""
 
@@ -273,6 +404,62 @@ def value_column_width(app):
         if box:
             return box[2]
     return int(app.table.tv.column("Value", "width"))
+
+
+def field_column_width(app):
+    """On-screen width of the summary panel's Field column, in pixels."""
+    for iid in app.table.tv.get_children(""):
+        box = app.table.tv.bbox(iid, "Field")
+        if box:
+            return box[2]
+    return int(app.table.tv.column("Field", "width"))
+
+
+def panel_rows(app, headers=False):
+    """``[(rendered_row, label, value, is_header)]`` of the panel's rows.
+
+    The blank separators are skipped; every other row — in render order, with
+    its index among the rendered rows — is returned, so a row added to the panel
+    later is measured without anyone having to list it here. *headers* also
+    returns the block titles, which are rows too (empty value cell, bold font).
+    """
+    rows = []
+    for number, row in enumerate(summary_rows(app)):
+        if len(row) < 3:
+            continue
+        if row[2]:
+            if headers and row[0]:
+                rows.append((number, row[0], "", True))
+            continue
+        rows.append((number, row[0], row[1], False))
+    return rows
+
+
+def panel_row_number(app, label):
+    """Index among the rendered rows of the row labelled *label*."""
+    for number, row_label, _value, _header in panel_rows(app, headers=True):
+        if row_label == label:
+            return number
+    raise AssertionError(f"no summary row {label!r} in "
+                         f"{[label for _n, label, _v, _h in panel_rows(app, headers=True)]}")
+
+
+def hover_cell(app, row_number, column):
+    """Hover the cell of rendered row *row_number*; return the reveal, if any.
+
+    ``None`` means the panel showed no reveal for that cell.
+    """
+    iid = app.table.tv.get_children("")[row_number]
+    app.table.tv.see(iid)
+    app.update()
+    box = app.table.tv.bbox(iid, column)
+    assert box, f"row {row_number} has no laid-out {column} cell to hover"
+    app._on_summary_motion(
+        SimpleNamespace(x=box[0] + box[2] // 2, y=box[1] + box[3] // 2))
+    app.update_idletasks()
+    if app._summary_tip_lbl.winfo_manager():
+        return app._summary_tip_lbl.cget("text")
+    return None
 
 
 def select(app, iid):
@@ -443,15 +630,207 @@ def test_the_rules_rows_fit_the_value_column_at_the_minimum_window(explorer):
             f"{value_w} px value column at {MINIMUM_SIZE}")
 
 
+def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explorer):
+    """Measure the whole panel, in every catalog — not a hand-picked few rows.
+
+    Tk *clips* a cell wider than its column instead of wrapping it, so a row that
+    does not fit is a row the user cannot read in full (the panel never auto-fits
+    — see ``_show_summary``). The overview has rows whose width comes from the
+    catalogs and from the file, so "does it fit" is a question per row **and**
+    per language: this walks every row of every state of the panel in all 34
+    catalogs, against the widths the real panel lays out at the 900x560 minimum.
+
+    Three things make it honest rather than a wide pass:
+
+    * the row set is not written down here — it is whatever the panel renders,
+      block headers included, so a row added later is measured without anyone
+      remembering to list it;
+    * a row that is too wide is either *named* in :data:`OVER_WIDE_ROWS` and
+      proven readable in full through the panel's hover reveal, or it fails with
+      its measured width, its catalog and its text. Nothing can join a silent
+      pass.
+    """
+    explorer.geometry(MINIMUM_SIZE)
+    explorer.update()
+    font = gui.tkfont.nametofont("TkDefaultFont")
+    # Block headers are drawn bold, so they are measured with their own font —
+    # the translated "DRIVING-TIME RULES" title clips in 15 catalogs (303 px in
+    # ro) while the body font would call it a fit.
+    heading_font = gui.tkfont.Font(font=gui.FONT_HEADING)
+    cases = STATUS_CASES + (NO_DAYS_CASE,)
+
+    unexpected: list[str] = []
+    named: list[str] = []
+    measured = 0
+    for lang in i18n.LANGUAGES:
+        i18n.install(lang)
+        named_here = tuple(i18n._(name) for name in OVER_WIDE_ROWS)
+        must_fit_here = tuple(i18n._(name) for name in MUST_FIT_ROWS)
+        for case, data in cases:
+            open_file(explorer, data, path="/data/driver_card.ddd")
+            assert rendered_value(explorer, i18n._("  Status")) == \
+                i18n._(CASE_VERDICTS[case]), \
+                f"{lang} {case}: the fixture no longer reaches that verdict"
+            widths = {"Field": field_column_width(explorer),
+                      "Value": value_column_width(explorer)}
+            assert widths["Value"] > 0, "the panel must be laid out to be measured"
+            for number, label, value, is_header in panel_rows(explorer, headers=True):
+                cell_font = heading_font if is_header else font
+                for column, text in (("Field", label), ("Value", str(value))):
+                    measured += 1
+                    got = cell_font.measure(text)
+                    if got <= widths[column]:
+                        continue
+                    detail = (f"{lang} {case} {column} row {label!r}: "
+                              f"{got} px in {widths[column]} px — {text!r}")
+                    if label in named_here:
+                        revealed = hover_cell(explorer, number, column)
+                        assert revealed == text, (
+                            f"{detail} is named as allowed to be too wide, but "
+                            f"the panel does not reveal it in full "
+                            f"(hover showed {revealed!r})")
+                        named.append(detail)
+                    elif label in must_fit_here:
+                        unexpected.append(f"{detail} (must fit; it is the row "
+                                          f"this test was widened for)")
+                    else:
+                        unexpected.append(detail)
+    # A sweep that stopped measuring would pass every assertion above.
+    assert measured >= len(i18n.LANGUAGES) * len(cases) * 20, \
+        f"only {measured} cells measured: the sweep is not covering the panel"
+    assert not unexpected, (
+        "the summary panel clips these rows at 900x560:\n  "
+        + "\n  ".join(unexpected))
+    assert named, ("no row was too wide in any catalog — the hazard this sweep "
+                   "guards against has changed; re-measure and update the "
+                   "OVER_WIDE_ROWS rationale instead of deleting the sweep")
+
+
+def test_an_over_wide_cell_is_readable_in_full_on_hover(explorer):
+    """The panel's reveal: a clipped cell shows its whole text, a fitting one not.
+
+    The Status row's verdicts, the catalogs' "no activity data" message and the
+    translated block titles can be wider than the column they sit in, and the
+    panel does not get to reword them (see :data:`OVER_WIDE_ROWS`), so the text
+    has to stay readable another way: hovering the cell reveals it in full, in
+    the font the cell is actually drawn with. Nothing else may be revealed — the
+    reveal must never cover a value the panel already shows completely.
+    """
+    explorer.geometry(MINIMUM_SIZE)
+    explorer.update()
+    i18n.install("it")
+    # "Catena di certificati non ancorata a una radice attendibile": 389 px in a
+    # 187 px value column — Italian's widest verdict, and one of the eleven that
+    # cannot be shortened without losing the verdict.
+    open_file(explorer, dict(STATUS_CASES)["card: chain unanchored"],
+              path="/data/driver_card.ddd")
+    explorer.update()
+
+    font = gui.tkfont.nametofont("TkDefaultFont")
+    value_w = value_column_width(explorer)
+    status_number = panel_row_number(explorer, i18n._("  Status"))
+    status_text = rendered_value(explorer, i18n._("  Status"))
+    assert font.measure(status_text) > value_w, \
+        "this fixture is the clipped one: the test needs a too-wide verdict"
+
+    assert hover_cell(explorer, status_number, "Value") == status_text
+    # The binding is really wired: a generated <Motion> over the same cell
+    # produces the same reveal, so the wiring — not just the handler — is tested.
+    explorer._hide_summary_tooltip()
+    assert explorer._summary_tip_lbl.winfo_manager() == ""
+    iid = explorer.table.tv.get_children("")[status_number]
+    box = explorer.table.tv.bbox(iid, "Value")
+    assert box, "the Status cell must be visible to generate a motion event"
+    explorer.table.tv.event_generate(
+        "<Motion>", x=box[0] + box[2] // 2, y=box[1] + box[3] // 2, when="now")
+    explorer.update_idletasks()
+    assert explorer._summary_tip_lbl.winfo_manager() == "place"
+    assert explorer._summary_tip_lbl.cget("text") == status_text
+    # ... and hovering a cell that fits hides it again.
+    coverage_number = panel_row_number(explorer, i18n._("  Byte-accounted coverage"))
+    assert hover_cell(explorer, coverage_number, "Value") is None
+    # A block header is a row too: the title clips in this language's neighbours
+    # and must be revealable with the bold font it is drawn with.
+    rules_header = panel_row_number(
+        explorer, i18n._("\u23f1\ufe0f  DRIVING-TIME RULES"))
+    heading_font = gui.tkfont.Font(font=gui.FONT_HEADING)
+    header_text = i18n._("\u23f1\ufe0f  DRIVING-TIME RULES")
+    revealed = hover_cell(explorer, rules_header, "Field")
+    if heading_font.measure(header_text) > field_column_width(explorer):
+        assert revealed == header_text
+    else:
+        assert revealed is None
+    # ... and a <Leave> on the panel hides it (the binding, not just the handler).
+    hover_cell(explorer, status_number, "Value")
+    assert explorer._summary_tip_lbl.winfo_manager() == "place"
+    explorer.table.tv.event_generate("<Leave>", when="now")
+    explorer.update_idletasks()
+    assert explorer._summary_tip_lbl.winfo_manager() == ""
+    # The reveal belongs to the summary panel: another view drops it entirely
+    # (File Info is a plain table, not a summary page).
+    select(explorer, node_by_title(explorer, i18n._("\U0001f4c4  File Info")))
+    assert explorer._summary_tip_lbl is None
+    assert explorer._summary_motion_bind is None
+    assert explorer._summary_leave_bind is None
+
+
+def test_the_two_rows_the_review_measured_fit_every_catalog(explorer):
+    """The defect this work started from: those two rows, in all 34 catalogs.
+
+    Measured on the panel at 900x560 by the review of the commit that added the
+    overview: ``Status`` = "Card data signature mismatch" was 205 px in English
+    and 374 px in mk, over the 187 px value column in 32 of 34 catalogs, and
+    ``Byte-accounted coverage`` = "100.0% (1 234 567 / 1 234 567 bytes)" was
+    241 px in **all** of them. Both values now state the same fact in the width
+    the panel has: "Signature mismatch" (164 px worst) and "100.0%" (48 px).
+    """
+    explorer.geometry(MINIMUM_SIZE)
+    explorer.update()
+    font = gui.tkfont.nametofont("TkDefaultFont")
+    # The default fixture's Status is "No EF signatures verified", one of the
+    # verdicts still wider than the column (260 px in el) and therefore named in
+    # OVER_WIDE_ROWS and revealed on hover; here the two *shortened* values are
+    # what must fit, so the row list is per case.
+    cases = (
+        ("card: ef mismatch", dict(STATUS_CASES)["card: ef mismatch"],
+         ("  Status", "  Byte-accounted coverage")),
+        ("card: default", card_data(), ("  Byte-accounted coverage",)),
+    )
+
+    for lang in i18n.LANGUAGES:
+        i18n.install(lang)
+        for case, data, msgids in cases:
+            open_file(explorer, data, path="/data/driver_card.ddd")
+            field_w = field_column_width(explorer)
+            value_w = value_column_width(explorer)
+            for msgid in msgids:
+                label = i18n._(msgid)
+                text = rendered_value(explorer, label)
+                assert font.measure(label) <= field_w, (
+                    f"{lang} {case}: the {label!r} label is "
+                    f"{font.measure(label)} px in a {field_w} px column")
+                assert font.measure(text) <= value_w, (
+                    f"{lang} {case}: {msgid.strip()!r} = {text!r} is "
+                    f"{font.measure(text)} px in a {value_w} px value column")
+
+
 def test_integrity_block_repeats_the_file_info_verdict_and_coverage(explorer):
     open_file(explorer, card_data())
     rows = summary_rows(explorer)
 
     assert row_value(rows, i18n._("  Status")) == i18n._("No EF signatures verified")
-    assert row_value(rows, i18n._("  Byte-accounted coverage")).startswith("100.0% ")
+    # The overview states the percentage; the byte arithmetic ("100.0%
+    # (1 234 / 1 234 bytes)", 241 px) does not fit this panel's 187 px value
+    # column in any catalog and repeats the number the percentage already
+    # gives — see test_the_coverage_row_fits_every_catalog. File Info owns it.
+    coverage_row = row_value(rows, i18n._("  Byte-accounted coverage"))
+    assert coverage_row == "100.0%"
     # The overview may not invent a verdict of its own.
     info = explorer._build_file_info(explorer.current_data)
     assert row_value(rows, i18n._("  Status")) == info[i18n._("Integrity")]
+    assert info[i18n._("Byte-accounted coverage")].startswith(
+        "100.0% (1 234 / 1 234 bytes"), \
+        "the detail page keeps the byte counts the overview summarises"
 
 
 def test_coverage_row_is_absent_when_the_parse_reported_none(explorer):
@@ -510,7 +889,8 @@ def test_a_vehicle_unit_shows_its_vehicle_facts(explorer):
 def test_the_previously_auto_selected_card_section_still_renders(explorer):
     open_file(explorer, card_data())
 
-    select(explorer, node_by_title(explorer, DRIVER_TITLE))
+    select(explorer, node_by_title(
+        explorer, i18n._("\U0001f464  Driver / Cardholder")))
     assert explorer.table.title_lbl.cget("text") == DRIVER_TITLE
     assert rendered_value(explorer, i18n._("  Name")) == "LUCA BIANCHI"
     assert rendered_value(explorer, i18n._("  Card number")) == "I100000168598002"
@@ -527,7 +907,8 @@ def test_the_previously_auto_selected_vu_section_still_renders(explorer):
 
 def test_selecting_the_overview_again_after_another_section(explorer):
     open_file(explorer, card_data())
-    select(explorer, node_by_title(explorer, DRIVER_TITLE))
+    select(explorer, node_by_title(
+        explorer, i18n._("\U0001f464  Driver / Cardholder")))
 
     select(explorer, node_by_title(explorer, SUMMARY_TITLE))
     assert explorer.table._summary_mode is True

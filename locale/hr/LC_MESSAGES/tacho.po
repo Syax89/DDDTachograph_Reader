@@ -294,8 +294,8 @@ msgstr "CVC certifikati (dekodirani)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kartica nije u tahografu od {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Potpis podataka kartice se ne podudara"
+msgid "Signature mismatch"
+msgstr "Potpis se ne podudara"
 
 msgid "Card inserted"
 msgstr "Kartica umetnuta"
@@ -2427,7 +2427,7 @@ msgid "🔒  INTEGRITY"
 msgstr "🔒  INTEGRITET"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Pokrivenost obračunata u bajtovima"
+msgstr "  Pokrivenost u bajtovima"
 
 msgid "  Daily driving limit"
 msgstr "  Dnevno ograničenje"

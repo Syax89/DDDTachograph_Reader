@@ -294,8 +294,8 @@ msgstr "CVC-certifikater (afkodet)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kort ikke i takografen pr. {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Signatur for kortdata stemmer ikke"
+msgid "Signature mismatch"
+msgstr "Signatur stemmer ikke"
 
 msgid "Card inserted"
 msgstr "Kort isat"

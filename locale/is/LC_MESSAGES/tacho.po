@@ -294,8 +294,8 @@ msgstr "CVC-skirteini (afkóðuð)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kort ekki í akstursritanum frá {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Undirskrift kortagagna stenst ekki"
+msgid "Signature mismatch"
+msgstr "Undirskrift stenst ekki"
 
 msgid "Card inserted"
 msgstr "Kort sett í"

@@ -294,8 +294,8 @@ msgstr "CVC sertifikatai (dekoduoti)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kortelės nėra tachografe nuo {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Kortelės duomenų parašas nesutampa"
+msgid "Signature mismatch"
+msgstr "Parašas nesutampa"
 
 msgid "Card inserted"
 msgstr "Kortelė įdėta"

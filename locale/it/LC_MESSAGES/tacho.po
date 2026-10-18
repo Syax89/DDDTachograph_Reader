@@ -294,8 +294,8 @@ msgstr "Certificati CVC (decodificati)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Carta assente dal tachigrafo a partire da {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Firma dei dati della carta non corrispondente"
+msgid "Signature mismatch"
+msgstr "Firma non coerente"
 
 msgid "Card inserted"
 msgstr "Carta inserita"
@@ -2427,7 +2427,7 @@ msgid "🔒  INTEGRITY"
 msgstr "🔒  INTEGRITÀ"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Copertura contabilizzata in byte"
+msgstr "  Copertura in byte"
 
 msgid "  Daily driving limit"
 msgstr "  Limite guida giornaliera"

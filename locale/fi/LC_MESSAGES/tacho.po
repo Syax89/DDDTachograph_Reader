@@ -294,8 +294,8 @@ msgstr "CVC-varmenteet (purettu)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kortti ei ole ajopiirturissa {time} alkaen"
 
-msgid "Card data signature mismatch"
-msgstr "Kortin tietojen allekirjoitus ei täsmää"
+msgid "Signature mismatch"
+msgstr "Allekirjoitus ei täsmää"
 
 msgid "Card inserted"
 msgstr "Kortti asetettu"
