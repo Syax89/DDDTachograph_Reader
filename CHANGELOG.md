@@ -1,4 +1,13 @@
 # Unreleased
+- **Linux Flatpak release**: the Linux x86_64 build now ships as a Flatpak
+  bundle (`io.github.Syax89.TachoReader`) using the same PyInstaller build spec
+  as the native Windows and macOS builds, and CI installs the exported bundle
+  and smoke-tests its GUI, so what CI verifies is the package users install.
+- **All three platforms on every build**: branch pushes, pull requests and
+  manual runs build Windows, macOS and Linux, with an aggregate
+  **All platforms verified** check that fails on any failed, cancelled or
+  skipped platform. Tagged releases start publication only after all three
+  platform jobs succeed and the non-empty zip, dmg and flatpak are all present.
 - **Cleaner details panel**: the summary views (Driver / Cardholder, Vehicle, …)
   no longer show an empty heading bar above the rows, and the section dividers
   are bands instead of rows of dash characters. The horizontal scrollbar now

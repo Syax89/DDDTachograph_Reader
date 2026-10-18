@@ -2,7 +2,9 @@
 
 Welcome to **DDD Tachograph Reader**, an open-source tool for reading, exploring, and validating digital tachograph files (`.ddd` format). This manual covers everything you need to get started, whether you are a driver, fleet manager, workshop, or analyst.
 
-The current release is **v2.5.0 "Revolution"**, which adds interactive activity timelines, speed graphs, dashboards, and a re-engineered parser that recovers partial or malformed downloads.
+The latest release and its download files are on the
+[Releases page](https://github.com/Syax89/DDDTachograph_Reader/releases/latest);
+Windows, macOS and Linux (x86_64 Flatpak) builds are all produced by CI.
 
 ---
 
@@ -10,7 +12,7 @@ The current release is **v2.5.0 "Revolution"**, which adds interactive activity 
 
 | Section | Description |
 |---------|-------------|
-| [Installation](installation.md) | How to install on Windows, macOS, or from source |
+| [Installation](installation.md) | How to install on Windows, macOS or Linux (Flatpak), or run from source |
 | [GUI Guide](gui_guide.md) | Using the Tacho Explorer desktop application |
 | [CLI Guide](cli_guide.md) | Command-line usage for scripting and automation |
 | [Export Guide](export_guide.md) | Export formats: JSON, Excel, CSV, PDF |
@@ -57,8 +59,13 @@ A visual product tour is available on the [project README](https://github.com/Sy
 1. **Download** the build for your platform from [GitHub Releases](https://github.com/Syax89/DDDTachograph_Reader/releases/latest):
    - Windows: `TachoReader-v<version>-windows-x64.zip`
    - macOS: `TachoReader-v<version>-macos.dmg`
-2. **Launch** the application (extract the zip and run `TachoReader.exe` on Windows; open the DMG and drag `TachoReader.app` to Applications on macOS).
+   - Linux (x86_64): `TachoReader-v<version>-linux-x86_64.flatpak`
+2. **Launch** the application (extract the zip and run `TachoReader.exe` on Windows; open the DMG and drag `TachoReader.app` to Applications on macOS; install and run the Flatpak on Linux — see [Installation](installation.md#linux-flatpak-x86_64)).
 3. **Click "Open DDD file"** and select your `.ddd` file.
 4. **Explore** the parsed data in the section tree, open the activity or speed charts, and export to PDF, Excel, CSV, or JSON.
+
+If the release page has no Linux package yet, the current Linux build can be
+downloaded as a CI artifact instead; the
+[Installation Guide](installation.md#downloading-a-build-from-ci) explains how.
 
 For command-line usage, see the [CLI Guide](cli_guide.md).
