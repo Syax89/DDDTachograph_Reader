@@ -572,14 +572,21 @@ def explorer(monkeypatch):
 def test_language_menu_lists_every_language_with_column_breaks(explorer):
     menu = explorer.nametowidget(explorer.btn_lang["menu"])
 
-    labels = [menu.entrycget(i, "label") for i in range(menu.index("end") + 1)]
-    # The languages come first; the last entry is the independent preference.
-    assert labels[:len(i18n.LANGUAGES)] == list(i18n.LANGUAGES.values())
-    assert labels[-1] == i18n._("Translate file contents")
-    assert len(labels) == len(i18n.LANGUAGES) + 1
+    # Top level: just the language submenu and the independent preference.
+    assert menu.entrycget(0, "label") == i18n._("Language")
+    assert menu.type(0) == "cascade"
+    assert menu.type(1) == "separator"
+    assert menu.entrycget(2, "label") == i18n._("Translate file contents")
+    assert menu.index("end") == 2
+
+    languages = explorer.nametowidget(menu.entrycget(0, "menu"))
+    labels = [languages.entrycget(i, "label")
+              for i in range(languages.index("end") + 1)]
+    assert labels == list(i18n.LANGUAGES.values())
     assert labels[0] == "English"
     # 34 entries in one column would not fit a small screen.
-    breaks = [i for i in range(len(labels)) if menu.entrycget(i, "columnbreak") == 1]
+    breaks = [i for i in range(len(labels))
+              if languages.entrycget(i, "columnbreak") == 1]
     assert breaks and len(labels) / (len(breaks) + 1) <= 12
     # The button shows the language actually in use, in its own language.
     assert explorer.btn_lang.cget("text").endswith("English")
