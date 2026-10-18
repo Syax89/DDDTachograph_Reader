@@ -2178,7 +2178,10 @@ class TachoExplorer(tk.Tk):
                             background="#ffffff", foreground="#1c2733",
                             activebackground="#1565c0", activeforeground="#ffffff",
                             borderwidth=0)
-        self._language_var = tk.StringVar(value=self._language)
+        # Explicit master: a variable created without one binds to whatever
+        # Tk root happens to be the default (a stale one in tests), and the
+        # menu would then toggle a variable this window cannot read back.
+        self._language_var = tk.StringVar(master=self, value=self._language)
         for index, (code, name) in enumerate(LANGUAGES.items()):
             # Names are never translated (each one is already in its own
             # language). 34 entries in a single column would run past the
@@ -2192,7 +2195,7 @@ class TachoExplorer(tk.Tk):
         # Independent preference: it does not change the UI language — it
         # decides whether the *values decoded from the file* are translated
         # too, or shown exactly as the file names them.
-        self._translate_data_var = tk.BooleanVar(value=self._translate_data)
+        self._translate_data_var = tk.BooleanVar(master=self, value=self._translate_data)
         lang_menu.add_checkbutton(
             label=_("Translate file contents"), variable=self._translate_data_var,
             command=self._toggle_translate_data)
@@ -2253,11 +2256,12 @@ class TachoExplorer(tk.Tk):
 
         Unlike the language itself, this preference changes only the text that
         was decoded from the file (activity names, nations, record labels), so
-        the window does not have to be rebuilt: the cached display flag is
-        updated and the current selection is rendered again through the normal
-        select path. A settings write that fails leaves the previous choice in
-        place, tells the user, and puts the menu tick back where it was — the
-        same contract as a failed language switch.
+        the window does not have to be rebuilt. The rows of every section were
+        formatted when the tree was populated, though, so re-selecting the node
+        is not enough: the tree is repopulated from the already-parsed data and
+        the same node is selected again. A settings write that fails leaves the
+        previous choice in place, tells the user, and puts the menu tick back
+        where it was — the same contract as a failed language switch.
         """
         flag = bool(self._translate_data_var.get())
         if flag == self._translate_data:
@@ -2269,7 +2273,53 @@ class TachoExplorer(tk.Tk):
             return
         self._translate_data = flag
         ui_text.configure_translate_data(flag)
-        self._on_tree_select(None)
+        self._refresh_data_text()
+
+    def _refresh_data_text(self):
+        """Re-populate the tree so cached rows follow the new data preference.
+
+        ``_populate_tree`` formats every cell once, at parse time, so the only
+        way to re-render them is to build the tree again from ``current_data``.
+        The selected node is remembered by its path of labels and selected
+        again, so the visible section does not jump to the top.
+        """
+        if not self.current_data or self._parsing:
+            return  # a running parse repopulates with the new flag when it ends
+        path = self._selected_path()
+        self._populate_tree(self.current_data)
+        self._update_top_bar(self.current_data)
+        target = self._node_by_path(path) or getattr(self, "_auto_select_iid", None)
+        if not (target and self.tree.exists(target)):
+            children = self.tree.get_children("")
+            target = children[0] if children else None
+        if target:
+            self.tree.selection_set(target)
+            self.tree.see(target)
+
+    def _selected_path(self):
+        """Labels from the root to the selected node (empty when nothing is selected)."""
+        selection = self.tree.selection()
+        if not selection:
+            return ()
+        labels, iid = [], selection[0]
+        while iid:
+            labels.append(self.tree.item(iid, "text"))
+            iid = self.tree.parent(iid)
+        return tuple(reversed(labels))
+
+    def _node_by_path(self, path):
+        """The node at ``path``, opening its ancestors; ``None`` when it is gone."""
+        parent = ""
+        for depth, label in enumerate(path):
+            for child in self.tree.get_children(parent):
+                if self.tree.item(child, "text") == label:
+                    if depth < len(path) - 1:
+                        self.tree.item(child, open=True)
+                    parent = child
+                    break
+            else:
+                return None
+        return parent or None
 
     def _switch_language(self, code):
         """Persist ``code`` and rebuild the window in the new language.
