@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% e skedarit"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Afati pas {days} ditësh"
+msgid "  Due in {days} days"
+msgstr "  Afati pas {days} ditësh"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ SKADUAR ({days} ditë më parë)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  SKADUAR ({days} ditë më parë)"
 
 msgid "# Drivers"
 msgstr "# Drejtues"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s të regjistruara | {gaps} boshllëqe të brendshme"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} rreshta · {columns} kolona"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Klikoni dy herë për të gjitha detajet"
+msgid "Double-click for full details"
+msgstr "Klikoni dy herë për të gjitha detajet"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Heqja"
@@ -892,106 +892,100 @@ msgstr "▲ Heqja"
 msgid "▼ Insertion"
 msgstr "▼ Vendosja"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  SKEDAR I DËMTUAR / JO I PLOTË"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "SKEDAR I DËMTUAR / JO I PLOTË"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  SEKSIONE TË DËMTUARA (të dhënat u hoqën)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "SEKSIONE TË DËMTUARA (të dhënat u hoqën)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Dështimet e dekoduesit"
+msgid "Decoder Failures"
+msgstr "Dështimet e dekoduesit"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  KY SKEDAR ËSHTË JO I PLOTË OSE I DËMTUAR"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "KY SKEDAR ËSHTË JO I PLOTË OSE I DËMTUAR"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} paralajmërime integriteti — klikoni për detaje"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} paralajmërime integriteti — klikoni për detaje"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  SEKSIONET JANË TË PRANISHME"
+msgid "SECTIONS PRESENT"
+msgstr "SEKSIONET JANË TË PRANISHME"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  MUNGOJNË SEKSIONET E DETYRUESHME"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "MUNGOJNË SEKSIONET E DETYRUESHME"
 
-msgid "❌  Parse error"
-msgstr "❌  Gabim analize"
+msgid "Parse error"
+msgstr "Gabim analize"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  I prerë (nuk u arrit fundi i skedarit)"
+msgid "Truncated (did not reach end of file)"
+msgstr "I prerë (nuk u arrit fundi i skedarit)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Certifikata jo të plota"
+msgid "CARDHOLDER"
+msgstr "MBAJTËSI I KARTËS"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  MBAJTËSI I KARTËS"
+msgid "Driver / Cardholder"
+msgstr "Drejtues / mbajtësi i kartës"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Drejtues / mbajtësi i kartës"
-
-msgid "💻  VU INFO"
-msgstr "💻  INFORMACION VU"
+msgid "VU INFO"
+msgstr "INFORMACION VU"
 
 msgid "Open DDD file"
 msgstr "Hap skedar DDD"
 
-msgid "📄  File Info"
-msgstr "📄  Informacion skedari"
+msgid "File Info"
+msgstr "Informacion skedari"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  INTERVALI I DATAVE"
+msgid "DATE RANGE"
+msgstr "INTERVALI I DATAVE"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  PLOTËSIA"
+msgid "COMPLETENESS"
+msgstr "PLOTËSIA"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMETRAT"
+msgid "PARAMETERS"
+msgstr "PARAMETRAT"
 
-msgid "📊  STATISTICS"
-msgstr "📊  STATISTIKA"
+msgid "STATISTICS"
+msgstr "STATISTIKA"
 
-msgid "📡  SENSOR"
-msgstr "📡  SENSORI"
+msgid "SENSOR"
+msgstr "SENSORI"
 
-msgid "📡  Sensor"
-msgstr "📡  Sensori"
+msgid "Sensor"
+msgstr "Sensori"
 
 msgid "Export"
 msgstr "Eksporto"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  NËNSHKRIMET"
+msgid "SIGNATURES"
+msgstr "NËNSHKRIMET"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Siguria dhe certifikatat"
+msgid "Security & Certificates"
+msgstr "Siguria dhe certifikatat"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  KYÇJA AKTUALE"
+msgid "CURRENT LOCK"
+msgstr "KYÇJA AKTUALE"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  KYÇJA AKTUALE"
+msgid "ASSOCIATED VEHICLE"
+msgstr "AUTOMJETI I LIDHUR"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  AUTOMJETI I LIDHUR"
+msgid "VEHICLE"
+msgstr "AUTOMJETI"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  AUTOMJETI"
+msgid "Vehicle"
+msgstr "Automjeti"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Automjeti"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "RIKUPERUAR NGA TË DHËNA TË DËMTUARA"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  RIKUPERUAR NGA TË DHËNA TË DËMTUARA"
+msgid "Raw / Unparsed Data"
+msgstr "Të dhëna të papërpunuara / të paanalizuara"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Të dhëna të papërpunuara / të paanalizuara"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  DETAJET E KARTËS"
+msgid "CARD DETAILS"
+msgstr "DETAJET E KARTËS"
 
 msgid "Additional Info"
 msgstr "Informacion shtesë"
@@ -1488,8 +1482,8 @@ msgstr "Karta e punëtorisë"
 msgid "Workshop Card Expiry"
 msgstr "Vlefshmëria e kartës së punëtorisë"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Gjenerata 1  [Shtojca 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Gjenerata 1  [Shtojca 1B]"
 
 msgid "Activity Chart"
 msgstr "Grafiku i aktivitetit"
@@ -2384,11 +2378,8 @@ msgstr "Drejtimi ditor {driven} — kufiri {limit}"
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Drejtim i pandërprerë {driven} pa pushim {pause} min — kufiri {limit}"
 
-msgid "📋  Summary"
-msgstr "📋  Përmbledhje"
-
-msgid "📄  FILE"
-msgstr "📄  SKEDAR"
+msgid "FILE"
+msgstr "SKEDAR"
 
 msgid "  Filename"
 msgstr "  Emri i skedarit"
@@ -2402,8 +2393,8 @@ msgstr "  Periudha e mbuluar"
 msgid "{first} → {last}"
 msgstr "{first} → {last}"
 
-msgid "📊  TOTALS"
-msgstr "📊  TOTALI"
+msgid "TOTALS"
+msgstr "TOTALI"
 
 msgid "  Drive"
 msgstr "  Drejtim"
@@ -2417,14 +2408,14 @@ msgstr "  Pushim"
 msgid "  Available"
 msgstr "  I disponueshëm"
 
-msgid "⏱️  DRIVING-TIME RULES"
-msgstr "⏱️  RREGULLAT E KOHËS SË DREJTIMIT"
+msgid "DRIVING-TIME RULES"
+msgstr "RREGULLAT E KOHËS SË DREJTIMIT"
 
 msgid "  Days flagged"
 msgstr "  Ditë me shkelje"
 
-msgid "🔒  INTEGRITY"
-msgstr "🔒  INTEGRITETI"
+msgid "INTEGRITY"
+msgstr "INTEGRITETI"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Mbulim sipas bajteve"

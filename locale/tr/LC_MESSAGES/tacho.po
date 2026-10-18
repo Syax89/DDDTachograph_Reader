@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  dosyanın %{percent:.2f} kadarı"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  {days} gün içinde vadesi doluyor"
+msgid "  Due in {days} days"
+msgstr "  {days} gün içinde vadesi doluyor"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ SÜRESİ DOLDU ({days} gün önce)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  SÜRESİ DOLDU ({days} gün önce)"
 
 msgid "# Drivers"
 msgstr "# Sürücüler"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s kayıtlı | {gaps} dahili boşluk"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} satır · {columns} sütun"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Tüm ayrıntılar için çift tıklayın"
+msgid "Double-click for full details"
+msgstr "Tüm ayrıntılar için çift tıklayın"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Çıkarma"
@@ -892,106 +892,100 @@ msgstr "▲ Çıkarma"
 msgid "▼ Insertion"
 msgstr "▼ Takma"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  BOZUK / EKSİK DOSYA"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "BOZUK / EKSİK DOSYA"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  BOZUK BÖLÜMLER (veri atıldı)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "BOZUK BÖLÜMLER (veri atıldı)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Kod çözücü hataları"
+msgid "Decoder Failures"
+msgstr "Kod çözücü hataları"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  BU DOSYA EKSİK VEYA BOZUK"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "BU DOSYA EKSİK VEYA BOZUK"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} bütünlük uyarısı — ayrıntılar için tıklayın"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} bütünlük uyarısı — ayrıntılar için tıklayın"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  BÖLÜMLER MEVCUT"
+msgid "SECTIONS PRESENT"
+msgstr "BÖLÜMLER MEVCUT"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  ZORUNLU BÖLÜMLER EKSİK"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "ZORUNLU BÖLÜMLER EKSİK"
 
-msgid "❌  Parse error"
-msgstr "❌  Ayrıştırma hatası"
+msgid "Parse error"
+msgstr "Ayrıştırma hatası"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Kesildi (dosya sonuna ulaşılmadı)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Kesildi (dosya sonuna ulaşılmadı)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Eksik sertifikalar"
+msgid "CARDHOLDER"
+msgstr "KART SAHİBİ"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  KART SAHİBİ"
+msgid "Driver / Cardholder"
+msgstr "Sürücü / kart sahibi"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Sürücü / kart sahibi"
-
-msgid "💻  VU INFO"
-msgstr "💻  VU BİLGİLERİ"
+msgid "VU INFO"
+msgstr "VU BİLGİLERİ"
 
 msgid "Open DDD file"
 msgstr "DDD dosyası aç"
 
-msgid "📄  File Info"
-msgstr "📄  Dosya bilgisi"
+msgid "File Info"
+msgstr "Dosya bilgisi"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  TARİH ARALIĞI"
+msgid "DATE RANGE"
+msgstr "TARİH ARALIĞI"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  TAMLIK"
+msgid "COMPLETENESS"
+msgstr "TAMLIK"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMETRELER"
+msgid "PARAMETERS"
+msgstr "PARAMETRELER"
 
-msgid "📊  STATISTICS"
-msgstr "📊  İSTATİSTİK"
+msgid "STATISTICS"
+msgstr "İSTATİSTİK"
 
-msgid "📡  SENSOR"
-msgstr "📡  SENSÖR"
+msgid "SENSOR"
+msgstr "SENSÖR"
 
-msgid "📡  Sensor"
-msgstr "📡  Sensör"
+msgid "Sensor"
+msgstr "Sensör"
 
 msgid "Export"
 msgstr "Dışa aktar"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  İMZALAR"
+msgid "SIGNATURES"
+msgstr "İMZALAR"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Güvenlik ve sertifikalar"
+msgid "Security & Certificates"
+msgstr "Güvenlik ve sertifikalar"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  MEVCUT KİLİT"
+msgid "CURRENT LOCK"
+msgstr "MEVCUT KİLİT"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  MEVCUT KİLİT"
+msgid "ASSOCIATED VEHICLE"
+msgstr "İLİŞKİLİ ARAÇ"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  İLİŞKİLİ ARAÇ"
+msgid "VEHICLE"
+msgstr "ARAÇ"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  ARAÇ"
+msgid "Vehicle"
+msgstr "Araç"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Araç"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "HASARLI VERİDEN KURTARILDI"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  HASARLI VERİDEN KURTARILDI"
+msgid "Raw / Unparsed Data"
+msgstr "Ham / çözülmemiş veri"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Ham / çözülmemiş veri"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  KART AYRINTILARI"
+msgid "CARD DETAILS"
+msgstr "KART AYRINTILARI"
 
 msgid "Additional Info"
 msgstr "Ek bilgi"
@@ -1488,8 +1482,8 @@ msgstr "Atölye kartı"
 msgid "Workshop Card Expiry"
 msgstr "Atölye kartı geçerliliği"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Nesil 1  [Ek 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Nesil 1  [Ek 1B]"
 
 msgid "Activity Chart"
 msgstr "Etkinlik grafiği"
@@ -2384,11 +2378,8 @@ msgstr "Günlük sürüş {driven} — sınır {limit}"
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Kesintisiz sürüş {driven}, {pause} dk mola yok — sınır {limit}"
 
-msgid "📋  Summary"
-msgstr "📋  Özet"
-
-msgid "📄  FILE"
-msgstr "📄  DOSYA"
+msgid "FILE"
+msgstr "DOSYA"
 
 msgid "  Filename"
 msgstr "  Dosya adı"
@@ -2402,8 +2393,8 @@ msgstr "  Kapsanan dönem"
 msgid "{first} → {last}"
 msgstr "{first} → {last}"
 
-msgid "📊  TOTALS"
-msgstr "📊  TOPLAM"
+msgid "TOTALS"
+msgstr "TOPLAM"
 
 msgid "  Drive"
 msgstr "  Sürüş"
@@ -2417,14 +2408,14 @@ msgstr "  Dinlenme"
 msgid "  Available"
 msgstr "  Müsait"
 
-msgid "⏱️  DRIVING-TIME RULES"
-msgstr "⏱️  SÜRÜŞ SÜRESİ KURALLARI"
+msgid "DRIVING-TIME RULES"
+msgstr "SÜRÜŞ SÜRESİ KURALLARI"
 
 msgid "  Days flagged"
 msgstr "  İhlalli günler"
 
-msgid "🔒  INTEGRITY"
-msgstr "🔒  BÜTÜNLÜK"
+msgid "INTEGRITY"
+msgstr "BÜTÜNLÜK"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Bayt bazında kapsam"

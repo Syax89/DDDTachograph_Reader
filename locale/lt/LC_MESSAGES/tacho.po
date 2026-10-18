@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% failo"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Terminas po {days} d."
+msgid "  Due in {days} days"
+msgstr "  Terminas po {days} d."
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ NEGALIOJA (prieš {days} d.)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  NEGALIOJA (prieš {days} d.)"
 
 msgid "# Drivers"
 msgstr "# Vairuotojai"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s įrašyta | {gaps} vidinių tarpų"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} eilutės · {columns} stulpeliai"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Dukart spustelėkite, kad matytumėte visą informaciją"
+msgid "Double-click for full details"
+msgstr "Dukart spustelėkite, kad matytumėte visą informaciją"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Išėmimas"
@@ -892,106 +892,100 @@ msgstr "▲ Išėmimas"
 msgid "▼ Insertion"
 msgstr "▼ Įdėjimas"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  SUGADINTAS / NEPILNAS FAILAS"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "SUGADINTAS / NEPILNAS FAILAS"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  SUGADINTI SKYRIAI (duomenys atmesti)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "SUGADINTI SKYRIAI (duomenys atmesti)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Dekoderio klaidos"
+msgid "Decoder Failures"
+msgstr "Dekoderio klaidos"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  ŠIS FAILAS NEPILNAS ARBA SUGADINTAS"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "ŠIS FAILAS NEPILNAS ARBA SUGADINTAS"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} vientisumo įspėjimai — spustelėkite, kad matytumėte detales"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} vientisumo įspėjimai — spustelėkite, kad matytumėte detales"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  SKYRIAI YRA"
+msgid "SECTIONS PRESENT"
+msgstr "SKYRIAI YRA"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  TRŪKSTA PRIVALOMŲ SKYRIŲ"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "TRŪKSTA PRIVALOMŲ SKYRIŲ"
 
-msgid "❌  Parse error"
-msgstr "❌  Dekodavimo klaida"
+msgid "Parse error"
+msgstr "Dekodavimo klaida"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Nutraukta (nepasiekta failo pabaiga)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Nutraukta (nepasiekta failo pabaiga)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Nepilni sertifikatai"
+msgid "CARDHOLDER"
+msgstr "KORTELĖS TURĖTOJAS"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  KORTELĖS TURĖTOJAS"
+msgid "Driver / Cardholder"
+msgstr "Vairuotojas / kortelės turėtojas"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Vairuotojas / kortelės turėtojas"
-
-msgid "💻  VU INFO"
-msgstr "💻  VU INFORMACIJA"
+msgid "VU INFO"
+msgstr "VU INFORMACIJA"
 
 msgid "Open DDD file"
 msgstr "Atverti DDD failą"
 
-msgid "📄  File Info"
-msgstr "📄  Failo informacija"
+msgid "File Info"
+msgstr "Failo informacija"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  DATŲ INTERVALAS"
+msgid "DATE RANGE"
+msgstr "DATŲ INTERVALAS"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  IŠSAMUMAS"
+msgid "COMPLETENESS"
+msgstr "IŠSAMUMAS"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMETRAI"
+msgid "PARAMETERS"
+msgstr "PARAMETRAI"
 
-msgid "📊  STATISTICS"
-msgstr "📊  STATISTIKA"
+msgid "STATISTICS"
+msgstr "STATISTIKA"
 
-msgid "📡  SENSOR"
-msgstr "📡  JUTIKLIS"
+msgid "SENSOR"
+msgstr "JUTIKLIS"
 
-msgid "📡  Sensor"
-msgstr "📡  Jutiklis"
+msgid "Sensor"
+msgstr "Jutiklis"
 
 msgid "Export"
 msgstr "Eksportas"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  PARAŠAI"
+msgid "SIGNATURES"
+msgstr "PARAŠAI"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Sauga ir sertifikatai"
+msgid "Security & Certificates"
+msgstr "Sauga ir sertifikatai"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  DABARTINIS UŽRAKINIMAS"
+msgid "CURRENT LOCK"
+msgstr "DABARTINIS UŽRAKINIMAS"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  DABARTINIS UŽRAKINIMAS"
+msgid "ASSOCIATED VEHICLE"
+msgstr "SUSIJUSI TRANSPORTO PRIEMONĖ"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  SUSIJUSI TRANSPORTO PRIEMONĖ"
+msgid "VEHICLE"
+msgstr "TRANSPORTO PRIEMONĖ"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  TRANSPORTO PRIEMONĖ"
+msgid "Vehicle"
+msgstr "Transporto priemonė"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Transporto priemonė"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "ATKURTA IŠ SUGADINTŲ DUOMENŲ"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  ATKURTA IŠ SUGADINTŲ DUOMENŲ"
+msgid "Raw / Unparsed Data"
+msgstr "Neapdoroti / nekoduoti duomenys"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Neapdoroti / nekoduoti duomenys"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  KORTELĖS DUOMENYS"
+msgid "CARD DETAILS"
+msgstr "KORTELĖS DUOMENYS"
 
 msgid "Additional Info"
 msgstr "Papildoma informacija"
@@ -1488,8 +1482,8 @@ msgstr "Dirbtuvių kortelė"
 msgid "Workshop Card Expiry"
 msgstr "Dirbtuvių kortelės galiojimas"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  1 karta  [Priedas 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "1 karta  [Priedas 1B]"
 
 msgid "Activity Chart"
 msgstr "Veiklos diagrama"
@@ -2384,11 +2378,8 @@ msgstr "Kasdienis vairavimas {driven} — riba {limit}"
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Nepertraukiamas vairavimas {driven} be {pause} min. pertraukos — riba {limit}"
 
-msgid "📋  Summary"
-msgstr "📋  Suvestinė"
-
-msgid "📄  FILE"
-msgstr "📄  FAILAS"
+msgid "FILE"
+msgstr "FAILAS"
 
 msgid "  Filename"
 msgstr "  Failo pavadinimas"
@@ -2402,8 +2393,8 @@ msgstr "  Apimtas laikotarpis"
 msgid "{first} → {last}"
 msgstr "{first} → {last}"
 
-msgid "📊  TOTALS"
-msgstr "📊  IŠ VISO"
+msgid "TOTALS"
+msgstr "IŠ VISO"
 
 msgid "  Drive"
 msgstr "  Vairavimas"
@@ -2417,14 +2408,14 @@ msgstr "  Poilsis"
 msgid "  Available"
 msgstr "  Prieinama"
 
-msgid "⏱️  DRIVING-TIME RULES"
-msgstr "⏱️  VAIRAVIMO LAIKO TAISYKLĖS"
+msgid "DRIVING-TIME RULES"
+msgstr "VAIRAVIMO LAIKO TAISYKLĖS"
 
 msgid "  Days flagged"
 msgstr "  Dienos su pažeidimais"
 
-msgid "🔒  INTEGRITY"
-msgstr "🔒  VIENTISUMAS"
+msgid "INTEGRITY"
+msgstr "VIENTISUMAS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Baitų apskaitos aprėptis"

@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% datoteke"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Zapade čez {days} dni"
+msgid "  Due in {days} days"
+msgstr "  Zapade čez {days} dni"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ POTECKLO (pred {days} dnevi)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  POTECKLO (pred {days} dnevi)"
 
 msgid "# Drivers"
 msgstr "# Vozniki"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s zabeleženih | {gaps} notranjih vrzeli"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} vrstic · {columns} stolpcev"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Dvokliknite za vse podrobnosti"
+msgid "Double-click for full details"
+msgstr "Dvokliknite za vse podrobnosti"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Izvlek"
@@ -892,106 +892,100 @@ msgstr "▲ Izvlek"
 msgid "▼ Insertion"
 msgstr "▼ Vstavitev"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  POŠKODOVANA / DELNA DATOTEKA"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "POŠKODOVANA / DELNA DATOTEKA"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  POŠKODOVANI RAZDELKI (podatki zavrženi)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "POŠKODOVANI RAZDELKI (podatki zavrženi)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Napake dekoderja"
+msgid "Decoder Failures"
+msgstr "Napake dekoderja"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  TA DATOTEKA JE NEPOPOLNA ALI POŠKODOVANA"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "TA DATOTEKA JE NEPOPOLNA ALI POŠKODOVANA"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} opozoril o celovitosti — kliknite za podrobnosti"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} opozoril o celovitosti — kliknite za podrobnosti"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  RAZDELKI PRISOTNI"
+msgid "SECTIONS PRESENT"
+msgstr "RAZDELKI PRISOTNI"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  MANJKAJO OBVEZNI RAZDELKI"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "MANJKAJO OBVEZNI RAZDELKI"
 
-msgid "❌  Parse error"
-msgstr "❌  Napaka pri razčlenjevanju"
+msgid "Parse error"
+msgstr "Napaka pri razčlenjevanju"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Odrezano (konec datoteke ni dosežen)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Odrezano (konec datoteke ni dosežen)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Nepopolna potrdila"
+msgid "CARDHOLDER"
+msgstr "IMETNIK KARTICE"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  IMETNIK KARTICE"
+msgid "Driver / Cardholder"
+msgstr "Voznik / imetnik kartice"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Voznik / imetnik kartice"
-
-msgid "💻  VU INFO"
-msgstr "💻  PODATKI O VU"
+msgid "VU INFO"
+msgstr "PODATKI O VU"
 
 msgid "Open DDD file"
 msgstr "Odpri datoteko DDD"
 
-msgid "📄  File Info"
-msgstr "📄  Podatki o datoteki"
+msgid "File Info"
+msgstr "Podatki o datoteki"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  RAZPON DATUMOV"
+msgid "DATE RANGE"
+msgstr "RAZPON DATUMOV"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  POPOLNOST"
+msgid "COMPLETENESS"
+msgstr "POPOLNOST"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMETRI"
+msgid "PARAMETERS"
+msgstr "PARAMETRI"
 
-msgid "📊  STATISTICS"
-msgstr "📊  STATISTIKA"
+msgid "STATISTICS"
+msgstr "STATISTIKA"
 
-msgid "📡  SENSOR"
-msgstr "📡  SENZOR"
+msgid "SENSOR"
+msgstr "SENZOR"
 
-msgid "📡  Sensor"
-msgstr "📡  Senzor"
+msgid "Sensor"
+msgstr "Senzor"
 
 msgid "Export"
 msgstr "Izvozi"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation} {annex}"
+msgid "{generation}{annex}"
+msgstr "{generation} {annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  PODPISI"
+msgid "SIGNATURES"
+msgstr "PODPISI"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Varnost in potrdila"
+msgid "Security & Certificates"
+msgstr "Varnost in potrdila"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  TRENUTNO ZAKLENJENO"
+msgid "CURRENT LOCK"
+msgstr "TRENUTNO ZAKLENJENO"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  TRENUTNO ODKLENJENO"
+msgid "ASSOCIATED VEHICLE"
+msgstr "POVEZANO VOZILO"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  POVEZANO VOZILO"
+msgid "VEHICLE"
+msgstr "VOZILO"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  VOZILO"
+msgid "Vehicle"
+msgstr "Vozilo"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Vozilo"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "OBNOVLJENO IZ POŠKODOVANIH PODATKOV"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  OBNOVLJENO IZ POŠKODOVANIH PODATKOV"
+msgid "Raw / Unparsed Data"
+msgstr "Surovi / nerazčlenjeni podatki"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Surovi / nerazčlenjeni podatki"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  PODROBNOSTI KARTICE"
+msgid "CARD DETAILS"
+msgstr "PODROBNOSTI KARTICE"
 
 msgid "Additional Info"
 msgstr "Dodatne informacije"
@@ -1488,8 +1482,8 @@ msgstr "Kartica delavnice"
 msgid "Workshop Card Expiry"
 msgstr "Potek kartice delavnice"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Generacija 1  [Dodatek 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Generacija 1  [Dodatek 1B]"
 
 msgid "Activity Chart"
 msgstr "Graf dejavnosti"
@@ -2384,11 +2378,8 @@ msgstr "Dnevna vožnja {driven} — omejitev {limit}"
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Neprekinjena vožnja {driven} brez {pause} min odmora — omejitev {limit}"
 
-msgid "📋  Summary"
-msgstr "📋  Povzetek"
-
-msgid "📄  FILE"
-msgstr "📄  DATOTEKA"
+msgid "FILE"
+msgstr "DATOTEKA"
 
 msgid "  Filename"
 msgstr "  Ime datoteke"
@@ -2402,8 +2393,8 @@ msgstr "  Zajeto obdobje"
 msgid "{first} → {last}"
 msgstr "{first} → {last}"
 
-msgid "📊  TOTALS"
-msgstr "📊  SKUPAJ"
+msgid "TOTALS"
+msgstr "SKUPAJ"
 
 msgid "  Drive"
 msgstr "  Vožnja"
@@ -2417,14 +2408,14 @@ msgstr "  Počitek"
 msgid "  Available"
 msgstr "  Razpoložljivost"
 
-msgid "⏱️  DRIVING-TIME RULES"
-msgstr "⏱️  PRAVILA O ČASU VOŽNJE"
+msgid "DRIVING-TIME RULES"
+msgstr "PRAVILA O ČASU VOŽNJE"
 
 msgid "  Days flagged"
 msgstr "  Dnevi s kršitvami"
 
-msgid "🔒  INTEGRITY"
-msgstr "🔒  CELOVITOST"
+msgid "INTEGRITY"
+msgstr "CELOVITOST"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Pokritost po bajtih"

@@ -10,6 +10,7 @@ Cross-platform (Windows/macOS/Linux) application for parsing, analyzing and visu
 - **Crypto**: `core/crypto/` — signature.py (root validator), vu_signature.py (ECDSA TREP + CVC chain), ef_signature.py (card data integrity)
 - **Utils**: `core/utils/` — ber_tlv, coverage, encoding, constants, logger, version, report_format, event_codes, tag_defs
 - **GUI**: `app/gui.py` — regedit-style tree + table viewer with Excel/CSV/JSON export
+- **Icons**: `app/icons.py` — the only way the UI asks for an image: `icon(name, size, master)` decodes `assets/icons/png/<size>/<name>.png` (16 px tree rows and inline markers, 20 px toolbar), caches it per Tk interpreter so Tkinter cannot garbage-collect it into a blank row, and returns `None` for a missing file. The emoji the UI used before were drawn by whatever font the OS picked; nothing in `app/gui.py`/`app/cli.py` may carry one again (`tests/unit/test_gui_icons.py`). `assets/icons/README.md` is the designer's note, `assets/icons/svg/` the editable masters (Tk cannot read them; only `png/` is bundled by `build.spec`).
 - **CLI**: `app/cli.py` — full-featured CLI; `app/main.py` — compatibility entry point
 - **Export**: `app/export.py` — multi-sheet Excel + CSV + PDF
 

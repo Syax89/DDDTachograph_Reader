@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% af skránni"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Gjalddagi eftir {days} daga"
+msgid "  Due in {days} days"
+msgstr "  Gjalddagi eftir {days} daga"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ ÚTRUNNIÐ ({days} dögum síðan)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  ÚTRUNNIÐ ({days} dögum síðan)"
 
 msgid "# Drivers"
 msgstr "# Ökumenn"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s skráð | {gaps} innri eyður"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} raðir · {columns} dálkar"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Tvísmelltu fyrir öll smáatriði"
+msgid "Double-click for full details"
+msgstr "Tvísmelltu fyrir öll smáatriði"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Úttekt"
@@ -892,106 +892,100 @@ msgstr "▲ Úttekt"
 msgid "▼ Insertion"
 msgstr "▼ Ísetning"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  SKEMMD / ÓFULLNÆGJANDI SKRÁ"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "SKEMMD / ÓFULLNÆGJANDI SKRÁ"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  SKEMMDIR HLUTAR (gögnum hafnað)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "SKEMMDIR HLUTAR (gögnum hafnað)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Afkóðunarbilanir"
+msgid "Decoder Failures"
+msgstr "Afkóðunarbilanir"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  ÞESSI SKRÁ ER ÓFULLNÆGJANDI EÐA SKEMMD"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "ÞESSI SKRÁ ER ÓFULLNÆGJANDI EÐA SKEMMD"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} viðvaranir um heilindi — smella fyrir smáatriði"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} viðvaranir um heilindi — smella fyrir smáatriði"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  HLUTAR TIL STAÐAR"
+msgid "SECTIONS PRESENT"
+msgstr "HLUTAR TIL STAÐAR"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  SKYLDUM HLUTUM VANNTAR"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "SKYLDUM HLUTUM VANNTAR"
 
-msgid "❌  Parse error"
-msgstr "❌  Afkóðunarvilla"
+msgid "Parse error"
+msgstr "Afkóðunarvilla"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Klippt (náði ekki enda skráarinnar)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Klippt (náði ekki enda skráarinnar)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Ófullnægjandi skírteini"
+msgid "CARDHOLDER"
+msgstr "KORTHAFI"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  KORTHAFI"
+msgid "Driver / Cardholder"
+msgstr "Ökumaður / korthafi"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Ökumaður / korthafi"
-
-msgid "💻  VU INFO"
-msgstr "💻  VU-UPPLÝSINGAR"
+msgid "VU INFO"
+msgstr "VU-UPPLÝSINGAR"
 
 msgid "Open DDD file"
 msgstr "Opna DDD-skrá"
 
-msgid "📄  File Info"
-msgstr "📄  Upplýsingar um skrá"
+msgid "File Info"
+msgstr "Upplýsingar um skrá"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  DAGSETNINGABIL"
+msgid "DATE RANGE"
+msgstr "DAGSETNINGABIL"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  HEILD"
+msgid "COMPLETENESS"
+msgstr "HEILD"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  FÆRIBREYTUR"
+msgid "PARAMETERS"
+msgstr "FÆRIBREYTUR"
 
-msgid "📊  STATISTICS"
-msgstr "📊  TÖLFRÆÐI"
+msgid "STATISTICS"
+msgstr "TÖLFRÆÐI"
 
-msgid "📡  SENSOR"
-msgstr "📡  SKYNJARI"
+msgid "SENSOR"
+msgstr "SKYNJARI"
 
-msgid "📡  Sensor"
-msgstr "📡  Skynjari"
+msgid "Sensor"
+msgstr "Skynjari"
 
 msgid "Export"
 msgstr "Útflutningur"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  UNDIRSKRIFTIR"
+msgid "SIGNATURES"
+msgstr "UNDIRSKRIFTIR"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Öryggi og skírteini"
+msgid "Security & Certificates"
+msgstr "Öryggi og skírteini"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  NÚVERANDI LÆSING"
+msgid "CURRENT LOCK"
+msgstr "NÚVERANDI LÆSING"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  NÚVERANDI LÆSING"
+msgid "ASSOCIATED VEHICLE"
+msgstr "TENGD ÖKUTÆKI"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  TENGD ÖKUTÆKI"
+msgid "VEHICLE"
+msgstr "ÖKUTÆKI"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  ÖKUTÆKI"
+msgid "Vehicle"
+msgstr "Ökutæki"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Ökutæki"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "ENDURHEIMT ÚR SKEMMDUM GÖGNUM"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  ENDURHEIMT ÚR SKEMMDUM GÖGNUM"
+msgid "Raw / Unparsed Data"
+msgstr "Hrá / óafkóðuð gögn"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Hrá / óafkóðuð gögn"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  KORTASMÁATRIÐI"
+msgid "CARD DETAILS"
+msgstr "KORTASMÁATRIÐI"
 
 msgid "Additional Info"
 msgstr "Viðbótarupplýsingar"
@@ -1488,8 +1482,8 @@ msgstr "Verkstæðiskort"
 msgid "Workshop Card Expiry"
 msgstr "Gildistími verkstæðiskorts"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Kynslóð 1  [Viðauki 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Kynslóð 1  [Viðauki 1B]"
 
 msgid "Activity Chart"
 msgstr "Virknigraf"
@@ -2384,11 +2378,8 @@ msgstr "Daglegur akstur {driven} — hámark {limit}"
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Samfelldur akstur {driven} án {pause} mín. hvíldar — hámark {limit}"
 
-msgid "📋  Summary"
-msgstr "📋  Samantekt"
-
-msgid "📄  FILE"
-msgstr "📄  SKRÁ"
+msgid "FILE"
+msgstr "SKRÁ"
 
 msgid "  Filename"
 msgstr "  Skráarnafn"
@@ -2402,8 +2393,8 @@ msgstr "  Tímabil sem nær yfir"
 msgid "{first} → {last}"
 msgstr "{first} → {last}"
 
-msgid "📊  TOTALS"
-msgstr "📊  SAMTALS"
+msgid "TOTALS"
+msgstr "SAMTALS"
 
 msgid "  Drive"
 msgstr "  Akstur"
@@ -2417,14 +2408,14 @@ msgstr "  Hvíld"
 msgid "  Available"
 msgstr "  Fáanlegur"
 
-msgid "⏱️  DRIVING-TIME RULES"
-msgstr "⏱️  REGLUR UM AKSTURSTÍMA"
+msgid "DRIVING-TIME RULES"
+msgstr "REGLUR UM AKSTURSTÍMA"
 
 msgid "  Days flagged"
 msgstr "  Dagar með brotum"
 
-msgid "🔒  INTEGRITY"
-msgstr "🔒  HEILLEIKI"
+msgid "INTEGRITY"
+msgstr "HEILLEIKI"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Þekja reiknuð í bætum"

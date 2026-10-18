@@ -2,7 +2,7 @@
 
 Regulation (EC) 561/2006 art. 6(1) (more than 9 h of daily driving) and art. 7
 (more than 4 h 30 min of continuous driving without a 45 min break). A flagged
-day must be recognisable *without* colour — the warning glyph the Ev column
+day must be recognisable *without* colour — the same marker the Ev column
 already uses goes into its Drive cell — and must say which rule it broke and by
 how much in its row tooltip; a clean day must carry neither. The dashboard's
 KPI row counts the flagged days of the whole file.
@@ -14,7 +14,7 @@ tests.
 
 The real render also pins the two interactions that broke the flag once
 (header-click sort and the filter box, both of which re-render every row): the
-tint, the month-total emphasis and the ⚠ marker must survive them, and each
+tint, the month-total emphasis and the violation marker must survive them, and
 row's tooltips must stay attached to that row's *own* day rather than to
 the position it happened to occupy before the reorder.
 """
@@ -57,7 +57,11 @@ CLEAN_DAY = {
     ],
 }
 
-WARNING_GLYPH = "\u26a0\ufe0f"
+#: The driving-rule marker in the Drive cell. Not an emoji and not an icon:
+#: a ttk.Treeview cell can hold text only, so the mark is an ASCII "!" (the
+#: row tint and the cell tooltip carry the rest).
+WARNING_MARK = "!"
+WARNING_MARK_CELL = "  " + WARNING_MARK
 KPI_CAPTION = _("Days over {hours} h").format(hours=DAILY_DRIVE_LIMIT_MIN // 60)
 
 #: A card-file payload with the bits the row tooltips are built from: a vehicle
@@ -113,17 +117,17 @@ def _kpi(kpis, caption):
 # ── the flag itself ────────────────────────────────────────────────────────
 
 def test_flagged_day_marks_the_drive_cell_and_explains_it_in_the_tooltip():
-    """The ⚠ marker is in the Drive cell; the tooltip names rule and value."""
+    """The marker is in the Drive cell; the tooltip names rule and value."""
     columns, rows, row_tags, tooltips, rule_tips, _kpis = _fast_dashboard([FLAGGED_DAY])
     index, row = _row_of(rows, "01/05/2025")
 
     drive_cell = row[columns.index(_("Drive"))]
-    assert drive_cell == f"10h 15m {WARNING_GLYPH}"
+    assert drive_cell == f"10h 15m{WARNING_MARK_CELL}"
     assert row_tags[index] == "flagged"
     tip = tooltips[index]
     assert "Daily driving 10h 15m \u2014 limit 9h 00m" in tip
     assert "Continuous driving 10h 15m without a 45 min break" in tip
-    # the same explanation hangs off the Drive cell, where the ⚠ marker sits
+    # the same explanation hangs off the Drive cell, where the marker sits
     assert "Daily driving 10h 15m" in rule_tips[index]
 
 
@@ -133,7 +137,7 @@ def test_clean_day_carries_no_marker_and_no_explanation():
 
     drive_cell = row[columns.index(_("Drive"))]
     assert drive_cell == "8h 00m"
-    assert WARNING_GLYPH not in drive_cell
+    assert WARNING_MARK not in drive_cell
     assert row_tags[index] is None
     assert "Daily driving" not in tooltips.get(index, "")
     assert "Continuous driving" not in tooltips.get(index, "")
@@ -149,7 +153,7 @@ def test_continuous_driving_alone_is_flagged_and_named():
     columns, rows, row_tags, tooltips, rule_tips, kpis = _fast_dashboard([day])
     index, row = _row_of(rows, "03/05/2025")
 
-    assert row[columns.index(_("Drive"))] == f"4h 31m {WARNING_GLYPH}"
+    assert row[columns.index(_("Drive"))] == f"4h 31m{WARNING_MARK_CELL}"
     assert row_tags[index] == "flagged"
     assert "Continuous driving 4h 31m without a 45 min break \u2014 limit 4h 30m" \
         in tooltips[index]
@@ -164,7 +168,7 @@ def test_flagged_marker_survives_the_month_subtotal_rows():
     columns, rows, row_tags, _tooltips, _rule_tips, _kpis = _fast_dashboard([FLAGGED_DAY])
     total_index = next(i for i, tag in enumerate(row_tags) if tag == "total")
     assert rows[total_index][columns.index(_("Drive"))] == "10h 15m"
-    assert WARNING_GLYPH not in rows[total_index][columns.index(_("Drive"))]
+    assert WARNING_MARK not in rows[total_index][columns.index(_("Drive"))]
     # the day's Ev column still only carries the events marker (none here)
     _index, row = _row_of(rows, "01/05/2025")
     assert row[columns.index(_("Ev"))] == ""
@@ -257,7 +261,7 @@ def test_rendered_dashboard_tints_and_marks_the_flagged_row(explorer):
     by_date = {date: (values, tags) for date, values, tags in rows}
 
     flagged_values, flagged_tags = by_date["01/05/2025"]
-    assert flagged_values[drive_col] == f"10h 15m {WARNING_GLYPH}"
+    assert flagged_values[drive_col] == f"10h 15m{WARNING_MARK_CELL}"
     # ttk.Treeview styles whole rows only: the violation is a row tint.
     assert "flagged" in flagged_tags
     clean_values, clean_tags = by_date["02/05/2025"]
@@ -357,9 +361,9 @@ def test_flagged_tint_and_month_total_tags_survive_a_header_sort(explorer):
     _iid, values, tags = _row_with_date(explorer, "01/05/2025")
     assert "flagged" in tags
     assert "flagged" not in _row_with_date(explorer, "02/05/2025")[2]
-    # the ⚠ marker is in the cell text, which a sort never rewrites
+    # the marker is in the cell text, which a sort never rewrites
     drive_col = list(explorer.table._cols).index(_("Drive"))
-    assert values[drive_col] == f"10h 15m {WARNING_GLYPH}"
+    assert values[drive_col] == f"10h 15m{WARNING_MARK_CELL}"
 
     # the pre-existing row emphasis keeps working through the same mechanism
     tags_of_rows = [tags for _values, tags in _displayed(explorer)]
@@ -381,7 +385,7 @@ def test_flagged_tint_and_tooltip_survive_a_filter(explorer):
     iid, values, tags = _row_with_date(explorer, "01/05/2025")
     assert "flagged" in tags
     drive_col = list(explorer.table._cols).index(_("Drive"))
-    assert values[drive_col] == f"10h 15m {WARNING_GLYPH}"
+    assert values[drive_col] == f"10h 15m{WARNING_MARK_CELL}"
     assert "Daily driving 10h 15m" in _hover(explorer, iid, _("Drive"))
 
     # clearing the box brings the clean day back, still untinted and tip-free
@@ -392,7 +396,7 @@ def test_flagged_tint_and_tooltip_survive_a_filter(explorer):
 
 
 def test_drive_cell_tooltip_follows_the_flagged_day_through_a_sort(explorer):
-    """Where the ⚠ sits, the explanation must be: on that day, and only there.
+    """Where the marker sits, the explanation must be: on that day, and only there.
 
     Reproduces the reported failure exactly — 01/05 flagged, 02/05 clean, sort
     Date ascending so the flagged day becomes display row 0 — and checks both

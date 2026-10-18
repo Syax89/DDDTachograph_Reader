@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% tiedostosta"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Erääntyy {days} päivän kuluttua"
+msgid "  Due in {days} days"
+msgstr "  Erääntyy {days} päivän kuluttua"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ VANHENTUNUT ({days} päivää sitten)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  VANHENTUNUT ({days} päivää sitten)"
 
 msgid "# Drivers"
 msgstr "# Kuljettajia"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s tallennettu | {gaps} sisäistä aukkoa"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} riviä · {columns} saraketta"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Kaksoisnapsauta, niin näet kaikki tiedot"
+msgid "Double-click for full details"
+msgstr "Kaksoisnapsauta, niin näet kaikki tiedot"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Poisto"
@@ -892,106 +892,100 @@ msgstr "▲ Poisto"
 msgid "▼ Insertion"
 msgstr "▼ Asetus"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  VIOITTUNUT / PUUTTEELLINEN TIEDOSTO"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "VIOITTUNUT / PUUTTEELLINEN TIEDOSTO"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  VIOITTUNEET OSIOT (tiedot hylätty)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "VIOITTUNEET OSIOT (tiedot hylätty)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Purkuvirheet"
+msgid "Decoder Failures"
+msgstr "Purkuvirheet"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  TÄMÄ TIEDOSTO ON PUUTTEELLINEN TAI VIOITTUNUT"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "TÄMÄ TIEDOSTO ON PUUTTEELLINEN TAI VIOITTUNUT"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} eheysvaroitusta — napsauta, niin näet tiedot"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} eheysvaroitusta — napsauta, niin näet tiedot"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  OSIOT OLEMASSA"
+msgid "SECTIONS PRESENT"
+msgstr "OSIOT OLEMASSA"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  PAKOLLISET OSIOT PUUTTUVAT"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "PAKOLLISET OSIOT PUUTTUVAT"
 
-msgid "❌  Parse error"
-msgstr "❌  Purkuvirhe"
+msgid "Parse error"
+msgstr "Purkuvirhe"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Katkaistu (tiedoston loppuun ei päästy)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Katkaistu (tiedoston loppuun ei päästy)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Puutteelliset varmenteet"
+msgid "CARDHOLDER"
+msgstr "KORTINHALTIJA"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  KORTINHALTIJA"
+msgid "Driver / Cardholder"
+msgstr "Kuljettaja / kortinhaltija"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Kuljettaja / kortinhaltija"
-
-msgid "💻  VU INFO"
-msgstr "💻  VU-TIEDOT"
+msgid "VU INFO"
+msgstr "VU-TIEDOT"
 
 msgid "Open DDD file"
 msgstr "Avaa DDD-tiedosto"
 
-msgid "📄  File Info"
-msgstr "📄  Tiedoston tiedot"
+msgid "File Info"
+msgstr "Tiedoston tiedot"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  AIKAVÄLI"
+msgid "DATE RANGE"
+msgstr "AIKAVÄLI"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  KATTAVUUS"
+msgid "COMPLETENESS"
+msgstr "KATTAVUUS"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMETRIT"
+msgid "PARAMETERS"
+msgstr "PARAMETRIT"
 
-msgid "📊  STATISTICS"
-msgstr "📊  TILASTOT"
+msgid "STATISTICS"
+msgstr "TILASTOT"
 
-msgid "📡  SENSOR"
-msgstr "📡  ANTURI"
+msgid "SENSOR"
+msgstr "ANTURI"
 
-msgid "📡  Sensor"
-msgstr "📡  Anturi"
+msgid "Sensor"
+msgstr "Anturi"
 
 msgid "Export"
 msgstr "Vienti"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  ALLEKIRJOITUKSET"
+msgid "SIGNATURES"
+msgstr "ALLEKIRJOITUKSET"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Turvallisuus ja varmenteet"
+msgid "Security & Certificates"
+msgstr "Turvallisuus ja varmenteet"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  NYKYINEN LUKITUS"
+msgid "CURRENT LOCK"
+msgstr "NYKYINEN LUKITUS"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  NYKYINEN LUKITUS"
+msgid "ASSOCIATED VEHICLE"
+msgstr "LIITETTY AJONEUVO"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  LIITETTY AJONEUVO"
+msgid "VEHICLE"
+msgstr "AJONEUVO"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  AJONEUVO"
+msgid "Vehicle"
+msgstr "Ajoneuvo"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Ajoneuvo"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "PALAUTETTU VAURIOITUNEISTA TIEDOISTA"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  PALAUTETTU VAURIOITUNEISTA TIEDOISTA"
+msgid "Raw / Unparsed Data"
+msgstr "Raaka / purkamaton data"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Raaka / purkamaton data"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  KORTIN TIEDOT"
+msgid "CARD DETAILS"
+msgstr "KORTIN TIEDOT"
 
 msgid "Additional Info"
 msgstr "Lisätiedot"
@@ -1488,8 +1482,8 @@ msgstr "Korjaamokortti"
 msgid "Workshop Card Expiry"
 msgstr "Korjaamokortin voimassaolo"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Sukupolvi 1  [Liite 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Sukupolvi 1  [Liite 1B]"
 
 msgid "Activity Chart"
 msgstr "Aktiivisuuskaavio"
@@ -2384,11 +2378,8 @@ msgstr "Päivittäinen ajo {driven} — raja {limit}"
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Yhtäjaksoinen ajo {driven} ilman {pause} min taukoa — raja {limit}"
 
-msgid "📋  Summary"
-msgstr "📋  Yhteenveto"
-
-msgid "📄  FILE"
-msgstr "📄  TIEDOSTO"
+msgid "FILE"
+msgstr "TIEDOSTO"
 
 msgid "  Filename"
 msgstr "  Tiedostonimi"
@@ -2402,8 +2393,8 @@ msgstr "  Katettu jakso"
 msgid "{first} → {last}"
 msgstr "{first} → {last}"
 
-msgid "📊  TOTALS"
-msgstr "📊  YHTEENSÄ"
+msgid "TOTALS"
+msgstr "YHTEENSÄ"
 
 msgid "  Drive"
 msgstr "  Ajo"
@@ -2417,14 +2408,14 @@ msgstr "  Lepo"
 msgid "  Available"
 msgstr "  Valmiudessa"
 
-msgid "⏱️  DRIVING-TIME RULES"
-msgstr "⏱️  AJOAJAN SÄÄNNÖT"
+msgid "DRIVING-TIME RULES"
+msgstr "AJOAJAN SÄÄNNÖT"
 
 msgid "  Days flagged"
 msgstr "  Rikkomuksia sisältävät päivät"
 
-msgid "🔒  INTEGRITY"
-msgstr "🔒  EHEYS"
+msgid "INTEGRITY"
+msgstr "EHEYS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Tavukohtainen kattavuus"

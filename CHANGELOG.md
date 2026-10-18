@@ -1,4 +1,15 @@
 # Unreleased
+- **Icons drawn, not typed**: every place the interface used an emoji now draws
+  a PNG from a commissioned monochrome icon set (`assets/icons/`, 28 icons at
+  six sizes, with the designer's SVG masters), so the same build looks the same
+  on Windows, macOS and Linux instead of depending on the emoji font each system
+  happens to ship. The toolbar buttons lead with an icon and keep their label;
+  tree nodes, the status badge, the integrity banner, the activity header and
+  the summary panel's section headers carry theirs on the row. The four status
+  icons differ by shape (circle/check, triangle/!, circle/cross, circle/?), not
+  only by colour, and `COMPLETENESS` and `PARAMETERS` no longer share the glyph
+  `TOTALS` and `STATISTICS` use. The CLI, which has no icon set to draw, prints
+  words instead of the emoji it used to.
 - **Detailed-speed plot reads as a signal**: the min–max envelope is a filled
   band under a 2 px mean line instead of a picket fence of bars, the plot opens
   on the hours the day actually has samples in (zoom still reaches the full
