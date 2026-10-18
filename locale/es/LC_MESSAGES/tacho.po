@@ -2424,7 +2424,7 @@ msgid "  Daily driving limit"
 msgstr "  Límite conducción diaria"
 
 msgid "  Continuous driving limit"
-msgstr "  Límite conducción continua"
+msgstr "  Conducción continua"
 
 msgid "  Break that resets it"
 msgstr "  Pausa que lo reinicia"

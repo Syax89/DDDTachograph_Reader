@@ -921,7 +921,7 @@ msgid "Truncated (did not reach end of file)"
 msgstr "Troncato (non raggiunta la fine del file)"
 
 msgid "CARDHOLDER"
-msgstr "TITOLARE DELLA CARTA"
+msgstr "TITOLARE CARTA"
 
 msgid "Driver / Cardholder"
 msgstr "Conducente / Titolare della carta"

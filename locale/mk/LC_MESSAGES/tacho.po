@@ -921,7 +921,7 @@ msgid "Truncated (did not reach end of file)"
 msgstr "Скратена (не е достигнат крајот на датотеката)"
 
 msgid "CARDHOLDER"
-msgstr "НОСИТЕЛ НА КАРТИЧКАТА"
+msgstr "ИМАТЕЛ НА КАРТИЧКА"
 
 msgid "Driver / Cardholder"
 msgstr "Возач / носител на картичката"

@@ -2418,13 +2418,13 @@ msgid "INTEGRITY"
 msgstr "ИНТЕГРИТЕТ"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Покривеност по бајтовима"
+msgstr "  Покривеност бајтима"
 
 msgid "  Daily driving limit"
 msgstr "  Дневно ограничење"
 
 msgid "  Continuous driving limit"
-msgstr "  Непрекидно ограничење"
+msgstr "  Непрекидна вожња"
 
 msgid "  Break that resets it"
 msgstr "  Пауза која га ресетује"

@@ -2418,13 +2418,13 @@ msgid "INTEGRITY"
 msgstr "INTEGRITÄT"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Byte-bilanzierte Abdeckung"
+msgstr "  Byte-Abdeckung"
 
 msgid "  Daily driving limit"
 msgstr "  Grenze Tageslenkzeit"
 
 msgid "  Continuous driving limit"
-msgstr "  Grenze Lenkzeit am Stück"
+msgstr "  Lenkzeit am Stück"
 
 msgid "  Break that resets it"
 msgstr "  Zurücksetzende Pause"

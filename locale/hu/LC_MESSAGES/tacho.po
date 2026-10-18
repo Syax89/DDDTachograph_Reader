@@ -2424,7 +2424,7 @@ msgid "  Daily driving limit"
 msgstr "  Napi vezetés határa"
 
 msgid "  Continuous driving limit"
-msgstr "  Folyamatos vezetés határa"
+msgstr "  Folyamatos vezetés"
 
 msgid "  Break that resets it"
 msgstr "  Nullázó szünet"

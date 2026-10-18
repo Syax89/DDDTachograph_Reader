@@ -973,7 +973,7 @@ msgid "ASSOCIATED VEHICLE"
 msgstr "SUSIJUSI TRANSPORTO PRIEMONĖ"
 
 msgid "VEHICLE"
-msgstr "TRANSPORTO PRIEMONĖ"
+msgstr "TRANSPORTAS"
 
 msgid "Vehicle"
 msgstr "Transporto priemonė"

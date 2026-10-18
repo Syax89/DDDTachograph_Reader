@@ -25,6 +25,11 @@ display is available, the same pattern as ``test_gui_driving_rules.py``):
   panel really lays out — and the rows that still cannot fit are named, with
   their measured widths, and proven readable in full through the panel's hover
   reveal (``test_every_row_of_the_summary_panel_fits_its_column_in_every_language``);
+  the measurement font is pinned (DejaVu Sans, the widest default font the
+  supported platforms hand out) instead of the machine's, because the same row
+  is 194 px in Noto Sans and 204 px in DejaVu and this suite used to be green
+  or red depending on which one it got
+  (``test_the_fit_sweep_measures_a_pinned_font``);
 * the two rows that were measured too wide in the review of the commit that
   introduced this panel — the byte-accounted coverage value and the card
   signature verdict — now fit in all 34 catalogs;
@@ -41,6 +46,7 @@ display is available, the same pattern as ``test_gui_driving_rules.py``):
 ``tests/unit/conftest.py`` pins the settings file and the translator for the
 whole directory, so no real user settings are read or written.
 """
+import warnings
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -76,6 +82,77 @@ LIMIT_ROWS = (
 #: ``TachoExplorer.minsize(900, 560)``: the smallest window the product
 #: supports, and the geometry the single-sentence limits row was clipped at.
 MINIMUM_SIZE = "900x560"
+
+#: The font family every fit measurement below is taken with — **pinned**, never
+#: the machine's own.
+#:
+#: ``theme.FONT_BODY`` is ``("", 10)``: an empty family, which Tk resolves to
+#: whatever the platform calls its default UI font. That is Noto Sans on a
+#: desktop with Noto installed, DejaVu Sans on a stock Ubuntu runner, Segoe UI
+#: on Windows and the system font on macOS — and they are not the same width.
+#: DejaVu Sans is ~5 % wider than Noto Sans, which is exactly how this panel
+#: came to clip eight rows on CI (``  Byte-bilanzierte Abdeckung`` 204 px in a
+#: 198 px Field column there, 194 px here) while the same suite was green
+#: locally. A fit measured against "whatever this machine happens to have" is
+#: therefore not a fit: it is a fit against one font, and the next machine's is
+#: wider. So the sweep measures DejaVu Sans — the widest default sans that ships
+#: with a supported platform — at the panel's own 10 pt.
+MEASURE_FAMILY = "DejaVu Sans"
+
+
+def measurement_family():
+    """The family the measurements below use, warning loudly when it is missing.
+
+    Measuring a *narrower* font than :data:`MEASURE_FAMILY` is worse than not
+    measuring at all — it reports a fit that another machine will not reproduce.
+    So a machine without DejaVu Sans gets a warning that says so in as many
+    words (and names the font actually used inside every failure message) rather
+    than a quiet pass; ``test_the_fit_sweep_measures_a_pinned_font`` pins both
+    halves of that.
+    """
+    if MEASURE_FAMILY in set(gui.tkfont.families()):
+        return MEASURE_FAMILY
+    fallback = gui.tkfont.nametofont("TkDefaultFont").actual("family")
+    warnings.warn(
+        f"{MEASURE_FAMILY} is not installed: the summary fit sweep is measuring "
+        f"{fallback!r} instead, which is usually narrower than the font this "
+        f"panel is verified against, so a row that clips on a stock Ubuntu "
+        f"runner can pass here. Install the DejaVu fonts (fonts-dejavu-core on "
+        f"Debian/Ubuntu) to measure the pinned font.",
+        UserWarning, stacklevel=3)
+    return fallback
+
+
+def measure_font(heading=False):
+    """The panel's body (or bold heading) font, pinned to :data:`MEASURE_FAMILY`.
+
+    The size and weight come from ``theme.FONT_BODY``/``FONT_HEADING`` — only
+    the family is overridden, so moving the panel to 11 pt moves the measurement
+    with it and a font the sweep never renders still cannot pass unmeasured.
+    """
+    spec = gui.FONT_HEADING if heading else gui.FONT_BODY
+    return gui.tkfont.Font(family=measurement_family(), size=spec[1],
+                           weight="bold" if "bold" in spec else "normal")
+
+
+def drawn_font(heading=False):
+    """The font the panel really draws a body (or header) cell with.
+
+    The mirror image of :func:`measure_font`, and the difference matters: the
+    *fit* of a row is a question about the widest font a user's machine may hand
+    the panel, so it is answered with the pinned one; the *reveal* is a runtime
+    decision the panel makes by measuring the font it is drawing with
+    (``_DataTable._summary_cell_font``: ``TkDefaultFont`` for a body cell,
+    ``FONT_HEADING`` for a block header), so asking it whether a cell should be
+    revealed has to use that same font — otherwise the test reports a reveal
+    that the panel, on this machine's narrower font, correctly does not make.
+
+    The two coincide whenever the platform's default family *is* the pinned
+    one, which is exactly the CI configuration.
+    """
+    if heading:
+        return gui.tkfont.Font(font=gui.FONT_HEADING)
+    return gui.tkfont.nametofont("TkDefaultFont")
 
 #: 10 h 15 min of unbroken driving: breaks Reg. (EC) 561/2006 art. 6(1) and
 #: art. 7 at once, so the file has exactly one flagged day.
@@ -264,26 +341,28 @@ CASE_VERDICTS = {
 }
 
 #: The only rows of the overview allowed to be wider than the panel's columns,
-#: named here with their measured widths at 900x560 (Linux, TkDefaultFont,
-#: 187 px value column / 198 px field column), because the panel does not get to
-#: shorten them — the wording belongs to the code that owns the fact:
+#: named here with their measured widths at 900x560 (measured with the pinned
+#: DejaVu Sans at 10 pt, see :data:`MEASURE_FAMILY`: 187 px value column /
+#: 198 px field column), because the panel does not get to shorten them — the
+#: wording belongs to the code that owns the fact:
 #:
 #: ``Status`` — ``_integrity_label``'s 15 verdicts. 11 of them exceed 187 px in
 #:   at least one catalog and 5 exceed it in all 34 (the fully-verified VU
-#:   verdict is 372 px in bg, the unverified-chain one 471 px in el, the
-#:   untrusted-key one 378 px in mk). Two were shortened because the length
-#:   bought nothing — "Signature mismatch" (164 px worst) and the coverage
+#:   verdict is 394 px in bg, the unverified-chain one 486 px in el, the
+#:   untrusted-key one 400 px in mk). Two were shortened because the length
+#:   bought nothing — "Signature mismatch" (176 px worst) and the coverage
 #:   percentage above — but the rest are security verdicts whose wording is not
 #:   this panel's to trade away, and no single short form fits all 34 catalogs.
 #: ``Period covered`` — the catalogs' "No activity data available." in the 29
-#:   languages where it is wider than the column (354 px in el); the date range
-#:   "01/05/2025 → 03/05/2025" fits everywhere (168 px, 19 px spare).
+#:   languages where it is wider than the column (372 px in el); the date range
+#:   "01/05/2025 → 03/05/2025" fits everywhere (184 px, 3 px spare).
 #: ``Origin`` — the catalogs' "Vehicle Unit (VU)", which a VU file's overview
-#:   states in the FILE block: 238 px in ru, 229 px in lt, and over the column
-#:   in be, bg, lv and uk as well. It is the same string the File Info section
-#:   and the dashboards show, so it is not this panel's wording to cut either.
+#:   states in the FILE block: 259 px in ru, 242 px in be, 241 px in lt, and over
+#:   the column in bg, lv, mk and uk as well. It is the same string the File Info
+#:   section and the dashboards show, so it is not this panel's wording to cut
+#:   either.
 #: ``DRIVING-TIME RULES`` (a block *header*, not a value) — the translated title
-#:   clips the 198 px Field column in 16 catalogs (283 px in ro); the other five
+#:   clips the 198 px Field column in 22 catalogs (317 px in ro); the other five
 #:   headers fit everywhere. The msgid used to carry a ``⏱️`` prefix that the
 #:   icon work removed from every catalog and from the call site: a name keyed
 #:   on the old spelling matches no rendered row, so it silently stopped
@@ -297,9 +376,12 @@ CASE_VERDICTS = {
 OVER_WIDE_ROWS = ("  Status", "  Period covered", "  Origin",
                   "DRIVING-TIME RULES")
 
-#: The value the defect reported as clipped, and which the overview now states
-#: short enough to fit every catalog: 187 px is the whole budget, so this row is
-#: not allowed into :data:`OVER_WIDE_ROWS` at all.
+#: The row the defect reported as clipped — the one this test file exists to keep
+#: fitting — so it may never join :data:`OVER_WIDE_ROWS`: not its 198 px Field
+#: label and not its 187 px Value. Its label is the one nine catalogs had to
+#: shorten (they stated "byte-accounted coverage" in 195–205 px; they now say it
+#: in 101–166 px), which is why this register is the single row a future catalog
+#: cannot quietly widen.
 MUST_FIT_ROWS = ("  Byte-accounted coverage",)
 
 
@@ -449,14 +531,31 @@ def panel_row_number(app, label):
                          f"{[label for _n, label, _v, _h in panel_rows(app, headers=True)]}")
 
 
+def row_iid(app, row_number):
+    """The treeview id of rendered row *row_number*, as of the current render.
+
+    Row ids are not stable across a re-render, and ``update()`` flushes exactly
+    the idle work that re-renders the panel, so an id read before an ``update``
+    and used after it can be gone: ``bbox`` then raises ``Item ... not found``
+    instead of returning a box. That made the all-catalog sweep fail
+    intermittently, so every use below re-reads the row from the live widget.
+    """
+    children = app.table.tv.get_children("")
+    assert row_number < len(children), (
+        f"row {row_number} is gone: the panel re-rendered with "
+        f"{len(children)} rows while the test held a stale one")
+    return children[row_number]
+
+
 def hover_cell(app, row_number, column):
     """Hover the cell of rendered row *row_number*; return the reveal, if any.
 
     ``None`` means the panel showed no reveal for that cell.
     """
-    iid = app.table.tv.get_children("")[row_number]
-    app.table.tv.see(iid)
+    app.table.tv.see(row_iid(app, row_number))
     app.update()
+    # ... and re-read the row after the update, which may have re-rendered it.
+    iid = row_iid(app, row_number)
     box = app.table.tv.bbox(iid, column)
     assert box, f"row {row_number} has no laid-out {column} cell to hover"
     app._on_summary_motion(
@@ -613,11 +712,54 @@ def test_rules_block_reads_the_limits_from_the_constants(explorer, monkeypatch):
     assert row_value(rows, i18n._("  Break that resets it")) == "60 min"
 
 
+def test_the_fit_sweep_measures_a_pinned_font(explorer, monkeypatch):
+    """The sweep's font is pinned, and a machine without it says so out loud.
+
+    The rows of this panel are measured against a font, and which font decides
+    whether the suite passes: the same label measured 194 px on the machine the
+    panel was tuned on and 204 px on the Ubuntu runner, because DejaVu Sans is
+    ~5 % wider than Noto Sans and ``FONT_BODY`` asks Tk for *the default* family
+    rather than naming one. The sweep therefore measures :data:`MEASURE_FAMILY`.
+    Both halves of that are pinned here: that the pin really returns that
+    family (body and bold) when it is installed, and that a machine without it
+    gets a warning naming the font it fell back to — never a quiet pass against
+    a narrower one.
+    """
+    if MEASURE_FAMILY not in set(gui.tkfont.families()):
+        warnings.warn(f"{MEASURE_FAMILY} is not installed, so the installed half "
+                      f"of this test has nothing to check", UserWarning,
+                      stacklevel=2)
+    else:
+        body = measure_font()
+        assert body.actual("family") == MEASURE_FAMILY
+        assert body.actual("size") == gui.FONT_BODY[1]
+        assert body.actual("weight") == "normal"
+        # ... and the heading font is the bold one the headers are drawn with,
+        # not the body font in disguise.
+        heading = measure_font(heading=True)
+        assert heading.actual("family") == MEASURE_FAMILY
+        assert heading.actual("weight") == "bold"
+        assert heading.measure("MMM") > body.measure("MMM")
+
+    # The missing-font path: the fallback is announced, with the font it fell
+    # back to, so a machine that cannot measure the pinned font cannot pass
+    # quietly on a narrower one.
+    real_families = gui.tkfont.families
+    monkeypatch.setattr(
+        gui.tkfont, "families",
+        lambda: [name for name in real_families() if name != MEASURE_FAMILY])
+    with pytest.warns(UserWarning, match="is not installed"):
+        family = measurement_family()
+    # Whatever the machine's default turns out to be, the fallback reports the
+    # font it is really measuring rather than claiming the pinned one.
+    assert family == gui.tkfont.nametofont("TkDefaultFont").actual("family")
+
+
 def test_the_rules_rows_fit_the_value_column_at_the_minimum_window(explorer):
     """The row this replaced was clipped at 900x560 — the app's own minsize.
 
     The overview used to state both limits in one sentence ("9h 00m daily
-    driving \u00b7 4h 30m continuous without a 45 min break"), 439 px of text
+    driving \u00b7 4h 30m continuous without a 45 min break"), 469 px of text
     in the 187 px value column the summary panel gets at the smallest window it
     supports. The panel deliberately never auto-fits (``_show_summary``) and Tk
     *clips* an overlong cell instead of wrapping it, so that row was cut off
@@ -631,7 +773,7 @@ def test_the_rules_rows_fit_the_value_column_at_the_minimum_window(explorer):
 
     value_w = value_column_width(explorer)
     assert value_w > 0, "the panel must be laid out to be measured"
-    font = gui.tkfont.nametofont("TkDefaultFont")
+    font = measure_font()
     for label in LIMIT_ROWS:
         text = rendered_value(explorer, i18n._(label))
         assert font.measure(text) <= value_w, (
@@ -649,23 +791,44 @@ def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explor
     per language: this walks every row of every state of the panel in all 34
     catalogs, against the widths the real panel lays out at the 900x560 minimum.
 
-    Three things make it honest rather than a wide pass:
+    Four things make it honest rather than a wide pass:
 
     * the row set is not written down here — it is whatever the panel renders,
       block headers included, so a row added later is measured without anyone
       remembering to list it;
+    * the font is *pinned* (:func:`measure_font`), not the machine's: the same
+      label is 194 px in Noto Sans and 204 px in DejaVu Sans, and this sweep is
+      green-or-red depending on which one the platform hands out. Eight rows
+      clipped on the Ubuntu runner while the suite was green on a Noto desktop;
     * a row that is too wide is either *named* in :data:`OVER_WIDE_ROWS` and
       proven readable in full through the panel's hover reveal, or it fails with
       its measured width, its catalog and its text. Nothing can join a silent
-      pass.
+      pass. The reveal half of that is asked in the font the panel draws with
+      (:func:`drawn_font`), because a machine whose own font fits the cell is
+      correctly shown nothing on hover — the two fonts coincide on CI.
     """
     explorer.geometry(MINIMUM_SIZE)
     explorer.update()
-    font = gui.tkfont.nametofont("TkDefaultFont")
+    font = measure_font()
     # Block headers are drawn bold, so they are measured with their own font —
-    # the translated "DRIVING-TIME RULES" title clips in 16 catalogs (283 px in
+    # the translated "DRIVING-TIME RULES" title clips in 22 catalogs (317 px in
     # ro) while the body font would call it a fit.
-    heading_font = gui.tkfont.Font(font=gui.FONT_HEADING)
+    heading_font = measure_font(heading=True)
+    # The sweep is only meaningful in the *pinned* font: ``cget("family")`` is
+    # what was asked for, so this catches a measurement quietly taken from the
+    # machine's default (``sans-serif``/``TkDefaultFont``) instead — which is the
+    # defect this file was fixed for, and which ``actual("family")`` alone would
+    # hide on a machine whose default *is* DejaVu Sans.
+    measured_family = measurement_family()
+    for name, used in (("body", font), ("heading", heading_font)):
+        assert used.cget("family") == measured_family, (
+            f"the {name} font the sweep measures with is {used.cget('family')!r}, "
+            f"not the pinned {measured_family!r}: the sweep has stopped "
+            f"measuring the font this panel is verified against")
+    # The fonts the panel actually draws with, which is what its reveal decision
+    # measures (see :func:`drawn_font`): stable for the whole sweep.
+    drawn_body = drawn_font()
+    drawn_heading = drawn_font(heading=True)
     cases = STATUS_CASES + (NO_DAYS_CASE,)
 
     unexpected: list[str] = []
@@ -685,6 +848,7 @@ def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explor
             assert widths["Value"] > 0, "the panel must be laid out to be measured"
             for number, label, value, is_header in panel_rows(explorer, headers=True):
                 cell_font = heading_font if is_header else font
+                drawn = drawn_heading if is_header else drawn_body
                 for column, text in (("Field", label), ("Value", str(value))):
                     measured += 1
                     got = cell_font.measure(text)
@@ -692,23 +856,41 @@ def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explor
                         continue
                     detail = (f"{lang} {case} {column} row {label!r}: "
                               f"{got} px in {widths[column]} px — {text!r}")
-                    if label in named_here:
-                        revealed = hover_cell(explorer, number, column)
+                    if label not in named_here:
+                        if label in must_fit_here:
+                            unexpected.append(f"{detail} (must fit; it is the "
+                                              f"row this test was widened for)")
+                        else:
+                            unexpected.append(detail)
+                        continue
+                    revealed = hover_cell(explorer, number, column)
+                    # The width the panel itself clips to for *this* cell, so the
+                    # reveal question is asked against the same number the panel
+                    # used (``_clipped_summary_cell`` measures `bbox(...)[2]`).
+                    iid = row_iid(explorer, number)
+                    cell = explorer.table.tv.bbox(iid, column)
+                    assert cell, f"{detail} has no laid-out cell to measure"
+                    if drawn.measure(text) > cell[2]:
                         assert revealed == text, (
                             f"{detail} is named as allowed to be too wide, but "
                             f"the panel does not reveal it in full "
                             f"(hover showed {revealed!r})")
-                        named.append(detail)
-                    elif label in must_fit_here:
-                        unexpected.append(f"{detail} (must fit; it is the row "
-                                          f"this test was widened for)")
                     else:
-                        unexpected.append(detail)
+                        # This machine draws a narrower font, so the panel shows
+                        # the cell in full and there is nothing to reveal — the
+                        # reveal must never cover text that already fits.
+                        assert revealed is None, (
+                            f"{detail} is named as allowed to be too wide for the "
+                            f"pinned font, but this machine's drawn font fits it "
+                            f"({drawn.measure(text)} px in {cell[2]} px) so the "
+                            f"panel must not reveal it (hover showed {revealed!r})")
+                    named.append(detail)
     # A sweep that stopped measuring would pass every assertion above.
     assert measured >= len(i18n.LANGUAGES) * len(cases) * 20, \
         f"only {measured} cells measured: the sweep is not covering the panel"
     assert not unexpected, (
-        "the summary panel clips these rows at 900x560:\n  "
+        f"the summary panel clips these rows at 900x560 (measured with "
+        f"{measurement_family()} at {gui.FONT_BODY[1]} pt):\n  "
         + "\n  ".join(unexpected))
     assert named, ("no row was too wide in any catalog — the hazard this sweep "
                    "guards against has changed; re-measure and update the "
@@ -728,14 +910,16 @@ def test_an_over_wide_cell_is_readable_in_full_on_hover(explorer):
     explorer.geometry(MINIMUM_SIZE)
     explorer.update()
     i18n.install("it")
-    # "Catena di certificati non ancorata a una radice attendibile": 389 px in a
+    # "Catena di certificati non ancorata a una radice attendibile": 411 px in a
     # 187 px value column — Italian's widest verdict, and one of the eleven that
-    # cannot be shortened without losing the verdict.
+    # cannot be shortened without losing the verdict. Measured in the font the
+    # panel draws it with (:func:`drawn_font`), because that is the font whose
+    # width decides whether the panel reveals it at all.
     open_file(explorer, dict(STATUS_CASES)["card: chain unanchored"],
               path="/data/driver_card.ddd")
     explorer.update()
 
-    font = gui.tkfont.nametofont("TkDefaultFont")
+    font = drawn_font()
     value_w = value_column_width(explorer)
     status_number = panel_row_number(explorer, i18n._("  Status"))
     status_text = rendered_value(explorer, i18n._("  Status"))
@@ -761,7 +945,7 @@ def test_an_over_wide_cell_is_readable_in_full_on_hover(explorer):
     # A block header is a row too: the title clips in this language's neighbours
     # and must be revealable with the bold font it is drawn with.
     rules_header = panel_row_number(explorer, i18n._("DRIVING-TIME RULES"))
-    heading_font = gui.tkfont.Font(font=gui.FONT_HEADING)
+    heading_font = drawn_font(heading=True)
     header_text = i18n._("DRIVING-TIME RULES")
     revealed = hover_cell(explorer, rules_header, "Field")
     if heading_font.measure(header_text) > field_column_width(explorer):
@@ -788,15 +972,15 @@ def test_the_two_rows_the_review_measured_fit_every_catalog(explorer):
     """The defect this work started from: those two rows, in all 34 catalogs.
 
     Measured on the panel at 900x560 by the review of the commit that added the
-    overview: ``Status`` = "Card data signature mismatch" was 205 px in English
-    and 374 px in mk, over the 187 px value column in 32 of 34 catalogs, and
+    overview: ``Status`` = "Card data signature mismatch" was 215 px in English
+    and 405 px in mk, over the 187 px value column in 32 of 34 catalogs, and
     ``Byte-accounted coverage`` = "100.0% (1 234 567 / 1 234 567 bytes)" was
-    241 px in **all** of them. Both values now state the same fact in the width
-    the panel has: "Signature mismatch" (164 px worst) and "100.0%" (48 px).
+    264 px in **all** of them. Both values now state the same fact in the width
+    the panel has: "Signature mismatch" (176 px worst) and "100.0%" (53 px).
     """
     explorer.geometry(MINIMUM_SIZE)
     explorer.update()
-    font = gui.tkfont.nametofont("TkDefaultFont")
+    font = measure_font()
     # The default fixture's Status is "No EF signatures verified", one of the
     # verdicts still wider than the column (260 px in el) and therefore named in
     # OVER_WIDE_ROWS and revealed on hover; here the two *shortened* values are
@@ -830,7 +1014,7 @@ def test_integrity_block_repeats_the_file_info_verdict_and_coverage(explorer):
 
     assert row_value(rows, i18n._("  Status")) == i18n._("No EF signatures verified")
     # The overview states the percentage; the byte arithmetic ("100.0%
-    # (1 234 / 1 234 bytes)", 241 px) does not fit this panel's 187 px value
+    # (1 234 / 1 234 bytes)", 202 px) does not fit this panel's 187 px value
     # column in any catalog and repeats the number the percentage already
     # gives — see test_the_coverage_row_fits_every_catalog. File Info owns it.
     coverage_row = row_value(rows, i18n._("  Byte-accounted coverage"))

@@ -921,7 +921,7 @@ msgid "Truncated (did not reach end of file)"
 msgstr "Отрязан (не достигна края на файла)"
 
 msgid "CARDHOLDER"
-msgstr "ПРИТЕЖАТЕЛ НА КАРТА"
+msgstr "ПРИТЕЖАТЕЛ КАРТА"
 
 msgid "Driver / Cardholder"
 msgstr "Водач / притежател на карта"

@@ -50,7 +50,7 @@ msgid "  Days with activities"
 msgstr "  Laethanta le gníomhaíochtaí"
 
 msgid "  Days with activity"
-msgstr "  Laethanta le gníomhaíocht"
+msgstr "  Laethanta gníomhacha"
 
 msgid "  Digital map"
 msgstr "  Léarscáil dhigiteach"
@@ -921,7 +921,7 @@ msgid "Truncated (did not reach end of file)"
 msgstr "Gearrtha (níor sroicheadh deireadh an chomhaid)"
 
 msgid "CARDHOLDER"
-msgstr "SEALBHÓIR AN CHÁRTA"
+msgstr "SEALBHÓIR CÁRTA"
 
 msgid "Driver / Cardholder"
 msgstr "Tiománaí / sealbhóir an chárta"
@@ -2418,7 +2418,7 @@ msgid "INTEGRITY"
 msgstr "SLÁINE"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Clúdach de réir na mbeart"
+msgstr "  Clúdach na mbeart"
 
 msgid "  Daily driving limit"
 msgstr "  Teorainn laethúil"

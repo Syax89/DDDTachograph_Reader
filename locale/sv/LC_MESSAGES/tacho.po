@@ -2412,7 +2412,7 @@ msgid "DRIVING-TIME RULES"
 msgstr "REGLER FÖR KÖRTID"
 
 msgid "  Days flagged"
-msgstr "  Dagar med överträdelser"
+msgstr "  Flaggade dagar"
 
 msgid "INTEGRITY"
 msgstr "INTEGRITET"

@@ -2418,7 +2418,7 @@ msgid "INTEGRITY"
 msgstr "INTEGRALNOŚĆ"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Pokrycie rozliczone bajtowo"
+msgstr "  Pokrycie bajtowe"
 
 msgid "  Daily driving limit"
 msgstr "  Limit jazdy dziennej"
