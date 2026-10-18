@@ -130,10 +130,13 @@ Norwegian, Icelandic, Russian, Ukrainian, Belarusian, Turkish, Serbian, Bosnian,
 Albanian and Macedonian. Pick one from the **Language** menu in the top bar; the
 choice is stored in the per-user settings file and applied at the next start.
 
-English is the source language and the default: decoded field names, raw values,
-parser diagnostics and exported files stay in English, so a report reads the same
-whatever UI language is selected. See [CONTRIBUTING.md](CONTRIBUTING.md) to add a
-language or improve a translation.
+English is the source language and the default. The application's own text —
+menus, column headers, section names, messages — is translated. Labels *decoded
+from the file* (activity names, country names, record-code names) are shown
+exactly as the decoder names them unless **Translate file contents** at the
+bottom of the Language menu is ticked. Free text carried by the file (driver
+names, plates, addresses) and exported reports are never translated. See
+[CONTRIBUTING.md](CONTRIBUTING.md) to add a language or improve a translation.
 
 ---
 

@@ -1888,3 +1888,171 @@ msgstr "Numru tas-serje CAR"
 
 msgid "Translate file contents"
 msgstr "Ittradu l-kontenut tal-fajl"
+
+msgid "Albania"
+msgstr "L-Albanija"
+
+msgid "Andorra"
+msgstr "Andorra"
+
+msgid "Armenia"
+msgstr "L-Armenja"
+
+msgid "Austria"
+msgstr "L-Awstrija"
+
+msgid "Azerbaijan"
+msgstr "L-Ażerbajġan"
+
+msgid "Belarus"
+msgstr "Il-Belarussja"
+
+msgid "Belgium"
+msgstr "Il-Belġju"
+
+msgid "Bosnia and Herzegovina"
+msgstr "Il-Bożnija u Ħerzegovina"
+
+msgid "Bulgaria"
+msgstr "Il-Bulgarija"
+
+msgid "Croatia"
+msgstr "Il-Kroazja"
+
+msgid "Cyprus"
+msgstr "Ċipru"
+
+msgid "Czech Republic"
+msgstr "Ir-Repubblika Ċeka"
+
+msgid "Denmark"
+msgstr "Id-Danimarka"
+
+msgid "Estonia"
+msgstr "L-Estonja"
+
+msgid "Europe"
+msgstr "L-Ewropa"
+
+msgid "European Community"
+msgstr "Il-Komunità Ewropea"
+
+msgid "Faroe Islands"
+msgstr "Il-Gżejjer Faroe"
+
+msgid "Finland"
+msgstr "Il-Finlandja"
+
+msgid "France"
+msgstr "Franza"
+
+msgid "Georgia"
+msgstr "Il-Ġorġja"
+
+msgid "Germany"
+msgstr "Il-Ġermanja"
+
+msgid "Greece"
+msgstr "Il-Greċja"
+
+msgid "Hungary"
+msgstr "L-Ungerija"
+
+msgid "Iceland"
+msgstr "L-Iżlanda"
+
+msgid "Ireland"
+msgstr "L-Irlanda"
+
+msgid "Italy"
+msgstr "L-Italja"
+
+msgid "Kazakhstan"
+msgstr "Il-Każakstan"
+
+msgid "Latvia"
+msgstr "Il-Latvja"
+
+msgid "Liechtenstein"
+msgstr "Il-Liechtenstein"
+
+msgid "Lithuania"
+msgstr "Il-Litwanja"
+
+msgid "Luxembourg"
+msgstr "Il-Lussemburgu"
+
+msgid "Malta"
+msgstr "Malta"
+
+msgid "Moldova"
+msgstr "Il-Moldova"
+
+msgid "Monaco"
+msgstr "Monako"
+
+msgid "Montenegro"
+msgstr "Il-Montenegro"
+
+msgid "Netherlands"
+msgstr "L-Olanda"
+
+msgid "North Macedonia"
+msgstr "Il-Maċedonja ta' Fuq"
+
+msgid "Norway"
+msgstr "In-Norveġja"
+
+msgid "Poland"
+msgstr "Il-Polonja"
+
+msgid "Portugal"
+msgstr "Il-Portugall"
+
+msgid "Romania"
+msgstr "Ir-Rumanija"
+
+msgid "Russia"
+msgstr "Ir-Russja"
+
+msgid "San Marino"
+msgstr "San Marino"
+
+msgid "Serbia"
+msgstr "Is-Serbja"
+
+msgid "Slovakia"
+msgstr "Is-Slovakkja"
+
+msgid "Slovenia"
+msgstr "Is-Slovenja"
+
+msgid "Spain"
+msgstr "Spanja"
+
+msgid "Sweden"
+msgstr "L-Iżvezja"
+
+msgid "Switzerland"
+msgstr "L-Iżvizzera"
+
+msgid "Turkey"
+msgstr "It-Turkija"
+
+msgid "Turkmenistan"
+msgstr "It-Turkmenistan"
+
+msgid "Ukraine"
+msgstr "L-Ukrajna"
+
+msgid "United Kingdom"
+msgstr "Ir-Renju Unit"
+
+msgid "Vatican City"
+msgstr "Il-Belt tal-Vatikan"
+
+msgid "World"
+msgstr "Id-Dinja"
+
+msgid "Yugoslavia"
+msgstr "Il-Jugoslavja"

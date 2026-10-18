@@ -1888,3 +1888,171 @@ msgstr "CAR seri numarası"
 
 msgid "Translate file contents"
 msgstr "Dosya içeriğini çevir"
+
+msgid "Albania"
+msgstr "Arnavutluk"
+
+msgid "Andorra"
+msgstr "Andorra"
+
+msgid "Armenia"
+msgstr "Ermenistan"
+
+msgid "Austria"
+msgstr "Avusturya"
+
+msgid "Azerbaijan"
+msgstr "Azerbaycan"
+
+msgid "Belarus"
+msgstr "Belarus"
+
+msgid "Belgium"
+msgstr "Belçika"
+
+msgid "Bosnia and Herzegovina"
+msgstr "Bosna-Hersek"
+
+msgid "Bulgaria"
+msgstr "Bulgaristan"
+
+msgid "Croatia"
+msgstr "Hırvatistan"
+
+msgid "Cyprus"
+msgstr "Kıbrıs"
+
+msgid "Czech Republic"
+msgstr "Çekya"
+
+msgid "Denmark"
+msgstr "Danimarka"
+
+msgid "Estonia"
+msgstr "Estonya"
+
+msgid "Europe"
+msgstr "Avrupa"
+
+msgid "European Community"
+msgstr "Avrupa Topluluğu"
+
+msgid "Faroe Islands"
+msgstr "Faroe Adaları"
+
+msgid "Finland"
+msgstr "Finlandiya"
+
+msgid "France"
+msgstr "Fransa"
+
+msgid "Georgia"
+msgstr "Gürcistan"
+
+msgid "Germany"
+msgstr "Almanya"
+
+msgid "Greece"
+msgstr "Yunanistan"
+
+msgid "Hungary"
+msgstr "Macaristan"
+
+msgid "Iceland"
+msgstr "İzlanda"
+
+msgid "Ireland"
+msgstr "İrlanda"
+
+msgid "Italy"
+msgstr "İtalya"
+
+msgid "Kazakhstan"
+msgstr "Kazakistan"
+
+msgid "Latvia"
+msgstr "Letonya"
+
+msgid "Liechtenstein"
+msgstr "Liechtenstein"
+
+msgid "Lithuania"
+msgstr "Litvanya"
+
+msgid "Luxembourg"
+msgstr "Lüksemburg"
+
+msgid "Malta"
+msgstr "Malta"
+
+msgid "Moldova"
+msgstr "Moldova"
+
+msgid "Monaco"
+msgstr "Monako"
+
+msgid "Montenegro"
+msgstr "Karadağ"
+
+msgid "Netherlands"
+msgstr "Hollanda"
+
+msgid "North Macedonia"
+msgstr "Kuzey Makedonya"
+
+msgid "Norway"
+msgstr "Norveç"
+
+msgid "Poland"
+msgstr "Polonya"
+
+msgid "Portugal"
+msgstr "Portekiz"
+
+msgid "Romania"
+msgstr "Romanya"
+
+msgid "Russia"
+msgstr "Rusya"
+
+msgid "San Marino"
+msgstr "San Marino"
+
+msgid "Serbia"
+msgstr "Sırbistan"
+
+msgid "Slovakia"
+msgstr "Slovakya"
+
+msgid "Slovenia"
+msgstr "Slovenya"
+
+msgid "Spain"
+msgstr "İspanya"
+
+msgid "Sweden"
+msgstr "İsveç"
+
+msgid "Switzerland"
+msgstr "İsviçre"
+
+msgid "Turkey"
+msgstr "Türkiye"
+
+msgid "Turkmenistan"
+msgstr "Türkmenistan"
+
+msgid "Ukraine"
+msgstr "Ukrayna"
+
+msgid "United Kingdom"
+msgstr "Birleşik Krallık"
+
+msgid "Vatican City"
+msgstr "Vatikan"
+
+msgid "World"
+msgstr "Dünya"
+
+msgid "Yugoslavia"
+msgstr "Yugoslavya"
