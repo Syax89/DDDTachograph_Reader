@@ -967,7 +967,7 @@ msgid "Security & Certificates"
 msgstr "Zabezpečení a certifikáty"
 
 msgid "CURRENT LOCK"
-msgstr "AKTUÁLNÍ UZAMČENÍ"
+msgstr "ZÁMEK"
 
 msgid "ASSOCIATED VEHICLE"
 msgstr "PŘIŘAZENÉ VOZIDLO"

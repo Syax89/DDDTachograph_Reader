@@ -424,6 +424,170 @@ def test_a_second_tree_rebuild_cannot_nest_inside_the_first(explorer, monkeypatc
     assert len(rebuilt) == 1, "the rebuild no longer runs when nothing owns it"
 
 
+def test_a_language_switch_during_a_translate_rebuild_is_refused(explorer,
+                                                                 monkeypatch):
+    """The one render that does **not** set ``_parsing`` must still refuse it.
+
+    ``_switch_language`` refuses while a parse or an export runs because the
+    restart it schedules tears the window down (``_shutdown`` + ``destroy``).
+    A parse render is covered by ``_parsing``, which is held for its whole
+    length — but the translate-data rebuild (:meth:`_refresh_data_text`) raises
+    ``_rendering`` alone, and it pumps the event loop while it walks the tree.
+    The pump delivers the language menu like any other click, so this drives the
+    *real* window: parse a file, start the rebuild, and hand the switch to it
+    from inside its own pump — the moment a user would have produced it.
+
+    Without ``_rendering`` in the guard the switch is accepted mid-rebuild: the
+    language is persisted and ``after_idle(_finish_restart)`` is queued on top
+    of a rebuild that is still using the widgets.
+    """
+    app = explorer
+    app._start_parse(FAKE_PATH)
+    _drive(app)
+
+    saved, restarts, delivered = [], [], []
+    # A language that is *not* the one in use: ``_switch_language`` returns
+    # silently for the current one, so a fixed code could make this test pass
+    # without reaching the guard at all.
+    other = next(code for code in gui.LANGUAGES if code != app._language)
+    monkeypatch.setattr(gui, "save_language",
+                        lambda code: saved.append(code) or True)
+    # The restart is recorded, not run: running it is exactly what the refusal
+    # prevents, and it would destroy the window the assertions below inspect.
+    monkeypatch.setattr(app, "_finish_restart", lambda: restarts.append("restart"))
+    real_update = app.update
+
+    def spy():
+        if app._rendering and not app._parsing and not delivered:
+            delivered.append("switch")
+            app._language_var.set(other)
+            app._switch_language(other)
+        real_update()
+
+    monkeypatch.setattr(app, "update", spy)
+    # The pump is rate-limited by wall clock (``_RENDER_PUMP_INTERVAL``), and the
+    # parse above just used it: on a fast machine a rebuild that starts right
+    # after it would skip every pump and the test would prove nothing. Clear the
+    # gate so the first slice of the rebuild pumps, as it does for a user.
+    app._pump_due = 0.0
+    app._translate_data_var.set(not app._translate_data)
+    app._toggle_translate_data()
+    app.update()
+
+    assert delivered, "the translate rebuild never pumped the event loop"
+    assert saved == [], \
+        "the language was persisted while a rebuild owned the tree"
+    assert restarts == [], (
+        "a restart was scheduled on top of the running rebuild: its "
+        "_finish_restart would _shutdown() and destroy() the window the "
+        "rebuild is still walking")
+    assert app._restart_requested is False
+    assert app._language_var.get() == app._language, \
+        "the menu radio was not put back on the language in use"
+    # ... and the window is intact: the rebuild finished, the tree is the one the
+    # parse produced, the file is still the open one and the busy state is gone.
+    assert not app._rendering
+    assert not app._parsing
+    assert app.winfo_exists()
+    assert app.current_file == FAKE_PATH
+    top_level = [app.tree.item(iid, "text") for iid in app.tree.get_children("")]
+    assert top_level and top_level[0] == SUMMARY_LABEL, top_level
+    assert app.tree.selection(), "the rebuild lost the selection it restores"
+    assert str(app.btn_open.cget("state")) == "normal"
+
+
+def test_a_translate_toggle_during_a_rebuild_keeps_the_tick_and_the_tree_in_step(
+        explorer, monkeypatch):
+    """The toggle writes the preference *before* the rebuild that applies it.
+
+    ``_toggle_translate_data`` persists the flag, flips the process-global
+    setting and only then asks ``_refresh_data_text`` to repopulate the tree —
+    which refuses while a rebuild is running. A toggle delivered by the running
+    rebuild's own pump would therefore leave the setting, the menu tick and the
+    rows disagreeing: the preference says "translate", every cell still shows
+    the file's own words, and nothing ever rebuilds them. So the toggle is
+    refused as a whole and the tick goes back, like every other busy guard.
+    """
+    app = explorer
+    app._start_parse(FAKE_PATH)
+    _drive(app)
+    before = app._translate_data
+    applied = not before          # what the outer (accepted) toggle applies
+
+    rebuilds = []
+    real_populate = app._populate_tree
+    monkeypatch.setattr(app, "_populate_tree",
+                        lambda data: (rebuilds.append(data), real_populate(data))[1])
+    delivered = []
+    real_update = app.update
+
+    def spy():
+        if app._rendering and not app._parsing and not delivered:
+            delivered.append("toggle")
+            # A second click on the same checkbutton: the tick goes back, and the
+            # command that follows it is what the running rebuild's pump sees.
+            app._translate_data_var.set(before)
+            app._toggle_translate_data()
+        real_update()
+
+    monkeypatch.setattr(app, "update", spy)
+    app._pump_due = 0.0  # see the language test above: make the first pump due
+    app._translate_data_var.set(applied)
+    app._toggle_translate_data()
+    app.update()
+
+    assert delivered, "the translate rebuild never pumped the event loop"
+    assert app._translate_data is applied, (
+        "the preference was flipped back while the rebuild that applies it was "
+        "refused: the setting, the tick and the rows would disagree")
+    assert app._translate_data_var.get() is applied, \
+        "the menu tick stayed on a preference the window never applied"
+    assert len(rebuilds) == 1, \
+        "the tree was rebuilt more than once for one toggle"
+
+
+def test_an_export_started_mid_rebuild_is_refused(explorer, monkeypatch):
+    """The export menu is reachable mid-rebuild, and its picker is modal.
+
+    The toolbar disables Export for the whole of a parse, but the translate-data
+    rebuild only owns the tree: the menu stays enabled, and the pump delivers a
+    click on it while ``_rendering`` is true. ``asksaveasfilename`` is a modal
+    dialog, so opening it there would hold the render — and the busy bar it
+    keeps moving — for as long as the user leaves the dialog open.
+    """
+    app = explorer
+    app._start_parse(FAKE_PATH)
+    _drive(app)
+
+    asked = []
+    monkeypatch.setattr(gui.filedialog, "asksaveasfilename",
+                        lambda **kwargs: asked.append(kwargs) or "")
+    delivered = []
+    real_update = app.update
+
+    def spy():
+        if app._rendering and not app._parsing and not delivered:
+            delivered.append("export")
+            app._export_pdf()
+            app._export_excel()
+            app._export_csv()
+            app._export_json()
+        real_update()
+
+    monkeypatch.setattr(app, "update", spy)
+    app._pump_due = 0.0  # see the language test above: make the first pump due
+    app._translate_data_var.set(not app._translate_data)
+    app._toggle_translate_data()
+    app.update()
+
+    assert delivered, "the translate rebuild never pumped the event loop"
+    assert asked == [], (
+        "a save dialog was opened on top of the running rebuild — it is modal, "
+        "so the render (and its busy bar) stands still until it is dismissed")
+    assert not app._exporting
+    assert not app._rendering
+
+
 # ── the render still ends where it did ─────────────────────────────────────
 
 def test_the_render_ends_on_the_summary_node(explorer):

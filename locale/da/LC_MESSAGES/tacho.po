@@ -967,7 +967,7 @@ msgid "Security & Certificates"
 msgstr "Sikkerhed og certifikater"
 
 msgid "CURRENT LOCK"
-msgstr "AKTUEL LÅS"
+msgstr "LÅS"
 
 msgid "ASSOCIATED VEHICLE"
 msgstr "TILKNYTTET KØRETØJ"
