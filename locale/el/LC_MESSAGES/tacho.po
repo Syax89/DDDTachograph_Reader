@@ -1885,3 +1885,6 @@ msgstr "Αρχή CAR"
 
 msgid "CAR Serial"
 msgstr "Σειριακός αριθμός CAR"
+
+msgid "Translate file contents"
+msgstr "Μετάφραση περιεχομένου αρχείου"

@@ -196,7 +196,8 @@ def _assert_tooltip_contains(chart, expected_text, *, context=""):
 class TestTooltipAtTheMinimumWindow:
     """The reviewed defect: a wrapped tip must also move up, not just left."""
 
-    def test_italian_slot_two_rest_tooltip_stays_inside_the_minimum_window(self, app):
+    def test_italian_slot_two_rest_tooltip_stays_inside_the_minimum_window(
+            self, app, translated_file_content):
         """900x560, 192 DPI, Italian: the bottom line used to be cut off."""
         chart = _show_day(app, MINIMUM_SIZE)
         canvas = chart.canvas

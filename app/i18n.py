@@ -22,6 +22,13 @@ DOMAIN = "tacho"
 DEFAULT_LANGUAGE = "en"
 _ENGLISH = "English"
 
+#: Settings key of the "translate file contents" preference. It decides whether
+#: text *decoded from the tachograph file* (activity names, nations, record
+#: labels) is translated. The application's own chrome is translated either
+#: way, so this is a separate, deliberately opt-in choice: the default keeps
+#: every file-derived label exactly as the file/decoder names it.
+TRANSLATE_DATA_KEY = "translate_file_content"
+
 #: Language code -> name shown in the Language menu, in menu order.
 #:
 #: Every name is written in its own language ("native name"), so a user who
@@ -159,6 +166,32 @@ def save_language(lang):
         return False
     settings = _read_settings()
     settings["language"] = lang
+    return _write_settings(settings)
+
+
+def saved_translate_data():
+    """Whether file-decoded labels should be translated (default ``False``).
+
+    The settings file is user-editable, so the stored value can be anything.
+    Only the JSON boolean ``true`` turns the preference on; a missing key, a
+    string (``"yes"``), a number (``1``) or ``null`` all mean off. ``is True``
+    is what enforces that: ``1 == True`` in Python, but ``1 is True`` is False.
+    """
+    return _read_settings().get(TRANSLATE_DATA_KEY) is True
+
+
+def save_translate_data(flag):
+    """Persist the "translate file contents" preference; ``False`` on failure.
+
+    Only a real ``bool`` is accepted — storing ``"yes"`` or ``1`` would be a
+    value :func:`saved_translate_data` then has to guess about. Keys other than
+    the preference are preserved, so this shares the settings file with the
+    language choice.
+    """
+    if not isinstance(flag, bool):
+        return False
+    settings = _read_settings()
+    settings[TRANSLATE_DATA_KEY] = flag
     return _write_settings(settings)
 
 

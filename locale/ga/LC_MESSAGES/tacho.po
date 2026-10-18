@@ -1885,3 +1885,6 @@ msgstr "Údarás CAR"
 
 msgid "CAR Serial"
 msgstr "Sraithuimhir CAR"
+
+msgid "Translate file contents"
+msgstr "Aistrigh inneachar an chomhaid"

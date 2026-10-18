@@ -15,6 +15,32 @@ def reset_registry():
 
 
 @pytest.fixture(autouse=True)
+def isolate_translate_data():
+    """Reset the "translate file contents" flag: it is process-global state."""
+    import app.ui_text as ui_text
+    ui_text.configure_translate_data(False)
+    try:
+        yield
+    finally:
+        ui_text.configure_translate_data(False)
+
+
+@pytest.fixture
+def translated_file_content():
+    """Turn on translation of file-decoded labels (activity names, nations).
+
+    Off is the product default: a test that asserts a *translated* activity
+    label must ask for it explicitly, and this fixture proves the toggle works.
+    """
+    import app.ui_text as ui_text
+    ui_text.configure_translate_data(True)
+    try:
+        yield
+    finally:
+        ui_text.configure_translate_data(False)
+
+
+@pytest.fixture(autouse=True)
 def isolate_i18n(tmp_path, monkeypatch):
     """Keep the process-global UI translator and the settings file per-test.
 

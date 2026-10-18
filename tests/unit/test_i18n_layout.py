@@ -196,7 +196,8 @@ class TestTranslatedChartLabelsFitTheCanvas:
 class TestHoverTooltipSlotIsTranslated:
     """The tooltip shows the translated slot; ``_layout`` keeps the raw key."""
 
-    def test_german_tooltip_translates_slot_but_layout_keeps_the_key(self, root, chart):
+    def test_german_tooltip_translates_slot_but_layout_keeps_the_key(
+            self, root, chart, translated_file_content):
         _require_catalog("de")
         assert i18n._("Slot 1") == "Steckplatz 1"
 
@@ -361,7 +362,8 @@ def _row(chart, activity, slot_tag):
 class TestHoverTooltipStaysInsideTheCanvas:
     """The translated tooltip is measured, not guessed, before it is drawn."""
 
-    def test_italian_slot_two_tooltip_keeps_its_duration(self, root, chart):
+    def test_italian_slot_two_tooltip_keeps_its_duration(
+            self, root, chart, translated_file_content):
         """The reviewed repro: 54 px of the duration were off a 760 px canvas."""
         _require_catalog("it")
         chart.show(DAY, True, VU_TWO_SLOT_DAY)

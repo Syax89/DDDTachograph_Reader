@@ -271,17 +271,25 @@ def _fmt_dict(d):
     return items if len(items) <= 120 else items[:120] + "…"
 
 
-def fmt_scalar(v, key=None, *, include_code_label=False):
+def fmt_scalar(v, key=None, *, include_code_label=False, label_translator=None):
     """Format a non-container decoded value for human-readable display.
 
     ``include_code_label`` is for views that show the numeric code alongside
     its tachograph name; report exports retain their existing numeric output.
+
+    ``label_translator`` is an optional ``str -> str`` hook applied to the
+    labels this function *derives* from a decoded value — the full nation name
+    and the ``code_label`` suffix — never to the value itself. The GUI passes
+    the display-text layer here so the user can choose whether file-decoded
+    labels are translated; ``None`` (the default, and what every report/export
+    path uses) keeps the output byte-identical to before.
     """
     if v is None:
         return ""
     if key in NATION_COLS and v not in (None, ""):
         from core.decoders.common import nation_full_name
-        return nation_full_name(v)
+        nation = nation_full_name(v)
+        return label_translator(nation) if label_translator else nation
     if isinstance(v, bool):
         return "Yes" if v else "No"
     if isinstance(v, float):
@@ -291,6 +299,8 @@ def fmt_scalar(v, key=None, *, include_code_label=False):
         if v in _NOT_AVAILABLE_INTS:
             return "N/A"
         label = code_label(v, key=key) if include_code_label and key in _CODE_LABEL_KEYS else ""
+        if label and label_translator:
+            label = label_translator(label)
         suffix = f"  ({label})" if label else ""
         return (f"{v:,}".replace(",", " ") if abs(v) >= 10000 else str(v)) + suffix
     if isinstance(v, (bytes, bytearray)):
@@ -298,6 +308,8 @@ def fmt_scalar(v, key=None, *, include_code_label=False):
         return h if len(h) <= 64 else h[:64] + "…"
     if isinstance(v, str):
         label = code_label(v, key=key) if include_code_label and key in _CODE_LABEL_KEYS else ""
+        if label and label_translator:
+            label = label_translator(label)
         text = fmt_iso(v)
         return f"{text}  ({label})" if label else text
     return str(v)

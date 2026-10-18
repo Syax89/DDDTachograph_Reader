@@ -1885,3 +1885,6 @@ msgstr "Autoritate CAR"
 
 msgid "CAR Serial"
 msgstr "Serie CAR"
+
+msgid "Translate file contents"
+msgstr "Tradu conținutul fișierului"
