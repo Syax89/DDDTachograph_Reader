@@ -24,8 +24,8 @@ The desktop application (**Tacho Explorer**, `app/gui.py`) provides a two-pane e
 
 | Control | Action |
 |---------|--------|
-| **📂 Open DDD file** | Opens a file dialog to select a `.ddd` file |
-| **📤 Export** | Drop-down menu: PDF (.pdf), Excel (.xlsx), CSV (.csv), JSON (.json) |
+| **Open DDD file** | Opens a file dialog to select a `.ddd` file |
+| **Export** | Drop-down menu: PDF (.pdf), Excel (.xlsx), CSV (.csv), JSON (.json) |
 | File label | Name of the currently loaded file |
 | Integrity banner | Warning shown only when there is a problem — click it for full details |
 | Generation badge | Detected generation (G1, G2, G2.2) and file type (Card / VU) |

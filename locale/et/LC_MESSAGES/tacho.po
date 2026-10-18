@@ -932,8 +932,8 @@ msgstr "👤  Juht / kaardiomanik"
 msgid "💻  VU INFO"
 msgstr "💻  VU TEAVE"
 
-msgid "📂  Open DDD file"
-msgstr "📂  Ava DDD-fail"
+msgid "Open DDD file"
+msgstr "Ava DDD-fail"
 
 msgid "📄  File Info"
 msgstr "📄  Faili teave"
@@ -956,8 +956,8 @@ msgstr "📡  ANDUR"
 msgid "📡  Sensor"
 msgstr "📡  Andur"
 
-msgid "📤  Export"
-msgstr "📤  Eksport"
+msgid "Export"
+msgstr "Eksport"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"

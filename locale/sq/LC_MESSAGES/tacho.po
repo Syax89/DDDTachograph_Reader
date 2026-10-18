@@ -932,8 +932,8 @@ msgstr "👤  Drejtues / mbajtësi i kartës"
 msgid "💻  VU INFO"
 msgstr "💻  INFORMACION VU"
 
-msgid "📂  Open DDD file"
-msgstr "📂  Hap skedar DDD"
+msgid "Open DDD file"
+msgstr "Hap skedar DDD"
 
 msgid "📄  File Info"
 msgstr "📄  Informacion skedari"
@@ -956,8 +956,8 @@ msgstr "📡  SENSORI"
 msgid "📡  Sensor"
 msgstr "📡  Sensori"
 
-msgid "📤  Export"
-msgstr "📤  Eksporto"
+msgid "Export"
+msgstr "Eksporto"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"

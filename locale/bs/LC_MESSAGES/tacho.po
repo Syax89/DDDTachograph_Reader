@@ -932,8 +932,8 @@ msgstr "👤  Vozač / imalac kartice"
 msgid "💻  VU INFO"
 msgstr "💻  VU INFORMACIJE"
 
-msgid "📂  Open DDD file"
-msgstr "📂  Otvori DDD datoteku"
+msgid "Open DDD file"
+msgstr "Otvori DDD datoteku"
 
 msgid "📄  File Info"
 msgstr "📄  Informacije o datoteci"
@@ -956,8 +956,8 @@ msgstr "📡  SENZOR"
 msgid "📡  Sensor"
 msgstr "📡  Senzor"
 
-msgid "📤  Export"
-msgstr "📤  Izvoz"
+msgid "Export"
+msgstr "Izvoz"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"

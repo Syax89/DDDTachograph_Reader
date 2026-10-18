@@ -932,8 +932,8 @@ msgstr "👤  Vezető / kártyatulajdonos"
 msgid "💻  VU INFO"
 msgstr "💻  VU-INFO"
 
-msgid "📂  Open DDD file"
-msgstr "📂  DDD-fájl megnyitása"
+msgid "Open DDD file"
+msgstr "DDD-fájl megnyitása"
 
 msgid "📄  File Info"
 msgstr "📄  Fájlinformáció"
@@ -956,8 +956,8 @@ msgstr "📡  ÉRZÉKELŐ"
 msgid "📡  Sensor"
 msgstr "📡  Érzékelő"
 
-msgid "📤  Export"
-msgstr "📤  Exportálás"
+msgid "Export"
+msgstr "Exportálás"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"
