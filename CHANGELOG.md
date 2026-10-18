@@ -1,4 +1,9 @@
 # Unreleased
+- **Cleaner details panel**: the summary views (Driver / Cardholder, Vehicle, …)
+  no longer show an empty heading bar above the rows, and the section dividers
+  are bands instead of rows of dash characters. The horizontal scrollbar now
+  appears only when a column really runs off the edge, instead of sitting under
+  every table.
 - **Speed chart summary cards and legend**: the detailed-speed view now shows
   its key numbers (max and average speed, time above the limit, time moving and
   the number of overspeeding events the unit recorded) as dashboard-style cards

@@ -391,7 +391,7 @@ class DataTable(ttk.Frame):
 
         self.tv.grid(row=0, column=0, sticky="nsew")
         ysb.grid(row=0, column=1, sticky="ns")
-        xsb.grid(row=1, column=0, sticky="ew")
+        self._xsb = xsb
         body.rowconfigure(0, weight=1)
         body.columnconfigure(0, weight=1)
 
@@ -413,6 +413,22 @@ class DataTable(ttk.Frame):
         self._summary_mode = False
 
         self.tv.bind("<Configure>", lambda e: self._schedule_fit())
+
+    def _sync_xscroll(self):
+        """Show the horizontal scrollbar only when a column runs off the edge.
+
+        A scrollbar under every table — including the ones that fit, and the
+        summary panel whose value column stretches — is chrome that suggests
+        hidden content. Gridded on demand, it appears exactly when it is true.
+        """
+        try:
+            needed = self.tv.xview()[1] < 1.0
+        except tk.TclError:  # widget already destroyed
+            return
+        if needed and not self._xsb.winfo_manager():
+            self._xsb.grid(row=1, column=0, sticky="ew")
+        elif not needed and self._xsb.winfo_manager():
+            self._xsb.grid_remove()
 
     def show(self, title, columns, rows, meta=""):
         """Display a table: sets headers (click to sort), sizes columns,
@@ -436,6 +452,7 @@ class DataTable(ttk.Frame):
         self._sort_state = {}
         self._fitted = False
         self._summary_mode = False
+        self.tv["show"] = "headings"
 
         self.tv["columns"] = self._cols
         for c in self._cols:
@@ -448,6 +465,7 @@ class DataTable(ttk.Frame):
         self.tv.update_idletasks()
         self._fit_columns()
         self.tv.update()
+        self._sync_xscroll()
         if self._fit_after_id is not None:
             self.tv.after_cancel(self._fit_after_id)
             self._fit_after_id = None
@@ -4119,6 +4137,7 @@ class TachoExplorer(tk.Tk):
         self.table._sort_state = {}
         self.table._fitted = False
         self.table._summary_mode = False
+        self.table.tv["show"] = "headings"
 
         self.table.filt_bar.pack_forget()
 
@@ -4185,6 +4204,7 @@ class TachoExplorer(tk.Tk):
         self.table.tv.update_idletasks()
         self.table._fit_columns()
         self.table.tv.update()
+        self.table._sync_xscroll()
         if self.table._fit_after_id is not None:
             self.table.tv.after_cancel(self.table._fit_after_id)
             self.table._fit_after_id = None
@@ -5057,6 +5077,9 @@ class TachoExplorer(tk.Tk):
         self.table._all_rows = rows
         self.table._sort_state = {}
         self.table.tv["columns"] = ["Field", "Value"]
+        # No heading bar at all: the panel is labelled rows, not a two-column
+        # table, and an empty grey strip above it reads as a loading glitch.
+        self.table.tv["show"] = ""
         self.table.tv.heading("Field", text="")
         self.table.tv.heading("Value", text="")
         self.table.tv.column("Field", width=_px(220), minwidth=_px(140), anchor=tk.W, stretch=False)
@@ -5064,6 +5087,7 @@ class TachoExplorer(tk.Tk):
         self.table._fitted = True
         self.table._summary_mode = True
         self.table._render(self.table._all_rows, summary=True)
+        self.table._sync_xscroll()
         self.table.filt_bar.pack_forget()
 
     # ── Summary builders ──────────────────────────────────────
@@ -5080,7 +5104,7 @@ class TachoExplorer(tk.Tk):
         nation = veh.get("registration_nation", "")
 
         rows = []
-        sep = ("\u2500" * 40, "", True)
+        sep = ("", "", True)
 
         rows.append((_("\U0001f697  VEHICLE"), "", True))
         rows.append((_("  Plate"), plate, False))
@@ -5260,7 +5284,7 @@ class TachoExplorer(tk.Tk):
         parts of the file could be recovered."""
         meta = meta or {}
         rows = []
-        sep = ("\u2500" * 40, "", True)
+        sep = ("", "", True)
 
         rows.append((_("\u26a0\ufe0f  THIS FILE IS INCOMPLETE OR CORRUPTED"), "", True))
         rows.append((_("  Only the sections listed below could be read."), "", False))
@@ -5318,7 +5342,7 @@ class TachoExplorer(tk.Tk):
         vin = veh.get("vin", "N/A")
 
         rows = []
-        sep = ("\u2500" * 40, "", True)
+        sep = ("", "", True)
 
         rows.append((_("\U0001f4e1  SENSOR"), "", True))
         approval = sensor.get("sensor_approval", "")
@@ -5372,7 +5396,7 @@ class TachoExplorer(tk.Tk):
         cards = data.get("card_downloads") or []
 
         rows = []
-        sep = ("\u2500" * 40, "", True)
+        sep = ("", "", True)
 
         rows.append((_("\U0001f464  CARDHOLDER"), "", True))
         surname = driver.get("surname", "")
