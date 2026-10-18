@@ -2071,3 +2071,240 @@ msgstr "Yugoslavya"
 
 msgid "or drop it here"
 msgstr "veya dosyayı buraya bırakın"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "GNSS alıcısından konum bilgisinin olmaması"
+
+msgid "Activation"
+msgstr "Etkinleştirme"
+
+msgid "Active / on-going event or fault"
+msgstr "Etkin / süregelen olay veya arıza"
+
+msgid "Activities"
+msgstr "Etkinlikler"
+
+msgid "Card conflict"
+msgstr "Kart çakışması"
+
+msgid "Card data input integrity error"
+msgstr "Kart verisi girişi bütünlük hatası"
+
+msgid "Card downloaded"
+msgstr "Kart indirildi"
+
+msgid "Card fault, no further details"
+msgstr "Kart arızası, ayrıntı yok"
+
+msgid "Card insertion while driving"
+msgstr "Sürüş sırasında kart takılması"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Harici GNSS birimiyle iletişim hatası"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Uzaktan iletişim birimiyle iletişim hatası"
+
+msgid "DetailedSpeed"
+msgstr "Ayrıntılı hız"
+
+msgid "Display"
+msgstr "Ekran"
+
+msgid "Display fault"
+msgstr "Ekran arızası"
+
+msgid "Downloading fault"
+msgstr "İndirme arızası"
+
+msgid "Driving without an appropriate card"
+msgstr "Uygun kart olmadan sürüş"
+
+msgid "EventsFaults"
+msgstr "Olaylar/arızalar"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Harici GNSS birimi kimlik doğrulama hatası"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Harici GNSS birimi sertifikasının süresi doldu"
+
+msgid "External GNSS facility fault"
+msgstr "Harici GNSS birimi arızası"
+
+msgid "Ferry/Train Begin"
+msgstr "Feribot/tren — başlangıç"
+
+msgid "Ferry/Train End"
+msgstr "Feribot/tren — bitiş"
+
+msgid "Ferry/Train crossing"
+msgstr "Feribot/tren geçişi"
+
+msgid "First event/fault after the last calibration"
+msgstr "Son kalibrasyondan sonraki ilk olay/arıza"
+
+msgid "First installation"
+msgstr "İlk kurulum"
+
+msgid "GNSS anomaly"
+msgstr "GNSS anormalliği"
+
+msgid "Hardware sabotage"
+msgstr "Donanım sabotajı"
+
+msgid "ITS interface fault"
+msgstr "ITS arayüzü arızası"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Hareket verileri ile kayıtlı sürücü etkinlik verileri arasında tutarsızlık"
+
+msgid "Insertion of a non-valid card"
+msgstr "Geçersiz kart takılması"
+
+msgid "Installation (current vehicle)"
+msgstr "Kurulum (mevcut araç)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Dahili GNSS alıcısı arızası"
+
+msgid "Internal data transfer error"
+msgstr "Dahili veri aktarım hatası"
+
+msgid "Internal sensor fault"
+msgstr "Dahili sensör arızası"
+
+msgid "Last card session not correctly closed"
+msgstr "Son kart oturumu doğru kapatılmadı"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Son 10 günden birindeki son olay"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Son 10 günden birindeki en uzun olay"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Son 10 günden birindeki en ciddi olay"
+
+msgid "Motion data error"
+msgstr "Hareket verisi hatası"
+
+msgid "Motion sensor authentication failure"
+msgstr "Hareket sensörü kimlik doğrulama hatası"
+
+msgid "No further details"
+msgstr "Ayrıntı yok"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "En son (veya son) 10 olaydan/arızadan biri"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Son 365 gündeki en uzun 5 olaydan biri"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Son 365 gündeki en ciddi 5 olaydan biri"
+
+msgid "OutOfScope Begin"
+msgstr "Kapsam dışı — başlangıç"
+
+msgid "OutOfScope End"
+msgstr "Kapsam dışı — bitiş"
+
+msgid "Over speeding"
+msgstr "Aşırı hız"
+
+msgid "Overview"
+msgstr "Genel bakış"
+
+msgid "Periodic inspection"
+msgstr "Periyodik denetim"
+
+msgid "Power supply interruption"
+msgstr "Güç kaynağı kesintisi"
+
+msgid "Printer fault"
+msgstr "Yazıcı arızası"
+
+msgid "Printing"
+msgstr "Yazdırma"
+
+msgid "RFU"
+msgstr "Ayrılmış (RFU)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Kayıt cihazı arızası, ayrıntı yok"
+
+msgid "Remote communication facility fault"
+msgstr "Uzaktan iletişim birimi arızası"
+
+msgid "Reserved"
+msgstr "Ayrılmış"
+
+msgid "Roadside calibration check"
+msgstr "Yol kenarı kalibrasyon kontrolü"
+
+msgid "Security breach attempt, no further details"
+msgstr "Güvenlik ihlali girişimi, ayrıntı yok"
+
+msgid "Sensor authentication failure"
+msgstr "Sensör kimlik doğrulama hatası"
+
+msgid "Sensor fault"
+msgstr "Sensör arızası"
+
+msgid "Sensor hardware sabotage"
+msgstr "Sensör donanım sabotajı"
+
+msgid "Sensor internal data transfer error"
+msgstr "Sensör dahili veri aktarım hatası"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Sensör güvenlik ihlali girişimi, ayrıntı yok"
+
+msgid "Sensor stored data integrity error"
+msgstr "Sensörde kayıtlı veri bütünlük hatası"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Sensör kasasının yetkisiz açılması"
+
+msgid "Stored user data integrity error"
+msgstr "Kayıtlı kullanıcı verisi bütünlük hatası"
+
+msgid "Tachograph card authentication failure"
+msgstr "Takograf kartı kimlik doğrulama hatası"
+
+msgid "Tamper detection of GNSS"
+msgstr "GNSS'e müdahale tespiti"
+
+msgid "TechnicalData"
+msgstr "Teknik veriler"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Saat çakışması (GNSS ile VU dahili saati)"
+
+msgid "Time overlap"
+msgstr "Zaman örtüşmesi"
+
+msgid "Unauthorised case opening"
+msgstr "Yetkisiz kasa açılması"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Hareket sensörünün yetkisiz değiştirilmesi"
+
+msgid "VU downloaded"
+msgstr "VU indirildi"
+
+msgid "VU internal fault"
+msgstr "VU dahili arızası"
+
+msgid "Vehicle motion conflict"
+msgstr "Araç hareketi çakışması"
+
+msgid "failed"
+msgstr "başarısız"
+
+msgid "skipped"
+msgstr "atlandı"
+
+msgid "verified"
+msgstr "doğrulandı"

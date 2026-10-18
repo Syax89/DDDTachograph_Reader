@@ -2071,3 +2071,240 @@ msgstr "Γιουγκοσλαβία"
 
 msgid "or drop it here"
 msgstr "ή σύρετε το αρχείο εδώ"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Έλλειψη πληροφοριών θέσης από τον δέκτη GNSS"
+
+msgid "Activation"
+msgstr "Ενεργοποίηση"
+
+msgid "Active / on-going event or fault"
+msgstr "Ενεργό / σε εξέλιξη συμβάν ή βλάβη"
+
+msgid "Activities"
+msgstr "Δραστηριότητες"
+
+msgid "Card conflict"
+msgstr "Σύγκρουση καρτών"
+
+msgid "Card data input integrity error"
+msgstr "Σφάλμα ακεραιότητας δεδομένων εισόδου κάρτας"
+
+msgid "Card downloaded"
+msgstr "Λήψη κάρτας"
+
+msgid "Card fault, no further details"
+msgstr "Βλάβη κάρτας, χωρίς άλλες λεπτομέρειες"
+
+msgid "Card insertion while driving"
+msgstr "Εισαγωγή κάρτας κατά την οδήγηση"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Σφάλμα επικοινωνίας με την εξωτερική διάταξη GNSS"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Σφάλμα επικοινωνίας με τη διάταξη απομακρυσμένης επικοινωνίας"
+
+msgid "DetailedSpeed"
+msgstr "Αναλυτικά δεδομένα ταχύτητας"
+
+msgid "Display"
+msgstr "Οθόνη"
+
+msgid "Display fault"
+msgstr "Βλάβη οθόνης"
+
+msgid "Downloading fault"
+msgstr "Βλάβη λήψης"
+
+msgid "Driving without an appropriate card"
+msgstr "Οδήγηση χωρίς κατάλληλη κάρτα"
+
+msgid "EventsFaults"
+msgstr "Συμβάντα και βλάβες"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Αποτυχία ελέγχου ταυτότητας εξωτερικής διάταξης GNSS"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Το πιστοποιητικό της εξωτερικής διάταξης GNSS έχει λήξει"
+
+msgid "External GNSS facility fault"
+msgstr "Βλάβη εξωτερικής διάταξης GNSS"
+
+msgid "Ferry/Train Begin"
+msgstr "Έναρξη διέλευσης με φέρι/τρένο"
+
+msgid "Ferry/Train End"
+msgstr "Λήξη διέλευσης με φέρι/τρένο"
+
+msgid "Ferry/Train crossing"
+msgstr "Διέλευση με φέρι/τρένο"
+
+msgid "First event/fault after the last calibration"
+msgstr "Πρώτο συμβάν/βλάβη μετά την τελευταία βαθμονόμηση"
+
+msgid "First installation"
+msgstr "Πρώτη εγκατάσταση"
+
+msgid "GNSS anomaly"
+msgstr "Ανωμαλία GNSS"
+
+msgid "Hardware sabotage"
+msgstr "Δολιοφθορά υλικού"
+
+msgid "ITS interface fault"
+msgstr "Βλάβη διεπαφής ITS"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Ασυνέπεια μεταξύ δεδομένων κίνησης και αποθηκευμένων δεδομένων δραστηριότητας οδηγού"
+
+msgid "Insertion of a non-valid card"
+msgstr "Εισαγωγή μη έγκυρης κάρτας"
+
+msgid "Installation (current vehicle)"
+msgstr "Εγκατάσταση (τρέχον όχημα)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Βλάβη εσωτερικού δέκτη GNSS"
+
+msgid "Internal data transfer error"
+msgstr "Σφάλμα εσωτερικής μεταφοράς δεδομένων"
+
+msgid "Internal sensor fault"
+msgstr "Εσωτερική βλάβη αισθητήρα"
+
+msgid "Last card session not correctly closed"
+msgstr "Η τελευταία συνεδρία κάρτας δεν έκλεισε σωστά"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Τελευταίο συμβάν για μία από τις τελευταίες 10 ημέρες εμφάνισης"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Συμβάν με τη μεγαλύτερη διάρκεια για μία από τις τελευταίες 10 ημέρες εμφάνισης"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Σοβαρότερο συμβάν για μία από τις τελευταίες 10 ημέρες εμφάνισης"
+
+msgid "Motion data error"
+msgstr "Σφάλμα δεδομένων κίνησης"
+
+msgid "Motion sensor authentication failure"
+msgstr "Αποτυχία ελέγχου ταυτότητας αισθητήρα κίνησης"
+
+msgid "No further details"
+msgstr "Χωρίς άλλες λεπτομέρειες"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Ένα από τα 10 πιο πρόσφατα (ή τελευταία) συμβάντα/βλάβες"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Ένα από τα 5 συμβάντα με τη μεγαλύτερη διάρκεια των τελευταίων 365 ημερών"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Ένα από τα 5 σοβαρότερα συμβάντα των τελευταίων 365 ημερών"
+
+msgid "OutOfScope Begin"
+msgstr "Εκτός πεδίου εφαρμογής – έναρξη"
+
+msgid "OutOfScope End"
+msgstr "Εκτός πεδίου εφαρμογής – τέλος"
+
+msgid "Over speeding"
+msgstr "Υπέρβαση ορίου ταχύτητας"
+
+msgid "Overview"
+msgstr "Επισκόπηση"
+
+msgid "Periodic inspection"
+msgstr "Περιοδικός έλεγχος"
+
+msgid "Power supply interruption"
+msgstr "Διακοπή τροφοδοσίας"
+
+msgid "Printer fault"
+msgstr "Βλάβη εκτυπωτή"
+
+msgid "Printing"
+msgstr "Εκτύπωση"
+
+msgid "RFU"
+msgstr "Διατηρείται για μελλοντική χρήση"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Βλάβη συσκευής καταγραφής, χωρίς άλλες λεπτομέρειες"
+
+msgid "Remote communication facility fault"
+msgstr "Βλάβη διάταξης απομακρυσμένης επικοινωνίας"
+
+msgid "Reserved"
+msgstr "Δεσμευμένο"
+
+msgid "Roadside calibration check"
+msgstr "Έλεγχος βαθμονόμησης στην άκρη του δρόμου"
+
+msgid "Security breach attempt, no further details"
+msgstr "Απόπειρα παραβίασης ασφάλειας, χωρίς άλλες λεπτομέρειες"
+
+msgid "Sensor authentication failure"
+msgstr "Αποτυχία ελέγχου ταυτότητας αισθητήρα"
+
+msgid "Sensor fault"
+msgstr "Βλάβη αισθητήρα"
+
+msgid "Sensor hardware sabotage"
+msgstr "Δολιοφθορά υλικού αισθητήρα"
+
+msgid "Sensor internal data transfer error"
+msgstr "Σφάλμα εσωτερικής μεταφοράς δεδομένων αισθητήρα"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Απόπειρα παραβίασης ασφάλειας αισθητήρα, χωρίς άλλες λεπτομέρειες"
+
+msgid "Sensor stored data integrity error"
+msgstr "Σφάλμα ακεραιότητας δεδομένων αποθηκευμένων στον αισθητήρα"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Μη εξουσιοδοτημένο άνοιγμα περιβλήματος αισθητήρα"
+
+msgid "Stored user data integrity error"
+msgstr "Σφάλμα ακεραιότητας αποθηκευμένων δεδομένων χρήστη"
+
+msgid "Tachograph card authentication failure"
+msgstr "Αποτυχία ελέγχου ταυτότητας κάρτας ταχογράφου"
+
+msgid "Tamper detection of GNSS"
+msgstr "Ανίχνευση παραποίησης GNSS"
+
+msgid "TechnicalData"
+msgstr "Τεχνικά δεδομένα"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Σύγκρουση ώρας (GNSS έναντι εσωτερικού ρολογιού VU)"
+
+msgid "Time overlap"
+msgstr "Επικάλυψη χρόνου"
+
+msgid "Unauthorised case opening"
+msgstr "Μη εξουσιοδοτημένο άνοιγμα περιβλήματος"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Μη εξουσιοδοτημένη αλλαγή αισθητήρα κίνησης"
+
+msgid "VU downloaded"
+msgstr "Λήψη VU"
+
+msgid "VU internal fault"
+msgstr "Εσωτερική βλάβη VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Σύγκρουση δεδομένων κίνησης οχήματος"
+
+msgid "failed"
+msgstr "απέτυχε"
+
+msgid "skipped"
+msgstr "παραλείφθηκε"
+
+msgid "verified"
+msgstr "επαληθεύτηκε"

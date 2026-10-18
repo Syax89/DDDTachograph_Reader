@@ -2071,3 +2071,240 @@ msgstr "Júgóslavía"
 
 msgid "or drop it here"
 msgstr "eða slepptu skránni hér"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Skortur á staðsetninguupplýsingum frá GNSS-móttakara"
+
+msgid "Activation"
+msgstr "Virkjun"
+
+msgid "Active / on-going event or fault"
+msgstr "Virkur / yfirstandandi atburður eða bilun"
+
+msgid "Activities"
+msgstr "Virkni"
+
+msgid "Card conflict"
+msgstr "Kortaárekstur"
+
+msgid "Card data input integrity error"
+msgstr "Villa í heilindum innlesinna kortagagna"
+
+msgid "Card downloaded"
+msgstr "Kort hlaðið niður"
+
+msgid "Card fault, no further details"
+msgstr "Kortabilun, engar frekari upplýsingar"
+
+msgid "Card insertion while driving"
+msgstr "Ísetning korts við akstur"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Samskiptavilla við ytri GNSS-búnað"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Samskiptavilla við fjarskiptabúnað"
+
+msgid "DetailedSpeed"
+msgstr "Nákvæmur hraði"
+
+msgid "Display"
+msgstr "Skjár"
+
+msgid "Display fault"
+msgstr "Bilun í skjá"
+
+msgid "Downloading fault"
+msgstr "Bilun við niðurhal"
+
+msgid "Driving without an appropriate card"
+msgstr "Akstur án viðeigandi korts"
+
+msgid "EventsFaults"
+msgstr "Atburðir/bilanir"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Auðkenning ytri GNSS-búnaðar mistókst"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Skírteini ytri GNSS-búnaðar er útrunnið"
+
+msgid "External GNSS facility fault"
+msgstr "Bilun í ytri GNSS-búnaði"
+
+msgid "Ferry/Train Begin"
+msgstr "Ferja/lest — upphaf"
+
+msgid "Ferry/Train End"
+msgstr "Ferja/lest — endir"
+
+msgid "Ferry/Train crossing"
+msgstr "Ferju-/lestaryfirferð"
+
+msgid "First event/fault after the last calibration"
+msgstr "Fyrsti atburður/bilun eftir síðustu kvörðun"
+
+msgid "First installation"
+msgstr "Fyrsta uppsetning"
+
+msgid "GNSS anomaly"
+msgstr "GNSS-frávik"
+
+msgid "Hardware sabotage"
+msgstr "Skemmdarverk á vélbúnaði"
+
+msgid "ITS interface fault"
+msgstr "Bilun í ITS-tengi"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Ósamræmi milli hreyfigagna og vistaðra virknigagna ökumanns"
+
+msgid "Insertion of a non-valid card"
+msgstr "Ísetning ógilds korts"
+
+msgid "Installation (current vehicle)"
+msgstr "Uppsetning (núverandi ökutæki)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Bilun í innri GNSS-móttakara"
+
+msgid "Internal data transfer error"
+msgstr "Villa í innri gagnaflutningi"
+
+msgid "Internal sensor fault"
+msgstr "Bilun í innri skynjara"
+
+msgid "Last card session not correctly closed"
+msgstr "Síðasta kortalota ekki rétt lokuð"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Síðasti atburður fyrir einn af síðustu 10 dögum"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Lengsti atburður fyrir einn af síðustu 10 dögum"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Alvarlegasti atburður fyrir einn af síðustu 10 dögum"
+
+msgid "Motion data error"
+msgstr "Villa í hreyfigögnum"
+
+msgid "Motion sensor authentication failure"
+msgstr "Auðkenning hreyfiskynjara mistókst"
+
+msgid "No further details"
+msgstr "Engar frekari upplýsingar"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Einn af 10 nýjustu (eða síðustu) atburðum/bilunum"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Einn af 5 lengstu atburðum síðustu 365 daga"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Einn af 5 alvarlegustu atburðum síðustu 365 daga"
+
+msgid "OutOfScope Begin"
+msgstr "Utan gildissviðs — upphaf"
+
+msgid "OutOfScope End"
+msgstr "Utan gildissviðs — endir"
+
+msgid "Over speeding"
+msgstr "Ofhraði"
+
+msgid "Overview"
+msgstr "Yfirlit"
+
+msgid "Periodic inspection"
+msgstr "Reglubundið eftirlit"
+
+msgid "Power supply interruption"
+msgstr "Rof í rafveitu"
+
+msgid "Printer fault"
+msgstr "Bilun í prentara"
+
+msgid "Printing"
+msgstr "Prentun"
+
+msgid "RFU"
+msgstr "Óskilgreint (RFU)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Bilun í skráningarbúnaði, engar frekari upplýsingar"
+
+msgid "Remote communication facility fault"
+msgstr "Bilun í fjarskiptabúnaði"
+
+msgid "Reserved"
+msgstr "Frátekið"
+
+msgid "Roadside calibration check"
+msgstr "Athugun kvörðunar á vegi"
+
+msgid "Security breach attempt, no further details"
+msgstr "Tilraun til öryggisbrots, engar frekari upplýsingar"
+
+msgid "Sensor authentication failure"
+msgstr "Auðkenning skynjara mistókst"
+
+msgid "Sensor fault"
+msgstr "Bilun í skynjara"
+
+msgid "Sensor hardware sabotage"
+msgstr "Skemmdarverk á vélbúnaði skynjara"
+
+msgid "Sensor internal data transfer error"
+msgstr "Villa í innri gagnaflutningi skynjara"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Tilraun til öryggisbrots skynjara, engar frekari upplýsingar"
+
+msgid "Sensor stored data integrity error"
+msgstr "Villa í heilindum vistaðra gagna skynjara"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Óheimil opnun skynjarahúss"
+
+msgid "Stored user data integrity error"
+msgstr "Villa í heilindum vistaðra notandagagna"
+
+msgid "Tachograph card authentication failure"
+msgstr "Auðkenning takógrafkorts mistókst"
+
+msgid "Tamper detection of GNSS"
+msgstr "Skynjun ágangs á GNSS"
+
+msgid "TechnicalData"
+msgstr "Tæknigögn"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Tímaárekstur (GNSS og innri klukka VU)"
+
+msgid "Time overlap"
+msgstr "Tímaskörun"
+
+msgid "Unauthorised case opening"
+msgstr "Óheimil opnun húss"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Óheimil skipti á hreyfiskynjara"
+
+msgid "VU downloaded"
+msgstr "VU hlaðið niður"
+
+msgid "VU internal fault"
+msgstr "Innri bilun í VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Árekstur í hreyfingu ökutækis"
+
+msgid "failed"
+msgstr "mistókst"
+
+msgid "skipped"
+msgstr "sleppt"
+
+msgid "verified"
+msgstr "staðfest"

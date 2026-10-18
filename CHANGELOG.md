@@ -10,10 +10,12 @@
   msgid language, so a missing translation always falls back to English.
 - **Optional translation of file-decoded labels**: section names, table headers
   and record field names are translated with the rest of the UI, while labels
-  decoded from the file itself (activity names, country names) stay exactly as
-  the decoder names them unless *Translate file contents* in the Language menu is
-  ticked. The preference is stored next to the language and applies immediately.
-  Free text carried by the file and exported reports are never translated.
+  decoded from the file itself (activity names, event and fault descriptions,
+  record purposes, specific conditions, country names, signature statuses) stay
+  exactly as the decoder names them unless *Translate file contents* in the
+  Language menu is ticked. The preference is stored next to the language and
+  applies immediately. Free text carried by the file, raw identifiers and
+  exported reports are never translated.
 - **Packaged gettext catalogs**: `scripts/compile_translations.py` compiles
   `locale/<code>/LC_MESSAGES/tacho.po` to `.mo` using only the standard library,
   validates every entry (placeholders, format specs, duplicates, no empty

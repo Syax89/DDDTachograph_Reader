@@ -36,7 +36,7 @@ from app.i18n import _
 from core.utils.report_format import humanize_key
 
 __all__ = ["humanize", "label", "data_text", "configure_translate_data",
-           "translate_data_enabled"]
+           "translate_data_enabled", "activity"]
 
 #: Whether labels decoded from the file are translated. Cached on purpose: the
 #: GUI renders one cell at a time and must never touch the settings file there.
@@ -151,3 +151,15 @@ def data_text(text):
     if not _translate_data or not isinstance(text, str):
         return text
     return _(text)
+
+
+#: Activity codes the tachograph file stores, and the word the decoder gives
+#: them. The chart already showed the word; table cells now do the same.
+_ACTIVITY_WORDS = {"DRIVE": "Drive", "WORK": "Work", "REST": "Rest",
+                   "AVAILABLE": "Available"}
+
+
+def activity(value):
+    """An activity code as a word, translated only when the user asked for it."""
+    word = _ACTIVITY_WORDS.get(str(value).upper(), value)
+    return data_text(word)

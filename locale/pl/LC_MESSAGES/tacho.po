@@ -2071,3 +2071,240 @@ msgstr "Jugosławia"
 
 msgid "or drop it here"
 msgstr "albo przeciągnij plik tutaj"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Brak informacji o położeniu z odbiornika GNSS"
+
+msgid "Activation"
+msgstr "Aktywacja"
+
+msgid "Active / on-going event or fault"
+msgstr "Zdarzenie lub usterka aktywne / w toku"
+
+msgid "Activities"
+msgstr "Aktywności"
+
+msgid "Card conflict"
+msgstr "Konflikt kart"
+
+msgid "Card data input integrity error"
+msgstr "Błąd integralności danych wejściowych karty"
+
+msgid "Card downloaded"
+msgstr "Karta pobrana"
+
+msgid "Card fault, no further details"
+msgstr "Usterka karty, bez dalszych szczegółów"
+
+msgid "Card insertion while driving"
+msgstr "Włożenie karty podczas jazdy"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Błąd komunikacji z zewnętrznym urządzeniem GNSS"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Błąd komunikacji z urządzeniem do komunikacji zdalnej"
+
+msgid "DetailedSpeed"
+msgstr "Szczegółowa prędkość"
+
+msgid "Display"
+msgstr "Wyświetlanie"
+
+msgid "Display fault"
+msgstr "Usterka wyświetlacza"
+
+msgid "Downloading fault"
+msgstr "Usterka pobierania danych"
+
+msgid "Driving without an appropriate card"
+msgstr "Jazda bez odpowiedniej karty"
+
+msgid "EventsFaults"
+msgstr "Zdarzenia/Usterki"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Niepowodzenie uwierzytelnienia zewnętrznego urządzenia GNSS"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Certyfikat zewnętrznego urządzenia GNSS wygasł"
+
+msgid "External GNSS facility fault"
+msgstr "Usterka zewnętrznego urządzenia GNSS"
+
+msgid "Ferry/Train Begin"
+msgstr "Prom/pociąg — początek"
+
+msgid "Ferry/Train End"
+msgstr "Prom/pociąg — koniec"
+
+msgid "Ferry/Train crossing"
+msgstr "Przeprawa promem/pociągiem"
+
+msgid "First event/fault after the last calibration"
+msgstr "Pierwsze zdarzenie/usterka po ostatniej kalibracji"
+
+msgid "First installation"
+msgstr "Pierwsza instalacja"
+
+msgid "GNSS anomaly"
+msgstr "Anomalia GNSS"
+
+msgid "Hardware sabotage"
+msgstr "Sabotaż sprzętu"
+
+msgid "ITS interface fault"
+msgstr "Usterka interfejsu ITS"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Niespójność między danymi o ruchu a zapisanymi danymi o aktywności kierowcy"
+
+msgid "Insertion of a non-valid card"
+msgstr "Włożenie nieważnej karty"
+
+msgid "Installation (current vehicle)"
+msgstr "Instalacja (bieżący pojazd)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Usterka wewnętrznego odbiornika GNSS"
+
+msgid "Internal data transfer error"
+msgstr "Wewnętrzny błąd przesyłania danych"
+
+msgid "Internal sensor fault"
+msgstr "Usterka wewnętrznego czujnika"
+
+msgid "Last card session not correctly closed"
+msgstr "Ostatnia sesja karty nie została prawidłowo zamknięta"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Ostatnie zdarzenie z jednego z ostatnich 10 dni wystąpienia"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Najdłuższe zdarzenie z jednego z ostatnich 10 dni wystąpienia"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Najpoważniejsze zdarzenie z jednego z ostatnich 10 dni wystąpienia"
+
+msgid "Motion data error"
+msgstr "Błąd danych o ruchu"
+
+msgid "Motion sensor authentication failure"
+msgstr "Niepowodzenie uwierzytelnienia czujnika ruchu"
+
+msgid "No further details"
+msgstr "Bez dalszych szczegółów"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Jedno z 10 najnowszych (lub ostatnich) zdarzeń/usterek"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Jedno z 5 najdłuższych zdarzeń z ostatnich 365 dni"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Jedno z 5 najpoważniejszych zdarzeń z ostatnich 365 dni"
+
+msgid "OutOfScope Begin"
+msgstr "Poza zakresem — początek"
+
+msgid "OutOfScope End"
+msgstr "Poza zakresem — koniec"
+
+msgid "Over speeding"
+msgstr "Przekroczenie prędkości"
+
+msgid "Overview"
+msgstr "Przegląd"
+
+msgid "Periodic inspection"
+msgstr "Kontrola okresowa"
+
+msgid "Power supply interruption"
+msgstr "Przerwa w zasilaniu"
+
+msgid "Printer fault"
+msgstr "Usterka drukarki"
+
+msgid "Printing"
+msgstr "Drukowanie"
+
+msgid "RFU"
+msgstr "RFU (zarezerwowane do przyszłego wykorzystania)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Usterka urządzenia rejestrującego, bez dalszych szczegółów"
+
+msgid "Remote communication facility fault"
+msgstr "Usterka urządzenia do komunikacji zdalnej"
+
+msgid "Reserved"
+msgstr "Zarezerwowane"
+
+msgid "Roadside calibration check"
+msgstr "Kontrola kalibracji na drodze"
+
+msgid "Security breach attempt, no further details"
+msgstr "Próba naruszenia bezpieczeństwa, bez dalszych szczegółów"
+
+msgid "Sensor authentication failure"
+msgstr "Niepowodzenie uwierzytelnienia czujnika"
+
+msgid "Sensor fault"
+msgstr "Usterka czujnika"
+
+msgid "Sensor hardware sabotage"
+msgstr "Sabotaż sprzętu czujnika"
+
+msgid "Sensor internal data transfer error"
+msgstr "Wewnętrzny błąd przesyłania danych czujnika"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Próba naruszenia bezpieczeństwa czujnika, bez dalszych szczegółów"
+
+msgid "Sensor stored data integrity error"
+msgstr "Błąd integralności danych zapisanych w czujniku"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Nieuprawnione otwarcie obudowy czujnika"
+
+msgid "Stored user data integrity error"
+msgstr "Błąd integralności zapisanych danych użytkownika"
+
+msgid "Tachograph card authentication failure"
+msgstr "Niepowodzenie uwierzytelnienia karty tachografu"
+
+msgid "Tamper detection of GNSS"
+msgstr "Wykrycie manipulacji przy GNSS"
+
+msgid "TechnicalData"
+msgstr "Dane techniczne"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Konflikt czasu (GNSS vs zegar wewnętrzny VU)"
+
+msgid "Time overlap"
+msgstr "Nakładanie się czasu"
+
+msgid "Unauthorised case opening"
+msgstr "Nieuprawnione otwarcie obudowy"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Nieuprawniona wymiana czujnika ruchu"
+
+msgid "VU downloaded"
+msgstr "VU pobrana"
+
+msgid "VU internal fault"
+msgstr "Usterka wewnętrzna VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Konflikt ruchu pojazdu"
+
+msgid "failed"
+msgstr "niepowodzenie"
+
+msgid "skipped"
+msgstr "pominięto"
+
+msgid "verified"
+msgstr "zweryfikowano"

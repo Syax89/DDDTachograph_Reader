@@ -110,6 +110,59 @@ def test_fmt_scalar_applies_the_translator_to_derived_labels_only():
                       label_translator=translator) == "IT1234567890"
 
 
+# ── what the toggle is allowed to translate ────────────────────────────────
+
+def _install_italian(monkeypatch):
+    if not (CATALOG_DIR / "it" / "LC_MESSAGES" / "tacho.mo").exists():
+        pytest.skip("the Italian catalog is not built in this checkout")
+    monkeypatch.setattr(i18n, "locale_dir", lambda: str(CATALOG_DIR))
+    assert i18n.save_language("it")
+    assert i18n.install("it") == "it"
+
+
+def test_decoder_vocabulary_follows_the_preference(monkeypatch):
+    """Event/fault names are decoder output: off keeps them, on translates them."""
+    _install_italian(monkeypatch)
+    import app.gui as gui
+
+    for key in ("description", "record_purpose_label", "condition", "section", "status"):
+        ui_text.configure_translate_data(False)
+        assert gui.fmt_val("Over speeding", key=key) == "Over speeding", key
+        ui_text.configure_translate_data(True)
+        try:
+            assert gui.fmt_val("Over speeding", key=key) == i18n._("Over speeding"), key
+            assert gui.fmt_val("Over speeding", key=key) != "Over speeding", key
+        finally:
+            ui_text.configure_translate_data(False)
+
+
+def test_free_text_is_never_translated(monkeypatch):
+    """A name, a plate or an address is data, not a label — in both states."""
+    _install_italian(monkeypatch)
+    import app.gui as gui
+
+    for value in ("GI.EFFE TRASPORTI S.R.L.", "AB123CD", "Via Roma 1"):
+        for flag in (False, True):
+            ui_text.configure_translate_data(flag)
+            assert gui.fmt_val(value, key="company_name") == value, (value, flag)
+    ui_text.configure_translate_data(False)
+
+
+def test_activity_cells_use_the_same_word_as_the_chart(monkeypatch):
+    _install_italian(monkeypatch)
+    import app.gui as gui
+
+    ui_text.configure_translate_data(False)
+    assert gui.fmt_val("DRIVE", key="activity") == "Drive"
+    assert gui._act_label("DRIVE") == "Drive"
+    ui_text.configure_translate_data(True)
+    try:
+        assert gui.fmt_val("DRIVE", key="activity") == i18n._("Drive")
+        assert gui.fmt_val("DRIVE", key="activity") == gui._act_label("DRIVE")
+    finally:
+        ui_text.configure_translate_data(False)
+
+
 # ── the window ─────────────────────────────────────────────────────────────
 
 def _explorer(monkeypatch):
@@ -136,7 +189,10 @@ MOCK_CARD = {
     "coverage": {},
     "driver": {},
     "generations": {"Generation 1": {
-        "CalibrationData": [{"nation": "I", "workshop_name": "OFFICINA"}]}},
+        "CalibrationData": [{"nation": "I", "workshop_name": "OFFICINA"}],
+        "EventsData": [{"description": "Over speeding",
+                        "record_purpose_label": "Active / on-going event or fault",
+                        "begin_time": "2024-11-26T00:00:00Z"}]}},
 }
 
 
@@ -184,6 +240,17 @@ def test_clicking_the_toggle_rerenders_the_visible_table(monkeypatch):
         assert window.table.title_lbl.cget("text") == label, "selection moved"
         assert window.tree.selection() == (section_node(),), "selection moved"
         assert i18n.saved_translate_data() is True
+
+        # A decoder label in a table follows the same click, not only nations.
+        events = i18n._("Events Data")
+        window.tree.selection_set(next(
+            iid for iid, payload in window._payloads.items()
+            if isinstance(payload, tuple) and payload and payload[0] == events))
+        window.update()
+        translated = i18n._("Over speeding")
+        assert translated != "Over speeding", "catalog is missing the event label"
+        assert any(translated in cell for cell in cells()), cells()
+        assert not any("Over speeding" in cell for cell in cells()), cells()
 
         menu.invoke(2)
         window.update()

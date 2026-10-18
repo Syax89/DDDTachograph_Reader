@@ -2071,3 +2071,240 @@ msgstr "An Iúgslaiv"
 
 msgid "or drop it here"
 msgstr "nó scaoil an comhad anseo"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Easpa eolais faoi shuíomh ó ghlacadóir GNSS"
+
+msgid "Activation"
+msgstr "Gníomhachtú"
+
+msgid "Active / on-going event or fault"
+msgstr "Teagmhas nó fabht gníomhach / ar siúl"
+
+msgid "Activities"
+msgstr "Gníomhaíochtaí"
+
+msgid "Card conflict"
+msgstr "Coimhlint cárta"
+
+msgid "Card data input integrity error"
+msgstr "Earráid sláine in ionchur sonraí an chárta"
+
+msgid "Card downloaded"
+msgstr "Cárta íoslódáilte"
+
+msgid "Card fault, no further details"
+msgstr "Fabht sa chárta, gan tuilleadh sonraí"
+
+msgid "Card insertion while driving"
+msgstr "Cárta curtha isteach agus an fheithicil á tiomáint"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Earráid chumarsáide leis an áis sheachtrach GNSS"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Earráid chumarsáide leis an áis chianchumarsáide"
+
+msgid "DetailedSpeed"
+msgstr "Luas mionsonraithe"
+
+msgid "Display"
+msgstr "Taispeáint"
+
+msgid "Display fault"
+msgstr "Fabht sa taispeáint"
+
+msgid "Downloading fault"
+msgstr "Fabht íoslódála"
+
+msgid "Driving without an appropriate card"
+msgstr "Tiomáint gan cárta cuí"
+
+msgid "EventsFaults"
+msgstr "Teagmhais/fabhtanna"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Teip ar fhíordheimhniú na háise seachtraí GNSS"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Teastas na háise seachtraí GNSS imithe in éag"
+
+msgid "External GNSS facility fault"
+msgstr "Fabht san áis sheachtrach GNSS"
+
+msgid "Ferry/Train Begin"
+msgstr "Bád farantóireachta/traein — tús"
+
+msgid "Ferry/Train End"
+msgstr "Bád farantóireachta/traein — deireadh"
+
+msgid "Ferry/Train crossing"
+msgstr "Trasnú ar bhád farantóireachta/traein"
+
+msgid "First event/fault after the last calibration"
+msgstr "An chéad teagmhas/fabht tar éis an chalabraithe dheiridh"
+
+msgid "First installation"
+msgstr "An chéad suiteáil"
+
+msgid "GNSS anomaly"
+msgstr "Anómalaí GNSS"
+
+msgid "Hardware sabotage"
+msgstr "Sabatáiste crua-earraí"
+
+msgid "ITS interface fault"
+msgstr "Fabht i gcomhéadan ITS"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Neamhréireacht idir sonraí gluaiseachta agus sonraí gníomhaíochta tiománaí atá stóráilte"
+
+msgid "Insertion of a non-valid card"
+msgstr "Cárta neamhbhailí a chur isteach"
+
+msgid "Installation (current vehicle)"
+msgstr "Suiteáil (an fheithicil reatha)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Fabht inmheánach i nglacadóir GNSS"
+
+msgid "Internal data transfer error"
+msgstr "Earráid inmheánach aistrithe sonraí"
+
+msgid "Internal sensor fault"
+msgstr "Fabht inmheánach sa braiteoir"
+
+msgid "Last card session not correctly closed"
+msgstr "Níor dúnadh an tseisiún cárta deiridh i gceart"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "An teagmhas deireanach ar cheann de na 10 lá deireanacha inar tharla sé"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "An teagmhas is faide ar cheann de na 10 lá deireanacha inar tharla sé"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "An teagmhas is tromchúisí ar cheann de na 10 lá deireanacha inar tharla sé"
+
+msgid "Motion data error"
+msgstr "Earráid i sonraí gluaiseachta"
+
+msgid "Motion sensor authentication failure"
+msgstr "Teip ar fhíordheimhniú an bhraiteora gluaiseachta"
+
+msgid "No further details"
+msgstr "Gan tuilleadh sonraí"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Ceann de na 10 teagmhas/fabht is déanaí (nó is deireanaí)"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Ceann de na 5 teagmhas is faide sna 365 lá deireanacha"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Ceann de na 5 teagmhas is tromchúisí sna 365 lá deireanacha"
+
+msgid "OutOfScope Begin"
+msgstr "Lasmuigh den raon — tús"
+
+msgid "OutOfScope End"
+msgstr "Lasmuigh den raon — deireadh"
+
+msgid "Over speeding"
+msgstr "Róluas"
+
+msgid "Overview"
+msgstr "Forléargas"
+
+msgid "Periodic inspection"
+msgstr "Cigireacht thréimhsiúil"
+
+msgid "Power supply interruption"
+msgstr "Scoith sa soláthar cumhachta"
+
+msgid "Printer fault"
+msgstr "Fabht sa phrintéir"
+
+msgid "Printing"
+msgstr "Priontáil"
+
+msgid "RFU"
+msgstr "Curtha in áirithe don todhchaí (RFU)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Fabht sa trealamh taifeadta, gan tuilleadh sonraí"
+
+msgid "Remote communication facility fault"
+msgstr "Fabht san áis chianchumarsáide"
+
+msgid "Reserved"
+msgstr "Curtha in áirithe"
+
+msgid "Roadside calibration check"
+msgstr "Seiceáil calabraithe ar thaobh an bhóthair"
+
+msgid "Security breach attempt, no further details"
+msgstr "Iarracht ar shárú slándála, gan tuilleadh sonraí"
+
+msgid "Sensor authentication failure"
+msgstr "Teip ar fhíordheimhniú an tsensor"
+
+msgid "Sensor fault"
+msgstr "Fabht sa braiteoir"
+
+msgid "Sensor hardware sabotage"
+msgstr "Sabatáiste crua-earraí an tsensor"
+
+msgid "Sensor internal data transfer error"
+msgstr "Earráid inmheánach aistrithe sonraí sa braiteoir"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Iarracht ar shárú slándála an tsensor, gan tuilleadh sonraí"
+
+msgid "Sensor stored data integrity error"
+msgstr "Earráid sláine i sonraí stóráilte an tsensor"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Oscailt neamhúdaraithe ar chás an tsensor"
+
+msgid "Stored user data integrity error"
+msgstr "Earráid sláine i sonraí stóráilte an úsáideora"
+
+msgid "Tachograph card authentication failure"
+msgstr "Teip ar fhíordheimhniú chárta an tacógraif"
+
+msgid "Tamper detection of GNSS"
+msgstr "Brath cluicheála ar GNSS"
+
+msgid "TechnicalData"
+msgstr "Sonraí teicniúla"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Coimhlint ama (GNSS vs clog inmheánach VU)"
+
+msgid "Time overlap"
+msgstr "Forluí ama"
+
+msgid "Unauthorised case opening"
+msgstr "Oscailt neamhúdaraithe ar an gcás"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Athrú neamhúdaraithe ar an mbraiteoir gluaiseachta"
+
+msgid "VU downloaded"
+msgstr "VU íoslódáilte"
+
+msgid "VU internal fault"
+msgstr "Fabht inmheánach sa VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Coimhlint ghluaiseacht na feithicle"
+
+msgid "failed"
+msgstr "teipthe"
+
+msgid "skipped"
+msgstr "scipeáilte"
+
+msgid "verified"
+msgstr "fíoraithe"

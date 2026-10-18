@@ -2071,3 +2071,240 @@ msgstr "Il-Jugoslavja"
 
 msgid "or drop it here"
 msgstr "jew itfa' l-fajl hawn"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Nuqqas ta' informazzjoni dwar il-pożizzjoni mir-riċevitur GNSS"
+
+msgid "Activation"
+msgstr "Attivazzjoni"
+
+msgid "Active / on-going event or fault"
+msgstr "Avveniment jew ħsara attiv / għaddej"
+
+msgid "Activities"
+msgstr "Attivitajiet"
+
+msgid "Card conflict"
+msgstr "Kunflitt tal-karta"
+
+msgid "Card data input integrity error"
+msgstr "Żball ta' integrità fl-input tad-data tal-karta"
+
+msgid "Card downloaded"
+msgstr "Karta mniżżla"
+
+msgid "Card fault, no further details"
+msgstr "Ħsara fil-karta, l-ebda dettall ieħor"
+
+msgid "Card insertion while driving"
+msgstr "Karta mdaħħla waqt is-sewqan"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Żball ta' komunikazzjoni mal-faċilità GNSS esterna"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Żball ta' komunikazzjoni mal-faċilità tal-komunikazzjoni remota"
+
+msgid "DetailedSpeed"
+msgstr "Veloċità fid-dettall"
+
+msgid "Display"
+msgstr "Skrin"
+
+msgid "Display fault"
+msgstr "Ħsara fl-iskrin"
+
+msgid "Downloading fault"
+msgstr "Ħsara fid-download"
+
+msgid "Driving without an appropriate card"
+msgstr "Sewqan mingħajr karta xierqa"
+
+msgid "EventsFaults"
+msgstr "Avvenimenti/ħsarat"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Falliment fl-awtentikazzjoni tal-faċilità GNSS esterna"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Iċ-ċertifikat tal-faċilità GNSS esterna skadut"
+
+msgid "External GNSS facility fault"
+msgstr "Ħsara fil-faċilità GNSS esterna"
+
+msgid "Ferry/Train Begin"
+msgstr "Lanċa/ferrovija — bidu"
+
+msgid "Ferry/Train End"
+msgstr "Lanċa/ferrovija — tmiem"
+
+msgid "Ferry/Train crossing"
+msgstr "Qsim bil-lanċa/ferrovija"
+
+msgid "First event/fault after the last calibration"
+msgstr "L-ewwel avveniment/ħsara wara l-aħħar kalibrazzjoni"
+
+msgid "First installation"
+msgstr "L-ewwel installazzjoni"
+
+msgid "GNSS anomaly"
+msgstr "Anomalija GNSS"
+
+msgid "Hardware sabotage"
+msgstr "Sabotaġġ tal-ħardwer"
+
+msgid "ITS interface fault"
+msgstr "Ħsara fl-interfaċċa ITS"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Inkonsistenza bejn id-data tal-moviment u d-data tal-attività tax-xufier maħżuna"
+
+msgid "Insertion of a non-valid card"
+msgstr "Dħul ta' karta mhix valida"
+
+msgid "Installation (current vehicle)"
+msgstr "Installazzjoni (il-vettura attwali)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Ħsara interna fir-riċevitur GNSS"
+
+msgid "Internal data transfer error"
+msgstr "Żball intern fit-trasferiment tad-data"
+
+msgid "Internal sensor fault"
+msgstr "Ħsara interna fis-sensor"
+
+msgid "Last card session not correctly closed"
+msgstr "L-aħħar sessjoni tal-karta ma ngħalqitx kif suppost"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "L-aħħar avveniment f'waħda mill-aħħar 10 ġranet li fihom seħħ"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "L-itwal avveniment f'waħda mill-aħħar 10 ġranet li fihom seħħ"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "L-aktar avveniment serju f'waħda mill-aħħar 10 ġranet li fihom seħħ"
+
+msgid "Motion data error"
+msgstr "Żball fid-data tal-moviment"
+
+msgid "Motion sensor authentication failure"
+msgstr "Falliment fl-awtentikazzjoni tas-sensor tal-moviment"
+
+msgid "No further details"
+msgstr "L-ebda dettall ieħor"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Wieħed mill-10 avvenimenti/ħsarat l-aktar reċenti (jew l-aħħar)"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Wieħed mill-5 avvenimenti l-itwal fl-aħħar 365 ġurnata"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Wieħed mill-5 avvenimenti l-aktar serji fl-aħħar 365 ġurnata"
+
+msgid "OutOfScope Begin"
+msgstr "Barra mill-kamp — bidu"
+
+msgid "OutOfScope End"
+msgstr "Barra mill-kamp — tmiem"
+
+msgid "Over speeding"
+msgstr "Qbiż tal-veloċità"
+
+msgid "Overview"
+msgstr "Ħarsa ġenerali"
+
+msgid "Periodic inspection"
+msgstr "Spezzjoni perjodika"
+
+msgid "Power supply interruption"
+msgstr "Interruzzjoni fil-provvista tal-enerġija"
+
+msgid "Printer fault"
+msgstr "Ħsara fil-printer"
+
+msgid "Printing"
+msgstr "Stampa"
+
+msgid "RFU"
+msgstr "Riżervat għall-futur (RFU)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Ħsara fl-apparat tar-reġistrazzjoni, l-ebda dettall ieħor"
+
+msgid "Remote communication facility fault"
+msgstr "Ħsara fil-faċilità tal-komunikazzjoni remota"
+
+msgid "Reserved"
+msgstr "Riżervat"
+
+msgid "Roadside calibration check"
+msgstr "Verifika tal-kalibrazzjoni max-xifer tat-triq"
+
+msgid "Security breach attempt, no further details"
+msgstr "Tentattiv ta' ksur tas-sigurtà, l-ebda dettall ieħor"
+
+msgid "Sensor authentication failure"
+msgstr "Falliment fl-awtentikazzjoni tas-sensor"
+
+msgid "Sensor fault"
+msgstr "Ħsara fis-sensor"
+
+msgid "Sensor hardware sabotage"
+msgstr "Sabotaġġ tal-ħardwer tas-sensor"
+
+msgid "Sensor internal data transfer error"
+msgstr "Żball intern fit-trasferiment tad-data fis-sensor"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Tentattiv ta' ksur tas-sigurtà tas-sensor, l-ebda dettall ieħor"
+
+msgid "Sensor stored data integrity error"
+msgstr "Żball ta' integrità fid-data maħżuna tas-sensor"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Ftuh mhux awtorizzat tal-kaxxa tas-sensor"
+
+msgid "Stored user data integrity error"
+msgstr "Żball ta' integrità fid-data maħżuna tal-utent"
+
+msgid "Tachograph card authentication failure"
+msgstr "Falliment fl-awtentikazzjoni tal-karta tat-takografu"
+
+msgid "Tamper detection of GNSS"
+msgstr "Skoperta ta' manipulazzjoni tal-GNSS"
+
+msgid "TechnicalData"
+msgstr "Data teknika"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Kunflitt tal-ħin (GNSS vs arloġġ intern tal-VU)"
+
+msgid "Time overlap"
+msgstr "Sovrappożizzjoni tal-ħin"
+
+msgid "Unauthorised case opening"
+msgstr "Ftuh mhux awtorizzat tal-kaxxa"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Tibdil mhux awtorizzat tas-sensor tal-moviment"
+
+msgid "VU downloaded"
+msgstr "VU mniżżel"
+
+msgid "VU internal fault"
+msgstr "Ħsara interna fil-VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Kunflitt fil-moviment tal-vettura"
+
+msgid "failed"
+msgstr "falliet"
+
+msgid "skipped"
+msgstr "mqabbeż"
+
+msgid "verified"
+msgstr "verifikat"

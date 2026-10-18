@@ -132,11 +132,13 @@ choice is stored in the per-user settings file and applied at the next start.
 
 English is the source language and the default. The application's own text —
 menus, column headers, section names, messages — is translated. Labels *decoded
-from the file* (activity names, country names, record-code names) are shown
-exactly as the decoder names them unless **Translate file contents** at the
-bottom of the Language menu is ticked. Free text carried by the file (driver
-names, plates, addresses) and exported reports are never translated. See
-[CONTRIBUTING.md](CONTRIBUTING.md) to add a language or improve a translation.
+from the file* (activity names, event and fault descriptions, record purposes,
+specific conditions, country names, signature statuses) are shown exactly as the
+decoder names them unless **Translate file contents** at the bottom of the
+Language menu is ticked. Free text carried by the file (driver names, plates,
+addresses, company names), identifiers and codes are never translated, nor are
+exported reports. See [CONTRIBUTING.md](CONTRIBUTING.md) to add a language or
+improve a translation.
 
 ---
 

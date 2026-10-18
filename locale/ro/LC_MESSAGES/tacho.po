@@ -2071,3 +2071,240 @@ msgstr "Iugoslavia"
 
 msgid "or drop it here"
 msgstr "sau plasați fișierul aici"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Absența informațiilor de poziție de la receptorul GNSS"
+
+msgid "Activation"
+msgstr "Activare"
+
+msgid "Active / on-going event or fault"
+msgstr "Eveniment sau defecțiune activ / în curs"
+
+msgid "Activities"
+msgstr "Activități"
+
+msgid "Card conflict"
+msgstr "Conflict de carduri"
+
+msgid "Card data input integrity error"
+msgstr "Eroare de integritate a datelor de intrare de la card"
+
+msgid "Card downloaded"
+msgstr "Card descărcat"
+
+msgid "Card fault, no further details"
+msgstr "Defecțiune a cardului, fără alte detalii"
+
+msgid "Card insertion while driving"
+msgstr "Introducerea cardului în timpul conducerii"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Eroare de comunicare cu dispozitivul GNSS extern"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Eroare de comunicare cu dispozitivul de comunicație la distanță"
+
+msgid "DetailedSpeed"
+msgstr "Viteză detaliată"
+
+msgid "Display"
+msgstr "Afișare"
+
+msgid "Display fault"
+msgstr "Defecțiune a afișajului"
+
+msgid "Downloading fault"
+msgstr "Defecțiune la descărcare"
+
+msgid "Driving without an appropriate card"
+msgstr "Conducere fără un card adecvat"
+
+msgid "EventsFaults"
+msgstr "Evenimente/Defecțiuni"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Eșec de autentificare a dispozitivului GNSS extern"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Certificatul dispozitivului GNSS extern a expirat"
+
+msgid "External GNSS facility fault"
+msgstr "Defecțiune a dispozitivului GNSS extern"
+
+msgid "Ferry/Train Begin"
+msgstr "Feribot/Tren — Început"
+
+msgid "Ferry/Train End"
+msgstr "Feribot/Tren — Sfârșit"
+
+msgid "Ferry/Train crossing"
+msgstr "Traversare cu feribotul/trenul"
+
+msgid "First event/fault after the last calibration"
+msgstr "Primul eveniment/defecțiune după ultima calibrare"
+
+msgid "First installation"
+msgstr "Prima instalare"
+
+msgid "GNSS anomaly"
+msgstr "Anomalie GNSS"
+
+msgid "Hardware sabotage"
+msgstr "Sabotaj hardware"
+
+msgid "ITS interface fault"
+msgstr "Defecțiune a interfeței ITS"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Neconcordanță între datele de mișcare și datele de activitate stocate ale conducătorului"
+
+msgid "Insertion of a non-valid card"
+msgstr "Introducerea unui card nevalid"
+
+msgid "Installation (current vehicle)"
+msgstr "Instalare (vehiculul actual)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Defecțiune a receptorului GNSS intern"
+
+msgid "Internal data transfer error"
+msgstr "Eroare internă de transfer de date"
+
+msgid "Internal sensor fault"
+msgstr "Defecțiune a senzorului intern"
+
+msgid "Last card session not correctly closed"
+msgstr "Ultima sesiune de card nu a fost închisă corect"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Ultimul eveniment dintr-una din ultimele 10 zile de apariție"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Cel mai lung eveniment dintr-una din ultimele 10 zile de apariție"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Cel mai grav eveniment dintr-una din ultimele 10 zile de apariție"
+
+msgid "Motion data error"
+msgstr "Eroare a datelor de mișcare"
+
+msgid "Motion sensor authentication failure"
+msgstr "Eșec de autentificare a senzorului de mișcare"
+
+msgid "No further details"
+msgstr "Fără alte detalii"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Unul dintre cele 10 evenimente/defecțiuni cele mai recente (sau ultimele)"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Unul dintre cele 5 evenimente cele mai lungi din ultimele 365 de zile"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Unul dintre cele 5 evenimente cele mai grave din ultimele 365 de zile"
+
+msgid "OutOfScope Begin"
+msgstr "În afara domeniului — Început"
+
+msgid "OutOfScope End"
+msgstr "În afara domeniului — Sfârșit"
+
+msgid "Over speeding"
+msgstr "Depășirea vitezei"
+
+msgid "Overview"
+msgstr "Prezentare generală"
+
+msgid "Periodic inspection"
+msgstr "Inspecție periodică"
+
+msgid "Power supply interruption"
+msgstr "Întrerupere alimentare"
+
+msgid "Printer fault"
+msgstr "Defecțiune a imprimantei"
+
+msgid "Printing"
+msgstr "Imprimare"
+
+msgid "RFU"
+msgstr "RFU (rezervat pentru utilizare viitoare)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Defecțiune a aparatului de înregistrare, fără alte detalii"
+
+msgid "Remote communication facility fault"
+msgstr "Defecțiune a dispozitivului de comunicație la distanță"
+
+msgid "Reserved"
+msgstr "Rezervat"
+
+msgid "Roadside calibration check"
+msgstr "Verificare a calibrării în trafic"
+
+msgid "Security breach attempt, no further details"
+msgstr "Tentativă de încălcare a securității, fără alte detalii"
+
+msgid "Sensor authentication failure"
+msgstr "Eșec de autentificare a senzorului"
+
+msgid "Sensor fault"
+msgstr "Defecțiune a senzorului"
+
+msgid "Sensor hardware sabotage"
+msgstr "Sabotaj hardware al senzorului"
+
+msgid "Sensor internal data transfer error"
+msgstr "Eroare internă de transfer de date a senzorului"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Tentativă de încălcare a securității senzorului, fără alte detalii"
+
+msgid "Sensor stored data integrity error"
+msgstr "Eroare de integritate a datelor stocate în senzor"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Deschidere neautorizată a carcasei senzorului"
+
+msgid "Stored user data integrity error"
+msgstr "Eroare de integritate a datelor de utilizator stocate"
+
+msgid "Tachograph card authentication failure"
+msgstr "Eșec de autentificare a cardului tahograf"
+
+msgid "Tamper detection of GNSS"
+msgstr "Detectarea manipulării GNSS"
+
+msgid "TechnicalData"
+msgstr "Date tehnice"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Conflict de timp (GNSS vs ceasul intern al VU)"
+
+msgid "Time overlap"
+msgstr "Suprapunere în timp"
+
+msgid "Unauthorised case opening"
+msgstr "Deschidere neautorizată a carcasei"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Înlocuire neautorizată a senzorului de mișcare"
+
+msgid "VU downloaded"
+msgstr "VU descărcată"
+
+msgid "VU internal fault"
+msgstr "Defecțiune internă a VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Conflict de mișcare a vehiculului"
+
+msgid "failed"
+msgstr "eșuat"
+
+msgid "skipped"
+msgstr "omis"
+
+msgid "verified"
+msgstr "verificat"

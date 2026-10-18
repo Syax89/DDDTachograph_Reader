@@ -2071,3 +2071,240 @@ msgstr "Jugoslavia"
 
 msgid "or drop it here"
 msgstr "tai pudota tiedosto tähän"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Sijaintitiedon puuttuminen GNSS-vastaanottimesta"
+
+msgid "Activation"
+msgstr "Aktivointi"
+
+msgid "Active / on-going event or fault"
+msgstr "Aktiivinen / käynnissä oleva tapahtuma tai vika"
+
+msgid "Activities"
+msgstr "Aktiviteetit"
+
+msgid "Card conflict"
+msgstr "Korttiristiriita"
+
+msgid "Card data input integrity error"
+msgstr "Kortin tietojen syötön eheysvirhe"
+
+msgid "Card downloaded"
+msgstr "Kortti ladattu"
+
+msgid "Card fault, no further details"
+msgstr "Kortin vika, ei tarkempia tietoja"
+
+msgid "Card insertion while driving"
+msgstr "Kortti asetettu ajon aikana"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Viestintävirhe ulkoisen GNSS-laitteen kanssa"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Viestintävirhe etäkommunikointilaitteen kanssa"
+
+msgid "DetailedSpeed"
+msgstr "Yksityiskohtainen nopeus"
+
+msgid "Display"
+msgstr "Näyttö"
+
+msgid "Display fault"
+msgstr "Näytön vika"
+
+msgid "Downloading fault"
+msgstr "Latausvika"
+
+msgid "Driving without an appropriate card"
+msgstr "Ajo ilman asianmukaista korttia"
+
+msgid "EventsFaults"
+msgstr "Tapahtumat/viat"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Ulkoisen GNSS-laitteen todennusvirhe"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Ulkoisen GNSS-laitteen varmenne on vanhentunut"
+
+msgid "External GNSS facility fault"
+msgstr "Ulkoisen GNSS-laitteen vika"
+
+msgid "Ferry/Train Begin"
+msgstr "Lautta/juna — alku"
+
+msgid "Ferry/Train End"
+msgstr "Lautta/juna — loppu"
+
+msgid "Ferry/Train crossing"
+msgstr "Lautta- tai junamatka"
+
+msgid "First event/fault after the last calibration"
+msgstr "Ensimmäinen tapahtuma/vika viimeisen kalibroinnin jälkeen"
+
+msgid "First installation"
+msgstr "Ensimmäinen asennus"
+
+msgid "GNSS anomaly"
+msgstr "GNSS-poikkeama"
+
+msgid "Hardware sabotage"
+msgstr "Laitteiston sabotaasi"
+
+msgid "ITS interface fault"
+msgstr "ITS-rajapinnan vika"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Ristiriita liiketietojen ja tallennettujen kuljettajan aktiviteettitietojen välillä"
+
+msgid "Insertion of a non-valid card"
+msgstr "Virheellisen kortin asettaminen"
+
+msgid "Installation (current vehicle)"
+msgstr "Asennus (nykyinen ajoneuvo)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "GNSS-vastaanottimen sisäinen vika"
+
+msgid "Internal data transfer error"
+msgstr "Sisäinen tiedonsiirtovirhe"
+
+msgid "Internal sensor fault"
+msgstr "Anturin sisäinen vika"
+
+msgid "Last card session not correctly closed"
+msgstr "Viimeistä kortti-istuntoa ei suljettu oikein"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Viimeisin tapahtuma jonakin viimeisistä 10 päivästä, joina tapahtumia esiintyi"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Pisin tapahtuma jonakin viimeisistä 10 päivästä, joina tapahtumia esiintyi"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Vakavin tapahtuma jonakin viimeisistä 10 päivästä, joina tapahtumia esiintyi"
+
+msgid "Motion data error"
+msgstr "Liiketietovirhe"
+
+msgid "Motion sensor authentication failure"
+msgstr "Liiketunnistimen todennusvirhe"
+
+msgid "No further details"
+msgstr "Ei tarkempia tietoja"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Yksi 10 viimeisimmästä (tai viimeisestä) tapahtumasta/viasta"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Yksi viidestä pisimmästä tapahtumasta viimeisen 365 päivän aikana"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Yksi viidestä vakavimmasta tapahtumasta viimeisen 365 päivän aikana"
+
+msgid "OutOfScope Begin"
+msgstr "Soveltamisalan ulkopuolella — alku"
+
+msgid "OutOfScope End"
+msgstr "Soveltamisalan ulkopuolella — loppu"
+
+msgid "Over speeding"
+msgstr "Ylinopeus"
+
+msgid "Overview"
+msgstr "Yleiskatsaus"
+
+msgid "Periodic inspection"
+msgstr "Määräaikaistarkastus"
+
+msgid "Power supply interruption"
+msgstr "Virransyötön katkos"
+
+msgid "Printer fault"
+msgstr "Tulostimen vika"
+
+msgid "Printing"
+msgstr "Tulostus"
+
+msgid "RFU"
+msgstr "Varattu tulevaan käyttöön (RFU)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Ajopiirturin vika, ei tarkempia tietoja"
+
+msgid "Remote communication facility fault"
+msgstr "Etäkommunikointilaitteen vika"
+
+msgid "Reserved"
+msgstr "Varattu"
+
+msgid "Roadside calibration check"
+msgstr "Kalibroinnin tienvarsitarkastus"
+
+msgid "Security breach attempt, no further details"
+msgstr "Yritys turvallisuuden murtamiseksi, ei tarkempia tietoja"
+
+msgid "Sensor authentication failure"
+msgstr "Anturin todennusvirhe"
+
+msgid "Sensor fault"
+msgstr "Anturin vika"
+
+msgid "Sensor hardware sabotage"
+msgstr "Anturin laitteiston sabotaasi"
+
+msgid "Sensor internal data transfer error"
+msgstr "Anturin sisäinen tiedonsiirtovirhe"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Yritys anturin turvallisuuden murtamiseksi, ei tarkempia tietoja"
+
+msgid "Sensor stored data integrity error"
+msgstr "Anturin tallennettujen tietojen eheysvirhe"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Anturin luvaton kotelon avaaminen"
+
+msgid "Stored user data integrity error"
+msgstr "Tallennettujen käyttäjätietojen eheysvirhe"
+
+msgid "Tachograph card authentication failure"
+msgstr "Ajopiirturikortin todennusvirhe"
+
+msgid "Tamper detection of GNSS"
+msgstr "GNSS:n peukaloinnin havaitseminen"
+
+msgid "TechnicalData"
+msgstr "Tekniset tiedot"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Aikaristiriita (GNSS vs VU:n sisäinen kello)"
+
+msgid "Time overlap"
+msgstr "Aikojen päällekkäisyys"
+
+msgid "Unauthorised case opening"
+msgstr "Luvaton kotelon avaaminen"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Liiketunnistimen luvaton vaihto"
+
+msgid "VU downloaded"
+msgstr "VU ladattu"
+
+msgid "VU internal fault"
+msgstr "VU:n sisäinen vika"
+
+msgid "Vehicle motion conflict"
+msgstr "Ajoneuvon liikkeen ristiriita"
+
+msgid "failed"
+msgstr "epäonnistunut"
+
+msgid "skipped"
+msgstr "ohitettu"
+
+msgid "verified"
+msgstr "varmennettu"

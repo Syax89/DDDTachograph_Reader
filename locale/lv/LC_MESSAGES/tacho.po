@@ -2071,3 +2071,240 @@ msgstr "Dienvidslāvija"
 
 msgid "or drop it here"
 msgstr "vai nometiet failu šeit"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Atrašanās vietas informācijas trūkums no GNSS uztvērēja"
+
+msgid "Activation"
+msgstr "Aktivizēšana"
+
+msgid "Active / on-going event or fault"
+msgstr "Aktīvs / notiekošs notikums vai bojājums"
+
+msgid "Activities"
+msgstr "Aktivitātes"
+
+msgid "Card conflict"
+msgstr "Kartes konflikts"
+
+msgid "Card data input integrity error"
+msgstr "Kartes datu ievades integritātes kļūda"
+
+msgid "Card downloaded"
+msgstr "Karte lejupielādēta"
+
+msgid "Card fault, no further details"
+msgstr "Kartes bojājums, sīkāka informācija nav"
+
+msgid "Card insertion while driving"
+msgstr "Karte ievietota braukšanas laikā"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Komunikācijas kļūda ar ārējo GNSS iekārtu"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Komunikācijas kļūda ar attālās komunikācijas iekārtu"
+
+msgid "DetailedSpeed"
+msgstr "Detalizēts ātrums"
+
+msgid "Display"
+msgstr "Displejs"
+
+msgid "Display fault"
+msgstr "Displeja bojājums"
+
+msgid "Downloading fault"
+msgstr "Lejupielādes bojājums"
+
+msgid "Driving without an appropriate card"
+msgstr "Braukšana bez atbilstošas kartes"
+
+msgid "EventsFaults"
+msgstr "Notikumi/bojājumi"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Ārējās GNSS iekārtas autentifikācijas kļūda"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Ārējās GNSS iekārtas sertifikāts ir beidzies"
+
+msgid "External GNSS facility fault"
+msgstr "Ārējās GNSS iekārtas bojājums"
+
+msgid "Ferry/Train Begin"
+msgstr "Prāmis/vilciens — sākums"
+
+msgid "Ferry/Train End"
+msgstr "Prāmis/vilciens — beigas"
+
+msgid "Ferry/Train crossing"
+msgstr "Šķērsojums ar prāmi/vilcienu"
+
+msgid "First event/fault after the last calibration"
+msgstr "Pirmais notikums/bojājums pēc pēdējās kalibrēšanas"
+
+msgid "First installation"
+msgstr "Pirmā uzstādīšana"
+
+msgid "GNSS anomaly"
+msgstr "GNSS anomālija"
+
+msgid "Hardware sabotage"
+msgstr "Aparatūras sabotāža"
+
+msgid "ITS interface fault"
+msgstr "ITS saskarnes bojājums"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Neatbilstība starp kustības datiem un saglabātajiem vadītāja aktivitātes datiem"
+
+msgid "Insertion of a non-valid card"
+msgstr "Nederīgas kartes ievietošana"
+
+msgid "Installation (current vehicle)"
+msgstr "Uzstādīšana (pašreizējais transportlīdzeklis)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "GNSS uztvērēja iekšējs bojājums"
+
+msgid "Internal data transfer error"
+msgstr "Iekšēja datu pārsūtīšanas kļūda"
+
+msgid "Internal sensor fault"
+msgstr "Sensora iekšējs bojājums"
+
+msgid "Last card session not correctly closed"
+msgstr "Pēdējā kartes sesija nav pareizi aizvērta"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Pēdējais notikums vienā no pēdējām 10 dienām, kad tas notika"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Garākais notikums vienā no pēdējām 10 dienām, kad tas notika"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Vissmagākais notikums vienā no pēdējām 10 dienām, kad tas notika"
+
+msgid "Motion data error"
+msgstr "Kustības datu kļūda"
+
+msgid "Motion sensor authentication failure"
+msgstr "Kustības sensora autentifikācijas kļūda"
+
+msgid "No further details"
+msgstr "Sīkāka informācija nav"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Viens no 10 jaunākajiem (vai pēdējiem) notikumiem/bojājumiem"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Viens no 5 garākajiem notikumiem pēdējo 365 dienu laikā"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Viens no 5 vissmagākajiem notikumiem pēdējo 365 dienu laikā"
+
+msgid "OutOfScope Begin"
+msgstr "Ārpus darbības jomas — sākums"
+
+msgid "OutOfScope End"
+msgstr "Ārpus darbības jomas — beigas"
+
+msgid "Over speeding"
+msgstr "Ātruma pārsniegšana"
+
+msgid "Overview"
+msgstr "Pārskats"
+
+msgid "Periodic inspection"
+msgstr "Periodiskā pārbaude"
+
+msgid "Power supply interruption"
+msgstr "Barošanas pārtraukums"
+
+msgid "Printer fault"
+msgstr "Printera bojājums"
+
+msgid "Printing"
+msgstr "Drukāšana"
+
+msgid "RFU"
+msgstr "Rezervēts nākotnei (RFU)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Tahogrāfa bojājums, sīkāka informācija nav"
+
+msgid "Remote communication facility fault"
+msgstr "Attālās komunikācijas iekārtas bojājums"
+
+msgid "Reserved"
+msgstr "Rezervēts"
+
+msgid "Roadside calibration check"
+msgstr "Kalibrēšanas pārbaude ceļa malā"
+
+msgid "Security breach attempt, no further details"
+msgstr "Mēģinājums pārkāpt drošību, sīkāka informācija nav"
+
+msgid "Sensor authentication failure"
+msgstr "Sensora autentifikācijas kļūda"
+
+msgid "Sensor fault"
+msgstr "Sensora bojājums"
+
+msgid "Sensor hardware sabotage"
+msgstr "Sensora aparatūras sabotāža"
+
+msgid "Sensor internal data transfer error"
+msgstr "Sensora iekšēja datu pārsūtīšanas kļūda"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Mēģinājums pārkāpt sensora drošību, sīkāka informācija nav"
+
+msgid "Sensor stored data integrity error"
+msgstr "Sensora saglabāto datu integritātes kļūda"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Nesankcionēta sensora korpusa atvēršana"
+
+msgid "Stored user data integrity error"
+msgstr "Saglabāto lietotāja datu integritātes kļūda"
+
+msgid "Tachograph card authentication failure"
+msgstr "Tahogrāfa kartes autentifikācijas kļūda"
+
+msgid "Tamper detection of GNSS"
+msgstr "GNSS manipulāciju noteikšana"
+
+msgid "TechnicalData"
+msgstr "Tehniskie dati"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Laika konflikts (GNSS vs VU iekšējais pulkstenis)"
+
+msgid "Time overlap"
+msgstr "Laika pārklāšanās"
+
+msgid "Unauthorised case opening"
+msgstr "Nesankcionēta korpusa atvēršana"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Nesankcionēta kustības sensora maiņa"
+
+msgid "VU downloaded"
+msgstr "VU lejupielādēts"
+
+msgid "VU internal fault"
+msgstr "VU iekšējs bojājums"
+
+msgid "Vehicle motion conflict"
+msgstr "Transportlīdzekļa kustības konflikts"
+
+msgid "failed"
+msgstr "neizdevies"
+
+msgid "skipped"
+msgstr "izlaists"
+
+msgid "verified"
+msgstr "pārbaudīts"
