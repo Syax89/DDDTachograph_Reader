@@ -932,8 +932,8 @@ msgstr "👤  Vadītājs / kartes turētājs"
 msgid "💻  VU INFO"
 msgstr "💻  VU INFORMĀCIJA"
 
-msgid "📂  Open DDD file"
-msgstr "📂  Atvērt DDD failu"
+msgid "Open DDD file"
+msgstr "Atvērt DDD failu"
 
 msgid "📄  File Info"
 msgstr "📄  Faila informācija"
@@ -956,8 +956,8 @@ msgstr "📡  SENSORS"
 msgid "📡  Sensor"
 msgstr "📡  Sensors"
 
-msgid "📤  Export"
-msgstr "📤  Eksports"
+msgid "Export"
+msgstr "Eksports"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"

@@ -932,8 +932,8 @@ msgstr "👤  Водач / притежател на карта"
 msgid "💻  VU INFO"
 msgstr "💻  ИНФОРМАЦИЯ ЗА VU"
 
-msgid "📂  Open DDD file"
-msgstr "📂  Отваряне на DDD файл"
+msgid "Open DDD file"
+msgstr "Отваряне на DDD файл"
 
 msgid "📄  File Info"
 msgstr "📄  Информация за файла"
@@ -956,8 +956,8 @@ msgstr "📡  СЕНЗОР"
 msgid "📡  Sensor"
 msgstr "📡  Сензор"
 
-msgid "📤  Export"
-msgstr "📤  Експорт"
+msgid "Export"
+msgstr "Експорт"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"

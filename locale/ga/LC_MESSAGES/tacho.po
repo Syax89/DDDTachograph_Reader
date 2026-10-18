@@ -932,8 +932,8 @@ msgstr "👤  Tiománaí / sealbhóir an chárta"
 msgid "💻  VU INFO"
 msgstr "💻  EOLAS VU"
 
-msgid "📂  Open DDD file"
-msgstr "📂  Oscail comhad DDD"
+msgid "Open DDD file"
+msgstr "Oscail comhad DDD"
 
 msgid "📄  File Info"
 msgstr "📄  Eolas comhaid"
@@ -956,8 +956,8 @@ msgstr "📡  BRAITEOIR"
 msgid "📡  Sensor"
 msgstr "📡  Braiteoir"
 
-msgid "📤  Export"
-msgstr "📤  Easpórtáil"
+msgid "Export"
+msgstr "Easpórtáil"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"

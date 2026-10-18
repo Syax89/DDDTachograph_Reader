@@ -932,8 +932,8 @@ msgstr "👤  Kierowca / Posiadacz karty"
 msgid "💻  VU INFO"
 msgstr "💻  INFORMACJE O VU"
 
-msgid "📂  Open DDD file"
-msgstr "📂  Otwórz plik DDD"
+msgid "Open DDD file"
+msgstr "Otwórz plik DDD"
 
 msgid "📄  File Info"
 msgstr "📄  Informacje o pliku"
@@ -956,8 +956,8 @@ msgstr "📡  CZUJNIK"
 msgid "📡  Sensor"
 msgstr "📡  Czujnik"
 
-msgid "📤  Export"
-msgstr "📤  Eksport"
+msgid "Export"
+msgstr "Eksport"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"

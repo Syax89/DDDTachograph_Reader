@@ -932,8 +932,8 @@ msgstr "👤  Οδηγός / Κάτοχος κάρτας"
 msgid "💻  VU INFO"
 msgstr "💻  ΣΤΟΙΧΕΙΑ VU"
 
-msgid "📂  Open DDD file"
-msgstr "📂  Άνοιγμα αρχείου DDD"
+msgid "Open DDD file"
+msgstr "Άνοιγμα αρχείου DDD"
 
 msgid "📄  File Info"
 msgstr "📄  Στοιχεία αρχείου"
@@ -956,8 +956,8 @@ msgstr "📡  ΑΙΣΘΗΤΗΡΑΣ"
 msgid "📡  Sensor"
 msgstr "📡  Αισθητήρας"
 
-msgid "📤  Export"
-msgstr "📤  Εξαγωγή"
+msgid "Export"
+msgstr "Εξαγωγή"
 
 #, python-brace-format
 msgid "📦  {generation}{annex}"
