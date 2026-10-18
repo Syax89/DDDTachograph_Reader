@@ -2165,10 +2165,16 @@ class TachoExplorer(tk.Tk):
         export_menu.add_command(label=_("JSON (.json)"), command=self._export_json)
         self.btn_export["menu"] = export_menu
         self.btn_export.pack(side=tk.LEFT, padx=(0, 14))
-        # Language menu: native names, never translated; the chosen code is
-        # stored in the settings file and applied on the next start.
+        # Language menu: two entries only. The 34 languages live in their own
+        # submenu (they are a long list and would otherwise bury the preference
+        # below them), and the "translate file contents" choice sits under a
+        # separator so the two decisions never read as one.
         self.btn_lang = ttk.Menubutton(top, text="\U0001f310  " + LANGUAGES[self._language])
         lang_menu = tk.Menu(self.btn_lang, tearoff=0,
+                            background="#ffffff", foreground="#1c2733",
+                            activebackground="#1565c0", activeforeground="#ffffff",
+                            borderwidth=0)
+        languages = tk.Menu(lang_menu, tearoff=0,
                             background="#ffffff", foreground="#1c2733",
                             activebackground="#1565c0", activeforeground="#ffffff",
                             borderwidth=0)
@@ -2177,13 +2183,15 @@ class TachoExplorer(tk.Tk):
             # Names are never translated (each one is already in its own
             # language). 34 entries in a single column would run past the
             # bottom of a small screen, so every dozen starts a new column.
-            lang_menu.add_radiobutton(
+            languages.add_radiobutton(
                 label=name, value=code, variable=self._language_var,
                 columnbreak=1 if index and index % 12 == 0 else 0,
                 command=lambda selected=code: self._switch_language(selected))
-        # Below the languages: one independent preference. It does not change
-        # the UI language — it decides whether the *values decoded from the
-        # file* are translated too, or shown exactly as the file names them.
+        lang_menu.add_cascade(label=_("Language"), menu=languages)
+        lang_menu.add_separator()
+        # Independent preference: it does not change the UI language — it
+        # decides whether the *values decoded from the file* are translated
+        # too, or shown exactly as the file names them.
         self._translate_data_var = tk.BooleanVar(value=self._translate_data)
         lang_menu.add_checkbutton(
             label=_("Translate file contents"), variable=self._translate_data_var,
