@@ -142,6 +142,11 @@ def _fmt_dict(d):
 DATA_TEXT_KEYS = frozenset({"description", "condition", "section", "status", "purpose"})
 
 
+def _bool_text(value):
+    """A boolean as the word the UI shows (``Yes``/``No``, translated)."""
+    return _("Yes") if value else _("No")
+
+
 def fmt_val(v, key=None):
     """Render any parser value for display: booleans as Yes/No, floats
     trimmed, large ints with thousands spaces, 0xFFFFFF sentinels as N/A,
@@ -151,6 +156,10 @@ def fmt_val(v, key=None):
     Labels *derived* from the file (the nation name, the code label) go through
     ``ui_text.data_text``, so they follow the "translate file contents"
     preference; everything else is the value itself."""
+    if isinstance(v, bool):
+        # fmt_scalar answers "Yes"/"No" for exports, which stay English; the
+        # window shows the translated word.
+        return _bool_text(v)
     if isinstance(v, dict):
         return _fmt_dict(v)
     if isinstance(v, list):
@@ -485,6 +494,9 @@ class DataTable(ttk.Frame):
             else:
                 tag = "even" if i % 2 == 0 else "odd"
                 vals = list(r)
+            # Summary rows are built with raw values; a bool must not reach the
+            # screen as Python's "True"/"False".
+            vals = [_bool_text(v) if isinstance(v, bool) else v for v in vals]
             self.tv.insert("", tk.END, values=vals, tags=(tag,))
 
     def _schedule_filter(self):

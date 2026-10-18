@@ -2308,3 +2308,9 @@ msgstr "anashkaluar"
 
 msgid "verified"
 msgstr "verifikuar"
+
+msgid "Yes"
+msgstr "Po"
+
+msgid "No"
+msgstr "Jo"

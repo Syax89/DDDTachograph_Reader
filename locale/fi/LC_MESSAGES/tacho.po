@@ -2308,3 +2308,9 @@ msgstr "ohitettu"
 
 msgid "verified"
 msgstr "varmennettu"
+
+msgid "Yes"
+msgstr "Kyllä"
+
+msgid "No"
+msgstr "Ei"

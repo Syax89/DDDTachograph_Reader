@@ -2308,3 +2308,9 @@ msgstr "παραλείφθηκε"
 
 msgid "verified"
 msgstr "επαληθεύτηκε"
+
+msgid "Yes"
+msgstr "Ναι"
+
+msgid "No"
+msgstr "Όχι"

@@ -2308,3 +2308,9 @@ msgstr "preskočené"
 
 msgid "verified"
 msgstr "overené"
+
+msgid "Yes"
+msgstr "Áno"
+
+msgid "No"
+msgstr "Nie"

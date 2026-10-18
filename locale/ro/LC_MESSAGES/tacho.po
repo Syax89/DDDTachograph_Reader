@@ -2308,3 +2308,9 @@ msgstr "omis"
 
 msgid "verified"
 msgstr "verificat"
+
+msgid "Yes"
+msgstr "Da"
+
+msgid "No"
+msgstr "Nu"

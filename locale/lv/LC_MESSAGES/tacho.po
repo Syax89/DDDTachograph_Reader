@@ -2308,3 +2308,9 @@ msgstr "izlaists"
 
 msgid "verified"
 msgstr "pārbaudīts"
+
+msgid "Yes"
+msgstr "Jā"
+
+msgid "No"
+msgstr "Nē"

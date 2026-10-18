@@ -2308,3 +2308,9 @@ msgstr "пропущено"
 
 msgid "verified"
 msgstr "проверено"
+
+msgid "Yes"
+msgstr "Да"
+
+msgid "No"
+msgstr "Нет"

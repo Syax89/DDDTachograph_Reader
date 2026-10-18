@@ -2308,3 +2308,9 @@ msgstr "praleista"
 
 msgid "verified"
 msgstr "patikrinta"
+
+msgid "Yes"
+msgstr "Taip"
+
+msgid "No"
+msgstr "Ne"

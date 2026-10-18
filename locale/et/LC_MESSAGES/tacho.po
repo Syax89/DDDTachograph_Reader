@@ -2308,3 +2308,9 @@ msgstr "vahele jäetud"
 
 msgid "verified"
 msgstr "kontrollitud"
+
+msgid "Yes"
+msgstr "Jah"
+
+msgid "No"
+msgstr "Ei"

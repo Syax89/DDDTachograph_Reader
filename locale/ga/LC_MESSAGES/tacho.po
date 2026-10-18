@@ -2308,3 +2308,9 @@ msgstr "scipeáilte"
 
 msgid "verified"
 msgstr "fíoraithe"
+
+msgid "Yes"
+msgstr "Tá"
+
+msgid "No"
+msgstr "Níl"

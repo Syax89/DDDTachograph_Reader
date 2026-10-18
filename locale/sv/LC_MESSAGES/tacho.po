@@ -2308,3 +2308,9 @@ msgstr "överhoppad"
 
 msgid "verified"
 msgstr "verifierad"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "No"
+msgstr "Nej"

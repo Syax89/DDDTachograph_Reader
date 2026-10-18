@@ -2308,3 +2308,9 @@ msgstr "прапушчана"
 
 msgid "verified"
 msgstr "праверана"
+
+msgid "Yes"
+msgstr "Так"
+
+msgid "No"
+msgstr "Не"
