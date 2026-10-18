@@ -2009,6 +2009,9 @@ msgstr "Kuzey Makedonya"
 msgid "Norway"
 msgstr "Norveç"
 
+msgid "Nothing to open in that drop"
+msgstr "Bu bırakmada açılacak bir şey yok"
+
 msgid "Poland"
 msgstr "Polonya"
 
@@ -2026,6 +2029,9 @@ msgstr "San Marino"
 
 msgid "Serbia"
 msgstr "Sırbistan"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Birden fazla dosya bırakıldı — ilki açıldı"
 
 msgid "Slovakia"
 msgstr "Slovakya"
@@ -2062,3 +2068,6 @@ msgstr "Dünya"
 
 msgid "Yugoslavia"
 msgstr "Yugoslavya"
+
+msgid "or drop it here"
+msgstr "veya dosyayı buraya bırakın"

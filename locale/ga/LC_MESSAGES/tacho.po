@@ -2009,6 +2009,9 @@ msgstr "An Mhacadóin Thuaidh"
 msgid "Norway"
 msgstr "An Iorua"
 
+msgid "Nothing to open in that drop"
+msgstr "Níl aon rud le hoscaílt sa scaoileadh sin"
+
 msgid "Poland"
 msgstr "An Pholainn"
 
@@ -2026,6 +2029,9 @@ msgstr "San Mairíne"
 
 msgid "Serbia"
 msgstr "An tSeirbia"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Scaoileadh roinnt comhad — osclaíodh an chéad cheann"
 
 msgid "Slovakia"
 msgstr "An tSlóvaic"
@@ -2062,3 +2068,6 @@ msgstr "An Domhan"
 
 msgid "Yugoslavia"
 msgstr "An Iúgslaiv"
+
+msgid "or drop it here"
+msgstr "nó scaoil an comhad anseo"

@@ -29,6 +29,14 @@
   exists are hidden without being forgotten. The history is stored next to the
   language preference in `settings.json` and is rebuilt every time the empty
   state appears; a failed open is never recorded.
+- **Drag & drop**: a `.ddd` file dropped anywhere on the window is opened
+  through the very same entry point as the file dialog, so the busy guard,
+  recent-files recording and parse-error reporting are shared; dropping several
+  files opens the first and says so in the status bar, dropping a folder (or a
+  file that no longer exists) opens nothing and says why. `tkinterdnd2` is
+  optional: without it — or without a `tkdnd` binary for the platform — the
+  window starts with drag & drop silently disabled and no "or drop it here"
+  hint, everything else unchanged.
 
 ### ♻️ Refactoring
 

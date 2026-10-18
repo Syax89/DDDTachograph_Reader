@@ -2009,6 +2009,9 @@ msgstr "Macedonia Północna"
 msgid "Norway"
 msgstr "Norwegia"
 
+msgid "Nothing to open in that drop"
+msgstr "Brak pliku do otwarcia w tym upuszczeniu"
+
 msgid "Poland"
 msgstr "Polska"
 
@@ -2026,6 +2029,9 @@ msgstr "San Marino"
 
 msgid "Serbia"
 msgstr "Serbia"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Upuszczono kilka plików — otwarto pierwszy"
 
 msgid "Slovakia"
 msgstr "Słowacja"
@@ -2062,3 +2068,6 @@ msgstr "Świat"
 
 msgid "Yugoslavia"
 msgstr "Jugosławia"
+
+msgid "or drop it here"
+msgstr "albo przeciągnij plik tutaj"

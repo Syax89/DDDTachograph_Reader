@@ -5,3 +5,6 @@ pyinstaller~=6.22
 cryptography~=50.0
 openpyxl~=3.1
 reportlab~=5.0
+# Optional at runtime: dropping a .ddd file onto the window. Without it (or
+# without its tkdnd binary for the platform) the GUI starts with DnD disabled.
+tkinterdnd2~=0.6

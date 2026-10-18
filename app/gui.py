@@ -16,6 +16,7 @@ import sys
 import re
 import json
 import queue
+import functools
 import threading
 import traceback
 import logging
@@ -1980,6 +1981,47 @@ def _condition_label(cond):
     return m.get(str(cond), _("Condition: {condition}").format(condition=cond))
 
 
+# ── Drag & drop (optional) ───────────────────────────────────────────────
+
+@functools.lru_cache(maxsize=1)
+def _drop_splitter():
+    """Tcl's own list parser, without a display (``tk.Tcl`` opens no window).
+
+    A dropped payload is a *Tcl list*, not whitespace-separated text: a path
+    with a space arrives braced (``{/a b/c.ddd}``) and Windows paths carry
+    backslashes, so only Tcl's rules can take it apart. The GUI passes
+    ``self.tk.splitlist``; this display-less interpreter is the same parser for
+    the callers that have no root (tests, batch tools).
+    """
+    return tk.Tcl().splitlist
+
+
+def dropped_paths(data, split=None, isfile=None):
+    """The existing regular files among a ``<<Drop>>`` payload, in drop order.
+
+    ``data`` is tkdnd's ``%D`` substitution — the raw Tcl list of the dropped
+    paths — and this is the only place that interprets it. Directories and
+    paths that no longer exist are dropped: a drop must never open something
+    that is not a readable file. Nothing usable yields ``[]``.
+
+    ``split`` (a Tcl list splitter) and ``isfile`` (the existence predicate) are
+    injectable so the parsing can be tested without a display and without
+    touching the disk.
+    """
+    if not isinstance(data, str) or not data.strip():
+        return []
+    split = split or _drop_splitter()
+    isfile = isfile or os.path.isfile
+    try:
+        candidates = split(data)
+    except Exception:  # unbalanced braces/quotes: not a list we can use
+        _log.debug("dropped payload is not a Tcl list: %r", data)
+        return []
+    if isinstance(candidates, str):
+        candidates = [candidates]
+    return [path for path in candidates if isinstance(path, str) and path and isfile(path)]
+
+
 # ── Main application ─────────────────────────────────────────────────────
 
 def _resource_path(rel):
@@ -2137,11 +2179,81 @@ class TachoExplorer(tk.Tk):
         self._parse_queue = queue.Queue()
         self._export_queue = queue.Queue()
 
+        # Optional feature, registered before the UI is built: the empty state
+        # only advertises a drop target when the registration really happened.
+        self._dnd_enabled = False
+        self._drop_command = None
+        self.drop_hint = None
+        self._enable_dnd()
+
         self._build_ui()
         try:
             self.protocol("WM_DELETE_WINDOW", self._on_close)
         except Exception:
             _log.debug("WM_DELETE_WINDOW not supported")
+
+    # ── Drag & drop (optional) ──────────────────────────────
+
+    def _enable_dnd(self):
+        """Register this window as a drop target for files, if tkdnd loads.
+
+        ``tkinterdnd2`` is optional *and* its ``tkdnd`` extension is a native
+        library that can fail to load (unsupported platform, Tcl build, frozen
+        bundle without the binaries). Every failure is one debug log line and a
+        no-op: the window and every other feature keep working, only drag &
+        drop is missing.
+        """
+        try:
+            from tkinterdnd2 import DND_FILES, TkinterDnD
+
+            version = TkinterDnD._require(self)  # loads tkdnd into this interp
+            # The window is a tk.Tk, not a tkinter.BaseWidget, so the DnDWrapper
+            # mixin methods the package injects there are absent on the root
+            # (verified on tkdnd 2.10.3). These are the same two Tcl commands
+            # the mixin issues, plus the binding it would create.
+            self._drop_command = self.register(self._on_drop)
+            self.tk.call("tkdnd::drop_target", "register", self._w, (DND_FILES,))
+            # tkdnd substitutes %D in the bind script and quotes the payload as
+            # a single word, so the handler always receives one Tcl list string.
+            self.tk.call("bind", self._w, "<<Drop>>",
+                         f"{self._drop_command} %D")
+        except Exception as exc:  # ImportError, RuntimeError, TclError, ...
+            _log.debug("drag & drop not available: %s", exc)
+            return
+        self._dnd_enabled = True
+        _log.debug("drag & drop enabled (tkdnd %s)", version)
+
+    def _on_drop(self, data="", *extra):
+        """``<<Drop>>`` handler: open the first dropped file, like the picker.
+
+        ``data`` is the whole ``%D`` payload, one Tcl list. A tkdnd build that
+        handed the payload over as several Tcl words would land in ``extra``:
+        each word is then treated as its own payload, so the drop is not lost
+        to an argument-count error out of the Tcl command. (A path that was
+        split on its own space cannot be recovered from that — it simply is not
+        found, and the status bar says nothing could be opened.)
+
+        Returns the action tkdnd expects. It is always ``copy``: the dropped
+        file is only ever read, never moved or deleted, whatever the drag
+        source's default action was. Dropping several files opens the first one
+        through the same entry point as the dialog, so recent files, the busy
+        guard and the error reporting are shared, not reimplemented.
+        """
+        if self._parsing:
+            return "copy"
+        paths = []
+        for part in (data, *extra):
+            paths.extend(dropped_paths(part, split=self.tk.splitlist))
+        if not paths:
+            self.status.config(text=_("Nothing to open in that drop"))
+            return "copy"
+        self._start_parse(paths[0])
+        if len(paths) > 1:
+            # After _start_parse: it writes its own "Parsing ..." status, which
+            # a note written first would never be seen under.
+            self.status.config(
+                text=_("Several files dropped \u2014 opened the first one"))
+        return "copy"
 
     # ── Layout ──────────────────────────────────────────────
 
@@ -2277,6 +2389,14 @@ class TachoExplorer(tk.Tk):
         ttk.Button(centre, text=_("\U0001f4c2  Open DDD file"),
                    command=self._open_file).pack(pady=(_px(12), _px(20)))
 
+        # Advertised only when the drop target really registered: a hint that
+        # nothing can honour is worse than no hint at all.
+        if self._dnd_enabled:
+            self.drop_hint = ttk.Label(centre, text=_("or drop it here"),
+                                       font=FONT_SMALL, foreground=MUTED,
+                                       anchor=tk.CENTER, wraplength=_px(420))
+            self.drop_hint.pack(fill=tk.X)
+
         # "Recent files" is filled by _refresh_recent_files(); with no history
         # (or nothing left on disk) the whole section stays hidden.
         self.recent_section = ttk.Frame(centre)
@@ -2291,7 +2411,12 @@ class TachoExplorer(tk.Tk):
         # German/Finnish/Greek titles and long paths are wider than the pane at
         # the minimum window size, so every text block wraps to the space it
         # actually has instead of pushing the sash or being clipped.
-        self._wrap_labels = [title, self.recent_heading]
+        self._wrap_labels = [title]
+        if self.drop_hint is not None:
+            self._wrap_labels.append(self.drop_hint)
+        self._wrap_labels.append(self.recent_heading)
+        # What comes after this is rebuilt by _refresh_recent_files().
+        self._fixed_wrap_labels = len(self._wrap_labels)
         outer.bind("<Configure>", self._wrap_empty_state)
         return outer
 
@@ -2328,7 +2453,7 @@ class TachoExplorer(tk.Tk):
         """
         for child in self.recent_list.winfo_children():
             child.destroy()
-        del self._wrap_labels[2:]  # the rows about to be rebuilt
+        del self._wrap_labels[self._fixed_wrap_labels:]  # the rows being rebuilt
         paths = [path for path in saved_recent_files() if os.path.isfile(path)]
         if not paths:
             self.recent_section.pack_forget()

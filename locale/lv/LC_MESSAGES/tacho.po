@@ -2009,6 +2009,9 @@ msgstr "Ziemeļmaķedonija"
 msgid "Norway"
 msgstr "Norvēģija"
 
+msgid "Nothing to open in that drop"
+msgstr "Šajā nomešanā nav ko atvērt"
+
 msgid "Poland"
 msgstr "Polija"
 
@@ -2026,6 +2029,9 @@ msgstr "Sanmarīno"
 
 msgid "Serbia"
 msgstr "Serbija"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Nomesti vairāki faili — atvērts pirmais"
 
 msgid "Slovakia"
 msgstr "Slovākija"
@@ -2062,3 +2068,6 @@ msgstr "Pasaule"
 
 msgid "Yugoslavia"
 msgstr "Dienvidslāvija"
+
+msgid "or drop it here"
+msgstr "vai nometiet failu šeit"

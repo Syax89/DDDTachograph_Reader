@@ -2009,6 +2009,9 @@ msgstr "Північна Македонія"
 msgid "Norway"
 msgstr "Норвегія"
 
+msgid "Nothing to open in that drop"
+msgstr "У цьому перетягуванні немає файлу для відкриття"
+
 msgid "Poland"
 msgstr "Польща"
 
@@ -2026,6 +2029,9 @@ msgstr "Сан-Марино"
 
 msgid "Serbia"
 msgstr "Сербія"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Перетягнуто кілька файлів — відкрито перший"
 
 msgid "Slovakia"
 msgstr "Словаччина"
@@ -2062,3 +2068,6 @@ msgstr "Світ"
 
 msgid "Yugoslavia"
 msgstr "Югославія"
+
+msgid "or drop it here"
+msgstr "або перетягніть файл сюди"

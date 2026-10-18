@@ -2009,6 +2009,9 @@ msgstr "Pohjois-Makedonia"
 msgid "Norway"
 msgstr "Norja"
 
+msgid "Nothing to open in that drop"
+msgstr "Tässä pudotuksessa ei ole avattavaa tiedostoa"
+
 msgid "Poland"
 msgstr "Puola"
 
@@ -2026,6 +2029,9 @@ msgstr "San Marino"
 
 msgid "Serbia"
 msgstr "Serbia"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Pudotettiin useita tiedostoja — avattiin ensimmäinen"
 
 msgid "Slovakia"
 msgstr "Slovakia"
@@ -2062,3 +2068,6 @@ msgstr "Maailma"
 
 msgid "Yugoslavia"
 msgstr "Jugoslavia"
+
+msgid "or drop it here"
+msgstr "tai pudota tiedosto tähän"

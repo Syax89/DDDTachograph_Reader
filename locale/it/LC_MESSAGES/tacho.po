@@ -2009,6 +2009,9 @@ msgstr "Macedonia del Nord"
 msgid "Norway"
 msgstr "Norvegia"
 
+msgid "Nothing to open in that drop"
+msgstr "Niente da aprire in questo trascinamento"
+
 msgid "Poland"
 msgstr "Polonia"
 
@@ -2026,6 +2029,9 @@ msgstr "San Marino"
 
 msgid "Serbia"
 msgstr "Serbia"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Trascinati più file — aperto il primo"
 
 msgid "Slovakia"
 msgstr "Slovacchia"
@@ -2062,3 +2068,6 @@ msgstr "Mondo"
 
 msgid "Yugoslavia"
 msgstr "Jugoslavia"
+
+msgid "or drop it here"
+msgstr "oppure trascina qui il file"

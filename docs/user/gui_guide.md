@@ -41,6 +41,13 @@ its name in bold and its folder underneath. Clicking one reopens it. Entries
 whose file is no longer there (an unplugged USB stick, a deleted download) are
 hidden until it comes back; a file that fails to parse is never added.
 
+When drag & drop is available, a muted **or drop it here** line sits under the
+button: dropping a file on the window opens it exactly like the dialog does
+(folders and files that no longer exist open nothing and the status bar says
+so; dropping several files opens the first one). If the optional
+`tkinterdnd2` package or its platform binary is missing, the hint is not shown
+and everything else works unchanged.
+
 ### Integrity Status
 
 The integrity banner stays quiet when a file verifies cleanly. It only appears when there is something worth your attention, and clicking it opens a details popup covering:

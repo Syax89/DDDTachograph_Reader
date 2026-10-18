@@ -2009,6 +2009,9 @@ msgstr "Il-Maċedonja ta' Fuq"
 msgid "Norway"
 msgstr "In-Norveġja"
 
+msgid "Nothing to open in that drop"
+msgstr "M'hemm xejn x'tiftaħ f'dan it-twaqqigħ"
+
 msgid "Poland"
 msgstr "Il-Polonja"
 
@@ -2026,6 +2029,9 @@ msgstr "San Marino"
 
 msgid "Serbia"
 msgstr "Is-Serbja"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Twaqqgħu diversi fajls — infetaħ l-ewwel wieħed"
 
 msgid "Slovakia"
 msgstr "Is-Slovakkja"
@@ -2062,3 +2068,6 @@ msgstr "Id-Dinja"
 
 msgid "Yugoslavia"
 msgstr "Il-Jugoslavja"
+
+msgid "or drop it here"
+msgstr "jew itfa' l-fajl hawn"

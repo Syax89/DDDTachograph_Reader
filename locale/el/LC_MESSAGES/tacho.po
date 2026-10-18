@@ -2009,6 +2009,9 @@ msgstr "Βόρεια Μακεδονία"
 msgid "Norway"
 msgstr "Νορβηγία"
 
+msgid "Nothing to open in that drop"
+msgstr "Δεν υπάρχει αρχείο για άνοιγμα σε αυτή την απόθεση"
+
 msgid "Poland"
 msgstr "Πολωνία"
 
@@ -2026,6 +2029,9 @@ msgstr "Σαν Μαρίνο"
 
 msgid "Serbia"
 msgstr "Σερβία"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Αποθέσηκαν πολλά αρχεία — άνοιξε το πρώτο"
 
 msgid "Slovakia"
 msgstr "Σλοβακία"
@@ -2062,3 +2068,6 @@ msgstr "Κόσμος"
 
 msgid "Yugoslavia"
 msgstr "Γιουγκοσλαβία"
+
+msgid "or drop it here"
+msgstr "ή σύρετε το αρχείο εδώ"

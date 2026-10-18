@@ -2009,6 +2009,9 @@ msgstr "Maqedonia e Veriut"
 msgid "Norway"
 msgstr "Norvegjia"
 
+msgid "Nothing to open in that drop"
+msgstr "Nuk ka asgjë për të hapur në këtë lëshim"
+
 msgid "Poland"
 msgstr "Polonia"
 
@@ -2026,6 +2029,9 @@ msgstr "San Marino"
 
 msgid "Serbia"
 msgstr "Serbia"
+
+msgid "Several files dropped — opened the first one"
+msgstr "U lëshuan disa skedarë — u hap i pari"
 
 msgid "Slovakia"
 msgstr "Sllovakia"
@@ -2062,3 +2068,6 @@ msgstr "Bota"
 
 msgid "Yugoslavia"
 msgstr "Jugosllavia"
+
+msgid "or drop it here"
+msgstr "ose lëshoje skedarin këtu"
