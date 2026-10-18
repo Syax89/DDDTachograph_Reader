@@ -179,7 +179,9 @@ _NOW_DRIVER = {
 }
 
 
-SUMMARY_LABEL = tr("\U0001f4cb  Summary")
+#: The overview node's label. Plain text: the icon in front of it is a row
+#: image from the commissioned set (app/icons.py), not a character.
+SUMMARY_LABEL = tr("Summary")
 
 
 def _populate_tree_sections(data):

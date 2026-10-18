@@ -1,12 +1,18 @@
-"""The top toolbar's controls are text-only (portability, not a redesign).
+"""The top toolbar's controls carry a PNG icon and a plain-text label.
 
 The Open/Export buttons used to carry a decorated glyph in front of their label
 (``📂``/``📤``) and the Language button a globe (``🌐``). Those code points are
 drawn by a *platform* font: where the fallback is missing the glyph renders as
 an empty box or a blank gap of a few pixels, so the same build looks different
 on Windows, macOS and Linux — and on a minimal Linux desktop the icon simply
-disappears. The three controls now show plain text, and the empty-state Open
-button repeats the top bar's label without the folder glyph.
+disappears. The controls therefore went text-only for one release;
+they now lead with an image from the commissioned icon set
+(``assets/icons/png/20/toolbar-*.png``, drawn by ``app/icons.py``) and keep the
+plain label beside it. An image is bytes, not a font lookup, so it cannot
+disappear that way — and the same set is what the tree rows use.
+
+So: no decorated *glyph* in any label, an icon *image* on all three controls,
+and the empty-state Open button still repeats the top bar's label without one.
 
 What must *not* change is pinned here too: the Open button still runs
 ``_open_file``, Export is still a Menubutton that starts disabled and keeps its
@@ -110,6 +116,24 @@ def test_no_toolbar_control_carries_a_decoration_glyph(explorer):
              if "text" in child.keys()]
     assert texts, "the toolbar should have labelled children"
     assert not {text for text in texts if _has_decoration(text)}
+
+
+def test_every_toolbar_control_carries_a_20px_icon_and_keeps_its_text(explorer):
+    """The icon is an image in front of the label, not a character in it."""
+    from app import icons
+
+    for widget, name in ((explorer.btn_open, "toolbar-open"),
+                         (explorer.btn_export, "toolbar-export"),
+                         (explorer.btn_lang, "toolbar-language")):
+        expected = icons.icon(name, 20, master=widget)
+        assert expected is not None, f"{name} is missing from the set"
+        # `cget("image")` hands back a Tcl list (('pyimage3',)), not a string.
+        value = widget.cget("image")
+        carried = str(value[0]) if isinstance(value, (tuple, list)) else str(value)
+        assert carried == str(expected), widget
+        assert expected.width() == 20 and expected.height() == 20
+        assert str(widget.cget("compound")) == "left"
+        assert widget.cget("text"), "the label stays: the icon only leads it"
 
 
 def test_language_button_shows_only_the_native_name(explorer):

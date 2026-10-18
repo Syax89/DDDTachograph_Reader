@@ -68,7 +68,10 @@ def test_cli_returns_failure_and_does_not_export_parse_errors(tmp_path, monkeypa
 
     assert error.value.code == 1
     assert not destination.exists()
-    assert "Parsing error: broken parser" in capsys.readouterr().err
+    # The CLI prefixes diagnostics with a word instead of a glyph: a terminal
+    # has no icon set, and the emoji it used to print was drawn by whatever
+    # console font was installed.
+    assert "Error: parsing failed: broken parser" in capsys.readouterr().err
 
 
 def test_cli_module_returns_nonzero_for_missing_file(tmp_path):
@@ -81,7 +84,7 @@ def test_cli_module_returns_nonzero_for_missing_file(tmp_path):
     )
 
     assert completed.returncode == 1
-    assert "File not found" in completed.stderr
+    assert "Error: file not found" in completed.stderr
 
 
 def test_smoke_check_rejects_structured_parse_error(monkeypatch, tmp_path):

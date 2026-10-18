@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% от файла"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Изтича след {days} дни"
+msgid "  Due in {days} days"
+msgstr "  Изтича след {days} дни"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ ИЗТЕКЛА (преди {days} дни)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  ИЗТЕКЛА (преди {days} дни)"
 
 msgid "# Drivers"
 msgstr "# Водачи"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s записани | {gaps} вътрешни пропуск
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} реда · {columns} колони"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Двойно кликване за пълни подробности"
+msgid "Double-click for full details"
+msgstr "Двойно кликване за пълни подробности"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Изваждане"
@@ -892,106 +892,100 @@ msgstr "▲ Изваждане"
 msgid "▼ Insertion"
 msgstr "▼ Поставяне"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  ПОВРЕДЕН / ЧАСТИЧЕН ФАЙЛ"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "ПОВРЕДЕН / ЧАСТИЧЕН ФАЙЛ"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  ПОВРЕДЕНИ СЕКЦИИ (данните са отхвърлени)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "ПОВРЕДЕНИ СЕКЦИИ (данните са отхвърлени)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Откази на декодера"
+msgid "Decoder Failures"
+msgstr "Откази на декодера"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  ТОЗИ ФАЙЛ Е НЕПЪЛЕН ИЛИ ПОВРЕДЕН"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "ТОЗИ ФАЙЛ Е НЕПЪЛЕН ИЛИ ПОВРЕДЕН"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} предупреждения за цялостта — кликнете за подробности"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} предупреждения за цялостта — кликнете за подробности"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  СЕКЦИИТЕ СА НАЛИЧНИ"
+msgid "SECTIONS PRESENT"
+msgstr "СЕКЦИИТЕ СА НАЛИЧНИ"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  ЛИПСВАТ ЗАДЪЛЖИТЕЛНИ СЕКЦИИ"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "ЛИПСВАТ ЗАДЪЛЖИТЕЛНИ СЕКЦИИ"
 
-msgid "❌  Parse error"
-msgstr "❌  Грешка при анализ"
+msgid "Parse error"
+msgstr "Грешка при анализ"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Отрязан (не достигна края на файла)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Отрязан (не достигна края на файла)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Непълни сертификати"
+msgid "CARDHOLDER"
+msgstr "ПРИТЕЖАТЕЛ НА КАРТА"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  ПРИТЕЖАТЕЛ НА КАРТА"
+msgid "Driver / Cardholder"
+msgstr "Водач / притежател на карта"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Водач / притежател на карта"
-
-msgid "💻  VU INFO"
-msgstr "💻  ИНФОРМАЦИЯ ЗА VU"
+msgid "VU INFO"
+msgstr "ИНФОРМАЦИЯ ЗА VU"
 
 msgid "Open DDD file"
 msgstr "Отваряне на DDD файл"
 
-msgid "📄  File Info"
-msgstr "📄  Информация за файла"
+msgid "File Info"
+msgstr "Информация за файла"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  ОБХВАТ НА ДАТИТЕ"
+msgid "DATE RANGE"
+msgstr "ОБХВАТ НА ДАТИТЕ"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  ПЪЛНОТА"
+msgid "COMPLETENESS"
+msgstr "ПЪЛНОТА"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  ПАРАМЕТРИ"
+msgid "PARAMETERS"
+msgstr "ПАРАМЕТРИ"
 
-msgid "📊  STATISTICS"
-msgstr "📊  СТАТИСТИКА"
+msgid "STATISTICS"
+msgstr "СТАТИСТИКА"
 
-msgid "📡  SENSOR"
-msgstr "📡  СЕНЗОР"
+msgid "SENSOR"
+msgstr "СЕНЗОР"
 
-msgid "📡  Sensor"
-msgstr "📡  Сензор"
+msgid "Sensor"
+msgstr "Сензор"
 
 msgid "Export"
 msgstr "Експорт"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation} {annex}"
+msgid "{generation}{annex}"
+msgstr "{generation} {annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  ПОДПИСИ"
+msgid "SIGNATURES"
+msgstr "ПОДПИСИ"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Сигурност и сертификати"
+msgid "Security & Certificates"
+msgstr "Сигурност и сертификати"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  ТЕКУЩО ЗАКЛЮЧВАНЕ"
+msgid "CURRENT LOCK"
+msgstr "ТЕКУЩО ЗАКЛЮЧВАНЕ"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  ТЕКУЩО ЗАКЛЮЧВАНЕ"
+msgid "ASSOCIATED VEHICLE"
+msgstr "СВЪРЗАНО ПРЕВОЗНО СРЕДСТВО"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  СВЪРЗАНО ПРЕВОЗНО СРЕДСТВО"
+msgid "VEHICLE"
+msgstr "ПРЕВОЗНО СРЕДСТВО"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  ПРЕВОЗНО СРЕДСТВО"
+msgid "Vehicle"
+msgstr "Превозно средство"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Превозно средство"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "ВЪЗСТАНОВЕНО ОТ ПОВРЕДЕНИ ДАННИ"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  ВЪЗСТАНОВЕНО ОТ ПОВРЕДЕНИ ДАННИ"
+msgid "Raw / Unparsed Data"
+msgstr "Сурови / неанализирани данни"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Сурови / неанализирани данни"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  ДАННИ НА КАРТАТА"
+msgid "CARD DETAILS"
+msgstr "ДАННИ НА КАРТАТА"
 
 msgid "Additional Info"
 msgstr "Допълнителни данни"
@@ -1488,8 +1482,8 @@ msgstr "Сервизна карта"
 msgid "Workshop Card Expiry"
 msgstr "Изтичане на сервизната карта"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Поколение 1  [Приложение 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Поколение 1  [Приложение 1B]"
 
 msgid "Activity Chart"
 msgstr "Графика на дейността"
@@ -2384,11 +2378,8 @@ msgstr "Дневно шофиране {driven} — ограничение {limit
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Непрекъснато шофиране {driven} без почивка от {pause} мин — ограничение {limit}"
 
-msgid "📋  Summary"
-msgstr "📋  Обобщение"
-
-msgid "📄  FILE"
-msgstr "📄  ФАЙЛ"
+msgid "FILE"
+msgstr "ФАЙЛ"
 
 msgid "  Filename"
 msgstr "  Име на файла"
@@ -2402,8 +2393,8 @@ msgstr "  Обхванат период"
 msgid "{first} → {last}"
 msgstr "{first} → {last}"
 
-msgid "📊  TOTALS"
-msgstr "📊  ОБЩО"
+msgid "TOTALS"
+msgstr "ОБЩО"
 
 msgid "  Drive"
 msgstr "  Управление"
@@ -2417,14 +2408,14 @@ msgstr "  Почивка"
 msgid "  Available"
 msgstr "  На разположение"
 
-msgid "⏱️  DRIVING-TIME RULES"
-msgstr "⏱️  ПРАВИЛА ЗА ВРЕМЕ НА ШОФИРАНЕ"
+msgid "DRIVING-TIME RULES"
+msgstr "ПРАВИЛА ЗА ВРЕМЕ НА ШОФИРАНЕ"
 
 msgid "  Days flagged"
 msgstr "  Дни с нарушения"
 
-msgid "🔒  INTEGRITY"
-msgstr "🔒  ЦЯЛОСТНОСТ"
+msgid "INTEGRITY"
+msgstr "ЦЯЛОСТНОСТ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Покритие по байтове"

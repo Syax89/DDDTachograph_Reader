@@ -62,19 +62,19 @@ Possible signature outcomes include **Verified**, partial variants (e.g. *Verifi
 
 ## Section Tree (Left Pane)
 
-The tree organizes all parsed data into sections. Clicking a section shows its records (as a table or chart) on the right. Typical top-level sections:
+The tree organizes all parsed data into sections. Clicking a section shows its records (as a table or chart) on the right. Every node carries an icon from the application's own monochrome set (the same drawing on Windows, macOS and Linux), so a long list of sections can be told apart at a glance. Typical top-level sections:
 
 | Section | Contents |
 |---------|----------|
-| **📋 Summary** | The view a file opens on (always the first node): file name and the period it covers, driver and/or vehicle, activity totals, the days flagged by the driving-time rules, and integrity |
+| **Summary** | The view a file opens on (always the first node): file name and the period it covers, driver and/or vehicle, activity totals, the days flagged by the driving-time rules, and integrity |
 | **File Info** | File name, origin (Driver Card / Vehicle Unit, including "from VU download"), generation, integrity, decoder failures |
-| **👤 Driver / Cardholder** | Card holder identity (driver card files) |
-| **🚚 Vehicle** | VIN, plate, registration nation, tachograph (next calibration, tyre size, authorised speed) |
-| **📊 Activity & Usage** | Daily activities (day-by-day hierarchy with charts), vehicles used, events, faults, places, calibrations, control activities, and more |
-| **🛰️ G2.2 — Smart V2** | GNSS accumulated driving, GNSS places, border crossings, load/unload records, load sensor, trailers |
-| **🚚 Vehicle Unit (VU)** | VU identification, sensor pairings, card insertions/withdrawals, time adjustments, company locks, downloads, power interruptions, overspeeding control, ITS consents, detailed speed |
-| **🔐 Security & Certificates** | Certificates and signature verification details |
-| **🧩 Raw Tags** | Every raw tag occurrence, for low-level inspection |
+| **Driver / Cardholder** | Card holder identity (driver card files) |
+| **Vehicle** | VIN, plate, registration nation, tachograph (next calibration, tyre size, authorised speed) |
+| **Activity & Usage** | Daily activities (day-by-day hierarchy with charts), vehicles used, events, faults, places, calibrations, control activities, and more |
+| **G2.2 — Smart V2** | GNSS accumulated driving, GNSS places, border crossings, load/unload records, load sensor, trailers |
+| **Vehicle Unit (VU)** | VU identification, sensor pairings, card insertions/withdrawals, time adjustments, company locks, downloads, power interruptions, overspeeding control, ITS consents, detailed speed |
+| **Security & Certificates** | Certificates and signature verification details |
+| **Raw Tags** | Every raw tag occurrence, for low-level inspection |
 
 Sections only appear when the loaded file actually contains that kind of data — a G1 driver card will not show the G2.2 or VU groups.
 
@@ -130,7 +130,7 @@ Note that a driver-card image wrapped inside a stand-alone VU download is **not*
 For non-chart sections the right pane shows a sortable grid:
 
 - **Sort**: click any column header to sort; click again to reverse.
-- **Filter**: type in the 🔎 filter box to show only matching rows.
+- **Filter**: type in the filter box (the magnifier on its left) to show only matching rows.
 - **Resizable columns**: columns auto-fit on first load, then keep the width you set; you can widen a column past the window edge and scroll horizontally.
 - **Record count**: shown next to the section title.
 

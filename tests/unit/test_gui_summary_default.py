@@ -55,13 +55,14 @@ from core.utils.activity_stats import evaluate_driving_rules  # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MOCK_DIR = REPO_ROOT / "tests" / "mock_data"
 
-#: The node the overview is titled with (the emoji matches every other
-#: top-level section title in the tree).
-SUMMARY_TITLE = i18n._("\U0001f4cb  Summary")
-FILE_INFO_TITLE = i18n._("\U0001f4c4  File Info")
+#: The node the overview is titled with. The label is plain text: the icon
+#: that used to sit in front of it is a row image (``app/icons.py``), so the
+#: msgid is the words alone.
+SUMMARY_TITLE = i18n._("Summary")
+FILE_INFO_TITLE = i18n._("File Info")
 #: The section that used to be auto-selected for a card / a VU.
-DRIVER_TITLE = i18n._("\U0001f464  Driver / Cardholder")
-VEHICLE_TITLE = i18n._("\U0001f69a  Vehicle")
+DRIVER_TITLE = i18n._("Driver / Cardholder")
+VEHICLE_TITLE = i18n._("Vehicle")
 
 #: The three rows the overview states the applied limits in — one short
 #: label/value row each (see ``test_the_rules_rows_fit_the_value_column_at_the_
@@ -486,8 +487,12 @@ def test_summary_uses_the_existing_summary_panel(explorer):
 
     assert explorer._payloads[iid][4] is True
     assert explorer._payloads[iid][1] == [i18n._("Field"), i18n._("Value")]
-    # ... rendered by _show_summary: no heading bar, summary mode on.
-    assert explorer.table.tv.cget("show") == ""
+    # ... rendered by _show_summary: no heading bar, summary mode on. The tree
+    # column is shown as the icon gutter, and it is the only column that can
+    # carry a row image (`cget` hands back a Tcl list, not a string).
+    show = {str(part) for part in explorer.table.tv.cget("show")}
+    assert show == {"tree"}, show
+    assert "headings" not in show, "still no heading bar above the panel"
     assert explorer.table._summary_mode is True
     assert explorer.table.title_lbl.cget("text") == SUMMARY_TITLE
 
@@ -506,12 +511,12 @@ def test_summary_blocks_are_all_present_in_order(explorer):
     headers = [row[0] for row in summary_rows(explorer) if row[2] and row[0]]
 
     assert headers == [
-        i18n._("\U0001f4c4  FILE"),
-        i18n._("\U0001f464  CARDHOLDER"),
-        i18n._("\U0001f697  VEHICLE"),
-        i18n._("\U0001f4ca  TOTALS"),
-        i18n._("\u23f1\ufe0f  DRIVING-TIME RULES"),
-        i18n._("\U0001f512  INTEGRITY"),
+        i18n._("FILE"),
+        i18n._("CARDHOLDER"),
+        i18n._("VEHICLE"),
+        i18n._("TOTALS"),
+        i18n._("DRIVING-TIME RULES"),
+        i18n._("INTEGRITY"),
     ]
 
 
@@ -560,15 +565,15 @@ def test_driving_time_rules_count_the_flagged_days(explorer):
 
 
 def test_a_clean_file_reports_a_zero_and_never_a_warning(explorer):
-    """Zero flagged days is the good news: a plain count, no ⚠ marker."""
+    """Zero flagged days is the good news: a plain count, no warning marker."""
     open_file(explorer, card_data(activities=[CLEAN_DAY, REST_DAY]))
     rows = summary_rows(explorer)
 
     flagged = row_value(rows, i18n._("  Days flagged"))
     assert flagged == "0"
-    assert "\u26a0" not in flagged
+    assert "!" not in flagged
     for label in LIMIT_ROWS:
-        assert "\u26a0" not in row_value(rows, i18n._(label))
+        assert "!" not in row_value(rows, i18n._(label))
 
 
 def test_rules_block_states_the_limits_it_applied(explorer):
@@ -850,7 +855,7 @@ def test_a_file_without_driver_data_gains_no_driver_block(explorer):
     open_file(explorer, card_data(driver=dict(NO_DRIVER)))
     rows = summary_rows(explorer)
 
-    assert i18n._("\U0001f464  CARDHOLDER") not in [row[0] for row in rows]
+    assert i18n._("CARDHOLDER") not in [row[0] for row in rows]
     assert DRIVER_TITLE not in tree_titles(explorer), \
         "and the pre-existing no-driver rule is unchanged"
     # The rest of the overview is still there — only the driver block is gone.
@@ -863,7 +868,7 @@ def test_a_card_that_recorded_no_vehicle_gains_no_vehicle_block(explorer):
         "plate": "N/A", "vin": "N/A", "registration_nation": "N/A"}))
     rows = summary_rows(explorer)
 
-    assert i18n._("\U0001f697  VEHICLE") not in [row[0] for row in rows]
+    assert i18n._("VEHICLE") not in [row[0] for row in rows]
 
 
 def test_a_card_that_recorded_a_vehicle_shows_plate_vin_and_registration(explorer):
@@ -894,7 +899,7 @@ def test_the_previously_auto_selected_card_section_still_renders(explorer):
     assert explorer.table.title_lbl.cget("text") == DRIVER_TITLE
     assert rendered_value(explorer, i18n._("  Name")) == "LUCA BIANCHI"
     assert rendered_value(explorer, i18n._("  Card number")) == "I100000000000000"
-    assert i18n._("\U0001faaa  CARD DETAILS") in [row[0] for row in rendered(explorer)]
+    assert i18n._("CARD DETAILS") in [row[0] for row in rendered(explorer)]
 
 
 def test_the_previously_auto_selected_vu_section_still_renders(explorer):

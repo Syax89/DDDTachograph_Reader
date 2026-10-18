@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% pliku"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Termin za {days} dni"
+msgid "  Due in {days} days"
+msgstr "  Termin za {days} dni"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ PRZETERMINOWANA ({days} dni temu)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  PRZETERMINOWANA ({days} dni temu)"
 
 msgid "# Drivers"
 msgstr "# Kierowcy"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s zarejestrowanych | {gaps} luk wewnętrznych"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} wierszy · {columns} kolumn"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Kliknij dwukrotnie, aby zobaczyć pełne szczegóły"
+msgid "Double-click for full details"
+msgstr "Kliknij dwukrotnie, aby zobaczyć pełne szczegóły"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Wyjęcie karty"
@@ -892,106 +892,100 @@ msgstr "▲ Wyjęcie karty"
 msgid "▼ Insertion"
 msgstr "▼ Włożenie karty"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  PLIK USZKODZONY / CZĘŚCIOWY"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "PLIK USZKODZONY / CZĘŚCIOWY"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  USZKODZONE SEKCJE (dane odrzucone)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "USZKODZONE SEKCJE (dane odrzucone)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Błędy dekodera"
+msgid "Decoder Failures"
+msgstr "Błędy dekodera"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  TEN PLIK JEST NIEKOMPLETNY LUB USZKODZONY"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "TEN PLIK JEST NIEKOMPLETNY LUB USZKODZONY"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} ostrzeżeń o integralności — kliknij, aby zobaczyć szczegóły"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} ostrzeżeń o integralności — kliknij, aby zobaczyć szczegóły"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  SEKCJE OBECNE"
+msgid "SECTIONS PRESENT"
+msgstr "SEKCJE OBECNE"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  BRAK SEKCJI OBOWIĄZKOWYCH"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "BRAK SEKCJI OBOWIĄZKOWYCH"
 
-msgid "❌  Parse error"
-msgstr "❌  Błąd przetwarzania"
+msgid "Parse error"
+msgstr "Błąd przetwarzania"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Ucięty (nie osiągnięto końca pliku)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Ucięty (nie osiągnięto końca pliku)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Niekompletne certyfikaty"
+msgid "CARDHOLDER"
+msgstr "POSIADACZ KARTY"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  POSIADACZ KARTY"
+msgid "Driver / Cardholder"
+msgstr "Kierowca / Posiadacz karty"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Kierowca / Posiadacz karty"
-
-msgid "💻  VU INFO"
-msgstr "💻  INFORMACJE O VU"
+msgid "VU INFO"
+msgstr "INFORMACJE O VU"
 
 msgid "Open DDD file"
 msgstr "Otwórz plik DDD"
 
-msgid "📄  File Info"
-msgstr "📄  Informacje o pliku"
+msgid "File Info"
+msgstr "Informacje o pliku"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  ZAKRES DAT"
+msgid "DATE RANGE"
+msgstr "ZAKRES DAT"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  KOMPLETNOŚĆ"
+msgid "COMPLETENESS"
+msgstr "KOMPLETNOŚĆ"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMETRY"
+msgid "PARAMETERS"
+msgstr "PARAMETRY"
 
-msgid "📊  STATISTICS"
-msgstr "📊  STATYSTYKI"
+msgid "STATISTICS"
+msgstr "STATYSTYKI"
 
-msgid "📡  SENSOR"
-msgstr "📡  CZUJNIK"
+msgid "SENSOR"
+msgstr "CZUJNIK"
 
-msgid "📡  Sensor"
-msgstr "📡  Czujnik"
+msgid "Sensor"
+msgstr "Czujnik"
 
 msgid "Export"
 msgstr "Eksport"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation} {annex}"
+msgid "{generation}{annex}"
+msgstr "{generation} {annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  PODPISY"
+msgid "SIGNATURES"
+msgstr "PODPISY"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Bezpieczeństwo i certyfikaty"
+msgid "Security & Certificates"
+msgstr "Bezpieczeństwo i certyfikaty"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  BIEŻĄCA BLOKADA"
+msgid "CURRENT LOCK"
+msgstr "BIEŻĄCA BLOKADA"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  BIEŻĄCA BLOKADA"
+msgid "ASSOCIATED VEHICLE"
+msgstr "POWIĄZANY POJAZD"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  POWIĄZANY POJAZD"
+msgid "VEHICLE"
+msgstr "POJAZD"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  POJAZD"
+msgid "Vehicle"
+msgstr "Pojazd"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Pojazd"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "ODZYSKANE Z USZKODZONYCH DANYCH"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  ODZYSKANE Z USZKODZONYCH DANYCH"
+msgid "Raw / Unparsed Data"
+msgstr "Dane surowe / nieprzetworzone"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Dane surowe / nieprzetworzone"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  SZCZEGÓŁY KARTY"
+msgid "CARD DETAILS"
+msgstr "SZCZEGÓŁY KARTY"
 
 msgid "Additional Info"
 msgstr "Informacje dodatkowe"
@@ -1488,8 +1482,8 @@ msgstr "Karta warsztatu"
 msgid "Workshop Card Expiry"
 msgstr "Ważność karty warsztatu"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Generacja 1  [Załącznik 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Generacja 1  [Załącznik 1B]"
 
 msgid "Activity Chart"
 msgstr "Wykres aktywności"
@@ -2384,11 +2378,8 @@ msgstr "Jazda dzienna {driven} — limit {limit}"
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Jazda ciągła {driven} bez przerwy {pause} min — limit {limit}"
 
-msgid "📋  Summary"
-msgstr "📋  Podsumowanie"
-
-msgid "📄  FILE"
-msgstr "📄  PLIK"
+msgid "FILE"
+msgstr "PLIK"
 
 msgid "  Filename"
 msgstr "  Nazwa pliku"
@@ -2402,8 +2393,8 @@ msgstr "  Objęty okres"
 msgid "{first} → {last}"
 msgstr "{first} → {last}"
 
-msgid "📊  TOTALS"
-msgstr "📊  RAZEM"
+msgid "TOTALS"
+msgstr "RAZEM"
 
 msgid "  Drive"
 msgstr "  Jazda"
@@ -2417,14 +2408,14 @@ msgstr "  Odpoczynek"
 msgid "  Available"
 msgstr "  Dyspozycyjność"
 
-msgid "⏱️  DRIVING-TIME RULES"
-msgstr "⏱️  ZASADY CZASU JAZDY"
+msgid "DRIVING-TIME RULES"
+msgstr "ZASADY CZASU JAZDY"
 
 msgid "  Days flagged"
 msgstr "  Dni z naruszeniami"
 
-msgid "🔒  INTEGRITY"
-msgstr "🔒  INTEGRALNOŚĆ"
+msgid "INTEGRITY"
+msgstr "INTEGRALNOŚĆ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Pokrycie rozliczone bajtowo"

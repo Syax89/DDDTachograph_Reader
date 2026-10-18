@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% van bestand"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Vervalt over {days} dagen"
+msgid "  Due in {days} days"
+msgstr "  Vervalt over {days} dagen"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ VERLOPEN ({days} dagen geleden)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  VERLOPEN ({days} dagen geleden)"
 
 msgid "# Drivers"
 msgstr "# Bestuurders"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s geregistreerd | {gaps} interne gaten"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} rijen · {columns} kolommen"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Dubbelklik voor volledige details"
+msgid "Double-click for full details"
+msgstr "Dubbelklik voor volledige details"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Uitneming"
@@ -892,106 +892,100 @@ msgstr "▲ Uitneming"
 msgid "▼ Insertion"
 msgstr "▼ Invoeging"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  BESCHADIGD / GEDEELTELIJK BESTAND"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "BESCHADIGD / GEDEELTELIJK BESTAND"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  BESCHADIGDE SECTIES (gegevens verworpen)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "BESCHADIGDE SECTIES (gegevens verworpen)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Decoderfouten"
+msgid "Decoder Failures"
+msgstr "Decoderfouten"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  DIT BESTAND IS ONVOLLEDIG OF BESCHADIGD"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "DIT BESTAND IS ONVOLLEDIG OF BESCHADIGD"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} integriteitswaarschuwing(en) — klik voor details"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} integriteitswaarschuwing(en) — klik voor details"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  SECTIES AANWEZIG"
+msgid "SECTIONS PRESENT"
+msgstr "SECTIES AANWEZIG"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  VERPLICHTE SECTIES ONTBREKEN"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "VERPLICHTE SECTIES ONTBREKEN"
 
-msgid "❌  Parse error"
-msgstr "❌  Verwerkingsfout"
+msgid "Parse error"
+msgstr "Verwerkingsfout"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Afgebroken (einde bestand niet bereikt)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Afgebroken (einde bestand niet bereikt)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Onvolledige certificaten"
+msgid "CARDHOLDER"
+msgstr "KAARTHOUDER"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  KAARTHOUDER"
+msgid "Driver / Cardholder"
+msgstr "Bestuurder / kaarthouder"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Bestuurder / kaarthouder"
-
-msgid "💻  VU INFO"
-msgstr "💻  VU-INFO"
+msgid "VU INFO"
+msgstr "VU-INFO"
 
 msgid "Open DDD file"
 msgstr "DDD-bestand openen"
 
-msgid "📄  File Info"
-msgstr "📄  Bestandsinfo"
+msgid "File Info"
+msgstr "Bestandsinfo"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  DATUMBEREEK"
+msgid "DATE RANGE"
+msgstr "DATUMBEREEK"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  VOLLEDIGHEID"
+msgid "COMPLETENESS"
+msgstr "VOLLEDIGHEID"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMETEROVERZICHT"
+msgid "PARAMETERS"
+msgstr "PARAMETEROVERZICHT"
 
-msgid "📊  STATISTICS"
-msgstr "📊  STATISTIEKEN"
+msgid "STATISTICS"
+msgstr "STATISTIEKEN"
 
-msgid "📡  SENSOR"
-msgstr "📡  BEWEGINGSSENSOR"
+msgid "SENSOR"
+msgstr "BEWEGINGSSENSOR"
 
-msgid "📡  Sensor"
-msgstr "📡  Bewegingssensor"
+msgid "Sensor"
+msgstr "Bewegingssensor"
 
 msgid "Export"
 msgstr "Exporteren"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation} {annex}"
+msgid "{generation}{annex}"
+msgstr "{generation} {annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  HANDTEKENINGEN"
+msgid "SIGNATURES"
+msgstr "HANDTEKENINGEN"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Beveiliging & certificaten"
+msgid "Security & Certificates"
+msgstr "Beveiliging & certificaten"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  HUIDIGE VERGRENDELING"
+msgid "CURRENT LOCK"
+msgstr "HUIDIGE VERGRENDELING"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  HUIDIGE VERGRENDELING"
+msgid "ASSOCIATED VEHICLE"
+msgstr "GEKOPPELD VOERTUIG"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  GEKOPPELD VOERTUIG"
+msgid "VEHICLE"
+msgstr "VOERTUIG"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  VOERTUIG"
+msgid "Vehicle"
+msgstr "Voertuig"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Voertuig"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "HERSTELD UIT BESCHADIGDE GEGEVENS"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  HERSTELD UIT BESCHADIGDE GEGEVENS"
+msgid "Raw / Unparsed Data"
+msgstr "Ruwe / niet-verwerkte gegevens"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Ruwe / niet-verwerkte gegevens"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  KAARTGEGEVENS"
+msgid "CARD DETAILS"
+msgstr "KAARTGEGEVENS"
 
 msgid "Additional Info"
 msgstr "Aanvullende info"
@@ -1488,8 +1482,8 @@ msgstr "Werkplaatskaart"
 msgid "Workshop Card Expiry"
 msgstr "Vervaldatum werkplaatskaart"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Generatie 1  [Bijlage 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Generatie 1  [Bijlage 1B]"
 
 msgid "Activity Chart"
 msgstr "Activiteitsgrafiek"
@@ -2384,11 +2378,8 @@ msgstr "Dagelijkse rijtijd {driven} — limiet {limit}"
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Ononderbroken rijtijd {driven} zonder pauze van {pause} min — limiet {limit}"
 
-msgid "📋  Summary"
-msgstr "📋  Samenvatting"
-
-msgid "📄  FILE"
-msgstr "📄  BESTAND"
+msgid "FILE"
+msgstr "BESTAND"
 
 msgid "  Filename"
 msgstr "  Bestandsnaam"
@@ -2402,8 +2393,8 @@ msgstr "  Gedekte periode"
 msgid "{first} → {last}"
 msgstr "{first} → {last}"
 
-msgid "📊  TOTALS"
-msgstr "📊  TOTALEN"
+msgid "TOTALS"
+msgstr "TOTALEN"
 
 msgid "  Drive"
 msgstr "  Rijden"
@@ -2417,14 +2408,14 @@ msgstr "  Rust"
 msgid "  Available"
 msgstr "  Beschikbaar"
 
-msgid "⏱️  DRIVING-TIME RULES"
-msgstr "⏱️  RIJTIJDREGELS"
+msgid "DRIVING-TIME RULES"
+msgstr "RIJTIJDREGELS"
 
 msgid "  Days flagged"
 msgstr "  Dagen met overtredingen"
 
-msgid "🔒  INTEGRITY"
-msgstr "🔒  INTEGRITEIT"
+msgid "INTEGRITY"
+msgstr "INTEGRITEIT"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Byte-verantwoorde dekking"

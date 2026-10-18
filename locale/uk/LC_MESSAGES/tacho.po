@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% файлу"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Термін через {days} дн."
+msgid "  Due in {days} days"
+msgstr "  Термін через {days} дн."
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ ПРОСТРОЧЕНО ({days} дн. тому)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  ПРОСТРОЧЕНО ({days} дн. тому)"
 
 msgid "# Drivers"
 msgstr "# Водіїв"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} с записано | {gaps} внутрішніх розр�
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} рядків · {columns} стовпців"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Подвійний клац для повної інформації"
+msgid "Double-click for full details"
+msgstr "Подвійний клац для повної інформації"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Вилучення"
@@ -892,106 +892,100 @@ msgstr "▲ Вилучення"
 msgid "▼ Insertion"
 msgstr "▼ Вставлення"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  ПОШКОДЖЕНИЙ / НЕПОВНИЙ ФАЙЛ"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "ПОШКОДЖЕНИЙ / НЕПОВНИЙ ФАЙЛ"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  ПОШКОДЖЕНІ РОЗДІЛИ (дані відкинуто)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "ПОШКОДЖЕНІ РОЗДІЛИ (дані відкинуто)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Помилки декодера"
+msgid "Decoder Failures"
+msgstr "Помилки декодера"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  ЦЕЙ ФАЙЛ НЕПОВНИЙ АБО ПОШКОДЖЕНИЙ"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "ЦЕЙ ФАЙЛ НЕПОВНИЙ АБО ПОШКОДЖЕНИЙ"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} попереджень про цілісність — натисніть для подробиць"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} попереджень про цілісність — натисніть для подробиць"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  РОЗДІЛИ ПРИСУТНІ"
+msgid "SECTIONS PRESENT"
+msgstr "РОЗДІЛИ ПРИСУТНІ"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  ВІДСУТНІ ОБОВ'ЯЗКОВІ РОЗДІЛИ"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "ВІДСУТНІ ОБОВ'ЯЗКОВІ РОЗДІЛИ"
 
-msgid "❌  Parse error"
-msgstr "❌  Помилка розбору"
+msgid "Parse error"
+msgstr "Помилка розбору"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Обрізано (не досягнуто кінця файлу)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Обрізано (не досягнуто кінця файлу)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Неповні сертифікати"
+msgid "CARDHOLDER"
+msgstr "ВЛАСНИК КАРТКИ"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  ВЛАСНИК КАРТКИ"
+msgid "Driver / Cardholder"
+msgstr "Водій / власник картки"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Водій / власник картки"
-
-msgid "💻  VU INFO"
-msgstr "💻  ІНФО ПРО VU"
+msgid "VU INFO"
+msgstr "ІНФО ПРО VU"
 
 msgid "Open DDD file"
 msgstr "Відкрити файл DDD"
 
-msgid "📄  File Info"
-msgstr "📄  Інформація про файл"
+msgid "File Info"
+msgstr "Інформація про файл"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  ДІАПАЗОН ДАТ"
+msgid "DATE RANGE"
+msgstr "ДІАПАЗОН ДАТ"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  ПОВНОТА"
+msgid "COMPLETENESS"
+msgstr "ПОВНОТА"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  ПАРАМЕТРИ"
+msgid "PARAMETERS"
+msgstr "ПАРАМЕТРИ"
 
-msgid "📊  STATISTICS"
-msgstr "📊  СТАТИСТИКА"
+msgid "STATISTICS"
+msgstr "СТАТИСТИКА"
 
-msgid "📡  SENSOR"
-msgstr "📡  ДАТЧИК"
+msgid "SENSOR"
+msgstr "ДАТЧИК"
 
-msgid "📡  Sensor"
-msgstr "📡  Датчик"
+msgid "Sensor"
+msgstr "Датчик"
 
 msgid "Export"
 msgstr "Експорт"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  ПІДПИСИ"
+msgid "SIGNATURES"
+msgstr "ПІДПИСИ"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Безпека та сертифікати"
+msgid "Security & Certificates"
+msgstr "Безпека та сертифікати"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  ПОТОЧНЕ БЛОКУВАННЯ"
+msgid "CURRENT LOCK"
+msgstr "ПОТОЧНЕ БЛОКУВАННЯ"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  ПОТОЧНЕ БЛОКУВАННЯ"
+msgid "ASSOCIATED VEHICLE"
+msgstr "ПОВ'ЯЗАНИЙ ТРАНСПОРТНИЙ ЗАСІБ"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  ПОВ'ЯЗАНИЙ ТРАНСПОРТНИЙ ЗАСІБ"
+msgid "VEHICLE"
+msgstr "ТРАНСПОРТНИЙ ЗАСІБ"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  ТРАНСПОРТНИЙ ЗАСІБ"
+msgid "Vehicle"
+msgstr "Транспортний засіб"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Транспортний засіб"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "ВІДНОВЛЕНО З ПОШКОДЖЕНИХ ДАНИХ"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  ВІДНОВЛЕНО З ПОШКОДЖЕНИХ ДАНИХ"
+msgid "Raw / Unparsed Data"
+msgstr "Необроблені / нерозібрані дані"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Необроблені / нерозібрані дані"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  ДАНІ КАРТКИ"
+msgid "CARD DETAILS"
+msgstr "ДАНІ КАРТКИ"
 
 msgid "Additional Info"
 msgstr "Додаткова інформація"
@@ -1488,8 +1482,8 @@ msgstr "Картка майстерні"
 msgid "Workshop Card Expiry"
 msgstr "Термін дії картки майстерні"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Покоління 1  [Додаток 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Покоління 1  [Додаток 1B]"
 
 msgid "Activity Chart"
 msgstr "Графік активності"
@@ -2384,11 +2378,8 @@ msgstr "Щоденне керування {driven} — межа {limit}"
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Безперервне керування {driven} без перерви {pause} хв — межа {limit}"
 
-msgid "📋  Summary"
-msgstr "📋  Підсумок"
-
-msgid "📄  FILE"
-msgstr "📄  ФАЙЛ"
+msgid "FILE"
+msgstr "ФАЙЛ"
 
 msgid "  Filename"
 msgstr "  Ім'я файлу"
@@ -2402,8 +2393,8 @@ msgstr "  Охоплений період"
 msgid "{first} → {last}"
 msgstr "{first} → {last}"
 
-msgid "📊  TOTALS"
-msgstr "📊  РАЗОМ"
+msgid "TOTALS"
+msgstr "РАЗОМ"
 
 msgid "  Drive"
 msgstr "  Водіння"
@@ -2417,14 +2408,14 @@ msgstr "  Відпочинок"
 msgid "  Available"
 msgstr "  Доступний"
 
-msgid "⏱️  DRIVING-TIME RULES"
-msgstr "⏱️  ПРАВИЛА ЧАСУ КЕРУВАННЯ"
+msgid "DRIVING-TIME RULES"
+msgstr "ПРАВИЛА ЧАСУ КЕРУВАННЯ"
 
 msgid "  Days flagged"
 msgstr "  Днів із порушеннями"
 
-msgid "🔒  INTEGRITY"
-msgstr "🔒  ЦІЛІСНІСТЬ"
+msgid "INTEGRITY"
+msgstr "ЦІЛІСНІСТЬ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Покриття за байтами"
