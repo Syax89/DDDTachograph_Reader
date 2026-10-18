@@ -1,7 +1,7 @@
 # AGENTS.md — DDD Tachograph Reader
 
 ## Project overview
-Cross-platform (Windows/macOS) application for parsing, analyzing and visualizing data from digital tachograph files (`.ddd` format). EU digital tachographs record driver activity, vehicle data, GNSS positions, and security certificate chains.
+Cross-platform (Windows/macOS/Linux) application for parsing, analyzing and visualizing data from digital tachograph files (`.ddd` format). Linux ships as an x86_64 Flatpak bundle (`flatpak/`, app ID `io.github.Syax89.TachoReader`). EU digital tachographs record driver activity, vehicle data, GNSS positions, and security certificate chains.
 
 ## Key architecture
 - **Entry point**: `app/main.py` (CLI compatibility entry point) → `app/cli.py` / `app/engine.py` (TachoParser) → `core/parser/deterministic.py` (STAP/BER-TLV + VU stream walks, full byte coverage)
@@ -20,6 +20,9 @@ python3 -m pytest tests/ -v
 Requires: `pip install -r requirements.txt` (pytest, pyinstaller, cryptography, openpyxl, reportlab)
 
 Tests use a conftest.py fixture that resets the DecoderRegistry singleton between tests.
+
+## CI and releases
+`.github/workflows/build.yml` builds Windows, macOS and Linux Flatpak on every branch push, PR and manual run (plus `--version`/`--smoke` smoke tests and, on Linux, an installed-Flatpak + Xvfb GUI smoke); the `All platforms verified` job fails unless all three succeeded. `.github/workflows/test.yml` is the separate lint/mypy, translation-catalog check, 3.10/3.12/3.13 pytest and semantic-coverage gate — it is not part of that platform gate. `.github/workflows/release.yml` runs on `v*` tags only (tag must match `core/utils/version.py`), and a single publisher publishes after all three platform packages exist. Details: `docs/developer/testing.md`.
 
 ## Spec documentation
 All tag specifications are in `scripts/`:

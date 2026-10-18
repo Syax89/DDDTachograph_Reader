@@ -75,13 +75,17 @@ and drag `TachoReader.app` to Applications. For Linux, see below.
 
 ### Linux (Flatpak, x86_64)
 
-Releases built from now on also ship a standalone Flatpak bundle, produced by CI
-from the same PyInstaller bundle as the Windows and macOS packages:
+Releases containing the Linux packaging job also ship a standalone Flatpak
+bundle, produced by CI using the same `build.spec` configuration as the native
+Windows and macOS builds:
 
 ```bash
-flatpak install --user ./TachoReader-v<version>-linux-x86_64.flatpak
+flatpak install --user ./TachoReader-vX.Y.Z-linux-x86_64.flatpak
 flatpak run io.github.Syax89.TachoReader
 ```
+
+Replace `vX.Y.Z` with the downloaded release version. For a CI build, extract
+the artifact ZIP and install the contained `TachoReader-linux-x86_64.flatpak`.
 
 > **Availability:** the Flatpak bundle is not part of the already-published
 > `v2.7.1` release — it appears with the next tagged release that includes the
@@ -113,8 +117,8 @@ flatpak override --user --filesystem=/run/media/$USER io.github.Syax89.TachoRead
 
 - **x86_64 only** — release CI produces a single `linux-x86_64` bundle; there is
   no aarch64/ARM build.
-- **Not Flathub-listed** — the bundle is a standalone download, so software
-  centers will not show it and it is **not updated automatically**: installing a
+- **Not Flathub-listed** — the bundle is a standalone download and is
+  **not updated automatically**: installing a
   newer release file is a manual step.
 - It is an unsigned local bundle, so Flatpak installs it as a sideload rather
   than from a verified remote.
@@ -203,15 +207,31 @@ those fixtures are unavailable.
 
 ### Continuous Integration
 
-Every branch push, pull request and manual build runs **Windows, macOS and
-Linux Flatpak** with native bundle/parser smoke tests; Linux also installs the
-Flatpak and checks its GUI under Xvfb. Matrix fail-fast is disabled, so a failure
-does not cancel another platform. **All platforms verified** passes only when
-all three builds and their checks succeed; failed, cancelled or skipped builds
-fail the gate. Tagged releases (`v*`) start publication only after all three
-platforms succeed and all three non-empty packages are available. Existing
-lint, translation, test and coverage checks run on the same branch/PR/manual
-events. Repository branch-protection settings are unchanged.
+What runs depends on what you do:
+
+| Trigger | What happens |
+|---------|--------------|
+| **Local commit** (`git commit`) | Nothing — no remote CI runs until you push |
+| **Push to any branch** or pull request | Both build and test workflows: all three platforms and their smoke checks, plus lint, translations, tests and semantic coverage |
+| **Manual run** | Select **Build TachoReader** for all three platforms and smoke checks, or **Tests** for lint, translations, tests and semantic coverage; the workflows are independent |
+| **Push a `v*` tag** | The release workflow: version check, lint, pytest, the three platform builds, then a single publisher |
+
+Matrix fail-fast is disabled, so one platform failing does not cancel another.
+**All platforms verified** passes only when all three platform builds succeed;
+failed, cancelled or skipped builds fail the gate. Linux checks include
+installation of the exported Flatpak and a real GUI window under Xvfb. The
+separate release workflow starts publication only after all three platform jobs
+succeed and the exact three non-empty packages (zip, dmg, flatpak) are present.
+
+A branch/PR build uploads ordinary Actions artifacts (`TachoReader-windows-latest`,
+`TachoReader-macos-latest`, `TachoReader-linux-x86_64`): the frozen Windows/macOS
+build folder / macOS `.app` (not a release zip/dmg) and the exported Linux
+`.flatpak`. Download them from the workflow run's **Artifacts** section and
+extract the artifact ZIP first. They expire after a retention period; tagged
+releases provide the versioned zip/dmg/flatpak files on the Releases page.
+
+Full trigger table, job breakdown and release gate:
+[docs/developer/testing.md](docs/developer/testing.md#ci-builds-and-releases).
 
 ---
 
@@ -220,7 +240,9 @@ events. Repository branch-protection settings are unchanged.
 ```bash
 pip install pyinstaller
 pyinstaller build.spec
-# Output: dist/TachoReader (macOS) / dist/TachoReader.exe (Windows)
+# Windows: dist/TachoReader/TachoReader.exe
+# macOS: dist/TachoReader.app
+# Linux: dist/TachoReader/TachoReader
 ```
 
 On Linux the frozen `dist/TachoReader` directory can be packaged as a Flatpak

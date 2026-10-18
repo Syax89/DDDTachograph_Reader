@@ -72,6 +72,20 @@ Belarusian, Turkish, Serbian, Bosnian, Albanian and Macedonian (34 in total).
 - 100% byte coverage on all test .ddd files
 - Python 3.10+ compatibility
 
+## CI and Releases
+A local commit runs no remote CI — nothing happens until you push. Pushing to
+any branch or opening a pull request runs the Windows, macOS and Linux Flatpak
+builds plus lint, tests and the coverage gate. Manual **Build TachoReader** and
+**Tests** runs are independent; a pushed `v*` tag runs the release workflow
+instead. Keep the build clean locally before pushing:
+
+```bash
+ruff check . && mypy . && python -m pytest tests/ -q
+```
+
+Trigger table, job breakdown and the release publication gate are documented in
+the [testing guide](docs/developer/testing.md#ci-builds-and-releases).
+
 ## Running Tests
 ```bash
 python -m pytest tests/ -v
