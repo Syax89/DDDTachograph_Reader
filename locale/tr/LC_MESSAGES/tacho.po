@@ -2324,3 +2324,47 @@ msgstr "Evet"
 
 msgid "No"
 msgstr "Hayır"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Birinci"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "İkinci"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normal"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Saat durdurma"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Genişletilmiş seri numarası"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "Kişiselleştirici kimliği"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "Gömülü IC birleştirici kimliği"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "IC tanımlayıcısı"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Geçmiş bilgileri"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "IC seri numarası"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "IC üretim referansı"

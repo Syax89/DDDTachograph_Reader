@@ -2324,3 +2324,47 @@ msgstr "Jā"
 
 msgid "No"
 msgstr "Nē"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Pirmais"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Otrais"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normāls"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Pulksteņa apstāšanās"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Paplašinātais sērijas numurs"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "Personalizētāja ID"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "Iegultā IC montētāja ID"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "IC identifikators"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Vēsturiskā informācija"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "IC sērijas numurs"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "IC ražošanas atsauce"

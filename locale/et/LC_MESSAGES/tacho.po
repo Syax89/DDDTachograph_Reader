@@ -2324,3 +2324,47 @@ msgstr "Jah"
 
 msgid "No"
 msgstr "Ei"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Esimene"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Teine"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normaalne"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Kella peatumine"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Laiendatud seerianumber"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "Isikustaja ID"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "Sisseehitatud IC koostaja ID"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "IC identifikaator"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Ajalooline teave"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "IC seerianumber"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "IC tootmisviide"

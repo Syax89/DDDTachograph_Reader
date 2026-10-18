@@ -2324,3 +2324,47 @@ msgstr "Taip"
 
 msgid "No"
 msgstr "Ne"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Pirmas"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Antras"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normalus"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Laikrodžio sustabdymas"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Išplėstas serijos numeris"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "Personalizuotojo ID"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "Įterpto IC surinkėjo ID"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "IC identifikatorius"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Istorinė informacija"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "IC serijos numeris"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "IC gamybos nuoroda"

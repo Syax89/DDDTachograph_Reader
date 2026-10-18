@@ -2324,3 +2324,47 @@ msgstr "Já"
 
 msgid "No"
 msgstr "Nei"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Fyrsta"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Annað"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Eðlilegt"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Stopp klukku"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Aukið raðnúmer"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "Auðkenni sérstillingar"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "Auðkenni samsetjara innfellds IC"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "Auðkenni IC"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Sögulegar upplýsingar"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "Raðnúmer IC"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "Framleiðslutilvísun IC"

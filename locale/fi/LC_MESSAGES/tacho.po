@@ -2324,3 +2324,47 @@ msgstr "Kyllä"
 
 msgid "No"
 msgstr "Ei"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Ensimmäinen"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Toinen"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normaali"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Kellon pysäytys"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Laajennettu sarjanumero"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "Personointitunnus"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "Upotetun IC:n kokoonpanijan tunnus"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "IC-tunniste"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Historialliset tiedot"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "IC-sarjanumero"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "IC-valmistusviite"

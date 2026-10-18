@@ -2324,3 +2324,47 @@ msgstr "Tá"
 
 msgid "No"
 msgstr "Níl"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Céad"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Dara"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Gnáth"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Stop uaireadóra"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Uimhir srathach leathnaithe"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "Aitheantas pearsantóra"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "Aitheantas cóimeálaí IC leabaithe"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "Aitheantas IC"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Faisnéis stairiúil"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "Uimhir srathach IC"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "Tagairt déantúsaíochta IC"

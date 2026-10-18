@@ -2324,3 +2324,47 @@ msgstr "Ja"
 
 msgid "No"
 msgstr "Nein"
+
+# Card / slot labels shown as cells.
+msgid "First"
+msgstr "Erster"
+
+# Card / slot labels shown as cells.
+msgid "Second"
+msgstr "Zweiter"
+
+# Card / slot labels shown as cells.
+msgid "Normal"
+msgstr "Normal"
+
+# Card / slot labels shown as cells.
+msgid "Clock Stop"
+msgstr "Uhrenstopp"
+
+# Card / slot labels shown as cells.
+msgid "Extended Serial Number"
+msgstr "Erweiterte Seriennummer"
+
+# Card / slot labels shown as cells.
+msgid "Personaliser ID"
+msgstr "Personaliser-ID"
+
+# Card / slot labels shown as cells.
+msgid "Embedder IC Assembler ID"
+msgstr "Embedder-IC-Assembler-ID"
+
+# Card / slot labels shown as cells.
+msgid "IC Identifier"
+msgstr "IC-Kennung"
+
+# Card / slot labels shown as cells.
+msgid "Historical Info"
+msgstr "Historische Informationen"
+
+# Card / slot labels shown as cells.
+msgid "IC Serial Number"
+msgstr "IC-Seriennummer"
+
+# Card / slot labels shown as cells.
+msgid "IC Manufacturing Reference"
+msgstr "IC-Herstellungsreferenz"
