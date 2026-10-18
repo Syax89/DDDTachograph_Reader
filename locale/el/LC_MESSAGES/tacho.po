@@ -2383,3 +2383,60 @@ msgstr "Ημερήσια οδήγηση {driven} — όριο {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Συνεχής οδήγηση {driven} χωρίς διάλειμμα {pause} λεπ. — όριο {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Σύνοψη"
+
+msgid "📄  FILE"
+msgstr "📄  ΑΡΧΕΙΟ"
+
+msgid "  Filename"
+msgstr "  Όνομα αρχείου"
+
+msgid "  Origin"
+msgstr "  Προέλευση"
+
+msgid "  Period covered"
+msgstr "  Καλυπτόμενη περίοδος"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  ΣΥΝΟΛΟ"
+
+msgid "  Drive"
+msgstr "  Οδήγηση"
+
+msgid "  Work"
+msgstr "  Εργασία"
+
+msgid "  Rest"
+msgstr "  Ανάπαυση"
+
+msgid "  Available"
+msgstr "  Διαθεσιμότητα"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  ΚΑΝΟΝΕΣ ΧΡΟΝΟΥ ΟΔΗΓΗΣΗΣ"
+
+msgid "  Days flagged"
+msgstr "  Ημέρες με παραβάσεις"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  ΑΚΕΡΑΙΟΤΗΤΑ"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Κάλυψη υπολογισμένη σε byte"
+
+msgid "  Daily driving limit"
+msgstr "  Όριο ημερήσιας οδήγησης"
+
+msgid "  Continuous driving limit"
+msgstr "  Όριο συνεχούς οδήγησης"
+
+msgid "  Break that resets it"
+msgstr "  Διάλειμμα που το μηδενίζει"
+
+msgid "{minutes} min"
+msgstr "{minutes} λεπ."

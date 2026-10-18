@@ -2383,3 +2383,60 @@ msgstr "Conducere zilnică {driven} — limită {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Conducere continuă {driven} fără o pauză de {pause} min — limită {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Rezumat"
+
+msgid "📄  FILE"
+msgstr "📄  FIȘIER"
+
+msgid "  Filename"
+msgstr "  Nume fișier"
+
+msgid "  Origin"
+msgstr "  Origine"
+
+msgid "  Period covered"
+msgstr "  Perioada acoperită"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  TOTALURI"
+
+msgid "  Drive"
+msgstr "  Conducere"
+
+msgid "  Work"
+msgstr "  Altă muncă"
+
+msgid "  Rest"
+msgstr "  Repaus"
+
+msgid "  Available"
+msgstr "  Disponibilitate"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  REGULI PRIVIND TIMPUL DE CONDUCERE"
+
+msgid "  Days flagged"
+msgstr "  Zile cu abateri"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  INTEGRITATE"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Acoperire contabilizată în octeți"
+
+msgid "  Daily driving limit"
+msgstr "  Limită conducere zilnică"
+
+msgid "  Continuous driving limit"
+msgstr "  Limită conducere continuă"
+
+msgid "  Break that resets it"
+msgstr "  Pauză care îl resetează"
+
+msgid "{minutes} min"
+msgstr "{minutes} min"

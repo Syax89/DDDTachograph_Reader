@@ -2383,3 +2383,60 @@ msgstr "Daglig kørsel {driven} — grænse {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Uafbrudt kørsel {driven} uden pause på {pause} min — grænse {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Resumé"
+
+msgid "📄  FILE"
+msgstr "📄  FIL"
+
+msgid "  Filename"
+msgstr "  Filnavn"
+
+msgid "  Origin"
+msgstr "  Oprindelse"
+
+msgid "  Period covered"
+msgstr "  Dækket periode"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  I ALT"
+
+msgid "  Drive"
+msgstr "  Kørsel"
+
+msgid "  Work"
+msgstr "  Arbejde"
+
+msgid "  Rest"
+msgstr "  Hvile"
+
+msgid "  Available"
+msgstr "  Rådighed"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  REGLER FOR KØRETID"
+
+msgid "  Days flagged"
+msgstr "  Dage med overtrædelser"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  INTEGRITET"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Byteafstemt dækning"
+
+msgid "  Daily driving limit"
+msgstr "  Grænse daglig kørsel"
+
+msgid "  Continuous driving limit"
+msgstr "  Grænse uafbrudt kørsel"
+
+msgid "  Break that resets it"
+msgstr "  Pause der nulstiller"
+
+msgid "{minutes} min"
+msgstr "{minutes} min"

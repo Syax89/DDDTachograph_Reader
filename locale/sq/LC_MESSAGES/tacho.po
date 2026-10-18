@@ -2383,3 +2383,60 @@ msgstr "Drejtimi ditor {driven} — kufiri {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Drejtim i pandërprerë {driven} pa pushim {pause} min — kufiri {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Përmbledhje"
+
+msgid "📄  FILE"
+msgstr "📄  SKEDAR"
+
+msgid "  Filename"
+msgstr "  Emri i skedarit"
+
+msgid "  Origin"
+msgstr "  Origjina"
+
+msgid "  Period covered"
+msgstr "  Periudha e mbuluar"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  TOTALI"
+
+msgid "  Drive"
+msgstr "  Drejtim"
+
+msgid "  Work"
+msgstr "  Punë"
+
+msgid "  Rest"
+msgstr "  Pushim"
+
+msgid "  Available"
+msgstr "  I disponueshëm"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  RREGULLAT E KOHËS SË DREJTIMIT"
+
+msgid "  Days flagged"
+msgstr "  Ditë me shkelje"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  INTEGRITETI"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Mbulim sipas bajteve"
+
+msgid "  Daily driving limit"
+msgstr "  Kufiri i drejtimit ditor"
+
+msgid "  Continuous driving limit"
+msgstr "  Kufiri i pandërprerë"
+
+msgid "  Break that resets it"
+msgstr "  Pushim që e rinis"
+
+msgid "{minutes} min"
+msgstr "{minutes} min"

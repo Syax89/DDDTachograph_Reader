@@ -2383,3 +2383,60 @@ msgstr "Napi vezetés {driven} — határ {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Folyamatos vezetés {driven} {pause} perc szünet nélkül — határ {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Összegzés"
+
+msgid "📄  FILE"
+msgstr "📄  FÁJL"
+
+msgid "  Filename"
+msgstr "  Fájlnév"
+
+msgid "  Origin"
+msgstr "  Eredet"
+
+msgid "  Period covered"
+msgstr "  Lefedett időszak"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  ÖSSZESEN"
+
+msgid "  Drive"
+msgstr "  Vezetés"
+
+msgid "  Work"
+msgstr "  Egyéb munka"
+
+msgid "  Rest"
+msgstr "  Pihenő"
+
+msgid "  Available"
+msgstr "  Rendelkezésre állás"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  VEZETÉSI IDŐ SZABÁLYAI"
+
+msgid "  Days flagged"
+msgstr "  Szabálysértő napok"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  INTEGRITÁS"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Bájtokkal elszámolt lefedettség"
+
+msgid "  Daily driving limit"
+msgstr "  Napi vezetés határa"
+
+msgid "  Continuous driving limit"
+msgstr "  Folyamatos vezetés határa"
+
+msgid "  Break that resets it"
+msgstr "  Nullázó szünet"
+
+msgid "{minutes} min"
+msgstr "{minutes} perc"

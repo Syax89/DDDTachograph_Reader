@@ -2383,3 +2383,60 @@ msgstr "Günlük sürüş {driven} — sınır {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Kesintisiz sürüş {driven}, {pause} dk mola yok — sınır {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Özet"
+
+msgid "📄  FILE"
+msgstr "📄  DOSYA"
+
+msgid "  Filename"
+msgstr "  Dosya adı"
+
+msgid "  Origin"
+msgstr "  Kaynak"
+
+msgid "  Period covered"
+msgstr "  Kapsanan dönem"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  TOPLAM"
+
+msgid "  Drive"
+msgstr "  Sürüş"
+
+msgid "  Work"
+msgstr "  Çalışma"
+
+msgid "  Rest"
+msgstr "  Dinlenme"
+
+msgid "  Available"
+msgstr "  Müsait"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  SÜRÜŞ SÜRESİ KURALLARI"
+
+msgid "  Days flagged"
+msgstr "  İhlalli günler"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  BÜTÜNLÜK"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Bayt bazında kapsam"
+
+msgid "  Daily driving limit"
+msgstr "  Günlük sürüş sınırı"
+
+msgid "  Continuous driving limit"
+msgstr "  Kesintisiz sürüş sınırı"
+
+msgid "  Break that resets it"
+msgstr "  Sıfırlayan mola"
+
+msgid "{minutes} min"
+msgstr "{minutes} dk"

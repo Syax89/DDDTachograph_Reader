@@ -2383,3 +2383,60 @@ msgstr "Conduite journalière {driven} — limite {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Conduite continue {driven} sans pause de {pause} min — limite {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Résumé"
+
+msgid "📄  FILE"
+msgstr "📄  FICHIER"
+
+msgid "  Filename"
+msgstr "  Nom du fichier"
+
+msgid "  Origin"
+msgstr "  Origine"
+
+msgid "  Period covered"
+msgstr "  Période couverte"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  TOTAUX"
+
+msgid "  Drive"
+msgstr "  Conduite"
+
+msgid "  Work"
+msgstr "  Autre travail"
+
+msgid "  Rest"
+msgstr "  Repos"
+
+msgid "  Available"
+msgstr "  Disponibilité"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  RÈGLES DE TEMPS DE CONDUITE"
+
+msgid "  Days flagged"
+msgstr "  Jours en infraction"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  INTÉGRITÉ"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Couverture comptabilisée en octets"
+
+msgid "  Daily driving limit"
+msgstr "  Limite conduite journalière"
+
+msgid "  Continuous driving limit"
+msgstr "  Limite conduite continue"
+
+msgid "  Break that resets it"
+msgstr "  Pause remettant à zéro"
+
+msgid "{minutes} min"
+msgstr "{minutes} min"

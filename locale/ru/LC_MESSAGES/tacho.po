@@ -2383,3 +2383,60 @@ msgstr "Ежедневное вождение {driven} — предел {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Непрерывное вождение {driven} без перерыва {pause} мин — предел {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Сводка"
+
+msgid "📄  FILE"
+msgstr "📄  ФАЙЛ"
+
+msgid "  Filename"
+msgstr "  Имя файла"
+
+msgid "  Origin"
+msgstr "  Источник"
+
+msgid "  Period covered"
+msgstr "  Охваченный период"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  ИТОГО"
+
+msgid "  Drive"
+msgstr "  Вождение"
+
+msgid "  Work"
+msgstr "  Работа"
+
+msgid "  Rest"
+msgstr "  Отдых"
+
+msgid "  Available"
+msgstr "  Доступен"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  ПРАВИЛА ВРЕМЕНИ УПРАВЛЕНИЯ"
+
+msgid "  Days flagged"
+msgstr "  Дней с нарушениями"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  ЦЕЛОСТНОСТЬ"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Покрытие с учётом байтов"
+
+msgid "  Daily driving limit"
+msgstr "  Дневной предел"
+
+msgid "  Continuous driving limit"
+msgstr "  Непрерывный предел"
+
+msgid "  Break that resets it"
+msgstr "  Сбрасывающий перерыв"
+
+msgid "{minutes} min"
+msgstr "{minutes} мин"

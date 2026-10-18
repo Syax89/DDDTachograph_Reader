@@ -2383,3 +2383,60 @@ msgstr "Päevane sõit {driven} — piir {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Katkematu sõit {driven} ilma {pause} min pausita — piir {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Kokkuvõte"
+
+msgid "📄  FILE"
+msgstr "📄  FAIL"
+
+msgid "  Filename"
+msgstr "  Failinimi"
+
+msgid "  Origin"
+msgstr "  Päritolu"
+
+msgid "  Period covered"
+msgstr "  Hõlmatud periood"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  KOKKU"
+
+msgid "  Drive"
+msgstr "  Sõit"
+
+msgid "  Work"
+msgstr "  Töö"
+
+msgid "  Rest"
+msgstr "  Puhkus"
+
+msgid "  Available"
+msgstr "  Saadaval"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  SÕIDUAJA REEGLID"
+
+msgid "  Days flagged"
+msgstr "  Rikkumistega päevad"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  TERVIIKLIKKUS"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Baidipõhine kaetus"
+
+msgid "  Daily driving limit"
+msgstr "  Päevase sõidu piir"
+
+msgid "  Continuous driving limit"
+msgstr "  Katkematu sõidu piir"
+
+msgid "  Break that resets it"
+msgstr "  Nulliv paus"
+
+msgid "{minutes} min"
+msgstr "{minutes} min"

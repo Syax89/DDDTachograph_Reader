@@ -2383,3 +2383,60 @@ msgstr "Дневно возење {driven} — ограничување {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Непрекинато возење {driven} без пауза од {pause} мин — ограничување {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Резиме"
+
+msgid "📄  FILE"
+msgstr "📄  ДАТОТЕКА"
+
+msgid "  Filename"
+msgstr "  Име на датотеката"
+
+msgid "  Origin"
+msgstr "  Потекло"
+
+msgid "  Period covered"
+msgstr "  Опфатен период"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  ВКУПНО"
+
+msgid "  Drive"
+msgstr "  Возење"
+
+msgid "  Work"
+msgstr "  Работа"
+
+msgid "  Rest"
+msgstr "  Одмор"
+
+msgid "  Available"
+msgstr "  Достапен"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  ПРАВИЛА ЗА ВРЕМЕ НА ВОЗЕЊЕ"
+
+msgid "  Days flagged"
+msgstr "  Денови со прекршоци"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  ИНТЕГРИТЕТ"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Покриеност по бајти"
+
+msgid "  Daily driving limit"
+msgstr "  Дневната граница"
+
+msgid "  Continuous driving limit"
+msgstr "  Непрекината граница"
+
+msgid "  Break that resets it"
+msgstr "  Пауза што го ресетира"
+
+msgid "{minutes} min"
+msgstr "{minutes} мин"

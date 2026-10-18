@@ -2383,3 +2383,60 @@ msgstr "Щоденне керування {driven} — межа {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Безперервне керування {driven} без перерви {pause} хв — межа {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Підсумок"
+
+msgid "📄  FILE"
+msgstr "📄  ФАЙЛ"
+
+msgid "  Filename"
+msgstr "  Ім'я файлу"
+
+msgid "  Origin"
+msgstr "  Джерело"
+
+msgid "  Period covered"
+msgstr "  Охоплений період"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  РАЗОМ"
+
+msgid "  Drive"
+msgstr "  Водіння"
+
+msgid "  Work"
+msgstr "  Робота"
+
+msgid "  Rest"
+msgstr "  Відпочинок"
+
+msgid "  Available"
+msgstr "  Доступний"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  ПРАВИЛА ЧАСУ КЕРУВАННЯ"
+
+msgid "  Days flagged"
+msgstr "  Днів із порушеннями"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  ЦІЛІСНІСТЬ"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Покриття з урахуванням байтів"
+
+msgid "  Daily driving limit"
+msgstr "  Щоденна межа"
+
+msgid "  Continuous driving limit"
+msgstr "  Безперервна межа"
+
+msgid "  Break that resets it"
+msgstr "  Перерва, що скидає"
+
+msgid "{minutes} min"
+msgstr "{minutes} хв"

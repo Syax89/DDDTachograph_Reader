@@ -2383,3 +2383,60 @@ msgstr "Daglegur akstur {driven} — hámark {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Samfelldur akstur {driven} án {pause} mín. hvíldar — hámark {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Samantekt"
+
+msgid "📄  FILE"
+msgstr "📄  SKRÁ"
+
+msgid "  Filename"
+msgstr "  Skráarnafn"
+
+msgid "  Origin"
+msgstr "  Uppruni"
+
+msgid "  Period covered"
+msgstr "  Tímabil sem nær yfir"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  SAMTALS"
+
+msgid "  Drive"
+msgstr "  Akstur"
+
+msgid "  Work"
+msgstr "  Vinna"
+
+msgid "  Rest"
+msgstr "  Hvíld"
+
+msgid "  Available"
+msgstr "  Fáanlegur"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  REGLUR UM AKSTURSTÍMA"
+
+msgid "  Days flagged"
+msgstr "  Dagar með brotum"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  HEILLEIKI"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Þekja reiknuð í bætum"
+
+msgid "  Daily driving limit"
+msgstr "  Hámark daglegs aksturs"
+
+msgid "  Continuous driving limit"
+msgstr "  Hámark samfellds aksturs"
+
+msgid "  Break that resets it"
+msgstr "  Hlé sem núllstillir"
+
+msgid "{minutes} min"
+msgstr "{minutes} mín."

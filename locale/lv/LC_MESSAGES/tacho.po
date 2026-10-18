@@ -2383,3 +2383,60 @@ msgstr "Dienas brauciens {driven} — limits {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Nepārtraukts brauciens {driven} bez {pause} min pārtraukuma — limits {limit}"
+
+msgid "📋  Summary"
+msgstr "📋  Kopsavilkums"
+
+msgid "📄  FILE"
+msgstr "📄  DATNE"
+
+msgid "  Filename"
+msgstr "  Faila nosaukums"
+
+msgid "  Origin"
+msgstr "  Izcelsme"
+
+msgid "  Period covered"
+msgstr "  Aptvertais periods"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "📊  TOTALS"
+msgstr "📊  KOPSUMMĀ"
+
+msgid "  Drive"
+msgstr "  Braukšana"
+
+msgid "  Work"
+msgstr "  Darbs"
+
+msgid "  Rest"
+msgstr "  Atpūta"
+
+msgid "  Available"
+msgstr "  Pieejams"
+
+msgid "⏱️  DRIVING-TIME RULES"
+msgstr "⏱️  BRAUKŠANAS LAIKA NOTEIKUMI"
+
+msgid "  Days flagged"
+msgstr "  Dienas ar pārkāpumiem"
+
+msgid "🔒  INTEGRITY"
+msgstr "🔒  INTEGRITĀTE"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Baitu uzskaites pārklājums"
+
+msgid "  Daily driving limit"
+msgstr "  Dienas brauciena limits"
+
+msgid "  Continuous driving limit"
+msgstr "  Nepārtrauktais limits"
+
+msgid "  Break that resets it"
+msgstr "  Nullējošs pārtraukums"
+
+msgid "{minutes} min"
+msgstr "{minutes} min"
