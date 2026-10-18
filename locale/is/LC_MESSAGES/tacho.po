@@ -2408,26 +2408,8 @@ msgstr "  Hvíld"
 msgid "  Available"
 msgstr "  Fáanlegur"
 
-msgid "DRIVING-TIME RULES"
-msgstr "REGLUR UM AKSTURSTÍMA"
-
-msgid "  Days flagged"
-msgstr "  Dagar með brotum"
-
 msgid "INTEGRITY"
 msgstr "HEILLEIKI"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Þekja reiknuð í bætum"
-
-msgid "  Daily driving limit"
-msgstr "  Hámark daglegs aksturs"
-
-msgid "  Continuous driving limit"
-msgstr "  Samfelldur akstur"
-
-msgid "  Break that resets it"
-msgstr "  Hlé sem núllstillir"
-
-msgid "{minutes} min"
-msgstr "{minutes} mín."

@@ -2408,26 +2408,8 @@ msgstr "  Lepo"
 msgid "  Available"
 msgstr "  Valmiudessa"
 
-msgid "DRIVING-TIME RULES"
-msgstr "AJOAJAN SÄÄNNÖT"
-
-msgid "  Days flagged"
-msgstr "  Rikkomuspäivät"
-
 msgid "INTEGRITY"
 msgstr "EHEYS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Tavukohtainen kattavuus"
-
-msgid "  Daily driving limit"
-msgstr "  Päivittäisen ajon raja"
-
-msgid "  Continuous driving limit"
-msgstr "  Yhtäjaksoisen ajon raja"
-
-msgid "  Break that resets it"
-msgstr "  Nollauksen tekevä tauko"
-
-msgid "{minutes} min"
-msgstr "{minutes} min"

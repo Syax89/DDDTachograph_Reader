@@ -2408,26 +2408,8 @@ msgstr "  Odpočinok"
 msgid "  Available"
 msgstr "  Pohotovosť"
 
-msgid "DRIVING-TIME RULES"
-msgstr "PRAVIDLÁ ČASU VEDENIA"
-
-msgid "  Days flagged"
-msgstr "  Dni s porušením"
-
 msgid "INTEGRITY"
 msgstr "INTEGRITA"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Pokrytie podľa bajtov"
-
-msgid "  Daily driving limit"
-msgstr "  Limit dennej jazdy"
-
-msgid "  Continuous driving limit"
-msgstr "  Limit nepretržitej jazdy"
-
-msgid "  Break that resets it"
-msgstr "  Nulovacia prestávka"
-
-msgid "{minutes} min"
-msgstr "{minutes} min"

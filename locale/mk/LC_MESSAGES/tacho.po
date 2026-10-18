@@ -2408,26 +2408,8 @@ msgstr "  Одмор"
 msgid "  Available"
 msgstr "  Достапен"
 
-msgid "DRIVING-TIME RULES"
-msgstr "ПРАВИЛА ЗА ВРЕМЕ НА ВОЗЕЊЕ"
-
-msgid "  Days flagged"
-msgstr "  Денови со прекршоци"
-
 msgid "INTEGRITY"
 msgstr "ИНТЕГРИТЕТ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Покриеност по бајти"
-
-msgid "  Daily driving limit"
-msgstr "  Дневната граница"
-
-msgid "  Continuous driving limit"
-msgstr "  Непрекината граница"
-
-msgid "  Break that resets it"
-msgstr "  Пауза што го ресетира"
-
-msgid "{minutes} min"
-msgstr "{minutes} мин"

@@ -2408,26 +2408,8 @@ msgstr "  Pushim"
 msgid "  Available"
 msgstr "  I disponueshëm"
 
-msgid "DRIVING-TIME RULES"
-msgstr "RREGULLAT E KOHËS SË DREJTIMIT"
-
-msgid "  Days flagged"
-msgstr "  Ditë me shkelje"
-
 msgid "INTEGRITY"
 msgstr "INTEGRITETI"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Mbulim sipas bajteve"
-
-msgid "  Daily driving limit"
-msgstr "  Kufiri i drejtimit ditor"
-
-msgid "  Continuous driving limit"
-msgstr "  Kufiri i pandërprerë"
-
-msgid "  Break that resets it"
-msgstr "  Pushim që e rinis"
-
-msgid "{minutes} min"
-msgstr "{minutes} min"

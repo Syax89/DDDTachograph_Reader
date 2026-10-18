@@ -2408,26 +2408,8 @@ msgstr "  Poilsis"
 msgid "  Available"
 msgstr "  Prieinama"
 
-msgid "DRIVING-TIME RULES"
-msgstr "VAIRAVIMO LAIKO TAISYKLĖS"
-
-msgid "  Days flagged"
-msgstr "  Dienos su pažeidimais"
-
 msgid "INTEGRITY"
 msgstr "VIENTISUMAS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Baitų apskaitos aprėptis"
-
-msgid "  Daily driving limit"
-msgstr "  Kasdienio vairavimo riba"
-
-msgid "  Continuous driving limit"
-msgstr "  Nepertraukiamo riba"
-
-msgid "  Break that resets it"
-msgstr "  Atstatanti pertrauka"
-
-msgid "{minutes} min"
-msgstr "{minutes} min."

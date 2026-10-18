@@ -2408,26 +2408,8 @@ msgstr "  Vila"
 msgid "  Available"
 msgstr "  Tillgänglig"
 
-msgid "DRIVING-TIME RULES"
-msgstr "REGLER FÖR KÖRTID"
-
-msgid "  Days flagged"
-msgstr "  Flaggade dagar"
-
 msgid "INTEGRITY"
 msgstr "INTEGRITET"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Byte-redovisad täckning"
-
-msgid "  Daily driving limit"
-msgstr "  Gräns daglig körtid"
-
-msgid "  Continuous driving limit"
-msgstr "  Gräns oavbruten körtid"
-
-msgid "  Break that resets it"
-msgstr "  Paus som nollställer"
-
-msgid "{minutes} min"
-msgstr "{minutes} min"

@@ -2408,26 +2408,8 @@ msgstr "  Адпачынак"
 msgid "  Available"
 msgstr "  Даступны"
 
-msgid "DRIVING-TIME RULES"
-msgstr "ПРАВІЛЫ ЧАСУ КІРАВАННЯ"
-
-msgid "  Days flagged"
-msgstr "  Дзён з парушэннямі"
-
 msgid "INTEGRITY"
 msgstr "ЦЭЛАСНАСЦЬ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Пакрыццё ў байтах"
-
-msgid "  Daily driving limit"
-msgstr "  Штодзённая мяжа"
-
-msgid "  Continuous driving limit"
-msgstr "  Безупынная мяжа"
-
-msgid "  Break that resets it"
-msgstr "  Перапынак, які скідвае"
-
-msgid "{minutes} min"
-msgstr "{minutes} хв"

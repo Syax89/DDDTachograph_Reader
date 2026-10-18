@@ -2408,26 +2408,8 @@ msgstr "  Puhkus"
 msgid "  Available"
 msgstr "  Saadaval"
 
-msgid "DRIVING-TIME RULES"
-msgstr "SÕIDUAJA REEGLID"
-
-msgid "  Days flagged"
-msgstr "  Rikkumistega päevad"
-
 msgid "INTEGRITY"
 msgstr "TERVIIKLIKKUS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Baidipõhine kaetus"
-
-msgid "  Daily driving limit"
-msgstr "  Päevase sõidu piir"
-
-msgid "  Continuous driving limit"
-msgstr "  Katkematu sõidu piir"
-
-msgid "  Break that resets it"
-msgstr "  Nulliv paus"
-
-msgid "{minutes} min"
-msgstr "{minutes} min"

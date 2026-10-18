@@ -66,7 +66,7 @@ The tree organizes all parsed data into sections. Clicking a section shows its r
 
 | Section | Contents |
 |---------|----------|
-| **Summary** | The view a file opens on (always the first node): file name and the period it covers, driver and/or vehicle, activity totals, the days flagged by the driving-time rules, and integrity |
+| **Summary** | The view a file opens on (always the first node): file name and the period it covers, driver and/or vehicle, activity totals, and integrity |
 | **File Info** | File name, origin (Driver Card / Vehicle Unit, including "from VU download"), generation, integrity, decoder failures |
 | **Driver / Cardholder** | Card holder identity (driver card files) |
 | **Vehicle** | VIN, plate, registration nation, tachograph (next calibration, tyre size, authorised speed) |

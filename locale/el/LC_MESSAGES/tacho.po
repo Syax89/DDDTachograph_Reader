@@ -2408,26 +2408,8 @@ msgstr "  Ανάπαυση"
 msgid "  Available"
 msgstr "  Διαθεσιμότητα"
 
-msgid "DRIVING-TIME RULES"
-msgstr "ΚΑΝΟΝΕΣ ΧΡΟΝΟΥ ΟΔΗΓΗΣΗΣ"
-
-msgid "  Days flagged"
-msgstr "  Ημέρες με παραβάσεις"
-
 msgid "INTEGRITY"
 msgstr "ΑΚΕΡΑΙΟΤΗΤΑ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Κάλυψη σε byte"
-
-msgid "  Daily driving limit"
-msgstr "  Ημερήσιο όριο"
-
-msgid "  Continuous driving limit"
-msgstr "  Όριο συνεχούς οδήγησης"
-
-msgid "  Break that resets it"
-msgstr "  Διάλειμμα επαναφοράς"
-
-msgid "{minutes} min"
-msgstr "{minutes} λεπ."

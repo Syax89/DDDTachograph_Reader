@@ -2408,26 +2408,8 @@ msgstr "  Pihenő"
 msgid "  Available"
 msgstr "  Rendelkezésre állás"
 
-msgid "DRIVING-TIME RULES"
-msgstr "VEZETÉSI IDŐ SZABÁLYAI"
-
-msgid "  Days flagged"
-msgstr "  Szabálysértő napok"
-
 msgid "INTEGRITY"
 msgstr "INTEGRITÁS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Bájtlefedettség"
-
-msgid "  Daily driving limit"
-msgstr "  Napi vezetés határa"
-
-msgid "  Continuous driving limit"
-msgstr "  Folyamatos vezetés"
-
-msgid "  Break that resets it"
-msgstr "  Nullázó szünet"
-
-msgid "{minutes} min"
-msgstr "{minutes} perc"

@@ -2408,26 +2408,8 @@ msgstr "  Repos"
 msgid "  Available"
 msgstr "  Disponibilité"
 
-msgid "DRIVING-TIME RULES"
-msgstr "RÈGLES DE TEMPS DE CONDUITE"
-
-msgid "  Days flagged"
-msgstr "  Jours en infraction"
-
 msgid "INTEGRITY"
 msgstr "INTÉGRITÉ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Couverture en octets"
-
-msgid "  Daily driving limit"
-msgstr "  Limite journalière"
-
-msgid "  Continuous driving limit"
-msgstr "  Limite conduite continue"
-
-msgid "  Break that resets it"
-msgstr "  Pause remettant à zéro"
-
-msgid "{minutes} min"
-msgstr "{minutes} min"

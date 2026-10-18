@@ -12,14 +12,13 @@ What is pinned here, against a real ``TachoExplorer`` (skipped cleanly when no
 display is available, the same pattern as ``test_gui_driving_rules.py``):
 
 * the node is first, keeps the summary renderer, and is what a parse selects;
-* its rows carry the file period, the activity totals and the number of days the
-  driving-time rules flag — cross-checked against
-  ``core.utils.activity_stats.evaluate_driving_rules`` itself, so the overview
-  cannot silently disagree with the evaluator;
-* the applied limits are stated one short row each, derived from the
-  ``core.utils.activity_stats`` constants (moving them moves the rows) and
-  measured against the panel's own value column at the minimum window
-  (900x560), where the single-sentence row this replaced was clipped;
+* its rows carry the file period and the activity totals — the totals are
+  cross-checked against ``core.utils.activity_stats.compute_activity_totals``
+  itself, so the overview cannot silently disagree with the section it
+  summarises (the driving-time-rules block that used to sit here — how many
+  days the rules flag, and the three limits — was removed on the owner's
+  decision, and the tests that pinned it went with it: see
+  ``test_summary_blocks_are_all_present_in_order``);
 * **every** row the panel renders is measured, in **every** one of the 34
   catalogs and in every state of the INTEGRITY block, against the widths the
   panel really lays out — and the rows that still cannot fit are named, with
@@ -56,7 +55,7 @@ pytest.importorskip("tkinter")
 
 import app.gui as gui  # noqa: E402
 import app.i18n as i18n  # noqa: E402
-from core.utils.activity_stats import evaluate_driving_rules  # noqa: E402
+from core.utils.activity_stats import compute_activity_totals  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MOCK_DIR = REPO_ROOT / "tests" / "mock_data"
@@ -70,17 +69,8 @@ FILE_INFO_TITLE = i18n._("File Info")
 DRIVER_TITLE = i18n._("Driver / Cardholder")
 VEHICLE_TITLE = i18n._("Vehicle")
 
-#: The three rows the overview states the applied limits in — one short
-#: label/value row each (see ``test_the_rules_rows_fit_the_value_column_at_the_
-#: minimum_window`` for why they are not one sentence).
-LIMIT_ROWS = (
-    "  Daily driving limit",
-    "  Continuous driving limit",
-    "  Break that resets it",
-)
-
 #: ``TachoExplorer.minsize(900, 560)``: the smallest window the product
-#: supports, and the geometry the single-sentence limits row was clipped at.
+#: supports, and the geometry the summary panel's rows are measured at.
 MINIMUM_SIZE = "900x560"
 
 #: The font family every fit measurement below is taken with — **pinned**, never
@@ -361,20 +351,12 @@ CASE_VERDICTS = {
 #:   the column in bg, lv, mk and uk as well. It is the same string the File Info
 #:   section and the dashboards show, so it is not this panel's wording to cut
 #:   either.
-#: ``DRIVING-TIME RULES`` (a block *header*, not a value) — the translated title
-#:   clips the 198 px Field column in 22 catalogs (317 px in ro); the other five
-#:   headers fit everywhere. The msgid used to carry a ``⏱️`` prefix that the
-#:   icon work removed from every catalog and from the call site: a name keyed
-#:   on the old spelling matches no rendered row, so it silently stopped
-#:   exempting anything and the sweep reported the title as unexpected in those
-#:   16 catalogs.
 #:
 #: None of them is a silent pass: ``test_an_over_wide_cell_is_readable_in_full_on_hover``
 #: pins the panel's hover reveal, and the sweep below measures that reveal on
 #: every one of those cells, in every catalog, as it goes. Any *other* row that
 #: stops fitting fails the sweep with its width, its language and its text.
-OVER_WIDE_ROWS = ("  Status", "  Period covered", "  Origin",
-                  "DRIVING-TIME RULES")
+OVER_WIDE_ROWS = ("  Status", "  Period covered", "  Origin")
 
 #: The row the defect reported as clipped — the one this test file exists to keep
 #: fitting — so it may never join :data:`OVER_WIDE_ROWS`: not its 198 px Field
@@ -618,7 +600,6 @@ def test_summary_blocks_are_all_present_in_order(explorer):
         i18n._("CARDHOLDER"),
         i18n._("VEHICLE"),
         i18n._("TOTALS"),
-        i18n._("DRIVING-TIME RULES"),
         i18n._("INTEGRITY"),
     ]
 
@@ -645,71 +626,54 @@ def test_file_block_says_so_when_there_are_no_activity_days(explorer):
 
 
 def test_totals_block_sums_the_file_with_the_shared_duration_formatter(explorer):
-    """18 h 15 m of drive over three days: 10 h 15 m + 8 h + a day of rest."""
+    """18 h 15 m of drive over three days: 10 h 15 m + 8 h + a day of rest.
+
+    Cross-checked against ``compute_activity_totals`` itself — the shared
+    evaluator the CLI, the PDF cover and the timeline all use — so the overview
+    cannot silently disagree with the section it summarises.
+    """
     open_file(explorer, card_data())
     rows = summary_rows(explorer)
 
-    assert row_value(rows, i18n._("  Drive")) == "18h 15m"
-    assert row_value(rows, i18n._("  Work")) == "0h 00m"
-    assert row_value(rows, i18n._("  Rest")) == "53h 45m"
-    assert row_value(rows, i18n._("  Available")) == "0h 00m"
+    expected = {"DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0}
+    for day in (FLAGGED_DAY, CLEAN_DAY, REST_DAY):
+        for kind, minutes in compute_activity_totals(day["changes"]).items():
+            if kind in expected:
+                expected[kind] += minutes
+
+    assert row_value(rows, i18n._("  Drive")) == \
+        gui._fmt_duration_minutes(expected["DRIVE"])
+    assert row_value(rows, i18n._("  Work")) == \
+        gui._fmt_duration_minutes(expected["WORK"])
+    assert row_value(rows, i18n._("  Rest")) == \
+        gui._fmt_duration_minutes(expected["REST"])
+    assert row_value(rows, i18n._("  Available")) == \
+        gui._fmt_duration_minutes(expected["AVAILABLE"])
     assert row_value(rows, i18n._("  Days with activity")) == "3"
 
 
-def test_driving_time_rules_count_the_flagged_days(explorer):
-    """One flagged day — and the number is the evaluator's own verdict."""
-    open_file(explorer, card_data())
-    rows = summary_rows(explorer)
+def test_the_driving_time_rules_block_is_no_longer_on_the_overview(explorer):
+    """The block the owner removed: no header, no count, no limits, no marker.
 
-    expected = sum(1 for day in (FLAGGED_DAY, CLEAN_DAY, REST_DAY)
-                   if evaluate_driving_rules(day["changes"]).flagged)
-    assert expected == 1, "the fixture must contain exactly one violation"
-    assert row_value(rows, i18n._("  Days flagged")) == str(expected)
-
-
-def test_a_clean_file_reports_a_zero_and_never_a_warning(explorer):
-    """Zero flagged days is the good news: a plain count, no warning marker."""
-    open_file(explorer, card_data(activities=[CLEAN_DAY, REST_DAY]))
-    rows = summary_rows(explorer)
-
-    flagged = row_value(rows, i18n._("  Days flagged"))
-    assert flagged == "0"
-    assert "!" not in flagged
-    for label in LIMIT_ROWS:
-        assert "!" not in row_value(rows, i18n._(label))
-
-
-def test_rules_block_states_the_limits_it_applied(explorer):
-    """One short row per limit, formatted exactly as the panel formats them."""
-    open_file(explorer, card_data())
-    rows = summary_rows(explorer)
-
-    assert row_value(rows, i18n._("  Daily driving limit")) == \
-        gui._fmt_duration_minutes(gui.DAILY_DRIVE_LIMIT_MIN)
-    assert row_value(rows, i18n._("  Continuous driving limit")) == \
-        gui._fmt_duration_minutes(gui.CONTINUOUS_DRIVE_LIMIT_MIN)
-    assert row_value(rows, i18n._("  Break that resets it")) == \
-        i18n._("{minutes} min").format(minutes=gui.QUALIFYING_BREAK_MIN)
-
-
-def test_rules_block_reads_the_limits_from_the_constants(explorer, monkeypatch):
-    """Move the three constants and the rows follow: no literal is baked in.
-
-    Together with the default-value assertions above this pins both halves of
-    the contract — the numbers are not hardcoded (they change with the
-    constants) and are not formatted ad hoc (they use the shared duration
-    formatter and the ``{minutes} min`` message).
+    The owner's decision (a file *analyzer* does not need the driving-time rules
+    yet — their limits are still being decided) removed the block outright, not
+    just hid it: the header, the flagged-day count and the three limit rows are
+    gone from the page and from the catalogs. This test is the shape of that
+    decision, so re-adding any of them is a deliberate act, not a regression
+    nobody notices. The *evaluation* is untouched — see
+    ``core/utils/activity_stats.evaluate_driving_rules`` and the dashboard's
+    ``SHOW_DRIVING_INFRACTIONS`` switch — so nothing here may be read as "the
+    rules were deleted".
     """
-    monkeypatch.setattr(gui, "DAILY_DRIVE_LIMIT_MIN", 600)
-    monkeypatch.setattr(gui, "CONTINUOUS_DRIVE_LIMIT_MIN", 240)
-    monkeypatch.setattr(gui, "QUALIFYING_BREAK_MIN", 60)
-
     open_file(explorer, card_data())
-    rows = summary_rows(explorer)
+    labels = [row[0] for row in summary_rows(explorer)]
 
-    assert row_value(rows, i18n._("  Daily driving limit")) == "10h 00m"
-    assert row_value(rows, i18n._("  Continuous driving limit")) == "4h 00m"
-    assert row_value(rows, i18n._("  Break that resets it")) == "60 min"
+    for gone in ("DRIVING-TIME RULES", "  Days flagged", "  Daily driving limit",
+                 "  Continuous driving limit", "  Break that resets it"):
+        assert i18n._(gone) not in labels, f"{gone!r} came back to the overview"
+    # ... and the rest of the page is intact: the block was the only thing lost.
+    for kept in ("FILE", "TOTALS", "INTEGRITY", "  Days with activity"):
+        assert i18n._(kept) in labels, f"{kept!r} disappeared with the block"
 
 
 def test_the_fit_sweep_measures_a_pinned_font(explorer, monkeypatch):
@@ -755,32 +719,6 @@ def test_the_fit_sweep_measures_a_pinned_font(explorer, monkeypatch):
     assert family == gui.tkfont.nametofont("TkDefaultFont").actual("family")
 
 
-def test_the_rules_rows_fit_the_value_column_at_the_minimum_window(explorer):
-    """The row this replaced was clipped at 900x560 — the app's own minsize.
-
-    The overview used to state both limits in one sentence ("9h 00m daily
-    driving \u00b7 4h 30m continuous without a 45 min break"), 469 px of text
-    in the 187 px value column the summary panel gets at the smallest window it
-    supports. The panel deliberately never auto-fits (``_show_summary``) and Tk
-    *clips* an overlong cell instead of wrapping it, so that row was cut off
-    mid-string. Measured here on the real panel: the value cell's own width
-    (``bbox``) against the font's measurement of every rules row.
-    """
-    explorer.geometry(MINIMUM_SIZE)
-    explorer.update()
-    open_file(explorer, card_data())
-    explorer.update()
-
-    value_w = value_column_width(explorer)
-    assert value_w > 0, "the panel must be laid out to be measured"
-    font = measure_font()
-    for label in LIMIT_ROWS:
-        text = rendered_value(explorer, i18n._(label))
-        assert font.measure(text) <= value_w, (
-            f"{label!r} ({text!r}) is {font.measure(text)} px wide in a "
-            f"{value_w} px value column at {MINIMUM_SIZE}")
-
-
 def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explorer):
     """Measure the whole panel, in every catalog — not a hand-picked few rows.
 
@@ -811,8 +749,8 @@ def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explor
     explorer.update()
     font = measure_font()
     # Block headers are drawn bold, so they are measured with their own font —
-    # the translated "DRIVING-TIME RULES" title clips in 22 catalogs (317 px in
-    # ro) while the body font would call it a fit.
+    # bold is wider than the body font, and the body font would call a clipped
+    # header a fit.
     heading_font = measure_font(heading=True)
     # The sweep is only meaningful in the *pinned* font: ``cget("family")`` is
     # what was asked for, so this catches a measurement quietly taken from the
@@ -942,16 +880,10 @@ def test_an_over_wide_cell_is_readable_in_full_on_hover(explorer):
     # ... and hovering a cell that fits hides it again.
     coverage_number = panel_row_number(explorer, i18n._("  Byte-accounted coverage"))
     assert hover_cell(explorer, coverage_number, "Value") is None
-    # A block header is a row too: the title clips in this language's neighbours
-    # and must be revealable with the bold font it is drawn with.
-    rules_header = panel_row_number(explorer, i18n._("DRIVING-TIME RULES"))
-    heading_font = drawn_font(heading=True)
-    header_text = i18n._("DRIVING-TIME RULES")
-    revealed = hover_cell(explorer, rules_header, "Field")
-    if heading_font.measure(header_text) > field_column_width(explorer):
-        assert revealed == header_text
-    else:
-        assert revealed is None
+    # (The one block header that used to clip in 22 catalogs, the translated
+    # "DRIVING-TIME RULES" title, is no longer on the page; every remaining row
+    # is still measured by the sweep above, headers included, with the bold
+    # font they are drawn in.)
     # ... and a <Leave> on the panel hides it (the binding, not just the handler).
     hover_cell(explorer, status_number, "Value")
     assert explorer._summary_tip_lbl.winfo_manager() == "place"
@@ -1049,7 +981,9 @@ def test_a_file_without_driver_data_gains_no_driver_block(explorer):
         "and the pre-existing no-driver rule is unchanged"
     # The rest of the overview is still there — only the driver block is gone.
     assert tree_titles(explorer)[0] == SUMMARY_TITLE
-    assert row_value(rows, i18n._("  Days flagged")) == "1"
+    assert row_value(rows, i18n._("  Period covered")) == \
+        i18n._("{first} \u2192 {last}").format(first="01/05/2025",
+                                                 last="03/05/2025")
 
 
 def test_a_card_that_recorded_no_vehicle_gains_no_vehicle_block(explorer):
@@ -1104,7 +1038,7 @@ def test_selecting_the_overview_again_after_another_section(explorer):
 
     select(explorer, node_by_title(explorer, SUMMARY_TITLE))
     assert explorer.table._summary_mode is True
-    assert rendered_value(explorer, i18n._("  Days flagged")) == "1"
+    assert rendered_value(explorer, i18n._("  Days with activity")) == "3"
 
 
 def test_the_translate_data_rebuild_keeps_the_overview_selected(explorer):
@@ -1117,7 +1051,7 @@ def test_the_translate_data_rebuild_keeps_the_overview_selected(explorer):
     selection = explorer.tree.selection()
     assert selection[0] == explorer.tree.get_children("")[0]
     assert explorer.tree.item(selection[0], "text") == SUMMARY_TITLE
-    assert rendered_value(explorer, i18n._("  Days flagged")) == "1"
+    assert rendered_value(explorer, i18n._("  Days with activity")) == "3"
 
 
 # ── fallbacks ─────────────────────────────────────────────────────────────
@@ -1180,4 +1114,5 @@ def test_a_really_parsed_card_file_opens_on_the_overview(explorer):
     # A real file: the identity comes from the decoded card, not the fixture.
     assert row_value(rows, i18n._("  Filename")) == path.name
     assert i18n._("  Days with activity") in [row[0] for row in rows]
-    assert i18n._("  Days flagged") in [row[0] for row in rows]
+    # The driving-time-rules block is gone from every file, a real one included.
+    assert i18n._("  Days flagged") not in [row[0] for row in rows]

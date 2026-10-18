@@ -9,6 +9,17 @@
   changes: the same tree, the same file overview selected at the end, Open and
   Export disabled until it is over, and a second open or a drop during the
   render is refused instead of running a second render on top of the first.
+- **Driving-time infractions, hidden for now**: the Summary no longer states a
+  `DRIVING-TIME RULES` block (how many days the rules flag, and the two limits
+  applied), and the remaining infraction surfaces — the red row on a day that
+  breaks the daily or the continuous driving limit, the `!` next to that day's
+  Drive total, the tooltip that explains it, and the `Days over 9 h` card on the
+  Daily Activities dashboard — sit behind one switch
+  (`app.gui.SHOW_DRIVING_INFRACTIONS`, shipped off) while their thresholds are
+  decided. The rules are still evaluated day by day, so flipping that single
+  name restores every surface. File-integrity and calibration warnings are
+  untouched, and the exports never reported the flag. Six now-unused msgids were
+  dropped from all 33 catalogs (791 → 785 entries each).
 - **Icons drawn, not typed**: every place the interface used an emoji now draws
   a PNG from a commissioned monochrome icon set (`assets/icons/`, 28 icons at
   six sizes, with the designer's SVG masters), so the same build looks the same
