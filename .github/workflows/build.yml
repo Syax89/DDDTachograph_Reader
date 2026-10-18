@@ -1,8 +1,7 @@
 name: Build TachoReader
 
-# Every branch push and every pull request builds all three platforms, so no
-# change can land with a platform that never compiled. Version tags are handled
-# by release.yml, which is why the push filter is branch-only ('**').
+# Build all three platforms on every branch push and pull request.
+# Version tags are handled by release.yml, hence the branch-only push filter.
 on:
   push:
     branches: [ "**" ]
@@ -123,7 +122,7 @@ jobs:
         if-no-files-found: error
 
   all-platforms-verified:
-    # Single required status for "every platform built and passed its smoke
+    # Single aggregate status for "every platform built and passed its smoke
     # test". The matrix job above is 'success' only when BOTH Windows and macOS
     # succeeded, so the two checks below cover all three platforms.
     name: All platforms verified

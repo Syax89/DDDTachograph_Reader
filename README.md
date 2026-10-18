@@ -203,19 +203,15 @@ those fixtures are unavailable.
 
 ### Continuous Integration
 
-CI builds **all three platforms on every branch push, every pull request and
-every manual (`workflow_dispatch`) run**: a PyInstaller bundle is frozen and
-smoke-tested on Windows and macOS (matrix without `fail-fast`, so one platform
-failing never hides the other), and on Linux the same frozen bundle is packaged
-into a Flatpak, installed, run head-less (parser smoke test) and started under
-Xvfb to prove a real GUI window maps. The build workflow ends with a single
-**All platforms verified** job that passes only when Windows, macOS *and* the
-Linux Flatpak all succeeded — a failed, cancelled or skipped platform fails that
-gate. Tagged releases (`v*`) run the release workflow: each platform uploads its
-package as an artifact, and one final `publish-release` job downloads all three,
-asserts all three filenames are present and only then publishes them together,
-so a tag never produces a partial release. Badge above tracks the build
-workflow.
+Every branch push, pull request and manual build runs **Windows, macOS and
+Linux Flatpak** with native bundle/parser smoke tests; Linux also installs the
+Flatpak and checks its GUI under Xvfb. Matrix fail-fast is disabled, so a failure
+does not cancel another platform. **All platforms verified** passes only when
+all three builds and their checks succeed; failed, cancelled or skipped builds
+fail the gate. Tagged releases (`v*`) start publication only after all three
+platforms succeed and all three non-empty packages are available. Existing
+lint, translation, test and coverage checks run on the same branch/PR/manual
+events. Repository branch-protection settings are unchanged.
 
 ---
 
