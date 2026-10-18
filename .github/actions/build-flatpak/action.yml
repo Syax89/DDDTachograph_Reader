@@ -1,0 +1,164 @@
+name: Build Linux Flatpak bundle
+description: >
+  Freeze the application with the existing PyInstaller spec on Ubuntu 24.04 and
+  package the resulting dist/TachoReader directory as a Linux x86_64 Flatpak.
+  Shared by the PR/push build and the tag-release workflow so both produce the
+  same bundle; installs the produced .flatpak and smoke-tests it for real.
+
+inputs:
+  bundle-name:
+    description: File name for the produced .flatpak bundle.
+    required: true
+
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+
+    - name: Install build and Flatpak tooling
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          flatpak flatpak-builder python3-tk xvfb x11-utils
+        # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor,
+        # which breaks the bwrap sandbox flatpak-builder needs. No-op on images
+        # without that sysctl.
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+
+    - name: Install Python dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Build frozen bundle with PyInstaller
+      # build.spec stays the single source of truth for hidden imports, datas,
+      # windowed mode and app version. python3-tk guarantees Tk is importable at
+      # freeze time; the assert below proves Tcl/Tk actually ended up *inside*
+      # the bundle, because the sandbox only provides X11 client libraries.
+      shell: bash
+      run: |
+        pyinstaller --noconfirm build.spec
+        test -x dist/TachoReader/TachoReader \
+          || { echo "::error::dist/TachoReader/TachoReader missing after pyinstaller"; exit 1; }
+        for lib in libtcl8.6.so libtk8.6.so; do
+          if [ -z "$(find dist/TachoReader -maxdepth 2 -name "$lib" -print -quit)" ]; then
+            echo "::error::$lib missing from the frozen bundle: Tk cannot start in the sandbox"
+            exit 1
+          fi
+        done
+
+    - name: Generate synthetic mock data
+      shell: bash
+      run: python tests/integration/generate_mock_ddd.py
+
+    - name: Install Flatpak runtime and SDK
+      shell: bash
+      run: |
+        flatpak remote-add --if-not-exists --user flathub \
+          https://dl.flathub.org/repo/flathub.flatpakrepo
+        flatpak install --user -y --noninteractive flathub \
+          org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08
+
+    - name: Build Flatpak and export bundle
+      shell: bash
+      env:
+        BUNDLE_NAME: ${{ inputs.bundle-name }}
+      run: |
+        set -euo pipefail
+        flatpak-builder --user --force-clean --disable-rofiles-fuse \
+          --repo=flatpak-repo --state-dir=flatpak-state \
+          flatpak-build flatpak/io.github.Syax89.TachoReader.yml
+        # --runtime-repo lets a fresh machine resolve org.freedesktop.Platform
+        # from Flathub when it installs this bundle.
+        flatpak build-bundle --arch=x86_64 \
+          --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo \
+          flatpak-repo "$BUNDLE_NAME" \
+          io.github.Syax89.TachoReader master
+        test -s "$BUNDLE_NAME"
+
+    - name: Install the produced bundle
+      # Smoke-test what users get: the exported .flatpak, not the build dir.
+      shell: bash
+      env:
+        BUNDLE_NAME: ${{ inputs.bundle-name }}
+      run: |
+        flatpak install --user -y --noninteractive --bundle "$BUNDLE_NAME"
+        flatpak info io.github.Syax89.TachoReader
+
+    - name: Smoke test the installed Flatpak
+      # Composite-action steps cannot set timeout-minutes, so bound the runs
+      # here: a hung GUI-mode start must never eat the job budget.
+      # TACHO_SMOKE_LOG is passed with --env because the sandbox does not
+      # inherit the host environment.
+      shell: bash
+
+      run: |
+        set -euo pipefail
+        timeout 120 flatpak run --env=TACHO_SMOKE_LOG=smoke.log \
+          io.github.Syax89.TachoReader --version
+        timeout 180 flatpak run --env=TACHO_SMOKE_LOG=smoke.log \
+          io.github.Syax89.TachoReader --smoke "$PWD/tests/mock_data/mock_g2_card.ddd"
+        cat smoke.log 2>/dev/null || true
+
+    - name: GUI smoke test (real X11 window)
+      # No window manager under Xvfb: just assert that the app maps its own
+      # top-level window, then shut it down within a bounded timeout.
+      shell: bash
+      run: |
+        set -euo pipefail
+        timeout 300 xvfb-run -a -s "-screen 0 1280x1024x24" bash -euo pipefail -s <<'GUI'
+        APP=io.github.Syax89.TachoReader
+        flatpak run "$APP" > gui.log 2>&1 &
+        run_pid=$!
+        found=""
+        for _ in $(seq 1 60); do
+          if xwininfo -root -tree 2>/dev/null | grep -q 'Tacho Explorer'; then
+            found=yes
+            break
+          fi
+          sleep 1
+        done
+        xwininfo -root -tree > gui-windows.log 2>&1 || true
+        if [ -z "$found" ]; then
+          echo "::error::GUI smoke: no TachoReader top-level X11 window after 60s"
+          echo "--- xwininfo -root -tree ---"
+          cat gui-windows.log
+          echo "--- flatpak run output ---"
+          cat gui.log
+          exit 1
+        fi
+        echo "GUI smoke: TachoReader window mapped"
+        flatpak kill "$APP" 2>/dev/null || kill "$run_pid" 2>/dev/null || true
+        for _ in $(seq 1 20); do
+          flatpak ps 2>/dev/null | grep -q "$APP" || break
+          sleep 1
+        done
+        if flatpak ps 2>/dev/null | grep -q "$APP"; then
+          echo "::error::GUI smoke: app did not terminate within 20s"
+          flatpak ps
+          cat gui.log
+          flatpak kill "$APP" 2>/dev/null || true
+          exit 1
+        fi
+        wait "$run_pid" 2>/dev/null || true
+        echo "GUI smoke: app terminated cleanly"
+        GUI
+
+    - name: Show failure logs
+      if: failure()
+      shell: bash
+      run: |
+        echo "--- smoke.log ---"
+        cat smoke.log 2>/dev/null || echo "(absent)"
+        echo "--- gui.log ---"
+        cat gui.log 2>/dev/null || echo "(absent)"
+        echo "--- gui-windows.log ---"
+        cat gui-windows.log 2>/dev/null || echo "(absent)"
+        flatpak list --app 2>/dev/null || true

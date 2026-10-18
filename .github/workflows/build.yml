@@ -93,3 +93,24 @@ jobs:
           dist/TachoReader.exe
           dist/TachoReader.app
           dist/TachoReader
+
+  build-linux-flatpak:
+    # Linux packaging: the frozen bundle from build.spec, wrapped in a Flatpak.
+    # Sits outside the Windows/macOS matrix because the packaging steps (and the
+    # base image, which must be a stable glibc for the bundle) are Linux-only.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Build, install and smoke-test Flatpak
+      uses: ./.github/actions/build-flatpak
+      with:
+        bundle-name: TachoReader-linux-x86_64.flatpak
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: TachoReader-linux-x86_64
+        path: TachoReader-linux-x86_64.flatpak
+        if-no-files-found: error
