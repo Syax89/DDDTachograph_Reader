@@ -267,3 +267,200 @@ class TestDayDetailSlotFragmentsAreTranslated:
         assert "[Slot" not in fragments["CARD_IN"][0]
         # The data behind it is untouched: the raw card_slot keys stay 1/2.
         assert [rec["card_slot"] for rec in self._DATA["card_iw_records"]] == [0, 1]
+
+
+# ── Hover tooltips must stay inside the canvas ────────────────────────────
+#
+# ``_show_hover`` used to place every tooltip with a *fixed* allowance
+# (260/300 px) and never measured the string it had just drawn. Translated
+# activity labels are longer than their English msgids, so hovering slot 2's
+# rest row near the right plot edge pushed the Italian tooltip
+# "Alloggiamento 2  Riposo  [00:00 — 24:00]  ·  24h 00m" 54 px past a 760 px
+# canvas — the duration was simply cut off. The three branches (card markers,
+# out-of-scope markers, activity blocks) shared that duplicated drawing code,
+# so they are now checked here through the one shared renderer.
+
+#: The reviewed repro day: slot 1 drives while slot 2 rests all day, so the
+#: slot-2 tooltip is the widest one the chart ever draws.
+VU_TWO_SLOT_DAY = [
+    {"time": "00:00", "activity": "DRIVE", "slot": "First"},
+    {"time": "00:00", "activity": "REST", "slot": "Second"},
+]
+
+SLOT_TWO_REST_TEXT = {
+    "en": "Slot 2  Rest  [00:00 \u2014 24:00]  \u00b7  24h 00m",
+    "it": "Alloggiamento 2  Riposo  [00:00 \u2014 24:00]  \u00b7  24h 00m",
+}
+
+#: A driver name long enough to overflow the canvas from a card marker.
+LONG_DRIVER_NAME = "Massimiliano Alessandro Della Valle-Schwarzenegger"
+
+#: A deliberately oversized tooltip: 40 words cannot fit any canvas we draw.
+OVERSIZED_LABEL = " ".join(f"parola{index}" for index in range(40))
+
+
+def _hover(canvas_chart, x, y):
+    canvas_chart._show_hover(types.SimpleNamespace(x=x, y=y))
+
+
+def _hover_items(canvas_chart):
+    """``[(kind, text_or_None, bbox)]`` for the tooltip currently drawn."""
+    canvas = canvas_chart.canvas
+    items = []
+    for item in canvas.find_withtag("act_hover"):
+        kind = canvas.type(item)
+        text = canvas.itemcget(item, "text") if kind == "text" else None
+        items.append((kind, text, canvas.bbox(item)))
+    return items
+
+
+def _assert_tooltip_inside(canvas_chart, *, expect_fragments=()):
+    """Every tooltip item is on-canvas and the whole text survived."""
+    width = canvas_chart.canvas.winfo_width()
+    items = _hover_items(canvas_chart)
+    texts = [text for kind, text, _bbox in items if kind == "text"]
+    assert len(texts) == 1, items
+    for kind, _text, (x0, y0, x1, y1) in items:
+        assert x0 >= 0, f"{kind} starts off-canvas at x={x0}"
+        assert x1 <= width, f"{kind} ends past the canvas at x={x1} (width={width})"
+        assert y0 >= 0 and y1 <= canvas_chart.canvas.winfo_height()
+    # Tk wraps on whitespace, so comparing the joined words proves that no
+    # character was lost — and no fragment landed outside the canvas above.
+    flat = "".join(texts[0].split())
+    for fragment in expect_fragments:
+        assert "".join(fragment.split()) in flat, (fragment, texts[0])
+    return texts[0]
+
+
+def _row(chart, activity, slot_tag):
+    return next(row for row in chart._layout["act_rows"]
+                if row[0] == activity and row[3] and row[4] == slot_tag)
+
+
+class TestHoverTooltipStaysInsideTheCanvas:
+    """The translated tooltip is measured, not guessed, before it is drawn."""
+
+    def test_italian_slot_two_tooltip_keeps_its_duration(self, root, chart):
+        """The reviewed repro: 54 px of the duration were off a 760 px canvas."""
+        _require_catalog("it")
+        chart.show(DAY, True, VU_TWO_SLOT_DAY)
+        root.update()
+
+        row = _row(chart, "REST", "Slot 2")
+        left, plot_width = chart._layout["left"], chart._layout["plot_width"]
+        # Right plot edge: the widest translation starts furthest right.
+        _hover(chart, left + plot_width - 1, (row[1] + row[2]) / 2)
+
+        text = _assert_tooltip_inside(
+            chart, expect_fragments=("Alloggiamento 2", "Riposo", "24h 00m"))
+        assert text.split() == SLOT_TWO_REST_TEXT["it"].split()
+        # Internal bookkeeping still holds the English keys the backend emits.
+        assert row[4] == "Slot 2"
+        assert sorted(chart._slots) == ["Slot 1", "Slot 2"]
+
+    def test_every_catalog_fits_at_both_plot_edges(self, root, chart):
+        """Cheap sweep: every shipped language, hovered at x=left and x=right."""
+        clipped = []
+        for code in ("en", *i18n.LANGUAGES):
+            mo = CATALOG_DIR / code / "LC_MESSAGES" / "tacho.mo"
+            if code != "en" and not mo.exists():
+                continue
+            i18n.install(code)
+            chart.show(DAY, True, VU_TWO_SLOT_DAY)
+            root.update()
+            width = chart.canvas.winfo_width()
+            left, plot_width = chart._layout["left"], chart._layout["plot_width"]
+            row = _row(chart, "REST", "Slot 2")
+            y = (row[1] + row[2]) / 2
+            for x in (left, left + plot_width - 1):
+                _hover(chart, x, y)
+                items = _hover_items(chart)
+                texts = [text for kind, text, _bbox in items if kind == "text"]
+                if len(texts) != 1:
+                    clipped.append((code, x, "missing tooltip", items))
+                    continue
+                if "24h00m" not in "".join(texts[0].split()):
+                    clipped.append((code, x, "duration lost", texts[0]))
+                for kind, _text, (x0, _y0, x1, _y1) in items:
+                    if x0 < 0 or x1 > width:
+                        clipped.append((code, x, kind, (x0, x1, width)))
+            # The raw slot keys must never be rewritten by the fix.
+            assert sorted(chart._slots) == ["Slot 1", "Slot 2"]
+        assert clipped == []
+
+    def test_english_tooltip_position_is_unchanged(self, root, chart):
+        """English already fit: same spot, same colours, no wrapping."""
+        i18n.install("en")
+        chart.show(DAY, True, VU_TWO_SLOT_DAY)
+        root.update()
+
+        row = _row(chart, "REST", "Slot 2")
+        left, plot_width = chart._layout["left"], chart._layout["plot_width"]
+        event_x = left + plot_width - 1
+        _hover(chart, event_x, (row[1] + row[2]) / 2)
+
+        canvas = chart.canvas
+        text_id = next(item for item in canvas.find_withtag("act_hover")
+                       if canvas.type(item) == "text")
+        # The legacy placement is preserved exactly when the text fits.
+        assert canvas.coords(text_id)[0] == min(event_x + 12,
+                                                canvas.winfo_width() - 300)
+        assert canvas.itemcget(text_id, "text").split() == \
+            SLOT_TWO_REST_TEXT["en"].split()
+        assert "\n" not in canvas.itemcget(text_id, "text")
+        assert canvas.itemcget(text_id, "fill") == "#17212b"
+        assert canvas.itemcget(text_id, "anchor") == "nw"
+        assert int(canvas.itemcget(text_id, "width")) == 0
+
+    def test_card_marker_with_long_driver_name_fits(self, root, chart):
+        """Card-marker branch: a long localized name must not run off-canvas."""
+        i18n.install("en")
+        markers = [(86000, "Slot 2", LONG_DRIVER_NAME, True)]
+        chart.show(DAY, True, VU_TWO_SLOT_DAY, markers=markers)
+        root.update()
+
+        marker_x, marker_y = chart._layout["markers_info"][0][:2]
+        _hover(chart, marker_x, marker_y)
+
+        text = _assert_tooltip_inside(chart, expect_fragments=(LONG_DRIVER_NAME,))
+        assert "Insertion:" in text
+        assert text.endswith("(Slot 2)")
+
+    def test_oos_marker_with_long_label_fits(self, root, chart):
+        """Out-of-scope branch: same shared renderer, same guarantee."""
+        i18n.install("en")
+        events = [(86000, "Ferry/Train crossing near the harbour terminal", None)]
+        chart.show(DAY, True, VU_TWO_SLOT_DAY, oos_events=events)
+        root.update()
+
+        oos_x, oos_y = chart._layout["oos_info"][0][:2]
+        _hover(chart, oos_x, oos_y)
+
+        _assert_tooltip_inside(
+            chart, expect_fragments=("Ferry/Train crossing", ": ?"))
+
+    def test_tooltip_wider_than_the_canvas_wraps(self, root, chart):
+        """Text that cannot fit even at x=0 is wrapped to the canvas width."""
+        i18n.install("en")
+        markers = [(86000, "Slot 2", OVERSIZED_LABEL, True)]
+        chart.show(DAY, True, VU_TWO_SLOT_DAY, markers=markers)
+        root.update()
+
+        canvas = chart.canvas
+        probe = canvas.create_text(-10, -10, text="probe",
+                                   anchor="nw", tags="probe_line_height")
+        probe_box = canvas.bbox(probe)
+        line_height = probe_box[3] - probe_box[1]
+        canvas.delete(probe)
+
+        marker_x, marker_y = chart._layout["markers_info"][0][:2]
+        _hover(chart, marker_x, marker_y)
+
+        # Every word is still rendered ...
+        _assert_tooltip_inside(chart, expect_fragments=(OVERSIZED_LABEL,))
+        # ... and it wraps to the canvas width instead of running off-canvas.
+        text_id = next(item for item in canvas.find_withtag("act_hover")
+                       if canvas.type(item) == "text")
+        assert int(canvas.itemcget(text_id, "width")) == canvas.winfo_width() - 12
+        _x0, y0, _x1, y1 = canvas.bbox(text_id)
+        assert y1 - y0 > 1.5 * line_height
