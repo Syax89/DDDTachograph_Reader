@@ -89,7 +89,7 @@ from core.utils.report_format import (  # noqa: E402
     NATION_COLS, VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
     fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
 from core.utils.activity_stats import (  # noqa: E402
-    CONTINUOUS_DRIVE_LIMIT_MIN, DAILY_DRIVE_LIMIT_MIN, QUALIFYING_BREAK_MIN,
+    DAILY_DRIVE_LIMIT_MIN, QUALIFYING_BREAK_MIN,
     RULE_CONTINUOUS_DRIVING, RULE_DAILY_DRIVING, evaluate_driving_rules)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 from app.i18n import (  # noqa: E402
@@ -276,6 +276,33 @@ LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_pur
 # Technical columns pushed to table end.
 TRAILING_KEYS = ["record_type"]
 SPEED_LIMIT_KMH = 90
+
+#: Whether the driving-time infractions are *shown*. **False by default.**
+#:
+#: This is the one switch for every infraction surface of the UI: the red row
+#: tint on a flagged day of the Daily-Activities dashboard, the ``!`` marker in
+#: that day's Drive cell, the tooltip that names the broken rule with the
+#: measured value, and the "Days over {hours} h" KPI card. Turning them back on
+#: is flipping this single name — no other change is needed anywhere.
+#:
+#: Why off: the owner reviewed the build and decided that, for a *file
+#: analyzer*, the driving-time rules of Reg. (EC) 561/2006 are not needed yet.
+#: Their thresholds (9 h of daily driving, 4 h 30 min of continuous driving, the
+#: 45 min break that resets it) are still being decided, and a red row painted
+#: on a rule whose limits are not final reads as a verdict the product does not
+#: stand behind.
+#:
+#: Hide, do not destroy: the evaluation is untouched and still runs on every day
+#: (``core.utils.activity_stats.evaluate_driving_rules``, called in
+#: :meth:`TachoExplorer._show_daily_summary`), so the numbers behind the switch
+#: are already computed when it flips.
+#:
+#: It deliberately does **not** hide anything about the file itself: the
+#: integrity warnings (the ``status-warning`` triangles on the banner, on the
+#: status badge, on ``Decoder Failures`` and on ``CORRUPTED / PARTIAL FILE``),
+#: the calibration "due in N days" text and the chart event markers all stay
+#: visible — a damaged or expiring file is not a driving-time breach.
+SHOW_DRIVING_INFRACTIONS = False
 
 
 # ── Section definitions ──
@@ -5106,7 +5133,8 @@ class TachoExplorer(tk.Tk):
         ``rule_tips`` (Drive column, the driving-time-rule explanation) are all
         keyed by *row key*, not by display position: the table is sortable and
         filterable, and a positional key handed the tooltip of the day that
-        happened to sit at that index after the reorder.
+        happened to sit at that index after the reorder. ``rule_tips`` is empty
+        while :data:`SHOW_DRIVING_INFRACTIONS` is off.
         """
         self._cleanup_dashboard()
         self._hide_empty_state()
@@ -5166,8 +5194,11 @@ class TachoExplorer(tk.Tk):
         # A day that breaks a driving-time rule (Reg. (EC) 561/2006 art. 6(1)
         # or art. 7). ttk.Treeview can only style a whole row, so the violation
         # tints the row; the Drive cell additionally carries the warning glyph
-        # so the day is recognisable without relying on colour.
-        self.table.tv.tag_configure("flagged", background=DANGER_BAND)
+        # so the day is recognisable without relying on colour. Both are hidden
+        # while :data:`SHOW_DRIVING_INFRACTIONS` is off — the tag is not even
+        # configured then, so the tint cannot reappear on a stale row either.
+        if SHOW_DRIVING_INFRACTIONS:
+            self.table.tv.tag_configure("flagged", background=DANGER_BAND)
 
         # Render with row tags. The rows carry their tag and a stable key from
         # here on, so a header click or a filter change cannot drop the tint of
@@ -5188,7 +5219,9 @@ class TachoExplorer(tk.Tk):
         self._dashboard_ev_tips = ev_tooltips or {}
         # Tooltips for the Drive column: the violation marker sits in that cell, so the
         # explanation of what it means has to be reachable there and not only
-        # on the driver/vehicle cell.
+        # on the driver/vehicle cell. With :data:`SHOW_DRIVING_INFRACTIONS` off
+        # there is no marker and ``rule_tips`` is empty, so the handler below
+        # shows nothing for that column.
         drive_column = _("Drive")
         self._dashboard_drive_col = (columns.index(drive_column)
                                      if drive_column in columns else -1)
@@ -5637,6 +5670,9 @@ class TachoExplorer(tk.Tk):
         totals_global = {"DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0}
         max_drive = 0
         # Days of the file that break a driving-time rule (see day_rules below).
+        # Counted only while the infractions are shown: the count exists for the
+        # "Days over {hours} h" KPI card, which :data:`SHOW_DRIVING_INFRACTIONS`
+        # hides as a whole (the evaluation itself still runs, every day).
         flagged_days = 0
         table_rows = []
         row_tags = []
@@ -5644,6 +5680,8 @@ class TachoExplorer(tk.Tk):
         ev_tooltips = {}
         # Drive-cell tooltips: the driving-time-rule explanation, keyed like the
         # others by row key so it follows the day through sorting/filtering.
+        # Empty while :data:`SHOW_DRIVING_INFRACTIONS` is off — the Drive cell
+        # then has nothing to explain, and the tooltip handler finds no text.
         rule_tips = {}
         row_idx = 0
 
@@ -5672,6 +5710,10 @@ class TachoExplorer(tk.Tk):
                 # continuous driving without a qualifying break). A crew day is
                 # judged per driver inside the helper, so the flag never comes
                 # from summing two drivers' independent driving time.
+                # Evaluated unconditionally — hiding the infractions
+                # (:data:`SHOW_DRIVING_INFRACTIONS`) must not stop the
+                # computation, so flipping the switch back is one line and the
+                # verdict is already there.
                 day_rules = evaluate_driving_rules(changes)
                 for act in totals_global:
                     totals_global[act] += day_tots[act]
@@ -5696,9 +5738,13 @@ class TachoExplorer(tk.Tk):
                 # driving-time rule. The tooltip on the cell still explains
                 # which rule and by how much, and the flagged row keeps its
                 # tint — the mark is the shape signal for a colour-blind user.
+                # The driving-rule half of that is behind
+                # :data:`SHOW_DRIVING_INFRACTIONS` (off: the rule's thresholds
+                # are not final yet); the event marker is not, it is about the
+                # file's own events.
                 ev_str = "!" if iso_date in event_dates else ""
                 drive_str = _fmt_duration_minutes(day_tots["DRIVE"])
-                if day_rules.flagged:
+                if SHOW_DRIVING_INFRACTIONS and day_rules.flagged:
                     drive_str += "  !"
                     flagged_days += 1
                 if is_vu:
@@ -5720,12 +5766,14 @@ class TachoExplorer(tk.Tk):
                         _fmt_duration_minutes(day_tots["REST"]),
                         _fmt_duration_minutes(day_tots["AVAILABLE"]),
                     ])
-                row_tags.append("flagged" if day_rules.flagged else None)
+                row_tags.append("flagged"
+                                if SHOW_DRIVING_INFRACTIONS and day_rules.flagged
+                                else None)
                 if is_vu and names:
                     tooltips[row_idx] = names
                 elif not is_vu and card_vehicle_tip:
                     tooltips[row_idx] = card_vehicle_tip
-                if day_rules.flagged:
+                if SHOW_DRIVING_INFRACTIONS and day_rules.flagged:
                     # Say which rule and by how much, on the row's own tooltip
                     # (driver/vehicle column) and on the Drive cell that carries
                     # the marker in the Drive cell: a red row alone tells the user nothing they
@@ -5796,15 +5844,18 @@ class TachoExplorer(tk.Tk):
             (_("Days"), str(day_count), TEXT_SECONDARY),
             (_("Avg Drive / day"), _fmt_duration_minutes(avg_drive), ACTIVITY_DRIVE),
             (_("Max Drive / day"), _fmt_duration_minutes(max_drive), ACTIVITY_DRIVE),
+        ]
+        if SHOW_DRIVING_INFRACTIONS:
             # Days over the daily driving limit of Reg. (EC) 561/2006 art. 6(1).
             # The count is of every *flagged* day, so a day flagged by art. 7
             # alone (continuous driving, with a daily total under 9 h) is
             # counted too: it broke the driving-time rules, and its own tooltip
             # names the rule that fired rather than this caption.
-            (_("Days over {hours} h").format(hours=DAILY_DRIVE_LIMIT_MIN // 60),
-             str(flagged_days),
-             DANGER if flagged_days else TEXT_SECONDARY),
-        ]
+            kpis.append(
+                (_("Days over {hours} h").format(
+                    hours=DAILY_DRIVE_LIMIT_MIN // 60),
+                 str(flagged_days),
+                 DANGER if flagged_days else TEXT_SECONDARY))
         if is_vu:
             kpis.append((_("Drivers"), str(driver_count), TEXT_SECONDARY))
         else:
@@ -5860,7 +5911,10 @@ class TachoExplorer(tk.Tk):
                             if lbl == label_text:
                                 # The value colour can depend on the value ("Days
                                 # over 9 h" is DANGER only while a day is
-                                # flagged), so keep both in sync.
+                                # flagged), so keep both in sync. That card is
+                                # only built while :data:`SHOW_DRIVING_INFRACTIONS`
+                                # is on; the loop simply finds nothing for it
+                                # otherwise.
                                 labels[1].config(text=val, fg=accent)
                                 break
 
@@ -6241,10 +6295,10 @@ class TachoExplorer(tk.Tk):
 
         Summary block headers are drawn with ``FONT_HEADING`` (see
         :meth:`_DataTable._render`), so measuring a header with the body font
-        would report a clipped header as fitting — and leave the header that
-        does not fit (the translated "DRIVING-TIME RULES" title: 317 px in ro
-        with DejaVu Sans, the widest default font this UI is verified against,
-        against the panel's 198 px field column) with no way to read it.
+        would report a clipped header as fitting — and leave a translated block
+        title that does not fit (bold is wider than the body font, and some
+        catalogs state a block name in a third more width than English does)
+        with no way to read it.
         """
         if "summary_header" in (self.table.tv.item(row_id, "tags") or ()):
             if self._summary_header_font is None:
@@ -6284,16 +6338,25 @@ class TachoExplorer(tk.Tk):
 
         Answers "what is this file" before any per-generation detail: which file
         it is and what period it covers, whose card and/or which vehicle
-        recorded it, what it totals, which days the driving-time rules flag and
-        how far the file verifies.
+        recorded it, what it totals and how far the file verifies.
 
         Nothing here is computed twice. Every block reuses the code that owns
         the fact — the File Info dict (:meth:`_build_file_info`),
         :meth:`_build_driver_summary`, :meth:`_build_vehicle_summary`,
-        ``_compute_activity_totals``, ``evaluate_driving_rules`` and
-        :meth:`_integrity_label` — so the overview cannot drift from the section
-        it summarises. Rows use the ``(label, value, is_header)`` shape the
-        other summary panels already render.
+        ``_compute_activity_totals`` and :meth:`_integrity_label` — so the
+        overview cannot drift from the section it summarises. Rows use the
+        ``(label, value, is_header)`` shape the other summary panels already
+        render.
+
+        The driving-time rules used to state a fourth block here (how many days
+        the rules flag, and the three limits applied). It was removed on the
+        owner's decision: for a file *analyzer* the rules are not needed yet —
+        the limits behind them (9 h daily, 4 h 30 continuous, 45 min break) are
+        still being decided — and a page that reports a verdict nobody has
+        finalised is worse than one that stays silent. The evaluation itself is
+        untouched (``core.utils.activity_stats.evaluate_driving_rules``): the
+        Daily-Activities dashboard still computes it, behind
+        :data:`SHOW_DRIVING_INFRACTIONS`.
 
         Rows whose value would not fit the panel's fixed value column are not
         shortened here except where the value repeats itself (see the INTEGRITY
@@ -6348,9 +6411,8 @@ class TachoExplorer(tk.Tk):
                 rows.extend(block)
                 rows.append(sep)
 
-        # ── TOTALS and the driving-time rules, day by day (one pass) ──
+        # ── TOTALS, day by day (one pass) ──
         totals = {"DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0}
-        flagged_days = 0
         for record in data.get("activities") or []:
             changes = record.get("changes") if isinstance(record, dict) else None
             if not isinstance(changes, list) or not changes:
@@ -6358,10 +6420,6 @@ class TachoExplorer(tk.Tk):
             day_totals = _compute_activity_totals(changes)
             for activity in totals:
                 totals[activity] += day_totals[activity]
-            # Reg. (EC) 561/2006 art. 6(1) / art. 7, judged per day and per
-            # card slot by the shared evaluator (core.utils.activity_stats).
-            if evaluate_driving_rules(changes).flagged:
-                flagged_days += 1
 
         rows.append(_SummaryHeader(_("TOTALS"), icon="statistics"))
         rows.append((_("  Drive"), _fmt_duration_minutes(totals["DRIVE"]), False))
@@ -6370,27 +6428,6 @@ class TachoExplorer(tk.Tk):
         rows.append((_("  Available"),
                      _fmt_duration_minutes(totals["AVAILABLE"]), False))
         rows.append((_("  Days with activity"), str(len(days)), False))
-        rows.append(sep)
-
-        rows.append(_SummaryHeader(_("DRIVING-TIME RULES"), icon="tachograph"))
-        # A zero is the good news here, so it is stated as a plain count and
-        # never dressed as a warning.
-        rows.append((_("  Days flagged"), str(flagged_days), False))
-        # One short row per limit, never one sentence for both: the summary
-        # panel deliberately never auto-fits (see ``_show_summary``) and Tk
-        # *clips* an overlong cell instead of wrapping it, so the single
-        # "9h 00m daily driving · 4h 30m continuous without a 45 min break" row
-        # was cut off mid-string at the minimum window (900x560 — 187 px of
-        # value column, against 439 px of text). Short label/value rows are
-        # also the shape of every other row on the page. The numbers stay the
-        # module's own constants, never literals.
-        rows.append((_("  Daily driving limit"),
-                     _fmt_duration_minutes(DAILY_DRIVE_LIMIT_MIN), False))
-        rows.append((_("  Continuous driving limit"),
-                     _fmt_duration_minutes(CONTINUOUS_DRIVE_LIMIT_MIN), False))
-        rows.append((_("  Break that resets it"),
-                     _("{minutes} min").format(minutes=QUALIFYING_BREAK_MIN),
-                     False))
         rows.append(sep)
 
         # ── INTEGRITY: the same verdict (and coverage, when reported) the

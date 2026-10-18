@@ -2408,26 +2408,8 @@ msgstr "  Scíth"
 msgid "  Available"
 msgstr "  Ar fáil"
 
-msgid "DRIVING-TIME RULES"
-msgstr "RIALACHA AM TIOMÁNA"
-
-msgid "  Days flagged"
-msgstr "  Laethanta le sáruithe"
-
 msgid "INTEGRITY"
 msgstr "SLÁINE"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Clúdach na mbeart"
-
-msgid "  Daily driving limit"
-msgstr "  Teorainn laethúil"
-
-msgid "  Continuous driving limit"
-msgstr "  Teorainn leanúnach"
-
-msgid "  Break that resets it"
-msgstr "  Sos a athshocraíonn é"
-
-msgid "{minutes} min"
-msgstr "{minutes} nóim"

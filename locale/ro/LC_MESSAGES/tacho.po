@@ -2408,26 +2408,8 @@ msgstr "  Repaus"
 msgid "  Available"
 msgstr "  Disponibilitate"
 
-msgid "DRIVING-TIME RULES"
-msgstr "REGULI PRIVIND TIMPUL DE CONDUCERE"
-
-msgid "  Days flagged"
-msgstr "  Zile cu abateri"
-
 msgid "INTEGRITY"
 msgstr "INTEGRITATE"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Acoperire în octeți"
-
-msgid "  Daily driving limit"
-msgstr "  Limită conducere zilnică"
-
-msgid "  Continuous driving limit"
-msgstr "  Conducere continuă"
-
-msgid "  Break that resets it"
-msgstr "  Pauză care îl resetează"
-
-msgid "{minutes} min"
-msgstr "{minutes} min"

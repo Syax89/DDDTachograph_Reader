@@ -7,6 +7,12 @@ already uses goes into its Drive cell — and must say which rule it broke and b
 how much in its row tooltip; a clean day must carry neither. The dashboard's
 KPI row counts the flagged days of the whole file.
 
+These are the *switch-on* tests: the shipped default hides every infraction
+surface (``SHOW_DRIVING_INFRACTIONS = False``, the owner's decision — the limits
+are still being decided), so the ``infractions_shown`` fixture below turns the
+one switch on for the whole module. ``test_gui_infractions_hidden.py`` pins the
+shipped default and proves each surface both ways.
+
 Two levels are checked: the widget logic with ``object.__new__`` plus mocks
 (no display needed) and one real render into a ``TachoExplorer`` window, which
 skips cleanly when there is no display — the same pattern as the other GUI
@@ -28,6 +34,7 @@ pytest.importorskip("tkinter")
 import tkinter as tk
 
 from app.gui import TachoExplorer, _driving_rule_explanation
+import app.gui as gui
 from app.i18n import _
 from app.theme import DANGER, TEXT_SECONDARY
 from core.utils.activity_stats import (
@@ -36,6 +43,20 @@ from core.utils.activity_stats import (
     RULE_DAILY_DRIVING,
     DrivingRuleBreach,
 )
+
+
+@pytest.fixture(autouse=True)
+def infractions_shown(monkeypatch):
+    """This file pins the behaviour *with* the infractions shown.
+
+    The product ships with ``SHOW_DRIVING_INFRACTIONS = False`` (the owner's
+    decision: the limits behind the rules are not final yet), so every test
+    here turns the one switch on explicitly. That is also the proof that
+    flipping the single name back restores every surface it used to drive;
+    ``tests/unit/test_gui_infractions_hidden.py`` pins the shipped default, the
+    hidden widget state, and both sides of that same switch.
+    """
+    monkeypatch.setattr(gui, "SHOW_DRIVING_INFRACTIONS", True)
 
 #: 10 h 15 min of unbroken driving: breaks art. 6(1) and art. 7 at once.
 FLAGGED_DAY = {

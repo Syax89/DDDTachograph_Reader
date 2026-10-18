@@ -2408,26 +2408,8 @@ msgstr "  Hvile"
 msgid "  Available"
 msgstr "  Rådighed"
 
-msgid "DRIVING-TIME RULES"
-msgstr "REGLER FOR KØRETID"
-
-msgid "  Days flagged"
-msgstr "  Markerede dage"
-
 msgid "INTEGRITY"
 msgstr "INTEGRITET"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Byteafstemt dækning"
-
-msgid "  Daily driving limit"
-msgstr "  Grænse daglig kørsel"
-
-msgid "  Continuous driving limit"
-msgstr "  Grænse uafbrudt kørsel"
-
-msgid "  Break that resets it"
-msgstr "  Pause der nulstiller"
-
-msgid "{minutes} min"
-msgstr "{minutes} min"
