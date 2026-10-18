@@ -2368,3 +2368,9 @@ msgstr "Σειριακός αριθμός IC"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "Αναφορά κατασκευής IC"
+
+msgid "No samples recorded"
+msgstr "Δεν καταγράφηκαν δείγματα"
+
+msgid "Speed range"
+msgstr "Εύρος ταχύτητας"

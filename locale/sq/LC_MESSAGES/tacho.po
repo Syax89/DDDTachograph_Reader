@@ -2368,3 +2368,9 @@ msgstr "Numri serial i IC-së"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "Referenca e prodhimit të IC-së"
+
+msgid "No samples recorded"
+msgstr "Nuk ka mostra të regjistruara"
+
+msgid "Speed range"
+msgstr "Diapazoni i shpejtësisë"

@@ -2368,3 +2368,9 @@ msgstr "IC sorozatszám"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "IC gyártási referencia"
+
+msgid "No samples recorded"
+msgstr "Nincsenek rögzített minták"
+
+msgid "Speed range"
+msgstr "Sebességtartomány"

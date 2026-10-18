@@ -2368,3 +2368,9 @@ msgstr "Numru tas-serje tal-IC"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "Referenza tal-manifattura tal-IC"
+
+msgid "No samples recorded"
+msgstr "L-ebda kampjun irreġistrat"
+
+msgid "Speed range"
+msgstr "Firxa tal-veloċità"

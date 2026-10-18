@@ -330,7 +330,8 @@ class TestSpeedSummaryAtTheMinimumWindow:
         assert chart.summary_lbl.cget("text") == "7,200 s recorded | 0 s internal gaps"
         assert sorted(chart.kpi) == ["above", "avg", "events", "max", "moving"]
         assert [label.cget("text") for label in chart._legend_labels] == [
-            "Speed Limit", "Overspeeding event (recorded by the unit)"]
+            "Speed Limit", "Speed range",
+            "Overspeeding event (recorded by the unit)"]
         # The plot keeps a usable height under the new rows.
         assert chart.canvas.winfo_height() >= 120
 
@@ -344,7 +345,7 @@ class TestSpeedSummaryAtTheMinimumWindow:
         assert labels == ["Velocità massima", "Velocità media",
                           "Tempo oltre 90 km/h", "Tempo in movimento"]
         assert [label.cget("text") for label in chart._legend_labels] == [
-            "Limite di velocità",
+            "Limite di velocità", "Intervallo di velocità",
             "Eccesso di velocità (registrato dall'apparecchio)"]
 
     def test_every_catalog_fits_the_cards_and_the_legend(self, app):
@@ -370,7 +371,7 @@ class TestSpeedSummaryAtTheMinimumWindow:
                             _label_fits(label, f"{context} {key}.{kind}")
                     for label in chart._legend_labels:
                         _label_fits(label, f"{context} legend")
-                    assert len(chart._legend_labels) == 2, context
+                    assert len(chart._legend_labels) >= 2, context
                 except AssertionError as error:
                     clipped.append(str(error))
             assert visited == list(i18n.LANGUAGES), visited

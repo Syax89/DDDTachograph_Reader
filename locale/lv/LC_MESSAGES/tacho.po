@@ -2368,3 +2368,9 @@ msgstr "IC sērijas numurs"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "IC ražošanas atsauce"
+
+msgid "No samples recorded"
+msgstr "Nav reģistrētu mērījumu"
+
+msgid "Speed range"
+msgstr "Ātruma diapazons"

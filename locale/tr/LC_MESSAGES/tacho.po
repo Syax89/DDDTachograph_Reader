@@ -2368,3 +2368,9 @@ msgstr "IC seri numarası"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "IC üretim referansı"
+
+msgid "No samples recorded"
+msgstr "Kayıtlı örnek yok"
+
+msgid "Speed range"
+msgstr "Hız aralığı"

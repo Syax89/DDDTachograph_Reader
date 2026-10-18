@@ -329,9 +329,13 @@ def _drawn_chart(root, samples, events):
 def test_overspeed_marker_stays_within_the_plot(root):
     """G-F4: an event whose max speed exceeds every sampled speed of the day
     was drawn above the plot (off-canvas → invisible and unhoverable). The
-    y-ceiling must include the event's max speed."""
+    y-ceiling must include the event's max speed.
+
+    The event sits inside the day's samples because the plot now opens on the
+    window the samples cover (01:00–02:00 here) instead of on the whole day.
+    """
     chart = _drawn_chart(root, [(3600, 100), (7200, 120)],
-                         [{"begin": "2025-05-01T08:00:00+00:00",
+                         [{"begin": "2025-05-01T01:30:00+00:00",
                            "max_speed_kmh": 250}])
     assert chart._oes_dots, "the overspeed marker must be drawn"
     _x, y, _evt = chart._oes_dots[0]
@@ -344,7 +348,7 @@ def test_overspeed_marker_without_speed_does_not_crash(root):
     """G-F4 companion: an event lacking ``max_speed_kmh`` must not raise inside
     ``y_for`` (``"" * height / ceiling``)."""
     chart = _drawn_chart(root, [(3600, 100)],
-                         [{"begin": "2025-05-01T08:00:00+00:00"}])
+                         [{"begin": "2025-05-01T01:00:00+00:00"}])
     assert chart._oes_dots
     _x, y, _evt = chart._oes_dots[0]
     _left, _right, top, bottom = chart._plot[:4]

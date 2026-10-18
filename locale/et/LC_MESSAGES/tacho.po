@@ -2368,3 +2368,9 @@ msgstr "IC seerianumber"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "IC tootmisviide"
+
+msgid "No samples recorded"
+msgstr "Salvestatud mõõtmisi ei ole"
+
+msgid "Speed range"
+msgstr "Kiiruse vahemik"

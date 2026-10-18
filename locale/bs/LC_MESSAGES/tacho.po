@@ -2368,3 +2368,9 @@ msgstr "Serijski broj IC"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "Referenca proizvodnje IC"
+
+msgid "No samples recorded"
+msgstr "Nema zabilježenih uzoraka"
+
+msgid "Speed range"
+msgstr "Raspon brzine"

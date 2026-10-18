@@ -2368,3 +2368,9 @@ msgstr "Uimhir srathach IC"
 # Card / slot labels shown as cells.
 msgid "IC Manufacturing Reference"
 msgstr "Tagairt déantúsaíochta IC"
+
+msgid "No samples recorded"
+msgstr "Ní taifeadadh aon samplaí"
+
+msgid "Speed range"
+msgstr "Raon luais"

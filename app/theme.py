@@ -113,6 +113,10 @@ CAUTION = "#f57c00"
 #: distinct on purpose ("this is Drive" vs "this is selected/interactive"), so
 #: the activity colour can be retuned later without touching the selection.
 ACTIVITY_DRIVE = "#1565c0"
+#: A 25 % tint of :data:`ACTIVITY_DRIVE` on white: the fill under the
+#: detailed-speed min–max envelope. Light enough that the mean line and the
+#: red over-limit parts still read on top of it.
+ACTIVITY_DRIVE_TINT = "#c4d8ef"
 #: Rest bar/marker. Same value as :data:`SLATE` today, for the same reason.
 ACTIVITY_REST = "#78909c"
 #: Work bar.
@@ -132,6 +136,13 @@ ACTIVITY_UNKNOWN = "#bdbdbd"
 #: Major gridline (a full hour) and minor gridline (a 15-minute tick).
 CHART_GRID_MAJOR = "#d9e1ea"
 CHART_GRID_MINOR = "#edf1f5"
+
+#: Band drawn where the unit recorded no sample at all, so "no data" never
+#: reads as a vehicle standing still at 0 km/h. A warm neutral, deliberately
+#: outside the blue family: next to the pale blue speed-range band a grey-blue
+#: gap read as more of the same signal, and a gap is the *absence* of signal.
+#: Kept out of the red family too — missing information is not a violation.
+GAP_BAND = "#e0d9cf"
 
 # ── Tooltips ───────────────────────────────────────────────────────────────
 #: Chart hover tip: pale yellow box with a grey outline and dark text.
