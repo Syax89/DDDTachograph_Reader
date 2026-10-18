@@ -1,6 +1,6 @@
 # Developer Documentation — DDD Tachograph Reader
 
-Cross-platform (Windows/macOS) application for parsing, analyzing and visualizing data from EU digital tachograph files (`.ddd` format).
+Cross-platform (Windows/macOS/Linux) application for parsing, analyzing and visualizing data from EU digital tachograph files (`.ddd` format). The Linux build ships as an x86_64 Flatpak bundle, packaged by the same CI pipeline as the Windows and macOS builds.
 
 ## Documents
 
@@ -9,7 +9,7 @@ Cross-platform (Windows/macOS) application for parsing, analyzing and visualizin
 | [Architecture](./architecture.md) | System design, pipeline flow, design patterns, component descriptions |
 | [Adding a Decoder](./adding_decoder.md) | Step-by-step guide for implementing new tag decoders |
 | [Parsing Pipeline](./parsing_pipeline.md) | Deep dive into STAP, BER-TLV, RecordArray formats and coverage tracking |
-| [Testing](./testing.md) | How to run tests, write new tests, generate mock DDD files, and fuzz |
+| [Testing](./testing.md) | How to run tests, write new tests, generate mock DDD files, fuzz, and how CI builds/releases all three platforms |
 | [Specs References](./specs.md) | How to use the specification documentation and verification statuses |
 | [Glossary](./glossary.md) | Terminology: tachograph concepts, layers, EU regulations |
 
@@ -20,6 +20,8 @@ Cross-platform (Windows/macOS) application for parsing, analyzing and visualizin
 - **Decoder registry**: `core/registry/registry.py` — `DecoderRegistry`
 - **Run tests**: `python -m pytest tests/ -v`
 - **Coverage audit**: `python3 scripts/coverage_audit.py`
+- **CI workflows**: [`build.yml`](../../.github/workflows/build.yml) (Windows/macOS/Linux builds), [`test.yml`](../../.github/workflows/test.yml) (lint/tests/coverage), [`release.yml`](../../.github/workflows/release.yml) (tagged releases)
+- **Linux packaging**: `flatpak/io.github.Syax89.TachoReader.yml` + [`build-flatpak` action](../../.github/actions/build-flatpak/action.yml)
 
 ## Generations Supported
 

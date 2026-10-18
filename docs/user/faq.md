@@ -105,4 +105,11 @@ No. The application is **read-only**. It parses, analyzes, and exports data from
 
 ### Does the tool work on Linux?
 
-The application is developed and tested on Windows and macOS. If you are comfortable running Python scripts, you can use the from-source installation on Linux by running `python app/gui.py` or the CLI tools. However, Linux is not an officially supported platform for the pre-built executables.
+Yes. CI builds and verifies a **Linux x86_64 Flatpak**, alongside native Windows
+and macOS builds. It needs Flatpak and, on Wayland, XWayland. Running from Python
+source also works.
+
+The published `v2.7.1` has no Flatpak: use a CI artifact until a release containing
+the Linux packaging job is published. See the
+[Linux installation guide](installation.md#linux-flatpak-x86_64) for downloads,
+installation, updates and sandbox permissions (home read/write, no network).

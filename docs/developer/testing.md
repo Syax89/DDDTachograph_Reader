@@ -34,6 +34,100 @@ pip install pytest-cov
 python -m pytest tests/ -v --cov=app --cov=core
 ```
 
+## CI, Builds and Releases
+
+The workflows are the source of truth; this section summarises what they do.
+Read the files themselves for step-level detail:
+
+- [`build.yml`](../../.github/workflows/build.yml) — branch/PR/manual builds for Windows, macOS and Linux
+- [`test.yml`](../../.github/workflows/test.yml) — lint, tests and the coverage gate
+- [`release.yml`](../../.github/workflows/release.yml) — tagged release publication
+- [`build-flatpak` action](../../.github/actions/build-flatpak/action.yml) — Linux packaging shared by `build.yml` and `release.yml`
+
+### When CI runs
+
+| Event | What runs |
+|---|---|
+| Local commit (`git commit`) | Nothing — no remote CI runs on a local commit |
+| Push to any branch | `build.yml` + `test.yml` |
+| Pull request (any base branch) | `build.yml` + `test.yml` |
+| Manual run (*Run workflow*) | `build.yml` and/or `test.yml` |
+| Push of a `v*` tag | `release.yml` only |
+
+Tag pushes do not run the branch workflows: their `push` trigger lists branches
+only, so `release.yml` owns lint, tests, builds and publication for a release
+tag. Merging a pull request is just a branch push, so it re-runs both branch
+workflows on the target branch.
+
+### Branch builds (`build.yml`)
+
+Each platform build freezes the app with `build.spec` and smoke-tests the result with
+`--version` and `--smoke tests/mock_data/mock_g2_card.ddd`:
+
+| Job | Runner | Verification |
+|---|---|---|
+| `build` (matrix) | `windows-latest`, `macos-latest` | frozen bundle starts natively (`TachoReader.exe` / `TachoReader.app`) and answers the version and parser smoke commands |
+| `build-linux-flatpak` | `ubuntu-24.04` | frozen bundle packaged as a Flatpak, the exported `.flatpak` installed, version + parser smoke inside the sandbox, then a GUI smoke under Xvfb (real X11 window mapped, app terminates cleanly) |
+| `all-platforms-verified` | `ubuntu-latest` | aggregate gate over the two jobs above |
+
+The Windows/macOS matrix uses `fail-fast: false`, so one platform failing never
+cancels the other. `all-platforms-verified` runs with `if: always()` and
+`needs: [build, build-linux-flatpak]`, and fails unless both results are exactly
+`success` — a failed, cancelled or skipped build never passes the gate.
+
+That gate covers the platform builds only: the `test.yml` jobs are not in its
+`needs`, so a green **All platforms verified** does not by itself mean lint,
+tests or the coverage audit passed.
+
+### Automated checks (`test.yml`)
+
+| Job | What it checks |
+|---|---|
+| `lint` | `ruff check .` and `mypy .` on Python 3.12 |
+| `test` (Python 3.10, 3.12, 3.13) | compiled translation catalogs still match their `.po` sources (`compile_translations.py --check`), then `pytest -q` |
+| `coverage` | semantic coverage audit against the committed mock baseline, failing on regression |
+
+### Build artifacts vs release assets
+
+A branch, PR or manual run uploads ordinary GitHub Actions artifacts:
+
+| Artifact | Contents |
+|---|---|
+| `TachoReader-windows-latest` | frozen `dist/TachoReader` folder with `TachoReader.exe` |
+| `TachoReader-macos-latest` | the frozen `.app` bundle and build directory |
+| `TachoReader-linux-x86_64` | the exported `TachoReader-linux-x86_64.flatpak` |
+
+The Windows/macOS artifacts are raw build output, **not** the packaged zip/dmg
+installers — that packaging only happens in `release.yml`. Find them under the
+workflow run → **Artifacts** in the Actions tab. Extract the downloaded artifact
+ZIP before using its contents; downloading may require a
+GitHub login, and artifacts expire, so they are not a permanent download
+channel. For installers use the Releases page.
+
+### Releases (`release.yml`)
+
+A `v*` tag runs, in order:
+
+1. `check-version` — the tag without its leading `v` must equal `__version__` in
+   [`core/utils/version.py`](../../core/utils/version.py).
+2. `lint`, then `test` — Ruff, Mypy and pytest on Python 3.12. Unlike the branch
+   test workflow, this path does not run the three-version matrix, a separate
+   translation-catalog check or the semantic coverage audit.
+3. `build-windows`, `build-macos`, `build-linux-flatpak` — each builds, smoke
+   tests and packages its own artifact; none of them publishes.
+4. `Publish release` — the only job with `contents: write`. It starts only after
+   all three platform jobs succeeded, downloads the three artifacts as a set,
+   verifies each exact file exists and is non-empty, and only then creates the
+   GitHub release.
+
+The three release assets are `TachoReader-<tag>-windows-x64.zip`,
+`TachoReader-<tag>-macos.dmg` and `TachoReader-<tag>-linux-x86_64.flatpak`, with
+release notes extracted from a matching `## [version]` section in `CHANGELOG.md`,
+or a generic `Release <tag>` note when no matching section is found. The gate runs
+before any upload, but the upload itself is a normal non-transactional API call:
+these workflows do not make it atomic. They also do not configure branch
+protection or required checks.
+
 ## Test Categories
 
 | File | Purpose |
