@@ -1202,10 +1202,14 @@ class ActivityTimelineChart(ttk.Frame):
         tooltips that already fit exactly where they were. The real bounding
         box is then measured, so a translated (longer) string is moved back
         inside the canvas instead of losing its tail, and one that is wider
-        than the whole canvas is wrapped to the available width.
+        than the whole canvas is wrapped to the available width. Wrapping makes
+        the tip taller than the one-line anchor asked for, so the frame is
+        finally clamped on BOTH axes; its own bbox already carries the 1px
+        outline, and the text always moves with it.
         """
         canvas = self.canvas
         width = canvas.winfo_width()
+        height = canvas.winfo_height()
         pad = 5
         margin = pad + 1
         text_id = canvas.create_text(
@@ -1216,14 +1220,37 @@ class ActivityTimelineChart(ttk.Frame):
             canvas.move(text_id, width - margin - x2, 0)
             x1, y1, x2, y2 = canvas.bbox(text_id)
         if x1 < margin:
-            canvas.itemconfigure(text_id, width=max(1, width - 2 * margin))
-            x1, y1, x2, y2 = canvas.bbox(text_id)
+            # Tk breaks lines on the requested width but reports a bbox a pixel
+            # or two wider than that budget, which would poke the frame past the
+            # right edge: shrink the budget by the excess actually measured.
+            budget = max(1, width - 2 * margin)
+            for _ in range(3):
+                canvas.itemconfigure(text_id, width=budget)
+                x1, y1, x2, y2 = canvas.bbox(text_id)
+                excess = (x2 - x1) - (width - 2 * margin)
+                if excess <= 0 or budget <= 1:
+                    break
+                budget = max(1, budget - excess)
             canvas.move(text_id, margin - x1, 0)
             x1, y1, x2, y2 = canvas.bbox(text_id)
         bg = canvas.create_rectangle(
             x1 - pad, y1 - 3, x2 + pad, y2 + 3,
             fill="#fffde7", outline="#9e9e9e", tags="act_hover")
         canvas.tag_lower(bg, text_id)
+        # Clamp what the user actually sees: the frame's bbox (its 5/3px pad and
+        # the 1px outline included), not just the text. Trying to fit both axes
+        # leaves an already-fitting tip alone, and a tip larger than the canvas
+        # is pinned to the origin instead of being half drawn off-canvas.
+        x1, y1, x2, y2 = canvas.bbox(bg)
+        dx = width - x2 if x2 > width else 0
+        dy = height - y2 if y2 > height else 0
+        if x1 + dx < 0:
+            dx = -x1
+        if y1 + dy < 0:
+            dy = -y1
+        if dx or dy:
+            canvas.move(text_id, dx, dy)
+            canvas.move(bg, dx, dy)
 
     def _show_hover(self, event):
         if not self._layout or not self._slots:
