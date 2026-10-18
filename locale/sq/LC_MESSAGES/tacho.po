@@ -976,3 +976,501 @@ msgstr "🧩  Të dhëna të papërpunuara / të paanalizuara"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  DETAJET E KARTËS"
+
+msgid "Additional Info"
+msgstr "Informacion shtesë"
+
+msgid "All trep signatures valid"
+msgstr "Të gjitha nënshkrimet TREP të vlefshme"
+
+msgid "Anchored to erca root"
+msgstr "Ankoruar në rrënjën ERCA"
+
+msgid "Approval Number"
+msgstr "Numri i miratimit"
+
+msgid "Average Speed KMH"
+msgstr "Shpejtësia mesatare KMH"
+
+msgid "Begin"
+msgstr "Fillimi"
+
+msgid "Begin Time"
+msgstr "Ora e fillimit"
+
+msgid "Ca Identifier"
+msgstr "Identifikuesi CA"
+
+msgid "Calibration Data"
+msgstr "Të dhënat e kalibrimit"
+
+msgid "Calibration VINs"
+msgstr "VIN e kalibrimit"
+
+msgid "Calibration Workshops"
+msgstr "Punëtoritë e kalibrimit"
+
+msgid "Card"
+msgstr "Karta"
+
+msgid "Card Codriver Begin"
+msgstr "Fillimi i drejtuesit të dytë"
+
+msgid "Card Codriver End"
+msgstr "Fundi i drejtuesit të dytë"
+
+msgid "Card Driver"
+msgstr "Karta e drejtuesit"
+
+msgid "Card Driver Begin"
+msgstr "Fillimi i drejtuesit"
+
+msgid "Card Driver End"
+msgstr "Fundi i drejtuesit"
+
+msgid "Card Expiry"
+msgstr "Vlefshmëria e kartës"
+
+msgid "Card IW Records"
+msgstr "Regjistrimet IW të kartës"
+
+msgid "Card Number"
+msgstr "Numri i kartës"
+
+msgid "Card Slot"
+msgstr "Slot karte"
+
+msgid "Company Address"
+msgstr "Adresa e kompanisë"
+
+msgid "Company Card"
+msgstr "Karta e kompanisë"
+
+msgid "Company Info"
+msgstr "Informacioni i kompanisë"
+
+msgid "Company Locks"
+msgstr "Blloqet e kompanisë"
+
+msgid "Company Name"
+msgstr "Emri i kompanisë"
+
+msgid "Condition"
+msgstr "Kushti"
+
+msgid "Control Activity Data"
+msgstr "Të dhënat e aktivitetit të kontrollit"
+
+msgid "Control Card"
+msgstr "Karta e kontrollit"
+
+msgid "Control Time"
+msgstr "Ora e kontrollit"
+
+msgid "Control Type"
+msgstr "Lloji i kontrollit"
+
+msgid "Control Type Label"
+msgstr "Etiketa e llojit të kontrollit"
+
+msgid "Current Usage"
+msgstr "Përdorimi aktual"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Aktivitetet ditore 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Aktivitetet ditore 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Aktivitetet ditore 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Aktivitetet ditore 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Aktivitetet ditore 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Aktivitetet ditore 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Aktivitetet ditore 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Aktivitetet ditore 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Aktivitetet ditore 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Aktivitetet ditore 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Aktivitetet ditore 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Aktivitetet ditore 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Aktivitetet ditore 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Aktivitetet ditore 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Aktivitetet ditore 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Aktivitetet ditore 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Aktivitetet ditore 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Aktivitetet ditore 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Aktivitetet ditore 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Aktivitetet ditore 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Aktivitetet ditore 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Aktivitetet ditore 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Aktivitetet ditore 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Aktivitetet ditore 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Aktivitetet ditore 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Aktivitetet ditore 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Aktivitetet ditore 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Aktivitetet ditore 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Aktivitetet ditore 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Aktivitetet ditore 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Aktivitetet ditore 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Aktivitetet ditore 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Aktivitetet ditore 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Aktivitetet ditore 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Aktivitetet ditore 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Aktivitetet ditore 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Aktivitetet ditore 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Aktivitetet ditore 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Aktivitetet ditore 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Aktivitetet ditore 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Aktivitetet ditore 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Aktivitetet ditore 31/12/2024"
+
+msgid "Description"
+msgstr "Përshkrimi"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Shpejtësi e detajuar 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Shpejtësi e detajuar 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Shpejtësi e detajuar 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Shpejtësi e detajuar 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Shpejtësi e detajuar 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Shpejtësi e detajuar 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Fillimi i periudhës së shkarkimit"
+
+msgid "Download Period End"
+msgstr "Fundi i periudhës së shkarkimit"
+
+msgid "End"
+msgstr "Fundi"
+
+msgid "End Time"
+msgstr "Ora e përfundimit"
+
+msgid "Entry Type"
+msgstr "Lloji i regjistrimit"
+
+msgid "Event Type"
+msgstr "Lloji i ngjarjes"
+
+msgid "Event Type Label"
+msgstr "Etiketa e llojit të ngjarjes"
+
+msgid "Events Data"
+msgstr "Të dhënat e ngjarjeve"
+
+msgid "Fault Purpose"
+msgstr "Qëllimi i defektit"
+
+msgid "Fault Type"
+msgstr "Lloji i defektit"
+
+msgid "Faults Data"
+msgstr "Të dhënat e defekteve"
+
+msgid "First Overspeed Since"
+msgstr "Tejkalimi i parë që nga"
+
+msgid "Firstname"
+msgstr "Emri"
+
+msgid "Format"
+msgstr "Formati"
+
+msgid "Holder First Names"
+msgstr "Emrat e mbajtësit"
+
+msgid "Holder Surname"
+msgstr "Mbiemri i mbajtësit"
+
+msgid "Inserted Drivers"
+msgstr "Drejtuesit e futur"
+
+msgid "Insertion Time"
+msgstr "Ora e futjes"
+
+msgid "K Constant"
+msgstr "Konstantja K"
+
+msgid "KM"
+msgstr "Km"
+
+msgid "L Tyre Circumference"
+msgstr "Perimetri i gomës L"
+
+msgid "Last Control Time"
+msgstr "Ora e fundit e kontrollit"
+
+msgid "Lock In Time"
+msgstr "Ora e bllokimit"
+
+msgid "Lock Out Time"
+msgstr "Ora e zhbllokimit"
+
+msgid "Manual Input"
+msgstr "Futje manuale"
+
+msgid "Manufacturer"
+msgstr "Prodhuesi"
+
+msgid "Manufacturer Address"
+msgstr "Adresa e prodhuesit"
+
+msgid "Manufacturing Date"
+msgstr "Data e prodhimit"
+
+msgid "Max Speed KMH"
+msgstr "Shpejtësia maksimale KMH"
+
+msgid "Minutes"
+msgstr "Minuta"
+
+msgid "Msca→vu chain"
+msgstr "Zinxhiri MSCA→VU"
+
+msgid "Name"
+msgstr "Emri"
+
+msgid "Nation"
+msgstr "Vendi"
+
+msgid "Nation Code"
+msgstr "Kodi i vendit"
+
+msgid "New Odometer"
+msgstr "Odometri i ri"
+
+msgid "New Time"
+msgstr "Ora e re"
+
+msgid "Next Calibration Date"
+msgstr "Data e kalibrimit të radhës"
+
+msgid "Number Of Overspeed"
+msgstr "Numri i tejkalimeve"
+
+msgid "Odometer Insertion KM"
+msgstr "Odometri në futje KM"
+
+msgid "Odometer KM"
+msgstr "Odometri KM"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Odometri në heqje KM"
+
+msgid "Old Time"
+msgstr "Ora e vjetër"
+
+msgid "Overspeeding Control"
+msgstr "Kontrolli i tejkalimit të shpejtësisë"
+
+msgid "Overspeeding Events"
+msgstr "Ngjarjet e tejkalimit të shpejtësisë"
+
+msgid "Part Number"
+msgstr "Numri i pjesës"
+
+msgid "Plate"
+msgstr "Targa"
+
+msgid "Public Key Remainder Hex"
+msgstr "Pjesa e mbetur e çelësit publik hex"
+
+msgid "Public Key Remainder Length"
+msgstr "Gjatësia e pjesës së mbetur të çelësit publik"
+
+msgid "Purpose"
+msgstr "Qëllimi"
+
+msgid "Purpose Code"
+msgstr "Kodi i qëllimit"
+
+msgid "Record Purpose"
+msgstr "Qëllimi i regjistrimit"
+
+msgid "Record Purpose Label"
+msgstr "Etiketa e qëllimit të regjistrimit"
+
+msgid "Region"
+msgstr "Rajoni"
+
+msgid "Registration Nation"
+msgstr "Vendi i regjistrimit"
+
+msgid "Section"
+msgstr "Seksioni"
+
+msgid "Sensor Approval Number"
+msgstr "Numri i miratimit të sensorit"
+
+msgid "Sensor Pairing Date"
+msgstr "Data e çiftimit të sensorit"
+
+msgid "Sensor Serial Number"
+msgstr "Numri serial i sensorit"
+
+msgid "Serial Number"
+msgstr "Numri serial"
+
+msgid "Signature Hex"
+msgstr "Nënshkrimi hex"
+
+msgid "Signature Length"
+msgstr "Gjatësia e nënshkrimit"
+
+msgid "Signature Valid"
+msgstr "Nënshkrimi i vlefshëm"
+
+msgid "Similar Events"
+msgstr "Ngjarje të ngjashme"
+
+msgid "Software Install Date"
+msgstr "Data e instalimit të softuerit"
+
+msgid "Software Version"
+msgstr "Versioni i softuerit"
+
+msgid "Specific Conditions"
+msgstr "Kushte të veçanta"
+
+msgid "Speed Limit"
+msgstr "Kufiri i shpejtësisë"
+
+msgid "Speeds Sample"
+msgstr "Shembulli i shpejtësive"
+
+msgid "Surname"
+msgstr "Mbiemri"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Informacion teknik"
+
+msgid "Timestamp"
+msgstr "Vula kohore"
+
+msgid "Total Size"
+msgstr "Madhësia totale"
+
+msgid "Type Code"
+msgstr "Kodi i llojit"
+
+msgid "Tyre Size"
+msgstr "Madhësia e gomës"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Identifikimi i automjetit"
+
+msgid "W Constant"
+msgstr "Konstantja W"
+
+msgid "Withdrawal Time"
+msgstr "Ora e heqjes"
+
+msgid "Workshop"
+msgstr "Punëtoria"
+
+msgid "Workshop Address"
+msgstr "Adresa e punëtorisë"
+
+msgid "Workshop Card"
+msgstr "Karta e punëtorisë"
+
+msgid "Workshop Card Expiry"
+msgstr "Vlefshmëria e kartës së punëtorisë"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Gjenerata 1  [Shtojca 1B]"

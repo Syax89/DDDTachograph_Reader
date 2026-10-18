@@ -275,8 +275,8 @@ def test_label_returns_the_catalog_string_when_a_catalog_is_installed(monkeypatc
     assert label("events") == "Eventi"           # "Events" is a catalog msgid
     assert label("places") == "Luoghi"           # "Places" too
     assert label("Field") == "Campo"
-    # Humanised but not yet catalogued: English until the catalogs are extended.
-    assert label("card_driver_begin") == "Card Driver Begin"
+    # A raw snake_case record key is humanised and then translated.
+    assert label("card_driver_begin") == "Inizio carta conducente"
 
 
 # ── the real render ────────────────────────────────────────────────────────

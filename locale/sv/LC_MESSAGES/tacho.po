@@ -976,3 +976,501 @@ msgstr "🧩  Rå / otolkade data"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  KORTUPPGIFTER"
+
+msgid "Additional Info"
+msgstr "Ytterligare info"
+
+msgid "All trep signatures valid"
+msgstr "Alla trep-signaturer giltiga"
+
+msgid "Anchored to erca root"
+msgstr "Förankrad i erca-roten"
+
+msgid "Approval Number"
+msgstr "Godkännandenummer"
+
+msgid "Average Speed KMH"
+msgstr "Medelhastighet KMH"
+
+msgid "Begin"
+msgstr "Början"
+
+msgid "Begin Time"
+msgstr "Starttid"
+
+msgid "Ca Identifier"
+msgstr "Ca-identifierare"
+
+msgid "Calibration Data"
+msgstr "Kalibreringsdata"
+
+msgid "Calibration VINs"
+msgstr "Kalibrerings-VIN"
+
+msgid "Calibration Workshops"
+msgstr "Kalibreringsverkstäder"
+
+msgid "Card"
+msgstr "Kort"
+
+msgid "Card Codriver Begin"
+msgstr "Kortmedförarens början"
+
+msgid "Card Codriver End"
+msgstr "Kortmedförarens slut"
+
+msgid "Card Driver"
+msgstr "Kortförare"
+
+msgid "Card Driver Begin"
+msgstr "Kortförarens början"
+
+msgid "Card Driver End"
+msgstr "Kortförarens slut"
+
+msgid "Card Expiry"
+msgstr "Kortets utgångsdatum"
+
+msgid "Card IW Records"
+msgstr "Kortets IW-poster"
+
+msgid "Card Number"
+msgstr "Kortnummer"
+
+msgid "Card Slot"
+msgstr "Kortplats"
+
+msgid "Company Address"
+msgstr "Företagets adress"
+
+msgid "Company Card"
+msgstr "Företagskort"
+
+msgid "Company Info"
+msgstr "Företagsinfo"
+
+msgid "Company Locks"
+msgstr "Företagets lås"
+
+msgid "Company Name"
+msgstr "Företagsnamn"
+
+msgid "Condition"
+msgstr "Villkor"
+
+msgid "Control Activity Data"
+msgstr "Kontrollaktivitetsdata"
+
+msgid "Control Card"
+msgstr "Kontrollkort"
+
+msgid "Control Time"
+msgstr "Kontrolltid"
+
+msgid "Control Type"
+msgstr "Kontrolltyp"
+
+msgid "Control Type Label"
+msgstr "Etikett för kontrolltyp"
+
+msgid "Current Usage"
+msgstr "Aktuell användning"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Dagliga aktiviteter 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Dagliga aktiviteter 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Dagliga aktiviteter 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Dagliga aktiviteter 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Dagliga aktiviteter 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Dagliga aktiviteter 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Dagliga aktiviteter 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Dagliga aktiviteter 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Dagliga aktiviteter 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Dagliga aktiviteter 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Dagliga aktiviteter 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Dagliga aktiviteter 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Dagliga aktiviteter 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Dagliga aktiviteter 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Dagliga aktiviteter 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Dagliga aktiviteter 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Dagliga aktiviteter 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Dagliga aktiviteter 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Dagliga aktiviteter 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Dagliga aktiviteter 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Dagliga aktiviteter 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Dagliga aktiviteter 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Dagliga aktiviteter 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Dagliga aktiviteter 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Dagliga aktiviteter 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Dagliga aktiviteter 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Dagliga aktiviteter 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Dagliga aktiviteter 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Dagliga aktiviteter 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Dagliga aktiviteter 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Dagliga aktiviteter 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Dagliga aktiviteter 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Dagliga aktiviteter 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Dagliga aktiviteter 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Dagliga aktiviteter 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Dagliga aktiviteter 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Dagliga aktiviteter 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Dagliga aktiviteter 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Dagliga aktiviteter 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Dagliga aktiviteter 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Dagliga aktiviteter 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Dagliga aktiviteter 31/12/2024"
+
+msgid "Description"
+msgstr "Beskrivning"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Detaljerad hastighet 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Detaljerad hastighet 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Detaljerad hastighet 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Detaljerad hastighet 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Detaljerad hastighet 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Detaljerad hastighet 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Nedladdningsperiodens början"
+
+msgid "Download Period End"
+msgstr "Nedladdningsperiodens slut"
+
+msgid "End"
+msgstr "Slut"
+
+msgid "End Time"
+msgstr "Sluttid"
+
+msgid "Entry Type"
+msgstr "Posttyp"
+
+msgid "Event Type"
+msgstr "Händelsetyp"
+
+msgid "Event Type Label"
+msgstr "Etikett för händelsetyp"
+
+msgid "Events Data"
+msgstr "Händelsedata"
+
+msgid "Fault Purpose"
+msgstr "Feländamål"
+
+msgid "Fault Type"
+msgstr "Feltyp"
+
+msgid "Faults Data"
+msgstr "Feldata"
+
+msgid "First Overspeed Since"
+msgstr "Första hastighetsöverskridandet sedan"
+
+msgid "Firstname"
+msgstr "Förnamn"
+
+msgid "Format"
+msgstr "Filformat"
+
+msgid "Holder First Names"
+msgstr "Innehavarens förnamn"
+
+msgid "Holder Surname"
+msgstr "Innehavarens efternamn"
+
+msgid "Inserted Drivers"
+msgstr "Isatta förare"
+
+msgid "Insertion Time"
+msgstr "Isättningstid"
+
+msgid "K Constant"
+msgstr "K-konstant"
+
+msgid "KM"
+msgstr "km"
+
+msgid "L Tyre Circumference"
+msgstr "L Däckomkrets"
+
+msgid "Last Control Time"
+msgstr "Senaste kontrolltid"
+
+msgid "Lock In Time"
+msgstr "Inlåsningstid"
+
+msgid "Lock Out Time"
+msgstr "Utlåsningstid"
+
+msgid "Manual Input"
+msgstr "Manuell inmatning"
+
+msgid "Manufacturer"
+msgstr "Tillverkare"
+
+msgid "Manufacturer Address"
+msgstr "Tillverkarens adress"
+
+msgid "Manufacturing Date"
+msgstr "Tillverkningsdatum"
+
+msgid "Max Speed KMH"
+msgstr "Maxhastighet KMH"
+
+msgid "Minutes"
+msgstr "Minuter"
+
+msgid "Msca→vu chain"
+msgstr "Msca→vu-kedja"
+
+msgid "Name"
+msgstr "Namn"
+
+msgid "Nation"
+msgstr "Land"
+
+msgid "Nation Code"
+msgstr "Landskod"
+
+msgid "New Odometer"
+msgstr "Ny vägmätarställning"
+
+msgid "New Time"
+msgstr "Ny tid"
+
+msgid "Next Calibration Date"
+msgstr "Nästa kalibreringsdatum"
+
+msgid "Number Of Overspeed"
+msgstr "Antal hastighetsöverskridanden"
+
+msgid "Odometer Insertion KM"
+msgstr "Vägmätare vid isättning km"
+
+msgid "Odometer KM"
+msgstr "Vägmätare km"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Vägmätare vid urtagning km"
+
+msgid "Old Time"
+msgstr "Gammal tid"
+
+msgid "Overspeeding Control"
+msgstr "Hastighetsöverskridningskontroll"
+
+msgid "Overspeeding Events"
+msgstr "Hastighetsöverskridande händelser"
+
+msgid "Part Number"
+msgstr "Artikelnummer"
+
+msgid "Plate"
+msgstr "Registreringsskylt"
+
+msgid "Public Key Remainder Hex"
+msgstr "Publik nyckel rest (hex)"
+
+msgid "Public Key Remainder Length"
+msgstr "Publik nyckel restlängd"
+
+msgid "Purpose"
+msgstr "Ändamål"
+
+msgid "Purpose Code"
+msgstr "Ändamålskod"
+
+msgid "Record Purpose"
+msgstr "Poständamål"
+
+msgid "Record Purpose Label"
+msgstr "Etikett för poständamål"
+
+msgid "Region"
+msgstr "Område"
+
+msgid "Registration Nation"
+msgstr "Registreringsland"
+
+msgid "Section"
+msgstr "Avsnitt"
+
+msgid "Sensor Approval Number"
+msgstr "Sensorns godkännandenummer"
+
+msgid "Sensor Pairing Date"
+msgstr "Sensorns parkopplingsdatum"
+
+msgid "Sensor Serial Number"
+msgstr "Sensorns serienummer"
+
+msgid "Serial Number"
+msgstr "Serienummer"
+
+msgid "Signature Hex"
+msgstr "Signatur (hex)"
+
+msgid "Signature Length"
+msgstr "Signaturlängd"
+
+msgid "Signature Valid"
+msgstr "Signatur giltig"
+
+msgid "Similar Events"
+msgstr "Liknande händelser"
+
+msgid "Software Install Date"
+msgstr "Programvarans installationsdatum"
+
+msgid "Software Version"
+msgstr "Programvaruversion"
+
+msgid "Specific Conditions"
+msgstr "Särskilda villkor"
+
+msgid "Speed Limit"
+msgstr "Hastighetsgräns"
+
+msgid "Speeds Sample"
+msgstr "Hastighetsprover"
+
+msgid "Surname"
+msgstr "Efternamn"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Teknisk info"
+
+msgid "Timestamp"
+msgstr "Tidsstämpel"
+
+msgid "Total Size"
+msgstr "Total storlek"
+
+msgid "Type Code"
+msgstr "Typkod"
+
+msgid "Tyre Size"
+msgstr "Däckdimension"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Fordonsidentifiering"
+
+msgid "W Constant"
+msgstr "W-konstant"
+
+msgid "Withdrawal Time"
+msgstr "Urtagningstid"
+
+msgid "Workshop"
+msgstr "Verkstad"
+
+msgid "Workshop Address"
+msgstr "Verkstadens adress"
+
+msgid "Workshop Card"
+msgstr "Verkstadskort"
+
+msgid "Workshop Card Expiry"
+msgstr "Verkstadskortets utgångsdatum"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Generation 1  [Bilaga 1B]"

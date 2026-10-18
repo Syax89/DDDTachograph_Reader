@@ -976,3 +976,501 @@ msgstr "🧩  Neapstrādāti / nedekodēti dati"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  KARTES DATI"
+
+msgid "Additional Info"
+msgstr "Papildu informācija"
+
+msgid "All trep signatures valid"
+msgstr "Visi trep paraksti derīgi"
+
+msgid "Anchored to erca root"
+msgstr "Piesaistīts erca saknei"
+
+msgid "Approval Number"
+msgstr "Apstiprinājuma numurs"
+
+msgid "Average Speed KMH"
+msgstr "Vidējais ātrums KMH"
+
+msgid "Begin"
+msgstr "Sākums"
+
+msgid "Begin Time"
+msgstr "Sākuma laiks"
+
+msgid "Ca Identifier"
+msgstr "Ca identifikators"
+
+msgid "Calibration Data"
+msgstr "Kalibrēšanas dati"
+
+msgid "Calibration VINs"
+msgstr "Kalibrēšanas VIN"
+
+msgid "Calibration Workshops"
+msgstr "Kalibrēšanas darbnīcas"
+
+msgid "Card"
+msgstr "Karte"
+
+msgid "Card Codriver Begin"
+msgstr "Kartes otrā vadītāja sākums"
+
+msgid "Card Codriver End"
+msgstr "Kartes otrā vadītāja beigas"
+
+msgid "Card Driver"
+msgstr "Kartes vadītājs"
+
+msgid "Card Driver Begin"
+msgstr "Kartes vadītāja sākums"
+
+msgid "Card Driver End"
+msgstr "Kartes vadītāja beigas"
+
+msgid "Card Expiry"
+msgstr "Kartes derīguma termiņš"
+
+msgid "Card IW Records"
+msgstr "Kartes IW ieraksti"
+
+msgid "Card Number"
+msgstr "Kartes numurs"
+
+msgid "Card Slot"
+msgstr "Kartes ligzda"
+
+msgid "Company Address"
+msgstr "Uzņēmuma adrese"
+
+msgid "Company Card"
+msgstr "Uzņēmuma karte"
+
+msgid "Company Info"
+msgstr "Uzņēmuma informācija"
+
+msgid "Company Locks"
+msgstr "Uzņēmuma slēdzenes"
+
+msgid "Company Name"
+msgstr "Uzņēmuma nosaukums"
+
+msgid "Condition"
+msgstr "Nosacījums"
+
+msgid "Control Activity Data"
+msgstr "Kontroles darbību dati"
+
+msgid "Control Card"
+msgstr "Kontroles karte"
+
+msgid "Control Time"
+msgstr "Kontroles laiks"
+
+msgid "Control Type"
+msgstr "Kontroles veids"
+
+msgid "Control Type Label"
+msgstr "Kontroles veida apzīmējums"
+
+msgid "Current Usage"
+msgstr "Pašreizējā izmantošana"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Dienas darbības 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Dienas darbības 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Dienas darbības 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Dienas darbības 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Dienas darbības 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Dienas darbības 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Dienas darbības 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Dienas darbības 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Dienas darbības 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Dienas darbības 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Dienas darbības 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Dienas darbības 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Dienas darbības 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Dienas darbības 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Dienas darbības 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Dienas darbības 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Dienas darbības 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Dienas darbības 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Dienas darbības 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Dienas darbības 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Dienas darbības 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Dienas darbības 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Dienas darbības 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Dienas darbības 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Dienas darbības 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Dienas darbības 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Dienas darbības 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Dienas darbības 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Dienas darbības 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Dienas darbības 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Dienas darbības 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Dienas darbības 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Dienas darbības 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Dienas darbības 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Dienas darbības 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Dienas darbības 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Dienas darbības 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Dienas darbības 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Dienas darbības 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Dienas darbības 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Dienas darbības 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Dienas darbības 31/12/2024"
+
+msgid "Description"
+msgstr "Apraksts"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Detalizēts ātrums 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Detalizēts ātrums 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Detalizēts ātrums 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Detalizēts ātrums 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Detalizēts ātrums 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Detalizēts ātrums 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Lejupielādes perioda sākums"
+
+msgid "Download Period End"
+msgstr "Lejupielādes perioda beigas"
+
+msgid "End"
+msgstr "Beigas"
+
+msgid "End Time"
+msgstr "Beigu laiks"
+
+msgid "Entry Type"
+msgstr "Ieraksta veids"
+
+msgid "Event Type"
+msgstr "Notikuma veids"
+
+msgid "Event Type Label"
+msgstr "Notikuma veida apzīmējums"
+
+msgid "Events Data"
+msgstr "Notikumu dati"
+
+msgid "Fault Purpose"
+msgstr "Kļūdas nolūks"
+
+msgid "Fault Type"
+msgstr "Kļūdas veids"
+
+msgid "Faults Data"
+msgstr "Kļūdu dati"
+
+msgid "First Overspeed Since"
+msgstr "Pirmais ātruma pārsniegums kopš"
+
+msgid "Firstname"
+msgstr "Vārds"
+
+msgid "Format"
+msgstr "Formāts"
+
+msgid "Holder First Names"
+msgstr "Turētāja vārdi"
+
+msgid "Holder Surname"
+msgstr "Turētāja uzvārds"
+
+msgid "Inserted Drivers"
+msgstr "Ievietotie vadītāji"
+
+msgid "Insertion Time"
+msgstr "Ievietošanas laiks"
+
+msgid "K Constant"
+msgstr "K konstante"
+
+msgid "KM"
+msgstr "km"
+
+msgid "L Tyre Circumference"
+msgstr "L riepas apkārtmērs"
+
+msgid "Last Control Time"
+msgstr "Pēdējais kontroles laiks"
+
+msgid "Lock In Time"
+msgstr "Aizslēgšanas laiks"
+
+msgid "Lock Out Time"
+msgstr "Atslēgšanas laiks"
+
+msgid "Manual Input"
+msgstr "Manuāla ievade"
+
+msgid "Manufacturer"
+msgstr "Ražotājs"
+
+msgid "Manufacturer Address"
+msgstr "Ražotāja adrese"
+
+msgid "Manufacturing Date"
+msgstr "Ražošanas datums"
+
+msgid "Max Speed KMH"
+msgstr "Maksimālais ātrums KMH"
+
+msgid "Minutes"
+msgstr "Minūtes"
+
+msgid "Msca→vu chain"
+msgstr "Msca→vu ķēde"
+
+msgid "Name"
+msgstr "Nosaukums"
+
+msgid "Nation"
+msgstr "Valsts"
+
+msgid "Nation Code"
+msgstr "Valsts kods"
+
+msgid "New Odometer"
+msgstr "Jauns odometrs"
+
+msgid "New Time"
+msgstr "Jauns laiks"
+
+msgid "Next Calibration Date"
+msgstr "Nākamais kalibrēšanas datums"
+
+msgid "Number Of Overspeed"
+msgstr "Ātruma pārsniegumu skaits"
+
+msgid "Odometer Insertion KM"
+msgstr "Odometrs ievietošanas brīdī km"
+
+msgid "Odometer KM"
+msgstr "Odometrs km"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Odometrs izņemšanas brīdī km"
+
+msgid "Old Time"
+msgstr "Vecais laiks"
+
+msgid "Overspeeding Control"
+msgstr "Ātruma pārsniegšanas kontrole"
+
+msgid "Overspeeding Events"
+msgstr "Ātruma pārsniegšanas notikumi"
+
+msgid "Part Number"
+msgstr "Daļas numurs"
+
+msgid "Plate"
+msgstr "Numura zīme"
+
+msgid "Public Key Remainder Hex"
+msgstr "Publiskās atslēgas atlikums (hex)"
+
+msgid "Public Key Remainder Length"
+msgstr "Publiskās atslēgas atlikuma garums"
+
+msgid "Purpose"
+msgstr "Nolūks"
+
+msgid "Purpose Code"
+msgstr "Nolūka kods"
+
+msgid "Record Purpose"
+msgstr "Ieraksta nolūks"
+
+msgid "Record Purpose Label"
+msgstr "Ieraksta nolūka apzīmējums"
+
+msgid "Region"
+msgstr "Reģions"
+
+msgid "Registration Nation"
+msgstr "Reģistrācijas valsts"
+
+msgid "Section"
+msgstr "Sadaļa"
+
+msgid "Sensor Approval Number"
+msgstr "Sensora apstiprinājuma numurs"
+
+msgid "Sensor Pairing Date"
+msgstr "Sensora savienošanas datums"
+
+msgid "Sensor Serial Number"
+msgstr "Sensora sērijas numurs"
+
+msgid "Serial Number"
+msgstr "Sērijas numurs"
+
+msgid "Signature Hex"
+msgstr "Paraksts (hex)"
+
+msgid "Signature Length"
+msgstr "Paraksta garums"
+
+msgid "Signature Valid"
+msgstr "Paraksts derīgs"
+
+msgid "Similar Events"
+msgstr "Līdzīgi notikumi"
+
+msgid "Software Install Date"
+msgstr "Programmatūras instalēšanas datums"
+
+msgid "Software Version"
+msgstr "Programmatūras versija"
+
+msgid "Specific Conditions"
+msgstr "Īpašie nosacījumi"
+
+msgid "Speed Limit"
+msgstr "Ātruma ierobežojums"
+
+msgid "Speeds Sample"
+msgstr "Ātruma paraugi"
+
+msgid "Surname"
+msgstr "Uzvārds"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Tehniskā informācija"
+
+msgid "Timestamp"
+msgstr "Laika zīmogs"
+
+msgid "Total Size"
+msgstr "Kopējais izmērs"
+
+msgid "Type Code"
+msgstr "Veida kods"
+
+msgid "Tyre Size"
+msgstr "Riepas izmērs"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Transportlīdzekļa identifikācija"
+
+msgid "W Constant"
+msgstr "W konstante"
+
+msgid "Withdrawal Time"
+msgstr "Izņemšanas laiks"
+
+msgid "Workshop"
+msgstr "Darbnīca"
+
+msgid "Workshop Address"
+msgstr "Darbnīcas adrese"
+
+msgid "Workshop Card"
+msgstr "Darbnīcas karte"
+
+msgid "Workshop Card Expiry"
+msgstr "Darbnīcas kartes derīguma termiņš"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  1. paaudze  [Pielikums 1B]"

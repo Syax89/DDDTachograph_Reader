@@ -976,3 +976,501 @@ msgstr "🧩  Сурови / неанализирани данни"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  ДАННИ НА КАРТАТА"
+
+msgid "Additional Info"
+msgstr "Допълнителни данни"
+
+msgid "All trep signatures valid"
+msgstr "Всички подписи trep са валидни"
+
+msgid "Anchored to erca root"
+msgstr "Обвързан с корена erca"
+
+msgid "Approval Number"
+msgstr "Номер на одобрение"
+
+msgid "Average Speed KMH"
+msgstr "Средна скорост KMH"
+
+msgid "Begin"
+msgstr "Начало"
+
+msgid "Begin Time"
+msgstr "Начален час"
+
+msgid "Ca Identifier"
+msgstr "Идентификатор на Ca"
+
+msgid "Calibration Data"
+msgstr "Данни от калибровка"
+
+msgid "Calibration VINs"
+msgstr "VINs от калибровка"
+
+msgid "Calibration Workshops"
+msgstr "Сервизи за калибровка"
+
+msgid "Card"
+msgstr "Карта"
+
+msgid "Card Codriver Begin"
+msgstr "Начало на карта на втори водач"
+
+msgid "Card Codriver End"
+msgstr "Край на карта на втори водач"
+
+msgid "Card Driver"
+msgstr "Карта на водач"
+
+msgid "Card Driver Begin"
+msgstr "Начало на карта на водач"
+
+msgid "Card Driver End"
+msgstr "Край на карта на водач"
+
+msgid "Card Expiry"
+msgstr "Изтичане на картата"
+
+msgid "Card IW Records"
+msgstr "IW записи на картата"
+
+msgid "Card Number"
+msgstr "Номер на картата"
+
+msgid "Card Slot"
+msgstr "Слот на картата"
+
+msgid "Company Address"
+msgstr "Адрес на фирмата"
+
+msgid "Company Card"
+msgstr "Карта на фирма"
+
+msgid "Company Info"
+msgstr "Данни за фирмата"
+
+msgid "Company Locks"
+msgstr "Заключвания на фирмата"
+
+msgid "Company Name"
+msgstr "Име на фирмата"
+
+msgid "Condition"
+msgstr "Условие"
+
+msgid "Control Activity Data"
+msgstr "Данни за контролна дейност"
+
+msgid "Control Card"
+msgstr "Контролна карта"
+
+msgid "Control Time"
+msgstr "Време на контрол"
+
+msgid "Control Type"
+msgstr "Вид контрол"
+
+msgid "Control Type Label"
+msgstr "Наименование на вид контрол"
+
+msgid "Current Usage"
+msgstr "Текущо използване"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Дневни дейности 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Дневни дейности 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Дневни дейности 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Дневни дейности 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Дневни дейности 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Дневни дейности 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Дневни дейности 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Дневни дейности 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Дневни дейности 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Дневни дейности 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Дневни дейности 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Дневни дейности 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Дневни дейности 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Дневни дейности 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Дневни дейности 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Дневни дейности 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Дневни дейности 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Дневни дейности 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Дневни дейности 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Дневни дейности 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Дневни дейности 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Дневни дейности 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Дневни дейности 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Дневни дейности 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Дневни дейности 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Дневни дейности 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Дневни дейности 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Дневни дейности 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Дневни дейности 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Дневни дейности 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Дневни дейности 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Дневни дейности 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Дневни дейности 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Дневни дейности 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Дневни дейности 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Дневни дейности 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Дневни дейности 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Дневни дейности 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Дневни дейности 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Дневни дейности 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Дневни дейности 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Дневни дейности 31/12/2024"
+
+msgid "Description"
+msgstr "Описание"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Подробна скорост 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Подробна скорост 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Подробна скорост 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Подробна скорост 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Подробна скорост 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Подробна скорост 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Начало на периода за изтегляне"
+
+msgid "Download Period End"
+msgstr "Край на периода за изтегляне"
+
+msgid "End"
+msgstr "Край"
+
+msgid "End Time"
+msgstr "Краен час"
+
+msgid "Entry Type"
+msgstr "Вид запис"
+
+msgid "Event Type"
+msgstr "Вид събитие"
+
+msgid "Event Type Label"
+msgstr "Наименование на вид събитие"
+
+msgid "Events Data"
+msgstr "Данни за събития"
+
+msgid "Fault Purpose"
+msgstr "Предназначение на неизправност"
+
+msgid "Fault Type"
+msgstr "Вид неизправност"
+
+msgid "Faults Data"
+msgstr "Данни за неизправности"
+
+msgid "First Overspeed Since"
+msgstr "Първо превишаване на скоростта от"
+
+msgid "Firstname"
+msgstr "Собствено име"
+
+msgid "Format"
+msgstr "Формат"
+
+msgid "Holder First Names"
+msgstr "Собствени имена на притежателя"
+
+msgid "Holder Surname"
+msgstr "Фамилия на притежателя"
+
+msgid "Inserted Drivers"
+msgstr "Водачи с поставена карта"
+
+msgid "Insertion Time"
+msgstr "Време на поставяне"
+
+msgid "K Constant"
+msgstr "Константа K"
+
+msgid "KM"
+msgstr "км"
+
+msgid "L Tyre Circumference"
+msgstr "Обиколка на гумата L"
+
+msgid "Last Control Time"
+msgstr "Време на последен контрол"
+
+msgid "Lock In Time"
+msgstr "Време на заключване"
+
+msgid "Lock Out Time"
+msgstr "Време на отключване"
+
+msgid "Manual Input"
+msgstr "Ръчно въвеждане"
+
+msgid "Manufacturer"
+msgstr "Производител"
+
+msgid "Manufacturer Address"
+msgstr "Адрес на производителя"
+
+msgid "Manufacturing Date"
+msgstr "Дата на производство"
+
+msgid "Max Speed KMH"
+msgstr "Максимална скорост KMH"
+
+msgid "Minutes"
+msgstr "Минути"
+
+msgid "Msca→vu chain"
+msgstr "Верига Msca→vu"
+
+msgid "Name"
+msgstr "Име"
+
+msgid "Nation"
+msgstr "Държава"
+
+msgid "Nation Code"
+msgstr "Код на държава"
+
+msgid "New Odometer"
+msgstr "Нов одометър"
+
+msgid "New Time"
+msgstr "Ново време"
+
+msgid "Next Calibration Date"
+msgstr "Дата на следваща калибровка"
+
+msgid "Number Of Overspeed"
+msgstr "Брой превишавания на скоростта"
+
+msgid "Odometer Insertion KM"
+msgstr "Одометър при поставяне KM"
+
+msgid "Odometer KM"
+msgstr "Одометър KM"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Одометър при изваждане KM"
+
+msgid "Old Time"
+msgstr "Старо време"
+
+msgid "Overspeeding Control"
+msgstr "Контрол на превишена скорост"
+
+msgid "Overspeeding Events"
+msgstr "Събития за превишена скорост"
+
+msgid "Part Number"
+msgstr "Номер на част"
+
+msgid "Plate"
+msgstr "Регистрационен номер"
+
+msgid "Public Key Remainder Hex"
+msgstr "Остатък от публичен ключ Hex"
+
+msgid "Public Key Remainder Length"
+msgstr "Дължина на остатъка от публичен ключ"
+
+msgid "Purpose"
+msgstr "Предназначение"
+
+msgid "Purpose Code"
+msgstr "Код на предназначението"
+
+msgid "Record Purpose"
+msgstr "Предназначение на записа"
+
+msgid "Record Purpose Label"
+msgstr "Наименование на предназначението на записа"
+
+msgid "Region"
+msgstr "Регион"
+
+msgid "Registration Nation"
+msgstr "Държава на регистрация"
+
+msgid "Section"
+msgstr "Секция"
+
+msgid "Sensor Approval Number"
+msgstr "Номер на одобрение на сензора"
+
+msgid "Sensor Pairing Date"
+msgstr "Дата на свързване на сензора"
+
+msgid "Sensor Serial Number"
+msgstr "Сериен номер на сензора"
+
+msgid "Serial Number"
+msgstr "Сериен номер"
+
+msgid "Signature Hex"
+msgstr "Подпис Hex"
+
+msgid "Signature Length"
+msgstr "Дължина на подписа"
+
+msgid "Signature Valid"
+msgstr "Валиден подпис"
+
+msgid "Similar Events"
+msgstr "Подобни събития"
+
+msgid "Software Install Date"
+msgstr "Дата на инсталиране на софтуера"
+
+msgid "Software Version"
+msgstr "Версия на софтуера"
+
+msgid "Specific Conditions"
+msgstr "Специфични условия"
+
+msgid "Speed Limit"
+msgstr "Ограничение на скоростта"
+
+msgid "Speeds Sample"
+msgstr "Проба от скорости"
+
+msgid "Surname"
+msgstr "Фамилия"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Технически данни"
+
+msgid "Timestamp"
+msgstr "Времева марка"
+
+msgid "Total Size"
+msgstr "Общ размер"
+
+msgid "Type Code"
+msgstr "Код на типа"
+
+msgid "Tyre Size"
+msgstr "Размер на гумите"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Идентификация на превозното средство"
+
+msgid "W Constant"
+msgstr "Константа W"
+
+msgid "Withdrawal Time"
+msgstr "Време на изваждане"
+
+msgid "Workshop"
+msgstr "Сервиз"
+
+msgid "Workshop Address"
+msgstr "Адрес на сервиза"
+
+msgid "Workshop Card"
+msgstr "Сервизна карта"
+
+msgid "Workshop Card Expiry"
+msgstr "Изтичане на сервизната карта"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Поколение 1  [Приложение 1B]"

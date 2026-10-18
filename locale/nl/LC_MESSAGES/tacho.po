@@ -976,3 +976,501 @@ msgstr "🧩  Ruwe / niet-verwerkte gegevens"
 
 msgid "🪪  CARD DETAILS"
 msgstr "🪪  KAARTGEGEVENS"
+
+msgid "Additional Info"
+msgstr "Aanvullende info"
+
+msgid "All trep signatures valid"
+msgstr "Alle trep-handtekeningen geldig"
+
+msgid "Anchored to erca root"
+msgstr "Verankerd aan erca-root"
+
+msgid "Approval Number"
+msgstr "Goedkeuringsnummer"
+
+msgid "Average Speed KMH"
+msgstr "Gemiddelde snelheid KMH"
+
+msgid "Begin"
+msgstr "Start"
+
+msgid "Begin Time"
+msgstr "Starttijd"
+
+msgid "Ca Identifier"
+msgstr "Ca-identificatie"
+
+msgid "Calibration Data"
+msgstr "Kalibratiegegevens"
+
+msgid "Calibration VINs"
+msgstr "Kalibratie-VIN's"
+
+msgid "Calibration Workshops"
+msgstr "Kalibratiewerkplaatsen"
+
+msgid "Card"
+msgstr "Kaart"
+
+msgid "Card Codriver Begin"
+msgstr "Start kaart tweede bestuurder"
+
+msgid "Card Codriver End"
+msgstr "Einde kaart tweede bestuurder"
+
+msgid "Card Driver"
+msgstr "Kaart bestuurder"
+
+msgid "Card Driver Begin"
+msgstr "Start kaart bestuurder"
+
+msgid "Card Driver End"
+msgstr "Einde kaart bestuurder"
+
+msgid "Card Expiry"
+msgstr "Vervaldatum kaart"
+
+msgid "Card IW Records"
+msgstr "Kaart IW-records"
+
+msgid "Card Number"
+msgstr "Kaartnummer"
+
+msgid "Card Slot"
+msgstr "Kaartsleuf"
+
+msgid "Company Address"
+msgstr "Bedrijfsadres"
+
+msgid "Company Card"
+msgstr "Bedrijfskaart"
+
+msgid "Company Info"
+msgstr "Bedrijfsinfo"
+
+msgid "Company Locks"
+msgstr "Bedrijfsvergrendelingen"
+
+msgid "Company Name"
+msgstr "Bedrijfsnaam"
+
+msgid "Condition"
+msgstr "Toestand"
+
+msgid "Control Activity Data"
+msgstr "Controleactiviteitsgegevens"
+
+msgid "Control Card"
+msgstr "Controlekaart"
+
+msgid "Control Time"
+msgstr "Controletijd"
+
+msgid "Control Type"
+msgstr "Controlesoort"
+
+msgid "Control Type Label"
+msgstr "Label controlesoort"
+
+msgid "Current Usage"
+msgstr "Huidig gebruik"
+
+msgid "Daily Activities 01/01/2025"
+msgstr "Dagelijkse activiteiten 01/01/2025"
+
+msgid "Daily Activities 01/12/2024"
+msgstr "Dagelijkse activiteiten 01/12/2024"
+
+msgid "Daily Activities 02/01/2025"
+msgstr "Dagelijkse activiteiten 02/01/2025"
+
+msgid "Daily Activities 02/12/2024"
+msgstr "Dagelijkse activiteiten 02/12/2024"
+
+msgid "Daily Activities 03/01/2025"
+msgstr "Dagelijkse activiteiten 03/01/2025"
+
+msgid "Daily Activities 03/12/2024"
+msgstr "Dagelijkse activiteiten 03/12/2024"
+
+msgid "Daily Activities 04/01/2025"
+msgstr "Dagelijkse activiteiten 04/01/2025"
+
+msgid "Daily Activities 04/12/2024"
+msgstr "Dagelijkse activiteiten 04/12/2024"
+
+msgid "Daily Activities 05/01/2025"
+msgstr "Dagelijkse activiteiten 05/01/2025"
+
+msgid "Daily Activities 05/12/2024"
+msgstr "Dagelijkse activiteiten 05/12/2024"
+
+msgid "Daily Activities 06/01/2025"
+msgstr "Dagelijkse activiteiten 06/01/2025"
+
+msgid "Daily Activities 06/12/2024"
+msgstr "Dagelijkse activiteiten 06/12/2024"
+
+msgid "Daily Activities 07/12/2024"
+msgstr "Dagelijkse activiteiten 07/12/2024"
+
+msgid "Daily Activities 08/12/2024"
+msgstr "Dagelijkse activiteiten 08/12/2024"
+
+msgid "Daily Activities 09/12/2024"
+msgstr "Dagelijkse activiteiten 09/12/2024"
+
+msgid "Daily Activities 10/12/2024"
+msgstr "Dagelijkse activiteiten 10/12/2024"
+
+msgid "Daily Activities 11/12/2024"
+msgstr "Dagelijkse activiteiten 11/12/2024"
+
+msgid "Daily Activities 12/12/2024"
+msgstr "Dagelijkse activiteiten 12/12/2024"
+
+msgid "Daily Activities 13/12/2024"
+msgstr "Dagelijkse activiteiten 13/12/2024"
+
+msgid "Daily Activities 14/12/2024"
+msgstr "Dagelijkse activiteiten 14/12/2024"
+
+msgid "Daily Activities 15/12/2024"
+msgstr "Dagelijkse activiteiten 15/12/2024"
+
+msgid "Daily Activities 16/12/2024"
+msgstr "Dagelijkse activiteiten 16/12/2024"
+
+msgid "Daily Activities 17/12/2024"
+msgstr "Dagelijkse activiteiten 17/12/2024"
+
+msgid "Daily Activities 18/12/2024"
+msgstr "Dagelijkse activiteiten 18/12/2024"
+
+msgid "Daily Activities 19/12/2024"
+msgstr "Dagelijkse activiteiten 19/12/2024"
+
+msgid "Daily Activities 20/12/2024"
+msgstr "Dagelijkse activiteiten 20/12/2024"
+
+msgid "Daily Activities 21/12/2024"
+msgstr "Dagelijkse activiteiten 21/12/2024"
+
+msgid "Daily Activities 22/12/2024"
+msgstr "Dagelijkse activiteiten 22/12/2024"
+
+msgid "Daily Activities 23/12/2024"
+msgstr "Dagelijkse activiteiten 23/12/2024"
+
+msgid "Daily Activities 24/12/2024"
+msgstr "Dagelijkse activiteiten 24/12/2024"
+
+msgid "Daily Activities 25/12/2024"
+msgstr "Dagelijkse activiteiten 25/12/2024"
+
+msgid "Daily Activities 26/11/2024"
+msgstr "Dagelijkse activiteiten 26/11/2024"
+
+msgid "Daily Activities 26/12/2024"
+msgstr "Dagelijkse activiteiten 26/12/2024"
+
+msgid "Daily Activities 27/11/2024"
+msgstr "Dagelijkse activiteiten 27/11/2024"
+
+msgid "Daily Activities 27/12/2024"
+msgstr "Dagelijkse activiteiten 27/12/2024"
+
+msgid "Daily Activities 28/11/2024"
+msgstr "Dagelijkse activiteiten 28/11/2024"
+
+msgid "Daily Activities 28/12/2024"
+msgstr "Dagelijkse activiteiten 28/12/2024"
+
+msgid "Daily Activities 29/11/2024"
+msgstr "Dagelijkse activiteiten 29/11/2024"
+
+msgid "Daily Activities 29/12/2024"
+msgstr "Dagelijkse activiteiten 29/12/2024"
+
+msgid "Daily Activities 30/11/2024"
+msgstr "Dagelijkse activiteiten 30/11/2024"
+
+msgid "Daily Activities 30/12/2024"
+msgstr "Dagelijkse activiteiten 30/12/2024"
+
+msgid "Daily Activities 31/12/2024"
+msgstr "Dagelijkse activiteiten 31/12/2024"
+
+msgid "Description"
+msgstr "Omschrijving"
+
+msgid "Detailed Speed 2024-12-14"
+msgstr "Gedetailleerde snelheid 2024-12-14"
+
+msgid "Detailed Speed 2024-12-17"
+msgstr "Gedetailleerde snelheid 2024-12-17"
+
+msgid "Detailed Speed 2024-12-18"
+msgstr "Gedetailleerde snelheid 2024-12-18"
+
+msgid "Detailed Speed 2024-12-19"
+msgstr "Gedetailleerde snelheid 2024-12-19"
+
+msgid "Detailed Speed 2024-12-20"
+msgstr "Gedetailleerde snelheid 2024-12-20"
+
+msgid "Detailed Speed 2025-01-07"
+msgstr "Gedetailleerde snelheid 2025-01-07"
+
+msgid "Download Period Begin"
+msgstr "Start downloadperiode"
+
+msgid "Download Period End"
+msgstr "Einde downloadperiode"
+
+msgid "End"
+msgstr "Einde"
+
+msgid "End Time"
+msgstr "Eindtijd"
+
+msgid "Entry Type"
+msgstr "Soort invoer"
+
+msgid "Event Type"
+msgstr "Soort gebeurtenis"
+
+msgid "Event Type Label"
+msgstr "Label soort gebeurtenis"
+
+msgid "Events Data"
+msgstr "Gebeurtenisgegevens"
+
+msgid "Fault Purpose"
+msgstr "Doel van storing"
+
+msgid "Fault Type"
+msgstr "Soort storing"
+
+msgid "Faults Data"
+msgstr "Storinggegevens"
+
+msgid "First Overspeed Since"
+msgstr "Eerste snelheidsovertreding sinds"
+
+msgid "Firstname"
+msgstr "Voornaam"
+
+msgid "Format"
+msgstr "Formaat"
+
+msgid "Holder First Names"
+msgstr "Voornamen houder"
+
+msgid "Holder Surname"
+msgstr "Achternaam houder"
+
+msgid "Inserted Drivers"
+msgstr "Bestuurders met ingestoken kaart"
+
+msgid "Insertion Time"
+msgstr "Insteektijd"
+
+msgid "K Constant"
+msgstr "K-constante"
+
+msgid "KM"
+msgstr "km"
+
+msgid "L Tyre Circumference"
+msgstr "Bandencircumferentie L"
+
+msgid "Last Control Time"
+msgstr "Laatste controletijd"
+
+msgid "Lock In Time"
+msgstr "Vergrendeltijd in"
+
+msgid "Lock Out Time"
+msgstr "Vergrendeltijd uit"
+
+msgid "Manual Input"
+msgstr "Handmatige invoer"
+
+msgid "Manufacturer"
+msgstr "Fabrikant"
+
+msgid "Manufacturer Address"
+msgstr "Adres fabrikant"
+
+msgid "Manufacturing Date"
+msgstr "Productiedatum"
+
+msgid "Max Speed KMH"
+msgstr "Maximale snelheid KMH"
+
+msgid "Minutes"
+msgstr "Minuten"
+
+msgid "Msca→vu chain"
+msgstr "Msca→vu-keten"
+
+msgid "Name"
+msgstr "Naam"
+
+msgid "Nation"
+msgstr "Land"
+
+msgid "Nation Code"
+msgstr "Landcode"
+
+msgid "New Odometer"
+msgstr "Nieuwe kilometerteller"
+
+msgid "New Time"
+msgstr "Nieuwe tijd"
+
+msgid "Next Calibration Date"
+msgstr "Volgende kalibratiedatum"
+
+msgid "Number Of Overspeed"
+msgstr "Aantal snelheidsovertredingen"
+
+msgid "Odometer Insertion KM"
+msgstr "Kilometerteller KM bij insteken"
+
+msgid "Odometer KM"
+msgstr "Kilometerteller KM"
+
+msgid "Odometer Withdrawal KM"
+msgstr "Kilometerteller KM bij uitname"
+
+msgid "Old Time"
+msgstr "Oude tijd"
+
+msgid "Overspeeding Control"
+msgstr "Controle snelheidsovertredingen"
+
+msgid "Overspeeding Events"
+msgstr "Snelheidsovertredingen"
+
+msgid "Part Number"
+msgstr "Onderdeelnummer"
+
+msgid "Plate"
+msgstr "Kenteken"
+
+msgid "Public Key Remainder Hex"
+msgstr "Rest openbare sleutel hex"
+
+msgid "Public Key Remainder Length"
+msgstr "Lengte rest openbare sleutel"
+
+msgid "Purpose"
+msgstr "Doel"
+
+msgid "Purpose Code"
+msgstr "Doelcode"
+
+msgid "Record Purpose"
+msgstr "Doel van registratie"
+
+msgid "Record Purpose Label"
+msgstr "Label doel van registratie"
+
+msgid "Region"
+msgstr "Regio"
+
+msgid "Registration Nation"
+msgstr "Land van registratie"
+
+msgid "Section"
+msgstr "Sectie"
+
+msgid "Sensor Approval Number"
+msgstr "Goedkeuringsnummer sensor"
+
+msgid "Sensor Pairing Date"
+msgstr "Koppeldatum sensor"
+
+msgid "Sensor Serial Number"
+msgstr "Serienummer sensor"
+
+msgid "Serial Number"
+msgstr "Serienummer"
+
+msgid "Signature Hex"
+msgstr "Handtekening hex"
+
+msgid "Signature Length"
+msgstr "Lengte handtekening"
+
+msgid "Signature Valid"
+msgstr "Handtekening geldig"
+
+msgid "Similar Events"
+msgstr "Vergelijkbare gebeurtenissen"
+
+msgid "Software Install Date"
+msgstr "Installatiedatum software"
+
+msgid "Software Version"
+msgstr "Softwareversie"
+
+msgid "Specific Conditions"
+msgstr "Specifieke voorwaarden"
+
+msgid "Speed Limit"
+msgstr "Snelheidslimiet"
+
+msgid "Speeds Sample"
+msgstr "Snelheidsmonster"
+
+msgid "Surname"
+msgstr "Achternaam"
+
+msgid "TREP"
+msgstr "TREP"
+
+msgid "Technical Info"
+msgstr "Technische info"
+
+msgid "Timestamp"
+msgstr "Tijdstempel"
+
+msgid "Total Size"
+msgstr "Totale grootte"
+
+msgid "Type Code"
+msgstr "Typecode"
+
+msgid "Tyre Size"
+msgstr "Bandenmaat"
+
+msgid "VIN"
+msgstr "VIN"
+
+msgid "Vehicle Identification"
+msgstr "Voertuigidentificatie"
+
+msgid "W Constant"
+msgstr "W-constante"
+
+msgid "Withdrawal Time"
+msgstr "Tijd van uitname"
+
+msgid "Workshop"
+msgstr "Werkplaats"
+
+msgid "Workshop Address"
+msgstr "Adres werkplaats"
+
+msgid "Workshop Card"
+msgstr "Werkplaatskaart"
+
+msgid "Workshop Card Expiry"
+msgstr "Vervaldatum werkplaatskaart"
+
+msgid "📦  Generation 1  [Annex 1B]"
+msgstr "📦  Generatie 1  [Bijlage 1B]"
