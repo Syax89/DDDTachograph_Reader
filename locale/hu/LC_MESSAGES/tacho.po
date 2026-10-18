@@ -656,6 +656,9 @@ msgstr "Gyorshajtás"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Gyorshajtás: {start} → {end} | max. {max_speed} | átl. {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "DDD-fájl megnyitása"
+
 msgid "PDF (.pdf)"
 msgstr "PDF-fájl (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Áramkimaradások"
 
 msgid "Ready — open a .ddd file"
 msgstr "Kész — nyisson meg egy .ddd fájlt"
+
+msgid "Recent files"
+msgstr "Legutóbbi fájlok"
 
 msgid "Rendering Error"
 msgstr "Megjelenítési hiba"

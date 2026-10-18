@@ -656,6 +656,9 @@ msgstr "Aşırı hız"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Aşırı hız: {start} → {end} | maks {max_speed} | ort {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "DDD dosyası aç"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Güç kesintileri"
 
 msgid "Ready — open a .ddd file"
 msgstr "Hazır — bir .ddd dosyası açın"
+
+msgid "Recent files"
+msgstr "Son dosyalar"
 
 msgid "Rendering Error"
 msgstr "Görüntüleme hatası"

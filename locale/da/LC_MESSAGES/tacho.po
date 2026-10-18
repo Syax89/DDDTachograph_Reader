@@ -656,6 +656,9 @@ msgstr "Hastighedsoverskridelse"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Hastighedsoverskridelse: {start} → {end} | maks. {max_speed} | gns. {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Åbn en DDD-fil"
+
 msgid "PDF (.pdf)"
 msgstr "PDF-dokument (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Strømafbrydelser"
 
 msgid "Ready — open a .ddd file"
 msgstr "Klar — åbn en .ddd-fil"
+
+msgid "Recent files"
+msgstr "Seneste filer"
 
 msgid "Rendering Error"
 msgstr "Visningsfejl"

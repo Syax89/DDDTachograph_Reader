@@ -656,6 +656,9 @@ msgstr "Greičio viršijimas"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Greičio viršijimas: {start} → {end} | maks {max_speed} | vid. {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Atidaryti DDD failą"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Maitinimo sutrikimai"
 
 msgid "Ready — open a .ddd file"
 msgstr "Paruošta — atverkite .ddd failą"
+
+msgid "Recent files"
+msgstr "Naujausi failai"
 
 msgid "Rendering Error"
 msgstr "Atvaizdavimo klaida"

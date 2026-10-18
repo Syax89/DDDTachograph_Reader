@@ -656,6 +656,9 @@ msgstr "Ofhraði"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Ofhraði: {start} → {end} | hámark {max_speed} | meðal {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Opna DDD-skrá"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Rof í rafveitu"
 
 msgid "Ready — open a .ddd file"
 msgstr "Tilbúið — opnaðu .ddd skrá"
+
+msgid "Recent files"
+msgstr "Nýlegar skrár"
 
 msgid "Rendering Error"
 msgstr "Villa við birtingu"

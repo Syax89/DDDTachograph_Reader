@@ -656,6 +656,9 @@ msgstr "Ülekiirus"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Ülekiirus: {start} → {end} | maks {max_speed} | keskm {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Ava DDD-fail"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Toitekatkestused"
 
 msgid "Ready — open a .ddd file"
 msgstr "Valmis — ava .ddd fail"
+
+msgid "Recent files"
+msgstr "Hiljutised failid"
 
 msgid "Rendering Error"
 msgstr "Kuvamise viga"

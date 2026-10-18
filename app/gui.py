@@ -76,8 +76,8 @@ from core.utils.report_format import (  # noqa: E402
     fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 from app.i18n import (  # noqa: E402
-    LANGUAGES, _, install, save_language, save_translate_data,
-    saved_language, saved_translate_data)
+    LANGUAGES, _, add_recent_file, install, save_language, save_translate_data,
+    saved_language, saved_recent_files, saved_translate_data)
 from app import ui_text  # noqa: E402
 from app.theme import (  # noqa: E402  (re-exported: GEN_COLORS/ROW_*/HEADER_BG)
     ACCENT, ACCENT_PURPLE, ACTIVITY_AVAILABLE, ACTIVITY_EVENT, ACTIVITY_FERRY,
@@ -2226,6 +2226,7 @@ class TachoExplorer(tk.Tk):
         self.table.pack(fill=tk.BOTH, expand=True)
         self.speed_chart = DetailedSpeedChart(right)
         self.activity_chart = ActivityTimelineChart(right)
+        self.empty_state = self._build_empty_state(right)
 
         self.bind("<Control-f>", lambda e: self._focus_filter())
 
@@ -2243,8 +2244,125 @@ class TachoExplorer(tk.Tk):
         self.progress = ttk.Progressbar(status_bar, mode="indeterminate", length=_px(160))
         # packed only while a parse is running \u2014 see _start_parse/_finish_parse
 
+        # Nothing is loaded yet: the right pane opens on the empty state
+        # instead of an empty table.
+        if not self.current_data:
+            self._show_empty_state()
+
         if self._initial_file and os.path.isfile(self._initial_file):
             self.after(100, lambda: self._start_parse(self._initial_file))
+
+    # ── Empty state (no file loaded) ────────────────────────
+
+    def _build_empty_state(self, parent):
+        """The placeholder the right pane shows while no file is loaded.
+
+        Built once, next to the table and the charts, and packed/unpacked by
+        :meth:`_show_empty_state` / :meth:`_hide_empty_state`: opening a file
+        must not rebuild it, and a failed first open must bring it back. It
+        carries the same open action as the top bar (never a second
+        implementation) plus the recently opened files.
+        """
+        outer = ttk.Frame(parent, padding=(16, 12))
+        outer.columnconfigure(0, weight=1)
+        outer.rowconfigure(0, weight=1)
+        outer.rowconfigure(2, weight=1)
+        centre = ttk.Frame(outer)
+        centre.grid(row=1, column=0)
+
+        title = ttk.Label(centre, text=_("Open a DDD file"),
+                          font=FONT_PAGE_TITLE, anchor=tk.CENTER,
+                          justify=tk.CENTER, wraplength=_px(420))
+        title.pack(fill=tk.X)
+        ttk.Button(centre, text=_("\U0001f4c2  Open DDD file"),
+                   command=self._open_file).pack(pady=(_px(12), _px(20)))
+
+        # "Recent files" is filled by _refresh_recent_files(); with no history
+        # (or nothing left on disk) the whole section stays hidden.
+        self.recent_section = ttk.Frame(centre)
+        self.recent_heading = ttk.Label(self.recent_section,
+                                        text=_("Recent files"),
+                                        font=FONT_HEADING, foreground=TEXT_MUTED,
+                                        anchor=tk.W, wraplength=_px(420))
+        self.recent_heading.pack(fill=tk.X, pady=(0, _px(4)))
+        self.recent_list = ttk.Frame(self.recent_section)
+        self.recent_list.pack(fill=tk.X)
+
+        # German/Finnish/Greek titles and long paths are wider than the pane at
+        # the minimum window size, so every text block wraps to the space it
+        # actually has instead of pushing the sash or being clipped.
+        self._wrap_labels = [title, self.recent_heading]
+        outer.bind("<Configure>", self._wrap_empty_state)
+        return outer
+
+    def _wrap_empty_state(self, event):
+        """Re-wrap the empty state's text to the width the pane really has."""
+        wrap = max(_px(160), event.width - _px(48))
+        for label in self._wrap_labels:
+            try:
+                if label.winfo_exists():
+                    label.configure(wraplength=wrap)
+            except tk.TclError:
+                continue  # a row destroyed by _refresh_recent_files
+
+    def _show_empty_state(self):
+        """Show the no-file placeholder instead of the table/charts."""
+        for widget in (self.table, self.speed_chart, self.activity_chart):
+            widget.pack_forget()
+        self._refresh_recent_files()
+        if not self.empty_state.winfo_manager():
+            self.empty_state.pack(fill=tk.BOTH, expand=True)
+
+    def _hide_empty_state(self):
+        """Give the right pane back to the table/charts."""
+        if self.empty_state.winfo_manager():
+            self.empty_state.pack_forget()
+
+    def _refresh_recent_files(self):
+        """Rebuild the recent-files list from the settings file.
+
+        Entries are read as stored (the settings helper never looks at the
+        disk) and only the ones that still exist are shown: a file on an
+        unplugged drive disappears from the list without being forgotten, so it
+        is back the next time the drive is mounted.
+        """
+        for child in self.recent_list.winfo_children():
+            child.destroy()
+        del self._wrap_labels[2:]  # the rows about to be rebuilt
+        paths = [path for path in saved_recent_files() if os.path.isfile(path)]
+        if not paths:
+            self.recent_section.pack_forget()
+            return
+        if not self.recent_section.winfo_manager():
+            self.recent_section.pack(fill=tk.X)
+        for path in paths:
+            self._add_recent_row(path)
+
+    def _add_recent_row(self, path):
+        """One recent file: bold file name, muted directory, click to open."""
+        row = ttk.Frame(self.recent_list, cursor="hand2")
+        row.pack(fill=tk.X, pady=_px(2))
+        wrap = self._wrap_labels[0].cget("wraplength")
+        name = ttk.Label(row, text=os.path.basename(path),
+                         font=FONT_SUBTITLE_BOLD, anchor=tk.W, wraplength=wrap)
+        name.pack(fill=tk.X)
+        directory = ttk.Label(row, text=os.path.dirname(path), font=FONT_SMALL,
+                              foreground=SLATE, anchor=tk.W, wraplength=wrap)
+        directory.pack(fill=tk.X)
+        self._wrap_labels.extend((name, directory))
+        for widget in (row, name, directory):
+            widget.bind("<Button-1>",
+                        lambda _event, target=path: self._open_recent(target))
+
+    def _open_recent(self, path):
+        """Open a recent file through the very same route as the file picker.
+
+        ``_open_file`` is the only other caller of :meth:`_start_parse`, and it
+        refuses to start while a parse runs; the same guard applies here.
+        """
+        if self._parsing:
+            return
+        self._start_parse(path)
 
     def _toggle_translate_data(self):
         """Apply the "translate file contents" preference without a restart.
@@ -2452,6 +2570,9 @@ class TachoExplorer(tk.Tk):
                     filename=os.path.basename(self.current_file or "")))
         else:
             self.status.config(text=_("Ready \u2014 open a .ddd file"))
+            # Nothing was loaded before and nothing is loaded now: the pane
+            # goes back to the empty state rather than to a blank table.
+            self._show_empty_state()
 
     # ── Export ────────────────────────────────────────────
 
@@ -2611,6 +2732,11 @@ class TachoExplorer(tk.Tk):
         try:
             self.current_data = data
             self.current_file = path
+            # Only a *successful* parse reaches this line (a fatal parse error
+            # returned above): a mistyped or truncated file must never appear
+            # under "Recent files". The path here is the one actually parsed,
+            # so a file given on the command line is recorded too.
+            add_recent_file(path)
             self._populate_tree(data)
             self._update_top_bar(data)
             self.btn_export.config(state=tk.NORMAL)
@@ -3542,6 +3668,7 @@ class TachoExplorer(tk.Tk):
                         row_tags=None, tooltips=None, ev_tooltips=None):
         """Render a summary dashboard with KPI cards and sortable table."""
         self._cleanup_dashboard()
+        self._hide_empty_state()
         self.speed_chart.pack_forget()
         self.activity_chart.pack_forget()
         if not self.table.winfo_manager():
@@ -4437,6 +4564,7 @@ class TachoExplorer(tk.Tk):
 
     def _show_table(self, title, cols, rows, meta=""):
         self._cleanup_dashboard()
+        self._hide_empty_state()
         self.speed_chart.pack_forget()
         self.activity_chart.pack_forget()
         if not self.table.winfo_manager():
@@ -4462,6 +4590,7 @@ class TachoExplorer(tk.Tk):
 
     def _show_speed_chart(self, day, samples, overspeeding_events=None):
         self._cleanup_dashboard()
+        self._hide_empty_state()
         self.table.pack_forget()
         self.activity_chart.pack_forget()
         self.speed_chart.pack(fill=tk.BOTH, expand=True)
@@ -4472,6 +4601,7 @@ class TachoExplorer(tk.Tk):
                              changes_count, driver_info, slot_schedule, markers,
                              oos_events=None, vehicle_info=None):
         self._cleanup_dashboard()
+        self._hide_empty_state()
         self.table.pack_forget()
         self.speed_chart.pack_forget()
         self.activity_chart.pack(fill=tk.BOTH, expand=True)
@@ -4483,6 +4613,7 @@ class TachoExplorer(tk.Tk):
     def _show_summary(self, title, cols, rows, meta):
         """Render a rich info panel with section headers instead of a data table."""
         self._cleanup_dashboard()
+        self._hide_empty_state()
         self.speed_chart.pack_forget()
         self.activity_chart.pack_forget()
         if not self.table.winfo_manager():

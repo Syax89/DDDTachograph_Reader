@@ -22,6 +22,13 @@
 - **Tests/docs**: `tests/unit/test_i18n.py` covers the translator, settings
   handling, PO/MO tooling, the language menu and the restart path; CONTRIBUTING
   documents how to add or update a language.
+- **Empty state with recent files**: before a file is opened the right pane now
+  shows `Open a DDD file` — the same open action as the top bar — and, under it,
+  the last 8 files that were parsed *successfully* (`feat(ui)`): name in bold,
+  folder underneath, one click to reopen, and entries whose file no longer
+  exists are hidden without being forgotten. The history is stored next to the
+  language preference in `settings.json` and is rebuilt every time the empty
+  state appears; a failed open is never recorded.
 
 ### ♻️ Refactoring
 

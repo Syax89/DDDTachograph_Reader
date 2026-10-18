@@ -656,6 +656,9 @@ msgstr "Пречекорување на брзината"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Пречекорување на брзината: {start} → {end} | макс. {max_speed} | просек {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Отвори DDD-датотека"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Прекини на напојување"
 
 msgid "Ready — open a .ddd file"
 msgstr "Подготвено — отворете .ddd датотека"
+
+msgid "Recent files"
+msgstr "Неодамнешни датотеки"
 
 msgid "Rendering Error"
 msgstr "Грешка при прикажување"

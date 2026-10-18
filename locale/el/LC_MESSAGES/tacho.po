@@ -656,6 +656,9 @@ msgstr "Υπερβολική ταχύτητα"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Υπερβολική ταχύτητα: {start} → {end} | μέγ. {max_speed} | μέση {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Άνοιγμα αρχείου DDD"
+
 msgid "PDF (.pdf)"
 msgstr "Μορφότυπο PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Διακοπές τροφοδοσίας"
 
 msgid "Ready — open a .ddd file"
 msgstr "Έτοιμο — ανοίξτε αρχείο .ddd"
+
+msgid "Recent files"
+msgstr "Πρόσφατα αρχεία"
 
 msgid "Rendering Error"
 msgstr "Σφάλμα απόδοσης"

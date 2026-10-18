@@ -656,6 +656,9 @@ msgstr "Fartsovertredelse"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Fartsovertredelse: {start} → {end} | maks {max_speed} | snitt {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Åpne en DDD-fil"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Strømbrudd"
 
 msgid "Ready — open a .ddd file"
 msgstr "Klar — åpne en .ddd-fil"
+
+msgid "Recent files"
+msgstr "Nylige filer"
 
 msgid "Rendering Error"
 msgstr "Visningsfeil"

@@ -656,6 +656,9 @@ msgstr "Ylinopeus"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Ylinopeus: {start} → {end} | enint. {max_speed} | keskim. {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Avaa DDD-tiedosto"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Sähkökatkot"
 
 msgid "Ready — open a .ddd file"
 msgstr "Valmis — avaa .ddd-tiedosto"
+
+msgid "Recent files"
+msgstr "Viimeisimmät tiedostot"
 
 msgid "Rendering Error"
 msgstr "Näyttövirhe"

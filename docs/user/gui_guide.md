@@ -32,6 +32,15 @@ The desktop application (**Tacho Explorer**, `app/gui.py`) provides a two-pane e
 
 Parsing runs in a background thread — a progress bar appears in the status bar while a file is loading, and the window stays responsive.
 
+### Before a File Is Open
+
+The right pane starts on an empty state rather than a blank table: a large
+**Open a DDD file** heading with the same open action as the top bar, and below
+it **Recent files** — the last 8 files that were parsed successfully, each with
+its name in bold and its folder underneath. Clicking one reopens it. Entries
+whose file is no longer there (an unplugged USB stick, a deleted download) are
+hidden until it comes back; a file that fails to parse is never added.
+
 ### Integrity Status
 
 The integrity banner stays quiet when a file verifies cleanly. It only appears when there is something worth your attention, and clicking it opens a details popup covering:

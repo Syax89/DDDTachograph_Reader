@@ -656,6 +656,9 @@ msgstr "Exceso de velocidad"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Exceso de velocidad: {start} → {end} | máx {max_speed} | med {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Abrir un archivo DDD"
+
 msgid "PDF (.pdf)"
 msgstr "Archivo PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Interrupciones de alimentación"
 
 msgid "Ready — open a .ddd file"
 msgstr "Listo — abra un archivo .ddd"
+
+msgid "Recent files"
+msgstr "Archivos recientes"
 
 msgid "Rendering Error"
 msgstr "Error de representación"

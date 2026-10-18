@@ -656,6 +656,9 @@ msgstr "Róluas"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Róluas: {start} → {end} | uas {max_speed} | meán {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Oscail comhad DDD"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Scoiteanna cumhachta"
 
 msgid "Ready — open a .ddd file"
 msgstr "Réidh — oscail comhad .ddd"
+
+msgid "Recent files"
+msgstr "Comhaid le déanaí"
 
 msgid "Rendering Error"
 msgstr "Earráid rindreála"
