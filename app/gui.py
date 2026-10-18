@@ -62,6 +62,17 @@ def _px(value):
     Design sizes throughout the UI are authored for a 96-DPI (100%) screen;
     on high-DPI Windows displays they are multiplied by the DPI ratio so the
     layout keeps its intended physical size instead of shrinking.
+
+    **This is not a pure scale factor, and the icons do not read it.** It is
+    the *identity* everywhere except high-DPI Windows: on macOS Tk scales a
+    Retina window itself, and on X11 a pixel is a pixel — only the font sizes
+    follow the screen there (``tk scaling``, set in
+    :meth:`TachoExplorer.__init__`). So ``_px`` cannot answer "how big is this
+    display"; :func:`_ui_scale` does, from that same ``tk scaling`` value, and
+    the two agree on Windows (``_px`` multiplies by ``_WIN_SCALE ==
+    DPI/96``). Anything derived from a display scale — the icon files, the tree
+    row height, the summary gutter — takes it from :func:`_ui_scale`; ``_px``
+    keeps scaling the layout exactly as before, so a 100% display is untouched.
     """
     if sys.platform == "win32" and _WIN_SCALE > 1.0:
         return int(round(value * _WIN_SCALE))
@@ -137,23 +148,104 @@ class _RenderAbandoned(Exception):
 #: True once an icon lookup has failed loudly (see :func:`_icon`).
 _ICON_FAILURE_LOGGED = False
 
+#: Tk's ``scaling`` is pixels per *point* (72 per inch); a logical pixel is
+#: 1/96 inch. The ratio between the two is what turns Tk's value — the one
+#: fonts are already sized by — into a display scale: 96 dpi is
+#: ``96/72 * 72/96 == 1.0``.
+_SCALE_PER_TK_UNIT = 72.0 / 96.0
+
+
+def _ui_scale(master=None):
+    """The display scale of *master*'s window: 1.0 at 100 %, 2.0 at 200 %.
+
+    Derived from Tk's own ``scaling``, the value :class:`TachoExplorer` sets in
+    :meth:`~TachoExplorer.__init__` (and that every font is already sized by),
+    so the icons have no separate notion of "how big is this display" to fall
+    out of step with the text they sit beside. Dividing out the 72-per-inch
+    point gives the ratio to the 96 dpi the layout is authored at:
+
+    * Windows sets ``scaling`` to ``DPI/72``, so this yields ``DPI/96`` — the
+      same factor :func:`_px` multiplies layout pixels by;
+    * macOS sets it to 1.0 (Tk scales a Retina window itself, and a
+      ``PhotoImage`` pixel is drawn as a *point* there), so this stays 1.0 and
+      the 16 px files keep their logical size — asking for the 32 px one would
+      draw an icon twice as large;
+    * X11 sets it from the screen's real DPI, which is the only half of a Linux
+      HiDPI window that scales today: fonts follow ``scaling``, ``_px`` is the
+      identity there (see its docstring). The icons follow the fonts, which is
+      what they are drawn next to.
+
+    A window that cannot answer (no ``tk scaling``: a stub interpreter in a
+    test) is treated as 100 %: 16 px, today's behaviour. So is anything below
+    100 %: the set's smallest file is the size the layout is authored for, and
+    nothing is resampled, so a display that reports less cannot make the icons
+    smaller than the design (that is also what keeps macOS — ``scaling`` 1.0,
+    i.e. 0.75 by this arithmetic — exactly where it is today).
+    """
+    if master is None:
+        master = getattr(tk, "_default_root", None)
+    try:
+        scale = float(master.tk.call("tk", "scaling")) * _SCALE_PER_TK_UNIT
+    except Exception:
+        return 1.0
+    return max(1.0, scale)
+
+
+def _icon_px(size=16, master=None):
+    """The delivered file size for a *logical* icon size at *master*'s scale."""
+    return icons.nearest_size(size, _ui_scale(master))
+
+
+def _tree_row_height(master=None):
+    """Row height that holds the row icon at *master*'s display scale.
+
+    A tree row carries a 16-logical-px icon (section nodes, summary headers),
+    and the file drawn for it grows with the scale while ``rowheight`` is a
+    fixed number in device pixels — which is how a scaled icon ends up clipped
+    by its own row. So the row is the taller of the design height and the image
+    plus a little room. At 100 % this is the design height unchanged (16 + 8 is
+    exactly 24), i.e. today's layout.
+    """
+    return max(_px(_TREE_ROW_HEIGHT),
+               _icon_px(16, master) + _px(_ROW_ICON_PADDING))
+
+
+def _summary_icon_gutter(master=None):
+    """Width of the summary panel's icon gutter (column ``#0``), in device px.
+
+    ``_SUMMARY_ICON_GUTTER`` is the design width for the 16 px icons; at a
+    higher scale the file drawn in it is larger, so the gutter grows with it.
+    It is a floor too: at 100 % this is the design width, unchanged.
+    """
+    return max(_px(_SUMMARY_ICON_GUTTER),
+               _icon_px(16, master) + _px(_SUMMARY_ICON_MARGIN))
+
 
 def _icon(name, size=16, master=None):
-    """The commissioned icon *name* at *size*, or ``None`` when unavailable.
+    """The commissioned icon *name* at *size* logical px, or ``None``.
+
+    *size* is a **request**, not a file: 16 (tree rows, inline markers) or 20
+    (toolbar) is the size the icon has on a 100 % display, which is also the
+    size the surrounding layout is authored in. Which of the delivered files is
+    drawn is decided for the scale of the window that will draw it — a 32 px
+    file beside text that is twice as tall at 200 % (:func:`_ui_scale`,
+    :func:`app.icons.nearest_size`). Nothing is resampled: the set ships 16 to
+    48 px for exactly this.
 
     Wraps :func:`app.icons.icon` for widget options: the set is a data file, so
     a bundle that lost ``assets/icons`` (or a headless caller with no Tk root)
     must cost a blank icon, never a traceback. The image itself is cached by
     :mod:`app.icons`, which also keeps it alive — Tkinter blanks a row whose
-    ``PhotoImage`` nothing references any more.
+    ``PhotoImage`` nothing references any more. The cache is keyed by the
+    *resolved* size, so two windows at two scales never share an image.
 
     *master* is the widget the image will be shown in: a ``PhotoImage`` belongs
     to one Tk interpreter, so the icon has to be decoded in the window that
-    will draw it.
+    will draw it (and it is the widget asked for its ``scaling`` above).
     """
     global _ICON_FAILURE_LOGGED
     try:
-        return icons.icon(name, size, master=master)
+        return icons.icon(name, _icon_px(size, master), master=master)
     except Exception:
         # Logged once at WARNING: a bundle that lost the set would otherwise
         # show twenty blank icons and say nothing about why.
@@ -887,8 +979,18 @@ _KPI_WIDTH_SLACK = 4
 _LEGEND_GLYPH_WIDTH = 18
 #: Width of the summary panel's icon gutter (the tree column holding the
 #: 16 px section icons). Taken out of the Field column, so the Value column
-#: keeps the width it had before the icons arrived.
+#: keeps the width it had before the icons arrived. It is the *design* width,
+#: for a 100 % display: at a higher scale the file drawn in it is larger, so
+#: the gutter grows (see :func:`_summary_icon_gutter`).
 _SUMMARY_ICON_GUTTER = 22
+#: Height of one tree row at 100 %, in logical px.
+_TREE_ROW_HEIGHT = 24
+#: Room a row icon needs around itself (vertical padding, and the gutter's
+#: horizontal margin). Both are chosen so the design values above are exactly
+#: what they are at 100 % — 16 + 8 is 24, 16 + 6 is 22 — and only take over
+#: when a scaled display asks for a larger file.
+_ROW_ICON_PADDING = 8
+_SUMMARY_ICON_MARGIN = 6
 
 
 def _flow_rows(widths, available):
@@ -2079,7 +2181,11 @@ class ActivityTimelineChart(ttk.Frame):
             label_x = left
             if label_icon is not None:
                 canvas.create_image(left, label_y, image=label_icon, anchor=tk.W)
-                label_x = left + 18
+                # The offset is the *image's* width, not the 16 px it was
+                # requested at: on a scaled display the file drawn here is
+                # larger (see _icon), and a fixed offset would print the name on
+                # top of it. At 100 % this is 16 + 2 = 18, exactly as before.
+                label_x = left + label_icon.width() + _px(2)
             canvas.create_text(label_x, label_y,
                                text=label_text, anchor=tk.W,
                                fill=TEXT_STRONG, font=FONT_CANVAS_TITLE)
@@ -3126,7 +3232,12 @@ class TachoExplorer(tk.Tk):
         style.configure("Sash", background=SURFACE, bordercolor=BORDER,
                         lightcolor=SURFACE, darkcolor=SURFACE)
         style.configure("TProgressbar", background=ACCENT, troughcolor=ACTIVE_BG)
-        style.configure("Treeview", rowheight=_px(24))
+        # The row height must hold the row icon at this display's scale, which
+        # is why it is derived from the image rather than written down: a
+        # 16 px icon in a 24 px row is today's layout (16 + 8 == _px(24)), and
+        # at 200 % the 32 px file gets a 40 px row instead of being clipped by
+        # the one it is drawn in. "Summary.Treeview" inherits this value.
+        style.configure("Treeview", rowheight=_tree_row_height(self))
 
         self.current_data = None
         self.current_file = None
@@ -6025,12 +6136,15 @@ class TachoExplorer(tk.Tk):
         # holds each block's icon. The gutter is taken out of the Field column's
         # width, so the Value column keeps exactly the width it had.
         self.table.tv["show"] = "tree"
-        self.table.tv.column("#0", width=_px(_SUMMARY_ICON_GUTTER),
-                             minwidth=_px(_SUMMARY_ICON_GUTTER),
+        # The gutter is the *image's* width plus its margin at this display's
+        # scale (22 px at 100 %, where the icon is 16 px), and the Field column
+        # gives up exactly that much, so the value column keeps its width.
+        gutter = _summary_icon_gutter(self)
+        self.table.tv.column("#0", width=gutter, minwidth=gutter,
                              stretch=False)
         self.table.tv.heading("Field", text="")
         self.table.tv.heading("Value", text="")
-        self.table.tv.column("Field", width=_px(220) - _px(_SUMMARY_ICON_GUTTER),
+        self.table.tv.column("Field", width=_px(220) - gutter,
                              minwidth=_px(140), anchor=tk.W, stretch=False)
         self.table.tv.column("Value", width=_px(100), minwidth=_px(60), anchor=tk.W, stretch=True)
         self.table._fitted = True

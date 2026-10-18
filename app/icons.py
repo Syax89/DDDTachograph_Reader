@@ -27,6 +27,13 @@ Three things this module must get right, all of them learned failures:
 Importing this module needs no Tk root (icons are decoded lazily on first use).
 Creating one *does* need a root: without one Tkinter raises, and the raise is
 allowed to propagate — caching a broken image would be worse than the error.
+
+**Sizes are chosen, not resampled.** :func:`icon` loads exactly the size it is
+given, so the caller decides; :func:`nearest_size` is that decision — the
+delivered size nearest to ``logical * scale`` for the display the window is on
+(``app.gui._ui_scale`` supplies the scale from Tk's own ``scaling``). The set
+ships 16 to 48 px for exactly this reason, and no image is ever stretched: a
+16 px request on a 200 % display becomes the 32 px *file*.
 """
 import os
 import sys
@@ -34,8 +41,56 @@ import sys
 import tkinter as tk
 
 #: Sizes the set is delivered in (``assets/icons/png/<size>/<name>.png``).
-#: 16 px is the tree and the inline markers, 20 px the toolbar buttons.
+#: The interface asks in *logical* pixels (16 for tree rows and inline markers,
+#: 20 for the toolbar buttons); which file that turns into is decided by
+#: :func:`nearest_size` for the display scale of the window drawing it.
 SIZES = (16, 20, 24, 32, 40, 48)
+
+
+def nearest_size(logical, scale=1.0):
+    """The delivered size to draw for *logical* px at *scale*, nearest wins.
+
+    A window asks for a *logical* size — the size the icon would be on a 100 %
+    display, which is also the size the surrounding layout is authored in — and
+    the file is chosen from :data:`SIZES` for the scale of the display the
+    window is on: logical 16 at scale 2.0 draws the 32 px file. That file is
+    never resampled, so the icon stays crisp; it is only chosen. The artwork is
+    authored on a 16-unit grid up to 48 px (``assets/icons/README.md``), which is
+    why four larger sizes are shipped and were, until this, never used.
+
+    *scale* is the ratio of the display to the 100 % / 96 dpi baseline
+    (``app.gui`` derives it from Tk's own ``scaling``, the value fonts are
+    already sized by). A scale outside the set's range clamps to the nearest
+    end: a 48 px request cannot be answered with a larger file than 48, and
+    nothing smaller than 16 is shipped.
+
+    Ties are broken **upwards**: logical 16 at scale 1.125 is exactly 18,
+    halfway between 16 and 20, and picks 20. An icon one step too small is
+    clipped by the row it sits in and unreadable, while one step too large only
+    adds margin — and the row height and the summary gutter are derived from
+    this answer (see ``app.gui._tree_row_height``), so they grow with it.
+
+    Pure and Tk-free on purpose: the mapping is the part worth pinning in a
+    test, and it must be checkable without a display.
+    """
+    try:
+        logical = int(logical)
+    except (TypeError, ValueError):
+        logical = 16
+    if logical < 1:
+        logical = 1
+    try:
+        scale = float(scale)
+    except (TypeError, ValueError):
+        scale = 1.0
+    # A display with no usable scale is treated as 100 % rather than as zero,
+    # which would collapse every request onto the smallest file.
+    if not (scale > 0) or scale == float("inf") or scale != scale:
+        scale = 1.0
+    target = logical * scale
+    # ``-size`` makes the larger of two equally distant sizes win the tie.
+    return min(SIZES, key=lambda size: (abs(size - target), -size))
+
 
 #: ``(interpreter id, name, size) -> tk.PhotoImage``. Every image the UI asks
 #: for stays referenced here for as long as its window lives (see the module
