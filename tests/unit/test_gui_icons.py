@@ -508,7 +508,11 @@ def test_the_icon_gutter_has_room_for_the_whole_icon(explorer):
 
     tv = explorer.table.tv
     gutter = int(tv.column("#0", "width"))
-    image = icons.icon("file-info", 16, master=tv)
+    # The *resolved* size: 16 px is the logical request, and which delivered
+    # file answers it depends on the display's scale (app/gui._icon_px). Asking
+    # the loader for a raw 16 would pass on this 100 % display and prove nothing
+    # on a HiDPI one, where the gutter and the file both grow.
+    image = icons.icon("file-info", gui._icon_px(16, tv), master=tv)
     assert image is not None
     assert gutter >= image.width(), (gutter, image.width())
 
@@ -527,7 +531,8 @@ def test_toolbar_buttons_carry_an_image_and_keep_their_text(explorer):
                 (explorer.btn_lang, "toolbar-language",
                  i18n.LANGUAGES[explorer._language]))
     for widget, name, text in expected:
-        image = icons.icon(name, 20, master=explorer)
+        # 20 is the logical request; the delivered file follows the display.
+        image = icons.icon(name, gui._icon_px(20, explorer), master=explorer)
         assert image is not None, name
         assert _widget_image(widget) == str(image), widget
         assert widget.cget("text") == text

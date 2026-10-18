@@ -119,19 +119,27 @@ def test_no_toolbar_control_carries_a_decoration_glyph(explorer):
 
 
 def test_every_toolbar_control_carries_a_20px_icon_and_keeps_its_text(explorer):
-    """The icon is an image in front of the label, not a character in it."""
-    from app import icons
+    """The icon is an image in front of the label, not a character in it.
+
+    20 px is the *logical* request — the size the button is laid out for on a
+    100 % display. The file that answers it depends on the display's scale
+    (``gui._icon_px``: 20 at 100 %, 32 at 150 %, 40 at 200 %), so the assertion
+    asks the same function the button asked, and pins that the image really has
+    that many pixels.
+    """
+    from app import gui, icons
 
     for widget, name in ((explorer.btn_open, "toolbar-open"),
                          (explorer.btn_export, "toolbar-export"),
                          (explorer.btn_lang, "toolbar-language")):
-        expected = icons.icon(name, 20, master=widget)
+        size = gui._icon_px(20, widget)
+        expected = icons.icon(name, size, master=widget)
         assert expected is not None, f"{name} is missing from the set"
         # `cget("image")` hands back a Tcl list (('pyimage3',)), not a string.
         value = widget.cget("image")
         carried = str(value[0]) if isinstance(value, (tuple, list)) else str(value)
         assert carried == str(expected), widget
-        assert expected.width() == 20 and expected.height() == 20
+        assert expected.width() == size and expected.height() == size
         assert str(widget.cget("compound")) == "left"
         assert widget.cget("text"), "the label stays: the icon only leads it"
 
