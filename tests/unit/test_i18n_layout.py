@@ -43,6 +43,11 @@ VU_CHANGES = [
     {"time": "08:00", "activity": "WORK", "slot": "Second"},
 ]
 
+#: A normal 96 dpi Tk scaling. The gutter/placement invariants below are
+#: calibrated here because on a HiDPI screen the *same* glyphs are genuinely
+#: wider, so the product rightly widens the gutter and the reserve there.
+REFERENCE_SCALING = 4 / 3
+
 #: The three languages whose labels were measured off-canvas by the reviewer.
 CLIPPING_LANGUAGES = ("nl", "bg", "hu")
 
@@ -155,21 +160,37 @@ class TestTranslatedChartLabelsFitTheCanvas:
         assert clipped == []
 
     def test_english_gutter_is_unchanged(self, root, chart):
-        """English is the calibration: the original 100px gutter must survive."""
-        i18n.install("en")
-        chart.show(DAY, True, VU_CHANGES)
-        root.update()
+        """English is the calibration: the original 100px gutter must survive.
 
-        assert chart._layout["left"] == 100
-        boxes = _activity_label_boxes(chart)
-        assert {text for text, _bbox in boxes} == {chart_label(a) for a in ACTIVITY_CODES}
-        assert all(x0 >= 0 for _text, (x0, _y0, _x1, _y1) in boxes)
-        # "Available" is the widest English label and still right-aligned in
-        # the original gutter, exactly where it was before the fix.
-        available = next(bbox for text, bbox in boxes if text == "Available")
-        # Tk's bbox is inclusive, so the right-aligned edge lands on
-        # (left - label_gap) +- 1 px.
-        assert chart._layout["left"] - 8 <= available[2] <= chart._layout["left"] - 7
+        Measured at the 96 dpi reference scaling: at HiDPI the identical glyphs
+        are wider than 100px, and widening the gutter *there* is the clipping
+        fix itself — asserting 100 at every DPI would demand clipping English.
+        """
+        i18n.install("en")
+        native_scaling = root.tk.call("tk", "scaling")
+        root.tk.call("tk", "scaling", REFERENCE_SCALING)
+        try:
+            # Font metrics follow ``tk scaling``; the chart caches its
+            # measuring font, so drop it before drawing at the reference size.
+            chart._label_font = None
+            chart.show(DAY, True, VU_CHANGES)
+            root.update()
+
+            assert chart._layout["left"] == 100
+            boxes = _activity_label_boxes(chart)
+            assert {text for text, _bbox in boxes} == \
+                {chart_label(a) for a in ACTIVITY_CODES}
+            assert all(x0 >= 0 for _text, (x0, _y0, _x1, _y1) in boxes)
+            # "Available" is the widest English label and still right-aligned in
+            # the original gutter, exactly where it was before the fix.
+            available = next(bbox for text, bbox in boxes if text == "Available")
+            # Tk's bbox is inclusive, so the right-aligned edge lands on
+            # (left - label_gap) +- 1 px.
+            assert chart._layout["left"] - 8 <= available[2] <= \
+                chart._layout["left"] - 7
+        finally:
+            root.tk.call("tk", "scaling", native_scaling)
+            chart._label_font = None
 
 
 class TestHoverTooltipSlotIsTranslated:
@@ -389,22 +410,33 @@ class TestHoverTooltipStaysInsideTheCanvas:
         assert clipped == []
 
     def test_english_tooltip_position_is_unchanged(self, root, chart):
-        """English already fit: same spot, same colours, no wrapping."""
+        """English that already fits keeps the legacy spot, colours and wrapping.
+
+        Hovered mid-plot, where the unclamped legacy placement
+        (``event.x + 12``) really does hold the whole English string — that
+        fitting precondition is asserted below, so this pins the position
+        contract without dictating where a *clipped* right-edge tip must go.
+        """
         i18n.install("en")
         chart.show(DAY, True, VU_TWO_SLOT_DAY)
         root.update()
 
         row = _row(chart, "REST", "Slot 2")
         left, plot_width = chart._layout["left"], chart._layout["plot_width"]
-        event_x = left + plot_width - 1
+        event_x = left + plot_width // 2
         _hover(chart, event_x, (row[1] + row[2]) / 2)
 
         canvas = chart.canvas
+        width = canvas.winfo_width()
         text_id = next(item for item in canvas.find_withtag("act_hover")
                        if canvas.type(item) == "text")
+        # Precondition: this is an already-fitting tooltip — the legacy rule
+        # neither clamps it nor lets it run off the canvas.
+        assert event_x + 12 <= width - 300
+        _x0, _y0, x1, _y1 = canvas.bbox(text_id)
+        assert x1 <= width
         # The legacy placement is preserved exactly when the text fits.
-        assert canvas.coords(text_id)[0] == min(event_x + 12,
-                                                canvas.winfo_width() - 300)
+        assert canvas.coords(text_id)[0] == event_x + 12
         assert canvas.itemcget(text_id, "text").split() == \
             SLOT_TWO_REST_TEXT["en"].split()
         assert "\n" not in canvas.itemcget(text_id, "text")
