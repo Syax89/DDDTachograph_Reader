@@ -1474,3 +1474,414 @@ msgstr "Vlefshmëria e kartës së punëtorisë"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Gjenerata 1  [Shtojca 1B]"
+
+msgid "Activity Chart"
+msgstr "Grafiku i aktivitetit"
+
+msgid "Authenticated"
+msgstr "Vërtetuar"
+
+msgid "Authentication Status"
+msgstr "Statusi i vërtetimit"
+
+msgid "Authorised Speed KMH"
+msgstr "Shpejtësia e lejuar KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Shpejtësia mesatare KMH"
+
+msgid "Border Crossings"
+msgstr "Kalimet e kufirit"
+
+msgid "By Default Load Type"
+msgstr "Lloji i ngarkesës si parazgjedhje"
+
+msgid "By Default Load Type Label"
+msgstr "Etiketa e llojit të ngarkesës si parazgjedhje"
+
+msgid "Calibration Country"
+msgstr "Vendi i kalibrimit"
+
+msgid "Calibration Country Timestamp"
+msgstr "Vula kohore e vendit të kalibrimit"
+
+msgid "Calibration Purpose"
+msgstr "Qëllimi i kalibrimit"
+
+msgid "Calibration Purpose Label"
+msgstr "Etiketa e qëllimit të kalibrimit"
+
+msgid "Card Border Crossings"
+msgstr "Kalimet e kufirit të kartës"
+
+msgid "Card Codriver"
+msgstr "Karta e shoferit të dytë"
+
+msgid "Card Download"
+msgstr "Shkarkimi i kartës"
+
+msgid "Card Download Records"
+msgstr "Regjistrat e shkarkimit të kartës"
+
+msgid "Card Extended Serial"
+msgstr "Numri serial i zgjeruar i kartës"
+
+msgid "Card ICC Identification"
+msgstr "Identifikimi ICC i kartës"
+
+msgid "Card Identification"
+msgstr "Identifikimi i kartës"
+
+msgid "Card Issuer Identification"
+msgstr "Identifikimi i lëshuesit të kartës"
+
+msgid "Card Load Type Entries"
+msgstr "Zërat e llojeve të ngarkesës së kartës"
+
+msgid "Card Load Unload Operations"
+msgstr "Operacionet e ngarkimit/shkarkimit të kartës"
+
+msgid "Card Nation"
+msgstr "Vendi i kartës"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Vendi i vërtetimit të periudhës ditore të punës"
+
+msgid "Card Records"
+msgstr "Regjistrat e kartës"
+
+msgid "Card Structure Version"
+msgstr "Versioni i strukturës së kartës"
+
+msgid "Card Type"
+msgstr "Lloji i kartës"
+
+msgid "Certificate Temporal Validity"
+msgstr "Afati i vlefshmërisë së certifikatës"
+
+msgid "Company Holder Data"
+msgstr "Të dhënat e mbajtësit-kompani"
+
+msgid "Company Or Workshop Name"
+msgstr "Emri i kompanisë ose punëtorisë"
+
+msgid "Consent"
+msgstr "Pëlqim"
+
+msgid "Country Entered"
+msgstr "Vendi i hyrjes"
+
+msgid "Country Left"
+msgstr "Vendi i daljes"
+
+msgid "Curve"
+msgstr "Kurba"
+
+msgid "Curve Oid"
+msgstr "Oid i kurbës"
+
+msgid "Daily Summary"
+msgstr "Përmbledhja ditore"
+
+msgid "Data Size"
+msgstr "Madhësia e të dhënave"
+
+msgid "Device ID"
+msgstr "ID e pajisjes"
+
+msgid "Distance"
+msgstr "Distanca"
+
+msgid "Download Activities"
+msgstr "Aktivitetet e shkarkimit"
+
+msgid "Download Time"
+msgstr "Koha e shkarkimit"
+
+msgid "Downloadable Periods"
+msgstr "Periudhat e shkarkueshme"
+
+msgid "Downloading Time"
+msgstr "Kohëzgjatja e shkarkimit"
+
+msgid "Driver Card Application Identification"
+msgstr "Identifikimi i aplikacionit të kartës së shoferit"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Identifikimi i aplikacionit të kartës së shoferit V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Identifikimi i mbajtësit të kartës së shoferit"
+
+msgid "Driving Licence Info"
+msgstr "Informacioni i patentës së shoferit"
+
+msgid "ECDSA Signature Verification"
+msgstr "Verifikimi i nënshkrimit ECDSA"
+
+msgid "Event Type Code"
+msgstr "Kodi i llojit të ngjarjes"
+
+msgid "Fault Type Code"
+msgstr "Kodi i llojit të defektit"
+
+msgid "First Event"
+msgstr "Ngjarja e parë"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Drejtimi i akumuluar GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Saktësia GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Drejtimi i akumuluar i vërtetuar GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS i vërtetuar"
+
+msgid "GNSS Authentication Status"
+msgstr "Statusi i vërtetimit GNSS"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "Saktësia GNSS GNSS"
+
+msgid "GNSS Latitude"
+msgstr "Gjerësia gjeografike GNSS"
+
+msgid "GNSS Longitude"
+msgstr "Gjatësia gjeografike GNSS"
+
+msgid "GNSS Place"
+msgstr "Vendi GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Vula kohore GNSS"
+
+msgid "Gen"
+msgstr "Gjen."
+
+msgid "Hex"
+msgstr "HEX"
+
+msgid "ICC Chip Identification"
+msgstr "Identifikimi i çipit ICC"
+
+msgid "ITS Consents"
+msgstr "Pëlqimet ITS"
+
+msgid "Identification"
+msgstr "Identifikimi"
+
+msgid "Is Newest"
+msgstr "Më i riu"
+
+msgid "Latitude"
+msgstr "Gjerësia gjeografike"
+
+msgid "Length"
+msgstr "Gjatësia"
+
+msgid "Load Type"
+msgstr "Lloji i ngarkesës"
+
+msgid "Longitude"
+msgstr "Gjatësia gjeografike"
+
+msgid "Manufacturer Code"
+msgstr "Kodi i prodhuesit"
+
+msgid "Max Downloadable Time"
+msgstr "Koha maksimale e shkarkimit"
+
+msgid "Min Downloadable Time"
+msgstr "Koha minimale e shkarkimit"
+
+msgid "Min Speed KMH"
+msgstr "Shpejtësia minimale KMH"
+
+msgid "Nation At Calibration"
+msgstr "Vendi në kalibrim"
+
+msgid "Nation From"
+msgstr "Vendi nga"
+
+msgid "Nation To"
+msgstr "Vendi për në"
+
+msgid "New Odometer KM"
+msgstr "Odometri i ri KM"
+
+msgid "Odometer Begin"
+msgstr "Odometri fillimi"
+
+msgid "Odometer End"
+msgstr "Odometri fundi"
+
+msgid "Offset"
+msgstr "Zhvendosja"
+
+msgid "Old Odometer"
+msgstr "Odometri i vjetër"
+
+msgid "Old Odometer KM"
+msgstr "Odometri i vjetër KM"
+
+msgid "Operation"
+msgstr "Operacioni"
+
+msgid "Pairing Date"
+msgstr "Data e çiftimit"
+
+msgid "Plate At Calibration"
+msgstr "Targa në kalibrim"
+
+msgid "Power Interruptions"
+msgstr "Ndërprerjet e energjisë"
+
+msgid "Public Key X"
+msgstr "Çelësi publik X"
+
+msgid "Public Key Y"
+msgstr "Çelësi publik Y"
+
+msgid "Raw Text"
+msgstr "Tekst i papërpunuar"
+
+msgid "Rcm Serial Number"
+msgstr "Numri serial Rcm"
+
+msgid "Reason"
+msgstr "Arsyeja"
+
+msgid "Record Counts"
+msgstr "Numri i regjistrave"
+
+msgid "Record Index"
+msgstr "Indeksi i regjistrit"
+
+msgid "Record Type"
+msgstr "Lloji i regjistrit"
+
+msgid "Role"
+msgstr "Roli"
+
+msgid "Seal Data VU"
+msgstr "Të dhënat e vulës VU"
+
+msgid "Sensor Approval"
+msgstr "Miratimi i sensorit"
+
+msgid "Sensor Daily Records"
+msgstr "Regjistrat ditorë të sensorit"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Numri serial GNSS i sensorit"
+
+msgid "Sensor Info"
+msgstr "Informacioni i sensorit"
+
+msgid "Sensor Pairings"
+msgstr "Çiftimet e sensorit"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Çiftimet e sensorit (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Numri serial i sensorit"
+
+msgid "Sig Size"
+msgstr "Madhësia e nënshkrimit"
+
+msgid "Signature R"
+msgstr "Nënshkrimi R"
+
+msgid "Signature S"
+msgstr "Nënshkrimi S"
+
+msgid "Similar Events Number"
+msgstr "Numri i ngjarjeve të ngjashme"
+
+msgid "Speed Avg"
+msgstr "Shpejtësia mes."
+
+msgid "Speed Chart"
+msgstr "Grafiku i shpejtësisë"
+
+msgid "Speed Max"
+msgstr "Shpejtësia maks."
+
+msgid "Speed Min"
+msgstr "Shpejtësia min."
+
+msgid "Speed Samples"
+msgstr "Mostrat e shpejtësisë"
+
+msgid "Speed Summary"
+msgstr "Përmbledhja e shpejtësisë"
+
+msgid "Speed Valid Count"
+msgstr "Numri i mostrave të vlefshme të shpejtësisë"
+
+msgid "Start"
+msgstr "Fillimi"
+
+msgid "Status"
+msgstr "Statusi"
+
+msgid "Tag"
+msgstr "Etiketa"
+
+msgid "VIN At Calibration"
+msgstr "VIN në kalibrim"
+
+msgid "VU Certificates (CVC)"
+msgstr "Certifikatat VU (CVC)"
+
+msgid "VU Identifications"
+msgstr "Identifikimet VU"
+
+msgid "VU Record Array Summary"
+msgstr "Përmbledhja e vargut të regjistrave VU"
+
+msgid "VU Software Version"
+msgstr "Versioni i softuerit VU"
+
+msgid "Valid From"
+msgstr "Vlefshme nga"
+
+msgid "Valid To"
+msgstr "Vlefshme deri"
+
+msgid "Vehicle Nation"
+msgstr "Vendi i automjetit"
+
+msgid "Vehicle Odometer Value"
+msgstr "Vlera e odometrit të automjetit"
+
+msgid "Vehicle Plate"
+msgstr "Targa e automjetit"
+
+msgid "Vehicle Registration"
+msgstr "Regjistrimi i automjetit"
+
+msgid "Vehicle Units Used"
+msgstr "Njësitë e automjeteve të përdorura"
+
+msgid "Vehicles Used"
+msgstr "Automjetet e përdorura"
+
+msgid "W Characteristic Constant"
+msgstr "Konstanta karakteristike W"
+
+msgid "W Vehicle Constant"
+msgstr "Konstanta e automjetit W"
+
+msgid "Workshop Name"
+msgstr "Emri i punëtorisë"
+
+msgid "CAR Authority"
+msgstr "Autoriteti CAR"
+
+msgid "CAR Serial"
+msgstr "Numri serial CAR"

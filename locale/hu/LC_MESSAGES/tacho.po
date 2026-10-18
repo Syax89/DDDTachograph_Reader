@@ -1474,3 +1474,414 @@ msgstr "Műhelykártya lejárata"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  1. generáció  [1B. melléklet]"
+
+msgid "Activity Chart"
+msgstr "Aktivitásdiagram"
+
+msgid "Authenticated"
+msgstr "Hitelesítve"
+
+msgid "Authentication Status"
+msgstr "Hitelesítés állapota"
+
+msgid "Authorised Speed KMH"
+msgstr "Engedélyezett sebesség KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Átl. sebesség KMH"
+
+msgid "Border Crossings"
+msgstr "Határátlépések"
+
+msgid "By Default Load Type"
+msgstr "Alapértelmezett rakodástípus"
+
+msgid "By Default Load Type Label"
+msgstr "Alapértelmezett rakodástípus címkéje"
+
+msgid "Calibration Country"
+msgstr "Kalibrálás országa"
+
+msgid "Calibration Country Timestamp"
+msgstr "Kalibrálás országának időbélyege"
+
+msgid "Calibration Purpose"
+msgstr "Kalibrálás célja"
+
+msgid "Calibration Purpose Label"
+msgstr "Kalibrálás céljának címkéje"
+
+msgid "Card Border Crossings"
+msgstr "Kártya határátlépései"
+
+msgid "Card Codriver"
+msgstr "Másodvezető a kártyán"
+
+msgid "Card Download"
+msgstr "Kártya letöltése"
+
+msgid "Card Download Records"
+msgstr "Kártya letöltési rekordjai"
+
+msgid "Card Extended Serial"
+msgstr "Kártya kiterjesztett sorozatszáma"
+
+msgid "Card ICC Identification"
+msgstr "Kártya ICC-azonosító"
+
+msgid "Card Identification"
+msgstr "Kártya azonosítása"
+
+msgid "Card Issuer Identification"
+msgstr "Kártya kibocsátójának azonosítása"
+
+msgid "Card Load Type Entries"
+msgstr "Kártya rakodástípus-bejegyzései"
+
+msgid "Card Load Unload Operations"
+msgstr "Kártya rakodási műveletei"
+
+msgid "Card Nation"
+msgstr "Kártya országa"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Kártya helye és hitelesítés napi munkaidőhöz"
+
+msgid "Card Records"
+msgstr "Kártyarekordok"
+
+msgid "Card Structure Version"
+msgstr "Kártyastruktúra verziója"
+
+msgid "Card Type"
+msgstr "Kártyatípus"
+
+msgid "Certificate Temporal Validity"
+msgstr "Tanúsítvány időbeli érvényessége"
+
+msgid "Company Holder Data"
+msgstr "Tulajdonos adatai (vállalat)"
+
+msgid "Company Or Workshop Name"
+msgstr "Vállalat vagy műhely neve"
+
+msgid "Consent"
+msgstr "Hozzájárulás"
+
+msgid "Country Entered"
+msgstr "Belépés országa"
+
+msgid "Country Left"
+msgstr "Kilépés országa"
+
+msgid "Curve"
+msgstr "Görbe"
+
+msgid "Curve Oid"
+msgstr "Görbe OID"
+
+msgid "Daily Summary"
+msgstr "Napi összegzés"
+
+msgid "Data Size"
+msgstr "Adatméret"
+
+msgid "Device ID"
+msgstr "Eszköz ID"
+
+msgid "Distance"
+msgstr "Távolság"
+
+msgid "Download Activities"
+msgstr "Letöltési tevékenységek"
+
+msgid "Download Time"
+msgstr "Letöltés ideje"
+
+msgid "Downloadable Periods"
+msgstr "Letölthető időszakok"
+
+msgid "Downloading Time"
+msgstr "Letöltés időtartama"
+
+msgid "Driver Card Application Identification"
+msgstr "Vezetői kártya alkalmazásának azonosítása"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Vezetői kártya alkalmazásának azonosítása V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Vezetői kártya tulajdonosának azonosítása"
+
+msgid "Driving Licence Info"
+msgstr "Vezetői engedély adatai"
+
+msgid "ECDSA Signature Verification"
+msgstr "ECDSA-aláírás ellenőrzése"
+
+msgid "Event Type Code"
+msgstr "Eseménytípus kódja"
+
+msgid "Fault Type Code"
+msgstr "Hibatípus kódja"
+
+msgid "First Event"
+msgstr "Első esemény"
+
+msgid "GNSS Accumulated Driving"
+msgstr "GNSS által halmozott vezetési idő"
+
+msgid "GNSS Accuracy"
+msgstr "GNSS-pontosság"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Hitelesített, GNSS által halmozott vezetési idő"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS hitelesítve"
+
+msgid "GNSS Authentication Status"
+msgstr "GNSS-hitelesítés állapota"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS GNSS-pontosság"
+
+msgid "GNSS Latitude"
+msgstr "GNSS szélesség"
+
+msgid "GNSS Longitude"
+msgstr "GNSS hosszúság"
+
+msgid "GNSS Place"
+msgstr "GNSS-hely"
+
+msgid "GNSS Timestamp"
+msgstr "GNSS-időbélyeg"
+
+msgid "Gen"
+msgstr "Generáció"
+
+msgid "Hex"
+msgstr "HEX"
+
+msgid "ICC Chip Identification"
+msgstr "ICC chip azonosítása"
+
+msgid "ITS Consents"
+msgstr "ITS-hozzájárulások"
+
+msgid "Identification"
+msgstr "Azonosítás"
+
+msgid "Is Newest"
+msgstr "Legújabb"
+
+msgid "Latitude"
+msgstr "Szélesség"
+
+msgid "Length"
+msgstr "Hossz"
+
+msgid "Load Type"
+msgstr "Rakodástípus"
+
+msgid "Longitude"
+msgstr "Hosszúság"
+
+msgid "Manufacturer Code"
+msgstr "Gyártói kód"
+
+msgid "Max Downloadable Time"
+msgstr "Maximális letölthető idő"
+
+msgid "Min Downloadable Time"
+msgstr "Minimális letölthető idő"
+
+msgid "Min Speed KMH"
+msgstr "Minimális sebesség KMH"
+
+msgid "Nation At Calibration"
+msgstr "Ország a kalibráláskor"
+
+msgid "Nation From"
+msgstr "Kiinduló ország"
+
+msgid "Nation To"
+msgstr "Célország"
+
+msgid "New Odometer KM"
+msgstr "Új kilométer-számláló KM"
+
+msgid "Odometer Begin"
+msgstr "Kilométer-számláló kezdete"
+
+msgid "Odometer End"
+msgstr "Kilométer-számláló vége"
+
+msgid "Offset"
+msgstr "Eltolás"
+
+msgid "Old Odometer"
+msgstr "Régi kilométer-számláló"
+
+msgid "Old Odometer KM"
+msgstr "Régi kilométer-számláló KM"
+
+msgid "Operation"
+msgstr "Művelet"
+
+msgid "Pairing Date"
+msgstr "Párosítás dátuma"
+
+msgid "Plate At Calibration"
+msgstr "Rendszám a kalibráláskor"
+
+msgid "Power Interruptions"
+msgstr "Áramkimaradások"
+
+msgid "Public Key X"
+msgstr "Nyilvános kulcs X"
+
+msgid "Public Key Y"
+msgstr "Nyilvános kulcs Y"
+
+msgid "Raw Text"
+msgstr "Nyers szöveg"
+
+msgid "Rcm Serial Number"
+msgstr "RCM sorozatszám"
+
+msgid "Reason"
+msgstr "Ok"
+
+msgid "Record Counts"
+msgstr "Rekordszámok"
+
+msgid "Record Index"
+msgstr "Rekordindex"
+
+msgid "Record Type"
+msgstr "Rekordtípus"
+
+msgid "Role"
+msgstr "Szerep"
+
+msgid "Seal Data VU"
+msgstr "VU plombájának adatai"
+
+msgid "Sensor Approval"
+msgstr "Érzékelő jóváhagyása"
+
+msgid "Sensor Daily Records"
+msgstr "Érzékelő napi rekordjai"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Érzékelő GNSS-sorozatszáma"
+
+msgid "Sensor Info"
+msgstr "Érzékelő adatai"
+
+msgid "Sensor Pairings"
+msgstr "Érzékelő párosításai"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Érzékelő párosításai (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Érzékelő sorozatszáma"
+
+msgid "Sig Size"
+msgstr "Aláírás mérete"
+
+msgid "Signature R"
+msgstr "Aláírás R"
+
+msgid "Signature S"
+msgstr "Aláírás S"
+
+msgid "Similar Events Number"
+msgstr "Hasonló események száma"
+
+msgid "Speed Avg"
+msgstr "Átl. sebesség"
+
+msgid "Speed Chart"
+msgstr "Sebességdiagram"
+
+msgid "Speed Max"
+msgstr "Max. sebesség"
+
+msgid "Speed Min"
+msgstr "Min. sebesség"
+
+msgid "Speed Samples"
+msgstr "Sebességminták"
+
+msgid "Speed Summary"
+msgstr "Sebesség összegzése"
+
+msgid "Speed Valid Count"
+msgstr "Érvényes minták száma"
+
+msgid "Start"
+msgstr "Kezdés"
+
+msgid "Status"
+msgstr "Állapot"
+
+msgid "Tag"
+msgstr "Címke"
+
+msgid "VIN At Calibration"
+msgstr "VIN a kalibráláskor"
+
+msgid "VU Certificates (CVC)"
+msgstr "VU-tanúsítványok (CVC)"
+
+msgid "VU Identifications"
+msgstr "VU-azonosítók"
+
+msgid "VU Record Array Summary"
+msgstr "VU rekordtömb összegzése"
+
+msgid "VU Software Version"
+msgstr "VU szoftververziója"
+
+msgid "Valid From"
+msgstr "Érvényes ettől"
+
+msgid "Valid To"
+msgstr "Érvényes eddig"
+
+msgid "Vehicle Nation"
+msgstr "Jármű országa"
+
+msgid "Vehicle Odometer Value"
+msgstr "Jármű kilométer-számláló értéke"
+
+msgid "Vehicle Plate"
+msgstr "Jármű rendszáma"
+
+msgid "Vehicle Registration"
+msgstr "Jármű regisztrációja"
+
+msgid "Vehicle Units Used"
+msgstr "Használt járműegységek"
+
+msgid "Vehicles Used"
+msgstr "Használt járművek"
+
+msgid "W Characteristic Constant"
+msgstr "W-jellemző állandó"
+
+msgid "W Vehicle Constant"
+msgstr "Jármű W-állandója"
+
+msgid "Workshop Name"
+msgstr "Műhely neve"
+
+msgid "CAR Authority"
+msgstr "CAR hatóság"
+
+msgid "CAR Serial"
+msgstr "CAR sorozatszám"

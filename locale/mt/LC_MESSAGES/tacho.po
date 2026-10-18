@@ -1474,3 +1474,414 @@ msgstr "Skadenza tal-karta tal-garaxx"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Ġenerazzjoni 1  [Anness 1B]"
+
+msgid "Activity Chart"
+msgstr "Grafiku tal-attività"
+
+msgid "Authenticated"
+msgstr "Awtentikat"
+
+msgid "Authentication Status"
+msgstr "Status tal-awtentikazzjoni"
+
+msgid "Authorised Speed KMH"
+msgstr "Veloċità awtorizzata KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Veloċità medja KMH"
+
+msgid "Border Crossings"
+msgstr "Qsim tal-fruntieri"
+
+msgid "By Default Load Type"
+msgstr "Tip tat-tagħbija predefinit"
+
+msgid "By Default Load Type Label"
+msgstr "Tikketta tat-tip tat-tagħbija predefinit"
+
+msgid "Calibration Country"
+msgstr "Pajjiż tal-kalibrazzjoni"
+
+msgid "Calibration Country Timestamp"
+msgstr "Marka tal-ħin tal-pajjiż tal-kalibrazzjoni"
+
+msgid "Calibration Purpose"
+msgstr "Skop tal-kalibrazzjoni"
+
+msgid "Calibration Purpose Label"
+msgstr "Tikketta tal-iskop tal-kalibrazzjoni"
+
+msgid "Card Border Crossings"
+msgstr "Qsim tal-fruntieri tal-karta"
+
+msgid "Card Codriver"
+msgstr "Xufier sekondarju tal-karta"
+
+msgid "Card Download"
+msgstr "Download tal-karta"
+
+msgid "Card Download Records"
+msgstr "Rekords tad-download tal-karta"
+
+msgid "Card Extended Serial"
+msgstr "Numru tas-serje estiż tal-karta"
+
+msgid "Card ICC Identification"
+msgstr "Identifikazzjoni ICC tal-karta"
+
+msgid "Card Identification"
+msgstr "Identifikazzjoni tal-karta"
+
+msgid "Card Issuer Identification"
+msgstr "Identifikazzjoni tal-emittent tal-karta"
+
+msgid "Card Load Type Entries"
+msgstr "Dħuliet tat-tip tat-tagħbija tal-karta"
+
+msgid "Card Load Unload Operations"
+msgstr "Operazzjonijiet tat-tagħbija/ħatt tal-karta"
+
+msgid "Card Nation"
+msgstr "Pajjiż tal-karta"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Post awtentikat tal-perjodu tax-xogħol ta' kuljum tal-karta"
+
+msgid "Card Records"
+msgstr "Rekords tal-karta"
+
+msgid "Card Structure Version"
+msgstr "Verżjoni tal-istruttura tal-karta"
+
+msgid "Card Type"
+msgstr "Tip tal-karta"
+
+msgid "Certificate Temporal Validity"
+msgstr "Validità temporali taċ-ċertifikat"
+
+msgid "Company Holder Data"
+msgstr "Dejta tad-detentur tal-kumpanija"
+
+msgid "Company Or Workshop Name"
+msgstr "Isem tal-kumpanija jew tal-garaxx"
+
+msgid "Consent"
+msgstr "Kunsens"
+
+msgid "Country Entered"
+msgstr "Pajjiż tad-dħul"
+
+msgid "Country Left"
+msgstr "Pajjiż tal-ħruġ"
+
+msgid "Curve"
+msgstr "Kurva"
+
+msgid "Curve Oid"
+msgstr "OID tal-kurva"
+
+msgid "Daily Summary"
+msgstr "Sommarju ta' kuljum"
+
+msgid "Data Size"
+msgstr "Daqs tad-dejta"
+
+msgid "Device ID"
+msgstr "ID tal-apparat"
+
+msgid "Distance"
+msgstr "Distanza"
+
+msgid "Download Activities"
+msgstr "Attivitajiet tad-download"
+
+msgid "Download Time"
+msgstr "Ħin tad-download"
+
+msgid "Downloadable Periods"
+msgstr "Perjodi li jistgħu jitniżżlu"
+
+msgid "Downloading Time"
+msgstr "Mument tad-download"
+
+msgid "Driver Card Application Identification"
+msgstr "Identifikazzjoni tal-applikazzjoni tal-karta tas-sewwieq"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Identifikazzjoni tal-applikazzjoni tal-karta tas-sewwieq V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Identifikazzjoni tad-detentur tal-karta tas-sewwieq"
+
+msgid "Driving Licence Info"
+msgstr "Informazzjoni tal-liċenzja tas-sewqan"
+
+msgid "ECDSA Signature Verification"
+msgstr "Verifika tal-firma ECDSA"
+
+msgid "Event Type Code"
+msgstr "Kodiċi tat-tip tal-avveniment"
+
+msgid "Fault Type Code"
+msgstr "Kodiċi tat-tip tal-ħsara"
+
+msgid "First Event"
+msgstr "L-ewwel avveniment"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Sewqan akkumulat GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Preċiżjoni GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Sewqan akkumulat awtentikat GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS awtentikat"
+
+msgid "GNSS Authentication Status"
+msgstr "Status tal-awtentikazzjoni GNSS"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS preċiżjoni GNSS"
+
+msgid "GNSS Latitude"
+msgstr "Latitudni GNSS"
+
+msgid "GNSS Longitude"
+msgstr "Lonġitudni GNSS"
+
+msgid "GNSS Place"
+msgstr "Post GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Marka tal-ħin GNSS"
+
+msgid "Gen"
+msgstr "Ġenerazzjoni"
+
+msgid "Hex"
+msgstr "Valur hex"
+
+msgid "ICC Chip Identification"
+msgstr "Identifikazzjoni taċ-ċippa ICC"
+
+msgid "ITS Consents"
+msgstr "Kunsensi ITS"
+
+msgid "Identification"
+msgstr "Identifikazzjoni"
+
+msgid "Is Newest"
+msgstr "L-aktar ġdid"
+
+msgid "Latitude"
+msgstr "Latitudni"
+
+msgid "Length"
+msgstr "Tul"
+
+msgid "Load Type"
+msgstr "Tip tat-tagħbija"
+
+msgid "Longitude"
+msgstr "Lonġitudni"
+
+msgid "Manufacturer Code"
+msgstr "Kodiċi tal-manifattur"
+
+msgid "Max Downloadable Time"
+msgstr "L-itwal ħin li jista' jitniżżel"
+
+msgid "Min Downloadable Time"
+msgstr "L-iqsar ħin li jista' jitniżżel"
+
+msgid "Min Speed KMH"
+msgstr "Veloċità minima KMH"
+
+msgid "Nation At Calibration"
+msgstr "Pajjiż waqt il-kalibrazzjoni"
+
+msgid "Nation From"
+msgstr "Pajjiż minn"
+
+msgid "Nation To"
+msgstr "Pajjiż għal"
+
+msgid "New Odometer KM"
+msgstr "Odometru ġdid km"
+
+msgid "Odometer Begin"
+msgstr "Odometru bidu"
+
+msgid "Odometer End"
+msgstr "Odometru tmiem"
+
+msgid "Offset"
+msgstr "Ċaqliq"
+
+msgid "Old Odometer"
+msgstr "Odometru qadim"
+
+msgid "Old Odometer KM"
+msgstr "Odometru qadim km"
+
+msgid "Operation"
+msgstr "Operazzjoni"
+
+msgid "Pairing Date"
+msgstr "Data tal-ibbjar"
+
+msgid "Plate At Calibration"
+msgstr "Pjanċa waqt il-kalibrazzjoni"
+
+msgid "Power Interruptions"
+msgstr "Interruzzjonijiet tal-enerġija"
+
+msgid "Public Key X"
+msgstr "Ċavetta pubblika X"
+
+msgid "Public Key Y"
+msgstr "Ċavetta pubblika Y"
+
+msgid "Raw Text"
+msgstr "Test mhux maħdum"
+
+msgid "Rcm Serial Number"
+msgstr "Numru tas-serje RCM"
+
+msgid "Reason"
+msgstr "Raġuni"
+
+msgid "Record Counts"
+msgstr "Għadd tar-rekords"
+
+msgid "Record Index"
+msgstr "Indiċi tar-rekord"
+
+msgid "Record Type"
+msgstr "Tip tar-rekord"
+
+msgid "Role"
+msgstr "Rwol"
+
+msgid "Seal Data VU"
+msgstr "Siġill VU"
+
+msgid "Sensor Approval"
+msgstr "Approvazzjoni tas-sensor"
+
+msgid "Sensor Daily Records"
+msgstr "Rekords ta' kuljum tas-sensor"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Numru tas-serje GNSS tas-sensor"
+
+msgid "Sensor Info"
+msgstr "Informazzjoni tas-sensor"
+
+msgid "Sensor Pairings"
+msgstr "Ibbjar tas-sensor"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Ibbjar tas-sensor (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Numru tas-serje tas-sensor"
+
+msgid "Sig Size"
+msgstr "Daqs tal-firma"
+
+msgid "Signature R"
+msgstr "Firma R"
+
+msgid "Signature S"
+msgstr "Firma S"
+
+msgid "Similar Events Number"
+msgstr "Numru ta' avvenimenti simili"
+
+msgid "Speed Avg"
+msgstr "Veloċità medja"
+
+msgid "Speed Chart"
+msgstr "Grafiku tal-veloċità"
+
+msgid "Speed Max"
+msgstr "Veloċità massima"
+
+msgid "Speed Min"
+msgstr "Veloċità minima"
+
+msgid "Speed Samples"
+msgstr "Kampjuni tal-veloċità"
+
+msgid "Speed Summary"
+msgstr "Sommarju tal-veloċità"
+
+msgid "Speed Valid Count"
+msgstr "Għadd tal-veloċitajiet validi"
+
+msgid "Start"
+msgstr "Bidu"
+
+msgid "Status"
+msgstr "Stat"
+
+msgid "Tag"
+msgstr "Tikketta"
+
+msgid "VIN At Calibration"
+msgstr "VIN waqt il-kalibrazzjoni"
+
+msgid "VU Certificates (CVC)"
+msgstr "Ċertifikati VU (CVC)"
+
+msgid "VU Identifications"
+msgstr "Identifikazzjonijiet VU"
+
+msgid "VU Record Array Summary"
+msgstr "Sommarju tal-array tar-rekords VU"
+
+msgid "VU Software Version"
+msgstr "Verżjoni tas-software VU"
+
+msgid "Valid From"
+msgstr "Validu mill-"
+
+msgid "Valid To"
+msgstr "Validu sal-"
+
+msgid "Vehicle Nation"
+msgstr "Pajjiż tal-vettura"
+
+msgid "Vehicle Odometer Value"
+msgstr "Valur tal-odometru tal-vettura"
+
+msgid "Vehicle Plate"
+msgstr "Pjanċa tal-vettura"
+
+msgid "Vehicle Registration"
+msgstr "Reġistrazzjoni tal-vettura"
+
+msgid "Vehicle Units Used"
+msgstr "Unitajiet tal-vettura użati"
+
+msgid "Vehicles Used"
+msgstr "Vetturi użati"
+
+msgid "W Characteristic Constant"
+msgstr "Kostanti karatteristika W"
+
+msgid "W Vehicle Constant"
+msgstr "Kostanti tal-vettura W"
+
+msgid "Workshop Name"
+msgstr "Isem tal-garaxx"
+
+msgid "CAR Authority"
+msgstr "Awtorità CAR"
+
+msgid "CAR Serial"
+msgstr "Numru tas-serje CAR"

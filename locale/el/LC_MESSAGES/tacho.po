@@ -1474,3 +1474,414 @@ msgstr "Λήξη κάρτας συνεργείου"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Γενιά 1  [Παράρτημα 1B]"
+
+msgid "Activity Chart"
+msgstr "Γράφημα δραστηριότητας"
+
+msgid "Authenticated"
+msgstr "Επαληθευμένο"
+
+msgid "Authentication Status"
+msgstr "Κατάσταση επαλήθευσης"
+
+msgid "Authorised Speed KMH"
+msgstr "Εγκεκριμένη ταχύτητα KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Μέση ταχύτητα KMH"
+
+msgid "Border Crossings"
+msgstr "Διελεύσεις συνόρων"
+
+msgid "By Default Load Type"
+msgstr "Προεπιλεγμένος τύπος φόρτωσης"
+
+msgid "By Default Load Type Label"
+msgstr "Ετικέτα προεπιλεγμένου τύπου φόρτωσης"
+
+msgid "Calibration Country"
+msgstr "Χώρα βαθμονόμησης"
+
+msgid "Calibration Country Timestamp"
+msgstr "Χρονική σήμανση χώρας βαθμονόμησης"
+
+msgid "Calibration Purpose"
+msgstr "Σκοπός βαθμονόμησης"
+
+msgid "Calibration Purpose Label"
+msgstr "Ετικέτα σκοπού βαθμονόμησης"
+
+msgid "Card Border Crossings"
+msgstr "Διελεύσεις συνόρων κάρτας"
+
+msgid "Card Codriver"
+msgstr "Δεύτερος οδηγός στην κάρτα"
+
+msgid "Card Download"
+msgstr "Λήψη κάρτας"
+
+msgid "Card Download Records"
+msgstr "Εγγραφές λήψης κάρτας"
+
+msgid "Card Extended Serial"
+msgstr "Εκτεταμένος σειριακός αριθμός κάρτας"
+
+msgid "Card ICC Identification"
+msgstr "Ταυτοποίηση ICC κάρτας"
+
+msgid "Card Identification"
+msgstr "Ταυτοποίηση κάρτας"
+
+msgid "Card Issuer Identification"
+msgstr "Ταυτοποίηση εκδότη κάρτας"
+
+msgid "Card Load Type Entries"
+msgstr "Καταχωρίσεις τύπου φόρτωσης κάρτας"
+
+msgid "Card Load Unload Operations"
+msgstr "Λειτουργίες φόρτωσης και εκφόρτωσης κάρτας"
+
+msgid "Card Nation"
+msgstr "Χώρα κάρτας"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Τοποθεσία κάρτας και επαλήθευση για ημερήσια περίοδο εργασίας"
+
+msgid "Card Records"
+msgstr "Εγγραφές κάρτας"
+
+msgid "Card Structure Version"
+msgstr "Έκδοση δομής κάρτας"
+
+msgid "Card Type"
+msgstr "Τύπος κάρτας"
+
+msgid "Certificate Temporal Validity"
+msgstr "Χρονική ισχύς πιστοποιητικού"
+
+msgid "Company Holder Data"
+msgstr "Στοιχεία κατόχου (εταιρεία)"
+
+msgid "Company Or Workshop Name"
+msgstr "Επωνυμία εταιρείας ή συνεργείου"
+
+msgid "Consent"
+msgstr "Συγκατάθεση"
+
+msgid "Country Entered"
+msgstr "Χώρα εισόδου"
+
+msgid "Country Left"
+msgstr "Χώρα εξόδου"
+
+msgid "Curve"
+msgstr "Καμπύλη"
+
+msgid "Curve Oid"
+msgstr "OID καμπύλης"
+
+msgid "Daily Summary"
+msgstr "Ημερήσια σύνοψη"
+
+msgid "Data Size"
+msgstr "Μέγεθος δεδομένων"
+
+msgid "Device ID"
+msgstr "ID συσκευής"
+
+msgid "Distance"
+msgstr "Απόσταση"
+
+msgid "Download Activities"
+msgstr "Δραστηριότητες λήψης"
+
+msgid "Download Time"
+msgstr "Χρόνος λήψης"
+
+msgid "Downloadable Periods"
+msgstr "Περίοδοι λήψης"
+
+msgid "Downloading Time"
+msgstr "Διάρκεια λήψης"
+
+msgid "Driver Card Application Identification"
+msgstr "Ταυτοποίηση εφαρμογής κάρτας οδηγού"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Ταυτοποίηση εφαρμογής κάρτας οδηγού V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Ταυτοποίηση κατόχου κάρτας οδηγού"
+
+msgid "Driving Licence Info"
+msgstr "Στοιχεία άδειας οδήγησης"
+
+msgid "ECDSA Signature Verification"
+msgstr "Επαλήθευση υπογραφής ECDSA"
+
+msgid "Event Type Code"
+msgstr "Κωδικός τύπου συμβάντος"
+
+msgid "Fault Type Code"
+msgstr "Κωδικός τύπου βλάβης"
+
+msgid "First Event"
+msgstr "Πρώτο συμβάν"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Συσσωρευμένος χρόνος οδήγησης GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Ακρίβεια GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Επαληθευμένος συσσωρευμένος χρόνος οδήγησης GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS επαληθευμένο"
+
+msgid "GNSS Authentication Status"
+msgstr "Κατάσταση επαλήθευσης GNSS"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS ακρίβεια GNSS"
+
+msgid "GNSS Latitude"
+msgstr "Γεωγραφικό πλάτος GNSS"
+
+msgid "GNSS Longitude"
+msgstr "Γεωγραφικό μήκος GNSS"
+
+msgid "GNSS Place"
+msgstr "Τοποθεσία GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Χρονική σήμανση GNSS"
+
+msgid "Gen"
+msgstr "Γενιά"
+
+msgid "Hex"
+msgstr "Δεκαεξ."
+
+msgid "ICC Chip Identification"
+msgstr "Ταυτοποίηση τσιπ ICC"
+
+msgid "ITS Consents"
+msgstr "Συγκαταθέσεις ITS"
+
+msgid "Identification"
+msgstr "Ταυτοποίηση"
+
+msgid "Is Newest"
+msgstr "Νεότερο"
+
+msgid "Latitude"
+msgstr "Γεωγραφικό πλάτος"
+
+msgid "Length"
+msgstr "Μήκος"
+
+msgid "Load Type"
+msgstr "Τύπος φόρτωσης"
+
+msgid "Longitude"
+msgstr "Γεωγραφικό μήκος"
+
+msgid "Manufacturer Code"
+msgstr "Κωδικός κατασκευαστή"
+
+msgid "Max Downloadable Time"
+msgstr "Μέγιστος χρόνος λήψης"
+
+msgid "Min Downloadable Time"
+msgstr "Ελάχιστος χρόνος λήψης"
+
+msgid "Min Speed KMH"
+msgstr "Ελάχιστη ταχύτητα KMH"
+
+msgid "Nation At Calibration"
+msgstr "Χώρα κατά τη βαθμονόμηση"
+
+msgid "Nation From"
+msgstr "Χώρα από"
+
+msgid "Nation To"
+msgstr "Χώρα προς"
+
+msgid "New Odometer KM"
+msgstr "Νέο οδόμετρο KM"
+
+msgid "Odometer Begin"
+msgstr "Οδόμετρο έναρξης"
+
+msgid "Odometer End"
+msgstr "Οδόμετρο λήξης"
+
+msgid "Offset"
+msgstr "Μετατόπιση"
+
+msgid "Old Odometer"
+msgstr "Παλιό οδόμετρο"
+
+msgid "Old Odometer KM"
+msgstr "Παλιό οδόμετρο KM"
+
+msgid "Operation"
+msgstr "Λειτουργία"
+
+msgid "Pairing Date"
+msgstr "Ημερομηνία αντιστοίχισης"
+
+msgid "Plate At Calibration"
+msgstr "Πινακίδα κατά τη βαθμονόμηση"
+
+msgid "Power Interruptions"
+msgstr "Διακοπές τροφοδοσίας"
+
+msgid "Public Key X"
+msgstr "Δημόσιο κλειδί X"
+
+msgid "Public Key Y"
+msgstr "Δημόσιο κλειδί Y"
+
+msgid "Raw Text"
+msgstr "Ακατέργαστο κείμενο"
+
+msgid "Rcm Serial Number"
+msgstr "Σειριακός αριθμός RCM"
+
+msgid "Reason"
+msgstr "Αιτία"
+
+msgid "Record Counts"
+msgstr "Πλήθος εγγραφών"
+
+msgid "Record Index"
+msgstr "Δείκτης εγγραφής"
+
+msgid "Record Type"
+msgstr "Τύπος εγγραφής"
+
+msgid "Role"
+msgstr "Ρόλος"
+
+msgid "Seal Data VU"
+msgstr "Δεδομένα σφραγίδας VU"
+
+msgid "Sensor Approval"
+msgstr "Έγκριση αισθητήρα"
+
+msgid "Sensor Daily Records"
+msgstr "Ημερήσιες εγγραφές αισθητήρα"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Σειριακός αριθμός GNSS αισθητήρα"
+
+msgid "Sensor Info"
+msgstr "Στοιχεία αισθητήρα"
+
+msgid "Sensor Pairings"
+msgstr "Αντιστοιχίσεις αισθητήρα"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Αντιστοιχίσεις αισθητήρα (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Σειριακός αριθμός αισθητήρα"
+
+msgid "Sig Size"
+msgstr "Μέγεθος υπογραφής"
+
+msgid "Signature R"
+msgstr "Υπογραφή R"
+
+msgid "Signature S"
+msgstr "Υπογραφή S"
+
+msgid "Similar Events Number"
+msgstr "Αριθμός παρόμοιων συμβάντων"
+
+msgid "Speed Avg"
+msgstr "Μέση ταχύτητα"
+
+msgid "Speed Chart"
+msgstr "Γράφημα ταχύτητας"
+
+msgid "Speed Max"
+msgstr "Μέγιστη ταχύτητα"
+
+msgid "Speed Min"
+msgstr "Ελάχιστη ταχύτητα"
+
+msgid "Speed Samples"
+msgstr "Δείγματα ταχύτητας"
+
+msgid "Speed Summary"
+msgstr "Σύνοψη ταχύτητας"
+
+msgid "Speed Valid Count"
+msgstr "Πλήθος έγκυρων δειγμάτων"
+
+msgid "Start"
+msgstr "Έναρξη"
+
+msgid "Status"
+msgstr "Κατάσταση"
+
+msgid "Tag"
+msgstr "Ετικέτα"
+
+msgid "VIN At Calibration"
+msgstr "VIN κατά τη βαθμονόμηση"
+
+msgid "VU Certificates (CVC)"
+msgstr "Πιστοποιητικά VU (CVC)"
+
+msgid "VU Identifications"
+msgstr "Ταυτοποιήσεις VU"
+
+msgid "VU Record Array Summary"
+msgstr "Σύνοψη πίνακα εγγραφών VU"
+
+msgid "VU Software Version"
+msgstr "Έκδοση λογισμικού VU"
+
+msgid "Valid From"
+msgstr "Ισχύει από"
+
+msgid "Valid To"
+msgstr "Ισχύει έως"
+
+msgid "Vehicle Nation"
+msgstr "Χώρα οχήματος"
+
+msgid "Vehicle Odometer Value"
+msgstr "Τιμή οδομέτρου οχήματος"
+
+msgid "Vehicle Plate"
+msgstr "Πινακίδα οχήματος"
+
+msgid "Vehicle Registration"
+msgstr "Καταχώριση οχήματος"
+
+msgid "Vehicle Units Used"
+msgstr "Μονάδες οχήματος που χρησιμοποιήθηκαν"
+
+msgid "Vehicles Used"
+msgstr "Οχήματα που χρησιμοποιήθηκαν"
+
+msgid "W Characteristic Constant"
+msgstr "Σταθερά χαρακτηριστικού W"
+
+msgid "W Vehicle Constant"
+msgstr "Σταθερά W οχήματος"
+
+msgid "Workshop Name"
+msgstr "Επωνυμία συνεργείου"
+
+msgid "CAR Authority"
+msgstr "Αρχή CAR"
+
+msgid "CAR Serial"
+msgstr "Σειριακός αριθμός CAR"

@@ -1474,3 +1474,414 @@ msgstr "Platnosť servisnej karty"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Generácia 1  [Dodatok 1B]"
+
+msgid "Activity Chart"
+msgstr "Graf aktivity"
+
+msgid "Authenticated"
+msgstr "Overené"
+
+msgid "Authentication Status"
+msgstr "Stav overenia"
+
+msgid "Authorised Speed KMH"
+msgstr "Povolená rýchlosť KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Priem. rýchlosť KMH"
+
+msgid "Border Crossings"
+msgstr "Prechody hraníc"
+
+msgid "By Default Load Type"
+msgstr "Predvolený typ nakládky"
+
+msgid "By Default Load Type Label"
+msgstr "Označenie predvoleného typu nakládky"
+
+msgid "Calibration Country"
+msgstr "Štát kalibrácie"
+
+msgid "Calibration Country Timestamp"
+msgstr "Časová pečiatka štátu kalibrácie"
+
+msgid "Calibration Purpose"
+msgstr "Účel kalibrácie"
+
+msgid "Calibration Purpose Label"
+msgstr "Označenie účelu kalibrácie"
+
+msgid "Card Border Crossings"
+msgstr "Prechody hraníc karty"
+
+msgid "Card Codriver"
+msgstr "Druhý vodič na karte"
+
+msgid "Card Download"
+msgstr "Stiahnutie karty"
+
+msgid "Card Download Records"
+msgstr "Záznamy stiahnutia karty"
+
+msgid "Card Extended Serial"
+msgstr "Rozšírené sériové číslo karty"
+
+msgid "Card ICC Identification"
+msgstr "Identifikácia ICC karty"
+
+msgid "Card Identification"
+msgstr "Identifikácia karty"
+
+msgid "Card Issuer Identification"
+msgstr "Identifikácia vydavateľa karty"
+
+msgid "Card Load Type Entries"
+msgstr "Záznamy typu nakládky karty"
+
+msgid "Card Load Unload Operations"
+msgstr "Operácie nakládky a vykládky karty"
+
+msgid "Card Nation"
+msgstr "Štát karty"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Miesto karty a overenie pre denný pracovný čas"
+
+msgid "Card Records"
+msgstr "Záznamy karty"
+
+msgid "Card Structure Version"
+msgstr "Verzia štruktúry karty"
+
+msgid "Card Type"
+msgstr "Typ karty"
+
+msgid "Certificate Temporal Validity"
+msgstr "Časová platnosť certifikátu"
+
+msgid "Company Holder Data"
+msgstr "Údaje držiteľa (spoločnosť)"
+
+msgid "Company Or Workshop Name"
+msgstr "Názov spoločnosti alebo servisu"
+
+msgid "Consent"
+msgstr "Súhlas"
+
+msgid "Country Entered"
+msgstr "Štát vjazdu"
+
+msgid "Country Left"
+msgstr "Štát výjazdu"
+
+msgid "Curve"
+msgstr "Krivka"
+
+msgid "Curve Oid"
+msgstr "OID krivky"
+
+msgid "Daily Summary"
+msgstr "Denné zhrnutie"
+
+msgid "Data Size"
+msgstr "Veľkosť údajov"
+
+msgid "Device ID"
+msgstr "ID zariadenia"
+
+msgid "Distance"
+msgstr "Vzdialenosť"
+
+msgid "Download Activities"
+msgstr "Aktivity sťahovania"
+
+msgid "Download Time"
+msgstr "Čas sťahovania"
+
+msgid "Downloadable Periods"
+msgstr "Obdobia na stiahnutie"
+
+msgid "Downloading Time"
+msgstr "Trvanie sťahovania"
+
+msgid "Driver Card Application Identification"
+msgstr "Identifikácia aplikácie karty vodiča"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Identifikácia aplikácie karty vodiča V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Identifikácia držiteľa karty vodiča"
+
+msgid "Driving Licence Info"
+msgstr "Informácie o vodičskom preukaze"
+
+msgid "ECDSA Signature Verification"
+msgstr "Overenie podpisu ECDSA"
+
+msgid "Event Type Code"
+msgstr "Kód typu udalosti"
+
+msgid "Fault Type Code"
+msgstr "Kód typu poruchy"
+
+msgid "First Event"
+msgstr "Prvá udalosť"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Nahromadený čas vedenia podľa GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Presnosť GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Overený nahromadený čas vedenia podľa GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS overené"
+
+msgid "GNSS Authentication Status"
+msgstr "Stav overenia GNSS"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "GNSS presnosť GNSS"
+
+msgid "GNSS Latitude"
+msgstr "Zemepisná šírka GNSS"
+
+msgid "GNSS Longitude"
+msgstr "Zemepisná dĺžka GNSS"
+
+msgid "GNSS Place"
+msgstr "Miesto GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Časová pečiatka GNSS"
+
+msgid "Gen"
+msgstr "Generácia"
+
+msgid "Hex"
+msgstr "HEX"
+
+msgid "ICC Chip Identification"
+msgstr "Identifikácia čipu ICC"
+
+msgid "ITS Consents"
+msgstr "Súhlasy ITS"
+
+msgid "Identification"
+msgstr "Identifikácia"
+
+msgid "Is Newest"
+msgstr "Najnovšie"
+
+msgid "Latitude"
+msgstr "Zemepisná šírka"
+
+msgid "Length"
+msgstr "Dĺžka"
+
+msgid "Load Type"
+msgstr "Typ nakládky"
+
+msgid "Longitude"
+msgstr "Zemepisná dĺžka"
+
+msgid "Manufacturer Code"
+msgstr "Kód výrobcu"
+
+msgid "Max Downloadable Time"
+msgstr "Maximálny čas na stiahnutie"
+
+msgid "Min Downloadable Time"
+msgstr "Minimálny čas na stiahnutie"
+
+msgid "Min Speed KMH"
+msgstr "Minimálna rýchlosť KMH"
+
+msgid "Nation At Calibration"
+msgstr "Štát pri kalibrácii"
+
+msgid "Nation From"
+msgstr "Štát od"
+
+msgid "Nation To"
+msgstr "Štát do"
+
+msgid "New Odometer KM"
+msgstr "Nové počítadlo km KM"
+
+msgid "Odometer Begin"
+msgstr "Počítadlo na začiatku"
+
+msgid "Odometer End"
+msgstr "Počítadlo na konci"
+
+msgid "Offset"
+msgstr "Posun"
+
+msgid "Old Odometer"
+msgstr "Staré počítadlo kilometrov"
+
+msgid "Old Odometer KM"
+msgstr "Staré počítadlo km KM"
+
+msgid "Operation"
+msgstr "Operácia"
+
+msgid "Pairing Date"
+msgstr "Dátum spárovania"
+
+msgid "Plate At Calibration"
+msgstr "Evidenčné číslo pri kalibrácii"
+
+msgid "Power Interruptions"
+msgstr "Prerušenia napájania"
+
+msgid "Public Key X"
+msgstr "Verejný kľúč X"
+
+msgid "Public Key Y"
+msgstr "Verejný kľúč Y"
+
+msgid "Raw Text"
+msgstr "Nespracovaný text"
+
+msgid "Rcm Serial Number"
+msgstr "Sériové číslo RCM"
+
+msgid "Reason"
+msgstr "Dôvod"
+
+msgid "Record Counts"
+msgstr "Počty záznamov"
+
+msgid "Record Index"
+msgstr "Index záznamu"
+
+msgid "Record Type"
+msgstr "Typ záznamu"
+
+msgid "Role"
+msgstr "Rola"
+
+msgid "Seal Data VU"
+msgstr "Údaje plomby VU"
+
+msgid "Sensor Approval"
+msgstr "Schválenie snímača"
+
+msgid "Sensor Daily Records"
+msgstr "Denné záznamy snímača"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Sériové číslo GNSS snímača"
+
+msgid "Sensor Info"
+msgstr "Informácie o snímači"
+
+msgid "Sensor Pairings"
+msgstr "Spárovania snímača"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Spárovania snímača (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Sériové číslo snímača"
+
+msgid "Sig Size"
+msgstr "Veľkosť podpisu"
+
+msgid "Signature R"
+msgstr "Podpis R"
+
+msgid "Signature S"
+msgstr "Podpis S"
+
+msgid "Similar Events Number"
+msgstr "Počet podobných udalostí"
+
+msgid "Speed Avg"
+msgstr "Priem. rýchlosť"
+
+msgid "Speed Chart"
+msgstr "Graf rýchlosti"
+
+msgid "Speed Max"
+msgstr "Max. rýchlosť"
+
+msgid "Speed Min"
+msgstr "Min. rýchlosť"
+
+msgid "Speed Samples"
+msgstr "Vzorky rýchlosti"
+
+msgid "Speed Summary"
+msgstr "Zhrnutie rýchlosti"
+
+msgid "Speed Valid Count"
+msgstr "Počet platných vzoriek"
+
+msgid "Start"
+msgstr "Začiatok"
+
+msgid "Status"
+msgstr "Stav"
+
+msgid "Tag"
+msgstr "Značka"
+
+msgid "VIN At Calibration"
+msgstr "VIN pri kalibrácii"
+
+msgid "VU Certificates (CVC)"
+msgstr "Certifikáty VU (CVC)"
+
+msgid "VU Identifications"
+msgstr "Identifikácie VU"
+
+msgid "VU Record Array Summary"
+msgstr "Zhrnutie poľa záznamov VU"
+
+msgid "VU Software Version"
+msgstr "Verzia softvéru VU"
+
+msgid "Valid From"
+msgstr "Platné od"
+
+msgid "Valid To"
+msgstr "Platné do"
+
+msgid "Vehicle Nation"
+msgstr "Štát vozidla"
+
+msgid "Vehicle Odometer Value"
+msgstr "Hodnota počítadla vozidla"
+
+msgid "Vehicle Plate"
+msgstr "Evidenčné číslo vozidla"
+
+msgid "Vehicle Registration"
+msgstr "Registrácia vozidla"
+
+msgid "Vehicle Units Used"
+msgstr "Použité jednotky vozidla"
+
+msgid "Vehicles Used"
+msgstr "Použité vozidlá"
+
+msgid "W Characteristic Constant"
+msgstr "Konštanta charakteristiky W"
+
+msgid "W Vehicle Constant"
+msgstr "Konštanta W vozidla"
+
+msgid "Workshop Name"
+msgstr "Názov servisu"
+
+msgid "CAR Authority"
+msgstr "Orgán CAR"
+
+msgid "CAR Serial"
+msgstr "Sériové číslo CAR"

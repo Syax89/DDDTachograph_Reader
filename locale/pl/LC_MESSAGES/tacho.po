@@ -1474,3 +1474,414 @@ msgstr "Ważność karty warsztatu"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Generacja 1  [Załącznik 1B]"
+
+msgid "Activity Chart"
+msgstr "Wykres aktywności"
+
+msgid "Authenticated"
+msgstr "Uwierzytelniony"
+
+msgid "Authentication Status"
+msgstr "Stan uwierzytelnienia"
+
+msgid "Authorised Speed KMH"
+msgstr "Prędkość dopuszczalna KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Prędkość śr. KMH"
+
+msgid "Border Crossings"
+msgstr "Przekroczenia granicy"
+
+msgid "By Default Load Type"
+msgstr "Domyślny rodzaj ładunku"
+
+msgid "By Default Load Type Label"
+msgstr "Etykieta domyślnego rodzaju ładunku"
+
+msgid "Calibration Country"
+msgstr "Kraj kalibracji"
+
+msgid "Calibration Country Timestamp"
+msgstr "Znacznik czasu kraju kalibracji"
+
+msgid "Calibration Purpose"
+msgstr "Cel kalibracji"
+
+msgid "Calibration Purpose Label"
+msgstr "Etykieta celu kalibracji"
+
+msgid "Card Border Crossings"
+msgstr "Przekroczenia granicy karty"
+
+msgid "Card Codriver"
+msgstr "Drugi kierowca karty"
+
+msgid "Card Download"
+msgstr "Pobranie karty"
+
+msgid "Card Download Records"
+msgstr "Rekordy pobrania karty"
+
+msgid "Card Extended Serial"
+msgstr "Rozszerzony numer seryjny karty"
+
+msgid "Card ICC Identification"
+msgstr "Identyfikacja ICC karty"
+
+msgid "Card Identification"
+msgstr "Identyfikacja karty"
+
+msgid "Card Issuer Identification"
+msgstr "Identyfikacja wydawcy karty"
+
+msgid "Card Load Type Entries"
+msgstr "Wpisy rodzaju ładunku karty"
+
+msgid "Card Load Unload Operations"
+msgstr "Operacje załadunku/rozładunku karty"
+
+msgid "Card Nation"
+msgstr "Kraj karty"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Okres pracy dziennej miejsce/uwierzytelnienie karty"
+
+msgid "Card Records"
+msgstr "Rekordy karty"
+
+msgid "Card Structure Version"
+msgstr "Wersja struktury karty"
+
+msgid "Card Type"
+msgstr "Typ karty"
+
+msgid "Certificate Temporal Validity"
+msgstr "Ważność czasowa certyfikatu"
+
+msgid "Company Holder Data"
+msgstr "Dane posiadacza firmy"
+
+msgid "Company Or Workshop Name"
+msgstr "Nazwa firmy lub warsztatu"
+
+msgid "Consent"
+msgstr "Zgoda"
+
+msgid "Country Entered"
+msgstr "Kraj wjazdu"
+
+msgid "Country Left"
+msgstr "Kraj wyjazdu"
+
+msgid "Curve"
+msgstr "Krzywa"
+
+msgid "Curve Oid"
+msgstr "OID krzywej"
+
+msgid "Daily Summary"
+msgstr "Podsumowanie dzienne"
+
+msgid "Data Size"
+msgstr "Rozmiar danych"
+
+msgid "Device ID"
+msgstr "ID urządzenia"
+
+msgid "Distance"
+msgstr "Odległość"
+
+msgid "Download Activities"
+msgstr "Aktywności pobierania"
+
+msgid "Download Time"
+msgstr "Czas pobrania"
+
+msgid "Downloadable Periods"
+msgstr "Okresy dostępne do pobrania"
+
+msgid "Downloading Time"
+msgstr "Czas trwania pobierania"
+
+msgid "Driver Card Application Identification"
+msgstr "Identyfikacja aplikacji karty kierowcy"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Identyfikacja aplikacji karty kierowcy V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Identyfikacja posiadacza karty kierowcy"
+
+msgid "Driving Licence Info"
+msgstr "Informacje o prawie jazdy"
+
+msgid "ECDSA Signature Verification"
+msgstr "Weryfikacja podpisów ECDSA"
+
+msgid "Event Type Code"
+msgstr "Kod typu zdarzenia"
+
+msgid "Fault Type Code"
+msgstr "Kod typu usterki"
+
+msgid "First Event"
+msgstr "Pierwsze zdarzenie"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Skumulowany czas jazdy GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Dokładność GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Uwierzytelniony skumulowany czas jazdy GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS uwierzytelniony"
+
+msgid "GNSS Authentication Status"
+msgstr "Stan uwierzytelnienia GNSS"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "Dokładność GNSS GNSS"
+
+msgid "GNSS Latitude"
+msgstr "Szerokość geograficzna GNSS"
+
+msgid "GNSS Longitude"
+msgstr "Długość geograficzna GNSS"
+
+msgid "GNSS Place"
+msgstr "Miejsce GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Znacznik czasu GNSS"
+
+msgid "Gen"
+msgstr "Generacja"
+
+msgid "Hex"
+msgstr "Szesnastkowy"
+
+msgid "ICC Chip Identification"
+msgstr "Identyfikacja układu ICC"
+
+msgid "ITS Consents"
+msgstr "Zgody ITS"
+
+msgid "Identification"
+msgstr "Identyfikacja"
+
+msgid "Is Newest"
+msgstr "Jest najnowszy"
+
+msgid "Latitude"
+msgstr "Szerokość geograficzna"
+
+msgid "Length"
+msgstr "Długość"
+
+msgid "Load Type"
+msgstr "Rodzaj ładunku"
+
+msgid "Longitude"
+msgstr "Długość geograficzna"
+
+msgid "Manufacturer Code"
+msgstr "Kod producenta"
+
+msgid "Max Downloadable Time"
+msgstr "Maksymalny czas do pobrania"
+
+msgid "Min Downloadable Time"
+msgstr "Minimalny czas do pobrania"
+
+msgid "Min Speed KMH"
+msgstr "Prędkość min. KMH"
+
+msgid "Nation At Calibration"
+msgstr "Kraj w momencie kalibracji"
+
+msgid "Nation From"
+msgstr "Kraj od"
+
+msgid "Nation To"
+msgstr "Kraj do"
+
+msgid "New Odometer KM"
+msgstr "Nowy licznik KM"
+
+msgid "Odometer Begin"
+msgstr "Licznik na początku"
+
+msgid "Odometer End"
+msgstr "Licznik na końcu"
+
+msgid "Offset"
+msgstr "Przesunięcie"
+
+msgid "Old Odometer"
+msgstr "Stary licznik"
+
+msgid "Old Odometer KM"
+msgstr "Stary licznik KM"
+
+msgid "Operation"
+msgstr "Operacja"
+
+msgid "Pairing Date"
+msgstr "Data sparowania"
+
+msgid "Plate At Calibration"
+msgstr "Tablica w momencie kalibracji"
+
+msgid "Power Interruptions"
+msgstr "Przerwy w zasilaniu"
+
+msgid "Public Key X"
+msgstr "Klucz publiczny X"
+
+msgid "Public Key Y"
+msgstr "Klucz publiczny Y"
+
+msgid "Raw Text"
+msgstr "Tekst surowy"
+
+msgid "Rcm Serial Number"
+msgstr "Numer seryjny RCM"
+
+msgid "Reason"
+msgstr "Powód"
+
+msgid "Record Counts"
+msgstr "Liczby rekordów"
+
+msgid "Record Index"
+msgstr "Indeks rekordu"
+
+msgid "Record Type"
+msgstr "Typ rekordu"
+
+msgid "Role"
+msgstr "Rola"
+
+msgid "Seal Data VU"
+msgstr "Dane plomby VU"
+
+msgid "Sensor Approval"
+msgstr "Homologacja czujnika"
+
+msgid "Sensor Daily Records"
+msgstr "Dzienne rekordy czujnika"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Numer seryjny GNSS czujnika"
+
+msgid "Sensor Info"
+msgstr "Informacje o czujniku"
+
+msgid "Sensor Pairings"
+msgstr "Sparowania czujnika"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Sparowania czujnika (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Numer seryjny czujnika"
+
+msgid "Sig Size"
+msgstr "Rozmiar podpisu"
+
+msgid "Signature R"
+msgstr "Podpis R"
+
+msgid "Signature S"
+msgstr "Podpis S"
+
+msgid "Similar Events Number"
+msgstr "Liczba podobnych zdarzeń"
+
+msgid "Speed Avg"
+msgstr "Prędkość śr."
+
+msgid "Speed Chart"
+msgstr "Wykres prędkości"
+
+msgid "Speed Max"
+msgstr "Prędkość maks."
+
+msgid "Speed Min"
+msgstr "Prędkość min."
+
+msgid "Speed Samples"
+msgstr "Próbki prędkości"
+
+msgid "Speed Summary"
+msgstr "Podsumowanie prędkości"
+
+msgid "Speed Valid Count"
+msgstr "Liczba prawidłowych próbek"
+
+msgid "Start"
+msgstr "Początek"
+
+msgid "Status"
+msgstr "Stan"
+
+msgid "Tag"
+msgstr "Tag TLV"
+
+msgid "VIN At Calibration"
+msgstr "VIN w momencie kalibracji"
+
+msgid "VU Certificates (CVC)"
+msgstr "Certyfikaty VU (CVC)"
+
+msgid "VU Identifications"
+msgstr "Identyfikacje VU"
+
+msgid "VU Record Array Summary"
+msgstr "Podsumowanie tablicy rekordów VU"
+
+msgid "VU Software Version"
+msgstr "Wersja oprogramowania VU"
+
+msgid "Valid From"
+msgstr "Ważne od"
+
+msgid "Valid To"
+msgstr "Ważne do"
+
+msgid "Vehicle Nation"
+msgstr "Kraj pojazdu"
+
+msgid "Vehicle Odometer Value"
+msgstr "Wartość licznika pojazdu"
+
+msgid "Vehicle Plate"
+msgstr "Tablica pojazdu"
+
+msgid "Vehicle Registration"
+msgstr "Rejestracja pojazdu"
+
+msgid "Vehicle Units Used"
+msgstr "Użyte jednostki pojazdowe"
+
+msgid "Vehicles Used"
+msgstr "Użyte pojazdy"
+
+msgid "W Characteristic Constant"
+msgstr "Stała charakterystyczna W"
+
+msgid "W Vehicle Constant"
+msgstr "Stała W pojazdu"
+
+msgid "Workshop Name"
+msgstr "Nazwa warsztatu"
+
+msgid "CAR Authority"
+msgstr "Organ CAR"
+
+msgid "CAR Serial"
+msgstr "Numer seryjny CAR"

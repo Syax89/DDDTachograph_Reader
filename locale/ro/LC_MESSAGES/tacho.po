@@ -1474,3 +1474,414 @@ msgstr "Expirare card atelier"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Generație 1  [Anexa 1B]"
+
+msgid "Activity Chart"
+msgstr "Grafic activitate"
+
+msgid "Authenticated"
+msgstr "Autentificat"
+
+msgid "Authentication Status"
+msgstr "Stare de autentificare"
+
+msgid "Authorised Speed KMH"
+msgstr "Viteză autorizată KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Viteză medie KMH"
+
+msgid "Border Crossings"
+msgstr "Traversări de frontieră"
+
+msgid "By Default Load Type"
+msgstr "Tip de încărcare implicit"
+
+msgid "By Default Load Type Label"
+msgstr "Etichetă tip de încărcare implicit"
+
+msgid "Calibration Country"
+msgstr "Țara de calibrare"
+
+msgid "Calibration Country Timestamp"
+msgstr "Marcă temporală țară de calibrare"
+
+msgid "Calibration Purpose"
+msgstr "Scop calibrare"
+
+msgid "Calibration Purpose Label"
+msgstr "Etichetă scop calibrare"
+
+msgid "Card Border Crossings"
+msgstr "Traversări de frontieră card"
+
+msgid "Card Codriver"
+msgstr "Al doilea conducător card"
+
+msgid "Card Download"
+msgstr "Descărcare card"
+
+msgid "Card Download Records"
+msgstr "Înregistrări descărcare card"
+
+msgid "Card Extended Serial"
+msgstr "Serie extinsă card"
+
+msgid "Card ICC Identification"
+msgstr "Identificare ICC card"
+
+msgid "Card Identification"
+msgstr "Identificare card"
+
+msgid "Card Issuer Identification"
+msgstr "Identificare emitent card"
+
+msgid "Card Load Type Entries"
+msgstr "Intrări tip de încărcare card"
+
+msgid "Card Load Unload Operations"
+msgstr "Operațiuni de încărcare/descărcare card"
+
+msgid "Card Nation"
+msgstr "Țara cardului"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Perioadă de lucru zilnică loc/autentificare card"
+
+msgid "Card Records"
+msgstr "Înregistrări card"
+
+msgid "Card Structure Version"
+msgstr "Versiune structură card"
+
+msgid "Card Type"
+msgstr "Tip card"
+
+msgid "Certificate Temporal Validity"
+msgstr "Valabilitate temporală certificat"
+
+msgid "Company Holder Data"
+msgstr "Date deținător companie"
+
+msgid "Company Or Workshop Name"
+msgstr "Nume companie sau atelier"
+
+msgid "Consent"
+msgstr "Consimțământ"
+
+msgid "Country Entered"
+msgstr "Țara de intrare"
+
+msgid "Country Left"
+msgstr "Țara de ieșire"
+
+msgid "Curve"
+msgstr "Curbă"
+
+msgid "Curve Oid"
+msgstr "OID curbă"
+
+msgid "Daily Summary"
+msgstr "Rezumat zilnic"
+
+msgid "Data Size"
+msgstr "Dimensiune date"
+
+msgid "Device ID"
+msgstr "ID dispozitiv"
+
+msgid "Distance"
+msgstr "Distanță"
+
+msgid "Download Activities"
+msgstr "Activități de descărcare"
+
+msgid "Download Time"
+msgstr "Oră de descărcare"
+
+msgid "Downloadable Periods"
+msgstr "Perioade descărcabile"
+
+msgid "Downloading Time"
+msgstr "Durată descărcare"
+
+msgid "Driver Card Application Identification"
+msgstr "Identificare aplicație card de conducător"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Identificare aplicație card de conducător V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Identificare deținător card de conducător"
+
+msgid "Driving Licence Info"
+msgstr "Informații permis de conducere"
+
+msgid "ECDSA Signature Verification"
+msgstr "Verificarea semnăturilor ECDSA"
+
+msgid "Event Type Code"
+msgstr "Cod tip eveniment"
+
+msgid "Fault Type Code"
+msgstr "Cod tip defecțiune"
+
+msgid "First Event"
+msgstr "Primul eveniment"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Conducere acumulată GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Precizie GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Conducere acumulată autentificată GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS autentificat"
+
+msgid "GNSS Authentication Status"
+msgstr "Stare de autentificare GNSS"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "Precizie GNSS GNSS"
+
+msgid "GNSS Latitude"
+msgstr "Latitudine GNSS"
+
+msgid "GNSS Longitude"
+msgstr "Longitudine GNSS"
+
+msgid "GNSS Place"
+msgstr "Loc GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Marcă temporală GNSS"
+
+msgid "Gen"
+msgstr "Generație"
+
+msgid "Hex"
+msgstr "Hexazecimal"
+
+msgid "ICC Chip Identification"
+msgstr "Identificare cip ICC"
+
+msgid "ITS Consents"
+msgstr "Consimțăminte ITS"
+
+msgid "Identification"
+msgstr "Identificare"
+
+msgid "Is Newest"
+msgstr "Este cel mai recent"
+
+msgid "Latitude"
+msgstr "Latitudine"
+
+msgid "Length"
+msgstr "Lungime"
+
+msgid "Load Type"
+msgstr "Tip de încărcare"
+
+msgid "Longitude"
+msgstr "Longitudine"
+
+msgid "Manufacturer Code"
+msgstr "Cod producător"
+
+msgid "Max Downloadable Time"
+msgstr "Timp maxim descărcabil"
+
+msgid "Min Downloadable Time"
+msgstr "Timp minim descărcabil"
+
+msgid "Min Speed KMH"
+msgstr "Viteză minimă KMH"
+
+msgid "Nation At Calibration"
+msgstr "Țara la calibrare"
+
+msgid "Nation From"
+msgstr "Țara de la"
+
+msgid "Nation To"
+msgstr "Țara până la"
+
+msgid "New Odometer KM"
+msgstr "Odometru nou KM"
+
+msgid "Odometer Begin"
+msgstr "Odometru început"
+
+msgid "Odometer End"
+msgstr "Odometru sfârșit"
+
+msgid "Offset"
+msgstr "Decalaj"
+
+msgid "Old Odometer"
+msgstr "Odometru vechi"
+
+msgid "Old Odometer KM"
+msgstr "Odometru vechi KM"
+
+msgid "Operation"
+msgstr "Operațiune"
+
+msgid "Pairing Date"
+msgstr "Data împerecherii"
+
+msgid "Plate At Calibration"
+msgstr "Număr înmatriculare la calibrare"
+
+msgid "Power Interruptions"
+msgstr "Întreruperi alimentare"
+
+msgid "Public Key X"
+msgstr "Cheie publică X"
+
+msgid "Public Key Y"
+msgstr "Cheie publică Y"
+
+msgid "Raw Text"
+msgstr "Text brut"
+
+msgid "Rcm Serial Number"
+msgstr "Număr de serie RCM"
+
+msgid "Reason"
+msgstr "Motiv"
+
+msgid "Record Counts"
+msgstr "Numărători înregistrări"
+
+msgid "Record Index"
+msgstr "Index înregistrare"
+
+msgid "Record Type"
+msgstr "Tip înregistrare"
+
+msgid "Role"
+msgstr "Rol"
+
+msgid "Seal Data VU"
+msgstr "Date sigiliu VU"
+
+msgid "Sensor Approval"
+msgstr "Omologare senzor"
+
+msgid "Sensor Daily Records"
+msgstr "Înregistrări zilnice senzor"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Număr de serie GNSS al senzorului"
+
+msgid "Sensor Info"
+msgstr "Informații senzor"
+
+msgid "Sensor Pairings"
+msgstr "Împerechere senzori"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Împerechere senzori (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Serie senzor"
+
+msgid "Sig Size"
+msgstr "Dimensiune semnătură"
+
+msgid "Signature R"
+msgstr "Semnătură R"
+
+msgid "Signature S"
+msgstr "Semnătură S"
+
+msgid "Similar Events Number"
+msgstr "Număr de evenimente similare"
+
+msgid "Speed Avg"
+msgstr "Viteză medie"
+
+msgid "Speed Chart"
+msgstr "Grafic viteză"
+
+msgid "Speed Max"
+msgstr "Viteză maximă"
+
+msgid "Speed Min"
+msgstr "Viteză minimă"
+
+msgid "Speed Samples"
+msgstr "Eșantioane de viteză"
+
+msgid "Speed Summary"
+msgstr "Rezumat viteză"
+
+msgid "Speed Valid Count"
+msgstr "Număr eșantioane valide"
+
+msgid "Start"
+msgstr "Început"
+
+msgid "Status"
+msgstr "Stare"
+
+msgid "Tag"
+msgstr "Etichetă TLV"
+
+msgid "VIN At Calibration"
+msgstr "VIN la calibrare"
+
+msgid "VU Certificates (CVC)"
+msgstr "Certificate VU (CVC)"
+
+msgid "VU Identifications"
+msgstr "Identificări VU"
+
+msgid "VU Record Array Summary"
+msgstr "Rezumat matrice de înregistrări VU"
+
+msgid "VU Software Version"
+msgstr "Versiune software VU"
+
+msgid "Valid From"
+msgstr "Valabil din"
+
+msgid "Valid To"
+msgstr "Valabil până"
+
+msgid "Vehicle Nation"
+msgstr "Țara vehiculului"
+
+msgid "Vehicle Odometer Value"
+msgstr "Valoare odometru vehicul"
+
+msgid "Vehicle Plate"
+msgstr "Număr înmatriculare vehicul"
+
+msgid "Vehicle Registration"
+msgstr "Înmatriculare vehicul"
+
+msgid "Vehicle Units Used"
+msgstr "Unități de vehicul utilizate"
+
+msgid "Vehicles Used"
+msgstr "Vehicule utilizate"
+
+msgid "W Characteristic Constant"
+msgstr "Constanta caracteristică W"
+
+msgid "W Vehicle Constant"
+msgstr "Constanta W a vehiculului"
+
+msgid "Workshop Name"
+msgstr "Nume atelier"
+
+msgid "CAR Authority"
+msgstr "Autoritate CAR"
+
+msgid "CAR Serial"
+msgstr "Serie CAR"

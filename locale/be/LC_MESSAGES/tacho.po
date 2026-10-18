@@ -1474,3 +1474,414 @@ msgstr "Тэрмін дзеяння карткі майстэрні"
 
 msgid "📦  Generation 1  [Annex 1B]"
 msgstr "📦  Пакаленне 1  [Дадатак 1B]"
+
+msgid "Activity Chart"
+msgstr "Графік актыўнасці"
+
+msgid "Authenticated"
+msgstr "Аўтэнтыфікавана"
+
+msgid "Authentication Status"
+msgstr "Стан аўтэнтыфікацыі"
+
+msgid "Authorised Speed KMH"
+msgstr "Дазволеная хуткасць KMH"
+
+msgid "Avg Speed KMH"
+msgstr "Сярэдняя хуткасць KMH"
+
+msgid "Border Crossings"
+msgstr "Перасячэнні межаў"
+
+msgid "By Default Load Type"
+msgstr "Тып загрузкі па змаўчанні"
+
+msgid "By Default Load Type Label"
+msgstr "Назва тыпу загрузкі па змаўчанні"
+
+msgid "Calibration Country"
+msgstr "Краіна каліброўкі"
+
+msgid "Calibration Country Timestamp"
+msgstr "Адзнака часу краіны каліброўкі"
+
+msgid "Calibration Purpose"
+msgstr "Мэта каліброўкі"
+
+msgid "Calibration Purpose Label"
+msgstr "Назва мэты каліброўкі"
+
+msgid "Card Border Crossings"
+msgstr "Перасячэнні межаў карткі"
+
+msgid "Card Codriver"
+msgstr "Картка другога кіроўцы"
+
+msgid "Card Download"
+msgstr "Выгрузка карткі"
+
+msgid "Card Download Records"
+msgstr "Запісы выгрузкі карткі"
+
+msgid "Card Extended Serial"
+msgstr "Пашыраны серыйны нумар карткі"
+
+msgid "Card ICC Identification"
+msgstr "Ідэнтыфікацыя ICC карткі"
+
+msgid "Card Identification"
+msgstr "Ідэнтыфікацыя карткі"
+
+msgid "Card Issuer Identification"
+msgstr "Ідэнтыфікацыя эмітэнта карткі"
+
+msgid "Card Load Type Entries"
+msgstr "Запісы тыпаў загрузкі карткі"
+
+msgid "Card Load Unload Operations"
+msgstr "Аперацыі загрузкі/разгрузкі карткі"
+
+msgid "Card Nation"
+msgstr "Краіна карткі"
+
+msgid "Card Place Auth Daily Work Period"
+msgstr "Месца пацверджання штодзённага працоўнага перыяду"
+
+msgid "Card Records"
+msgstr "Запісы карткі"
+
+msgid "Card Structure Version"
+msgstr "Версія структуры карткі"
+
+msgid "Card Type"
+msgstr "Тып карткі"
+
+msgid "Certificate Temporal Validity"
+msgstr "Тэрмін дзеяння сертыфіката"
+
+msgid "Company Holder Data"
+msgstr "Даныя ўладальніка-кампаніі"
+
+msgid "Company Or Workshop Name"
+msgstr "Назва кампаніі або майстэрні"
+
+msgid "Consent"
+msgstr "Згода"
+
+msgid "Country Entered"
+msgstr "Краіна ўезду"
+
+msgid "Country Left"
+msgstr "Краіна выезду"
+
+msgid "Curve"
+msgstr "Крывая"
+
+msgid "Curve Oid"
+msgstr "Oid крывой"
+
+msgid "Daily Summary"
+msgstr "Зводка за дзень"
+
+msgid "Data Size"
+msgstr "Памер даных"
+
+msgid "Device ID"
+msgstr "ID прылады"
+
+msgid "Distance"
+msgstr "Адлегласць"
+
+msgid "Download Activities"
+msgstr "Актыўнасць выгрузкі"
+
+msgid "Download Time"
+msgstr "Час выгрузкі"
+
+msgid "Downloadable Periods"
+msgstr "Перыяды для выгрузкі"
+
+msgid "Downloading Time"
+msgstr "Час спампоўвання"
+
+msgid "Driver Card Application Identification"
+msgstr "Ідэнтыфікацыя праграмы карткі кіроўцы"
+
+msgid "Driver Card Application Identification V 2"
+msgstr "Ідэнтыфікацыя праграмы карткі кіроўцы V 2"
+
+msgid "Driver Card Holder Identification"
+msgstr "Ідэнтыфікацыя ўладальніка карткі кіроўцы"
+
+msgid "Driving Licence Info"
+msgstr "Звесткі пра пасведчанне кіроўцы"
+
+msgid "ECDSA Signature Verification"
+msgstr "Праверка подпісу ECDSA"
+
+msgid "Event Type Code"
+msgstr "Код тыпу падзеі"
+
+msgid "Fault Type Code"
+msgstr "Код тыпу няспраўнасці"
+
+msgid "First Event"
+msgstr "Першая падзея"
+
+msgid "GNSS Accumulated Driving"
+msgstr "Накопленае кіраванне GNSS"
+
+msgid "GNSS Accuracy"
+msgstr "Дакладнасць GNSS"
+
+msgid "GNSS Auth Accumulated Driving"
+msgstr "Накопленае пацверджанае кіраванне GNSS"
+
+msgid "GNSS Authenticated"
+msgstr "GNSS аўтэнтыфікавана"
+
+msgid "GNSS Authentication Status"
+msgstr "Стан аўтэнтыфікацыі GNSS"
+
+msgid "GNSS GNSS Accuracy"
+msgstr "Дакладнасць GNSS GNSS"
+
+msgid "GNSS Latitude"
+msgstr "Шырата GNSS"
+
+msgid "GNSS Longitude"
+msgstr "Даўгата GNSS"
+
+msgid "GNSS Place"
+msgstr "Месца GNSS"
+
+msgid "GNSS Timestamp"
+msgstr "Адзнака часу GNSS"
+
+msgid "Gen"
+msgstr "Пак."
+
+msgid "Hex"
+msgstr "HEX"
+
+msgid "ICC Chip Identification"
+msgstr "Ідэнтыфікацыя чыпа ICC"
+
+msgid "ITS Consents"
+msgstr "Згоды ITS"
+
+msgid "Identification"
+msgstr "Ідэнтыфікацыя"
+
+msgid "Is Newest"
+msgstr "Найноўшая"
+
+msgid "Latitude"
+msgstr "Шырата"
+
+msgid "Length"
+msgstr "Даўжыня"
+
+msgid "Load Type"
+msgstr "Тып загрузкі"
+
+msgid "Longitude"
+msgstr "Даўгата"
+
+msgid "Manufacturer Code"
+msgstr "Код вытворцы"
+
+msgid "Max Downloadable Time"
+msgstr "Максімальны час выгрузкі"
+
+msgid "Min Downloadable Time"
+msgstr "Мінімальны час выгрузкі"
+
+msgid "Min Speed KMH"
+msgstr "Мінімальная хуткасць KMH"
+
+msgid "Nation At Calibration"
+msgstr "Краіна падчас каліброўкі"
+
+msgid "Nation From"
+msgstr "Краіна адкуль"
+
+msgid "Nation To"
+msgstr "Краіна куды"
+
+msgid "New Odometer KM"
+msgstr "Новы адаметр KM"
+
+msgid "Odometer Begin"
+msgstr "Адаметр пачатак"
+
+msgid "Odometer End"
+msgstr "Адаметр канец"
+
+msgid "Offset"
+msgstr "Зрух"
+
+msgid "Old Odometer"
+msgstr "Стары адаметр"
+
+msgid "Old Odometer KM"
+msgstr "Стары адаметр KM"
+
+msgid "Operation"
+msgstr "Аперацыя"
+
+msgid "Pairing Date"
+msgstr "Дата спалучэння"
+
+msgid "Plate At Calibration"
+msgstr "Нумарны знак падчас каліброўкі"
+
+msgid "Power Interruptions"
+msgstr "Перапынкі сілкавання"
+
+msgid "Public Key X"
+msgstr "Адкрыты ключ X"
+
+msgid "Public Key Y"
+msgstr "Адкрыты ключ Y"
+
+msgid "Raw Text"
+msgstr "Неапрацаваны тэкст"
+
+msgid "Rcm Serial Number"
+msgstr "Серыйны нумар Rcm"
+
+msgid "Reason"
+msgstr "Прычына"
+
+msgid "Record Counts"
+msgstr "Колькасць запісаў"
+
+msgid "Record Index"
+msgstr "Індэкс запісу"
+
+msgid "Record Type"
+msgstr "Тып запісу"
+
+msgid "Role"
+msgstr "Роля"
+
+msgid "Seal Data VU"
+msgstr "Даныя пломбы VU"
+
+msgid "Sensor Approval"
+msgstr "Зацвярджэнне датчыка"
+
+msgid "Sensor Daily Records"
+msgstr "Штодзённыя запісы датчыка"
+
+msgid "Sensor GNSS Serial Number"
+msgstr "Серыйны нумар GNSS датчыка"
+
+msgid "Sensor Info"
+msgstr "Інфармацыя пра датчык"
+
+msgid "Sensor Pairings"
+msgstr "Спалучэнні датчыка"
+
+msgid "Sensor Pairings (G2.2)"
+msgstr "Спалучэнні датчыка (G2.2)"
+
+msgid "Sensor Serial"
+msgstr "Серыйны нумар датчыка"
+
+msgid "Sig Size"
+msgstr "Памер подпісу"
+
+msgid "Signature R"
+msgstr "Подпіс R"
+
+msgid "Signature S"
+msgstr "Подпіс S"
+
+msgid "Similar Events Number"
+msgstr "Колькасць падобных падзей"
+
+msgid "Speed Avg"
+msgstr "Хуткасць сярэдн."
+
+msgid "Speed Chart"
+msgstr "Графік хуткасці"
+
+msgid "Speed Max"
+msgstr "Хуткасць макс."
+
+msgid "Speed Min"
+msgstr "Хуткасць мін."
+
+msgid "Speed Samples"
+msgstr "Выбаркі хуткасці"
+
+msgid "Speed Summary"
+msgstr "Зводка хуткасці"
+
+msgid "Speed Valid Count"
+msgstr "Колькасць сапраўдных вымярэнняў хуткасці"
+
+msgid "Start"
+msgstr "Пачатак"
+
+msgid "Status"
+msgstr "Стан"
+
+msgid "Tag"
+msgstr "Метка"
+
+msgid "VIN At Calibration"
+msgstr "VIN падчас каліброўкі"
+
+msgid "VU Certificates (CVC)"
+msgstr "Сертыфікаты VU (CVC)"
+
+msgid "VU Identifications"
+msgstr "Ідэнтыфікацыі VU"
+
+msgid "VU Record Array Summary"
+msgstr "Зводка масіву запісаў VU"
+
+msgid "VU Software Version"
+msgstr "Версія ПЗ VU"
+
+msgid "Valid From"
+msgstr "Дзейнічае з"
+
+msgid "Valid To"
+msgstr "Дзейнічае да"
+
+msgid "Vehicle Nation"
+msgstr "Краіна транспартнага сродку"
+
+msgid "Vehicle Odometer Value"
+msgstr "Значэнне адаметра транспартнага сродку"
+
+msgid "Vehicle Plate"
+msgstr "Нумарны знак транспартнага сродку"
+
+msgid "Vehicle Registration"
+msgstr "Рэгістрацыя транспартнага сродку"
+
+msgid "Vehicle Units Used"
+msgstr "Выкарыстаныя блокі транспартных сродкаў"
+
+msgid "Vehicles Used"
+msgstr "Выкарыстаныя транспартныя сродкі"
+
+msgid "W Characteristic Constant"
+msgstr "Пастаянная характарыстыкі W"
+
+msgid "W Vehicle Constant"
+msgstr "Пастаянная транспартнага сродку W"
+
+msgid "Workshop Name"
+msgstr "Назва майстэрні"
+
+msgid "CAR Authority"
+msgstr "Орган CAR"
+
+msgid "CAR Serial"
+msgstr "Серыйны нумар CAR"
