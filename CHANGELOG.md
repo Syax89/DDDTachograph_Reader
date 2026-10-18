@@ -23,6 +23,14 @@
   handling, PO/MO tooling, the language menu and the restart path; CONTRIBUTING
   documents how to add or update a language.
 
+### ♻️ Refactoring
+
+- **Single palette and font source**: `refactor(ui)` — every colour and every
+  font spec the desktop UI paints now lives in `app/theme.py` (`SURFACE`,
+  `ACCENT`, `ACTIVITY_*`, `FONT_*`, ...), and `app/gui.py` no longer contains a
+  single raw `#rrggbb` literal. The change is visually inert: the palette was
+  dumped widget by widget before and after, and the two snapshots are identical.
+
 # v2.7.0 (2026-10-03)
 
 ## 🎉 Major Release: Batch 6-20 Campaign Complete
