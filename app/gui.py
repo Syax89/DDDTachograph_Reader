@@ -65,7 +65,7 @@ def _px(value):
     return int(value)
 
 import tkinter as tk  # noqa: E402
-from tkinter import ttk, filedialog, messagebox  # noqa: E402
+from tkinter import ttk, filedialog, font as tkfont, messagebox  # noqa: E402
 
 from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
@@ -903,6 +903,7 @@ class ActivityTimelineChart(ttk.Frame):
         self._oos_events = []
         self._driver_name = ""
         self._draw_after_id = None
+        self._label_font = None   # measuring font for the translated row labels
         self._layout = None
         self._info_parts = []
         self._activities = []
@@ -1032,7 +1033,13 @@ class ActivityTimelineChart(ttk.Frame):
             return
 
         rows = ["DRIVE", "WORK", "REST", "AVAILABLE"]
-        left, right, top, bottom = 100, 14, 64, height - 32
+        # Translated row labels are wider than the original 100px gutter.
+        label_gap, label_pad = 8, 4
+        if self._label_font is None:
+            self._label_font = tkfont.Font(root=canvas, font=("", 8, "bold"))
+        widest_label = max(self._label_font.measure(_act_label(act)) for act in rows)
+        left, right, top, bottom = (max(100, widest_label + label_gap + label_pad),
+                                    14, 64, height - 32)
         plot_width = width - left - right
         totals_bar = 80
         usable_width = plot_width - totals_bar - 12
@@ -1136,7 +1143,7 @@ class ActivityTimelineChart(ttk.Frame):
                 color = ACTIVITY_COLORS.get(act, "#bdbdbd")
 
                 # Activity label on the left
-                canvas.create_text(left - 8, (y0 + y1) / 2,
+                canvas.create_text(left - label_gap, (y0 + y1) / 2,
                                    text=_act_label(act),
                                    anchor=tk.E, fill="#37474f",
                                    font=("", 8, "bold"))
@@ -1246,7 +1253,7 @@ class ActivityTimelineChart(ttk.Frame):
             dh, dm = divmod(dur, 60)
             # Act labels are translated at the display boundary, never stored.
             if has_multi:
-                text = (f"{slot_tag}  {_act_label(act)}  "
+                text = (f"{_(slot_tag)}  {_act_label(act)}  "
                         f"[{sh:02d}:{sm:02d} \u2014 {eh:02d}:{em:02d}]  "
                         f"\u00b7  {dh}h {dm:02d}m")
             else:
@@ -1513,7 +1520,7 @@ class DayDetailWindow(tk.Toplevel):
             if rec.get("manual_input"):
                 label = _("Manual entry")
                 slot = rec.get("card_slot")
-                slot_str = f"[Slot {'2' if slot else '1'}]" if slot is not None else ""
+                slot_str = f"[{_('Slot 2') if slot else _('Slot 1')}]" if slot is not None else ""
                 detail = _fmt_empty_prefix() + slot_str
                 odo = rec.get("odometer_insertion_km")
                 odo_str = str(odo) if odo else ""
@@ -1528,7 +1535,7 @@ class DayDetailWindow(tk.Toplevel):
                     name = rec.get("card_number", "") or "Unknown"
                 label = _("Card inserted")
                 slot = rec.get("card_slot")
-                slot_str = f"[Slot {'2' if slot else '1'}]" if slot is not None else ""
+                slot_str = f"[{_('Slot 2') if slot else _('Slot 1')}]" if slot is not None else ""
                 detail = _fmt_empty_prefix() + f"{name} {slot_str}" if slot_str else _fmt_empty_prefix() + name
                 odo = rec.get("odometer_insertion_km")
                 odo_str = str(odo) if odo else ""
