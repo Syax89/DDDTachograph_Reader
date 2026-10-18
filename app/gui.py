@@ -5966,9 +5966,9 @@ class TachoExplorer(tk.Tk):
 
         Summary block headers are drawn with ``FONT_HEADING`` (see
         :meth:`_DataTable._render`), so measuring a header with the body font
-        would report a clipped header as fitting — and leave the one header that
-        does not fit (the translated "DRIVING-TIME RULES" title, 303 px in ro)
-        with no way to read it.
+        would report a clipped header as fitting — and leave the header that
+        does not fit (the translated "DRIVING-TIME RULES" title: 283 px in ro
+        against the panel's 198 px field column) with no way to read it.
         """
         if "summary_header" in (self.table.tv.item(row_id, "tags") or ()):
             if self._summary_header_font is None:

@@ -2412,7 +2412,7 @@ msgid "DRIVING-TIME RULES"
 msgstr "AJOAJAN SÄÄNNÖT"
 
 msgid "  Days flagged"
-msgstr "  Rikkomuksia sisältävät päivät"
+msgstr "  Rikkomuspäivät"
 
 msgid "INTEGRITY"
 msgstr "EHEYS"

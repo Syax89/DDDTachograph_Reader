@@ -2418,7 +2418,7 @@ msgid "INTEGRITY"
 msgstr "ΑΚΕΡΑΙΟΤΗΤΑ"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Κάλυψη υπολογισμένη σε byte"
+msgstr "  Κάλυψη σε byte"
 
 msgid "  Daily driving limit"
 msgstr "  Όριο ημερήσιας οδήγησης"
