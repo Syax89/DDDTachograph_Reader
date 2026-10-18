@@ -644,6 +644,88 @@ def test_switch_requests_a_restart_that_reopens_the_current_file(explorer, monke
     assert gone
 
 
+def test_language_switch_during_the_render_cannot_restart_the_window(explorer, monkeypatch):
+    """Regression: rendering a loaded file is still busy time.
+
+    ``_parse_done`` renders through ``DataTable.show``, whose sizing
+    ``update()`` pumps the event loop, so a language selection dispatched from
+    it used to find ``_parsing`` already cleared by ``_finish_parse`` and
+    schedule the restart. The teardown then destroyed the widgets
+    ``_parse_done`` was still configuring (``TclError: invalid command name
+    .!frame2.!label``), leaving the error path talking to a dead window. The
+    selection must be refused while the render runs -- and work afterwards.
+    """
+    tkinter = pytest.importorskip("tkinter")
+    import app.gui as gui
+
+    saved, dialogs = [], []
+    monkeypatch.setattr(gui, "save_language", lambda code: saved.append(code) or True)
+    monkeypatch.setattr(gui.messagebox, "showerror",
+                        lambda title, message: dialogs.append(title))
+    # The payload is not the subject here: keep the tree walk out of the way so
+    # the render that matters (the placeholder pane below) stays the real one.
+    explorer._populate_tree = lambda data: None
+    explorer._update_top_bar = lambda data: None
+    explorer._check_integrity = lambda data, path: None
+    # Queue the selection exactly as the menu/timer does, then let the table's
+    # nested update() inside the render dispatch it mid-call.
+    explorer.after_idle(lambda: explorer._switch_language("it"))
+
+    explorer._parse_done({"metadata": {"generation": "Gen2"}, "raw_tags": [{"tag": 1}]},
+                         CURRENT_FILE)
+
+    assert dialogs == []                     # the render completed cleanly
+    assert saved == []                       # nothing persisted, no restart asked
+    assert explorer._restart_requested is False
+    assert explorer._language_var.get() == "en"
+    assert explorer.winfo_exists()           # the window was not torn down
+    assert explorer._parsing is False        # the guard is released afterwards
+    assert explorer.current_file == CURRENT_FILE
+    assert str(explorer.btn_open.cget("state")) == "normal"
+    assert str(explorer.btn_export.cget("state")) == "normal"
+
+    # With the render over, the same selection goes through normally.
+    explorer._language_var.set("it")
+    explorer._switch_language("it")
+
+    assert saved == ["it"]
+    assert explorer._restart_requested is True
+    assert explorer._restart_file == CURRENT_FILE
+    explorer.update()  # the idle restart tears the window down
+    try:
+        gone = not explorer.winfo_exists()
+    except tkinter.TclError:  # the whole interpreter is gone, not just the widget
+        gone = True
+    assert gone
+
+
+def test_failed_render_holds_then_releases_the_busy_guard(explorer, monkeypatch):
+    """A render that raises is busy time too, and must still end idle: the
+    guard covers the failing render and is released by the time it returns."""
+    import app.gui as gui
+
+    seen, dialogs = [], []
+    monkeypatch.setattr(gui, "save_language", lambda code: True)
+    monkeypatch.setattr(gui.messagebox, "showerror",
+                        lambda title, message: dialogs.append(title))
+
+    def explode(data):
+        seen.append(explorer._parsing)   # a selection here must be refused
+        explorer._switch_language("it")
+        assert explorer._restart_requested is False
+        raise RuntimeError("render boom")
+
+    explorer._populate_tree = explode
+
+    explorer._parse_done({"metadata": {}, "raw_tags": [{"tag": 1}]}, CURRENT_FILE)
+
+    assert seen == [True]
+    assert dialogs == ["Rendering Error"]
+    assert explorer._parsing is False
+    assert explorer._language_var.get() == "en"
+    assert str(explorer.btn_open.cget("state")) == "normal"
+
+
 def test_main_rebuilds_the_window_in_the_chosen_language(monkeypatch, capfd):
     """The main loop is the restart mechanism: no exec, no stale argv file.
 
