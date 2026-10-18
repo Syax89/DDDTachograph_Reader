@@ -1,4 +1,10 @@
 # Unreleased
+- **Speed chart summary cards and legend**: the detailed-speed view now shows
+  its key numbers (max and average speed, time above the limit, time moving and
+  the number of overspeeding events the unit recorded) as dashboard-style cards
+  above the plot instead of one dense grey line, and a legend explains the
+  dashed limit line and the red dots — those dots are overspeeding events
+  recorded by the unit, whose peak can be higher than any sampled speed.
 
 ### ✨ New Features
 

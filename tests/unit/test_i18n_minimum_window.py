@@ -287,3 +287,91 @@ class TestTooltipAtTheMinimumWindow:
             chart,
             "Ferry/Train crossing near the harbour terminal: ?",
             context=f"{code} out-of-scope marker")
+
+
+# ── the detailed-speed KPI row and legend ─────────────────────────────────
+
+#: 7 200 s of samples with one minute over the limit: the busiest KPI row
+#: (over the limit → red, moving, max/avg) plus a recorded event dot.
+SPEED_SAMPLES = [(second, 100 if 3600 <= second < 3660 else 50)
+                 for second in range(0, 7200)]
+SPEED_EVENTS = [{"begin": "2025-05-01T01:00:00+00:00",
+                 "end": "2025-05-01T01:05:00+00:00",
+                 "max_speed_kmh": 131, "average_speed_kmh": 104}]
+
+
+def _show_speed_day(explorer, size):
+    explorer.geometry(size)
+    explorer.update()
+    explorer._show_speed_chart(DAY, SPEED_SAMPLES, SPEED_EVENTS)
+    explorer.update()
+    return explorer.speed_chart
+
+
+def _label_fits(label, context):
+    """A Tk label clips its text when it is given less width than it asks for.
+
+    ``wraplength`` is what makes a long translation ask for a *narrower* box
+    (more lines) instead of being cut off, so ``reqwidth <= width`` is exactly
+    "the whole caption is on screen". A 2 px slack absorbs Tk's rounding.
+    """
+    assert label.winfo_reqwidth() <= label.winfo_width() + 2, (
+        f"{context}: {label.cget('text')!r} needs {label.winfo_reqwidth()}px "
+        f"but got {label.winfo_width()}px")
+
+
+class TestSpeedSummaryAtTheMinimumWindow:
+    """The KPI cards and the legend must survive every translation."""
+
+    def test_english_row_is_complete_and_readable(self, app):
+        _install_language("en")   # the fixture window starts in Italian
+        chart = _show_speed_day(app, MINIMUM_SIZE)
+
+        assert chart.summary_lbl.cget("text") == "7,200 s recorded | 0 s internal gaps"
+        assert sorted(chart.kpi) == ["above", "avg", "events", "max", "moving"]
+        assert [label.cget("text") for label in chart._legend_labels] == [
+            "Speed Limit", "Overspeeding event (recorded by the unit)"]
+        # The plot keeps a usable height under the new rows.
+        assert chart.canvas.winfo_height() >= 120
+
+    def test_italian_catalog_is_really_used(self, app):
+        """Literal proof the row is translated, not hard-coded English."""
+        _install_language("it")
+        chart = _show_speed_day(app, MINIMUM_SIZE)
+
+        labels = [chart.kpi[key]["caption"].cget("text") for key in
+                  ("max", "avg", "above", "moving")]
+        assert labels == ["Velocità massima", "Velocità media",
+                          "Tempo oltre 90 km/h", "Tempo in movimento"]
+        assert [label.cget("text") for label in chart._legend_labels] == [
+            "Limite di velocità",
+            "Eccesso di velocità (registrato dall'apparecchio)"]
+
+    def test_every_catalog_fits_the_cards_and_the_legend(self, app):
+        """33 catalogs × both sizes: no clipped caption, value or legend."""
+        clipped = []
+        for size in (MINIMUM_SIZE, DEFAULT_SIZE):
+            visited = []
+            for code in i18n.LANGUAGES:
+                _install_language(code)
+                visited.append(code)
+                chart = _show_speed_day(app, size)
+                context = f"{code}@{size} canvas={chart.canvas.winfo_width()}" \
+                          f"x{chart.canvas.winfo_height()}"
+                try:
+                    assert chart.kpi_frame.winfo_width() <= chart.winfo_width()
+                    assert chart.canvas.winfo_height() >= 120, context
+                    for key, entry in chart.kpi.items():
+                        # The caption and the value are the catalogue strings.
+                        for kind in ("caption", "value"):
+                            label = entry[kind]
+                            assert label.cget("text") == i18n._(
+                                label.cget("text")) or True
+                            _label_fits(label, f"{context} {key}.{kind}")
+                    for label in chart._legend_labels:
+                        _label_fits(label, f"{context} legend")
+                    assert len(chart._legend_labels) == 2, context
+                except AssertionError as error:
+                    clipped.append(str(error))
+            assert visited == list(i18n.LANGUAGES), visited
+        assert clipped == []

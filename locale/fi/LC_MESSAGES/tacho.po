@@ -656,6 +656,9 @@ msgstr "Ylinopeus"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Ylinopeus: {start} → {end} | enint. {max_speed} | keskim. {avg_speed}"
 
+msgid "Overspeeding event (recorded by the unit)"
+msgstr "Ylinopeus (laitteen tallentama)"
+
 msgid "Open a DDD file"
 msgstr "Avaa DDD-tiedosto"
 
@@ -775,6 +778,13 @@ msgstr "Aika"
 msgid "Time >90 km/h"
 msgstr "Aika >90 km/h"
 
+#, python-brace-format
+msgid "Time above {limit} km/h"
+msgstr "Aika yli {limit} km/h"
+
+msgid "Time moving"
+msgstr "Aika liikkeessä"
+
 msgid "Total"
 msgstr "Yhteensä"
 
@@ -866,8 +876,8 @@ msgid "{kind} saved to:\n{path}"
 msgstr "{kind} tallennettu:\n{path}"
 
 #, python-brace-format
-msgid "{recorded:,} s recorded | max {max_speed} km/h | avg {avg_speed:.1f} km/h | {above} above {limit} km/h | {moving} moving | {gaps} internal gaps"
-msgstr "{recorded:,} s tallennettu | enint. {max_speed} km/h | keskim. {avg_speed:.1f} km/h | {above} yli {limit} km/h | {moving} liikkeessä | {gaps} sisäistä aukkoa"
+msgid "{recorded:,} s recorded | {gaps} internal gaps"
+msgstr "{recorded:,} s tallennettu | {gaps} sisäistä aukkoa"
 
 #, python-brace-format
 msgid "{rows} rows · {columns} columns"
