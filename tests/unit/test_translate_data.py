@@ -179,17 +179,17 @@ def test_booleans_are_words_not_python(monkeypatch):
         ui_text.configure_translate_data(False)
 
 
-def test_activity_cells_use_the_same_word_as_the_chart(monkeypatch):
+def test_activity_word_is_chrome_outside_and_a_cell_inside(monkeypatch):
+    """The chart label always follows the language; the cell only when ticked."""
     _install_italian(monkeypatch)
     import app.gui as gui
 
     ui_text.configure_translate_data(False)
     assert gui.fmt_val("DRIVE", key="activity") == "Drive"
-    assert gui._act_label("DRIVE") == "Drive"
+    assert gui._act_label("DRIVE") == i18n._("Drive")      # chart: always
     ui_text.configure_translate_data(True)
     try:
         assert gui.fmt_val("DRIVE", key="activity") == i18n._("Drive")
-        assert gui.fmt_val("DRIVE", key="activity") == gui._act_label("DRIVE")
     finally:
         ui_text.configure_translate_data(False)
 
@@ -296,7 +296,8 @@ def test_clicking_the_toggle_rerenders_the_visible_table(monkeypatch):
         ui_text.configure_translate_data(False)
 
 
-def test_activity_label_follows_the_preference(monkeypatch):
+def test_activity_label_is_chart_chrome_not_file_text(monkeypatch):
+    """The chart legend follows the language even with the tick off."""
     tkinter = pytest.importorskip("tkinter")
     try:
         probe = tkinter.Tk()
@@ -312,7 +313,7 @@ def test_activity_label_follows_the_preference(monkeypatch):
     assert i18n.install("it") == "it"
 
     ui_text.configure_translate_data(False)
-    assert gui._act_label("DRIVE") == "Drive"
+    assert gui._act_label("DRIVE") == i18n._("Drive")
     ui_text.configure_translate_data(True)
     try:
         assert gui._act_label("DRIVE") == i18n._("Drive")

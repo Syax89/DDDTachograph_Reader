@@ -1135,11 +1135,11 @@ ACTIVITY_LABEL = {"DRIVE": "Drive", "WORK": "Work", "REST": "Rest",
 def _act_label(activity):
     """Display name of an activity code.
 
-    The activity name is decoded from the file, so it obeys the "translate file
-    contents" preference: with it off the label stays exactly as the decoder
-    names it (``Drive``), with it on it is translated (``Guida``).
+    This is chart and tree chrome, not a table cell: it always follows the
+    selected language. The same word inside a table obeys the "translate file
+    contents" preference instead — see ``fmt_val``.
     """
-    return ui_text.activity(ACTIVITY_LABEL.get(activity, activity))
+    return _(ACTIVITY_LABEL.get(activity, activity))
 
 
 class ActivityTimelineChart(ttk.Frame):
