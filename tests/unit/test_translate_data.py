@@ -7,6 +7,7 @@ off keeps them exactly as the file/decoder names them, on translates them too.
 """
 import json
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
@@ -110,6 +111,92 @@ def test_fmt_scalar_applies_the_translator_to_derived_labels_only():
 
 
 # ── the window ─────────────────────────────────────────────────────────────
+
+def _explorer(monkeypatch):
+    """A real, Italian window with modal dialogs stubbed out."""
+    tkinter = pytest.importorskip("tkinter")
+    try:
+        probe = tkinter.Tk()
+    except tkinter.TclError:
+        pytest.skip("no display available")
+    probe.destroy()
+
+    import app.gui as gui
+    monkeypatch.setattr(gui, "messagebox", Mock())
+    return gui.TachoExplorer()
+
+
+#: The smallest file that renders a table with a file-decoded value: a
+#: calibration record whose nation column is "I" ("Italy" / "Italia").
+MOCK_CARD = {
+    "metadata": {"generation": "Generation 1", "is_vu": False,
+                 "origin": "driver_card", "file_size_bytes": 4096,
+                 "parsed_at": "", "app_version": "test",
+                 "integrity_check": "Verified"},
+    "coverage": {},
+    "driver": {},
+    "generations": {"Generation 1": {
+        "CalibrationData": [{"nation": "I", "workshop_name": "OFFICINA"}]}},
+}
+
+
+def test_clicking_the_toggle_rerenders_the_visible_table(monkeypatch):
+    """Rows are formatted when the tree is built: the click must rebuild them."""
+    if not (CATALOG_DIR / "it" / "LC_MESSAGES" / "tacho.mo").exists():
+        pytest.skip("the Italian catalog is not built in this checkout")
+    monkeypatch.setattr(i18n, "locale_dir", lambda: str(CATALOG_DIR))
+    # The window constructor reinstalls the *saved* language, so it must be
+    # persisted before it is built (otherwise it comes back up in English).
+    assert i18n.save_language("it")
+    assert i18n.install("it") == "it"
+    ui_text.configure_translate_data(False)
+
+    window = _explorer(monkeypatch)
+    label = i18n._("Calibration Data")
+
+    def section_node():
+        """The tree node whose payload is the calibration table."""
+        for iid, payload in window._payloads.items():
+            if isinstance(payload, tuple) and payload and payload[0] == label:
+                return iid
+        raise AssertionError(f"no node for {label!r}")
+
+    def cells():
+        tv = window.table.tv
+        return [str(cell) for iid in tv.get_children("")
+                for cell in tv.item(iid, "values")]
+
+    try:
+        window._parse_done(MOCK_CARD, "mock.ddd")
+        window.update()
+        window.tree.selection_set(section_node())
+        window.update()
+
+        assert any("Italy" in cell for cell in cells()), cells()
+        assert not any("Italia" in cell for cell in cells()), cells()
+
+        menu = window.nametowidget(window.btn_lang["menu"])
+        menu.invoke(2)                      # the real checkbutton, a real click
+        window.update()
+
+        assert any("Italia" in cell for cell in cells()), cells()
+        assert not any("Italy" in cell for cell in cells()), cells()
+        assert window.table.title_lbl.cget("text") == label, "selection moved"
+        assert window.tree.selection() == (section_node(),), "selection moved"
+        assert i18n.saved_translate_data() is True
+
+        menu.invoke(2)
+        window.update()
+        window.tree.selection_set(section_node())
+        window.update()
+        assert any("Italy" in cell for cell in cells()), cells()
+        assert i18n.saved_translate_data() is False
+    finally:
+        for after_id in window.tk.call("after", "info"):
+            window.tk.call("after", "cancel", after_id)
+        window._on_close()
+        ui_text.configure_translate_data(False)
+
 
 def test_activity_label_follows_the_preference(monkeypatch):
     tkinter = pytest.importorskip("tkinter")
