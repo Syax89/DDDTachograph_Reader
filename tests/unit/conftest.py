@@ -2,6 +2,7 @@ import logging
 
 import pytest
 
+import app.i18n as i18n_module
 import core.utils.logger as logger_module
 from core.registry.registry import DecoderRegistry
 
@@ -11,6 +12,25 @@ def reset_registry():
     DecoderRegistry.reset_instance()
     yield
     DecoderRegistry.reset_instance()
+
+
+@pytest.fixture(autouse=True)
+def isolate_i18n(tmp_path, monkeypatch):
+    """Keep the process-global UI translator and the settings file per-test.
+
+    Both are process-wide state: the translator is a module global in
+    ``app.i18n`` and the settings file is the *user's* real preferences file.
+    A test that installs a catalog (or that constructs the GUI, which calls
+    ``install(saved_language())``) would otherwise leak a language into every
+    later test, and would read — or overwrite — the real ``settings.json``.
+    """
+    monkeypatch.setattr(i18n_module, "settings_path",
+                        lambda: str(tmp_path / "TachoReader" / "settings.json"))
+    i18n_module.install(i18n_module.DEFAULT_LANGUAGE)
+    try:
+        yield
+    finally:
+        i18n_module.install(i18n_module.DEFAULT_LANGUAGE)
 
 
 @pytest.fixture(autouse=True)

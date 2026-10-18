@@ -12,6 +12,17 @@ added_files = []
 if os.path.exists(certs_path):
     added_files.append((certs_path, "certs"))
 
+# UI translation catalogs. app/i18n.py looks for <bundle>/locale/<lang>/
+# LC_MESSAGES/tacho.mo, so the compiled .mo files (not the .po sources) must be
+# bundled: without them the frozen application would silently fall back to
+# English for every language.
+locale_path = os.path.join(base_path, "locale")
+if os.path.isdir(locale_path):
+    for lang in sorted(os.listdir(locale_path)):
+        mo_file = os.path.join(locale_path, lang, "LC_MESSAGES", "tacho.mo")
+        if os.path.isfile(mo_file):
+            added_files.append((mo_file, os.path.join("locale", lang, "LC_MESSAGES")))
+
 # App icons: .ico/.icns for the executables, one PNG for the Tk window icon.
 icons_path = os.path.join(base_path, "AppIcons")
 win_icon = os.path.join(icons_path, "icon.ico")

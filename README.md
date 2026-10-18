@@ -123,6 +123,20 @@ DDDTachograph_Reader/
 
 ---
 
+## Languages
+
+The interface ships in 34 languages: English plus the 24 official EU languages,
+Norwegian, Icelandic, Russian, Ukrainian, Belarusian, Turkish, Serbian, Bosnian,
+Albanian and Macedonian. Pick one from the **Language** menu in the top bar; the
+choice is stored in the per-user settings file and applied at the next start.
+
+English is the source language and the default: decoded field names, raw values,
+parser diagnostics and exported files stay in English, so a report reads the same
+whatever UI language is selected. See [CONTRIBUTING.md](CONTRIBUTING.md) to add a
+language or improve a translation.
+
+---
+
 ## Testing
 
 ```bash

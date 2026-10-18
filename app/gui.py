@@ -75,6 +75,7 @@ from core.utils.report_format import (  # noqa: E402
     VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
     fmt_known_structure, fmt_scalar, humanize_key, integrity_verdict, visible_columns)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
+from app.i18n import LANGUAGES, _, install, save_language, saved_language  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
 
@@ -191,7 +192,7 @@ def _kv_rows(d):
                 rows.append([subfield, fmt_val(sv, key=sk)])
         else:
             rows.append([field, fmt_val(v, key=k)])
-    return (["Field", "Value"], rows)
+    return ([_("Field"), _("Value")], rows)
 
 
 def _utc_speed_block(block):
@@ -336,7 +337,7 @@ class DataTable(ttk.Frame):
         filt.pack(fill=tk.X, padx=8, pady=(0, 4))
         ttk.Label(filt, text="\U0001f50e").pack(side=tk.LEFT)
         self.filter_var = tk.StringVar()
-        self.filter_var.trace_add("write", lambda *_: self._schedule_filter())
+        self.filter_var.trace_add("write", lambda *_args: self._schedule_filter())
         self.filter_entry = ttk.Entry(filt, textvariable=self.filter_var)
         self.filter_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(4, 0))
         body = ttk.Frame(self)
@@ -384,7 +385,8 @@ class DataTable(ttk.Frame):
         self.filt_bar.pack(fill=tk.X, padx=8, pady=(0, 4), before=self.tv.master)
         self.title_lbl.config(text=title)
         self.count_lbl.config(
-            text=f"{len(rows)} rows \u00b7 {len(columns)} columns"
+            text=_("{rows} rows \u00b7 {columns} columns").format(
+                rows=len(rows), columns=len(columns))
             + (f"   \u2014   {meta}" if meta else ""))
         self.filter_var.set("")
 
@@ -544,25 +546,29 @@ class DetailedSpeedChart(ttk.Frame):
         self._day = day
         self._speed_limit = speed_limit or SPEED_LIMIT_KMH
         self._samples = samples
-        self._sample_seconds = [second for second, _ in samples]
+        self._sample_seconds = [second for second, _speed in samples]
         self._view_start, self._view_end = 0, 86400
         self._selection_start = None
         self._selection_moved = False
         self._overspeeding_events = overspeeding_events or []
-        speeds = [speed for _, speed in samples]
+        speeds = [speed for _second, speed in samples]
         recorded = len(speeds)
         moving = sum(speed > 0 for speed in speeds)
         above_limit = sum(speed > self._speed_limit for speed in speeds)
         internal_gaps = sum(max(0, second - previous - 1)
-                            for (previous, _), (second, _) in zip(samples, samples[1:], strict=False))
-        self.title_lbl.config(text=f"Detailed Speed - {day} (UTC)")
-        self.summary_lbl.config(
-            text=(f"{recorded:,} s recorded | max {max(speeds)} km/h | "
-                  f"avg {sum(speeds) / recorded:.1f} km/h | "
-                  f"{_fmt_seconds_duration(above_limit)} above {self._speed_limit} km/h | "
-                  f"{_fmt_seconds_duration(moving)} moving | "
-                  f"{_fmt_seconds_duration(internal_gaps)} internal gaps")
-            if speeds else "No valid speed samples")
+                            for (previous, _prev), (second, _cur) in zip(samples, samples[1:], strict=False))
+        self.title_lbl.config(text=_("Detailed Speed - {day} (UTC)").format(day=day))
+        self.summary_lbl.config(text=(
+            _("{recorded:,} s recorded | max {max_speed} km/h | "
+              "avg {avg_speed:.1f} km/h | {above} above {limit} km/h | "
+              "{moving} moving | {gaps} internal gaps").format(
+                  recorded=recorded, max_speed=max(speeds),
+                  avg_speed=sum(speeds) / recorded,
+                  above=_fmt_seconds_duration(above_limit),
+                  limit=self._speed_limit,
+                  moving=_fmt_seconds_duration(moving),
+                  gaps=_fmt_seconds_duration(internal_gaps))
+            if speeds else _("No valid speed samples")))
         self._schedule_draw()
 
     def _zoom_in(self):
@@ -596,7 +602,7 @@ class DetailedSpeedChart(ttk.Frame):
         first = bisect_left(self._sample_seconds, self._view_start)
         last = bisect_left(self._sample_seconds, self._view_end)
         visible_samples = self._samples[first:last]
-        speeds = [speed for _, speed in visible_samples]
+        speeds = [speed for _second, speed in visible_samples]
         max_speed = max(speeds, default=self._speed_limit)
         # G-F4: a recorded overspeeding event can exceed every sampled speed of
         # the visible window. Include the visible events' max speed in the
@@ -643,7 +649,7 @@ class DetailedSpeedChart(ttk.Frame):
             canvas.create_line(x, top, x, bottom, fill="#edf1f5")
             canvas.create_text(x, bottom + 16, text=self._time_label(second, span), anchor=tk.N,
                                fill="#536273")
-        canvas.create_text(left, 10, text="Speed (km/h)", anchor=tk.W, fill="#536273")
+        canvas.create_text(left, 10, text=_("Speed (km/h)"), anchor=tk.W, fill="#536273")
 
         # Aggregate to screen pixels. Missing pixels remain blank, so chart
         # resolution never invents a continuous speed trace across a gap.
@@ -751,7 +757,8 @@ class DetailedSpeedChart(ttk.Frame):
                 drv = ""
                 if isinstance(cd, dict):
                     drv = (cd.get("card_number") or "").strip()
-                text = f"Overspeeding: {b} \u2192 {e} | max {mx} | avg {av}"
+                text = _("Overspeeding: {start} \u2192 {end} | max {max_speed} | "
+                         "avg {avg_speed}").format(start=b, end=e, max_speed=mx, avg_speed=av)
                 if drv:
                     text += f" | {drv}"
                 self.canvas.delete("speed_hover")
@@ -858,6 +865,11 @@ ACTIVITY_LABEL = {"DRIVE": "Drive", "WORK": "Work", "REST": "Rest",
                   "AVAILABLE": "Available"}
 
 
+def _act_label(activity):
+    """Display name of an activity code (translated)."""
+    return _(ACTIVITY_LABEL.get(activity, activity))
+
+
 class ActivityTimelineChart(ttk.Frame):
     """Gantt timeline for one UTC day of driver activity changes."""
 
@@ -927,12 +939,12 @@ class ActivityTimelineChart(ttk.Frame):
 
         self.detail_btn.unbind("<Button-1>")
         self.detail_btn.bind("<Button-1>", _open_detail)
-        self.title_lbl.config(text=f"Daily Activities - {day} (UTC)")
+        self.title_lbl.config(text=_("Daily Activities - {day} (UTC)").format(day=day))
         info_parts = [f"\U0001f4c5 {day}"]
         if is_vu:
             info_parts.append(f"\U0001f6e3 {day_km} km")
         if changes_count:
-            info_parts.append(f"{changes_count} changes")
+            info_parts.append(_("{count} changes").format(count=changes_count))
         if driver_info:
             info_parts.append(f"\U0001f464 {driver_info}")
         vehicle_info = vehicle_info or []
@@ -1097,7 +1109,7 @@ class ActivityTimelineChart(ttk.Frame):
             if slot_name == "Cardholder" and self._driver_name:
                 label_text = f"\U0001f464 {self._driver_name}"
             else:
-                label_text = slot_name
+                label_text = _(slot_name)
             canvas.create_text(left, section_top + header_h // 3,
                                text=label_text, anchor=tk.W,
                                fill="#263238", font=("TkDefaultFont", 11, "bold"))
@@ -1111,8 +1123,10 @@ class ActivityTimelineChart(ttk.Frame):
                 seconds = totals.get(act, 0)
                 if seconds:
                     h, m = divmod(seconds // 60, 60)
-                    parts.append(f"{h}h {m:02d}m {ACTIVITY_LABEL[act]}")
-            totals_lines.append(f"  {slot_name}:  " + "  |  ".join(parts) if parts else f"  {slot_name}:  —")
+                    parts.append(f"{h}h {m:02d}m {_act_label(act)}")
+            slot_text = _(slot_name)
+            totals_lines.append(f"  {slot_text}:  " + "  |  ".join(parts) if parts
+                                else f"  {slot_text}:  —")
 
             # Activity rows start after the header
             rows_top = section_top + header_h
@@ -1123,7 +1137,7 @@ class ActivityTimelineChart(ttk.Frame):
 
                 # Activity label on the left
                 canvas.create_text(left - 8, (y0 + y1) / 2,
-                                   text=ACTIVITY_LABEL.get(act, act),
+                                   text=_act_label(act),
                                    anchor=tk.E, fill="#37474f",
                                    font=("", 8, "bold"))
 
@@ -1184,8 +1198,8 @@ class ActivityTimelineChart(ttk.Frame):
         # Check markers first
         for mx, my, m_slot, m_name, is_ins, _sec in self._layout.get("markers_info", []):
             if abs(event.x - mx) <= 10 and abs(event.y - my) <= 10:
-                kind = "\u25bc Insertion" if is_ins else "\u25b2 Withdrawal"
-                text = f"{kind}: {m_name} ({m_slot})"
+                kind = _("\u25bc Insertion") if is_ins else _("\u25b2 Withdrawal")
+                text = f"{kind}: {m_name} ({_(m_slot)})"
                 label_x = min(event.x + 12, self.canvas.winfo_width() - 260)
                 label_y = max(event.y - 24, 4)
                 text_id = self.canvas.create_text(
@@ -1230,12 +1244,13 @@ class ActivityTimelineChart(ttk.Frame):
             eh, em = divmod(end_s // 60, 60)
             dur = (end_s - start_s) // 60
             dh, dm = divmod(dur, 60)
+            # Act labels are translated at the display boundary, never stored.
             if has_multi:
-                text = (f"{slot_tag}  {ACTIVITY_LABEL.get(act, act)}  "
+                text = (f"{slot_tag}  {_act_label(act)}  "
                         f"[{sh:02d}:{sm:02d} \u2014 {eh:02d}:{em:02d}]  "
                         f"\u00b7  {dh}h {dm:02d}m")
             else:
-                text = (f"{ACTIVITY_LABEL.get(act, act)}  "
+                text = (f"{_act_label(act)}  "
                         f"[{sh:02d}:{sm:02d} \u2014 {eh:02d}:{em:02d}]  "
                         f"\u00b7  {dh}h {dm:02d}m")
             label_x = min(event.x + 12, self.canvas.winfo_width() - 300)
@@ -1292,14 +1307,23 @@ class DayDetailWindow(tk.Toplevel):
         # ``current_file``; tests pass a bare Tk root without it (-> None).
         key = (getattr(parent, "current_file", None), day)
         existing = DayDetailWindow._open_windows.get(key)
-        if existing is not None and existing.winfo_exists():
-            existing.lift()
-            existing.focus_force()
-            return
+        if existing is not None:
+            try:
+                alive = bool(existing.winfo_exists())
+            except tk.TclError:
+                # Left over from a Tk interpreter that is already gone (an
+                # in-process language restart builds a new root); it can never
+                # be reused, so forget it and open a fresh window below.
+                alive = False
+            if alive:
+                existing.lift()
+                existing.focus_force()
+                return
+            DayDetailWindow._open_windows.pop(key, None)
         super().__init__(parent)
         self._reuse_key = key
         DayDetailWindow._open_windows[key] = self
-        self.title(f"Daily Detail — {day} (UTC)")
+        self.title(_("Daily Detail — {day} (UTC)").format(day=day))
         self.geometry("900x580")
         self.resizable(True, True)
         self.configure(bg="#FAFAFA")
@@ -1335,12 +1359,12 @@ class DayDetailWindow(tk.Toplevel):
         hdr.pack(fill=tk.X, padx=14, pady=(12, 6))
         title_row = tk.Frame(hdr, bg="#FAFAFA")
         title_row.pack(fill=tk.X)
-        tk.Label(title_row, text="Daily Detail",
+        tk.Label(title_row, text=_("Daily Detail"),
                  font=("", 16, "bold"), fg="#263238", bg="#FAFAFA",
                  anchor=tk.W).pack(side=tk.LEFT)
         if is_vu:
             self._slot_btn = tk.Label(title_row,
-                                      text="Slot 2" if self._current_slot == 1 else "Slot 1",
+                                      text=_("Slot 2") if self._current_slot == 1 else _("Slot 1"),
                                       font=("", 10, "bold"),
                                       fg="#1565C0", bg="#E3F2FD",
                                       padx=10, pady=2,
@@ -1351,7 +1375,7 @@ class DayDetailWindow(tk.Toplevel):
             self._slot_btn.bind("<Button-1>", lambda e: self._toggle_slot())
         else:
             self._slot_btn = None
-        tk.Label(hdr, text=f"{day} (UTC)",
+        tk.Label(hdr, text=_("{day} (UTC)").format(day=day),
                  font=("", 11), fg="#607D8B", bg="#FAFAFA",
                  anchor=tk.W).pack(anchor=tk.W, pady=(1, 6))
         self._header_info = tk.Label(hdr, text="",
@@ -1400,15 +1424,15 @@ class DayDetailWindow(tk.Toplevel):
     def _refresh_header(self):
         info = []
         if self._driver_info:
-            info.append(f"Driver: {self._driver_info}")
+            info.append(_("Driver: {name}").format(name=self._driver_info))
         if self._vehicle_info:
             plates = [v.get("plate", "?") for v in self._vehicle_info[:3]]
-            info.append(f"Vehicle: {', '.join(plates)}")
+            info.append(_("Vehicle: {plates}").format(plates=", ".join(plates)))
         if self._day_km:
-            info.append(f"Distance: {self._day_km} km")
-        slot_label = f"Slot {self._current_slot}" if self._is_vu else ""
+            info.append(_("Distance: {km} km").format(km=self._day_km))
+        slot_label = _("Slot {number}").format(number=self._current_slot) if self._is_vu else ""
         n_act = len(self._act_slot1) if self._current_slot == 1 else len(self._act_slot2)
-        info.append(f"{n_act} activity changes"
+        info.append(_("{count} activity changes").format(count=n_act)
                     + (f" ({slot_label})" if slot_label else ""))
         self._header_info.config(text="  |  ".join(info))
 
@@ -1417,10 +1441,10 @@ class DayDetailWindow(tk.Toplevel):
     def _toggle_slot(self):
         if self._current_slot == 1:
             self._current_slot = 2
-            self._slot_btn.config(text="Slot 1")
+            self._slot_btn.config(text=_("Slot 1"))
         else:
             self._current_slot = 1
-            self._slot_btn.config(text="Slot 2")
+            self._slot_btn.config(text=_("Slot 2"))
         self._refresh_header()
         self._render()
 
@@ -1442,6 +1466,16 @@ class DayDetailWindow(tk.Toplevel):
         DayDetailWindow._open_windows.pop(getattr(self, "_reuse_key", None), None)
         self.destroy()
 
+    @classmethod
+    def forget_all(cls):
+        """Drop every known popup from the reuse registry.
+
+        The registry is plain Python state and outlives the Tcl interpreter that
+        owned the windows, so the root must clear it when it goes away (close or
+        language restart); otherwise a later window finds dead objects.
+        """
+        cls._open_windows.clear()
+
     # ── Timeline construction ──────────────────────────────────────────
 
     def _build_shared_timeline(self):
@@ -1459,12 +1493,12 @@ class DayDetailWindow(tk.Toplevel):
                         sm = _hhmm_to_min(start_hhmm)
                         detail = _fmt_empty_prefix() + name
                         entries.append((sm, 500, "CARD_IN", start_hhmm,
-                                        "Card inserted", detail, 0, ""))
+                                        _("Card inserted"), detail, 0, ""))
                     if end_hhmm and end_hhmm != "24:00":
                         em = _hhmm_to_min(end_hhmm)
                         detail = _fmt_empty_prefix() + name
                         entries.append((em, 510, "CARD_OUT", end_hhmm,
-                                        "Card withdrawn", detail, 0, ""))
+                                        _("Card withdrawn"), detail, 0, ""))
 
         # Card I/W records from data
         for rec in (data.get("card_iw_records") or []):
@@ -1477,7 +1511,7 @@ class DayDetailWindow(tk.Toplevel):
             hhmm = ins_dt.strftime("%H:%M")
             im = _hhmm_to_min(hhmm)
             if rec.get("manual_input"):
-                label = "Manual entry"
+                label = _("Manual entry")
                 slot = rec.get("card_slot")
                 slot_str = f"[Slot {'2' if slot else '1'}]" if slot is not None else ""
                 detail = _fmt_empty_prefix() + slot_str
@@ -1492,7 +1526,7 @@ class DayDetailWindow(tk.Toplevel):
                 name = f"{rec.get('holder_first_names','')} {rec.get('holder_surname','')}".strip()
                 if not name or name == "N/A N/A":
                     name = rec.get("card_number", "") or "Unknown"
-                label = "Card inserted"
+                label = _("Card inserted")
                 slot = rec.get("card_slot")
                 slot_str = f"[Slot {'2' if slot else '1'}]" if slot is not None else ""
                 detail = _fmt_empty_prefix() + f"{name} {slot_str}" if slot_str else _fmt_empty_prefix() + name
@@ -1509,7 +1543,7 @@ class DayDetailWindow(tk.Toplevel):
                     odo = rec.get("odometer_withdrawal_km")
                     odo_str = str(odo) if odo else ""
                     entries.append((wm, 510, "CARD_OUT", whhmm,
-                                    "Card withdrawn", "", 0, odo_str))
+                                    _("Card withdrawn"), "", 0, odo_str))
 
         # Events
         for ev in (data.get("events") or []):
@@ -1520,14 +1554,14 @@ class DayDetailWindow(tk.Toplevel):
             if not dt or dt.date().isoformat() != self._iso_date:
                 continue
             hhmm = dt.strftime("%H:%M")
-            desc = ev.get("description", "Unknown event")
+            desc = ev.get("description", _("Unknown event"))
             plate_str = ""
             plate = ev.get("vehicle_plate", "")
             if plate:
-                plate_str = f"  Plate: {plate}"
+                plate_str = "  " + _("Plate: {plate}").format(plate=plate)
             detail = _fmt_empty_prefix() + desc + plate_str
             entries.append((_hhmm_to_min(hhmm), 800, "EVENT", hhmm,
-                            "Event", detail, 0, ""))
+                            _("Event"), detail, 0, ""))
 
         # Faults
         for flt in (data.get("faults") or []):
@@ -1538,10 +1572,10 @@ class DayDetailWindow(tk.Toplevel):
             if not dt or dt.date().isoformat() != self._iso_date:
                 continue
             hhmm = dt.strftime("%H:%M")
-            desc = flt.get("description", "Unknown fault")
+            desc = flt.get("description", _("Unknown fault"))
             detail = _fmt_empty_prefix() + desc
             entries.append((_hhmm_to_min(hhmm), 810, "FAULT", hhmm,
-                            "Fault", detail, 0, ""))
+                            _("Fault"), detail, 0, ""))
 
         # Specific conditions
         for sec_of_day, cond, _dt in (self._oos_events or []):
@@ -1569,11 +1603,11 @@ class DayDetailWindow(tk.Toplevel):
             if not country:
                 country = nation_code or "Unknown"
             if entry_type == "START":
-                label = "Place: Begin"
+                label = _("Place: Begin")
             elif entry_type == "END":
-                label = "Place: End"
+                label = _("Place: End")
             else:
-                label = "Place"
+                label = _("Place")
             detail = country
             odo = pl.get("odometer_km")
             odo_str = str(odo) if odo else ""
@@ -1592,13 +1626,13 @@ class DayDetailWindow(tk.Toplevel):
             avg_s = oe.get("average_speed_kmh")
             speed_parts = []
             if max_s is not None:
-                speed_parts.append(f"Max {max_s} km/h")
+                speed_parts.append(_("Max {speed} km/h").format(speed=max_s))
             if avg_s is not None:
-                speed_parts.append(f"Avg {avg_s} km/h")
+                speed_parts.append(_("Avg {speed} km/h").format(speed=avg_s))
             speed_str = "  |  ".join(speed_parts) if speed_parts else ""
             detail = _fmt_empty_prefix() + speed_str
             entries.append((_hhmm_to_min(hhmm), 820, "OVERSPEED", hhmm,
-                            "Overspeeding", detail, 0, ""))
+                            _("Overspeeding"), detail, 0, ""))
 
         # VU-specific: power interruptions
         for pi in (data.get("power_interruptions") or []):
@@ -1610,7 +1644,7 @@ class DayDetailWindow(tk.Toplevel):
                 continue
             hhmm = dt.strftime("%H:%M")
             entries.append((_hhmm_to_min(hhmm), 830, "POWER", hhmm,
-                            "Power interruption", "", 0, ""))
+                            _("Power interruption"), "", 0, ""))
 
         # VU-specific (G2.2): border crossings
         for bc in (data.get("border_crossings") or []):
@@ -1626,15 +1660,15 @@ class DayDetailWindow(tk.Toplevel):
             if left and entered:
                 desc = f"{left} \u2192 {entered}"
             elif left:
-                desc = f"Left: {left}"
+                desc = _("Left: {country}").format(country=left)
             elif entered:
-                desc = f"Entered: {entered}"
+                desc = _("Entered: {country}").format(country=entered)
             else:
                 desc = ""
             odo = bc.get("odometer_km")
             odo_str = str(odo) if odo else ""
             entries.append((_hhmm_to_min(hhmm), 840, "BORDER", hhmm,
-                            "Border crossing",
+                            _("Border crossing"),
                             _fmt_empty_prefix() + desc, 0, odo_str))
 
         # VU-specific (G2.2): load/unload
@@ -1650,7 +1684,8 @@ class DayDetailWindow(tk.Toplevel):
             odo = lu.get("odometer_km")
             odo_str = str(odo) if odo else ""
             entries.append((_hhmm_to_min(hhmm), 845, "LOADUNLD", hhmm,
-                            f"Load/Unload: {op}" if op else "Load/Unload",
+                            _("Load/Unload: {operation}").format(operation=op) if op
+                            else _("Load/Unload"),
                             "", 0, odo_str))
 
         return entries
@@ -1695,26 +1730,26 @@ class DayDetailWindow(tk.Toplevel):
                 if active_name:
                     detail += active_name
                 elif not card_in:
-                    detail += "No card present"
+                    detail += _("No card present")
                 else:
-                    detail += f"Slot {self._current_slot}"
+                    detail += _("Slot {number}").format(number=self._current_slot)
                 if crew and active_name:
-                    detail += "  Crew"
+                    detail += "  " + _("Crew")
             else:
                 if slot and slot != "First":
-                    detail += f"Slot {slot}"
+                    detail += _("Slot {number}").format(number=slot)
                 if crew:
-                    detail += "  Crew"
+                    detail += "  " + _("Crew")
                 if not card_in:
-                    detail += "  No card present"
+                    detail += "  " + _("No card present")
 
             entries.append((start_min, 1000, act, start_time,
                             _activity_label(act), detail, dur_min, ""))
 
             if not card_in:
                 entries.append((start_min, 999, "CARD_OUT", start_time,
-                                "Card not inserted",
-                                f"Card absent from the tachograph as of {start_time}",
+                                _("Card not inserted"),
+                                _("Card absent from the tachograph as of {time}").format(time=start_time),
                                 0, ""))
         return entries
 
@@ -1756,10 +1791,10 @@ class DayDetailWindow(tk.Toplevel):
         LABEL_W = 22
 
         if not timeline:
-            self.text.insert(tk.END, "No data for this day.\n", "t_sub")
+            self.text.insert(tk.END, _("No data for this day.\n"), "t_sub")
             return
 
-        self.text.insert(tk.END, "Activity Timeline\n", "t_hdr")
+        self.text.insert(tk.END, _("Activity Timeline\n"), "t_hdr")
 
         for entry in timeline:
             if len(entry) < 8:
@@ -1786,7 +1821,7 @@ class DayDetailWindow(tk.Toplevel):
         self.text.insert(tk.END, "\n")
         self.text.insert(tk.END,
                          "\u2500" * 52 + "\n", "t_sub")
-        self.text.insert(tk.END, "Summary\n", "t_hdr")
+        self.text.insert(tk.END, _("Summary\n"), "t_hdr")
 
         totals = {"DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0, "UNKNOWN": 0}
         for entry in timeline:
@@ -1796,31 +1831,29 @@ class DayDetailWindow(tk.Toplevel):
             if kind in totals:
                 totals[kind] += dur
 
-        for act, label in [("DRIVE", "Drive"), ("WORK", "Work"),
-                           ("AVAILABLE", "Available"), ("REST", "Rest")]:
+        for act, label in [("DRIVE", _("Drive")), ("WORK", _("Work")),
+                           ("AVAILABLE", _("Available")), ("REST", _("Rest"))]:
             self.text.insert(tk.END,
                              f"  {label:12s} {_format_duration(totals[act])}\n",
                              f"t_{act}")
 
         counts = [
-            ("Events", "EVENT"), ("Faults", "FAULT"),
-            ("Conditions", "CONDITION"), ("Places", "PLACES"),
-            ("Overspeeding", "OVERSPEED"), ("Power interruptions", "POWER"),
-            ("Border crossings", "BORDER"), ("Load/Unload", "LOADUNLD"),
-            ("Manual entries", "MANUAL"),
+            (_("Events"), "EVENT"), (_("Faults"), "FAULT"),
+            (_("Conditions"), "CONDITION"), (_("Places"), "PLACES"),
+            (_("Overspeeding"), "OVERSPEED"), (_("Power interruptions"), "POWER"),
+            (_("Border crossings"), "BORDER"), (_("Load/Unload"), "LOADUNLD"),
+            (_("Manual entries"), "MANUAL"),
         ]
         self.text.insert(tk.END, "\n")
         for label, kind in counts:
-            n = sum(1 for _s, _r, k, *_ in timeline if k == kind)
+            n = sum(1 for entry in timeline if entry[2] == kind)
             if n > 0 or kind in ("EVENT", "FAULT", "CONDITION", "PLACES", "MANUAL"):
                 self.text.insert(tk.END,
                                  f"  {label:20s} {n}\n",
                                  "t_count")
 
-        card_in_times = sorted({sk for sk, _rk, k, *_ in timeline
-                                if k == "CARD_IN"})
-        card_out_times = sorted({sk for sk, _rk, k, *_ in timeline
-                                 if k == "CARD_OUT"})
+        card_in_times = sorted({e[0] for e in timeline if e[2] == "CARD_IN"})
+        card_out_times = sorted({e[0] for e in timeline if e[2] == "CARD_OUT"})
         act_entries = [e for e in timeline
                        if e[2] in ("DRIVE", "WORK", "REST", "AVAILABLE")]
         act_card_present = sorted({e[0] for e in act_entries})
@@ -1829,8 +1862,7 @@ class DayDetailWindow(tk.Toplevel):
         # carries no explicit "Card not inserted" marker, and end that window at
         # the END of the last activity (start + duration), never at its start.
         card_explicitly_absent = any(
-            k == "CARD_OUT" and label == "Card not inserted"
-            for _sk, _rk, k, _t, label, *_ in timeline)
+            e[2] == "CARD_OUT" and e[4] == _("Card not inserted") for e in timeline)
         if not card_in_times and act_card_present and not card_explicitly_absent:
             card_in_times = [act_card_present[0]]
             card_out_times = [max(e[0] + e[6] for e in act_entries)]
@@ -1839,8 +1871,9 @@ class DayDetailWindow(tk.Toplevel):
             h1, m1 = divmod(card_in_times[0], 60)
             h2, m2 = divmod(card_out_times[-1] if card_out_times else 1440, 60)
             self.text.insert(tk.END,
-                             f"  Card present: {h1:02d}:{m1:02d}"
-                             f" \u2013 {h2:02d}:{m2:02d}\n",
+                             _("  Card present: {from_time} \u2013 {to_time}\n").format(
+                                 from_time=f"{h1:02d}:{m1:02d}",
+                                 to_time=f"{h2:02d}:{m2:02d}"),
                              "t_count")
 
 
@@ -1876,23 +1909,22 @@ def _format_duration(minutes):
 
 
 def _activity_label(act):
-    return {"DRIVE": "Drive", "WORK": "Work",
-            "REST": "Rest", "AVAILABLE": "Available"}.get(act, act)
+    return _act_label(act)
 
 
 def _condition_label(cond):
     m = {
-        "1": "Out of scope \u2014 Begin",
-        "2": "Out of scope \u2014 End",
-        "3": "Ferry / Train \u2014 Begin",
-        "4": "Ferry / Train \u2014 End",
-        "OutOfScope Begin": "Out of scope \u2014 Begin",
-        "OutOfScope End": "Out of scope \u2014 End",
-        "Ferry/Train crossing": "Ferry / Train crossing",
-        "FerryTrain Begin": "Ferry / Train \u2014 Begin",
-        "FerryTrain End": "Ferry / Train \u2014 End",
+        "1": _("Out of scope \u2014 Begin"),
+        "2": _("Out of scope \u2014 End"),
+        "3": _("Ferry / Train \u2014 Begin"),
+        "4": _("Ferry / Train \u2014 End"),
+        "OutOfScope Begin": _("Out of scope \u2014 Begin"),
+        "OutOfScope End": _("Out of scope \u2014 End"),
+        "Ferry/Train crossing": _("Ferry / Train crossing"),
+        "FerryTrain Begin": _("Ferry / Train \u2014 Begin"),
+        "FerryTrain End": _("Ferry / Train \u2014 End"),
     }
-    return m.get(str(cond), f"Condition: {cond}")
+    return m.get(str(cond), _("Condition: {condition}").format(condition=cond))
 
 
 # ── Main application ─────────────────────────────────────────────────────
@@ -1906,7 +1938,13 @@ def _resource_path(rel):
 class TachoExplorer(tk.Tk):
     def __init__(self, initial_file=None):
         super().__init__()
+        # The saved UI language must be loaded before the first _() call below.
+        self._language = install(saved_language())
         self._initial_file = initial_file
+        # Set when the user picks another language: ``main()`` reads these to
+        # rebuild the window in the new language (see _switch_language).
+        self._restart_requested = False
+        self._restart_file = None
         self.title(f"Tacho Explorer v{__version__}")
         self.geometry(f"{_px(1280)}x{_px(760)}")
         self.minsize(_px(900), _px(560))
@@ -2042,6 +2080,7 @@ class TachoExplorer(tk.Tk):
         self._payloads = {}  # iid -> (title, columns, rows, meta)
         self._destroyed = False
         self._parsing = False
+        self._exporting = False
         self._parse_queue = queue.Queue()
         self._export_queue = queue.Queue()
 
@@ -2056,22 +2095,40 @@ class TachoExplorer(tk.Tk):
     def _build_ui(self):
         top = ttk.Frame(self, padding=(10, 8))
         top.pack(fill=tk.X)
-        self.btn_open = ttk.Button(top, text="\U0001f4c2  Open DDD file",
+        self.btn_open = ttk.Button(top, text=_("\U0001f4c2  Open DDD file"),
                                    command=self._open_file)
         self.btn_open.pack(side=tk.LEFT, padx=(0, 8))
-        self.btn_export = ttk.Menubutton(top, text="\U0001f4e4  Export",
+        self.btn_export = ttk.Menubutton(top, text=_("\U0001f4e4  Export"),
                                          state=tk.DISABLED)
         export_menu = tk.Menu(self.btn_export, tearoff=0,
                               background="#ffffff", foreground="#1c2733",
                               activebackground="#1565c0", activeforeground="#ffffff",
                               borderwidth=0)
-        export_menu.add_command(label="PDF (.pdf)", command=self._export_pdf)
-        export_menu.add_command(label="Excel (.xlsx)", command=self._export_excel)
-        export_menu.add_command(label="CSV (.csv)", command=self._export_csv)
-        export_menu.add_command(label="JSON (.json)", command=self._export_json)
+        export_menu.add_command(label=_("PDF (.pdf)"), command=self._export_pdf)
+        export_menu.add_command(label=_("Excel (.xlsx)"), command=self._export_excel)
+        export_menu.add_command(label=_("CSV (.csv)"), command=self._export_csv)
+        export_menu.add_command(label=_("JSON (.json)"), command=self._export_json)
         self.btn_export["menu"] = export_menu
         self.btn_export.pack(side=tk.LEFT, padx=(0, 14))
-        self.lbl_file = ttk.Label(top, text="No file loaded",
+        # Language menu: native names, never translated; the chosen code is
+        # stored in the settings file and applied on the next start.
+        self.btn_lang = ttk.Menubutton(top, text="\U0001f310  " + LANGUAGES[self._language])
+        lang_menu = tk.Menu(self.btn_lang, tearoff=0,
+                            background="#ffffff", foreground="#1c2733",
+                            activebackground="#1565c0", activeforeground="#ffffff",
+                            borderwidth=0)
+        self._language_var = tk.StringVar(value=self._language)
+        for index, (code, name) in enumerate(LANGUAGES.items()):
+            # Names are never translated (each one is already in its own
+            # language). 34 entries in a single column would run past the
+            # bottom of a small screen, so every dozen starts a new column.
+            lang_menu.add_radiobutton(
+                label=name, value=code, variable=self._language_var,
+                columnbreak=1 if index and index % 12 == 0 else 0,
+                command=lambda selected=code: self._switch_language(selected))
+        self.btn_lang["menu"] = lang_menu
+        self.btn_lang.pack(side=tk.RIGHT, padx=(8, 0))
+        self.lbl_file = ttk.Label(top, text=_("No file loaded"),
                                   font=("", 11, "bold"))
         self.lbl_file.pack(side=tk.LEFT)
         self.lbl_status = ttk.Label(top, text="", font=("", 10))
@@ -2106,7 +2163,7 @@ class TachoExplorer(tk.Tk):
 
         status_bar = ttk.Frame(self, relief=tk.SUNKEN)
         status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-        self.status = ttk.Label(status_bar, text="Ready \u2014 open a .ddd file",
+        self.status = ttk.Label(status_bar, text=_("Ready \u2014 open a .ddd file"),
                                 anchor=tk.W, padding=(6, 2))
         self.status.pack(side=tk.LEFT, fill=tk.X, expand=True)
         self.integrity_banner = ttk.Label(status_bar, text="", anchor=tk.E,
@@ -2121,6 +2178,87 @@ class TachoExplorer(tk.Tk):
         if self._initial_file and os.path.isfile(self._initial_file):
             self.after(100, lambda: self._start_parse(self._initial_file))
 
+    def _switch_language(self, code):
+        """Persist ``code`` and rebuild the window in the new language.
+
+        A live window cannot change language in place: every widget string is
+        created once, and some are embedded in stored tree payloads. So the
+        window is destroyed and rebuilt by the main loop (:func:`main`), which
+        makes this an in-process restart: no ``execv``, therefore identical
+        behaviour for ``python app/gui.py``, ``python -m app.gui`` and the
+        frozen bundle, and no terminal is dropped on the floor. The file that is
+        open right now is reopened; the original command line is not replayed
+        (the file it named may have been closed or replaced long ago).
+
+        A restart while a parse or an export is running would abort the worker
+        and lose its result, so the current language is kept and the menu radio
+        silently returns to it. A settings write that fails does the same, after
+        telling the user.
+        """
+        if code == self._language:
+            return
+        if self._parsing or self._exporting:
+            self._restore_language_choice()
+            return
+        if not save_language(code):
+            self._restore_language_choice()
+            messagebox.showwarning(_("Language"),
+                                   _("Could not save the language setting."))
+            return
+        self._restart_file = self.current_file
+        self._restart_requested = True
+        # Tear the window down from the idle loop, not from inside the menu
+        # command: destroying a menu's owner while the menu is still posting
+        # makes Tcl complain about an invalid command name.
+        self.after_idle(self._finish_restart)
+
+    def _finish_restart(self):
+        """Stop this window so ``main()`` can rebuild it in the new language."""
+        self._shutdown()
+        self.destroy()
+
+    def _shutdown(self):
+        """Release the state this window owns and end its main loop.
+
+        A bare ``destroy()`` releases only some of it:
+
+        * the day-detail reuse registry is a class attribute, so it survives the
+          window and would hand the *next* window Tcl objects from a dead
+          interpreter;
+        * ``after`` callbacks already queued in this interpreter keep firing at
+          widgets that no longer exist, which Tk reports on stderr as
+          "invalid command name ...". They are cancelled here;
+        * ``mainloop()`` waits for *every* Tk main window in the thread, not
+          only this one (e.g. a stray root another component made), so the loop
+          must be told to ``quit()`` or an in-process restart would never
+          return.
+
+        Only this app's own Tcl interpreter is touched: each ``tk.Tk`` root has
+        its own, so other windows' timers are unaffected.
+        """
+        self._destroyed = True
+        DayDetailWindow.forget_all()
+        try:
+            # Cancel at Tcl level: `Misc.after_cancel` also deletes the callback's
+            # Tcl command from *this* widget's registry, but a child widget (e.g.
+            # the table's own fit timer) registered it, and its later destroy()
+            # would then raise "can't delete Tcl command".
+            for after_id in self.tk.call("after", "info"):
+                self.tk.call("after", "cancel", after_id)
+        except tk.TclError:
+            pass
+        try:
+            self.quit()
+        except tk.TclError:
+            pass
+
+    def _restore_language_choice(self):
+        """Put the menu radio back on the language that is actually active."""
+        try:
+            self._language_var.set(self._language)
+        except tk.TclError:
+            pass
+
     def _focus_filter(self):
         """Focus the table filter box only when it is actually visible
         (summary and dashboard views hide the filter bar)."""
@@ -2134,7 +2272,7 @@ class TachoExplorer(tk.Tk):
         if self._parsing:
             return
         path = filedialog.askopenfilename(
-            filetypes=[("DDD Files", "*.ddd *.DDD"), ("All Files", "*.*")])
+            filetypes=[(_("DDD Files"), "*.ddd *.DDD"), (_("All Files"), "*.*")])
         if not path:
             return
         self._start_parse(path)
@@ -2145,7 +2283,8 @@ class TachoExplorer(tk.Tk):
         self._parsing = True
         self.btn_open.config(state=tk.DISABLED)
         self.btn_export.config(state=tk.DISABLED)
-        self.status.config(text=f"Parsing {os.path.basename(path)}\u2026")
+        self.status.config(text=_("Parsing {filename}\u2026").format(
+            filename=os.path.basename(path)))
         self.progress.pack(side=tk.RIGHT, padx=6, pady=1)
         self.progress.start(12)
 
@@ -2199,7 +2338,7 @@ class TachoExplorer(tk.Tk):
         (H-F5). The previous downloads' *data* is deliberately retained so it
         stays exportable; only the on-screen identity is reset.
         """
-        self.lbl_file.config(text="No file loaded")
+        self.lbl_file.config(text=_("No file loaded"))
         self.lbl_gen.config(text="")
         self.lbl_status.config(text="")
         self.integrity_banner.config(text="")
@@ -2211,17 +2350,17 @@ class TachoExplorer(tk.Tk):
         self._finish_parse()
         self._reset_file_display()
         try:
-            messagebox.showerror("Parsing Error", str(msg))
+            messagebox.showerror(_("Parsing Error"), str(msg))
         except Exception:
             pass
         if self.current_data:
             # A failed re-open keeps the previously loaded file exportable, but
             # the status must make clear that what is shown is NOT the new file.
             self.status.config(
-                text=f"Parsing error \u2014 showing previous file: "
-                     f"{os.path.basename(self.current_file or '')}")
+                text=_("Parsing error \u2014 showing previous file: {filename}").format(
+                    filename=os.path.basename(self.current_file or "")))
         else:
-            self.status.config(text="Ready \u2014 open a .ddd file")
+            self.status.config(text=_("Ready \u2014 open a .ddd file"))
 
     # ── Export ────────────────────────────────────────────
 
@@ -2230,20 +2369,22 @@ class TachoExplorer(tk.Tk):
         if not self.current_data:
             return
         if ExportManager is None:
-            messagebox.showwarning("Export Unavailable",
-                                   f"{kind} export is unavailable. {requirement}".strip())
+            messagebox.showwarning(_("Export Unavailable"),
+                                   _("{kind} export is unavailable. {requirement}").format(
+                                       kind=kind, requirement=requirement).strip())
             return
         path = filedialog.asksaveasfilename(
             defaultextension=extension,
-            filetypes=filetypes + [("All Files", "*.*")],
+            filetypes=filetypes + [(_("All Files"), "*.*")],
             initialfile=os.path.splitext(os.path.basename(self.current_file))[0]
             + "_export" + extension)
         if not path:
             return
-        self.status.config(text=f"Exporting to {kind}\u2026")
+        self.status.config(text=_("Exporting to {kind}\u2026").format(kind=kind))
         self.progress.pack(side=tk.RIGHT)
         self.progress.start(12)
         self.update_idletasks()
+        self._exporting = True
 
         # Capture on the main thread: the worker must serialize the data this
         # export was started with, not whatever _parse_done assigns to
@@ -2270,32 +2411,38 @@ class TachoExplorer(tk.Tk):
                 return
             self.progress.stop()
             self.progress.pack_forget()
+            self._exporting = False
             if exc is not None:
                 if isinstance(exc, ImportError):
-                    self.status.config(text="Export failed")
-                    messagebox.showwarning("Export Unavailable",
-                                           f"{kind_err} export requires an extra package:\n{exc}\n{req}")
+                    self.status.config(text=_("Export failed"))
+                    messagebox.showwarning(_("Export Unavailable"),
+                                           _("{kind} export requires an extra package:\n"
+                                             "{error}\n{requirement}").format(
+                                               kind=kind_err, error=exc, requirement=req))
                 else:
-                    self.status.config(text="Export failed")
-                    messagebox.showerror("Export Error", str(exc))
+                    self.status.config(text=_("Export failed"))
+                    messagebox.showerror(_("Export Error"), str(exc))
             else:
-                self.status.config(text=f"Exported: {os.path.basename(export_path)}")
-                messagebox.showinfo("Export Complete", f"{kind_err} saved to:\n{export_path}")
+                self.status.config(text=_("Exported: {filename}").format(
+                    filename=os.path.basename(export_path)))
+                messagebox.showinfo(_("Export Complete"),
+                                    _("{kind} saved to:\n{path}").format(
+                                        kind=kind_err, path=export_path))
 
         self.after(50, _poll)
 
     def _export_pdf(self):
-        self._run_export("PDF", ".pdf", [("PDF Document", "*.pdf")],
+        self._run_export("PDF", ".pdf", [(_("PDF Document"), "*.pdf")],
                          lambda d, p: ExportManager.export_to_pdf(d, p),
                          requirement="pip install reportlab")
 
     def _export_excel(self):
-        self._run_export("Excel", ".xlsx", [("Excel Workbook", "*.xlsx")],
+        self._run_export("Excel", ".xlsx", [(_("Excel Workbook"), "*.xlsx")],
                          lambda d, p: ExportManager.export_to_excel(d, p),
                          requirement="pip install openpyxl")
 
     def _export_csv(self):
-        self._run_export("CSV", ".csv", [("CSV Files", "*.csv")],
+        self._run_export("CSV", ".csv", [(_("CSV Files"), "*.csv")],
                          lambda d, p: ExportManager.export_to_csv(d, p))
 
     def _export_json(self):
@@ -2303,14 +2450,15 @@ class TachoExplorer(tk.Tk):
             return
         path = filedialog.asksaveasfilename(
             defaultextension=".json",
-            filetypes=[("JSON Files", "*.json"), ("All Files", "*.*")],
+            filetypes=[(_("JSON Files"), "*.json"), (_("All Files"), "*.*")],
             initialfile=os.path.splitext(os.path.basename(self.current_file))[0] + "_export.json")
         if not path:
             return
-        self.status.config(text="Exporting to JSON\u2026")
+        self.status.config(text=_("Exporting to JSON\u2026"))
         self.progress.pack(side=tk.RIGHT)
         self.progress.start(12)
         self.update_idletasks()
+        self._exporting = True
 
         # Capture on the main thread (see _run_export): the worker must not
         # read self.current_data, which _parse_done may reassign concurrently.
@@ -2338,17 +2486,21 @@ class TachoExplorer(tk.Tk):
                 return
             self.progress.stop()
             self.progress.pack_forget()
+            self._exporting = False
             if exc is not None:
-                self.status.config(text="Export failed")
-                messagebox.showerror("Export Error", str(exc))
+                self.status.config(text=_("Export failed"))
+                messagebox.showerror(_("Export Error"), str(exc))
             else:
-                self.status.config(text=f"Exported: {os.path.basename(export_path)}")
-                messagebox.showinfo("Export Complete", f"{kind_err} saved to:\n{export_path}")
+                self.status.config(text=_("Exported: {filename}").format(
+                    filename=os.path.basename(export_path)))
+                messagebox.showinfo(_("Export Complete"),
+                                    _("{kind} saved to:\n{path}").format(
+                                        kind=kind_err, path=export_path))
 
         self.after(50, _poll)
 
     def _on_close(self):
-        self._destroyed = True
+        self._shutdown()
         self.destroy()
 
     def _parse_done(self, data, path):
@@ -2359,7 +2511,7 @@ class TachoExplorer(tk.Tk):
         has_data = bool(data.get("raw_tags") or data.get("generations")
                         or data.get("activities"))
         if parse_error and not has_data:
-            message = parse_error.get("message", "Unknown parsing error") \
+            message = parse_error.get("message", _("Unknown parsing error")) \
                 if isinstance(parse_error, dict) else str(parse_error)
             self._parse_error(message)
             return
@@ -2383,24 +2535,26 @@ class TachoExplorer(tk.Tk):
             # an explicit placeholder (never the old file's data) and keep the
             # single deferred render of the chosen node.
             if target:
-                self._show_empty(os.path.basename(path), "Loading\u2026")
+                self._show_empty(os.path.basename(path), _("Loading\u2026"))
                 self.after_idle(
                     lambda tid=target: self.tree.selection_set(tid)
                     if self.tree.exists(tid) else None)
             else:
                 # No selectable node: the placeholder stays (no render follows).
                 self._show_empty(os.path.basename(path),
-                                 "No sections to display.")
+                                 _("No sections to display."))
             meta = data.get("metadata", {})
             self.status.config(
-                text=f"Loaded: {os.path.basename(path)}  |  "
-                     f"{meta.get('generation', '?')}")
+                text=_("Loaded: {filename}  |  {generation}").format(
+                    filename=os.path.basename(path),
+                    generation=meta.get("generation", "?")))
             self._check_integrity(data, path)
         except Exception:
             _log.error("GUI render failed: %s", traceback.format_exc())
-            messagebox.showerror("Rendering Error",
-                                  f"Failed to display file:\n{traceback.format_exc()}")
-            self.status.config(text="Ready \u2014 open a .ddd file")
+            messagebox.showerror(_("Rendering Error"),
+                                  _("Failed to display file:\n{detail}").format(
+                                      detail=traceback.format_exc()))
+            self.status.config(text=_("Ready \u2014 open a .ddd file"))
             self._finish_parse()
 
     def _check_integrity(self, data, path):
@@ -2525,11 +2679,12 @@ class TachoExplorer(tk.Tk):
         self._integrity_file = os.path.basename(path)
         if warnings:
             self.integrity_banner.config(
-                text=f"\u26a0\ufe0f  {len(warnings)} integrity warning(s) \u2014 click for details",
+                text=_("\u26a0\ufe0f  {count} integrity warning(s) \u2014 click for details").format(
+                    count=len(warnings)),
                 foreground="#e65100")
-            header = (f"The file may be incomplete or corrupted.\n\n"
-                      f"{os.path.basename(path)}\n\n")
-            messagebox.showwarning("File Integrity Warning",
+            header = _("The file may be incomplete or corrupted.\n\n{filename}\n\n").format(
+                filename=os.path.basename(path))
+            messagebox.showwarning(_("File Integrity Warning"),
                                    header + "\n".join(warnings))
         else:
             # Valid file: no green tick, no banner — the absence of a warning
@@ -2540,13 +2695,13 @@ class TachoExplorer(tk.Tk):
         """Show the collected integrity warnings on demand (banner click)."""
         if not self._integrity_warnings:
             messagebox.showinfo(
-                "File Integrity",
-                f"{getattr(self, '_integrity_file', '')}\n\n"
-                "No integrity issues detected.")
+                _("File Integrity"),
+                _("{filename}\n\nNo integrity issues detected.").format(
+                    filename=getattr(self, "_integrity_file", "")))
             return
-        header = (f"The file may be incomplete or corrupted.\n\n"
-                  f"{getattr(self, '_integrity_file', '')}\n\n")
-        messagebox.showwarning("File Integrity Warning",
+        header = _("The file may be incomplete or corrupted.\n\n{filename}\n\n").format(
+            filename=getattr(self, "_integrity_file", ""))
+        messagebox.showwarning(_("File Integrity Warning"),
                                header + "\n".join(self._integrity_warnings))
 
     def _update_top_bar(self, data):
@@ -2574,49 +2729,49 @@ class TachoExplorer(tk.Tk):
             sv_ok = sv.get("all_treps_valid") is True
             vu_chain_ok = sv.get("msca_to_vu") is True
             if sv_ok and vu_chain_ok and sv.get("root_anchored"):
-                return "VU signatures verified (root anchored)"
+                return _("VU signatures verified (root anchored)")
             if sv_ok and vu_chain_ok:
-                return "VU TREP signatures verified (chain partial)"
+                return _("VU TREP signatures verified (chain partial)")
             if sv_ok:
-                return "VU TREP signatures valid (chain unverified)"
+                return _("VU TREP signatures valid (chain unverified)")
         else:
             if integrity_verdict(data) == VERDICT_VERIFIED:
-                return "All signatures verified"
+                return _("All signatures verified")
             if efv.get("failed", 0):
-                return "Card data signature mismatch"
+                return _("Card data signature mismatch")
             if efv.get("skipped", 0):
-                return "EF signatures incomplete"
+                return _("EF signatures incomplete")
             # Chain-level failures must surface even when there is no signed EF
             # pair to explain them (never hidden behind "No EF signatures").
             if "Invalid" in integrity:
-                return "Certificate chain invalid"
+                return _("Certificate chain invalid")
             if "anchor" in integrity.lower() or "Missing ERCA" in integrity:
-                return "Certificate chain not anchored to a trusted root"
+                return _("Certificate chain not anchored to a trusted root")
             if "not trusted" in integrity:
-                return "Card signing key not trusted"
+                return _("Card signing key not trusted")
             if "EF Signature Verification Failed" in integrity:
-                return "EF signature verification failed"
+                return _("EF signature verification failed")
             if "Error" in integrity:
-                return "Verification error"
+                return _("Verification error")
             if not (efv.get("ef_results") or []):
-                return "No EF signatures verified"
+                return _("No EF signatures verified")
             if integrity.startswith("Partial"):
-                return "Partial verification"
+                return _("Partial verification")
             if "Incomplete" in integrity:
-                return "Incomplete certificates"
+                return _("Incomplete certificates")
             return integrity or "N/A"
 
         # VU negative/corrupt fallbacks.
         if integrity.startswith("Partial"):
-            return "Partial verification"
+            return _("Partial verification")
         if integrity == "Invalid Certificate Chain":
-            return "Certificate chain invalid"
+            return _("Certificate chain invalid")
         if "Missing ERCA" in integrity:
-            return "ERCA root not available"
+            return _("ERCA root not available")
         if "Incomplete" in integrity:
-            return "Incomplete certificates"
+            return _("Incomplete certificates")
         if "Error" in integrity:
-            return "Verification error"
+            return _("Verification error")
         return integrity or "N/A"
 
     def _update_status_badge(self, data):
@@ -2642,9 +2797,9 @@ class TachoExplorer(tk.Tk):
             elif verdict == VERDICT_PARTIAL:
                 text, color = "\u26a0\ufe0f  " + label, "#f57c00"
             elif "Incomplete" in integrity:
-                text, color = "\u2753  Incomplete certificates", "#757575"
+                text, color = _("\u2753  Incomplete certificates"), "#757575"
             elif "Error" in integrity:
-                text, color = "\u274c  Parse error", "#c62828"
+                text, color = _("\u274c  Parse error"), "#c62828"
             else:
                 # Reached only when the file is NOT fully trusted (the
                 # all-good case is returned above): VERDICT_UNVERIFIED with
@@ -2659,9 +2814,9 @@ class TachoExplorer(tk.Tk):
         elif verdict == VERDICT_CORRUPT or efv.get("failed", 0):
             text, color = "\u274c  " + label, "#c62828"
         elif "Incomplete" in integrity:
-            text, color = "\u2753  Incomplete certificates", "#757575"
+            text, color = _("\u2753  Incomplete certificates"), "#757575"
         elif "Error" in integrity:
-            text, color = "\u274c  Parse error", "#c62828"
+            text, color = _("\u274c  Parse error"), "#c62828"
         else:
             text, color = "\u26a0\ufe0f  " + label, "#e65100"
 
@@ -2686,7 +2841,7 @@ class TachoExplorer(tk.Tk):
 
     def _populate_detailed_speed(self, parent, data, raw_blocks):
         """Add daily UTC graph and raw-record children under Detailed Speed."""
-        node = self.tree.insert(parent, tk.END, text="Detailed Speed")
+        node = self.tree.insert(parent, tk.END, text=_("Detailed Speed"))
         self._payloads[node] = ("__speed_summary__", raw_blocks, data)
         raw_by_day = detailed_speed_blocks_by_day(raw_blocks)
 
@@ -2707,7 +2862,7 @@ class TachoExplorer(tk.Tk):
             day_node = self._add_speed_chart_day(node, day, samples, oes_by_day.get(day))
             blocks = raw_by_day.get(day, [])
             cols, rows = _rows_for(blocks, None) if blocks else (["Value"], [])
-            self._add_section(day_node, f"Detailed Speed {day}", cols, rows)
+            self._add_section(day_node, _("Detailed Speed {day}").format(day=day), cols, rows)
 
     def _add_activity_day(self, parent, day, is_vu, activities, day_km,
                           changes_count, driver_info, slot_schedule, markers,
@@ -2892,7 +3047,7 @@ class TachoExplorer(tk.Tk):
                 if prev_odo and cur_odo and cur_odo > prev_odo:
                     day_data["_day_km"] = cur_odo - prev_odo
 
-        node = self.tree.insert(parent, tk.END, text="Daily Activities")
+        node = self.tree.insert(parent, tk.END, text=_("Daily Activities"))
         self._payloads[node] = ("__daily_summary__", activity_list, data)
         for day_data in reversed(activity_list):
             if not isinstance(day_data, dict):
@@ -2966,7 +3121,7 @@ class TachoExplorer(tk.Tk):
             # ── Per-day driver_info ──
             if is_vu and day_schedule:
                 all_names = sorted(set(n for ranges in day_schedule.values() for _s, _e, n in ranges))
-                day_di = f"{len(all_names)} drivers" if all_names else ""
+                day_di = _("{count} drivers").format(count=len(all_names)) if all_names else ""
             else:
                 day_di = driver_info if not is_vu else ""
 
@@ -3005,10 +3160,12 @@ class TachoExplorer(tk.Tk):
                          fmt_val(ev.get("slot", "")) if ev.get("slot") else "",
                          fmt_val(ev.get("crew", "")),
                          fmt_val(odometer)] for ev in changes if isinstance(ev, dict)]
-                cols = ["Time", "Activity", "Slot", "Crew", "Odometer km"]
+                cols = [_("Time"), _("Activity"), _("Slot"), _("Crew"), _("Odometer km")]
             else:
-                cols, rows = (["Time", "Activity"], [[fmt_val("\u2014"), "(no changes)"]])
-            self._add_section(day_node, f"Daily Activities {date_str}", cols, rows)
+                cols, rows = ([_("Time"), _("Activity")],
+                              [[fmt_val("\u2014"), _("(no changes)")]])
+            self._add_section(day_node, _("Daily Activities {date}").format(date=date_str),
+                              cols, rows)
 
     def _populate_tree(self, data):
         """Rebuild the section tree from the generations dict produced by
@@ -3024,47 +3181,48 @@ class TachoExplorer(tk.Tk):
         is_vu = meta.get("is_vu", False)
         origin = meta.get("origin", "")
         if origin == "vehicle_unit" or (not origin and is_vu):
-            origin_label = "Vehicle Unit (VU)"
+            origin_label = _("Vehicle Unit (VU)")
         elif meta.get("origin_note"):
-            origin_label = "Driver Card (from VU download)"
+            origin_label = _("Driver Card (from VU download)")
         else:
-            origin_label = "Driver Card"
+            origin_label = _("Driver Card")
         info = {
-            "Filename": os.path.basename(self.current_file),
-            "Size": f"{meta.get('file_size_bytes', 0):,} bytes".replace(",", " "),
-            "Origin": origin_label,
-            "Generation": meta.get("generation", "?"),
-            "Integrity": self._integrity_label(data),
+            _("Filename"): os.path.basename(self.current_file),
+            _("Size"): _("{count} bytes").format(
+                count=f"{meta.get('file_size_bytes', 0):,}".replace(",", " ")),
+            _("Origin"): origin_label,
+            _("Generation"): meta.get("generation", "?"),
+            _("Integrity"): self._integrity_label(data),
         }
         coverage = data.get("coverage") or {}
         if "byte_accounted_pct" in coverage:
-            info["Byte-accounted coverage"] = (
+            info[_("Byte-accounted coverage")] = (
                 f"{coverage['byte_accounted_pct']}% "
                 f"({coverage.get('byte_accounted_bytes', 0):,} / "
                 f"{meta.get('file_size_bytes', 0):,} bytes)"
             ).replace(",", " ")
-            info["Unknown bytes"] = (
+            info[_("Unknown bytes")] = (
                 f"{coverage.get('unknown_bytes', 0):,} "
                 f"({coverage.get('unknown_pct', 0)}%)"
             ).replace(",", " ")
-            info["Structurally identified coverage"] = (
+            info[_("Structurally identified coverage")] = (
                 f"{coverage.get('structurally_identified_pct', 0)}% "
-                "(not a semantic decoding rate)"
+                + _("(not a semantic decoding rate)")
             )
         if meta.get("origin_note"):
-            info["Origin details"] = meta["origin_note"]
+            info[_("Origin details")] = meta["origin_note"]
         if meta.get("decoder_failure_count", 0) > 0:
-            info["Decoder failures"] = meta["decoder_failure_count"]
-        info["Parsed at"] = meta.get("parsed_at", "")
-        info["App version"] = meta.get("app_version", "")
+            info[_("Decoder failures")] = meta["decoder_failure_count"]
+        info[_("Parsed at")] = meta.get("parsed_at", "")
+        info[_("App version")] = meta.get("app_version", "")
         cols, rows = _kv_rows(info)
-        self._add_section("", "\U0001f4c4  File Info", cols, rows)
+        self._add_section("", _("\U0001f4c4  File Info"), cols, rows)
 
         # ── Decoder failures detail ──
         failures = meta.get("decoder_failures") or []
         if failures:
             cols, rows = _rows_for(failures, None)
-            self._add_section("", "\u26a0\ufe0f  Decoder Failures", cols, rows)
+            self._add_section("", _("\u26a0\ufe0f  Decoder Failures"), cols, rows)
 
         # ── Raw / Unparsed Data (only when bytes could not be decoded) ──
         self._populate_unparsed(data)
@@ -3081,7 +3239,7 @@ class TachoExplorer(tk.Tk):
         if not is_vu and any(v and v != "N/A" for v in drv.values()):
             cols, rows = self._build_driver_summary(data)
             self._auto_select_iid = self._add_section(
-                "", "\U0001f464  Driver / Cardholder", cols, rows, summary=True)
+                "", _("\U0001f464  Driver / Cardholder"), cols, rows, summary=True)
 
         if is_vu:
             try:
@@ -3089,18 +3247,18 @@ class TachoExplorer(tk.Tk):
                 if sensor:
                     cols, rows = self._build_sensor_summary(data)
                     self._auto_select_iid = self._add_section(
-                        "", "\U0001f4e1  Sensor", cols, rows, summary=True)
+                        "", _("\U0001f4e1  Sensor"), cols, rows, summary=True)
                 else:
                     cols, rows = self._build_vehicle_summary(data)
                     self._auto_select_iid = self._add_section(
-                        "", "\U0001f69a  Vehicle", cols, rows, summary=True)
+                        "", _("\U0001f69a  Vehicle"), cols, rows, summary=True)
             except Exception:
                 _log.debug("Vehicle section render failed: %s", traceback.format_exc())
             trep_report = meta.get("trep_report")
             if trep_report and trep_report.get("is_partial"):
                 cols, rows = self._build_trep_summary(trep_report, meta)
                 self._auto_select_iid = self._add_section(
-                    "", "\u26a0\ufe0f  CORRUPTED / PARTIAL FILE", cols, rows,
+                    "", _("\u26a0\ufe0f  CORRUPTED / PARTIAL FILE"), cols, rows,
                     summary=True)
 
         # ── Generations tree (single source of truth) ──
@@ -3112,13 +3270,16 @@ class TachoExplorer(tk.Tk):
                 continue
 
             annex_map = {
-                "Generation 1": "Annex 1B",
-                "Generation 2": "Annex 1C",
-                "Generation 2.2": "Annex 1C \u00b7 2023/980",
+                "Generation 1": _("Annex 1B"),
+                "Generation 2": _("Annex 1C"),
+                "Generation 2.2": _("Annex 1C \u00b7 2023/980"),
             }
             annex = annex_map.get(gen_name, "")
             annex_suffix = f"  [{annex}]" if annex else ""
-            gnode = self.tree.insert("", tk.END, text=f"\U0001f4e6  {gen_name}{annex_suffix}")
+            gnode = self.tree.insert(
+                "", tk.END,
+                text=_("\U0001f4e6  {generation}{annex}").format(
+                    generation=_(gen_name), annex=annex_suffix))
 
             for item_name, item_data in gen_items.items():
                 if item_name == "_RawTags":
@@ -3198,21 +3359,24 @@ class TachoExplorer(tk.Tk):
                 row.insert(0, entry.get("container", "file"))
             rows.append(row)
         pct = cov.get("unknown_pct", (unknown_bytes / total * 100) if total else 0)
-        meta = f"{unknown_bytes:,} bytes undecoded".replace(",", " ")
+        meta = _("{count} bytes undecoded").format(
+            count=f"{unknown_bytes:,}".replace(",", " "))
         if total:
-            meta += f"  \u00b7  {pct:.2f}% of file"
+            meta += _("  \u00b7  {percent:.2f}% of file").format(percent=pct)
         # File-level coverage may report 0 unknown bytes when the undecoded
         # ranges live inside a decoded container (e.g. a VU CardDownload). Fall
         # back to the sum of the listed ranges so the count is never misleading.
         if not unknown_bytes:
             listed = sum(e.get("length", 0) for e in unparsed
                          if isinstance(e, dict))
-            meta = f"{listed:,} bytes undecoded".replace(",", " ")
+            meta = _("{count} bytes undecoded").format(
+                count=f"{listed:,}".replace(",", " "))
             if total:
-                meta += f"  \u00b7  {listed / total * 100:.2f}% of file"
+                meta += _("  \u00b7  {percent:.2f}% of file").format(
+                    percent=listed / total * 100)
         columns = (["Location", "Offset", "Length", "Hex"] if has_container
                    else ["Offset", "Length", "Hex"])
-        self._add_section("", "\U0001f9e9  Raw / Unparsed Data",
+        self._add_section("", _("\U0001f9e9  Raw / Unparsed Data"),
                           columns, rows, meta=meta)
 
     def _populate_security(self, data):
@@ -3226,56 +3390,56 @@ class TachoExplorer(tk.Tk):
         icc = data.get("card_icc") or {}
         if not sv and not efv and not certs and not cvc and not chip and not icc:
             return
-        gnode = self.tree.insert("", tk.END, text="\U0001f510  Security & Certificates")
+        gnode = self.tree.insert("", tk.END, text=_("\U0001f510  Security & Certificates"))
         if efv:
             ef_summary = {
-                "Summary": efv.get("summary", ""),
-                "Verified": efv.get("verified"),
-                "Failed": efv.get("failed"),
-                "Skipped": efv.get("skipped"),
-                "Total": efv.get("total"),
+                _("Summary"): efv.get("summary", ""),
+                _("Verified"): efv.get("verified"),
+                _("Failed"): efv.get("failed"),
+                _("Skipped"): efv.get("skipped"),
+                _("Total"): efv.get("total"),
             }
             cols, rows = _kv_rows(ef_summary)
-            self._add_section(gnode, "EF Signatures (Card Data Integrity)", cols, rows)
+            self._add_section(gnode, _("EF Signatures (Card Data Integrity)"), cols, rows)
             ef_results = efv.get("ef_results") or []
             if ef_results:
                 cols, rows = _rows_for(ef_results, None)
-                self._add_section(gnode, "EF Signature Details", cols, rows)
+                self._add_section(gnode, _("EF Signature Details"), cols, rows)
         if cvc:
             cols, rows = _rows_for(cvc, None)
-            self._add_section(gnode, "CVC Certificates (decoded)", cols, rows,
-                              meta="Appendix 11 \u00b7 CAR=issuing authority, "
-                                   "CHR=holder, validity from TimeReal")
+            self._add_section(gnode, _("CVC Certificates (decoded)"), cols, rows,
+                              meta=_("Appendix 11 \u00b7 CAR=issuing authority, "
+                                     "CHR=holder, validity from TimeReal"))
         if sv:
             summary = {
-                "Available": sv.get("available"),
-                "MSCA\u2192VU chain": sv.get("msca_to_vu"),
-                "Anchored to ERCA root": sv.get("root_anchored"),
-                "All TREP signatures valid": sv.get("all_treps_valid"),
-                "Summary": sv.get("summary", ""),
+                _("Available"): sv.get("available"),
+                _("MSCA\u2192VU chain"): sv.get("msca_to_vu"),
+                _("Anchored to ERCA root"): sv.get("root_anchored"),
+                _("All TREP signatures valid"): sv.get("all_treps_valid"),
+                _("Summary"): sv.get("summary", ""),
             }
             cols, rows = _kv_rows(summary)
-            self._add_section(gnode, "Signature Verification", cols, rows)
+            self._add_section(gnode, _("Signature Verification"), cols, rows)
             treps = sv.get("treps") or []
             if treps:
                 cols, rows = _rows_for(treps, None)
-                self._add_section(gnode, "Section Signatures (TREP)", cols, rows)
+                self._add_section(gnode, _("Section Signatures (TREP)"), cols, rows)
         if certs:
             cols, rows = _rows_for(certs, None)
-            self._add_section(gnode, "Certificates", cols, rows)
+            self._add_section(gnode, _("Certificates"), cols, rows)
         if chip:
             cols, rows = _kv_rows(chip)
-            self._add_section(gnode, "IC Chip (EF_ICC / EF_IC)", cols, rows)
+            self._add_section(gnode, _("IC Chip (EF_ICC / EF_IC)"), cols, rows)
         if icc:
             cols, rows = _kv_rows(icc)
-            self._add_section(gnode, "ICC Identification", cols, rows)
+            self._add_section(gnode, _("ICC Identification"), cols, rows)
         for auth_key, auth_label in [("gnss_auth", "GNSS Authentication (0x960F)"),
                                       ("load_unload_auth", "Load/Unload Authentication (0x6399)")]:
             auth_data = data.get(auth_key) or []
             if auth_data:
                 cols, rows = _rows_for(auth_data, None)
-                self._add_section(gnode, auth_label, cols, rows,
-                                  meta="BER-TLV walk \u00b7 spec Appendix 11 not public")
+                self._add_section(gnode, _(auth_label), cols, rows,
+                                  meta=_("BER-TLV walk \u00b7 spec Appendix 11 not public"))
 
     # ── Dashboard views ──────────────────────────────────
 
@@ -3334,7 +3498,7 @@ class TachoExplorer(tk.Tk):
             self.table.tv.heading(c, text=str(c),
                                   command=lambda col=c: self.table._sort_by(col))
             min_w = max(len(str(c)) * _px(9) + _px(20), _px(60))
-            anchor = tk.W if c == "Date" else tk.CENTER
+            anchor = tk.W if c == _("Date") else tk.CENTER
             self.table.tv.column(c, minwidth=min_w, anchor=anchor, stretch=True)
 
         self.table.tv.tag_configure("total",
@@ -3358,12 +3522,13 @@ class TachoExplorer(tk.Tk):
         # Tooltips for # Drivers / # Vehicles column
         self._dashboard_tooltips = tooltips or {}
         self._dashboard_drv_col = -1
-        for name in ("# Drivers", "# Vehicles"):
+        for name in (_("# Drivers"), _("# Vehicles")):
             if name in columns:
                 self._dashboard_drv_col = columns.index(name)
                 break
         # Tooltips for Ev column
-        self._dashboard_ev_col = columns.index("Ev") if "Ev" in columns else -1
+        ev_column = _("Ev")
+        self._dashboard_ev_col = columns.index(ev_column) if ev_column in columns else -1
         self._dashboard_ev_tips = ev_tooltips or {}
         self._dashboard_motion_bind = self.table.tv.bind(
             "<Motion>", self._on_dashboard_motion, add="+")
@@ -3557,7 +3722,7 @@ class TachoExplorer(tk.Tk):
         updates table rows and KPI labels in place (used by the slot toggle)."""
         valid = [d for d in activity_list if isinstance(d, dict)]
         if not valid:
-            self._show_empty("Daily Activities", "No activity data available.")
+            self._show_empty(_("Daily Activities"), _("No activity data available."))
             return
         is_vu = (data.get("metadata") or {}).get("is_vu", False)
 
@@ -3727,7 +3892,7 @@ class TachoExplorer(tk.Tk):
                 continue
             iso = dt.date().isoformat()
             event_dates.add(iso)
-            desc = ev.get("description", "Unknown event")
+            desc = ev.get("description", _("Unknown event"))
             time_str = dt.strftime("%H:%M")
             events_by_date.setdefault(iso, []).append(f"{time_str}  {desc}")
 
@@ -3762,8 +3927,9 @@ class TachoExplorer(tk.Tk):
                         current += timedelta(days=1)
 
         # Monthly grouping
-        MONTH_NAMES = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr", 5: "May", 6: "Jun",
-                       7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec"}
+        MONTH_NAMES = {1: _("Jan"), 2: _("Feb"), 3: _("Mar"), 4: _("Apr"),
+                       5: _("May"), 6: _("Jun"), 7: _("Jul"), 8: _("Aug"),
+                       9: _("Sep"), 10: _("Oct"), 11: _("Nov"), 12: _("Dec")}
 
         sort_key = lambda d: _activity_to_iso(str(d.get("date", "")))
         sorted_asc = sorted(valid, key=sort_key)
@@ -3871,7 +4037,7 @@ class TachoExplorer(tk.Tk):
                 if iso_date in event_dates:
                     ev_list = events_by_date.get(iso_date, [])
                     ev_text = "\n".join(ev_list)
-                    ev_text += "\n\n\u2139\ufe0f  Double-click for full details"
+                    ev_text += "\n\n" + _("\u2139\ufe0f  Double-click for full details")
                     ev_tooltips[row_idx] = ev_text
                 row_idx += 1
 
@@ -3914,37 +4080,39 @@ class TachoExplorer(tk.Tk):
         avg_drive = totals_global["DRIVE"] // day_count if day_count else 0
         driver_count = len(driver_names)
 
-        date_range = f"{sorted_asc[0].get('date', '?')}  \u2192  {sorted_asc[-1].get('date', '?')}  \u00b7  {day_count} days"
+        date_range = _("{first}  \u2192  {last}  \u00b7  {days} days").format(
+            first=sorted_asc[0].get("date", "?"),
+            last=sorted_asc[-1].get("date", "?"), days=day_count)
 
         kpis = [
-            ("Drive", _fmt_duration_minutes(totals_global["DRIVE"]), "#1565c0"),
-            ("Work", _fmt_duration_minutes(totals_global["WORK"]), "#ef6c00"),
-            ("Rest", _fmt_duration_minutes(totals_global["REST"]), "#78909c"),
-            ("Available", _fmt_duration_minutes(totals_global["AVAILABLE"]), "#f9a825"),
-            ("Days", str(day_count), "#37474f"),
-            ("Avg Drive / day", _fmt_duration_minutes(avg_drive), "#1565c0"),
-            ("Max Drive / day", _fmt_duration_minutes(max_drive), "#1565c0"),
+            (_("Drive"), _fmt_duration_minutes(totals_global["DRIVE"]), "#1565c0"),
+            (_("Work"), _fmt_duration_minutes(totals_global["WORK"]), "#ef6c00"),
+            (_("Rest"), _fmt_duration_minutes(totals_global["REST"]), "#78909c"),
+            (_("Available"), _fmt_duration_minutes(totals_global["AVAILABLE"]), "#f9a825"),
+            (_("Days"), str(day_count), "#37474f"),
+            (_("Avg Drive / day"), _fmt_duration_minutes(avg_drive), "#1565c0"),
+            (_("Max Drive / day"), _fmt_duration_minutes(max_drive), "#1565c0"),
         ]
         if is_vu:
-            kpis.append(("Drivers", str(driver_count), "#37474f"))
+            kpis.append((_("Drivers"), str(driver_count), "#37474f"))
         else:
             all_vehicles = set()
             for plates in veh_by_date.values():
                 all_vehicles.update(plates)
-            kpis.append(("Vehicles", str(len(all_vehicles) or n_veh), "#37474f"))
+            kpis.append((_("Vehicles"), str(len(all_vehicles) or n_veh), "#37474f"))
 
         if is_vu:
-            columns = ["Date", "# Drivers", "Ev", "Km", "Odometer",
-                       "Drive", "Work", "Rest", "Available"]
+            columns = [_("Date"), _("# Drivers"), _("Ev"), _("Km"), _("Odometer"),
+                       _("Drive"), _("Work"), _("Rest"), _("Available")]
         else:
-            columns = ["Date", "# Vehicles", "Ev", "Km",
-                       "Drive", "Work", "Rest", "Available"]
+            columns = [_("Date"), _("# Vehicles"), _("Ev"), _("Km"),
+                       _("Drive"), _("Work"), _("Rest"), _("Available")]
         if _fast_refresh:
             self._update_dashboard_in_place(
                 date_range, kpis, table_rows, row_tags,
                 columns, tooltips, ev_tooltips, activity_list, data)
         else:
-            self._show_dashboard("Daily Activities",
+            self._show_dashboard(_("Daily Activities"),
                                  date_range, kpis, columns, table_rows,
                                  row_tags=row_tags, tooltips=tooltips,
                                  ev_tooltips=ev_tooltips)
@@ -4001,7 +4169,7 @@ class TachoExplorer(tk.Tk):
             slot_label = getattr(self, "_vu_slot_filter", "Slot 1")
             for child in slot_frame.winfo_children():
                 if isinstance(child, tk.Label):
-                    child.config(text=slot_label)
+                    child.config(text=_(slot_label))
                     break
 
     def _build_vu_slot_toggle(self, activity_list, data):
@@ -4013,7 +4181,7 @@ class TachoExplorer(tk.Tk):
         self._slot_toggle_frame = btn_frame
         btn_frame.pack(fill=tk.X, padx=8, pady=(0, 4), before=self.table.tv.master)
 
-        tk.Label(btn_frame, text=slot_label, font=("", 10, "bold"),
+        tk.Label(btn_frame, text=_(slot_label), font=("", 10, "bold"),
                  fg="#1565c0", bg="#f4f6f9").pack(side=tk.LEFT)
 
         def _toggle():
@@ -4035,7 +4203,7 @@ class TachoExplorer(tk.Tk):
 
         by_day = detailed_speed_by_day(data)
         if not by_day:
-            self._show_empty("Detailed Speed", "No detailed speed samples available.")
+            self._show_empty(_("Detailed Speed"), _("No detailed speed samples available."))
             return
 
         total_samples = 0
@@ -4051,7 +4219,7 @@ class TachoExplorer(tk.Tk):
             samples = by_day[day_iso]
             if not samples:
                 continue
-            speeds = [s for _, s in samples if isinstance(s, (int, float))]
+            speeds = [sample for _second, sample in samples if isinstance(sample, (int, float))]
             if not speeds:
                 continue
             n = len(speeds)
@@ -4067,13 +4235,14 @@ class TachoExplorer(tk.Tk):
                 min_daily_avg = day_avg
 
             # Overspeed (>90 km/h)
-            over_secs = sum(1 for _, s in samples if isinstance(s, (int, float)) and s > 90)
+            over_secs = sum(1 for _s, sample in samples
+                            if isinstance(sample, (int, float)) and sample > 90)
             overspeed_seconds += over_secs
 
             # Overspeed events (contiguous runs > 90)
             events = 0
             in_over = False
-            for _, s in samples:
+            for _s, s in samples:
                 if isinstance(s, (int, float)) and s > 90:
                     if not in_over:
                         events += 1
@@ -4104,21 +4273,23 @@ class TachoExplorer(tk.Tk):
             min_daily_avg = 0
         days = sorted(by_day, reverse=True)
         day_count = len(days)
-        date_range = f"{days[-1]}  \u2192  {days[0]}  \u00b7  {day_count} days"
+        date_range = _("{first}  \u2192  {last}  \u00b7  {days} days").format(
+            first=days[-1], last=days[0], days=day_count)
 
         kpis = [
-            ("Days", str(day_count), "#37474f"),
-            ("Max speed", f"{global_max:.0f} km/h", "#1565c0"),
-            ("Avg speed", f"{global_avg:.1f} km/h", "#37474f"),
-            ("Samples", f"{total_samples:,}".replace(",", " "), "#37474f"),
-            ("Time >90 km/h", _fmt_seconds_duration(overspeed_seconds), "#d32f2f"),
-            ("Overspeed events", str(overspeed_events), "#d32f2f"),
-            ("Max avg / day", f"{max_daily_avg:.1f} km/h", "#1565c0"),
-            ("Min avg / day", f"{min_daily_avg:.1f} km/h", "#78909c"),
+            (_("Days"), str(day_count), "#37474f"),
+            (_("Max speed"), f"{global_max:.0f} km/h", "#1565c0"),
+            (_("Avg speed"), f"{global_avg:.1f} km/h", "#37474f"),
+            (_("Samples"), f"{total_samples:,}".replace(",", " "), "#37474f"),
+            (_("Time >90 km/h"), _fmt_seconds_duration(overspeed_seconds), "#d32f2f"),
+            (_("Overspeed events"), str(overspeed_events), "#d32f2f"),
+            (_("Max avg / day"), f"{max_daily_avg:.1f} km/h", "#1565c0"),
+            (_("Min avg / day"), f"{min_daily_avg:.1f} km/h", "#78909c"),
         ]
 
-        columns = ["Date", "Max km/h", "Avg km/h", "Samples", ">90 km/h", "Events"]
-        self._show_dashboard("Detailed Speed",
+        columns = [_("Date"), _("Max km/h"), _("Avg km/h"), _("Samples"),
+                   _(">90 km/h"), _("Events")]
+        self._show_dashboard(_("Detailed Speed"),
                              date_range, kpis, columns, table_rows)
 
     # ── Selection → table ──────────────────────────────────
@@ -4158,7 +4329,7 @@ class TachoExplorer(tk.Tk):
                 self._show_speed_summary(payload[1], payload[2])
                 return
             if len(payload) >= 5 and payload[4]:
-                label, cols, rows, meta, _ = payload
+                label, cols, rows, meta, _unused = payload
                 self._show_summary(label, cols, rows, meta)
             else:
                 label, cols, rows, meta = payload[:4]
@@ -4167,7 +4338,7 @@ class TachoExplorer(tk.Tk):
             children = self.tree.get_children(sel[0])
             rows = [[self.tree.item(c, "text")] for c in children]
             self._show_table(self.tree.item(sel[0], "text").strip(),
-                             ["Sub-section"], rows)
+                             [_("Sub-section")], rows)
 
     def _show_table(self, title, cols, rows, meta=""):
         self._cleanup_dashboard()
@@ -4261,11 +4432,11 @@ class TachoExplorer(tk.Tk):
         rows = []
         sep = ("\u2500" * 40, "", True)
 
-        rows.append(("\U0001f697  VEHICLE", "", True))
-        rows.append(("  Plate", plate, False))
-        rows.append(("  VIN", vin, False))
+        rows.append((_("\U0001f697  VEHICLE"), "", True))
+        rows.append((_("  Plate"), plate, False))
+        rows.append((_("  VIN"), vin, False))
         if nation and nation not in ("N/A", ""):
-            rows.append(("  Registration", nation_full_name(nation), False))
+            rows.append((_("  Registration"), nation_full_name(nation), False))
         rows.append(sep)
 
         if calibrations:
@@ -4306,89 +4477,89 @@ class TachoExplorer(tk.Tk):
             tacho_serial = (vu_id.get("serial_number") or vu_info.get("serial_number")
                             or vu_info.get("sensor_serial_number") or "")
             if tacho_make:
-                rows.append(("  Make", tacho_make, False))
+                rows.append((_("  Make"), tacho_make, False))
             if tacho_sw:
-                rows.append(("  Software version", tacho_sw, False))
+                rows.append((_("  Software version"), tacho_sw, False))
             if tacho_serial:
-                rows.append(("  Serial number", tacho_serial, False))
+                rows.append((_("  Serial number"), tacho_serial, False))
             if next_date:
                 date_str = fmt_val(next_date)
                 if cal_expired:
-                    date_str += f"  \u274c EXPIRED ({abs(days_left)} days ago)"
+                    date_str += _("  \u274c EXPIRED ({days} days ago)").format(days=abs(days_left))
                 elif cal_soon:
-                    date_str += f"  \u26a0\ufe0f  Due in {days_left} days"
-                rows.append(("  Next calibration", date_str, False))
+                    date_str += _("  \u26a0\ufe0f  Due in {days} days").format(days=days_left)
+                rows.append((_("  Next calibration"), date_str, False))
             tyre = cal.get("tyre_size", "")
             speed = cal.get("authorised_speed_kmh", "")
             if tyre:
-                rows.append(("  Tyre size", tyre, False))
+                rows.append((_("  Tyre size"), tyre, False))
             if speed:
-                rows.append(("  Authorised speed", f"{speed} km/h", False))
+                rows.append((_("  Authorised speed"), f"{speed} km/h", False))
             rows.append(sep)
 
         if sensors:
             s = sensors[0] if isinstance(sensors[0], dict) else {}
-            rows.append(("\U0001f4e1  SENSOR", "", False))
+            rows.append((_("\U0001f4e1  SENSOR"), "", False))
             serial = s.get("sensor_serial", "")
             if serial:
-                rows.append(("  Serial", serial, False))
+                rows.append((_("  Serial"), serial, False))
             approval = s.get("sensor_approval", "")
             if approval:
-                rows.append(("  Approval", approval, False))
+                rows.append((_("  Approval"), approval, False))
             pairing = s.get("pairing_date", "")
             if pairing:
-                rows.append(("  Paired", fmt_val(pairing), False))
+                rows.append((_("  Paired"), fmt_val(pairing), False))
 
             gnss_sensors = data.get("sensor_gnss_couplings") or []
             if gnss_sensors:
                 g = gnss_sensors[0] if isinstance(gnss_sensors[0], dict) else {}
                 gserial = g.get("sensor_gnss_serial", g.get("sensor_serial", ""))
                 if gserial:
-                    rows.append(("  GNSS Serial", gserial, False))
+                    rows.append((_("  GNSS Serial"), gserial, False))
             rows.append(sep)
 
         if vu_info:
-            rows.append(("\U0001f4bb  VU INFO", "", True))
+            rows.append((_("\U0001f4bb  VU INFO"), "", True))
             # G1 VU keys (Mass Memory / old Continental VDO format)
             manufacturer = vu_info.get("manufacturer", vu_info.get("manufacturer_name", ""))
             if manufacturer:
-                rows.append(("  Manufacturer", manufacturer, False))
+                rows.append((_("  Manufacturer"), manufacturer, False))
             part = vu_info.get("part_number", "")
             if part:
-                rows.append(("  Part number", part, False))
+                rows.append((_("  Part number"), part, False))
             serial = vu_info.get("serial_number", vu_info.get("sensor_serial_number", ""))
             if serial:
-                rows.append(("  Serial", serial, False))
+                rows.append((_("  Serial"), serial, False))
             sw = vu_info.get("software_version", "")
             if sw:
-                rows.append(("  Software version", sw, False))
+                rows.append((_("  Software version"), sw, False))
             approval = vu_info.get("approval_number", "")
             if approval:
-                rows.append(("  Approval", approval, False))
+                rows.append((_("  Approval"), approval, False))
             gen = vu_info.get("vu_generation", "")
             if gen and gen not in ("N/A", "", None):
-                rows.append(("  Generation", str(gen), False))
+                rows.append((_("  Generation"), str(gen), False))
             ability = vu_info.get("vu_ability", "")
             if ability and ability not in ("N/A", "", None):
-                rows.append(("  Ability", str(ability), False))
+                rows.append((_("  Ability"), str(ability), False))
             map_ver = vu_info.get("digital_map_version", "")
             if map_ver and map_ver not in ("N/A", ""):
-                rows.append(("  Digital map", map_ver, False))
+                rows.append((_("  Digital map"), map_ver, False))
             mfg_date = vu_info.get("manufacturing_date", "")
             if mfg_date:
-                rows.append(("  Manufactured", mfg_date, False))
+                rows.append((_("  Manufactured"), mfg_date, False))
             sw_date = vu_info.get("software_install_date", vu_info.get("software_installation_date", ""))
             if sw_date:
-                rows.append(("  SW installed", sw_date, False))
+                rows.append((_("  SW installed"), sw_date, False))
             sensor_serial = vu_info.get("sensor_serial_number", "")
             if sensor_serial and sensor_serial != serial:
-                rows.append(("  Sensor serial", sensor_serial, False))
+                rows.append((_("  Sensor serial"), sensor_serial, False))
             sensor_approval = vu_info.get("sensor_approval_number", "")
             if sensor_approval:
-                rows.append(("  Sensor approval", sensor_approval, False))
+                rows.append((_("  Sensor approval"), sensor_approval, False))
             sensor_pairing = vu_info.get("sensor_pairing_date", "")
             if sensor_pairing:
-                rows.append(("  Sensor paired", sensor_pairing, False))
+                rows.append((_("  Sensor paired"), sensor_pairing, False))
             rows.append(sep)
 
         # Current company lock
@@ -4399,24 +4570,24 @@ class TachoExplorer(tk.Tk):
                 active_lock = lock
                 break
         if active_lock:
-            rows.append(("\U0001f512  CURRENT LOCK", "", True))
+            rows.append((_("\U0001f512  CURRENT LOCK"), "", True))
             name = active_lock.get("company_name", "")
             if name:
-                rows.append(("  Company", name, False))
+                rows.append((_("  Company"), name, False))
             addr = active_lock.get("company_address", "")
             if addr:
-                rows.append(("  Address", addr, False))
+                rows.append((_("  Address"), addr, False))
             lock_in = active_lock.get("lock_in_time", "")
             if lock_in:
-                rows.append(("  Locked since", fmt_val(lock_in), False))
+                rows.append((_("  Locked since"), fmt_val(lock_in), False))
             card = active_lock.get("company_card", "")
             if isinstance(card, dict):
                 card_str = card.get("card_number", "")
                 if card_str:
-                    rows.append(("  Lock card", card_str, False))
+                    rows.append((_("  Lock card"), card_str, False))
         elif locks:
-            rows.append(("\U0001f513  CURRENT LOCK", "", True))
-            rows.append(("  Status", "Not locked", False))
+            rows.append((_("\U0001f513  CURRENT LOCK"), "", True))
+            rows.append((_("  Status"), _("Not locked"), False))
 
         # Activity summary
         activities = len(data.get("activities") or [])
@@ -4425,10 +4596,10 @@ class TachoExplorer(tk.Tk):
         if activities or events:
             if rows and rows[-1] != sep:
                 rows.append(sep)
-            rows.append(("\U0001f4ca  STATISTICS", "", False))
-            rows.append(("  Days with activities", str(activities), False))
-            rows.append(("  Events", str(events), False))
-            rows.append(("  Faults", str(faults), False))
+            rows.append((_("\U0001f4ca  STATISTICS"), "", False))
+            rows.append((_("  Days with activities"), str(activities), False))
+            rows.append((_("  Events"), str(events), False))
+            rows.append((_("  Faults"), str(faults), False))
 
         cols = ["Field", "Value"]
         return cols, rows
@@ -4441,47 +4612,48 @@ class TachoExplorer(tk.Tk):
         rows = []
         sep = ("\u2500" * 40, "", True)
 
-        rows.append(("\u26a0\ufe0f  THIS FILE IS INCOMPLETE OR CORRUPTED", "", True))
-        rows.append(("  Only the sections listed below could be read.", "", False))
-        rows.append(("  Missing or corrupted data is NOT shown.", "", False))
+        rows.append((_("\u26a0\ufe0f  THIS FILE IS INCOMPLETE OR CORRUPTED"), "", True))
+        rows.append((_("  Only the sections listed below could be read."), "", False))
+        rows.append((_("  Missing or corrupted data is NOT shown."), "", False))
         rows.append(sep)
 
-        rows.append(("\U0001f4ca  COMPLETENESS", "", True))
+        rows.append((_("\U0001f4ca  COMPLETENESS"), "", True))
         rows.append((
-            "  Mandatory sections read",
+            _("  Mandatory sections read"),
             f"{trep_report['mandatory_ok']}/{trep_report['mandatory_total']} "
             f"({trep_report['completeness_pct']}%)", False))
         if not trep_report.get("complete_walk", True):
-            rows.append(("  File structure", "\u274c  Truncated (did not reach end of file)", False))
+            rows.append((_("  File structure"),
+                         _("\u274c  Truncated (did not reach end of file)"), False))
         rows.append(sep)
 
         present = trep_report.get("present") or []
-        rows.append(("\u2705  SECTIONS PRESENT", "", True))
+        rows.append((_("\u2705  SECTIONS PRESENT"), "", True))
         if present:
             for t in present:
                 rows.append((f"  {t['name']}", t["trep"], False))
         else:
-            rows.append(("  (none)", "", False))
+            rows.append((_("  (none)"), "", False))
         rows.append(sep)
 
         missing = trep_report.get("mandatory_missing") or []
         if missing:
-            rows.append(("\u274c  MISSING MANDATORY SECTIONS", "", True))
+            rows.append((_("\u274c  MISSING MANDATORY SECTIONS"), "", True))
             for t in missing:
                 rows.append((f"  {t['name']}", t["trep"], False))
             rows.append(sep)
 
         suspect = trep_report.get("decoded_suspect") or []
         if suspect:
-            rows.append(("\u26a0\ufe0f  CORRUPTED SECTIONS (data discarded)", "", True))
+            rows.append((_("\u26a0\ufe0f  CORRUPTED SECTIONS (data discarded)"), "", True))
             for t in suspect:
                 rows.append((f"  {t['name']}", t["trep"], False))
             rows.append(sep)
 
         salvaged = meta.get("salvage_recovered") or []
         if salvaged:
-            rows.append(("\U0001f6e0\ufe0f  RECOVERED FROM DAMAGED DATA", "", True))
-            rows.append(("  Low-confidence recovery", ", ".join(salvaged), False))
+            rows.append((_("\U0001f6e0\ufe0f  RECOVERED FROM DAMAGED DATA"), "", True))
+            rows.append((_("  Low-confidence recovery"), ", ".join(salvaged), False))
 
         cols = ["Field", "Value"]
         return cols, rows
@@ -4498,45 +4670,45 @@ class TachoExplorer(tk.Tk):
         rows = []
         sep = ("\u2500" * 40, "", True)
 
-        rows.append(("\U0001f4e1  SENSOR", "", True))
+        rows.append((_("\U0001f4e1  SENSOR"), "", True))
         approval = sensor.get("sensor_approval", "")
         nation = sensor.get("approval_nation", "")
         if approval:
-            rows.append(("  Approval", f"{approval}", False))
+            rows.append((_("  Approval"), f"{approval}", False))
         if nation:
-            rows.append(("  Nation", nation_full_name(nation), False))
+            rows.append((_("  Nation"), nation_full_name(nation), False))
         prefix = sensor.get("approval_prefix", "")
         if prefix:
-            rows.append(("  Prefix", prefix, False))
+            rows.append((_("  Prefix"), prefix, False))
         rows.append(sep)
 
-        rows.append(("\U0001f697  ASSOCIATED VEHICLE", "", True))
-        rows.append(("  Plate", plate, False))
-        rows.append(("  VIN", vin, False))
+        rows.append((_("\U0001f697  ASSOCIATED VEHICLE"), "", True))
+        rows.append((_("  Plate"), plate, False))
+        rows.append((_("  VIN"), vin, False))
         rows.append(sep)
 
-        rows.append(("\U0001f4c5  DATE RANGE", "", True))
+        rows.append((_("\U0001f4c5  DATE RANGE"), "", True))
         first = sensor.get("first_date", "N/A")
         last = sensor.get("last_date", "N/A")
-        rows.append(("  First date", first, False))
-        rows.append(("  Last date", last, False))
+        rows.append((_("  First date"), first, False))
+        rows.append((_("  Last date"), last, False))
         if daily:
             unique = sorted(set(d.get("date", "") for d in daily))
-            rows.append(("  Days recorded", str(len(unique)), False))
+            rows.append((_("  Days recorded"), str(len(unique)), False))
             if len(unique) >= 2:
-                rows.append(("  Actual range", f"{unique[0]} \u2192 {unique[-1]}", False))
+                rows.append((_("  Actual range"), f"{unique[0]} \u2192 {unique[-1]}", False))
         rows.append(sep)
 
-        rows.append(("\U0001f4ca  PARAMETERS", "", True))
+        rows.append((_("\U0001f4ca  PARAMETERS"), "", True))
         spd_max = sensor.get("param_speed_max_kmh", "")
         spd_avg = sensor.get("param_speed_avg_kmh", "")
         dist = sensor.get("param_distance_km", "")
         if spd_max:
-            rows.append(("  Max speed", f"{spd_max} km/h", False))
+            rows.append((_("  Max speed"), f"{spd_max} km/h", False))
         if spd_avg:
-            rows.append(("  Avg speed", f"{spd_avg} km/h", False))
+            rows.append((_("  Avg speed"), f"{spd_avg} km/h", False))
         if dist:
-            rows.append(("  Distance", f"{dist} km", False))
+            rows.append((_("  Distance"), f"{dist} km", False))
 
         cols = ["Field", "Value"]
         return cols, rows
@@ -4552,56 +4724,56 @@ class TachoExplorer(tk.Tk):
         rows = []
         sep = ("\u2500" * 40, "", True)
 
-        rows.append(("\U0001f464  CARDHOLDER", "", True))
+        rows.append((_("\U0001f464  CARDHOLDER"), "", True))
         surname = driver.get("surname", "")
         firstname = driver.get("firstname", "")
         name = f"{firstname} {surname}".strip()
         if name:
-            rows.append(("  Name", name, False))
-        rows.append(("  Card number", driver.get("card_number", "N/A"), False))
+            rows.append((_("  Name"), name, False))
+        rows.append((_("  Card number"), driver.get("card_number", "N/A"), False))
         rows.append(sep)
 
-        rows.append(("\U0001faaa  CARD DETAILS", "", True))
+        rows.append((_("\U0001faaa  CARD DETAILS"), "", True))
         nation = driver.get("issuing_nation", "")
         if nation:
-            rows.append(("  Issuing nation", nation_full_name(nation), False))
+            rows.append((_("  Issuing nation"), nation_full_name(nation), False))
         authority = driver.get("issuing_authority", "")
         if authority and authority != "N/A":
-            rows.append(("  Issuing authority", authority, False))
+            rows.append((_("  Issuing authority"), authority, False))
         issue_date = driver.get("issue_date", "")
         if issue_date:
-            rows.append(("  Issue date", issue_date, False))
+            rows.append((_("  Issue date"), issue_date, False))
         validity_begin = driver.get("validity_begin", "")
         if validity_begin:
-            rows.append(("  Valid from", validity_begin, False))
+            rows.append((_("  Valid from"), validity_begin, False))
         expiry = driver.get("expiry_date", "")
         if expiry:
-            rows.append(("  Expiry date", expiry, False))
+            rows.append((_("  Expiry date"), expiry, False))
         birth = driver.get("birth_date", "")
         if birth:
-            rows.append(("  Birth date", birth, False))
+            rows.append((_("  Birth date"), birth, False))
         licence = driver.get("licence_number", "")
         if licence and licence != "N/A":
-            rows.append(("  Licence number", licence, False))
+            rows.append((_("  Licence number"), licence, False))
         language = driver.get("preferred_language", "")
         if language and language != "N/A":
-            rows.append(("  Language", language, False))
+            rows.append((_("  Language"), language, False))
         rows.append(sep)
 
-        rows.append(("\U0001f4ca  STATISTICS", "", True))
+        rows.append((_("\U0001f4ca  STATISTICS"), "", True))
         act_days = len(activities)
         total_changes = sum(len(a.get("changes") or [])
                             for a in activities if isinstance(a, dict))
-        rows.append(("  Days with activity", str(act_days), False))
-        rows.append(("  Activity changes", str(total_changes), False))
-        rows.append(("  Events", str(len(events)), False))
+        rows.append((_("  Days with activity"), str(act_days), False))
+        rows.append((_("  Activity changes"), str(total_changes), False))
+        rows.append((_("  Events"), str(len(events)), False))
         if cards:
-            rows.append(("  Card downloads", str(len(cards)), False))
+            rows.append((_("  Card downloads"), str(len(cards)), False))
 
         if efv.get("summary"):
             rows.append(sep)
-            rows.append(("\U0001f510  SIGNATURES", "", True))
-            rows.append(("  EF verification", efv["summary"], False))
+            rows.append((_("\U0001f510  SIGNATURES"), "", True))
+            rows.append((_("  EF verification"), efv["summary"], False))
 
         cols = ["Field", "Value"]
         return cols, rows
@@ -4675,7 +4847,14 @@ def main():
             sys.exit(2)
         sys.exit(_smoke_check(args[1]))
     initial = args[0] if args and os.path.isfile(args[0]) else None
-    TachoExplorer(initial_file=initial).mainloop()
+    while True:
+        app = TachoExplorer(initial_file=initial)
+        app.mainloop()
+        if not app._restart_requested:
+            return
+        # Language switch: rebuild the window from scratch (see
+        # TachoExplorer._switch_language) and reopen the file that was showing.
+        initial = app._restart_file
 
 
 if __name__ == "__main__":

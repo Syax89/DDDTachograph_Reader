@@ -52,6 +52,11 @@ jobs:
       # them skip on their own. Synthetic mocks exercise the decoders.
       run: python tests/integration/generate_mock_ddd.py
 
+    - name: Check translation catalogs are compiled
+      # A stale locale/<lang>/LC_MESSAGES/tacho.mo silently keeps the old
+      # strings in the bundle, so the .mo files must match their .po sources.
+      run: python scripts/compile_translations.py --check
+
     - name: Run test suite
       run: pytest -q
 
