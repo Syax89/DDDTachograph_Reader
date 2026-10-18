@@ -73,9 +73,10 @@ from core.utils.encoding import BytesEncoder  # noqa: E402
 from core.utils.version import __version__  # noqa: E402
 from core.utils.report_format import (  # noqa: E402
     VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
-    fmt_known_structure, fmt_scalar, humanize_key, integrity_verdict, visible_columns)
+    fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 from app.i18n import LANGUAGES, _, install, save_language, saved_language  # noqa: E402
+from app import ui_text  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
 
@@ -175,9 +176,10 @@ def _rows_for(records, transformer):
                 rows.append([fmt_val(item.get(c), key=c) for c in cols])
             else:
                 rows.append([fmt_val(item)])
-    # Transformer output keys are already display labels; raw record keys are
-    # humanised + translated for display (rows above keep the raw key order).
-    headers = cols if transformer else [humanize_key(c) for c in cols]
+    # Transformer output keys are already display labels; raw record keys go
+    # through the display-text layer, which humanises and translates them (rows
+    # above keep the raw key order).
+    headers = cols if transformer else [ui_text.label(c) for c in cols]
     return headers, rows
 
 
@@ -185,10 +187,10 @@ def _kv_rows(d):
     """Convert a dict to (Field, Value) rows, flattening nested dicts one level."""
     rows = []
     for k, v in d.items():
-        field = humanize_key(k) if isinstance(k, str) else str(k)
+        field = ui_text.label(k)
         if isinstance(v, dict) and v:
             for sk, sv in v.items():
-                subfield = f"{field} \u203a {humanize_key(sk) if isinstance(sk, str) else str(sk)}"
+                subfield = f"{field} \u203a {ui_text.label(sk)}"
                 rows.append([subfield, fmt_val(sv, key=sk)])
         else:
             rows.append([field, fmt_val(v, key=k)])
@@ -2900,7 +2902,7 @@ class TachoExplorer(tk.Tk):
         for day, samples in sorted(detailed_speed_by_day(data).items(), reverse=True):
             day_node = self._add_speed_chart_day(node, day, samples, oes_by_day.get(day))
             blocks = raw_by_day.get(day, [])
-            cols, rows = _rows_for(blocks, None) if blocks else (["Value"], [])
+            cols, rows = _rows_for(blocks, None) if blocks else ([_("Value")], [])
             self._add_section(day_node, _("Detailed Speed {day}").format(day=day), cols, rows)
 
     def _add_activity_day(self, parent, day, is_vu, activities, day_km,
@@ -3354,7 +3356,7 @@ class TachoExplorer(tk.Tk):
                 else:
                     continue
 
-                self._add_section(gnode, item_name, cols, rows)
+                self._add_section(gnode, ui_text.label(item_name), cols, rows)
 
         # ── Security ──
         self._populate_security(data)
@@ -3365,7 +3367,8 @@ class TachoExplorer(tk.Tk):
             for item_name, item_data in sec.items():
                 if isinstance(item_data, dict) and item_data:
                     cols, rows = _kv_rows(item_data)
-                    self._add_section("", f"\U0001f510  {item_name}", cols, rows)
+                    self._add_section("", f"\U0001f510  {ui_text.label(item_name)}",
+                                      cols, rows)
 
     def _populate_unparsed(self, data):
         """Surface bytes the structural walk could not decode.
@@ -3413,8 +3416,9 @@ class TachoExplorer(tk.Tk):
             if total:
                 meta += _("  \u00b7  {percent:.2f}% of file").format(
                     percent=listed / total * 100)
-        columns = (["Location", "Offset", "Length", "Hex"] if has_container
-                   else ["Offset", "Length", "Hex"])
+        columns = ([ui_text.label(c) for c in ("Location", "Offset", "Length", "Hex")]
+                   if has_container
+                   else [ui_text.label(c) for c in ("Offset", "Length", "Hex")])
         self._add_section("", _("\U0001f9e9  Raw / Unparsed Data"),
                           columns, rows, meta=meta)
 
