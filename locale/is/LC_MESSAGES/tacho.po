@@ -1885,3 +1885,6 @@ msgstr "CAR yfirvald"
 
 msgid "CAR Serial"
 msgstr "CAR raðnúmer"
+
+msgid "Translate file contents"
+msgstr "Þýða innihald skráar"

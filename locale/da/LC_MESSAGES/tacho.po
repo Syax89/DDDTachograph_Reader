@@ -1885,3 +1885,6 @@ msgstr "CAR-myndighed"
 
 msgid "CAR Serial"
 msgstr "CAR-serienummer"
+
+msgid "Translate file contents"
+msgstr "Oversæt filindhold"

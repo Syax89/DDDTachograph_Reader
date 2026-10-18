@@ -573,7 +573,10 @@ def test_language_menu_lists_every_language_with_column_breaks(explorer):
     menu = explorer.nametowidget(explorer.btn_lang["menu"])
 
     labels = [menu.entrycget(i, "label") for i in range(menu.index("end") + 1)]
-    assert labels == list(i18n.LANGUAGES.values())
+    # The languages come first; the last entry is the independent preference.
+    assert labels[:len(i18n.LANGUAGES)] == list(i18n.LANGUAGES.values())
+    assert labels[-1] == i18n._("Translate file contents")
+    assert len(labels) == len(i18n.LANGUAGES) + 1
     assert labels[0] == "English"
     # 34 entries in one column would not fit a small screen.
     breaks = [i for i in range(len(labels)) if menu.entrycget(i, "columnbreak") == 1]

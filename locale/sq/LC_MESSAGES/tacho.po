@@ -1885,3 +1885,6 @@ msgstr "Autoriteti CAR"
 
 msgid "CAR Serial"
 msgstr "Numri serial CAR"
+
+msgid "Translate file contents"
+msgstr "Përkthe përmbajtjen e skedarit"

@@ -20,13 +20,27 @@ that decides what a label reads like — and one place to teach a new key.
 
 English is the msgid, so a label with no catalog entry falls back to English
 and the UI is never half-empty (see :mod:`app.i18n`).
+
+A second, orthogonal decision is *what kind* of text is being shown. The
+application's chrome (menus, column headers it owns, messages) is always
+translated, but a value decoded from the tachograph file — the activity of a
+record (``Drive``), a nation (``Italy``), a record-type name — is evidence
+from the file, and some users need to see it exactly as the file names it.
+:func:`configure_translate_data` holds that preference (off by default) and
+:func:`data_text` is the only place it is applied, so the choice is one cached
+flag read per rendered cell instead of a settings-file read per cell.
 """
 import re
 
 from app.i18n import _
 from core.utils.report_format import humanize_key
 
-__all__ = ["humanize", "label"]
+__all__ = ["humanize", "label", "data_text", "configure_translate_data",
+           "translate_data_enabled"]
+
+#: Whether labels decoded from the file are translated. Cached on purpose: the
+#: GUI renders one cell at a time and must never touch the settings file there.
+_translate_data = False
 
 #: One CamelCase token: a plural acronym (``VINs``, ``IDs``), an uppercase run
 #: (``VU``, ``GNSS``), a Capitalised word (``Calibration``) or a digits run
@@ -106,3 +120,34 @@ def humanize(key) -> str:
 def label(key) -> str:
     """The translated label for *key*: the only entry point the GUI needs."""
     return _(humanize(key))
+
+
+def configure_translate_data(flag) -> None:
+    """Set whether labels decoded from the file are translated.
+
+    Called once when the window starts and again from the Language menu; the
+    value is cached in this module so the render path never reads the settings
+    file. Only the JSON boolean ``True`` means on (see
+    :func:`app.i18n.saved_translate_data`).
+    """
+    global _translate_data
+    _translate_data = flag is True
+
+
+def translate_data_enabled() -> bool:
+    """The cached preference (``True`` when file-decoded labels are translated)."""
+    return _translate_data
+
+
+def data_text(text):
+    """Translate a label that was decoded *from the file*, when the user asked.
+
+    With the preference off — the default — the text is returned unchanged, so
+    a record reads exactly as the file/decoder names it (``Drive``, ``Rest``,
+    ``Italy``). With it on, the text goes through the same catalog as the rest
+    of the UI (``Guida``, ``Riposo``, ``Italia``). Non-string values pass
+    through untouched in both cases, so a caller may wrap any cell value.
+    """
+    if not _translate_data or not isinstance(text, str):
+        return text
+    return _(text)

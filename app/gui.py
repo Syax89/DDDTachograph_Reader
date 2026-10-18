@@ -75,7 +75,9 @@ from core.utils.report_format import (  # noqa: E402
     VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
     fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
-from app.i18n import LANGUAGES, _, install, save_language, saved_language  # noqa: E402
+from app.i18n import (  # noqa: E402
+    LANGUAGES, _, install, save_language, save_translate_data,
+    saved_language, saved_translate_data)
 from app import ui_text  # noqa: E402
 
 _log = logging.getLogger("tacho_gui")
@@ -132,7 +134,11 @@ def fmt_val(v, key=None):
     """Render any parser value for display: booleans as Yes/No, floats
     trimmed, large ints with thousands spaces, 0xFFFFFF sentinels as N/A,
     bytes as hex, ISO timestamps shortened, dicts/lists flattened. Nation
-    code columns are expanded to the full English country name."""
+    code columns are expanded to the full English country name.
+
+    Labels *derived* from the file (the nation name, the code label) go through
+    ``ui_text.data_text``, so they follow the "translate file contents"
+    preference; everything else is the value itself."""
     if isinstance(v, dict):
         return _fmt_dict(v)
     if isinstance(v, list):
@@ -141,7 +147,8 @@ def fmt_val(v, key=None):
         if all(not isinstance(x, (dict, list)) for x in v):
             return ", ".join(fmt_val(x) for x in v)
         return f"[{len(v)} items]"
-    return fmt_scalar(v, key=key, include_code_label=True)
+    return fmt_scalar(v, key=key, include_code_label=True,
+                      label_translator=ui_text.data_text)
 
 
 def _columns_for(records, transformer):
@@ -868,8 +875,13 @@ ACTIVITY_LABEL = {"DRIVE": "Drive", "WORK": "Work", "REST": "Rest",
 
 
 def _act_label(activity):
-    """Display name of an activity code (translated)."""
-    return _(ACTIVITY_LABEL.get(activity, activity))
+    """Display name of an activity code.
+
+    The activity name is decoded from the file, so it obeys the "translate file
+    contents" preference: with it off the label stays exactly as the file names
+    it (``Drive``), with it on it is translated (``Guida``).
+    """
+    return ui_text.data_text(ACTIVITY_LABEL.get(activity, activity))
 
 
 class ActivityTimelineChart(ttk.Frame):
@@ -1638,7 +1650,7 @@ class DayDetailWindow(tk.Toplevel):
             nation_code = pl.get("nation", "")
             if isinstance(nation_code, int):
                 nation_code = get_nation(nation_code)
-            country = nation_full_name(nation_code) if nation_code else ""
+            country = ui_text.data_text(nation_full_name(nation_code)) if nation_code else ""
             if not country:
                 country = nation_code or "Unknown"
             if entry_type == "START":
@@ -1979,6 +1991,10 @@ class TachoExplorer(tk.Tk):
         super().__init__()
         # The saved UI language must be loaded before the first _() call below.
         self._language = install(saved_language())
+        # Whether labels decoded from the file are translated: read once here,
+        # cached in the display-text layer, toggled from the Language menu.
+        self._translate_data = saved_translate_data()
+        ui_text.configure_translate_data(self._translate_data)
         self._initial_file = initial_file
         # Set when the user picks another language: ``main()`` reads these to
         # rebuild the window in the new language (see _switch_language).
@@ -2165,6 +2181,13 @@ class TachoExplorer(tk.Tk):
                 label=name, value=code, variable=self._language_var,
                 columnbreak=1 if index and index % 12 == 0 else 0,
                 command=lambda selected=code: self._switch_language(selected))
+        # Below the languages: one independent preference. It does not change
+        # the UI language — it decides whether the *values decoded from the
+        # file* are translated too, or shown exactly as the file names them.
+        self._translate_data_var = tk.BooleanVar(value=self._translate_data)
+        lang_menu.add_checkbutton(
+            label=_("Translate file contents"), variable=self._translate_data_var,
+            command=self._toggle_translate_data)
         self.btn_lang["menu"] = lang_menu
         self.btn_lang.pack(side=tk.RIGHT, padx=(8, 0))
         self.lbl_file = ttk.Label(top, text=_("No file loaded"),
@@ -2216,6 +2239,29 @@ class TachoExplorer(tk.Tk):
 
         if self._initial_file and os.path.isfile(self._initial_file):
             self.after(100, lambda: self._start_parse(self._initial_file))
+
+    def _toggle_translate_data(self):
+        """Apply the "translate file contents" preference without a restart.
+
+        Unlike the language itself, this preference changes only the text that
+        was decoded from the file (activity names, nations, record labels), so
+        the window does not have to be rebuilt: the cached display flag is
+        updated and the current selection is rendered again through the normal
+        select path. A settings write that fails leaves the previous choice in
+        place, tells the user, and puts the menu tick back where it was — the
+        same contract as a failed language switch.
+        """
+        flag = bool(self._translate_data_var.get())
+        if flag == self._translate_data:
+            return
+        if not save_translate_data(flag):
+            self._translate_data_var.set(self._translate_data)
+            messagebox.showwarning(_("Language"),
+                                   _("Could not save the language setting."))
+            return
+        self._translate_data = flag
+        ui_text.configure_translate_data(flag)
+        self._on_tree_select(None)
 
     def _switch_language(self, code):
         """Persist ``code`` and rebuild the window in the new language.
@@ -4479,7 +4525,7 @@ class TachoExplorer(tk.Tk):
         rows.append((_("  Plate"), plate, False))
         rows.append((_("  VIN"), vin, False))
         if nation and nation not in ("N/A", ""):
-            rows.append((_("  Registration"), nation_full_name(nation), False))
+            rows.append((_("  Registration"), ui_text.data_text(nation_full_name(nation)), False))
         rows.append(sep)
 
         if calibrations:
@@ -4719,7 +4765,7 @@ class TachoExplorer(tk.Tk):
         if approval:
             rows.append((_("  Approval"), f"{approval}", False))
         if nation:
-            rows.append((_("  Nation"), nation_full_name(nation), False))
+            rows.append((_("  Nation"), ui_text.data_text(nation_full_name(nation)), False))
         prefix = sensor.get("approval_prefix", "")
         if prefix:
             rows.append((_("  Prefix"), prefix, False))
@@ -4779,7 +4825,7 @@ class TachoExplorer(tk.Tk):
         rows.append((_("\U0001faaa  CARD DETAILS"), "", True))
         nation = driver.get("issuing_nation", "")
         if nation:
-            rows.append((_("  Issuing nation"), nation_full_name(nation), False))
+            rows.append((_("  Issuing nation"), ui_text.data_text(nation_full_name(nation)), False))
         authority = driver.get("issuing_authority", "")
         if authority and authority != "N/A":
             rows.append((_("  Issuing authority"), authority, False))

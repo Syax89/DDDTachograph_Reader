@@ -1885,3 +1885,6 @@ msgstr "CAR-viranomainen"
 
 msgid "CAR Serial"
 msgstr "CAR-sarjanumero"
+
+msgid "Translate file contents"
+msgstr "Käännä tiedoston sisältö"

@@ -1885,3 +1885,6 @@ msgstr "CAR iestāde"
 
 msgid "CAR Serial"
 msgstr "CAR sērijas numurs"
+
+msgid "Translate file contents"
+msgstr "Tulkot faila saturu"

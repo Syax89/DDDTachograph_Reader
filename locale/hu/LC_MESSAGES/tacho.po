@@ -1885,3 +1885,6 @@ msgstr "CAR hatóság"
 
 msgid "CAR Serial"
 msgstr "CAR sorozatszám"
+
+msgid "Translate file contents"
+msgstr "Fájl tartalmának fordítása"
