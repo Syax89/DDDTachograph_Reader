@@ -2418,7 +2418,7 @@ msgid "INTEGRITY"
 msgstr "INTEGRITÁS"
 
 msgid "  Byte-accounted coverage"
-msgstr "  Bájtokkal elszámolt lefedettség"
+msgstr "  Bájtlefedettség"
 
 msgid "  Daily driving limit"
 msgstr "  Napi vezetés határa"

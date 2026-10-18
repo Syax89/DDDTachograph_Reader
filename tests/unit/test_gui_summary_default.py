@@ -265,7 +265,7 @@ CASE_VERDICTS = {
 
 #: The only rows of the overview allowed to be wider than the panel's columns,
 #: named here with their measured widths at 900x560 (Linux, TkDefaultFont,
-#: 187 px value column / 220 px field column), because the panel does not get to
+#: 187 px value column / 198 px field column), because the panel does not get to
 #: shorten them — the wording belongs to the code that owns the fact:
 #:
 #: ``Status`` — ``_integrity_label``'s 15 verdicts. 11 of them exceed 187 px in
@@ -282,16 +282,20 @@ CASE_VERDICTS = {
 #:   states in the FILE block: 238 px in ru, 229 px in lt, and over the column
 #:   in be, bg, lv and uk as well. It is the same string the File Info section
 #:   and the dashboards show, so it is not this panel's wording to cut either.
-#: ``\u23f1\ufe0f  DRIVING-TIME RULES`` (a block *header*, not a value) — the
-#:   translated title clips the 220 px Field column in 15 catalogs (303 px in
-#:   ro); the other five headers fit everywhere.
+#: ``DRIVING-TIME RULES`` (a block *header*, not a value) — the translated title
+#:   clips the 198 px Field column in 16 catalogs (283 px in ro); the other five
+#:   headers fit everywhere. The msgid used to carry a ``⏱️`` prefix that the
+#:   icon work removed from every catalog and from the call site: a name keyed
+#:   on the old spelling matches no rendered row, so it silently stopped
+#:   exempting anything and the sweep reported the title as unexpected in those
+#:   16 catalogs.
 #:
 #: None of them is a silent pass: ``test_an_over_wide_cell_is_readable_in_full_on_hover``
 #: pins the panel's hover reveal, and the sweep below measures that reveal on
 #: every one of those cells, in every catalog, as it goes. Any *other* row that
 #: stops fitting fails the sweep with its width, its language and its text.
 OVER_WIDE_ROWS = ("  Status", "  Period covered", "  Origin",
-                  "\u23f1\ufe0f  DRIVING-TIME RULES")
+                  "DRIVING-TIME RULES")
 
 #: The value the defect reported as clipped, and which the overview now states
 #: short enough to fit every catalog: 187 px is the whole budget, so this row is
@@ -659,7 +663,7 @@ def test_every_row_of_the_summary_panel_fits_its_column_in_every_language(explor
     explorer.update()
     font = gui.tkfont.nametofont("TkDefaultFont")
     # Block headers are drawn bold, so they are measured with their own font —
-    # the translated "DRIVING-TIME RULES" title clips in 15 catalogs (303 px in
+    # the translated "DRIVING-TIME RULES" title clips in 16 catalogs (283 px in
     # ro) while the body font would call it a fit.
     heading_font = gui.tkfont.Font(font=gui.FONT_HEADING)
     cases = STATUS_CASES + (NO_DAYS_CASE,)
@@ -756,10 +760,9 @@ def test_an_over_wide_cell_is_readable_in_full_on_hover(explorer):
     assert hover_cell(explorer, coverage_number, "Value") is None
     # A block header is a row too: the title clips in this language's neighbours
     # and must be revealable with the bold font it is drawn with.
-    rules_header = panel_row_number(
-        explorer, i18n._("\u23f1\ufe0f  DRIVING-TIME RULES"))
+    rules_header = panel_row_number(explorer, i18n._("DRIVING-TIME RULES"))
     heading_font = gui.tkfont.Font(font=gui.FONT_HEADING)
-    header_text = i18n._("\u23f1\ufe0f  DRIVING-TIME RULES")
+    header_text = i18n._("DRIVING-TIME RULES")
     revealed = hover_cell(explorer, rules_header, "Field")
     if heading_font.measure(header_text) > field_column_width(explorer):
         assert revealed == header_text
@@ -773,7 +776,9 @@ def test_an_over_wide_cell_is_readable_in_full_on_hover(explorer):
     assert explorer._summary_tip_lbl.winfo_manager() == ""
     # The reveal belongs to the summary panel: another view drops it entirely
     # (File Info is a plain table, not a summary page).
-    select(explorer, node_by_title(explorer, i18n._("\U0001f4c4  File Info")))
+    # ... in the catalog installed at the top of this test (Italian), so the
+    # node's title is translated at call time, not the module-level English one.
+    select(explorer, node_by_title(explorer, i18n._("File Info")))
     assert explorer._summary_tip_lbl is None
     assert explorer._summary_motion_bind is None
     assert explorer._summary_leave_bind is None
@@ -894,8 +899,7 @@ def test_a_vehicle_unit_shows_its_vehicle_facts(explorer):
 def test_the_previously_auto_selected_card_section_still_renders(explorer):
     open_file(explorer, card_data())
 
-    select(explorer, node_by_title(
-        explorer, i18n._("\U0001f464  Driver / Cardholder")))
+    select(explorer, node_by_title(explorer, DRIVER_TITLE))
     assert explorer.table.title_lbl.cget("text") == DRIVER_TITLE
     assert rendered_value(explorer, i18n._("  Name")) == "LUCA BIANCHI"
     assert rendered_value(explorer, i18n._("  Card number")) == "I100000168598002"
@@ -912,8 +916,7 @@ def test_the_previously_auto_selected_vu_section_still_renders(explorer):
 
 def test_selecting_the_overview_again_after_another_section(explorer):
     open_file(explorer, card_data())
-    select(explorer, node_by_title(
-        explorer, i18n._("\U0001f464  Driver / Cardholder")))
+    select(explorer, node_by_title(explorer, DRIVER_TITLE))
 
     select(explorer, node_by_title(explorer, SUMMARY_TITLE))
     assert explorer.table._summary_mode is True
