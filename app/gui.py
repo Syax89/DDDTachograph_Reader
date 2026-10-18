@@ -2515,7 +2515,8 @@ class TachoExplorer(tk.Tk):
                 if isinstance(parse_error, dict) else str(parse_error)
             self._parse_error(message)
             return
-        self._finish_parse()
+        # Rendering's table sizing update() pumps the loop: stay busy until done.
+        self._parsing = True
         try:
             self.current_data = data
             self.current_file = path
@@ -2555,6 +2556,7 @@ class TachoExplorer(tk.Tk):
                                   _("Failed to display file:\n{detail}").format(
                                       detail=traceback.format_exc()))
             self.status.config(text=_("Ready \u2014 open a .ddd file"))
+        finally:
             self._finish_parse()
 
     def _check_integrity(self, data, path):
