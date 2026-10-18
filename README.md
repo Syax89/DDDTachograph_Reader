@@ -156,7 +156,7 @@ DDDTachograph_Reader/
 ├── tests/                       # Test suite
 ├── scripts/                     # Specifications and audits
 ├── docs/                        # Documentation
-└── .github/workflows/           # CI/CD (lint, tests, Windows/macOS builds)
+└── .github/workflows/           # CI/CD (lint, tests, Windows/macOS/Linux builds)
 ```
 
 ---
@@ -200,6 +200,18 @@ python -m pytest tests/ -v
 The suite covers multi-generation detection, G1/G2/G2.2 parsing, byte coverage,
 fuzzing, and digital signatures. Tests requiring private DDD samples skip when
 those fixtures are unavailable.
+
+### Continuous Integration
+
+Every branch push, pull request and manual build runs **Windows, macOS and
+Linux Flatpak** with native bundle/parser smoke tests; Linux also installs the
+Flatpak and checks its GUI under Xvfb. Matrix fail-fast is disabled, so a failure
+does not cancel another platform. **All platforms verified** passes only when
+all three builds and their checks succeed; failed, cancelled or skipped builds
+fail the gate. Tagged releases (`v*`) start publication only after all three
+platforms succeed and all three non-empty packages are available. Existing
+lint, translation, test and coverage checks run on the same branch/PR/manual
+events. Repository branch-protection settings are unchanged.
 
 ---
 

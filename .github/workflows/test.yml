@@ -1,10 +1,12 @@
 name: Tests
 
 on:
+  # Every branch push (version tags are owned by release.yml), every pull
+  # request regardless of base branch, and manual runs.
   push:
-    branches: [ "master", "main" ]
+    branches: [ "**" ]
   pull_request:
-    branches: [ "master", "main" ]
+  workflow_dispatch:
 
 jobs:
   lint:
