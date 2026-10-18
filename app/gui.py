@@ -16,6 +16,7 @@ import sys
 import re
 import json
 import queue
+import functools
 import threading
 import traceback
 import logging
@@ -76,9 +77,24 @@ from core.utils.report_format import (  # noqa: E402
     fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 from app.i18n import (  # noqa: E402
-    LANGUAGES, _, install, save_language, save_translate_data,
-    saved_language, saved_translate_data)
+    LANGUAGES, _, add_recent_file, install, save_language, save_translate_data,
+    saved_language, saved_recent_files, saved_translate_data)
 from app import ui_text  # noqa: E402
+from app.theme import (  # noqa: E402  (re-exported: GEN_COLORS/ROW_*/HEADER_BG)
+    ACCENT, ACCENT_PURPLE, ACTIVITY_AVAILABLE, ACTIVITY_EVENT, ACTIVITY_FERRY,
+    ACTIVITY_UNKNOWN, ACTIVITY_WORK, ACTIVITY_WORK_MUTED, ACTIVE_BG, BORDER,
+    BUTTON_PRESSED_BG, CAUTION, CARD_BORDER, CHART_GRID_MAJOR, CHART_GRID_MINOR,
+    CONTROL_HOVER_BG, DANGER, DANGER_BAND, DANGER_DARK, DANGER_STRONG,
+    DASHBOARD_TOOLTIP_BG, FIELD_BG, FONT_BADGE, FONT_BODY, FONT_CANVAS_TITLE,
+    FONT_CAPTION, FONT_CAPTION_BOLD, FONT_HEADING, FONT_KPI_VALUE, FONT_MONO,
+    FONT_MONO_BOLD, FONT_MONO_ITALIC, FONT_MONO_LARGE, FONT_MONO_NORMAL,
+    FONT_MONO_SMALL,
+    FONT_PAGE_TITLE, FONT_SMALL, FONT_SUBTITLE, FONT_SUBTITLE_BOLD, FONT_TITLE,
+    GEN_COLORS, HEADER_BG, HOVER_BG, LINK_BUTTON_BG, MUTED, ROW_EVEN, ROW_ODD,
+    SCROLLBAR_BG, SCROLLBAR_HOVER_BG, SLATE, SUCCESS, SURFACE, SURFACE_ALT,
+    SURFACE_RAISED, SURFACE_SUNKEN, TEXT_FAINT, TEXT_LABEL, TEXT_MUTED,
+    TEXT_PRIMARY, TEXT_SECONDARY, TEXT_STRONG, TEXT_SUBTLE, TOGGLE_BG,
+    TOOLTIP_BG, TOOLTIP_BORDER, TOOLTIP_FG, WARNING, WHITE)
 
 _log = logging.getLogger("tacho_gui")
 
@@ -87,19 +103,6 @@ try:
 except ImportError:
     ExportManager = None  # type: ignore[assignment,misc]
 
-
-# ── Palette ────────────────────────────────────────────────────────────────
-
-GEN_COLORS = {
-    "G1 (Digital)": "#2e7d32",
-    "G2 (Smart)": "#1565c0",
-    "G2.2 (Smart V2)": "#6a1b9a",
-    "Unknown": "#757575",
-}
-
-ROW_EVEN = "#ffffff"
-ROW_ODD = "#f2f6fb"
-HEADER_BG = "#e3e9f2"
 
 # Internal keys to hide from columns (service noise). Keys starting with "_"
 # (e.g. "_key" dedup markers) are always hidden — see _columns_for.
@@ -337,7 +340,7 @@ class DataTable(ttk.Frame):
 
         head = ttk.Frame(self)
         head.pack(fill=tk.X, padx=8, pady=(8, 2))
-        self.title_lbl = ttk.Label(head, text="", font=("", 13, "bold"))
+        self.title_lbl = ttk.Label(head, text="", font=FONT_TITLE)
         self.title_lbl.pack(side=tk.LEFT)
         self.count_lbl = ttk.Label(head, text="", foreground="gray")
         self.count_lbl.pack(side=tk.LEFT, padx=(8, 0))
@@ -366,8 +369,8 @@ class DataTable(ttk.Frame):
         self.tv.tag_configure("even", background=ROW_EVEN)
         self.tv.tag_configure("odd", background=ROW_ODD)
         self.tv.tag_configure("summary_header",
-                              font=("", 10, "bold"),
-                              background="#e3e9f2")
+                              font=FONT_HEADING,
+                              background=HEADER_BG)
 
         self._cols = []
         self._all_rows = []
@@ -521,13 +524,13 @@ class DetailedSpeedChart(ttk.Frame):
         super().__init__(parent)
         header = ttk.Frame(self)
         header.pack(fill=tk.X, padx=8, pady=(8, 2))
-        self.title_lbl = ttk.Label(header, font=("", 13, "bold"))
+        self.title_lbl = ttk.Label(header, font=FONT_TITLE)
         self.title_lbl.pack(side=tk.LEFT)
         self.zoom_in_btn = ttk.Button(header, text="+", width=3, command=self._zoom_in)
         self.zoom_in_btn.pack(side=tk.RIGHT)
         self.zoom_out_btn = ttk.Button(header, text="-", width=3, command=self._zoom_out)
         self.zoom_out_btn.pack(side=tk.RIGHT, padx=(0, 4))
-        self.canvas = tk.Canvas(self, background="#ffffff", highlightthickness=0)
+        self.canvas = tk.Canvas(self, background=WHITE, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=8, pady=(2, 2))
         self.canvas.bind("<Configure>", lambda _event: self._schedule_draw())
         self.canvas.bind("<Motion>", self._show_hover)
@@ -642,7 +645,7 @@ class DetailedSpeedChart(ttk.Frame):
 
         for value in (0, self._speed_limit, ceiling):
             y = y_for(value)
-            color = "#d32f2f" if value == self._speed_limit else "#d9e1ea"
+            color = DANGER_STRONG if value == self._speed_limit else CHART_GRID_MAJOR
             dash = (4, 3) if value == self._speed_limit else None
             canvas.create_line(left, y, width - right, y, fill=color, dash=dash)
             label = f"{value} km/h" if value == self._speed_limit else str(value)
@@ -655,10 +658,10 @@ class DetailedSpeedChart(ttk.Frame):
             if second < self._view_start or second > self._view_end:
                 continue
             x = left + plot_width * (second - self._view_start) / span
-            canvas.create_line(x, top, x, bottom, fill="#edf1f5")
+            canvas.create_line(x, top, x, bottom, fill=CHART_GRID_MINOR)
             canvas.create_text(x, bottom + 16, text=self._time_label(second, span), anchor=tk.N,
-                               fill="#536273")
-        canvas.create_text(left, 10, text=_("Speed (km/h)"), anchor=tk.W, fill="#536273")
+                               fill=TEXT_MUTED)
+        canvas.create_text(left, 10, text=_("Speed (km/h)"), anchor=tk.W, fill=TEXT_MUTED)
 
         # Aggregate to screen pixels. Missing pixels remain blank, so chart
         # resolution never invents a continuous speed trace across a gap.
@@ -672,10 +675,10 @@ class DetailedSpeedChart(ttk.Frame):
         for x in sorted(bins):
             total, count, low, high = bins[x]
             average_y = y_for(total / count)
-            color = "#c62828" if high > self._speed_limit else "#1565c0"
+            color = DANGER if high > self._speed_limit else ACCENT
             canvas.create_line(x, y_for(low), x, y_for(high), fill=color)
             if previous_x is not None and x == previous_x + 1:
-                canvas.create_line(previous_x, previous_y, x, average_y, fill="#1565c0")
+                canvas.create_line(previous_x, previous_y, x, average_y, fill=ACCENT)
             previous_x, previous_y = x, average_y
 
         # Overspeed zone shading (stipple)
@@ -697,7 +700,7 @@ class DetailedSpeedChart(ttk.Frame):
             if x1 - x0 < 1:
                 continue
             canvas.create_rectangle(x0, top, x1, bottom,
-                                    fill="#ffcdd2", outline="", stipple="gray25",
+                                    fill=DANGER_BAND, outline="", stipple="gray25",
                                     tags="speed_overspeed")
 
         # Overspeeding event markers (red dots from file data)
@@ -719,7 +722,7 @@ class DetailedSpeedChart(ttk.Frame):
             y_center = y_for(evt_speed)
             r = 4
             canvas.create_oval(x - r, y_center - r, x + r, y_center + r,
-                               fill="#d32f2f", outline="#ffffff", width=1,
+                               fill=DANGER_STRONG, outline=WHITE, width=1,
                                tags="speed_oes")
             self._oes_dots.append((x, y_center, evt))
 
@@ -774,11 +777,11 @@ class DetailedSpeedChart(ttk.Frame):
                 label_x = min(event.x + 12, self.canvas.winfo_width() - 290)
                 label_y = max(event.y - 24, 4)
                 text_id = self.canvas.create_text(label_x, label_y, text=text,
-                                                  anchor=tk.NW, fill="#17212b",
+                                                  anchor=tk.NW, fill=TOOLTIP_FG,
                                                   tags="speed_hover")
                 x1, yb1, x2, yb2 = self.canvas.bbox(text_id)
                 bg = self.canvas.create_rectangle(x1 - 5, yb1 - 3, x2 + 5, yb2 + 3,
-                                                  fill="#fffde7", outline="#9e9e9e",
+                                                  fill=TOOLTIP_BG, outline=TOOLTIP_BORDER,
                                                   tags="speed_hover")
                 self.canvas.tag_lower(bg, text_id)
                 return
@@ -805,15 +808,15 @@ class DetailedSpeedChart(ttk.Frame):
             dot_py = dot_y - speed * dot_h / dot_ceiling
             r = 4
             self.canvas.create_oval(dot_x - r, dot_py - r, dot_x + r, dot_py + r,
-                                    fill="#c62828" if speed > self._speed_limit else "#1565c0",
-                                    outline="#ffffff", width=1, tags="speed_hover")
+                                    fill=DANGER if speed > self._speed_limit else ACCENT,
+                                    outline=WHITE, width=1, tags="speed_hover")
         label_x = min(event.x + 12, self.canvas.winfo_width() - 190)
         label_y = max(event.y - 24, 4)
         text_id = self.canvas.create_text(label_x, label_y, text=text, anchor=tk.NW,
-                                          fill="#17212b", tags="speed_hover")
+                                          fill=TOOLTIP_FG, tags="speed_hover")
         x1, y1, x2, y2 = self.canvas.bbox(text_id)
         background = self.canvas.create_rectangle(x1 - 5, y1 - 3, x2 + 5, y2 + 3,
-                                                  fill="#fffde7", outline="#9e9e9e",
+                                                  fill=TOOLTIP_BG, outline=TOOLTIP_BORDER,
                                                   tags="speed_hover")
         self.canvas.tag_lower(background, text_id)
 
@@ -836,7 +839,7 @@ class DetailedSpeedChart(ttk.Frame):
         self.canvas.delete("speed_hover")
         self.canvas.delete("speed_selection")
         self.canvas.create_rectangle(self._selection_start, top, current, bottom,
-                                     outline="#1565c0", dash=(4, 3), width=2,
+                                     outline=ACCENT, dash=(4, 3), width=2,
                                      tags="speed_selection")
 
     def _finish_selection(self, event):
@@ -865,10 +868,10 @@ class DetailedSpeedChart(ttk.Frame):
 
 # ── Activity timeline chart ─────────────────────────────────────────────
 ACTIVITY_COLORS = {
-    "DRIVE": "#1565c0",
-    "WORK": "#ef6c00",
-    "REST": "#78909c",
-    "AVAILABLE": "#f9a825",
+    "DRIVE": ACCENT,
+    "WORK": ACTIVITY_WORK,
+    "REST": SLATE,
+    "AVAILABLE": ACTIVITY_AVAILABLE,
 }
 ACTIVITY_LABEL = {"DRIVE": "Drive", "WORK": "Work", "REST": "Rest",
                   "AVAILABLE": "Available"}
@@ -891,18 +894,18 @@ class ActivityTimelineChart(ttk.Frame):
         super().__init__(parent)
         header = ttk.Frame(self)
         header.pack(fill=tk.X, padx=8, pady=(8, 2))
-        self.title_lbl = ttk.Label(header, font=("", 13, "bold"))
+        self.title_lbl = ttk.Label(header, font=FONT_TITLE)
         self.title_lbl.pack(side=tk.LEFT)
-        self.detail_btn = tk.Label(header, text="?", font=("", 12, "bold"),
-                                   fg="#1565C0", bg="#E3F2FD", padx=6, pady=0,
+        self.detail_btn = tk.Label(header, text="?", font=FONT_BADGE,
+                                   fg=ACCENT, bg=LINK_BUTTON_BG, padx=6, pady=0,
                                    cursor="hand2", relief=tk.FLAT,
                                    bd=1, highlightthickness=0)
         self.detail_btn.pack(side=tk.RIGHT, padx=(8, 0))
-        self.detail_btn.bind("<Enter>", lambda e: e.widget.configure(bg="#BBDEFB"))
-        self.detail_btn.bind("<Leave>", lambda e: e.widget.configure(bg="#E3F2FD"))
-        self.info_lbl = ttk.Label(self, foreground="#37474f", anchor=tk.W)
+        self.detail_btn.bind("<Enter>", lambda e: e.widget.configure(bg=HOVER_BG))
+        self.detail_btn.bind("<Leave>", lambda e: e.widget.configure(bg=LINK_BUTTON_BG))
+        self.info_lbl = ttk.Label(self, foreground=TEXT_SECONDARY, anchor=tk.W)
         self.info_lbl.pack(fill=tk.X, padx=8, pady=(0, 4))
-        self.canvas = tk.Canvas(self, background="#ffffff", highlightthickness=0)
+        self.canvas = tk.Canvas(self, background=WHITE, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=8, pady=(2, 2))
         self.canvas.bind("<Configure>", lambda _event: self._schedule_draw())
         self.canvas.bind("<Motion>", self._show_hover)
@@ -1050,7 +1053,7 @@ class ActivityTimelineChart(ttk.Frame):
         # Translated row labels are wider than the original 100px gutter.
         label_gap, label_pad = 8, 4
         if self._label_font is None:
-            self._label_font = tkfont.Font(root=canvas, font=("", 8, "bold"))
+            self._label_font = tkfont.Font(root=canvas, font=FONT_CAPTION_BOLD)
         widest_label = max(self._label_font.measure(_act_label(act)) for act in rows)
         left, right, top, bottom = (max(100, widest_label + label_gap + label_pad),
                                     14, 64, height - 32)
@@ -1077,25 +1080,25 @@ class ActivityTimelineChart(ttk.Frame):
         # Time axis ticks — drawn across both sections
         for hour in range(0, 25, 6):
             x = left + usable_width * hour / 24
-            canvas.create_line(x, top, x, bottom, fill="#edf1f5")
+            canvas.create_line(x, top, x, bottom, fill=CHART_GRID_MINOR)
             canvas.create_text(x, top - 22, text=f"{hour:02d}:00",
-                               anchor=tk.S, fill="#536273")
+                               anchor=tk.S, fill=TEXT_MUTED)
 
         # Out-of-scope / ferry-train markers (between card markers and activity rows)
         OOS_COLORS = {
-            "OutOfScope Begin": "#ef6c00",
-            "OutOfScope End": "#ef6c00",
-            "Ferry/Train Begin": "#7b1fa2",
-            "Ferry/Train End": "#7b1fa2",
+            "OutOfScope Begin": ACTIVITY_WORK,
+            "OutOfScope End": ACTIVITY_WORK,
+            "Ferry/Train Begin": ACTIVITY_FERRY,
+            "Ferry/Train End": ACTIVITY_FERRY,
             # Generation 1 single ferry/train crossing code (Annex 1C §2.154).
-            "Ferry/Train crossing": "#7b1fa2",
+            "Ferry/Train crossing": ACTIVITY_FERRY,
         }
         # Section header height (slot label + markers, above activity rows)
         header_h = 56 if has_multi else 24
         oos_info = []
         for sec, cond, ts in self._oos_events:
             x = left + sec * usable_width / 86400
-            color = OOS_COLORS.get(cond, "#bdbdbd")
+            color = OOS_COLORS.get(cond, ACTIVITY_UNKNOWN)
             size = 4
             is_begin = "Begin" in cond
             marker_y = top + header_h - 42 if has_multi else top + header_h - 17
@@ -1122,7 +1125,7 @@ class ActivityTimelineChart(ttk.Frame):
             if sidx > 0:
                 dy = section_top - section_gap // 2
                 canvas.create_line(left - 8, dy, left + usable_width + 8, dy,
-                                   fill="#90a4ae", width=1)
+                                   fill=TEXT_FAINT, width=1)
 
             slot_blocks = self._slots.get(slot_name, [])
 
@@ -1133,7 +1136,7 @@ class ActivityTimelineChart(ttk.Frame):
                 label_text = _(slot_name)
             canvas.create_text(left, section_top + header_h // 3,
                                text=label_text, anchor=tk.W,
-                               fill="#263238", font=("TkDefaultFont", 11, "bold"))
+                               fill=TEXT_STRONG, font=FONT_CANVAS_TITLE)
 
             # Per-slot totals
             totals = {}
@@ -1154,13 +1157,13 @@ class ActivityTimelineChart(ttk.Frame):
             for ridx, act in enumerate(rows):
                 y0 = rows_top + ridx * (row_h + gap)
                 y1 = y0 + row_h
-                color = ACTIVITY_COLORS.get(act, "#bdbdbd")
+                color = ACTIVITY_COLORS.get(act, ACTIVITY_UNKNOWN)
 
                 # Activity label on the left
                 canvas.create_text(left - label_gap, (y0 + y1) / 2,
                                    text=_act_label(act),
-                                   anchor=tk.E, fill="#37474f",
-                                   font=("", 8, "bold"))
+                                   anchor=tk.E, fill=TEXT_SECONDARY,
+                                   font=FONT_CAPTION_BOLD)
 
                 blocks = sorted(
                     [(s, e) for s, e, a in slot_blocks if a == act],
@@ -1181,7 +1184,7 @@ class ActivityTimelineChart(ttk.Frame):
                 total_text = f"{th}h {tm:02d}m"
                 total_x = left + usable_width + 16
                 canvas.create_text(total_x, (y0 + y1) / 2, text=total_text,
-                                   anchor=tk.W, fill="#536273", font=("", 8))
+                                   anchor=tk.W, fill=TEXT_MUTED, font=FONT_CAPTION)
 
             # Draw card-insertion / withdrawal markers in the header area
             slot_index = {name: idx for idx, name in enumerate(slot_order)}
@@ -1195,7 +1198,7 @@ class ActivityTimelineChart(ttk.Frame):
                 marker_x = left + sec * usable_width / 86400
                 marker_y = marker_section_top + header_h - 14
                 size = 6
-                color = "#2e7d32" if is_ins else "#c62828"
+                color = SUCCESS if is_ins else DANGER
                 if is_ins:
                     canvas.create_polygon(marker_x, marker_y + 4, marker_x - size, marker_y - 6,
                                           marker_x + size, marker_y - 6,
@@ -1228,7 +1231,7 @@ class ActivityTimelineChart(ttk.Frame):
         margin = pad + 1
         text_id = canvas.create_text(
             min(event.x + 12, width - reserve), max(event.y - 24, 4), text=text,
-            anchor=tk.NW, fill="#17212b", tags="act_hover")
+            anchor=tk.NW, fill=TOOLTIP_FG, tags="act_hover")
         x1, y1, x2, y2 = canvas.bbox(text_id)
         if x2 > width - margin:
             canvas.move(text_id, width - margin - x2, 0)
@@ -1249,7 +1252,7 @@ class ActivityTimelineChart(ttk.Frame):
             x1, y1, x2, y2 = canvas.bbox(text_id)
         bg = canvas.create_rectangle(
             x1 - pad, y1 - 3, x2 + pad, y2 + 3,
-            fill="#fffde7", outline="#9e9e9e", tags="act_hover")
+            fill=TOOLTIP_BG, outline=TOOLTIP_BORDER, tags="act_hover")
         canvas.tag_lower(bg, text_id)
         # Clamp what the user actually sees: the frame's bbox (its 5/3px pad and
         # the 1px outline included), not just the text. Trying to fit both axes
@@ -1328,22 +1331,22 @@ class DayDetailWindow(tk.Toplevel):
     _open_windows: dict[tuple, "DayDetailWindow"] = {}
 
     COLORS = {
-        "DRIVE":      "#1565C0",
-        "WORK":       "#546E7A",
-        "REST":       "#78909C",
-        "AVAILABLE":  "#90A4AE",
-        "UNKNOWN":    "#78909C",
-        "CARD_IN":    "#2E7D32",
-        "CARD_OUT":   "#B71C1C",
-        "MANUAL":     "#6A1B9A",
-        "EVENT":      "#5D4037",
-        "FAULT":      "#5D4037",
-        "CONDITION":  "#5D4037",
-        "PLACES":     "#5D4037",
-        "OVERSPEED":  "#5D4037",
-        "POWER":      "#5D4037",
-        "BORDER":     "#5D4037",
-        "LOADUNLD":   "#5D4037",
+        "DRIVE":      ACCENT,
+        "WORK":       ACTIVITY_WORK_MUTED,
+        "REST":       SLATE,
+        "AVAILABLE":  TEXT_FAINT,
+        "UNKNOWN":    SLATE,
+        "CARD_IN":    SUCCESS,
+        "CARD_OUT":   DANGER_DARK,
+        "MANUAL":     ACCENT_PURPLE,
+        "EVENT":      ACTIVITY_EVENT,
+        "FAULT":      ACTIVITY_EVENT,
+        "CONDITION":  ACTIVITY_EVENT,
+        "PLACES":     ACTIVITY_EVENT,
+        "OVERSPEED":  ACTIVITY_EVENT,
+        "POWER":      ACTIVITY_EVENT,
+        "BORDER":     ACTIVITY_EVENT,
+        "LOADUNLD":   ACTIVITY_EVENT,
     }
 
     def __init__(self, parent, day, activities, day_km, changes_count,
@@ -1377,7 +1380,7 @@ class DayDetailWindow(tk.Toplevel):
         self.title(_("Daily Detail — {day} (UTC)").format(day=day))
         self.geometry("900x580")
         self.resizable(True, True)
-        self.configure(bg="#FAFAFA")
+        self.configure(bg=SURFACE_ALT)
         self.transient(parent)
 
         self._day = day
@@ -1406,31 +1409,31 @@ class DayDetailWindow(tk.Toplevel):
         self._current_slot = initial_slot if (is_vu and initial_slot == 2) else 1
 
         # ── Header ──
-        hdr = tk.Frame(self, bg="#FAFAFA")
+        hdr = tk.Frame(self, bg=SURFACE_ALT)
         hdr.pack(fill=tk.X, padx=14, pady=(12, 6))
-        title_row = tk.Frame(hdr, bg="#FAFAFA")
+        title_row = tk.Frame(hdr, bg=SURFACE_ALT)
         title_row.pack(fill=tk.X)
         tk.Label(title_row, text=_("Daily Detail"),
-                 font=("", 16, "bold"), fg="#263238", bg="#FAFAFA",
+                 font=FONT_PAGE_TITLE, fg=TEXT_STRONG, bg=SURFACE_ALT,
                  anchor=tk.W).pack(side=tk.LEFT)
         if is_vu:
             self._slot_btn = tk.Label(title_row,
                                       text=_("Slot 2") if self._current_slot == 1 else _("Slot 1"),
-                                      font=("", 10, "bold"),
-                                      fg="#1565C0", bg="#E3F2FD",
+                                      font=FONT_HEADING,
+                                      fg=ACCENT, bg=LINK_BUTTON_BG,
                                       padx=10, pady=2,
                                       cursor="hand2", relief=tk.FLAT, bd=1)
             self._slot_btn.pack(side=tk.RIGHT)
-            self._slot_btn.bind("<Enter>", lambda e: e.widget.configure(bg="#BBDEFB"))
-            self._slot_btn.bind("<Leave>", lambda e: e.widget.configure(bg="#E3F2FD"))
+            self._slot_btn.bind("<Enter>", lambda e: e.widget.configure(bg=HOVER_BG))
+            self._slot_btn.bind("<Leave>", lambda e: e.widget.configure(bg=LINK_BUTTON_BG))
             self._slot_btn.bind("<Button-1>", lambda e: self._toggle_slot())
         else:
             self._slot_btn = None
         tk.Label(hdr, text=_("{day} (UTC)").format(day=day),
-                 font=("", 11), fg="#607D8B", bg="#FAFAFA",
+                 font=FONT_SUBTITLE, fg=TEXT_SUBTLE, bg=SURFACE_ALT,
                  anchor=tk.W).pack(anchor=tk.W, pady=(1, 6))
         self._header_info = tk.Label(hdr, text="",
-                                     font=("", 10), fg="#78909C", bg="#FAFAFA",
+                                     font=FONT_BODY, fg=SLATE, bg=SURFACE_ALT,
                                      anchor=tk.W)
         self._header_info.pack(anchor=tk.W, pady=(0, 2))
         self._refresh_header()
@@ -1440,8 +1443,8 @@ class DayDetailWindow(tk.Toplevel):
         text_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
         scroll_y = ttk.Scrollbar(text_frame, orient=tk.VERTICAL)
         scroll_x = ttk.Scrollbar(text_frame, orient=tk.HORIZONTAL)
-        self.text = tk.Text(text_frame, font=("Menlo", 11), wrap=tk.NONE,
-                            bg="#FFFFFF", fg="#263238", padx=14, pady=10,
+        self.text = tk.Text(text_frame, font=FONT_MONO, wrap=tk.NONE,
+                            bg=WHITE, fg=TEXT_STRONG, padx=14, pady=10,
                             yscrollcommand=scroll_y.set,
                             xscrollcommand=scroll_x.set, cursor="arrow",
                             borderwidth=1, relief=tk.SOLID)
@@ -1451,22 +1454,22 @@ class DayDetailWindow(tk.Toplevel):
         scroll_x.pack(side=tk.BOTTOM, fill=tk.X)
         self.text.pack(fill=tk.BOTH, expand=True)
 
-        self.text.tag_configure("t_label", foreground="#263238",
-                                font=("Menlo", 11, "bold"))
-        self.text.tag_configure("t_marker", foreground="#263238",
-                                font=("Menlo", 11, "normal"))
-        self.text.tag_configure("t_event", foreground="#263238",
-                                font=("Menlo", 11, "italic"))
-        self.text.tag_configure("t_sub", foreground="#5D4037",
-                                font=("Menlo", 10))
-        self.text.tag_configure("t_hdr", foreground="#37474F",
-                                font=("Menlo", 12, "bold"))
-        self.text.tag_configure("t_time", foreground="#90A4AE",
-                                font=("Menlo", 10))
-        self.text.tag_configure("t_count", foreground="#78909C",
-                                font=("Menlo", 10))
-        self.text.tag_configure("t_odo", foreground="#78909C",
-                                font=("Menlo", 10))
+        self.text.tag_configure("t_label", foreground=TEXT_STRONG,
+                                font=FONT_MONO_BOLD)
+        self.text.tag_configure("t_marker", foreground=TEXT_STRONG,
+                                font=FONT_MONO_NORMAL)
+        self.text.tag_configure("t_event", foreground=TEXT_STRONG,
+                                font=FONT_MONO_ITALIC)
+        self.text.tag_configure("t_sub", foreground=ACTIVITY_EVENT,
+                                font=FONT_MONO_SMALL)
+        self.text.tag_configure("t_hdr", foreground=TEXT_SECONDARY,
+                                font=FONT_MONO_LARGE)
+        self.text.tag_configure("t_time", foreground=TEXT_FAINT,
+                                font=FONT_MONO_SMALL)
+        self.text.tag_configure("t_count", foreground=SLATE,
+                                font=FONT_MONO_SMALL)
+        self.text.tag_configure("t_odo", foreground=SLATE,
+                                font=FONT_MONO_SMALL)
 
         self._render()
 
@@ -1978,6 +1981,47 @@ def _condition_label(cond):
     return m.get(str(cond), _("Condition: {condition}").format(condition=cond))
 
 
+# ── Drag & drop (optional) ───────────────────────────────────────────────
+
+@functools.lru_cache(maxsize=1)
+def _drop_splitter():
+    """Tcl's own list parser, without a display (``tk.Tcl`` opens no window).
+
+    A dropped payload is a *Tcl list*, not whitespace-separated text: a path
+    with a space arrives braced (``{/a b/c.ddd}``) and Windows paths carry
+    backslashes, so only Tcl's rules can take it apart. The GUI passes
+    ``self.tk.splitlist``; this display-less interpreter is the same parser for
+    the callers that have no root (tests, batch tools).
+    """
+    return tk.Tcl().splitlist
+
+
+def dropped_paths(data, split=None, isfile=None):
+    """The existing regular files among a ``<<Drop>>`` payload, in drop order.
+
+    ``data`` is tkdnd's ``%D`` substitution — the raw Tcl list of the dropped
+    paths — and this is the only place that interprets it. Directories and
+    paths that no longer exist are dropped: a drop must never open something
+    that is not a readable file. Nothing usable yields ``[]``.
+
+    ``split`` (a Tcl list splitter) and ``isfile`` (the existence predicate) are
+    injectable so the parsing can be tested without a display and without
+    touching the disk.
+    """
+    if not isinstance(data, str) or not data.strip():
+        return []
+    split = split or _drop_splitter()
+    isfile = isfile or os.path.isfile
+    try:
+        candidates = split(data)
+    except Exception:  # unbalanced braces/quotes: not a list we can use
+        _log.debug("dropped payload is not a Tcl list: %r", data)
+        return []
+    if isinstance(candidates, str):
+        candidates = [candidates]
+    return [path for path in candidates if isinstance(path, str) and path and isfile(path)]
+
+
 # ── Main application ─────────────────────────────────────────────────────
 
 def _resource_path(rel):
@@ -2072,62 +2116,58 @@ class TachoExplorer(tk.Tk):
         # data tables even when the OS is in dark mode. Without this, macOS
         # dark mode leaves ttk frames/labels dark while the explicitly-styled
         # Treeview rows stay light, producing a jarring split appearance.
-        APP_BG = "#f4f6f9"
-        APP_FG = "#1c2733"
-        FIELD_BG = "#ffffff"
-        BORDER = "#c5cfdb"
-        self.configure(background=APP_BG)
+        self.configure(background=SURFACE)
 
         # tk_setPalette recolours classic (non-ttk) widgets: menus, canvases,
         # message boxes. Do this first, then override ttk styles below so the
         # palette cannot clobber ttk-specific element colours (e.g. the tree
         # expand/collapse indicator).
-        self.tk_setPalette(background=APP_BG, foreground=APP_FG,
-                           activeBackground="#dbe4f0", activeForeground=APP_FG,
-                           highlightBackground=APP_BG,
-                           highlightColor="#1565c0",
-                           selectBackground="#1565c0", selectForeground="#ffffff")
+        self.tk_setPalette(background=SURFACE, foreground=TEXT_PRIMARY,
+                           activeBackground=ACTIVE_BG, activeForeground=TEXT_PRIMARY,
+                           highlightBackground=SURFACE,
+                           highlightColor=ACCENT,
+                           selectBackground=ACCENT, selectForeground=WHITE)
 
         # Root style: kills clam's grey 3D borders/shading everywhere at once.
-        style.configure(".", background=APP_BG, foreground=APP_FG,
+        style.configure(".", background=SURFACE, foreground=TEXT_PRIMARY,
                         fieldbackground=FIELD_BG, bordercolor=BORDER,
-                        darkcolor=APP_BG, lightcolor=APP_BG,
-                        troughcolor="#dbe4f0", arrowcolor=APP_FG,
-                        insertcolor=APP_FG, focuscolor="#1565c0",
-                        selectbackground="#1565c0", selectforeground="#ffffff")
+                        darkcolor=SURFACE, lightcolor=SURFACE,
+                        troughcolor=ACTIVE_BG, arrowcolor=TEXT_PRIMARY,
+                        insertcolor=TEXT_PRIMARY, focuscolor=ACCENT,
+                        selectbackground=ACCENT, selectforeground=WHITE)
 
         for cls in ("TFrame", "TLabelframe", "TPanedWindow"):
-            style.configure(cls, background=APP_BG)
-        style.configure("TLabelframe.Label", background=APP_BG, foreground=APP_FG)
-        style.configure("TLabel", background=APP_BG, foreground=APP_FG)
-        style.configure("TButton", background="#e3e9f2", foreground=APP_FG,
+            style.configure(cls, background=SURFACE)
+        style.configure("TLabelframe.Label", background=SURFACE, foreground=TEXT_PRIMARY)
+        style.configure("TLabel", background=SURFACE, foreground=TEXT_PRIMARY)
+        style.configure("TButton", background=HEADER_BG, foreground=TEXT_PRIMARY,
                         bordercolor=BORDER)
         style.map("TButton",
-                  background=[("active", "#d2ddec"), ("pressed", "#c3d1e6")])
-        style.configure("TMenubutton", background="#e3e9f2", foreground=APP_FG,
-                        arrowcolor=APP_FG)
-        style.map("TMenubutton", background=[("active", "#d2ddec")])
-        style.configure("TEntry", fieldbackground=FIELD_BG, foreground=APP_FG,
-                        insertcolor=APP_FG, bordercolor=BORDER)
-        style.configure("TCombobox", fieldbackground=FIELD_BG, foreground=APP_FG)
+                  background=[("active", CONTROL_HOVER_BG), ("pressed", BUTTON_PRESSED_BG)])
+        style.configure("TMenubutton", background=HEADER_BG, foreground=TEXT_PRIMARY,
+                        arrowcolor=TEXT_PRIMARY)
+        style.map("TMenubutton", background=[("active", CONTROL_HOVER_BG)])
+        style.configure("TEntry", fieldbackground=FIELD_BG, foreground=TEXT_PRIMARY,
+                        insertcolor=TEXT_PRIMARY, bordercolor=BORDER)
+        style.configure("TCombobox", fieldbackground=FIELD_BG, foreground=TEXT_PRIMARY)
         style.configure("Treeview", background=FIELD_BG, fieldbackground=FIELD_BG,
-                        foreground=APP_FG, bordercolor=BORDER)
+                        foreground=TEXT_PRIMARY, bordercolor=BORDER)
         style.map("Treeview",
-                  background=[("selected", "#1565c0")],
-                  foreground=[("selected", "#ffffff")])
+                  background=[("selected", ACCENT)],
+                  foreground=[("selected", WHITE)])
         # Restore a dark, visible expand/collapse arrow on the light tree.
-        style.configure("Treeview.Item", indicatorforeground=APP_FG)
+        style.configure("Treeview.Item", indicatorforeground=TEXT_PRIMARY)
         style.configure("Treeview.Heading", background=HEADER_BG,
-                        foreground=APP_FG, font=("", 10, "bold"),
+                        foreground=TEXT_PRIMARY, font=FONT_HEADING,
                         bordercolor=BORDER, relief=tk.FLAT)
-        style.map("Treeview.Heading", background=[("active", "#d2ddec")])
-        style.configure("TScrollbar", background="#cdd7e4", troughcolor=APP_BG,
-                        bordercolor=BORDER, arrowcolor=APP_FG)
-        style.map("TScrollbar", background=[("active", "#b6c3d6")])
+        style.map("Treeview.Heading", background=[("active", CONTROL_HOVER_BG)])
+        style.configure("TScrollbar", background=SCROLLBAR_BG, troughcolor=SURFACE,
+                        bordercolor=BORDER, arrowcolor=TEXT_PRIMARY)
+        style.map("TScrollbar", background=[("active", SCROLLBAR_HOVER_BG)])
         # PanedWindow divider (sash) between the tree and the table.
-        style.configure("Sash", background=APP_BG, bordercolor=BORDER,
-                        lightcolor=APP_BG, darkcolor=APP_BG)
-        style.configure("TProgressbar", background="#1565c0", troughcolor="#dbe4f0")
+        style.configure("Sash", background=SURFACE, bordercolor=BORDER,
+                        lightcolor=SURFACE, darkcolor=SURFACE)
+        style.configure("TProgressbar", background=ACCENT, troughcolor=ACTIVE_BG)
         style.configure("Treeview", rowheight=_px(24))
 
         self.current_data = None
@@ -2139,11 +2179,81 @@ class TachoExplorer(tk.Tk):
         self._parse_queue = queue.Queue()
         self._export_queue = queue.Queue()
 
+        # Optional feature, registered before the UI is built: the empty state
+        # only advertises a drop target when the registration really happened.
+        self._dnd_enabled = False
+        self._drop_command = None
+        self.drop_hint = None
+        self._enable_dnd()
+
         self._build_ui()
         try:
             self.protocol("WM_DELETE_WINDOW", self._on_close)
         except Exception:
             _log.debug("WM_DELETE_WINDOW not supported")
+
+    # ── Drag & drop (optional) ──────────────────────────────
+
+    def _enable_dnd(self):
+        """Register this window as a drop target for files, if tkdnd loads.
+
+        ``tkinterdnd2`` is optional *and* its ``tkdnd`` extension is a native
+        library that can fail to load (unsupported platform, Tcl build, frozen
+        bundle without the binaries). Every failure is one debug log line and a
+        no-op: the window and every other feature keep working, only drag &
+        drop is missing.
+        """
+        try:
+            from tkinterdnd2 import DND_FILES, TkinterDnD
+
+            version = TkinterDnD._require(self)  # loads tkdnd into this interp
+            # The window is a tk.Tk, not a tkinter.BaseWidget, so the DnDWrapper
+            # mixin methods the package injects there are absent on the root
+            # (verified on tkdnd 2.10.3). These are the same two Tcl commands
+            # the mixin issues, plus the binding it would create.
+            self._drop_command = self.register(self._on_drop)
+            self.tk.call("tkdnd::drop_target", "register", self._w, (DND_FILES,))
+            # tkdnd substitutes %D in the bind script and quotes the payload as
+            # a single word, so the handler always receives one Tcl list string.
+            self.tk.call("bind", self._w, "<<Drop>>",
+                         f"{self._drop_command} %D")
+        except Exception as exc:  # ImportError, RuntimeError, TclError, ...
+            _log.debug("drag & drop not available: %s", exc)
+            return
+        self._dnd_enabled = True
+        _log.debug("drag & drop enabled (tkdnd %s)", version)
+
+    def _on_drop(self, data="", *extra):
+        """``<<Drop>>`` handler: open the first dropped file, like the picker.
+
+        ``data`` is the whole ``%D`` payload, one Tcl list. A tkdnd build that
+        handed the payload over as several Tcl words would land in ``extra``:
+        each word is then treated as its own payload, so the drop is not lost
+        to an argument-count error out of the Tcl command. (A path that was
+        split on its own space cannot be recovered from that — it simply is not
+        found, and the status bar says nothing could be opened.)
+
+        Returns the action tkdnd expects. It is always ``copy``: the dropped
+        file is only ever read, never moved or deleted, whatever the drag
+        source's default action was. Dropping several files opens the first one
+        through the same entry point as the dialog, so recent files, the busy
+        guard and the error reporting are shared, not reimplemented.
+        """
+        if self._parsing:
+            return "copy"
+        paths = []
+        for part in (data, *extra):
+            paths.extend(dropped_paths(part, split=self.tk.splitlist))
+        if not paths:
+            self.status.config(text=_("Nothing to open in that drop"))
+            return "copy"
+        self._start_parse(paths[0])
+        if len(paths) > 1:
+            # After _start_parse: it writes its own "Parsing ..." status, which
+            # a note written first would never be seen under.
+            self.status.config(
+                text=_("Several files dropped \u2014 opened the first one"))
+        return "copy"
 
     # ── Layout ──────────────────────────────────────────────
 
@@ -2156,8 +2266,8 @@ class TachoExplorer(tk.Tk):
         self.btn_export = ttk.Menubutton(top, text=_("\U0001f4e4  Export"),
                                          state=tk.DISABLED)
         export_menu = tk.Menu(self.btn_export, tearoff=0,
-                              background="#ffffff", foreground="#1c2733",
-                              activebackground="#1565c0", activeforeground="#ffffff",
+                              background=WHITE, foreground=TEXT_PRIMARY,
+                              activebackground=ACCENT, activeforeground=WHITE,
                               borderwidth=0)
         export_menu.add_command(label=_("PDF (.pdf)"), command=self._export_pdf)
         export_menu.add_command(label=_("Excel (.xlsx)"), command=self._export_excel)
@@ -2171,12 +2281,12 @@ class TachoExplorer(tk.Tk):
         # separator so the two decisions never read as one.
         self.btn_lang = ttk.Menubutton(top, text="\U0001f310  " + LANGUAGES[self._language])
         lang_menu = tk.Menu(self.btn_lang, tearoff=0,
-                            background="#ffffff", foreground="#1c2733",
-                            activebackground="#1565c0", activeforeground="#ffffff",
+                            background=WHITE, foreground=TEXT_PRIMARY,
+                            activebackground=ACCENT, activeforeground=WHITE,
                             borderwidth=0)
         languages = tk.Menu(lang_menu, tearoff=0,
-                            background="#ffffff", foreground="#1c2733",
-                            activebackground="#1565c0", activeforeground="#ffffff",
+                            background=WHITE, foreground=TEXT_PRIMARY,
+                            activebackground=ACCENT, activeforeground=WHITE,
                             borderwidth=0)
         # Explicit master: a variable created without one binds to whatever
         # Tk root happens to be the default (a stale one in tests), and the
@@ -2202,9 +2312,9 @@ class TachoExplorer(tk.Tk):
         self.btn_lang["menu"] = lang_menu
         self.btn_lang.pack(side=tk.RIGHT, padx=(8, 0))
         self.lbl_file = ttk.Label(top, text=_("No file loaded"),
-                                  font=("", 11, "bold"))
+                                  font=FONT_SUBTITLE_BOLD)
         self.lbl_file.pack(side=tk.LEFT)
-        self.lbl_status = ttk.Label(top, text="", font=("", 10))
+        self.lbl_status = ttk.Label(top, text="", font=FONT_BODY)
         self.lbl_status.pack(side=tk.LEFT, padx=(6, 0))
         self.lbl_gen = ttk.Label(top, text="")
         self.lbl_gen.pack(side=tk.RIGHT, padx=8)
@@ -2231,6 +2341,7 @@ class TachoExplorer(tk.Tk):
         self.table.pack(fill=tk.BOTH, expand=True)
         self.speed_chart = DetailedSpeedChart(right)
         self.activity_chart = ActivityTimelineChart(right)
+        self.empty_state = self._build_empty_state(right)
 
         self.bind("<Control-f>", lambda e: self._focus_filter())
 
@@ -2248,8 +2359,138 @@ class TachoExplorer(tk.Tk):
         self.progress = ttk.Progressbar(status_bar, mode="indeterminate", length=_px(160))
         # packed only while a parse is running \u2014 see _start_parse/_finish_parse
 
+        # Nothing is loaded yet: the right pane opens on the empty state
+        # instead of an empty table.
+        if not self.current_data:
+            self._show_empty_state()
+
         if self._initial_file and os.path.isfile(self._initial_file):
             self.after(100, lambda: self._start_parse(self._initial_file))
+
+    # ── Empty state (no file loaded) ────────────────────────
+
+    def _build_empty_state(self, parent):
+        """The placeholder the right pane shows while no file is loaded.
+
+        Built once, next to the table and the charts, and packed/unpacked by
+        :meth:`_show_empty_state` / :meth:`_hide_empty_state`: opening a file
+        must not rebuild it, and a failed first open must bring it back. It
+        carries the same open action as the top bar (never a second
+        implementation) plus the recently opened files.
+        """
+        outer = ttk.Frame(parent, padding=(16, 12))
+        outer.columnconfigure(0, weight=1)
+        outer.rowconfigure(0, weight=1)
+        outer.rowconfigure(2, weight=1)
+        centre = ttk.Frame(outer)
+        centre.grid(row=1, column=0)
+
+        title = ttk.Label(centre, text=_("Open a DDD file"),
+                          font=FONT_PAGE_TITLE, anchor=tk.CENTER,
+                          justify=tk.CENTER, wraplength=_px(420))
+        title.pack(fill=tk.X)
+        ttk.Button(centre, text=_("\U0001f4c2  Open DDD file"),
+                   command=self._open_file).pack(pady=(_px(12), _px(20)))
+
+        # Advertised only when the drop target really registered: a hint that
+        # nothing can honour is worse than no hint at all.
+        if self._dnd_enabled:
+            self.drop_hint = ttk.Label(centre, text=_("or drop it here"),
+                                       font=FONT_SMALL, foreground=MUTED,
+                                       anchor=tk.CENTER, wraplength=_px(420))
+            self.drop_hint.pack(fill=tk.X)
+
+        # "Recent files" is filled by _refresh_recent_files(); with no history
+        # (or nothing left on disk) the whole section stays hidden.
+        self.recent_section = ttk.Frame(centre)
+        self.recent_heading = ttk.Label(self.recent_section,
+                                        text=_("Recent files"),
+                                        font=FONT_HEADING, foreground=TEXT_MUTED,
+                                        anchor=tk.W, wraplength=_px(420))
+        self.recent_heading.pack(fill=tk.X, pady=(0, _px(4)))
+        self.recent_list = ttk.Frame(self.recent_section)
+        self.recent_list.pack(fill=tk.X)
+
+        # German/Finnish/Greek titles and long paths are wider than the pane at
+        # the minimum window size, so every text block wraps to the space it
+        # actually has instead of pushing the sash or being clipped.
+        self._wrap_labels = [title]
+        if self.drop_hint is not None:
+            self._wrap_labels.append(self.drop_hint)
+        self._wrap_labels.append(self.recent_heading)
+        # What comes after this is rebuilt by _refresh_recent_files().
+        self._fixed_wrap_labels = len(self._wrap_labels)
+        outer.bind("<Configure>", self._wrap_empty_state)
+        return outer
+
+    def _wrap_empty_state(self, event):
+        """Re-wrap the empty state's text to the width the pane really has."""
+        wrap = max(_px(160), event.width - _px(48))
+        for label in self._wrap_labels:
+            try:
+                if label.winfo_exists():
+                    label.configure(wraplength=wrap)
+            except tk.TclError:
+                continue  # a row destroyed by _refresh_recent_files
+
+    def _show_empty_state(self):
+        """Show the no-file placeholder instead of the table/charts."""
+        for widget in (self.table, self.speed_chart, self.activity_chart):
+            widget.pack_forget()
+        self._refresh_recent_files()
+        if not self.empty_state.winfo_manager():
+            self.empty_state.pack(fill=tk.BOTH, expand=True)
+
+    def _hide_empty_state(self):
+        """Give the right pane back to the table/charts."""
+        if self.empty_state.winfo_manager():
+            self.empty_state.pack_forget()
+
+    def _refresh_recent_files(self):
+        """Rebuild the recent-files list from the settings file.
+
+        Entries are read as stored (the settings helper never looks at the
+        disk) and only the ones that still exist are shown: a file on an
+        unplugged drive disappears from the list without being forgotten, so it
+        is back the next time the drive is mounted.
+        """
+        for child in self.recent_list.winfo_children():
+            child.destroy()
+        del self._wrap_labels[self._fixed_wrap_labels:]  # the rows being rebuilt
+        paths = [path for path in saved_recent_files() if os.path.isfile(path)]
+        if not paths:
+            self.recent_section.pack_forget()
+            return
+        if not self.recent_section.winfo_manager():
+            self.recent_section.pack(fill=tk.X)
+        for path in paths:
+            self._add_recent_row(path)
+
+    def _add_recent_row(self, path):
+        """One recent file: bold file name, muted directory, click to open."""
+        row = ttk.Frame(self.recent_list, cursor="hand2")
+        row.pack(fill=tk.X, pady=_px(2))
+        wrap = self._wrap_labels[0].cget("wraplength")
+        name = ttk.Label(row, text=os.path.basename(path),
+                         font=FONT_SUBTITLE_BOLD, anchor=tk.W, wraplength=wrap)
+        name.pack(fill=tk.X)
+        directory = ttk.Label(row, text=os.path.dirname(path), font=FONT_SMALL,
+                              foreground=SLATE, anchor=tk.W, wraplength=wrap)
+        directory.pack(fill=tk.X)
+        self._wrap_labels.extend((name, directory))
+        for widget in (row, name, directory):
+            widget.bind("<Button-1>",
+                        lambda _event, target=path: self._open_recent(target))
+
+    def _open_recent(self, path):
+        """Open a recent file through the very same route as the file picker.
+
+        ``_open_file`` is the only other caller of :meth:`_start_parse`, and it
+        refuses to start while a parse runs; the same guard applies here.
+        """
+        if self._parsing:
+            return
+        self._start_parse(path)
 
     def _toggle_translate_data(self):
         """Apply the "translate file contents" preference without a restart.
@@ -2504,6 +2745,9 @@ class TachoExplorer(tk.Tk):
                     filename=os.path.basename(self.current_file or "")))
         else:
             self.status.config(text=_("Ready \u2014 open a .ddd file"))
+            # Nothing was loaded before and nothing is loaded now: the pane
+            # goes back to the empty state rather than to a blank table.
+            self._show_empty_state()
 
     # ── Export ────────────────────────────────────────────
 
@@ -2663,6 +2907,11 @@ class TachoExplorer(tk.Tk):
         try:
             self.current_data = data
             self.current_file = path
+            # Only a *successful* parse reaches this line (a fatal parse error
+            # returned above): a mistyped or truncated file must never appear
+            # under "Recent files". The path here is the one actually parsed,
+            # so a file given on the command line is recorded too.
+            add_recent_file(path)
             self._populate_tree(data)
             self._update_top_bar(data)
             self.btn_export.config(state=tk.NORMAL)
@@ -2826,7 +3075,7 @@ class TachoExplorer(tk.Tk):
             self.integrity_banner.config(
                 text=_("\u26a0\ufe0f  {count} integrity warning(s) \u2014 click for details").format(
                     count=len(warnings)),
-                foreground="#e65100")
+                foreground=WARNING)
             header = _("The file may be incomplete or corrupted.\n\n{filename}\n\n").format(
                 filename=os.path.basename(path))
             messagebox.showwarning(_("File Integrity Warning"),
@@ -2934,17 +3183,17 @@ class TachoExplorer(tk.Tk):
             sv_ok = sv.get("all_treps_valid") is True
             vu_chain_ok = sv.get("msca_to_vu") is True
             if sv_ok and vu_chain_ok and sv.get("root_anchored"):
-                text, color = "", "#757575"
+                text, color = "", MUTED
             elif sv_ok:
-                text, color = "\u26a0\ufe0f  " + label, "#e65100"
+                text, color = "\u26a0\ufe0f  " + label, WARNING
             elif verdict == VERDICT_CORRUPT:
-                text, color = "\u274c  " + label, "#c62828"
+                text, color = "\u274c  " + label, DANGER
             elif verdict == VERDICT_PARTIAL:
-                text, color = "\u26a0\ufe0f  " + label, "#f57c00"
+                text, color = "\u26a0\ufe0f  " + label, CAUTION
             elif "Incomplete" in integrity:
-                text, color = _("\u2753  Incomplete certificates"), "#757575"
+                text, color = _("\u2753  Incomplete certificates"), MUTED
             elif "Error" in integrity:
-                text, color = _("\u274c  Parse error"), "#c62828"
+                text, color = _("\u274c  Parse error"), DANGER
             else:
                 # Reached only when the file is NOT fully trusted (the
                 # all-good case is returned above): VERDICT_UNVERIFIED with
@@ -2953,17 +3202,17 @@ class TachoExplorer(tk.Tk):
                 # ("Partial (VU - chain ok)"). Hiding the badge here read as
                 # a clean file; it must warn like every other non-verified
                 # VU state (R1, Batch 1 refutation).
-                text, color = "\u26a0\ufe0f  " + label, "#e65100"
+                text, color = "\u26a0\ufe0f  " + label, WARNING
         elif verdict == VERDICT_VERIFIED:
-            text, color = "", "#757575"
+            text, color = "", MUTED
         elif verdict == VERDICT_CORRUPT or efv.get("failed", 0):
-            text, color = "\u274c  " + label, "#c62828"
+            text, color = "\u274c  " + label, DANGER
         elif "Incomplete" in integrity:
-            text, color = _("\u2753  Incomplete certificates"), "#757575"
+            text, color = _("\u2753  Incomplete certificates"), MUTED
         elif "Error" in integrity:
-            text, color = _("\u274c  Parse error"), "#c62828"
+            text, color = _("\u274c  Parse error"), DANGER
         else:
-            text, color = "\u26a0\ufe0f  " + label, "#e65100"
+            text, color = "\u26a0\ufe0f  " + label, WARNING
 
         self.lbl_status.config(text=text, foreground=color)
         # Also update the window title with a compact status (problems only).
@@ -3594,6 +3843,7 @@ class TachoExplorer(tk.Tk):
                         row_tags=None, tooltips=None, ev_tooltips=None):
         """Render a summary dashboard with KPI cards and sortable table."""
         self._cleanup_dashboard()
+        self._hide_empty_state()
         self.speed_chart.pack_forget()
         self.activity_chart.pack_forget()
         if not self.table.winfo_manager():
@@ -3617,7 +3867,7 @@ class TachoExplorer(tk.Tk):
 
         self.table.filt_bar.pack_forget()
 
-        kpi_frame = tk.Frame(self.table, bg="#f0f0f0")
+        kpi_frame = tk.Frame(self.table, bg=SURFACE_SUNKEN)
         kpi_frame.pack(fill=tk.X, padx=8, pady=(4, 12), before=self.table.tv.master)
         self._kpi_frame = kpi_frame
 
@@ -3625,15 +3875,15 @@ class TachoExplorer(tk.Tk):
         for i, (label, value, accent) in enumerate(kpis):
             row_idx = i // num_cols
             col_idx = i % num_cols
-            card = tk.Frame(kpi_frame, bg="#f8f9fa",
-                            highlightbackground="#d0d0d0",
+            card = tk.Frame(kpi_frame, bg=SURFACE_RAISED,
+                            highlightbackground=CARD_BORDER,
                             highlightthickness=1, padx=14, pady=10)
             card.grid(row=row_idx, column=col_idx, padx=5, pady=5,
                       sticky="nsew")
-            tk.Label(card, text=label, font=("", 9), fg="#6b7280",
-                     bg="#f8f9fa", anchor=tk.W).pack(anchor=tk.W)
-            tk.Label(card, text=value, font=("", 14, "bold"), fg=accent,
-                     bg="#f8f9fa", anchor=tk.W).pack(anchor=tk.W)
+            tk.Label(card, text=label, font=FONT_SMALL, fg=TEXT_LABEL,
+                     bg=SURFACE_RAISED, anchor=tk.W).pack(anchor=tk.W)
+            tk.Label(card, text=value, font=FONT_KPI_VALUE, fg=accent,
+                     bg=SURFACE_RAISED, anchor=tk.W).pack(anchor=tk.W)
 
         for c in range(num_cols):
             kpi_frame.columnconfigure(c, weight=1, uniform="kpi")
@@ -3649,10 +3899,10 @@ class TachoExplorer(tk.Tk):
             self.table.tv.column(c, minwidth=min_w, anchor=anchor, stretch=True)
 
         self.table.tv.tag_configure("total",
-                                    font=("", 10, "bold"),
-                                    foreground="#1565c0",
-                                    background="#e3e9f2")
-        self.table.tv.tag_configure("separator", background="#f0f0f0")
+                                    font=FONT_HEADING,
+                                    foreground=ACCENT,
+                                    background=HEADER_BG)
+        self.table.tv.tag_configure("separator", background=SURFACE_SUNKEN)
 
         # Render with row tags
         row_tags = row_tags or [None] * len(rows)
@@ -3679,9 +3929,9 @@ class TachoExplorer(tk.Tk):
         self._dashboard_ev_tips = ev_tooltips or {}
         self._dashboard_motion_bind = self.table.tv.bind(
             "<Motion>", self._on_dashboard_motion, add="+")
-        self._tooltip_lbl = tk.Label(self.table.tv, text="", bg="#ffffcc",
-                                     relief=tk.SOLID, borderwidth=1, font=("", 9),
-                                     fg="#37474f", padx=6, pady=2)
+        self._tooltip_lbl = tk.Label(self.table.tv, text="", bg=DASHBOARD_TOOLTIP_BG,
+                                     relief=tk.SOLID, borderwidth=1, font=FONT_SMALL,
+                                     fg=TEXT_SECONDARY, padx=6, pady=2)
 
         self.table.tv.update_idletasks()
         self.table._fit_columns()
@@ -4232,21 +4482,21 @@ class TachoExplorer(tk.Tk):
             last=sorted_asc[-1].get("date", "?"), days=day_count)
 
         kpis = [
-            (_("Drive"), _fmt_duration_minutes(totals_global["DRIVE"]), "#1565c0"),
-            (_("Work"), _fmt_duration_minutes(totals_global["WORK"]), "#ef6c00"),
-            (_("Rest"), _fmt_duration_minutes(totals_global["REST"]), "#78909c"),
-            (_("Available"), _fmt_duration_minutes(totals_global["AVAILABLE"]), "#f9a825"),
-            (_("Days"), str(day_count), "#37474f"),
-            (_("Avg Drive / day"), _fmt_duration_minutes(avg_drive), "#1565c0"),
-            (_("Max Drive / day"), _fmt_duration_minutes(max_drive), "#1565c0"),
+            (_("Drive"), _fmt_duration_minutes(totals_global["DRIVE"]), ACCENT),
+            (_("Work"), _fmt_duration_minutes(totals_global["WORK"]), ACTIVITY_WORK),
+            (_("Rest"), _fmt_duration_minutes(totals_global["REST"]), SLATE),
+            (_("Available"), _fmt_duration_minutes(totals_global["AVAILABLE"]), ACTIVITY_AVAILABLE),
+            (_("Days"), str(day_count), TEXT_SECONDARY),
+            (_("Avg Drive / day"), _fmt_duration_minutes(avg_drive), ACCENT),
+            (_("Max Drive / day"), _fmt_duration_minutes(max_drive), ACCENT),
         ]
         if is_vu:
-            kpis.append((_("Drivers"), str(driver_count), "#37474f"))
+            kpis.append((_("Drivers"), str(driver_count), TEXT_SECONDARY))
         else:
             all_vehicles = set()
             for plates in veh_by_date.values():
                 all_vehicles.update(plates)
-            kpis.append((_("Vehicles"), str(len(all_vehicles) or n_veh), "#37474f"))
+            kpis.append((_("Vehicles"), str(len(all_vehicles) or n_veh), TEXT_SECONDARY))
 
         if is_vu:
             columns = [_("Date"), _("# Drivers"), _("Ev"), _("Km"), _("Odometer"),
@@ -4324,12 +4574,12 @@ class TachoExplorer(tk.Tk):
         slot_label = getattr(self, "_vu_slot_filter", "Slot 1")
         if getattr(self, "_slot_toggle_frame", None) is not None:
             self._slot_toggle_frame.destroy()
-        btn_frame = tk.Frame(self.table, bg="#f4f6f9")
+        btn_frame = tk.Frame(self.table, bg=SURFACE)
         self._slot_toggle_frame = btn_frame
         btn_frame.pack(fill=tk.X, padx=8, pady=(0, 4), before=self.table.tv.master)
 
-        tk.Label(btn_frame, text=_(slot_label), font=("", 10, "bold"),
-                 fg="#1565c0", bg="#f4f6f9").pack(side=tk.LEFT)
+        tk.Label(btn_frame, text=_(slot_label), font=FONT_HEADING,
+                 fg=ACCENT, bg=SURFACE).pack(side=tk.LEFT)
 
         def _toggle():
             current = getattr(self, "_vu_slot_filter", "Slot 1")
@@ -4337,10 +4587,10 @@ class TachoExplorer(tk.Tk):
             self._vu_slot_filter = new_slot
             self._show_daily_summary(activity_list, data, _fast_refresh=True)
 
-        tk.Button(btn_frame, text="\u21c4", font=("", 10),
-                  bg="#e8edf2", fg="#37474f", relief=tk.FLAT,
-                  padx=8, pady=0, activebackground="#dbe4f0",
-                  activeforeground="#1565c0", cursor="hand2",
+        tk.Button(btn_frame, text="\u21c4", font=FONT_BODY,
+                  bg=TOGGLE_BG, fg=TEXT_SECONDARY, relief=tk.FLAT,
+                  padx=8, pady=0, activebackground=ACTIVE_BG,
+                  activeforeground=ACCENT, cursor="hand2",
                   command=_toggle).pack(side=tk.RIGHT)
 
     def _show_speed_summary(self, raw_blocks, data):
@@ -4424,14 +4674,14 @@ class TachoExplorer(tk.Tk):
             first=days[-1], last=days[0], days=day_count)
 
         kpis = [
-            (_("Days"), str(day_count), "#37474f"),
-            (_("Max speed"), f"{global_max:.0f} km/h", "#1565c0"),
-            (_("Avg speed"), f"{global_avg:.1f} km/h", "#37474f"),
-            (_("Samples"), f"{total_samples:,}".replace(",", " "), "#37474f"),
-            (_("Time >90 km/h"), _fmt_seconds_duration(overspeed_seconds), "#d32f2f"),
-            (_("Overspeed events"), str(overspeed_events), "#d32f2f"),
-            (_("Max avg / day"), f"{max_daily_avg:.1f} km/h", "#1565c0"),
-            (_("Min avg / day"), f"{min_daily_avg:.1f} km/h", "#78909c"),
+            (_("Days"), str(day_count), TEXT_SECONDARY),
+            (_("Max speed"), f"{global_max:.0f} km/h", ACCENT),
+            (_("Avg speed"), f"{global_avg:.1f} km/h", TEXT_SECONDARY),
+            (_("Samples"), f"{total_samples:,}".replace(",", " "), TEXT_SECONDARY),
+            (_("Time >90 km/h"), _fmt_seconds_duration(overspeed_seconds), DANGER_STRONG),
+            (_("Overspeed events"), str(overspeed_events), DANGER_STRONG),
+            (_("Max avg / day"), f"{max_daily_avg:.1f} km/h", ACCENT),
+            (_("Min avg / day"), f"{min_daily_avg:.1f} km/h", SLATE),
         ]
 
         columns = [_("Date"), _("Max km/h"), _("Avg km/h"), _("Samples"),
@@ -4489,6 +4739,7 @@ class TachoExplorer(tk.Tk):
 
     def _show_table(self, title, cols, rows, meta=""):
         self._cleanup_dashboard()
+        self._hide_empty_state()
         self.speed_chart.pack_forget()
         self.activity_chart.pack_forget()
         if not self.table.winfo_manager():
@@ -4514,6 +4765,7 @@ class TachoExplorer(tk.Tk):
 
     def _show_speed_chart(self, day, samples, overspeeding_events=None):
         self._cleanup_dashboard()
+        self._hide_empty_state()
         self.table.pack_forget()
         self.activity_chart.pack_forget()
         self.speed_chart.pack(fill=tk.BOTH, expand=True)
@@ -4524,6 +4776,7 @@ class TachoExplorer(tk.Tk):
                              changes_count, driver_info, slot_schedule, markers,
                              oos_events=None, vehicle_info=None):
         self._cleanup_dashboard()
+        self._hide_empty_state()
         self.table.pack_forget()
         self.speed_chart.pack_forget()
         self.activity_chart.pack(fill=tk.BOTH, expand=True)
@@ -4535,6 +4788,7 @@ class TachoExplorer(tk.Tk):
     def _show_summary(self, title, cols, rows, meta):
         """Render a rich info panel with section headers instead of a data table."""
         self._cleanup_dashboard()
+        self._hide_empty_state()
         self.speed_chart.pack_forget()
         self.activity_chart.pack_forget()
         if not self.table.winfo_manager():

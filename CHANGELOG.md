@@ -22,6 +22,29 @@
 - **Tests/docs**: `tests/unit/test_i18n.py` covers the translator, settings
   handling, PO/MO tooling, the language menu and the restart path; CONTRIBUTING
   documents how to add or update a language.
+- **Empty state with recent files**: before a file is opened the right pane now
+  shows `Open a DDD file` — the same open action as the top bar — and, under it,
+  the last 8 files that were parsed *successfully* (`feat(ui)`): name in bold,
+  folder underneath, one click to reopen, and entries whose file no longer
+  exists are hidden without being forgotten. The history is stored next to the
+  language preference in `settings.json` and is rebuilt every time the empty
+  state appears; a failed open is never recorded.
+- **Drag & drop**: a `.ddd` file dropped anywhere on the window is opened
+  through the very same entry point as the file dialog, so the busy guard,
+  recent-files recording and parse-error reporting are shared; dropping several
+  files opens the first and says so in the status bar, dropping a folder (or a
+  file that no longer exists) opens nothing and says why. `tkinterdnd2` is
+  optional: without it — or without a `tkdnd` binary for the platform — the
+  window starts with drag & drop silently disabled and no "or drop it here"
+  hint, everything else unchanged.
+
+### ♻️ Refactoring
+
+- **Single palette and font source**: `refactor(ui)` — every colour and every
+  font spec the desktop UI paints now lives in `app/theme.py` (`SURFACE`,
+  `ACCENT`, `ACTIVITY_*`, `FONT_*`, ...), and `app/gui.py` no longer contains a
+  single raw `#rrggbb` literal. The change is visually inert: the palette was
+  dumped widget by widget before and after, and the two snapshots are identical.
 
 # v2.7.0 (2026-10-03)
 

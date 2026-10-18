@@ -72,6 +72,12 @@ LANGUAGES = {
     "mk": "Македонски",
 }
 
+#: Settings key of the recently opened files, most recent first.
+RECENT_FILES_KEY = "recent_files"
+
+#: How many recently opened files the settings file remembers.
+RECENT_FILES_LIMIT = 8
+
 #: A catalog that cannot be read must degrade to English, never to a crash, so
 #: every parse/decoding failure of ``gettext`` is treated the same way. The
 #: concrete types are what ``GNUTranslations._parse`` raises on a truncated or
@@ -193,6 +199,63 @@ def save_translate_data(flag):
     settings = _read_settings()
     settings[TRANSLATE_DATA_KEY] = flag
     return _write_settings(settings)
+
+
+def saved_recent_files():
+    """The recently opened files, most recent first (``[]`` when unknown).
+
+    A pure read: it never touches the file system beyond the settings file, so
+    a path that has since been deleted or unmounted is still returned — hiding
+    those is the GUI's decision, and forgetting them here would erase a history
+    that a temporarily unavailable drive should get back.
+
+    The settings file is user-editable, so the stored value can be anything: a
+    non-list (``null``, a number, a string) means "no history", and inside a
+    list every entry that is not a non-empty string is dropped individually
+    instead of discarding the whole history. Duplicates are collapsed and the
+    list is capped at :data:`RECENT_FILES_LIMIT`.
+    """
+    stored = _read_settings().get(RECENT_FILES_KEY)
+    if not isinstance(stored, list):
+        return []
+    files = []
+    for entry in stored:
+        if not isinstance(entry, str) or not entry.strip():
+            continue
+        if entry not in files:
+            files.append(entry)
+        if len(files) >= RECENT_FILES_LIMIT:
+            break
+    return files
+
+
+def add_recent_file(path):
+    """Record ``path`` as the most recently opened file; ``False`` if not stored.
+
+    The list is kept as absolute paths, newest first, without duplicates: a file
+    opened twice moves to the top instead of appearing twice, and only the
+    :data:`RECENT_FILES_LIMIT` most recent are kept. Everything else in the
+    settings file is preserved, and a failed write returns ``False`` (the
+    previous history is untouched) exactly like the sibling setters.
+    """
+    if not isinstance(path, str) or not path.strip():
+        return False
+    try:
+        entry = os.path.abspath(path)
+    except (OSError, TypeError, ValueError):
+        return False
+    kept = [other for other in saved_recent_files() if not _same_path(other, entry)]
+    settings = _read_settings()
+    settings[RECENT_FILES_KEY] = [entry] + kept[:RECENT_FILES_LIMIT - 1]
+    return _write_settings(settings)
+
+
+def _same_path(first, second):
+    """Whether two stored paths point at the same file (best effort)."""
+    try:
+        return os.path.abspath(first) == os.path.abspath(second)
+    except (OSError, TypeError, ValueError):
+        return first == second
 
 
 def install(lang):

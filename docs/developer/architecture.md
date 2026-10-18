@@ -184,5 +184,6 @@ Validates digital certificate chains. Supports RSA (G1/G2) and ECDSA (G2). Hiera
 
 ### GUI Layer
 
-- **app/gui.py**: Desktop application (tkinter/ttk). Regedit-style section tree on the left, Excel-style data table on the right (sortable columns, text filter). Data-driven: sections are derived from the parser output.
+- **app/gui.py**: Desktop application (tkinter/ttk). Regedit-style section tree on the left, Excel-style data table on the right (sortable columns, text filter). Data-driven: sections are derived from the parser output. With no file loaded the right pane shows the empty state (open action + recently opened files) instead of an empty table.
+- **app/theme.py**: the single source of the palette (`SURFACE`, `TEXT_*`, `ACCENT`, `ACTIVITY_*`, `DANGER*`, ...) and of the font specs (`FONT_*`) the GUI paints. `app/gui.py` holds no colour literal of its own, so a palette change is a one-file edit.
 - **app/cli.py** (`app/cli.py:14`): CLI with `--json`, `--excel`, `--all`, `--summary` flags

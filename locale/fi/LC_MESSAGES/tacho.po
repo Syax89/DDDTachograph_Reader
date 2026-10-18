@@ -656,6 +656,9 @@ msgstr "Ylinopeus"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Ylinopeus: {start} → {end} | enint. {max_speed} | keskim. {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Avaa DDD-tiedosto"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Sähkökatkot"
 
 msgid "Ready — open a .ddd file"
 msgstr "Valmis — avaa .ddd-tiedosto"
+
+msgid "Recent files"
+msgstr "Viimeisimmät tiedostot"
 
 msgid "Rendering Error"
 msgstr "Näyttövirhe"
@@ -2003,6 +2009,9 @@ msgstr "Pohjois-Makedonia"
 msgid "Norway"
 msgstr "Norja"
 
+msgid "Nothing to open in that drop"
+msgstr "Tässä pudotuksessa ei ole avattavaa tiedostoa"
+
 msgid "Poland"
 msgstr "Puola"
 
@@ -2020,6 +2029,9 @@ msgstr "San Marino"
 
 msgid "Serbia"
 msgstr "Serbia"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Pudotettiin useita tiedostoja — avattiin ensimmäinen"
 
 msgid "Slovakia"
 msgstr "Slovakia"
@@ -2056,3 +2068,6 @@ msgstr "Maailma"
 
 msgid "Yugoslavia"
 msgstr "Jugoslavia"
+
+msgid "or drop it here"
+msgstr "tai pudota tiedosto tähän"

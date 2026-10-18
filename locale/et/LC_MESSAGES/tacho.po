@@ -656,6 +656,9 @@ msgstr "Ülekiirus"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Ülekiirus: {start} → {end} | maks {max_speed} | keskm {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Ava DDD-fail"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Toitekatkestused"
 
 msgid "Ready — open a .ddd file"
 msgstr "Valmis — ava .ddd fail"
+
+msgid "Recent files"
+msgstr "Hiljutised failid"
 
 msgid "Rendering Error"
 msgstr "Kuvamise viga"
@@ -2003,6 +2009,9 @@ msgstr "Põhja-Makedoonia"
 msgid "Norway"
 msgstr "Norra"
 
+msgid "Nothing to open in that drop"
+msgstr "Selles lohistamises ei ole avatavat faili"
+
 msgid "Poland"
 msgstr "Poola"
 
@@ -2020,6 +2029,9 @@ msgstr "San Marino"
 
 msgid "Serbia"
 msgstr "Serbia"
+
+msgid "Several files dropped — opened the first one"
+msgstr "Lohistati mitu faili — avati esimene"
 
 msgid "Slovakia"
 msgstr "Slovakkia"
@@ -2056,3 +2068,6 @@ msgstr "Maailm"
 
 msgid "Yugoslavia"
 msgstr "Jugoslaavia"
+
+msgid "or drop it here"
+msgstr "või lohista fail siia"

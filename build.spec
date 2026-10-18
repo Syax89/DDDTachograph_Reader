@@ -50,6 +50,10 @@ a = Analysis(
     datas=added_files,
     hiddenimports=[
         'tkinter',
+        # Optional drag & drop (imported lazily in app/gui.py). The
+        # pyinstaller-hooks-contrib hook bundles the tkdnd shared library and
+        # its .tcl files for the target platform.
+        'tkinterdnd2',
         'cryptography',
         'core.crypto.signature',
         'core',

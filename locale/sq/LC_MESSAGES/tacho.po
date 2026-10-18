@@ -656,6 +656,9 @@ msgstr "Tejkalim shpejtësie"
 msgid "Overspeeding: {start} → {end} | max {max_speed} | avg {avg_speed}"
 msgstr "Tejkalim shpejtësie: {start} → {end} | maks {max_speed} | mesatare {avg_speed}"
 
+msgid "Open a DDD file"
+msgstr "Hap një skedar DDD"
+
 msgid "PDF (.pdf)"
 msgstr "PDF (.pdf)"
 
@@ -703,6 +706,9 @@ msgstr "Ndërprerje të energjisë"
 
 msgid "Ready — open a .ddd file"
 msgstr "Gati — hapni një skedar .ddd"
+
+msgid "Recent files"
+msgstr "Skedarët e fundit"
 
 msgid "Rendering Error"
 msgstr "Gabim shfaqjeje"
@@ -2003,6 +2009,9 @@ msgstr "Maqedonia e Veriut"
 msgid "Norway"
 msgstr "Norvegjia"
 
+msgid "Nothing to open in that drop"
+msgstr "Nuk ka asgjë për të hapur në këtë lëshim"
+
 msgid "Poland"
 msgstr "Polonia"
 
@@ -2020,6 +2029,9 @@ msgstr "San Marino"
 
 msgid "Serbia"
 msgstr "Serbia"
+
+msgid "Several files dropped — opened the first one"
+msgstr "U lëshuan disa skedarë — u hap i pari"
 
 msgid "Slovakia"
 msgstr "Sllovakia"
@@ -2056,3 +2068,6 @@ msgstr "Bota"
 
 msgid "Yugoslavia"
 msgstr "Jugosllavia"
+
+msgid "or drop it here"
+msgstr "ose lëshoje skedarin këtu"
