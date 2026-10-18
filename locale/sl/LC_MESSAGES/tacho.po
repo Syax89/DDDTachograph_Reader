@@ -2071,3 +2071,240 @@ msgstr "Jugoslavija"
 
 msgid "or drop it here"
 msgstr "ali spustite datoteko tukaj"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Odsotnost podatkov o položaju iz sprejemnika GNSS"
+
+msgid "Activation"
+msgstr "Aktiviranje"
+
+msgid "Active / on-going event or fault"
+msgstr "Aktivni / tekoči dogodek ali okvara"
+
+msgid "Activities"
+msgstr "Dejavnosti"
+
+msgid "Card conflict"
+msgstr "Spor kartic"
+
+msgid "Card data input integrity error"
+msgstr "Napaka celovitosti vhodnih podatkov kartice"
+
+msgid "Card downloaded"
+msgstr "Prenos kartice"
+
+msgid "Card fault, no further details"
+msgstr "Okvara kartice, brez dodatnih podrobnosti"
+
+msgid "Card insertion while driving"
+msgstr "Vstavljanje kartice med vožnjo"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Napaka komunikacije z zunanjo napravo GNSS"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Napaka komunikacije z napravo za daljinsko komuniciranje"
+
+msgid "DetailedSpeed"
+msgstr "Podrobni podatki o hitrosti"
+
+msgid "Display"
+msgstr "Zaslon"
+
+msgid "Display fault"
+msgstr "Okvara zaslona"
+
+msgid "Downloading fault"
+msgstr "Okvara prenosa"
+
+msgid "Driving without an appropriate card"
+msgstr "Vožnja brez ustrezne kartice"
+
+msgid "EventsFaults"
+msgstr "Dogodki in okvare"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Neuspešna avtentikacija zunanje naprave GNSS"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Potrdilo zunanje naprave GNSS je poteklo"
+
+msgid "External GNSS facility fault"
+msgstr "Okvara zunanje naprave GNSS"
+
+msgid "Ferry/Train Begin"
+msgstr "Začetek prehoda s trajektom/vlakom"
+
+msgid "Ferry/Train End"
+msgstr "Konec prehoda s trajektom/vlakom"
+
+msgid "Ferry/Train crossing"
+msgstr "Prehod s trajektom/vlakom"
+
+msgid "First event/fault after the last calibration"
+msgstr "Prvi dogodek/okvara po zadnji kalibraciji"
+
+msgid "First installation"
+msgstr "Prva vgradnja"
+
+msgid "GNSS anomaly"
+msgstr "Anomalija GNSS"
+
+msgid "Hardware sabotage"
+msgstr "Sabotaža strojne opreme"
+
+msgid "ITS interface fault"
+msgstr "Okvara vmesnika ITS"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Neskladje med podatki o gibanju in shranjenimi podatki o dejavnosti voznika"
+
+msgid "Insertion of a non-valid card"
+msgstr "Vstavljanje neveljavne kartice"
+
+msgid "Installation (current vehicle)"
+msgstr "Vgradnja (trenutno vozilo)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Okvara notranjega sprejemnika GNSS"
+
+msgid "Internal data transfer error"
+msgstr "Napaka notranjega prenosa podatkov"
+
+msgid "Internal sensor fault"
+msgstr "Okvara notranjega senzorja"
+
+msgid "Last card session not correctly closed"
+msgstr "Zadnja seja kartice ni bila pravilno zaključena"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Zadnji dogodek za enega od zadnjih 10 dni pojava"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Najdaljši dogodek za enega od zadnjih 10 dni pojava"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Najresnejši dogodek za enega od zadnjih 10 dni pojava"
+
+msgid "Motion data error"
+msgstr "Napaka podatkov o gibanju"
+
+msgid "Motion sensor authentication failure"
+msgstr "Neuspešna avtentikacija senzorja gibanja"
+
+msgid "No further details"
+msgstr "Brez dodatnih podrobnosti"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Eden od 10 najnovejših (ali zadnjih) dogodkov/okvar"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Eden od 5 najdaljših dogodkov v zadnjih 365 dneh"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Eden od 5 najresnejših dogodkov v zadnjih 365 dneh"
+
+msgid "OutOfScope Begin"
+msgstr "Izven obsega – začetek"
+
+msgid "OutOfScope End"
+msgstr "Izven obsega – konec"
+
+msgid "Over speeding"
+msgstr "Prekoračitev hitrosti"
+
+msgid "Overview"
+msgstr "Pregled"
+
+msgid "Periodic inspection"
+msgstr "Redni pregled"
+
+msgid "Power supply interruption"
+msgstr "Prekinitev napajanja"
+
+msgid "Printer fault"
+msgstr "Okvara tiskalnika"
+
+msgid "Printing"
+msgstr "Tiskanje"
+
+msgid "RFU"
+msgstr "Rezervirano za prihodnjo uporabo"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Okvara zapisovalne naprave, brez dodatnih podrobnosti"
+
+msgid "Remote communication facility fault"
+msgstr "Okvara naprave za daljinsko komunikacijo"
+
+msgid "Reserved"
+msgstr "Rezervirano"
+
+msgid "Roadside calibration check"
+msgstr "Kontrola kalibracije na cesti"
+
+msgid "Security breach attempt, no further details"
+msgstr "Poskus kršitve varnosti, brez dodatnih podrobnosti"
+
+msgid "Sensor authentication failure"
+msgstr "Neuspešna avtentikacija senzorja"
+
+msgid "Sensor fault"
+msgstr "Okvara senzorja"
+
+msgid "Sensor hardware sabotage"
+msgstr "Sabotaža strojne opreme senzorja"
+
+msgid "Sensor internal data transfer error"
+msgstr "Napaka notranjega prenosa podatkov senzorja"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Poskus kršitve varnosti senzorja, brez dodatnih podrobnosti"
+
+msgid "Sensor stored data integrity error"
+msgstr "Napaka celovitosti podatkov, shranjenih v senzorju"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Nepooblaščeno odpiranje ohišja senzorja"
+
+msgid "Stored user data integrity error"
+msgstr "Napaka celovitosti shranjenih uporabniških podatkov"
+
+msgid "Tachograph card authentication failure"
+msgstr "Neuspešna avtentikacija tahografske kartice"
+
+msgid "Tamper detection of GNSS"
+msgstr "Zaznavanje poseganja v GNSS"
+
+msgid "TechnicalData"
+msgstr "Tehnični podatki"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Časovni konflikt (GNSS proti notranji uri VU)"
+
+msgid "Time overlap"
+msgstr "Prekrivanje časa"
+
+msgid "Unauthorised case opening"
+msgstr "Nepooblaščeno odpiranje ohišja"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Nepooblaščena zamenjava senzorja gibanja"
+
+msgid "VU downloaded"
+msgstr "Prenos VU"
+
+msgid "VU internal fault"
+msgstr "Notranja okvara VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Konflikt gibanja vozila"
+
+msgid "failed"
+msgstr "neuspešno"
+
+msgid "skipped"
+msgstr "izpuščeno"
+
+msgid "verified"
+msgstr "preverjeno"

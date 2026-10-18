@@ -2071,3 +2071,240 @@ msgstr "Jugoslavija"
 
 msgid "or drop it here"
 msgstr "arba numeskite failą čia"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Vietos informacijos nebuvimas iš GNSS imtuvo"
+
+msgid "Activation"
+msgstr "Aktyvavimas"
+
+msgid "Active / on-going event or fault"
+msgstr "Aktyvus / vykstantis įvykis ar gedimas"
+
+msgid "Activities"
+msgstr "Veiklos"
+
+msgid "Card conflict"
+msgstr "Kortelės konfliktas"
+
+msgid "Card data input integrity error"
+msgstr "Kortelės duomenų įvesties vientisumo klaida"
+
+msgid "Card downloaded"
+msgstr "Kortelė atsisiųsta"
+
+msgid "Card fault, no further details"
+msgstr "Kortelės gedimas, išsamesnės informacijos nėra"
+
+msgid "Card insertion while driving"
+msgstr "Kortelė įdėta vairuojant"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Ryšio su išoriniu GNSS įrenginiu klaida"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Ryšio su nuotolinio ryšio įrenginiu klaida"
+
+msgid "DetailedSpeed"
+msgstr "Išsamus greitis"
+
+msgid "Display"
+msgstr "Ekranas"
+
+msgid "Display fault"
+msgstr "Ekrano gedimas"
+
+msgid "Downloading fault"
+msgstr "Atsisiuntimo gedimas"
+
+msgid "Driving without an appropriate card"
+msgstr "Vairavimas be tinkamos kortelės"
+
+msgid "EventsFaults"
+msgstr "Įvykiai/gedimai"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Išorinio GNSS įrenginio autentifikavimo klaida"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Išorinio GNSS įrenginio sertifikatas pasibaigęs"
+
+msgid "External GNSS facility fault"
+msgstr "Išorinio GNSS įrenginio gedimas"
+
+msgid "Ferry/Train Begin"
+msgstr "Keltas/traukinys — pradžia"
+
+msgid "Ferry/Train End"
+msgstr "Keltas/traukinys — pabaiga"
+
+msgid "Ferry/Train crossing"
+msgstr "Kėlimasis keltu ar traukiniu"
+
+msgid "First event/fault after the last calibration"
+msgstr "Pirmasis įvykis/gedimas po paskutinio kalibravimo"
+
+msgid "First installation"
+msgstr "Pirmasis sumontavimas"
+
+msgid "GNSS anomaly"
+msgstr "GNSS anomalija"
+
+msgid "Hardware sabotage"
+msgstr "Aparatinės įrangos sabotažas"
+
+msgid "ITS interface fault"
+msgstr "ITS sąsajos gedimas"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Nenuoseklumas tarp judėjimo duomenų ir įrašytų vairuotojo veiklos duomenų"
+
+msgid "Insertion of a non-valid card"
+msgstr "Negaliojančios kortelės įdėjimas"
+
+msgid "Installation (current vehicle)"
+msgstr "Sumontavimas (dabartinė transporto priemonė)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Vidinis GNSS imtuvo gedimas"
+
+msgid "Internal data transfer error"
+msgstr "Vidinė duomenų perdavimo klaida"
+
+msgid "Internal sensor fault"
+msgstr "Vidinis jutiklio gedimas"
+
+msgid "Last card session not correctly closed"
+msgstr "Paskutinė kortelės sesija tinkamai neuždaryta"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Paskutinis įvykis vieną iš paskutinių 10 dienų, kai jis įvyko"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Ilgiausias įvykis vieną iš paskutinių 10 dienų, kai jis įvyko"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Sunkiausias įvykis vieną iš paskutinių 10 dienų, kai jis įvyko"
+
+msgid "Motion data error"
+msgstr "Judėjimo duomenų klaida"
+
+msgid "Motion sensor authentication failure"
+msgstr "Judėjimo jutiklio autentifikavimo klaida"
+
+msgid "No further details"
+msgstr "Išsamesnės informacijos nėra"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Vienas iš 10 naujausių (arba paskutinių) įvykių/gedimų"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Vienas iš 5 ilgiausių įvykių per pastarąsias 365 dienas"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Vienas iš 5 sunkiausių įvykių per pastarąsias 365 dienas"
+
+msgid "OutOfScope Begin"
+msgstr "Už taikymo srities — pradžia"
+
+msgid "OutOfScope End"
+msgstr "Už taikymo srities — pabaiga"
+
+msgid "Over speeding"
+msgstr "Greičio viršijimas"
+
+msgid "Overview"
+msgstr "Apžvalga"
+
+msgid "Periodic inspection"
+msgstr "Periodinė patikra"
+
+msgid "Power supply interruption"
+msgstr "Maitinimo nutrūkimas"
+
+msgid "Printer fault"
+msgstr "Spausdintuvo gedimas"
+
+msgid "Printing"
+msgstr "Spausdinimas"
+
+msgid "RFU"
+msgstr "Rezervuota ateičiai (RFU)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Tachografo gedimas, išsamesnės informacijos nėra"
+
+msgid "Remote communication facility fault"
+msgstr "Nuotolinio ryšio įrenginio gedimas"
+
+msgid "Reserved"
+msgstr "Rezervuota"
+
+msgid "Roadside calibration check"
+msgstr "Kalibravimo patikra kelio pakraštyje"
+
+msgid "Security breach attempt, no further details"
+msgstr "Bandymas pažeisti saugumą, išsamesnės informacijos nėra"
+
+msgid "Sensor authentication failure"
+msgstr "Jutiklio autentifikavimo klaida"
+
+msgid "Sensor fault"
+msgstr "Jutiklio gedimas"
+
+msgid "Sensor hardware sabotage"
+msgstr "Jutiklio aparatinės įrangos sabotažas"
+
+msgid "Sensor internal data transfer error"
+msgstr "Vidinė jutiklio duomenų perdavimo klaida"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Bandymas pažeisti jutiklio saugumą, išsamesnės informacijos nėra"
+
+msgid "Sensor stored data integrity error"
+msgstr "Jutiklio įrašytų duomenų vientisumo klaida"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Neteisėtas jutiklio korpuso atidarymas"
+
+msgid "Stored user data integrity error"
+msgstr "Įrašytų naudotojo duomenų vientisumo klaida"
+
+msgid "Tachograph card authentication failure"
+msgstr "Tachografo kortelės autentifikavimo klaida"
+
+msgid "Tamper detection of GNSS"
+msgstr "GNSS duomenų klastojimo aptikimas"
+
+msgid "TechnicalData"
+msgstr "Techniniai duomenys"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Laiko konfliktas (GNSS vs VU vidinis laikrodis)"
+
+msgid "Time overlap"
+msgstr "Laiko persidengimas"
+
+msgid "Unauthorised case opening"
+msgstr "Neteisėtas korpuso atidarymas"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Neteisėtas judėjimo jutiklio pakeitimas"
+
+msgid "VU downloaded"
+msgstr "VU atsisiųstas"
+
+msgid "VU internal fault"
+msgstr "Vidinis VU gedimas"
+
+msgid "Vehicle motion conflict"
+msgstr "Transporto priemonės judėjimo konfliktas"
+
+msgid "failed"
+msgstr "nepavyko"
+
+msgid "skipped"
+msgstr "praleista"
+
+msgid "verified"
+msgstr "patikrinta"

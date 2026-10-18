@@ -2071,3 +2071,240 @@ msgstr "Jugoslavia"
 
 msgid "or drop it here"
 msgstr "eller slipp filen her"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Manglende posisjonsinformasjon fra GNSS-mottaker"
+
+msgid "Activation"
+msgstr "Aktivering"
+
+msgid "Active / on-going event or fault"
+msgstr "Aktiv / pågående hendelse eller feil"
+
+msgid "Activities"
+msgstr "Aktiviteter"
+
+msgid "Card conflict"
+msgstr "Kortkonflikt"
+
+msgid "Card data input integrity error"
+msgstr "Integritetsfeil ved inndata av kortdata"
+
+msgid "Card downloaded"
+msgstr "Kort lastet ned"
+
+msgid "Card fault, no further details"
+msgstr "Feil i kortet, ingen ytterligere detaljer"
+
+msgid "Card insertion while driving"
+msgstr "Kort satt inn under kjøring"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Kommunikasjonsfeil med det eksterne GNSS-utstyret"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Kommunikasjonsfeil med fjernkommunikasjonsutstyret"
+
+msgid "DetailedSpeed"
+msgstr "Detaljert hastighet"
+
+msgid "Display"
+msgstr "Skjerm"
+
+msgid "Display fault"
+msgstr "Feil i skjermen"
+
+msgid "Downloading fault"
+msgstr "Feil ved nedlasting"
+
+msgid "Driving without an appropriate card"
+msgstr "Kjøring uten et egnet kort"
+
+msgid "EventsFaults"
+msgstr "Hendelser/feil"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Autentiseringsfeil for eksternt GNSS-utstyr"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Sertifikatet for eksternt GNSS-utstyr er utløpt"
+
+msgid "External GNSS facility fault"
+msgstr "Feil i eksternt GNSS-utstyr"
+
+msgid "Ferry/Train Begin"
+msgstr "Ferje/tog — start"
+
+msgid "Ferry/Train End"
+msgstr "Ferje/tog — slutt"
+
+msgid "Ferry/Train crossing"
+msgstr "Overfart med ferje/tog"
+
+msgid "First event/fault after the last calibration"
+msgstr "Første hendelse/feil etter siste kalibrering"
+
+msgid "First installation"
+msgstr "Første installasjon"
+
+msgid "GNSS anomaly"
+msgstr "GNSS-anomali"
+
+msgid "Hardware sabotage"
+msgstr "Sabotasje av maskinvare"
+
+msgid "ITS interface fault"
+msgstr "Feil i ITS-grensesnittet"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Uoverensstemmelse mellom bevegelsesdata og lagrede aktivitetsdata for sjåføren"
+
+msgid "Insertion of a non-valid card"
+msgstr "Innsetting av et ugyldig kort"
+
+msgid "Installation (current vehicle)"
+msgstr "Installasjon (gjeldende kjøretøy)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Intern feil i GNSS-mottakeren"
+
+msgid "Internal data transfer error"
+msgstr "Intern dataoverføringsfeil"
+
+msgid "Internal sensor fault"
+msgstr "Intern feil i sensoren"
+
+msgid "Last card session not correctly closed"
+msgstr "Siste kortsession ble ikke lukket riktig"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Siste hendelse i en av de siste 10 dagene hvor den inntraff"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Lengste hendelse i en av de siste 10 dagene hvor den inntraff"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Alvorligste hendelse i en av de siste 10 dagene hvor den inntraff"
+
+msgid "Motion data error"
+msgstr "Feil i bevegelsesdata"
+
+msgid "Motion sensor authentication failure"
+msgstr "Autentiseringsfeil for bevegelsessensoren"
+
+msgid "No further details"
+msgstr "Ingen ytterligere detaljer"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Én av de 10 nyeste (eller siste) hendelsene/feilene"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Én av de 5 lengste hendelsene de siste 365 dagene"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Én av de 5 alvorligste hendelsene de siste 365 dagene"
+
+msgid "OutOfScope Begin"
+msgstr "Utenfor virkeområdet — start"
+
+msgid "OutOfScope End"
+msgstr "Utenfor virkeområdet — slutt"
+
+msgid "Over speeding"
+msgstr "Hastighetsoverskridelse"
+
+msgid "Overview"
+msgstr "Oversikt"
+
+msgid "Periodic inspection"
+msgstr "Periodisk kontroll"
+
+msgid "Power supply interruption"
+msgstr "Avbrudd i strømforsyningen"
+
+msgid "Printer fault"
+msgstr "Feil i skriveren"
+
+msgid "Printing"
+msgstr "Utskrift"
+
+msgid "RFU"
+msgstr "Reservert for fremtiden (RFU)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Feil i fartsskriveren, ingen ytterligere detaljer"
+
+msgid "Remote communication facility fault"
+msgstr "Feil i fjernkommunikasjonsutstyret"
+
+msgid "Reserved"
+msgstr "Reservert"
+
+msgid "Roadside calibration check"
+msgstr "Kalibreringskontroll ved veikanten"
+
+msgid "Security breach attempt, no further details"
+msgstr "Forsøk på sikkerhetsbrudd, ingen ytterligere detaljer"
+
+msgid "Sensor authentication failure"
+msgstr "Autentiseringsfeil for sensoren"
+
+msgid "Sensor fault"
+msgstr "Feil i sensoren"
+
+msgid "Sensor hardware sabotage"
+msgstr "Sabotasje av sensorens maskinvare"
+
+msgid "Sensor internal data transfer error"
+msgstr "Intern dataoverføringsfeil i sensoren"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Forsøk på sikkerhetsbrudd i sensoren, ingen ytterligere detaljer"
+
+msgid "Sensor stored data integrity error"
+msgstr "Integritetsfeil i sensorens lagrede data"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Uautorisert åpning av sensorens kapsling"
+
+msgid "Stored user data integrity error"
+msgstr "Integritetsfeil i lagrede brukerdata"
+
+msgid "Tachograph card authentication failure"
+msgstr "Autentiseringsfeil for fartsskriverkortet"
+
+msgid "Tamper detection of GNSS"
+msgstr "Oppdaging av manipulering av GNSS"
+
+msgid "TechnicalData"
+msgstr "Tekniske data"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Tidskonflikt (GNSS vs VU intern klokke)"
+
+msgid "Time overlap"
+msgstr "Tidsoverlapp"
+
+msgid "Unauthorised case opening"
+msgstr "Uautorisert åpning av kapslingen"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Uautorisert bytte av bevegelsessensor"
+
+msgid "VU downloaded"
+msgstr "VU lastet ned"
+
+msgid "VU internal fault"
+msgstr "Intern feil i VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Konflikt i kjøretøybevegelsen"
+
+msgid "failed"
+msgstr "mislykket"
+
+msgid "skipped"
+msgstr "hoppet over"
+
+msgid "verified"
+msgstr "verifisert"

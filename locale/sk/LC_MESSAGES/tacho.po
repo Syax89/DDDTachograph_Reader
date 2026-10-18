@@ -2071,3 +2071,240 @@ msgstr "Juhoslávia"
 
 msgid "or drop it here"
 msgstr "alebo sem presuňte súbor"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Neprítomnosť informácie o polohe z prijímača GNSS"
+
+msgid "Activation"
+msgstr "Aktivácia"
+
+msgid "Active / on-going event or fault"
+msgstr "Aktívna / prebiehajúca udalosť alebo porucha"
+
+msgid "Activities"
+msgstr "Činnosti"
+
+msgid "Card conflict"
+msgstr "Konflikt kariet"
+
+msgid "Card data input integrity error"
+msgstr "Chyba integrity vstupných údajov karty"
+
+msgid "Card downloaded"
+msgstr "Stiahnutie karty"
+
+msgid "Card fault, no further details"
+msgstr "Porucha karty, bez ďalších podrobností"
+
+msgid "Card insertion while driving"
+msgstr "Vloženie karty počas jazdy"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Chyba komunikácie s externým zariadením GNSS"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Chyba komunikácie so zariadením na diaľkovú komunikáciu"
+
+msgid "DetailedSpeed"
+msgstr "Podrobné údaje o rýchlosti"
+
+msgid "Display"
+msgstr "Displej"
+
+msgid "Display fault"
+msgstr "Porucha displeja"
+
+msgid "Downloading fault"
+msgstr "Porucha sťahovania"
+
+msgid "Driving without an appropriate card"
+msgstr "Jazda bez príslušnej karty"
+
+msgid "EventsFaults"
+msgstr "Udalosti a poruchy"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Zlyhanie autentifikácie externého zariadenia GNSS"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Platnosť certifikátu externého zariadenia GNSS vypršala"
+
+msgid "External GNSS facility fault"
+msgstr "Porucha externého zariadenia GNSS"
+
+msgid "Ferry/Train Begin"
+msgstr "Začiatok prejazdu trajektom/vlakom"
+
+msgid "Ferry/Train End"
+msgstr "Koniec prejazdu trajektom/vlakom"
+
+msgid "Ferry/Train crossing"
+msgstr "Prejazd trajektom/vlakom"
+
+msgid "First event/fault after the last calibration"
+msgstr "Prvá udalosť/porucha po poslednej kalibrácii"
+
+msgid "First installation"
+msgstr "Prvá inštalácia"
+
+msgid "GNSS anomaly"
+msgstr "Anomália GNSS"
+
+msgid "Hardware sabotage"
+msgstr "Sabotáž hardvéru"
+
+msgid "ITS interface fault"
+msgstr "Porucha rozhrania ITS"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Nesúlad medzi údajmi o pohybe a uloženými údajmi o činnosti vodiča"
+
+msgid "Insertion of a non-valid card"
+msgstr "Vloženie neplatnej karty"
+
+msgid "Installation (current vehicle)"
+msgstr "Inštalácia (aktuálne vozidlo)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Porucha vnútorného prijímača GNSS"
+
+msgid "Internal data transfer error"
+msgstr "Chyba vnútorného prenosu údajov"
+
+msgid "Internal sensor fault"
+msgstr "Porucha vnútorného snímača"
+
+msgid "Last card session not correctly closed"
+msgstr "Posledná relácia karty nebola správne uzavretá"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Posledná udalosť za jeden z posledných 10 dní výskytu"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Najdlhšia udalosť za jeden z posledných 10 dní výskytu"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Najzávažnejšia udalosť za jeden z posledných 10 dní výskytu"
+
+msgid "Motion data error"
+msgstr "Chyba údajov o pohybe"
+
+msgid "Motion sensor authentication failure"
+msgstr "Zlyhanie autentifikácie snímača pohybu"
+
+msgid "No further details"
+msgstr "Bez ďalších podrobností"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Jedna z 10 najnovších (alebo posledných) udalostí/porúch"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Jedna z 5 najdlhších udalostí za posledných 365 dní"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Jedna z 5 najzávažnejších udalostí za posledných 365 dní"
+
+msgid "OutOfScope Begin"
+msgstr "Mimo rozsah – začiatok"
+
+msgid "OutOfScope End"
+msgstr "Mimo rozsah – koniec"
+
+msgid "Over speeding"
+msgstr "Prekročenie rýchlosti"
+
+msgid "Overview"
+msgstr "Prehľad"
+
+msgid "Periodic inspection"
+msgstr "Pravidelná kontrola"
+
+msgid "Power supply interruption"
+msgstr "Prerušenie napájania"
+
+msgid "Printer fault"
+msgstr "Porucha tlačiarne"
+
+msgid "Printing"
+msgstr "Tlač"
+
+msgid "RFU"
+msgstr "Vyhradené pre budúce použitie"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Porucha záznamového zariadenia, bez ďalších podrobností"
+
+msgid "Remote communication facility fault"
+msgstr "Porucha zariadenia na diaľkovú komunikáciu"
+
+msgid "Reserved"
+msgstr "Vyhradené"
+
+msgid "Roadside calibration check"
+msgstr "Kontrola kalibrácie na ceste"
+
+msgid "Security breach attempt, no further details"
+msgstr "Pokus o narušenie zabezpečenia, bez ďalších podrobností"
+
+msgid "Sensor authentication failure"
+msgstr "Zlyhanie autentifikácie snímača"
+
+msgid "Sensor fault"
+msgstr "Porucha snímača"
+
+msgid "Sensor hardware sabotage"
+msgstr "Sabotáž hardvéru snímača"
+
+msgid "Sensor internal data transfer error"
+msgstr "Chyba vnútorného prenosu údajov snímača"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Pokus o narušenie zabezpečenia snímača, bez ďalších podrobností"
+
+msgid "Sensor stored data integrity error"
+msgstr "Chyba integrity údajov uložených v snímači"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Neoprávnené otvorenie krytu snímača"
+
+msgid "Stored user data integrity error"
+msgstr "Chyba integrity uložených používateľských údajov"
+
+msgid "Tachograph card authentication failure"
+msgstr "Zlyhanie autentifikácie karty tachografu"
+
+msgid "Tamper detection of GNSS"
+msgstr "Detekcia manipulácie s GNSS"
+
+msgid "TechnicalData"
+msgstr "Technické údaje"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Časový konflikt (GNSS vs vnútorné hodiny VU)"
+
+msgid "Time overlap"
+msgstr "Prekrytie časov"
+
+msgid "Unauthorised case opening"
+msgstr "Neoprávnené otvorenie krytu"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Neoprávnená výmena snímača pohybu"
+
+msgid "VU downloaded"
+msgstr "Stiahnutie VU"
+
+msgid "VU internal fault"
+msgstr "Vnútorná porucha VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Konflikt pohybu vozidla"
+
+msgid "failed"
+msgstr "neúspešné"
+
+msgid "skipped"
+msgstr "preskočené"
+
+msgid "verified"
+msgstr "overené"

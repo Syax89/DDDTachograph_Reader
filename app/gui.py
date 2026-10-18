@@ -128,9 +128,18 @@ def _fmt_dict(d):
     known = fmt_known_structure(d)
     if known is not None:
         return known
-    # Compact generic fallback
-    items = ", ".join(f"{k}={fmt_val(val)}" for k, val in d.items())
+    # Compact generic fallback. The key is handed to fmt_val so a nested label
+    # ("calibration_purpose_label") follows the same rules as a flat cell.
+    items = ", ".join(f"{k}={fmt_val(val, key=k)}" for k, val in d.items())
     return items if len(items) <= 120 else items[:120] + "\u2026"
+
+
+#: Record keys whose value is a label the decoder derived from a numeric code
+#: (event/fault description, record purpose, specific condition, TREP section,
+#: signature status). ``*_label`` keys are covered by the suffix. These are the
+#: only cells the "translate file contents" preference may translate — free text
+#: (names, plates, addresses) and raw identifiers never are.
+DATA_TEXT_KEYS = frozenset({"description", "condition", "section", "status", "purpose"})
 
 
 def fmt_val(v, key=None):
@@ -150,6 +159,10 @@ def fmt_val(v, key=None):
         if all(not isinstance(x, (dict, list)) for x in v):
             return ", ".join(fmt_val(x) for x in v)
         return f"[{len(v)} items]"
+    if isinstance(v, str) and (key in DATA_TEXT_KEYS or str(key).endswith("_label")):
+        return ui_text.data_text(v)
+    if isinstance(v, str) and key == "activity":
+        return ui_text.activity(v)
     return fmt_scalar(v, key=key, include_code_label=True,
                       label_translator=ui_text.data_text)
 
@@ -881,10 +894,10 @@ def _act_label(activity):
     """Display name of an activity code.
 
     The activity name is decoded from the file, so it obeys the "translate file
-    contents" preference: with it off the label stays exactly as the file names
-    it (``Drive``), with it on it is translated (``Guida``).
+    contents" preference: with it off the label stays exactly as the decoder
+    names it (``Drive``), with it on it is translated (``Guida``).
     """
-    return ui_text.data_text(ACTIVITY_LABEL.get(activity, activity))
+    return ui_text.activity(ACTIVITY_LABEL.get(activity, activity))
 
 
 class ActivityTimelineChart(ttk.Frame):
@@ -3550,7 +3563,7 @@ class TachoExplorer(tk.Tk):
             odometer = day_data.get("odometer_km", 0) or 0
             if changes:
                 rows = [[fmt_val(ev.get("time", "?")),
-                         fmt_val(ev.get("activity", "?")),
+                         ui_text.activity(ev.get("activity", "?")),
                          fmt_val(ev.get("slot", "")) if ev.get("slot") else "",
                          fmt_val(ev.get("crew", "")),
                          fmt_val(odometer)] for ev in changes if isinstance(ev, dict)]

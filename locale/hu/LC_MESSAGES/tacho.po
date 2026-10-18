@@ -2071,3 +2071,240 @@ msgstr "Jugoszlávia"
 
 msgid "or drop it here"
 msgstr "vagy húzza ide a fájlt"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "A GNSS-vevő pozícióinformációjának hiánya"
+
+msgid "Activation"
+msgstr "Aktiválás"
+
+msgid "Active / on-going event or fault"
+msgstr "Aktív / folyamatban lévő esemény vagy hiba"
+
+msgid "Activities"
+msgstr "Tevékenységek"
+
+msgid "Card conflict"
+msgstr "Kártyaütközés"
+
+msgid "Card data input integrity error"
+msgstr "A kártya bemeneti adatainak integritási hibája"
+
+msgid "Card downloaded"
+msgstr "Kártya letöltése"
+
+msgid "Card fault, no further details"
+msgstr "Kártyahiba, további részletek nélkül"
+
+msgid "Card insertion while driving"
+msgstr "Kártya behelyezése vezetés közben"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Kommunikációs hiba a külső GNSS-berendezéssel"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Kommunikációs hiba a távoli kommunikációs berendezéssel"
+
+msgid "DetailedSpeed"
+msgstr "Részletes sebességadatok"
+
+msgid "Display"
+msgstr "Kijelző"
+
+msgid "Display fault"
+msgstr "Kijelzőhiba"
+
+msgid "Downloading fault"
+msgstr "Letöltési hiba"
+
+msgid "Driving without an appropriate card"
+msgstr "Vezetés megfelelő kártya nélkül"
+
+msgid "EventsFaults"
+msgstr "Események és hibák"
+
+msgid "External GNSS facility authentication failure"
+msgstr "A külső GNSS-berendezés autentikációs hibája"
+
+msgid "External GNSS facility certificate expired"
+msgstr "A külső GNSS-berendezés tanúsítványa lejárt"
+
+msgid "External GNSS facility fault"
+msgstr "A külső GNSS-berendezés hibája"
+
+msgid "Ferry/Train Begin"
+msgstr "Komppal/vonattal való átkelés kezdete"
+
+msgid "Ferry/Train End"
+msgstr "Komppal/vonattal való átkelés vége"
+
+msgid "Ferry/Train crossing"
+msgstr "Komppal/vonattal való átkelés"
+
+msgid "First event/fault after the last calibration"
+msgstr "Az utolsó hitelesítés utáni első esemény/hiba"
+
+msgid "First installation"
+msgstr "Első telepítés"
+
+msgid "GNSS anomaly"
+msgstr "GNSS-anomália"
+
+msgid "Hardware sabotage"
+msgstr "Hardveres szabotázs"
+
+msgid "ITS interface fault"
+msgstr "ITS-interfész hiba"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Eltérés a mozgásadatok és a tárolt gépjárművezetői tevékenységi adatok között"
+
+msgid "Insertion of a non-valid card"
+msgstr "Érvénytelen kártya behelyezése"
+
+msgid "Installation (current vehicle)"
+msgstr "Telepítés (aktuális jármű)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "A belső GNSS-vevő hibája"
+
+msgid "Internal data transfer error"
+msgstr "Belső adatátviteli hiba"
+
+msgid "Internal sensor fault"
+msgstr "A belső érzékelő hibája"
+
+msgid "Last card session not correctly closed"
+msgstr "Az utolsó kártyamenet nem lett megfelelően lezárva"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Az utolsó esemény az előfordulás utolsó 10 napjának egyikén"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "A leghosszabb esemény az előfordulás utolsó 10 napjának egyikén"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "A legsúlyosabb esemény az előfordulás utolsó 10 napjának egyikén"
+
+msgid "Motion data error"
+msgstr "Mozgásadat-hiba"
+
+msgid "Motion sensor authentication failure"
+msgstr "A mozgásérzékelő autentikációs hibája"
+
+msgid "No further details"
+msgstr "További részletek nélkül"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "A 10 legutóbbi (vagy utolsó) esemény/hiba egyike"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Az elmúlt 365 nap 5 leghosszabb eseményének egyike"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Az elmúlt 365 nap 5 legsúlyosabb eseményének egyike"
+
+msgid "OutOfScope Begin"
+msgstr "Hatókörön kívül – kezdet"
+
+msgid "OutOfScope End"
+msgstr "Hatókörön kívül – vég"
+
+msgid "Over speeding"
+msgstr "Sebességtúllépés"
+
+msgid "Overview"
+msgstr "Áttekintés"
+
+msgid "Periodic inspection"
+msgstr "Időszakos ellenőrzés"
+
+msgid "Power supply interruption"
+msgstr "Tápfeszültség-megszakadás"
+
+msgid "Printer fault"
+msgstr "Nyomtatóhiba"
+
+msgid "Printing"
+msgstr "Nyomtatás"
+
+msgid "RFU"
+msgstr "Jövőbeli használatra fenntartva"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Az adatrögzítő berendezés hibája, további részletek nélkül"
+
+msgid "Remote communication facility fault"
+msgstr "A távoli kommunikációs berendezés hibája"
+
+msgid "Reserved"
+msgstr "Fenntartva"
+
+msgid "Roadside calibration check"
+msgstr "Útmenti hitelesítés-ellenőrzés"
+
+msgid "Security breach attempt, no further details"
+msgstr "Biztonság megsértésére irányuló kísérlet, további részletek nélkül"
+
+msgid "Sensor authentication failure"
+msgstr "Az érzékelő autentikációs hibája"
+
+msgid "Sensor fault"
+msgstr "Az érzékelő hibája"
+
+msgid "Sensor hardware sabotage"
+msgstr "Az érzékelő hardveres szabotázsa"
+
+msgid "Sensor internal data transfer error"
+msgstr "Az érzékelő belső adatátviteli hibája"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Az érzékelő biztonságának megsértésére irányuló kísérlet, további részletek nélkül"
+
+msgid "Sensor stored data integrity error"
+msgstr "Az érzékelőben tárolt adatok integritási hibája"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Az érzékelő jogosulatlan felnyitása"
+
+msgid "Stored user data integrity error"
+msgstr "A tárolt felhasználói adatok integritási hibája"
+
+msgid "Tachograph card authentication failure"
+msgstr "A tachográf-kártya autentikációs hibája"
+
+msgid "Tamper detection of GNSS"
+msgstr "GNSS-manipuláció észlelése"
+
+msgid "TechnicalData"
+msgstr "Műszaki adatok"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Időkonfliktus (GNSS vs VU belső óra)"
+
+msgid "Time overlap"
+msgstr "Időátfedés"
+
+msgid "Unauthorised case opening"
+msgstr "Jogosulatlan felnyitás"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "A mozgásérzékelő jogosulatlan cseréje"
+
+msgid "VU downloaded"
+msgstr "VU letöltése"
+
+msgid "VU internal fault"
+msgstr "VU belső hiba"
+
+msgid "Vehicle motion conflict"
+msgstr "A jármű mozgásával kapcsolatos konfliktus"
+
+msgid "failed"
+msgstr "sikertelen"
+
+msgid "skipped"
+msgstr "kihagyva"
+
+msgid "verified"
+msgstr "ellenőrizve"

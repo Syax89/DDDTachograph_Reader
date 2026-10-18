@@ -2071,3 +2071,240 @@ msgstr "Jugoslaavia"
 
 msgid "or drop it here"
 msgstr "või lohista fail siia"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Asukohateabe puudumine GNSS-vastuvõtjast"
+
+msgid "Activation"
+msgstr "Aktiveerimine"
+
+msgid "Active / on-going event or fault"
+msgstr "Aktiivne / käimasolev sündmus või rike"
+
+msgid "Activities"
+msgstr "Aktiivsused"
+
+msgid "Card conflict"
+msgstr "Kaardi konflikt"
+
+msgid "Card data input integrity error"
+msgstr "Kaardi andmete sisestuse terviklikkuse viga"
+
+msgid "Card downloaded"
+msgstr "Kaart alla laaditud"
+
+msgid "Card fault, no further details"
+msgstr "Kaardi rike, täpsemad andmed puuduvad"
+
+msgid "Card insertion while driving"
+msgstr "Kaart sisestatud sõidu ajal"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Suhtlusviga välise GNSS-seadeldisega"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Suhtlusviga kaugkommunikatsiooniseadmega"
+
+msgid "DetailedSpeed"
+msgstr "Üksikasjalik kiirus"
+
+msgid "Display"
+msgstr "Ekraan"
+
+msgid "Display fault"
+msgstr "Ekraani rike"
+
+msgid "Downloading fault"
+msgstr "Allalaadimise rike"
+
+msgid "Driving without an appropriate card"
+msgstr "Sõitmine ilma nõuetekohase kaardita"
+
+msgid "EventsFaults"
+msgstr "Sündmused/rikked"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Välise GNSS-seadeldise autentimise tõrge"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Välise GNSS-seadeldise sertifikaat on aegunud"
+
+msgid "External GNSS facility fault"
+msgstr "Välise GNSS-seadeldise rike"
+
+msgid "Ferry/Train Begin"
+msgstr "Praam/rong — algus"
+
+msgid "Ferry/Train End"
+msgstr "Praam/rong — lõpp"
+
+msgid "Ferry/Train crossing"
+msgstr "Praami- või rongiületus"
+
+msgid "First event/fault after the last calibration"
+msgstr "Esimene sündmus/rike pärast viimast kalibreerimist"
+
+msgid "First installation"
+msgstr "Esimene paigaldus"
+
+msgid "GNSS anomaly"
+msgstr "GNSS anomaalia"
+
+msgid "Hardware sabotage"
+msgstr "Riistvara saboteerimine"
+
+msgid "ITS interface fault"
+msgstr "ITS-liidese rike"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Vastuolu liikumisandmete ja salvestatud juhi aktiivsusandmete vahel"
+
+msgid "Insertion of a non-valid card"
+msgstr "Mittekehtiva kaardi sisestamine"
+
+msgid "Installation (current vehicle)"
+msgstr "Paigaldus (praegune sõiduk)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "GNSS-vastuvõtja sisemine rike"
+
+msgid "Internal data transfer error"
+msgstr "Sisemine andmeedastusviga"
+
+msgid "Internal sensor fault"
+msgstr "Anduri sisemine rike"
+
+msgid "Last card session not correctly closed"
+msgstr "Viimast kaardiseanssi ei suletud õigesti"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Viimane sündmus ühel viimasest 10 päevast, mil see esines"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Pikim sündmus ühel viimasest 10 päevast, mil see esines"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Kõige tõsisem sündmus ühel viimasest 10 päevast, mil see esines"
+
+msgid "Motion data error"
+msgstr "Liikumisandmete viga"
+
+msgid "Motion sensor authentication failure"
+msgstr "Liikumisanduri autentimise tõrge"
+
+msgid "No further details"
+msgstr "Täpsemad andmed puuduvad"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Üks 10 kõige hiljutisemast (või viimasest) sündmusest/rikkest"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Üks viiest pikimast sündmusest viimase 365 päeva jooksul"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Üks viiest kõige tõsisemast sündmusest viimase 365 päeva jooksul"
+
+msgid "OutOfScope Begin"
+msgstr "Reguleerimisalast väljas — algus"
+
+msgid "OutOfScope End"
+msgstr "Reguleerimisalast väljas — lõpp"
+
+msgid "Over speeding"
+msgstr "Kiiruseületamine"
+
+msgid "Overview"
+msgstr "Ülevaade"
+
+msgid "Periodic inspection"
+msgstr "Perioodiline ülevaatus"
+
+msgid "Power supply interruption"
+msgstr "Toitekatkestus"
+
+msgid "Printer fault"
+msgstr "Printeri rike"
+
+msgid "Printing"
+msgstr "Printimine"
+
+msgid "RFU"
+msgstr "Tulevikuks reserveeritud (RFU)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Sõidumeeriku rike, täpsemad andmed puuduvad"
+
+msgid "Remote communication facility fault"
+msgstr "Kaugkommunikatsiooniseadme rike"
+
+msgid "Reserved"
+msgstr "Reserveeritud"
+
+msgid "Roadside calibration check"
+msgstr "Kalibreerimise teeäärne kontroll"
+
+msgid "Security breach attempt, no further details"
+msgstr "Turvalisuse rikkumise katse, täpsemad andmed puuduvad"
+
+msgid "Sensor authentication failure"
+msgstr "Anduri autentimise tõrge"
+
+msgid "Sensor fault"
+msgstr "Anduri rike"
+
+msgid "Sensor hardware sabotage"
+msgstr "Anduri riistvara saboteerimine"
+
+msgid "Sensor internal data transfer error"
+msgstr "Anduri sisemine andmeedastusviga"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Anduri turvalisuse rikkumise katse, täpsemad andmed puuduvad"
+
+msgid "Sensor stored data integrity error"
+msgstr "Anduri salvestatud andmete terviklikkuse viga"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Anduri korpuse loata avamine"
+
+msgid "Stored user data integrity error"
+msgstr "Salvestatud kasutajaandmete terviklikkuse viga"
+
+msgid "Tachograph card authentication failure"
+msgstr "Sõidumeerikukaardi autentimise tõrge"
+
+msgid "Tamper detection of GNSS"
+msgstr "GNSS-iga manipuleerimise tuvastamine"
+
+msgid "TechnicalData"
+msgstr "Tehnilised andmed"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Ajakonflikt (GNSS vs VU sisemine kell)"
+
+msgid "Time overlap"
+msgstr "Aegade kattumine"
+
+msgid "Unauthorised case opening"
+msgstr "Korpuse loata avamine"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Liikumisanduri loata vahetamine"
+
+msgid "VU downloaded"
+msgstr "VU alla laaditud"
+
+msgid "VU internal fault"
+msgstr "VU sisemine rike"
+
+msgid "Vehicle motion conflict"
+msgstr "Sõiduki liikumise konflikt"
+
+msgid "failed"
+msgstr "ebaõnnestunud"
+
+msgid "skipped"
+msgstr "vahele jäetud"
+
+msgid "verified"
+msgstr "kontrollitud"

@@ -2071,3 +2071,240 @@ msgstr "Jugosllavia"
 
 msgid "or drop it here"
 msgstr "ose lëshoje skedarin këtu"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Mungesa e informacionit të pozicionit nga marrësi GNSS"
+
+msgid "Activation"
+msgstr "Aktivizimi"
+
+msgid "Active / on-going event or fault"
+msgstr "Ngjarje ose defekt aktiv / në vazhdim"
+
+msgid "Activities"
+msgstr "Aktivitetet"
+
+msgid "Card conflict"
+msgstr "Konflikt kartash"
+
+msgid "Card data input integrity error"
+msgstr "Gabim integriteti i të dhënave hyrëse të kartës"
+
+msgid "Card downloaded"
+msgstr "Karta u shkarkua"
+
+msgid "Card fault, no further details"
+msgstr "Defekt i kartës, pa detaje të mëtejshme"
+
+msgid "Card insertion while driving"
+msgstr "Futja e kartës gjatë drejtimit"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Gabim komunikimi me pajisjen e jashtme GNSS"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Gabim komunikimi me pajisjen e komunikimit në distancë"
+
+msgid "DetailedSpeed"
+msgstr "Shpejtësi e detajuar"
+
+msgid "Display"
+msgstr "Ekran"
+
+msgid "Display fault"
+msgstr "Defekt i ekranit"
+
+msgid "Downloading fault"
+msgstr "Defekt gjatë shkarkimit"
+
+msgid "Driving without an appropriate card"
+msgstr "Drejtim pa një kartë të përshtatshme"
+
+msgid "EventsFaults"
+msgstr "Ngjarje/defekte"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Dështim i vërtetimit të pajisjes së jashtme GNSS"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Certifikati i pajisjes së jashtme GNSS ka skaduar"
+
+msgid "External GNSS facility fault"
+msgstr "Defekt i pajisjes së jashtme GNSS"
+
+msgid "Ferry/Train Begin"
+msgstr "Traget/tren — Fillimi"
+
+msgid "Ferry/Train End"
+msgstr "Traget/tren — Fundi"
+
+msgid "Ferry/Train crossing"
+msgstr "Kalim me traget/tren"
+
+msgid "First event/fault after the last calibration"
+msgstr "Ngjarja/defekti i parë pas kalibrimit të fundit"
+
+msgid "First installation"
+msgstr "Instalimi i parë"
+
+msgid "GNSS anomaly"
+msgstr "Anomali GNSS"
+
+msgid "Hardware sabotage"
+msgstr "Sabotazh i harduerit"
+
+msgid "ITS interface fault"
+msgstr "Defekt i ndërfaqes ITS"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Mospërputhje midis të dhënave të lëvizjes dhe të dhënave të ruajtura të aktivitetit të drejtuesit"
+
+msgid "Insertion of a non-valid card"
+msgstr "Futja e një karte të pavlefshme"
+
+msgid "Installation (current vehicle)"
+msgstr "Instalimi (automjeti aktual)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Defekt i marrësit të brendshëm GNSS"
+
+msgid "Internal data transfer error"
+msgstr "Gabim i transferimit të brendshëm të të dhënave"
+
+msgid "Internal sensor fault"
+msgstr "Defekt i sensorit të brendshëm"
+
+msgid "Last card session not correctly closed"
+msgstr "Sesioni i fundit i kartës nuk u mbyll saktë"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Ngjarja e fundit për një nga 10 ditët e fundit"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Ngjarja më e gjatë për një nga 10 ditët e fundit"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Ngjarja më e rëndë për një nga 10 ditët e fundit"
+
+msgid "Motion data error"
+msgstr "Gabim i të dhënave të lëvizjes"
+
+msgid "Motion sensor authentication failure"
+msgstr "Dështim i vërtetimit të sensorit të lëvizjes"
+
+msgid "No further details"
+msgstr "Pa detaje të mëtejshme"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Një nga 10 ngjarjet/defektet më të reja (ose të fundit)"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Një nga 5 ngjarjet më të gjata gjatë 365 ditëve të fundit"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Një nga 5 ngjarjet më të rënda gjatë 365 ditëve të fundit"
+
+msgid "OutOfScope Begin"
+msgstr "Jashtë fushës — Fillimi"
+
+msgid "OutOfScope End"
+msgstr "Jashtë fushës — Fundi"
+
+msgid "Over speeding"
+msgstr "Tejkalim shpejtësie"
+
+msgid "Overview"
+msgstr "Përmbledhje"
+
+msgid "Periodic inspection"
+msgstr "Inspektim periodik"
+
+msgid "Power supply interruption"
+msgstr "Ndërprerje e furnizimit me energji"
+
+msgid "Printer fault"
+msgstr "Defekt i printerit"
+
+msgid "Printing"
+msgstr "Printimi"
+
+msgid "RFU"
+msgstr "E rezervuar (RFU)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Defekt i pajisjes regjistruese, pa detaje të mëtejshme"
+
+msgid "Remote communication facility fault"
+msgstr "Defekt i pajisjes së komunikimit në distancë"
+
+msgid "Reserved"
+msgstr "E rezervuar"
+
+msgid "Roadside calibration check"
+msgstr "Kontroll kalibrimi në rrugë"
+
+msgid "Security breach attempt, no further details"
+msgstr "Tentativë shkeljeje të sigurisë, pa detaje të mëtejshme"
+
+msgid "Sensor authentication failure"
+msgstr "Dështim i vërtetimit të sensorit"
+
+msgid "Sensor fault"
+msgstr "Defekt i sensorit"
+
+msgid "Sensor hardware sabotage"
+msgstr "Sabotazh i harduerit të sensorit"
+
+msgid "Sensor internal data transfer error"
+msgstr "Gabim i transferimit të brendshëm të të dhënave të sensorit"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Tentativë shkeljeje të sigurisë së sensorit, pa detaje të mëtejshme"
+
+msgid "Sensor stored data integrity error"
+msgstr "Gabim integriteti i të dhënave të ruajtura të sensorit"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Hapje e paautorizuar e kasës së sensorit"
+
+msgid "Stored user data integrity error"
+msgstr "Gabim integriteti i të dhënave të ruajtura të përdoruesit"
+
+msgid "Tachograph card authentication failure"
+msgstr "Dështim i vërtetimit të kartës së takografit"
+
+msgid "Tamper detection of GNSS"
+msgstr "Zbulim ndërhyrjeje në GNSS"
+
+msgid "TechnicalData"
+msgstr "Të dhëna teknike"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Konflikt kohe (GNSS dhe ora e brendshme e VU)"
+
+msgid "Time overlap"
+msgstr "Mbivendosje kohe"
+
+msgid "Unauthorised case opening"
+msgstr "Hapje e paautorizuar e kasës"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Ndryshim i paautorizuar i sensorit të lëvizjes"
+
+msgid "VU downloaded"
+msgstr "VU u shkarkua"
+
+msgid "VU internal fault"
+msgstr "Defekt i brendshëm i VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Konflikt i lëvizjes së automjetit"
+
+msgid "failed"
+msgstr "dështoi"
+
+msgid "skipped"
+msgstr "anashkaluar"
+
+msgid "verified"
+msgstr "verifikuar"

@@ -2071,3 +2071,240 @@ msgstr "Југославија"
 
 msgid "or drop it here"
 msgstr "или превуците датотеку овде"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Одсуство података о положају од GNSS пријемника"
+
+msgid "Activation"
+msgstr "Активација"
+
+msgid "Active / on-going event or fault"
+msgstr "Активан / текући догађај или грешка"
+
+msgid "Activities"
+msgstr "Активности"
+
+msgid "Card conflict"
+msgstr "Конфликт картица"
+
+msgid "Card data input integrity error"
+msgstr "Грешка интегритета улазних података картице"
+
+msgid "Card downloaded"
+msgstr "Картица је преузета"
+
+msgid "Card fault, no further details"
+msgstr "Грешка картице, без додатних детаља"
+
+msgid "Card insertion while driving"
+msgstr "Уметање картице током вожње"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Грешка комуникације са спољним GNSS уређајем"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Грешка комуникације са уређајем за даљинску комуникацију"
+
+msgid "DetailedSpeed"
+msgstr "Детаљна брзина"
+
+msgid "Display"
+msgstr "Дисплеј"
+
+msgid "Display fault"
+msgstr "Грешка дисплеја"
+
+msgid "Downloading fault"
+msgstr "Грешка при преузимању"
+
+msgid "Driving without an appropriate card"
+msgstr "Вожња без одговарајуће картице"
+
+msgid "EventsFaults"
+msgstr "Догађаји/грешке"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Неуспела аутентификација спољног GNSS уређаја"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Истекао је сертификат спољног GNSS уређаја"
+
+msgid "External GNSS facility fault"
+msgstr "Грешка спољног GNSS уређаја"
+
+msgid "Ferry/Train Begin"
+msgstr "Трајект/воз — почетак"
+
+msgid "Ferry/Train End"
+msgstr "Трајект/воз — крај"
+
+msgid "Ferry/Train crossing"
+msgstr "Прелазак трајектом/возом"
+
+msgid "First event/fault after the last calibration"
+msgstr "Први догађај/грешка након последње калибрације"
+
+msgid "First installation"
+msgstr "Прва инсталација"
+
+msgid "GNSS anomaly"
+msgstr "Аномалија GNSS"
+
+msgid "Hardware sabotage"
+msgstr "Саботажа хардвера"
+
+msgid "ITS interface fault"
+msgstr "Грешка ITS интерфејса"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Несагласност између података о кретању и сачуваних података о активности возача"
+
+msgid "Insertion of a non-valid card"
+msgstr "Уметање неважеће картице"
+
+msgid "Installation (current vehicle)"
+msgstr "Инсталација (тренутно возило)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Грешка унутрашњег GNSS пријемника"
+
+msgid "Internal data transfer error"
+msgstr "Грешка унутрашњег преноса података"
+
+msgid "Internal sensor fault"
+msgstr "Грешка унутрашњег сензора"
+
+msgid "Last card session not correctly closed"
+msgstr "Последња сесија картице није исправно затворена"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Последњи догађај за један од последњих 10 дана"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Најдужи догађај за један од последњих 10 дана"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Најозбиљнији догађај за један од последњих 10 дана"
+
+msgid "Motion data error"
+msgstr "Грешка података о кретању"
+
+msgid "Motion sensor authentication failure"
+msgstr "Неуспела аутентификација сензора кретања"
+
+msgid "No further details"
+msgstr "Без додатних детаља"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Један од 10 најновијих (или последњих) догађаја/грешака"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Један од 5 најдужих догађаја у последњих 365 дана"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Један од 5 најозбиљнијих догађаја у последњих 365 дана"
+
+msgid "OutOfScope Begin"
+msgstr "Ван обима — почетак"
+
+msgid "OutOfScope End"
+msgstr "Ван обима — крај"
+
+msgid "Over speeding"
+msgstr "Прекорачење брзине"
+
+msgid "Overview"
+msgstr "Преглед"
+
+msgid "Periodic inspection"
+msgstr "Периодична провера"
+
+msgid "Power supply interruption"
+msgstr "Прекид напајања"
+
+msgid "Printer fault"
+msgstr "Грешка штампача"
+
+msgid "Printing"
+msgstr "Штампање"
+
+msgid "RFU"
+msgstr "Резервисано (RFU)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Грешка регистрационе опреме, без додатних детаља"
+
+msgid "Remote communication facility fault"
+msgstr "Грешка уређаја за даљинску комуникацију"
+
+msgid "Reserved"
+msgstr "Резервисано"
+
+msgid "Roadside calibration check"
+msgstr "Провера калибрације на путу"
+
+msgid "Security breach attempt, no further details"
+msgstr "Покушај нарушавања безбедности, без додатних детаља"
+
+msgid "Sensor authentication failure"
+msgstr "Неуспела аутентификација сензора"
+
+msgid "Sensor fault"
+msgstr "Грешка сензора"
+
+msgid "Sensor hardware sabotage"
+msgstr "Саботажа хардвера сензора"
+
+msgid "Sensor internal data transfer error"
+msgstr "Грешка унутрашњег преноса података сензора"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Покушај нарушавања безбедности сензора, без додатних детаља"
+
+msgid "Sensor stored data integrity error"
+msgstr "Грешка интегритета сачуваних података сензора"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Неовлашћено отварање кућишта сензора"
+
+msgid "Stored user data integrity error"
+msgstr "Грешка интегритета сачуваних корисничких података"
+
+msgid "Tachograph card authentication failure"
+msgstr "Неуспела аутентификација тахографске картице"
+
+msgid "Tamper detection of GNSS"
+msgstr "Детекција неовлашћеног утицаја на GNSS"
+
+msgid "TechnicalData"
+msgstr "Технички подаци"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Конфликт времена (GNSS и унутрашњи сат VU)"
+
+msgid "Time overlap"
+msgstr "Преклапање времена"
+
+msgid "Unauthorised case opening"
+msgstr "Неовлашћено отварање кућишта"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Неовлашћена замена сензора кретања"
+
+msgid "VU downloaded"
+msgstr "VU је преузет"
+
+msgid "VU internal fault"
+msgstr "Унутрашња грешка VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Конфликт кретања возила"
+
+msgid "failed"
+msgstr "није успело"
+
+msgid "skipped"
+msgstr "прескочено"
+
+msgid "verified"
+msgstr "проверено"

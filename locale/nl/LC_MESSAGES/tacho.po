@@ -2071,3 +2071,240 @@ msgstr "Joegoslavië"
 
 msgid "or drop it here"
 msgstr "of sleep het bestand hierheen"
+
+msgid "Absence of position information from GNSS receiver"
+msgstr "Ontbreken van positie-informatie van de GNSS-ontvanger"
+
+msgid "Activation"
+msgstr "Activering"
+
+msgid "Active / on-going event or fault"
+msgstr "Actieve / lopende gebeurtenis of storing"
+
+msgid "Activities"
+msgstr "Activiteiten"
+
+msgid "Card conflict"
+msgstr "Kaartconflict"
+
+msgid "Card data input integrity error"
+msgstr "Integriteitsfout in de ingevoerde kaartgegevens"
+
+msgid "Card downloaded"
+msgstr "Kaart gedownload"
+
+msgid "Card fault, no further details"
+msgstr "Storing van de kaart, geen nadere bijzonderheden"
+
+msgid "Card insertion while driving"
+msgstr "Kaart ingevoerd tijdens het rijden"
+
+msgid "Communication error with the external GNSS facility"
+msgstr "Communicatiefout met de externe GNSS-inrichting"
+
+msgid "Communication error with the remote communication facility"
+msgstr "Communicatiefout met de voorziening voor communicatie op afstand"
+
+msgid "DetailedSpeed"
+msgstr "Gedetailleerde snelheid"
+
+msgid "Display"
+msgstr "Weergave"
+
+msgid "Display fault"
+msgstr "Storing in de weergave"
+
+msgid "Downloading fault"
+msgstr "Storing bij het downloaden"
+
+msgid "Driving without an appropriate card"
+msgstr "Rijden zonder geschikte kaart"
+
+msgid "EventsFaults"
+msgstr "Gebeurtenissen/Storingen"
+
+msgid "External GNSS facility authentication failure"
+msgstr "Authenticatiefout van de externe GNSS-inrichting"
+
+msgid "External GNSS facility certificate expired"
+msgstr "Certificaat van de externe GNSS-inrichting verlopen"
+
+msgid "External GNSS facility fault"
+msgstr "Storing van de externe GNSS-inrichting"
+
+msgid "Ferry/Train Begin"
+msgstr "Veerboot/trein — begin"
+
+msgid "Ferry/Train End"
+msgstr "Veerboot/trein — einde"
+
+msgid "Ferry/Train crossing"
+msgstr "Overtocht veerboot/trein"
+
+msgid "First event/fault after the last calibration"
+msgstr "Eerste gebeurtenis/storing na de laatste kalibratie"
+
+msgid "First installation"
+msgstr "Eerste installatie"
+
+msgid "GNSS anomaly"
+msgstr "GNSS-anomalie"
+
+msgid "Hardware sabotage"
+msgstr "Sabotage van de hardware"
+
+msgid "ITS interface fault"
+msgstr "Storing van de ITS-interface"
+
+msgid "Inconsistency between motion data and stored driver activity data"
+msgstr "Inconsistentie tussen bewegingsgegevens en opgeslagen activiteitsgegevens van de bestuurder"
+
+msgid "Insertion of a non-valid card"
+msgstr "Invoeren van een ongeldige kaart"
+
+msgid "Installation (current vehicle)"
+msgstr "Installatie (huidig voertuig)"
+
+msgid "Internal GNSS receiver fault"
+msgstr "Storing van de interne GNSS-ontvanger"
+
+msgid "Internal data transfer error"
+msgstr "Interne gegevensoverdrachtfout"
+
+msgid "Internal sensor fault"
+msgstr "Storing van de interne sensor"
+
+msgid "Last card session not correctly closed"
+msgstr "Laatste kaartsessie niet correct afgesloten"
+
+msgid "Last event for one of the last 10 days of occurrence"
+msgstr "Laatste gebeurtenis op een van de laatste 10 dagen van voorkomen"
+
+msgid "Longest event for one of the last 10 days of occurrence"
+msgstr "Langste gebeurtenis op een van de laatste 10 dagen van voorkomen"
+
+msgid "Most serious event for one of the last 10 days of occurrence"
+msgstr "Ernstigste gebeurtenis op een van de laatste 10 dagen van voorkomen"
+
+msgid "Motion data error"
+msgstr "Fout in de bewegingsgegevens"
+
+msgid "Motion sensor authentication failure"
+msgstr "Authenticatiefout van de bewegingssensor"
+
+msgid "No further details"
+msgstr "Geen nadere bijzonderheden"
+
+msgid "One of the 10 most recent (or last) events/faults"
+msgstr "Een van de 10 recentste (of laatste) gebeurtenissen/storingen"
+
+msgid "One of the 5 longest events over the last 365 days"
+msgstr "Een van de 5 langste gebeurtenissen van de laatste 365 dagen"
+
+msgid "One of the 5 most serious events over the last 365 days"
+msgstr "Een van de 5 ernstigste gebeurtenissen van de laatste 365 dagen"
+
+msgid "OutOfScope Begin"
+msgstr "Buiten toepassingsgebied — begin"
+
+msgid "OutOfScope End"
+msgstr "Buiten toepassingsgebied — einde"
+
+msgid "Over speeding"
+msgstr "Snelheidsovertreding"
+
+msgid "Overview"
+msgstr "Overzicht"
+
+msgid "Periodic inspection"
+msgstr "Periodieke controle"
+
+msgid "Power supply interruption"
+msgstr "Spanningsonderbreking"
+
+msgid "Printer fault"
+msgstr "Storing van de printer"
+
+msgid "Printing"
+msgstr "Afdrukken"
+
+msgid "RFU"
+msgstr "RFU (gereserveerd voor toekomstig gebruik)"
+
+msgid "Recording equipment fault, no further details"
+msgstr "Storing van het controleapparaat, geen nadere bijzonderheden"
+
+msgid "Remote communication facility fault"
+msgstr "Storing van de voorziening voor communicatie op afstand"
+
+msgid "Reserved"
+msgstr "Gereserveerd"
+
+msgid "Roadside calibration check"
+msgstr "Kalibratiecontrole langs de weg"
+
+msgid "Security breach attempt, no further details"
+msgstr "Poging tot inbreuk op de beveiliging, geen nadere bijzonderheden"
+
+msgid "Sensor authentication failure"
+msgstr "Authenticatiefout van de sensor"
+
+msgid "Sensor fault"
+msgstr "Storing van de sensor"
+
+msgid "Sensor hardware sabotage"
+msgstr "Sabotage van de sensorhardware"
+
+msgid "Sensor internal data transfer error"
+msgstr "Interne gegevensoverdrachtfout van de sensor"
+
+msgid "Sensor security breach attempt, no further details"
+msgstr "Poging tot inbreuk op de beveiliging van de sensor, geen nadere bijzonderheden"
+
+msgid "Sensor stored data integrity error"
+msgstr "Integriteitsfout in de opgeslagen sensorgegevens"
+
+msgid "Sensor unauthorised case opening"
+msgstr "Onrechtmatig openen van de behuizing van de sensor"
+
+msgid "Stored user data integrity error"
+msgstr "Integriteitsfout in de opgeslagen gebruikersgegevens"
+
+msgid "Tachograph card authentication failure"
+msgstr "Authenticatiefout van de tachograafkaart"
+
+msgid "Tamper detection of GNSS"
+msgstr "Detectie van manipulatie van de GNSS"
+
+msgid "TechnicalData"
+msgstr "Technische gegevens"
+
+msgid "Time conflict (GNSS vs VU internal clock)"
+msgstr "Tijdconflict (GNSS vs interne klok van de VU)"
+
+msgid "Time overlap"
+msgstr "Overlap in tijd"
+
+msgid "Unauthorised case opening"
+msgstr "Onrechtmatig openen van de behuizing"
+
+msgid "Unauthorised change of motion sensor"
+msgstr "Onrechtmatige vervanging van de bewegingssensor"
+
+msgid "VU downloaded"
+msgstr "VU gedownload"
+
+msgid "VU internal fault"
+msgstr "Interne storing van de VU"
+
+msgid "Vehicle motion conflict"
+msgstr "Conflict in de voertuigbeweging"
+
+msgid "failed"
+msgstr "mislukt"
+
+msgid "skipped"
+msgstr "overgeslagen"
+
+msgid "verified"
+msgstr "geverifieerd"
