@@ -2308,3 +2308,9 @@ msgstr "pominięto"
 
 msgid "verified"
 msgstr "zweryfikowano"
+
+msgid "Yes"
+msgstr "Tak"
+
+msgid "No"
+msgstr "Nie"

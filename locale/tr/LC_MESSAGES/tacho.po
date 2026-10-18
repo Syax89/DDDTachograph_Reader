@@ -2308,3 +2308,9 @@ msgstr "atlandı"
 
 msgid "verified"
 msgstr "doğrulandı"
+
+msgid "Yes"
+msgstr "Evet"
+
+msgid "No"
+msgstr "Hayır"

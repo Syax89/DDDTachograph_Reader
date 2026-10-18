@@ -2308,3 +2308,9 @@ msgstr "sleppt"
 
 msgid "verified"
 msgstr "staðfest"
+
+msgid "Yes"
+msgstr "Já"
+
+msgid "No"
+msgstr "Nei"

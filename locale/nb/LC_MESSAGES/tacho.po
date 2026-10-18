@@ -2308,3 +2308,9 @@ msgstr "hoppet over"
 
 msgid "verified"
 msgstr "verifisert"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "No"
+msgstr "Nei"

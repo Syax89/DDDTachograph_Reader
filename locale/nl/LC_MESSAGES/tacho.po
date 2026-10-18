@@ -2308,3 +2308,9 @@ msgstr "overgeslagen"
 
 msgid "verified"
 msgstr "geverifieerd"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "No"
+msgstr "Nee"

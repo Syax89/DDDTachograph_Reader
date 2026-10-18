@@ -2308,3 +2308,9 @@ msgstr "mqabbeż"
 
 msgid "verified"
 msgstr "verifikat"
+
+msgid "Yes"
+msgstr "Iva"
+
+msgid "No"
+msgstr "Le"

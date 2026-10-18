@@ -2308,3 +2308,9 @@ msgstr "izpuščeno"
 
 msgid "verified"
 msgstr "preverjeno"
+
+msgid "Yes"
+msgstr "Da"
+
+msgid "No"
+msgstr "Ne"

@@ -148,6 +148,16 @@ def test_free_text_is_never_translated(monkeypatch):
     ui_text.configure_translate_data(False)
 
 
+def test_booleans_are_words_not_python(monkeypatch):
+    """Summary rows carry raw bools: they must reach the screen as Sì/No."""
+    _install_italian(monkeypatch)
+    import app.gui as gui
+
+    assert gui.fmt_val(True) == "Sì"
+    assert gui.fmt_val(False) == "No"
+    assert gui.fmt_val(1) == "1"          # an int is a value, not a flag
+
+
 def test_activity_cells_use_the_same_word_as_the_chart(monkeypatch):
     _install_italian(monkeypatch)
     import app.gui as gui

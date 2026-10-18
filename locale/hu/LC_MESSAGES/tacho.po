@@ -2308,3 +2308,9 @@ msgstr "kihagyva"
 
 msgid "verified"
 msgstr "ellenőrizve"
+
+msgid "Yes"
+msgstr "Igen"
+
+msgid "No"
+msgstr "Nem"
