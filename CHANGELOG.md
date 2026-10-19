@@ -1,5 +1,20 @@
 ## [Unreleased]
 
+### Exported reports no longer clip or box the characters they carry
+
+- The Excel workbook wraps a value that is wider than its column and grows that
+  row, instead of leaving the reader with the text cut at the column edge — the
+  161-character official manufacturer name of code `0xA1` was the visible case,
+  beside a populated neighbour cell. The cell keeps its exact text: no newline,
+  ellipsis or shortened name is written into it, and rows that already fit are
+  unchanged.
+- The PDF report sets the characters its own font does not have — the Lithuanian
+  `Ė` in the official name of code `0xB1` — in a bundled font, instead of drawing
+  a black square over each one. Every other report keeps Helvetica and its
+  layout. The font ships with the application together with its licence; if it is
+  missing from an installation, the PDF export fails and says why rather than
+  returning a complete-looking report with a boxed identity.
+
 ### Gen2 vehicle-unit events and faults are decoded in full, with a verdict
 
 Vehicle-unit downloads (Gen2 and Gen2.2) store events and faults as

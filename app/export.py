@@ -9,7 +9,9 @@ for the columns with a known semantics, moves the monthly activity subtotals to
 their own sheet, and indexes its sheets from the Summary.
 """
 import logging
+import os
 import re
+import sys
 from datetime import date, datetime, timedelta
 from xml.sax.saxutils import escape
 
@@ -122,6 +124,61 @@ def _pdf_plain(value):
     for char, stand_in in _PDF_STAND_INS.items():
         text = text.replace(char, stand_in)
     return text
+
+
+#: Bundled face for the characters the PDF's own font cannot encode. Helvetica is
+#: a Type1 font with a single-byte WinAnsi encoding, and the official registry
+#: name of code 0xB1 carries the Lithuanian "Ė" (U+0116), which it has no
+#: glyph for — reportlab draws a black square. The file ships with the
+#: application (``assets/fonts``, see ``build.spec``) with its upstream licence,
+#: so the report never depends on a font installed on the reader's machine.
+_PDF_FALLBACK_FONT = "TachoDejaVuSans"
+
+
+def _pdf_markup(value):
+    """*value* as escaped paragraph markup the report's font can really draw.
+
+    Representable text is escaped and returned unchanged, so an ordinary report
+    keeps Helvetica, its metrics and its pagination. Only a character outside the
+    font's encoding is set in the bundled fallback face — a font choice, never a
+    transliteration, an ASCII repair or a stand-in.
+    """
+    text = str(value)
+    from reportlab.pdfbase import pdfmetrics
+
+    # The encoding reportlab itself encodes paragraphs with decides what is
+    # drawable: no hand-kept character table that could drift from the font.
+    encoding = pdfmetrics.getFont("Helvetica").encName
+    try:
+        text.encode(encoding)
+    except UnicodeEncodeError:
+        pass
+    else:
+        return escape(text)
+    if _PDF_FALLBACK_FONT not in pdfmetrics.getRegisteredFontNames():
+        # Resolved like app/i18n.locale_dir: against the package, and against
+        # _MEIPASS when frozen.
+        base = getattr(sys, "_MEIPASS", None) or os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__)))
+        path = os.path.join(base, "assets", "fonts", "DejaVuSans.ttf")
+        if not os.path.isfile(path):
+            # Fail closed: a boxed identity in a report that looks complete is
+            # worse than a failed export (the callers already report this).
+            raise FileNotFoundError(
+                f"PDF export cannot draw {text!r}: the bundled fallback font "
+                f"{path} is missing from this installation")
+        from reportlab.pdfbase.ttfonts import TTFont
+
+        pdfmetrics.registerFont(TTFont(_PDF_FALLBACK_FONT, path))
+    parts = []
+    for char in text:
+        try:
+            char.encode(encoding)
+        except UnicodeEncodeError:
+            parts.append(f'<font name="{_PDF_FALLBACK_FONT}">{escape(char)}</font>')
+        else:
+            parts.append(escape(char))
+    return "".join(parts)
 
 
 def _spreadsheet_value(value):
@@ -529,6 +586,8 @@ class ExportManager:
         LINK_FONT = Font(color="0563C1", underline="single")
         TOP = Alignment(vertical="top")
         TOP_RIGHT = Alignment(vertical="top", horizontal="right")
+        #: For a value too wide for its column (see ``_write_table_sheet``).
+        TOP_WRAP = Alignment(vertical="top", wrap_text=True)
 
         wb = Workbook()
         #: ``(sheet name, exported data rows, one-line contents)`` per sheet.
@@ -598,9 +657,11 @@ class ExportManager:
                 header_lines = max(header_lines, -(-len(str(header)) // per_line))
             ws.row_dimensions[header_row].height = 15 * min(header_lines, 3)
 
+            clipped = False
             for offset, row in enumerate(rows):
                 excel_row = header_row + 1 + offset
                 is_subtotal = offset in subtotal_rows
+                row_lines = 1
                 for col in range(1, len(headers) + 1):
                     raw = row[col - 1] if col <= len(row) else None
                     value, number_format = _excel_typed_value(kinds[col - 1], raw)
@@ -614,6 +675,28 @@ class ExportManager:
                         cell.fill = SUBTOTAL_FILL
                     elif offset % 2 == 1:
                         cell.fill = STRIPE_FILL
+                    if isinstance(value, str):
+                        # The neighbour cell holds a value, so text wider than
+                        # its column is clipped there: wrap it and grow the row.
+                        # The cell keeps its exact text (no newline, ellipsis or
+                        # shortening); cells that fit are left alone.
+                        lines = _excel_wrapped_lines(value, widths[col - 1])
+                        if lines > 1:
+                            cell.alignment = TOP_WRAP
+                            row_lines = max(row_lines, lines)
+                if row_lines > 1:
+                    # Height is per row: the tallest wrapped value sets it.
+                    # Excel's own ceiling is 409.5pt, so a value beyond ~27
+                    # lines still cannot be shown in a cell — logged once per
+                    # sheet rather than passed over (the JSON carries it).
+                    ws.row_dimensions[excel_row].height = min(
+                        _EXCEL_NOTE_LINE_HEIGHT * row_lines, _EXCEL_MAX_ROW_HEIGHT)
+                    if (_EXCEL_NOTE_LINE_HEIGHT * row_lines > _EXCEL_MAX_ROW_HEIGHT
+                            and not clipped):
+                        clipped = True
+                        _log.warning("Excel: a value on sheet '%s' is taller than "
+                                     "Excel's maximum row height; the JSON export "
+                                     "holds it in full", ws.title)
 
             ws.freeze_panes = f"A{header_row + 1}"
             if rows:
@@ -879,7 +962,9 @@ class ExportManager:
         from core.utils.version import __version__
 
         def _pdf_text(value):
-            return escape(_pdf_plain(value))
+            # Drawable text is unchanged; unsupported characters use the bundled
+            # face instead of a black square (see :func:`_pdf_markup`).
+            return _pdf_markup(_pdf_plain(value))
 
         def _cell_text(value):
             """A cell's text: ``None`` is blank, but ``0``/``False`` stay visible."""

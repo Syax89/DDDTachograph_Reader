@@ -39,6 +39,18 @@ ui_icons_png = os.path.join(base_path, "assets", "icons", "png")
 if os.path.isdir(ui_icons_png):
     added_files.append((ui_icons_png, os.path.join("assets", "icons", "png")))
 
+# PDF fallback font (app/export.py). The report is set in Helvetica and the PDF
+# export writes straight text into the paragraph markup, so a character outside
+# the standard font's WinAnsi encoding would be drawn as a black square. The one
+# character the official manufacturer registry needs and Helvetica lacks (the
+# Lithuanian "Ė", U+0116) is drawn with this bundled face instead — never with a
+# font the reader's machine happens to have. app/export.py resolves it as
+# <bundle>/assets/fonts/DejaVuSans.ttf, so the directory keeps its layout; the
+# font's upstream licence ships beside it, as the Bitstream Vera licence requires.
+ui_fonts = os.path.join(base_path, "assets", "fonts")
+if os.path.isdir(ui_fonts):
+    added_files.append((ui_fonts, os.path.join("assets", "fonts")))
+
 # NOTE: core/ must NOT go in datas — PyInstaller collects it automatically
 # from hiddenimports; listing it in datas duplicates every module in the
 # dist build. reportlab is needed for the PDF export (lazy import in
