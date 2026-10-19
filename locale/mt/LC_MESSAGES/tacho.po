@@ -294,6 +294,15 @@ msgstr "Ċertifikati CVC (dekodifikati)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Il-karta mhix fit-takografu minn {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Dħul tan-numru tar-reġistrazzjoni mill-kumpanija"
+
+msgid "Manufacturer specific"
+msgstr "Speċifiku għall-manifattur"
+
+msgid "Reserved for future use"
+msgstr "Riżervat għal użu futur"
+
 msgid "Signature mismatch"
 msgstr "Il-firma ma taqbilx"
 
@@ -781,6 +790,9 @@ msgstr "Ħin >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Ħin fuq {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Aġġustament tal-ħin mingħajr kalibrazzjoni"
 
 msgid "Time moving"
 msgstr "Ħin miexi"

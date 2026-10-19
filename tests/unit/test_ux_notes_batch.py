@@ -123,3 +123,92 @@ def test_the_integrity_warning_opens_after_the_file_is_on_screen(explorer, monke
     name, parsing, rendering, open_state, bar = seen[0]
     assert (name, parsing, rendering, open_state, bar) == ("showwarning", False, False, "normal", False)
     assert explorer.tree.selection(), "the pane must already show the file"
+
+
+# ── Record Type: off the screen, beside the section title in the exports ───────
+def test_the_record_type_column_is_not_on_screen(explorer):  # noqa: F811
+    """Every node of a VU file whose records carry a record code: no "Record Type"."""
+    import time
+
+    from tests.unit.test_gui_summary_default import open_file, vu_data
+    calibrations = [{"purpose": "Activation", "record_type": "0x0C", "name": "VuCalibrationRecord"},
+                    {"purpose": "Periodic inspection", "record_type": "0x0C", "name": "VuCalibrationRecord"}]
+    places = [{"description": "Start", "record_type": "0x1C"}]
+    explorer.geometry("1100x700")
+    explorer.update()
+    open_file(explorer, vu_data(generations={"Generation 2": {
+        "CalibrationData": calibrations, "Places": places,
+        "VU Identifications": [{"description": "Unit", "record_type": "0x19"}]}}))
+    seen = 0
+
+    def walk(parent=""):
+        for iid in explorer.tree.get_children(parent):
+            yield iid
+            yield from walk(iid)
+
+    for iid in list(walk()):
+        explorer.tree.selection_set(iid)
+        explorer.update()
+        time.sleep(0.01)
+        fields = [explorer.table.tv.item(r, "values")[0] for r in explorer.table.tv.get_children("")
+                  if explorer.table.tv.item(r, "values")]
+        assert "Record Type" not in explorer.table._cols
+        assert "Record Type" not in fields
+        seen += 1
+    assert seen >= 6
+    titles = [explorer.tree.item(i, "text") for i in walk()]
+    assert any("Calibration" in t for t in titles), titles   # the sections were really rendered
+
+
+def test_a_constant_record_type_moves_to_the_section_note_in_the_exports():
+    from core.utils.report_format import section_tables
+    calibs = [{"purpose": "Activation", "record_type": "0x0C"},
+              {"purpose": "Periodic inspection", "record_type": "0x0C"}]
+    (label, desc, headers, rows, _t), = list(section_tables({"calibrations": calibs}))
+    assert "Record Type" not in headers and headers == ["Purpose"]
+    assert rows == [["Activation"], ["Periodic inspection"]]
+    assert "Record type: 0x0C (VuCalibrationRecord)." in desc
+
+
+def test_a_varying_record_type_stays_a_column_in_the_exports():
+    from core.utils.report_format import section_tables
+    items = [{"purpose": "a", "record_type": "0x0C"}, {"purpose": "b", "record_type": "0x0D"}]
+    (_l, desc, headers, rows, _t), = list(section_tables({"calibrations": items}))
+    assert headers[-1] == "Record Type" and [r[-1] for r in rows] == ["0x0C", "0x0D"]
+    assert "Record type" not in desc
+
+
+# ── every language knows the labels added today ───────────────────────────────
+NEW_LABELS = ("Entry of VRN by company", "Time adjustment without calibration",
+              "Reserved for future use", "Manufacturer specific")
+
+
+def test_every_catalog_translates_every_new_label():
+    import gettext
+    from pathlib import Path
+    from app import i18n
+    root = Path(__file__).resolve().parents[2] / "locale"
+    langs = [p.name for p in root.iterdir() if p.is_dir()]
+    assert len(langs) == 33
+    for lang in langs:
+        catalog = gettext.GNUTranslations(open(root / lang / "LC_MESSAGES" / "tacho.mo", "rb"))
+        for label in NEW_LABELS:
+            assert catalog.gettext(label).strip(), f"{lang}: {label!r}"
+    assert i18n.LANGUAGES  # the catalogs are the ones the app ships
+
+
+@pytest.mark.parametrize("lang", ["it", "de", "ru", "el"])
+def test_a_coded_label_keeps_its_code_and_translates_its_words(lang):
+    from app import i18n, ui_text
+    i18n.install(lang)
+    ui_text.configure_translate_data(True)
+    try:
+        for label in ("Manufacturer specific", "Reserved for future use"):
+            text = ui_text.data_text(f"{label} (0x83)")
+            assert text.endswith(" (0x83)")
+            assert text != f"{label} (0x83)", f"{lang}: {label} untranslated"
+        assert ui_text.data_text("Entry of VRN by company") != "Entry of VRN by company"
+        assert ui_text.data_text("Unlisted thing (0x83)") == "Unlisted thing (0x83)"
+    finally:
+        ui_text.configure_translate_data(False)
+        i18n.install("en")

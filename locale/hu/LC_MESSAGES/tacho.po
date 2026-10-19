@@ -294,6 +294,15 @@ msgstr "CVC-tanúsítványok (dekódolva)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "A kártya {time} óta nincs a tachográfban"
 
+msgid "Entry of VRN by company"
+msgstr "Rendszám megadása a vállalkozás által"
+
+msgid "Manufacturer specific"
+msgstr "Gyártóspecifikus"
+
+msgid "Reserved for future use"
+msgstr "Jövőbeli használatra fenntartva"
+
 msgid "Signature mismatch"
 msgstr "Az aláírás nem egyezik"
 
@@ -781,6 +790,9 @@ msgstr "Idő >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Idő {limit} km/h felett"
+
+msgid "Time adjustment without calibration"
+msgstr "Időbeállítás kalibrálás nélkül"
 
 msgid "Time moving"
 msgstr "Idő mozgásban"

@@ -294,6 +294,15 @@ msgstr "Teastais CVC (díchódaithe)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Níl an cárta sa tacógraf ó {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Uimhir chláraithe a iontráil ag an gcuideachta"
+
+msgid "Manufacturer specific"
+msgstr "Sainiúil don mhonaróir"
+
+msgid "Reserved for future use"
+msgstr "Curtha in áirithe le húsáid amach anseo"
+
 msgid "Signature mismatch"
 msgstr "Míthagairt sa síniú"
 
@@ -781,6 +790,9 @@ msgstr "Am >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Am os cionn {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Coigeartú ama gan calabrú"
 
 msgid "Time moving"
 msgstr "Am ag gluaiseacht"
