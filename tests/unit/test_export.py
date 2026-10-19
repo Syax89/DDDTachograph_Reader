@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 from copy import deepcopy
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -126,29 +127,38 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("Unknown bytes", summary_text)
         self.assertNotIn("Coverage", [cell.value for cell in wb["Summary"]["A"]])
 
-        # Daily Activities: monthly grouped report with hours columns + monthly totals
+        # Daily Activities: the shared report's day rows with typed cells; the
+        # monthly subtotal rows are on their own sheet (test_export_excel_layout).
         ws = wb["Daily Activities"]
         # Description in row 1, headers in row 2
         self.assertIn("Daily activity", str(ws.cell(row=1, column=1).value))
         headers = [c.value for c in ws[2]]
         self.assertIn("Date", headers)
-        self.assertIn("Drive (h)", headers)
-        self.assertIn("Work (h)", headers)
-        self.assertIn("Rest (h)", headers)
-        self.assertIn("Available (h)", headers)
-        self.assertIn("Unknown (h)", headers)
-        self.assertIn("Total (h)", headers)
+        self.assertIn("Drive (h:mm)", headers)
+        self.assertIn("Work (h:mm)", headers)
+        self.assertIn("Rest (h:mm)", headers)
+        self.assertIn("Available (h:mm)", headers)
+        self.assertIn("Unknown (h:mm)", headers)
+        self.assertIn("Total (h:mm)", headers)
         rows_read = ws.max_row - 2  # skip desc row and header
-        self.assertGreaterEqual(rows_read, 3)  # 2 days + 1 monthly total
+        self.assertEqual(rows_read, 2)  # the 2 days, not the monthly subtotal
+        self.assertEqual(ws.cell(row=3, column=1).value, datetime(2026, 6, 1))
+        self.assertEqual(ws.cell(row=3, column=3).value, timedelta(hours=4))
+        self.assertEqual(wb["Monthly Activities"].cell(row=3, column=1).value,
+                         "06/2026 TOTAL")
+        self.assertEqual(wb["Monthly Activities"].cell(row=3, column=3).value,
+                         timedelta(hours=8))
 
-        # Events: humanised columns, formatted timestamps, hidden keys dropped
+        # Events: humanised columns, typed UTC timestamps, hidden keys dropped
         ws = wb["Events"]
         # Row 1 = description, row 2 = headers, row 3+ = data
         headers = [c.value for c in ws[2]]
         self.assertIn("Description", headers)
         self.assertNotIn("Confidence", headers)
         values = [c.value for c in ws[3]]
-        self.assertIn("2026-06-01 10:30Z", values)
+        self.assertIn(datetime(2026, 6, 1, 10, 30), values)
+        begin = ws.cell(row=3, column=headers.index("Begin") + 1)
+        self.assertEqual(begin.number_format, 'yyyy-mm-dd hh:mm"Z"')
         # Description is in a merged cell row 1
         desc = ws.cell(row=1, column=1).value
         self.assertIsNotNone(desc)
@@ -233,7 +243,10 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("'=untrusted Header", excel_values)
         self.assertIn("-42", excel_values)
         self.assertNotIn("'-42", excel_values)
-        self.assertIn("2026-06-01 10:30Z", excel_values)
+        # A UTC timestamp is a real date-time cell; its zone survives in the
+        # cell's number format (Excel has no time zones).
+        self.assertIn(datetime(2026, 6, 1, 10, 30), excel_values)
+        self.assertNotIn("2026-06-01 10:30Z", excel_values)
 
     def test_spreadsheet_formula_protection_handles_leading_whitespace(self):
         from app.export import _spreadsheet_value
