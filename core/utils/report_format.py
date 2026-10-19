@@ -666,6 +666,29 @@ def summary_rows(data):
     return rows
 
 
+def _hoist_constant_record_type(headers, rows):
+    """Lift a ``Record Type`` that is the same on every row out of the table.
+
+    Returns ``(headers, rows, note)``. When every row carries the same record
+    type the column is only noise, repeated down the page; the value moves to a
+    one-line note the exports print beside the section title. When the types
+    differ the column stays (it tells the rows apart). ``note`` is ``""`` when
+    nothing was lifted.
+    """
+    label = humanize_key("record_type")
+    if label not in headers or len(headers) < 2 or not rows:
+        return headers, rows, ""
+    idx = headers.index(label)
+    values = {row[idx] for row in rows}
+    if len(values) != 1 or not next(iter(values)):
+        return headers, rows, ""
+    value = values.pop()
+    name = code_label(value, key="record_type")
+    note = f"Record type: {value}" + (f" ({name})" if name else "")
+    headers = headers[:idx] + headers[idx + 1:]
+    return headers, [row[:idx] + row[idx + 1:] for row in rows], note
+
+
 def section_tables(data, max_rows=None):
     """Yield (label, description, headers, rows, truncated) for every populated export section."""
     for key, label in EXPORT_SECTIONS:
@@ -693,6 +716,9 @@ def section_tables(data, max_rows=None):
                 headers, rows = records_to_table(items)
         if not rows:
             continue
+        headers, rows, type_note = _hoist_constant_record_type(headers, rows)
+        if type_note:
+            desc = f"{desc} {type_note}.".strip()
         truncated = False
         if max_rows is not None and len(rows) > max_rows:
             rows = rows[:max_rows]

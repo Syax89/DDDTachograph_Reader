@@ -294,6 +294,15 @@ msgstr "CVC sertifikatai (dekoduoti)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kortelės nėra tachografe nuo {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Registracijos numerio įvedimas įmonės"
+
+msgid "Manufacturer specific"
+msgstr "Specifinis gamintojui"
+
+msgid "Reserved for future use"
+msgstr "Rezervuota būsimam naudojimui"
+
 msgid "Signature mismatch"
 msgstr "Parašas nesutampa"
 
@@ -781,6 +790,9 @@ msgstr "Laikas >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Laikas virš {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Laiko koregavimas be kalibravimo"
 
 msgid "Time moving"
 msgstr "Laikas judant"

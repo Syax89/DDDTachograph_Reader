@@ -271,11 +271,13 @@ _BADGE_WORDS = {
 
 # Internal keys to hide from columns (service noise). Keys starting with "_"
 # (e.g. "_key" dedup markers) are always hidden — see _columns_for.
-HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence"}
+# ``record_type`` is the file's internal record code: of no use on screen, it is
+# kept for the exports, where it sits next to the section title.
+HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence", "record_type"}
 # Descriptive columns pushed to table start.
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
 # Technical columns pushed to table end.
-TRAILING_KEYS = ["record_type"]
+TRAILING_KEYS: list[str] = []
 SPEED_LIMIT_KMH = 90
 
 #: Whether the driving-time infractions are *shown*. **False by default.**

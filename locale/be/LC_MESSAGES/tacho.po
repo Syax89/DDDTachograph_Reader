@@ -294,6 +294,15 @@ msgstr "Сертыфікаты CVC (дэкадавана)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Картка адсутнічае ў тахографе з {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Ўвод рэгістрацыйнага нумара прадпрыемствам"
+
+msgid "Manufacturer specific"
+msgstr "Спецыфічна для вытворцы"
+
+msgid "Reserved for future use"
+msgstr "Зарэзервавана для будучага выкарыстання"
+
 msgid "Signature mismatch"
 msgstr "Подпіс не супадае"
 
@@ -781,6 +790,9 @@ msgstr "Час >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Час звыш {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Карэкцыя часу без каліброўкі"
 
 msgid "Time moving"
 msgstr "Час у руху"
