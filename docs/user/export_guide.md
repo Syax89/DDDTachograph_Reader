@@ -112,16 +112,24 @@ Sheets have styled headers, alternating row stripes, auto-filters, and frozen he
 - Drive and Work are summed across the two card slots; Rest, Available and
   Unknown are kept at the maximum across slots. A day with two drivers (crew)
   can therefore show more than `24:00` in total.
-- The cover and the monthly table are computed by the same slot-aware engine, so
-  their numbers always agree.
+- Each day is summed with the same slot-aware engine the monthly table uses, so
+  per-day figures match. The cover totals cover **every** daily record in the
+  input, while the printed tables stop at the row limit: past it the Daily
+  Activities table is a subset and the cover is the complete figure.
 - Records wider than ten columns (calibrations, certificates, power
   interruptions, VU identifications) are printed as one field/value card per
   record — "Record 2 of 7" — so no field is squeezed into an unreadable column.
   A record long enough to need two pages repeats its record number and header.
-- A section longer than 1,500 rows is cut at that limit and says so on the page,
-  with the rows exported and a pointer to the JSON export (Excel has its own
-  limit). A month cut off before its subtotal is labelled as a partial month
-  instead of showing an empty month name.
+- A list-based section is cut at 1,500 rows and says so on the page, naming the
+  rows exported and pointing at the JSON export (Excel has its own limit). That
+  applies to the daily activities table and to every record table (events,
+  places, detailed speed, …). The monthly subtotal rows are rows of the same cap,
+  so a long month can be cut before its subtotal — its heading then says it is a
+  partial month instead of showing an empty month name, and a capped section
+  whose retained rows carry no displayable value still discloses the cut without
+  printing an empty grid. Dictionary sections (card application, VU
+  information, sensor identification, …) and the special TREP / VU-certificate
+  lists are not capped and keep their existing behaviour.
 - The PDF is a **summary**: nested structures are flattened into readable text
   (an absent card slot as `—`, a certificate as a truncated digest). Use JSON for
   the complete decoded structure, or Excel to work with the rows.

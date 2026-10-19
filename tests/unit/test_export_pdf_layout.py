@@ -623,7 +623,9 @@ def test_technical_appendix_follows_the_operational_sections(tmp_path):
     # Technical sections are inside the appendix, not before it.
     for technical in ("Calibrations", "EF Card Data Signatures",
                       "Driver Card Certificates", "Card Application",
-                      "VU Certificates (CVC)", "File & Parse Details"):
+                      "VU Certificates (CVC)",
+                      # the label is escaped, as every report string is
+                      "File &amp; Parse Details"):
         assert text.index(technical) > text.index("Technical Appendix"), technical
 
 
@@ -668,7 +670,7 @@ def test_row_cap_warning_is_visible_for_activities_and_ordinary_sections(tmp_pat
                        "begin": "2025-05-01T10:00:00+00:00"} for i in range(1600)]
 
     _path, spy = render(tmp_path, data)
-    warnings = [t for t in spy.texts if "row limit" in t]
+    warnings = [t for t in spy.texts if "1 500-row report limit" in t]
     assert len(warnings) >= 2, warnings
     assert any("JSON" in w for w in warnings)
     assert any("Excel" in w for w in warnings)
@@ -708,6 +710,151 @@ def test_footer_strings_never_overlap_for_a_long_file_name(tmp_path):
     # A file name too long for the footer is shortened, not run into the page
     # number.
     assert left[0][1].endswith("\u2026  ·  TachoReader v2.7.1")
+
+
+# ── 9. Correction leg: disclosure, labels, pagination, placeholders ────────
+
+def _minutes(duration):
+    hours, _sep, mins = duration.partition(":")
+    return int(hours) * 60 + int(mins)
+
+
+def test_row_cap_warning_survives_a_preview_with_no_displayable_values(tmp_path):
+    """A capped section must disclose the cut even when no row shows a value."""
+    data = minimal_data()
+    data["events"] = [{"source": "internal"}] * 1500 + [{"description": "FINAL-EVENT"}]
+
+    _path, spy = render(tmp_path, data)
+    text = spy.joined()
+    assert "FINAL-EVENT" not in text, "the preview really carries no visible value"
+
+    warnings = [entry for entry in spy.texts if "row limit" in entry]
+    assert warnings, "the row cap must stay disclosed"
+    assert any("1 500" in entry for entry in warnings)
+    assert any("JSON" in entry for entry in warnings)
+    # And it must not pretend that 1 500 blank rows were printed.
+    assert not any("Showing the first" in entry for entry in warnings)
+    assert any("no table is printed" in entry for entry in warnings)
+
+
+def test_uncapped_section_without_displayable_values_is_still_skipped(tmp_path):
+    data = minimal_data()
+    data["events"] = [{"source": "internal"}] * 3
+    data["faults"] = [{"description": "Sensor fault"}]
+
+    _path, spy = render(tmp_path, data)
+    assert "Events" not in spy.texts
+    assert "Faults" in spy.texts
+
+
+def test_cover_period_counts_dated_days_not_days_with_recorded_activity(tmp_path):
+    """The period states the dated span; the grid keeps the active-day count."""
+    data = minimal_data()
+    data["activities"] = [
+        {"date": "01/06/2025", "changes": []},
+        {"date": "02/06/2025", "changes": [{"activity": "REST", "time": "00:00"}]},
+    ]
+
+    _path, spy = render(tmp_path, data)
+    period = next(t for t in spy.texts if "01/06/2025" in t and "02/06/2025" in t)
+    assert "2 dated days" in period
+    assert "with activity" not in period
+
+    stats = spy.pairs()
+    assert stats["Days with activity"] == "1"     # established count, unchanged
+    assert stats["Rest"] == "24:00"               # duration math unchanged
+
+
+def test_cover_totals_are_complete_while_the_table_is_capped(tmp_path):
+    """1 501 full days: the totals cover all of them, the tables cannot."""
+    from datetime import date, timedelta
+
+    start = date(2020, 1, 1)
+    data = minimal_data()
+    data["activities"] = [
+        {"date": (start + timedelta(days=offset)).strftime("%d/%m/%Y"),
+         "changes": [{"activity": "REST", "time": "00:00"}]}
+        for offset in range(1501)
+    ]
+
+    _path, spy = render(tmp_path, data)
+    stats = spy.pairs()
+    assert stats["Rest"] == "36024:00"
+    assert stats["Total"] == "36024:00"
+
+    # Monthly subtotal rows consume the same 1 500-row cap, so the printed
+    # tables are a strict subset of the input.
+    printed = sum(
+        _minutes(row[-1])
+        for _ncols, rows in spy.tables
+        for row in rows
+        if row and isinstance(row[0], str) and row[0].endswith(" TOTAL")
+    )
+    assert 0 < printed < 1501 * 24 * 60
+    assert any("row limit" in entry for entry in spy.texts)
+
+    # The cover says exactly that, instead of promising agreement.
+    note = next(t for t in spy.texts if "every daily record" in t)
+    assert "subset" in note and "row limit" in note
+
+
+def test_section_intro_stays_with_the_first_card_of_a_tall_record(tmp_path):
+    data = minimal_data()
+    data["events"] = [{"description": f"Event description {index}"}
+                      for index in range(14)]
+    tall = {"field_00": "longvalue " * 240}
+    for index in range(1, 12):
+        tall[f"field_{index:02d}"] = f"VALUE-{index}"
+    data["vu_identifications"] = [tall]
+
+    _path, spy = render(tmp_path, data)
+    heading_pages = spy.pages_showing("VU Identifications")
+    assert heading_pages
+    for page in heading_pages:
+        assert ("table", "") in spy.drawn_items[page], (
+            f"the section intro is stranded on page {page}")
+
+    record_pages = spy.pages_showing("Record 1 of 1")
+    assert record_pages and record_pages[0] == heading_pages[0]
+    assert spy.blank_pages() == []
+
+
+def test_placeholder_driver_name_is_dropped_even_with_a_real_card_number(tmp_path):
+    data = minimal_data()
+    data["driver"] = {"firstname": "N/A", "surname": "N/A",
+                      "card_number": "I100000000000000"}
+
+    _path, spy = render(tmp_path, data)
+    assert not any("N/A N/A" in entry for entry in spy.texts)
+    assert "Driver" not in spy.texts                # the name row says nothing
+    assert spy.pairs()["Card Number"] == "I100000000000000"
+
+
+def test_one_over_page_card_value_is_split_not_dropped(tmp_path):
+    data = minimal_data()
+    record = {"field_00": "longvalue " * 900}
+    for index in range(1, 12):
+        record[f"field_{index:02d}"] = f"VALUE-{index}"
+    data["vu_identifications"] = [record]
+
+    _path, spy = render(tmp_path, data)
+    text = spy.joined()
+    # Every word of the value is drawn (across the split parts), and the fields
+    # after it are not swallowed by the fragment.
+    assert sum(entry.count("longvalue") for entry in spy.texts) >= 890
+    assert text.count("longvalue") <= 910
+    assert "VALUE-1" in text and "VALUE-11" in text
+    # The record identity repeats on every page the card continues onto.
+    assert len(spy.pages_showing("Record 1 of 1")) >= 2
+    assert spy.blank_pages() == []
+
+
+def test_subtitle_keeps_the_shared_source_text(tmp_path):
+    _path, spy = render(tmp_path, signature_only_data())
+    assert any("Vehicle Unit (VU)" in entry for entry in spy.texts)
+
+    _path, card_spy = render(tmp_path, minimal_data(), "card.pdf")
+    assert any(entry.endswith("\u00b7  Driver Card") for entry in card_spy.texts)
 
 
 # ── 8. Real sample files render ────────────────────────────────────────────
