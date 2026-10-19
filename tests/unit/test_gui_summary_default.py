@@ -380,7 +380,7 @@ OVER_WIDE_HEADERS = ()
 #: the wording belongs to the code that owns the fact. Each is allowed to be too
 #: wide in its **Value** cell only; its label is the panel's own row wording and
 #: must fit like every other one. Measured at 900x560 with the pinned DejaVu Sans
-#: at 10 pt (187 px value column / 198 px field column), see
+#: at 10 pt (363 px value column / 198 px field column), see
 #: :data:`MEASURE_FAMILY`:
 #:
 #: ``Status`` — ``_integrity_label``'s 15 verdicts. 11 of them exceed 187 px in
@@ -393,11 +393,13 @@ OVER_WIDE_HEADERS = ()
 #: ``Period covered`` — the catalogs' "No activity data available." in the 29
 #:   languages where it is wider than the column (372 px in el); the date range
 #:   "01/05/2025 → 03/05/2025" fits everywhere (184 px, 3 px spare).
-#: ``Origin`` — the catalogs' "Vehicle Unit (VU)", which a VU file's overview
-#:   states in the FILE block: 259 px in ru, 242 px in be, 241 px in lt, and over
-#:   the column in bg, lv, mk and uk as well. It is the same string the File Info
-#:   section and the dashboards show, so it is not this panel's wording to cut
-#:   either.
+#: ``Origin`` used to be here ("Vehicle Unit (VU)" is 259 px in ru). It left when
+#:   the tree pane began at 260 px and the value column grew from 187 to 363 px.
+#:
+#: The widths quoted in the paragraphs above and in the tests below were
+#: measured when the two panes split the window evenly (187 px value column);
+#: the verdicts they name are still the widest cells, just fewer of them now
+#: overflow.
 #:
 #: None of them is a silent pass: ``test_an_over_wide_cell_is_readable_in_full_on_hover``
 #: pins the panel's hover reveal, and the sweep below measures that reveal on
@@ -406,7 +408,7 @@ OVER_WIDE_HEADERS = ()
 #: so does a registered row's *label*: these two registers are the only place
 #: that can turn a clipped cell into a pass, so their membership is validated
 #: rather than trusted (``test_the_over_wide_registers_hold_only_what_they_claim``).
-OVER_WIDE_VALUES = ("  Status", "  Period covered", "  Origin")
+OVER_WIDE_VALUES = ("  Status", "  Period covered")
 
 #: The row the defect reported as clipped — the one this test file exists to keep
 #: fitting — so it may never join either register above: not its 198 px Field

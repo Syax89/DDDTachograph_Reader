@@ -880,8 +880,8 @@ msgid "{recorded:,} s recorded | {gaps} internal gaps"
 msgstr "{recorded:,} s skráð | {gaps} innri eyður"
 
 #, python-brace-format
-msgid "{rows} rows · {columns} columns"
-msgstr "{rows} raðir · {columns} dálkar"
+msgid "Rows: {rows} · Columns: {columns}"
+msgstr "Raðir: {rows} · Dálkar: {columns}"
 
 msgid "Double-click for full details"
 msgstr "Tvísmelltu fyrir öll smáatriði"

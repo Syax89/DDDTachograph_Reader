@@ -880,8 +880,8 @@ msgid "{recorded:,} s recorded | {gaps} internal gaps"
 msgstr "{recorded:,} с записано | {gaps} внутренних разрывов"
 
 #, python-brace-format
-msgid "{rows} rows · {columns} columns"
-msgstr "{rows} строк · {columns} столбцов"
+msgid "Rows: {rows} · Columns: {columns}"
+msgstr "Строк: {rows} · Столбцов: {columns}"
 
 msgid "Double-click for full details"
 msgstr "Двойной щелчок для полной информации"

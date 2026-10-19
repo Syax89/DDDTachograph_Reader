@@ -880,8 +880,8 @@ msgid "{recorded:,} s recorded | {gaps} internal gaps"
 msgstr "{recorded:,} s irreġistrati | {gaps} distakki interni"
 
 #, python-brace-format
-msgid "{rows} rows · {columns} columns"
-msgstr "{rows} ringieli · {columns} kolonni"
+msgid "Rows: {rows} · Columns: {columns}"
+msgstr "Ringieli: {rows} · Kolonni: {columns}"
 
 msgid "Double-click for full details"
 msgstr "Ikklikkja darbtejn għad-dettalji kollha"
