@@ -251,12 +251,18 @@ def test_pdf_cover_reports_available_and_unknown_and_matches_the_table(tmp_path)
     with patch("reportlab.platypus.Paragraph", side_effect=capture):
         ExportManager.export_to_pdf(data, str(tmp_path / "cover.pdf"))
 
-    stats = next(t for t in captured if t.startswith("Drive: "))
-    assert "Drive: 6h 0m" in stats
-    assert "Available: 4h 0m" in stats
-    assert "Rest: 14h 0m" in stats
-    assert "Unknown: 0h 0m" in stats
-    assert "Total: 24h 0m" in stats
+    # The cover's activity-totals grid: each label paragraph is immediately
+    # followed by its value paragraph, so creation order gives the pairs. The
+    # values are h:mm, the same style as the monthly table's own durations.
+    stats = {}
+    for index, text in enumerate(captured[:-1]):
+        if text in {"Drive", "Work", "Rest", "Available", "Unknown", "Total"}:
+            stats.setdefault(text, captured[index + 1])
+    assert stats["Drive"] == "06:00"
+    assert stats["Available"] == "04:00"
+    assert stats["Rest"] == "14:00"
+    assert stats["Unknown"] == "00:00"
+    assert stats["Total"] == "24:00"
 
     _, rows = build_monthly_activity_report(data["activities"])
     assert rows[0][7] == "24:00"   # table total equals the cover total

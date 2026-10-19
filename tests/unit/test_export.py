@@ -88,6 +88,19 @@ class TestExportManager(unittest.TestCase):
         import shutil
         shutil.rmtree(self.tmpdir)
 
+    @staticmethod
+    def _cover_stats(captured):
+        """Label → value of the cover's activity-totals grid.
+
+        The grid's cells are Paragraphs, so the captured creation order holds
+        each label immediately before its value.
+        """
+        stats = {}
+        for index, text in enumerate(captured[:-1]):
+            if text in {"Drive", "Work", "Rest", "Available", "Unknown", "Total"}:
+                stats.setdefault(text, captured[index + 1])
+        return stats
+
     def test_export_to_excel(self):
         ExportManager.export_to_excel(self.mock_data, self.excel_path)
         self.assertTrue(os.path.exists(self.excel_path))
@@ -316,16 +329,16 @@ class TestExportManager(unittest.TestCase):
         with patch("reportlab.platypus.Paragraph", side_effect=capture):
             ExportManager.export_to_pdf(data, self.pdf_path)
 
-        stats = next(t for t in captured
-                     if t.startswith("Drive: ") and "Rest:" in t)
-        # Cover now sums every bucket the table engine reports (XF-F3): the
-        # 00:00-08:00 gap is UNKNOWN 8h, the MYSTERY 10:00-12:00 is UNKNOWN 2h,
-        # so Unknown = 10h and the Total matches the table (24h).
-        self.assertIn("Drive: 2h 0m", stats)
-        self.assertIn("Rest: 12h 0m", stats)
-        self.assertIn("Available: 0h 0m", stats)
-        self.assertIn("Unknown: 10h 0m", stats)
-        self.assertIn("Total: 24h 0m", stats)
+        # The cover states every bucket the table engine reports (XF-F3) in the
+        # same h:mm style the monthly table uses. The 00:00-08:00 gap is UNKNOWN
+        # 8 h and the MYSTERY 10:00-12:00 is UNKNOWN 2 h, so Unknown = 10 h and
+        # the Total matches the table (24 h).
+        stats = self._cover_stats(captured)
+        self.assertEqual(stats["Drive"], "02:00")
+        self.assertEqual(stats["Rest"], "12:00")
+        self.assertEqual(stats["Available"], "00:00")
+        self.assertEqual(stats["Unknown"], "10:00")
+        self.assertEqual(stats["Total"], "24:00")
 
         # The report shows the SAME Drive/Rest and keeps the unknown hours.
         _, rows = build_monthly_activity_report(data["activities"])

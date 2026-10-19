@@ -1,4 +1,33 @@
 # Unreleased
+- **The PDF report is restructured and legible**: the cover now names the file,
+  its source and generation, the generation time, the activity period taken from
+  the daily records in the file (explicitly UTC and explicitly *not* a claim
+  about the download's full retention period), the identity facts, the file state
+  (integrity, download completeness and every partial-parse warning the parser
+  recorded) and a compact totals grid — Drive, Work, Rest, Available, Unknown,
+  Total in the single `h:mm` style the tables use, plus days with activity,
+  events and faults. Every bucket still comes from the one slot-aware totals
+  engine, so the cover cannot contradict the monthly table, and the cover states
+  that Unknown time is unattributed rather than proof of a corrupt file. The
+  bogus `N/A N/A` driver line on vehicle-unit files and the second, standalone
+  printing of the driver's name are gone. Monthly activity tables print `(h:mm)`
+  headers, right-aligned numeric Paragraphs (not merely TableStyle alignment),
+  bold shaded monthly subtotals and a full 31-day month — the first one too — on
+  a single page. Records wider than ten columns (calibrations, certificates,
+  power interruptions, VU identifications) are printed as one field/value card
+  per record with explicit record numbering instead of being crushed into
+  unreadable columns, and a card longer than a page repeats its record number and
+  header. Certificates, signature checks, calibrations/workshops and
+  VU/sensor/card identification now follow the operational data in a named
+  Technical Appendix (ending with a `File & Parse Details` block) instead of
+  trailing the contents; Excel and CSV keep the existing section order. The
+  1,500-row cap now warns on the page for activities as well, names the rows
+  exported and points at the JSON export, a month cut off before its subtotal is
+  labelled as partial instead of showing an empty month name, blank pages and
+  header-only trailing pages are gone, and a long file name is shortened in the
+  footer rather than run into the page number. No new options, graphs or
+  dependencies, and nested structures are still summarised as text — the PDF is a
+  summary; use JSON for the complete decoded structure.
 - **Keyboard, contrast and layout fixes from the design review**: the tree pane
   starts 52 px wider (312 instead of 260) so that no node of a fully expanded
   G2 card or vehicle-unit file is cut mid-word — "EF Signatures (Card Data
