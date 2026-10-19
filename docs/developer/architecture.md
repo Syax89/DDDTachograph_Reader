@@ -11,7 +11,7 @@ The DDD Tachograph Reader follows a layered pipeline architecture with four main
 
 ### Key Design Patterns
 
-**Registry Pattern** — `DecoderRegistry` (`core/registry/registry.py:28`) is the single source of truth mapping tag IDs to decoder functions. Each entry carries metadata: container flag, signature block, minimum length, record size, Annex reference, and generation. This enables lookup-by-tag without hardcoded switch statements.
+**Registry Pattern** — `DecoderRegistry` (`core/registry/registry.py:49`) is the single source of truth mapping tag IDs to decoder functions. Each entry carries metadata: container flag, signature block, minimum length, record size, Annex reference, and generation. This enables lookup-by-tag without hardcoded switch statements.
 
 **Strategy Pattern** — `DeterministicParser` (`core/parser/deterministic.py`) selects a walk per file kind:
 - Card files: sequential STAP (G1, T2L2 headers) or BER-TLV (G2/G2.2) walk with container recursion
@@ -27,7 +27,7 @@ flowchart TD
     A[".ddd File"] --> B[TachoParser.parse]
     B --> C{Generation + VU/card detection}
     C -->|"Card"| D["DeterministicParser\nSTAP / BER-TLV walk"]
-    C -->|"G2/G2.2 VU"| E["RecordArray stream walk\n(vu_record_dispatcher)"]
+    C -->|"G2/G2.2 VU"| E["RecordArray stream walk\n(vu_dispatcher.walk_vu_record_arrays)"]
     D --> G["DecoderRegistry.get_decoder"]
     E --> G
     F --> G
@@ -92,7 +92,7 @@ Entry point class. Constructor accepts the file path, records metadata, initiali
 6. `_verify_ef_signatures()` — per-EF data integrity against the card key
 7. `build_generations_tree()` — hierarchical per-generation view
 
-### DecoderRegistry (`core/registry/registry.py:28`)
+### DecoderRegistry (`core/registry/registry.py:49`)
 
 Centralized tag → decoder mapping. Holds a `Dict[int, TagDecoder]` with entries for all known tags. Each `TagDecoder` dataclass contains:
 
@@ -113,13 +113,13 @@ Centralized tag → decoder mapping. Holds a `Dict[int, TagDecoder]` with entrie
 
 Key methods: `get_decoder(tag)`, `is_container(tag)`, `is_signature(tag)`, `get_by_generation(gen)`, `get_unhandled_tags(seen_tags)`.
 
-### DeterministicParser (`core/parser/deterministic.py:105`)
+### DeterministicParser (`core/parser/deterministic.py:198`)
 
 Schema-driven two-pass parser (migration target). Architecture:
 1. **Structural pass**: Sequentially parses the file using `_try_read_stap()` or `_try_read_ber_tlv()`, dispatching through `DecoderRegistry.get_decoder()` and recursing into containers
 2. **Semantic pass**: (reserved for future) Validates record sizes, checksums, and field ranges
 
-Uses `CoverageTracker` (`core/parser/deterministic.py:18`) to track exact byte ranges covered, with classifications (Tag, Padding, Unknown). Guarantees 100% coverage by construction.
+Uses `CoverageTracker` (`core/parser/deterministic.py:46`) to track exact byte ranges covered, with classifications (Tag, Padding, Unknown). Guarantees 100% coverage by construction.
 
 ### Decoders (`core/decoders/__init__.py` facade + themed modules)
 
@@ -169,9 +169,9 @@ TachoResult
 └── signed_daily_records: List[Dict]
 ```
 
-`build_generations_tree()` (line 113) organizes results into a hierarchical view: `{Generation 1: {...}, Generation 2: {...}, Generation 2.2: {...}}`.
+`build_generations_tree()` (line 552) organizes results into a hierarchical view: `{Generation 1: {...}, Generation 2: {...}, Generation 2.2: {...}}`.
 
-### SignatureValidator (`core/crypto/signature.py:10`)
+### SignatureValidator (`core/crypto/signature.py:27`)
 
 Validates digital certificate chains. Supports RSA (G1/G2) and ECDSA (G2). Hierarchy:
 - **ERCA** (European Root Certificate Authority) — root certificates in `certs/`
@@ -180,10 +180,21 @@ Validates digital certificate chains. Supports RSA (G1/G2) and ECDSA (G2). Hiera
 
 ### Export Layer
 
-- **ExportManager** (`app/export.py:5`): Multi-sheet Excel (Riepilogo, Attività Giornaliere) and CSV export
+`app/export.py` (`ExportManager`, `app/export.py:489`) writes the report formats from one shared report layer (`core/utils/report_format.py`), and every method takes the parsed result dict and an output path:
+
+| Method | Format | Shape |
+|---|---|---|
+| `export_to_excel(data, filepath)` | `.xlsx` (openpyxl) | Multi-sheet workbook: `Summary` (facts, warnings and a sheet index), `TREP Signatures`, `VU Certificates`, `Daily Activities`, `Monthly Activities`, one sheet per data section, key/value sheets. Types the columns whose semantics are known (day dates, UTC timestamps, numbers, durations) and leaves identifiers as protected text. |
+| `export_to_pdf(data, filepath)` | `.pdf` (reportlab) | A4 landscape: cover, operational sections, Technical Appendix. Wide records become field/value cards. |
+| `export_to_csv(data, filepath)` | `.csv` | Semicolon-separated, UTF-8 with BOM, one block per section. |
+
+JSON is not produced here: the CLI and the GUI serialise the parser result directly with `core.utils.encoding.BytesEncoder`, so JSON carries the full parsed structure rather than the report sections. Excel and PDF are previews with explicit caps (`50000` and `1500` report rows per section); CSV is uncapped.
 
 ### GUI Layer
 
-- **app/gui.py**: Desktop application (tkinter/ttk). Regedit-style section tree on the left, Excel-style data table on the right (sortable columns, text filter). Data-driven: sections are derived from the parser output. With no file loaded the right pane shows the empty state (open action + recently opened files) instead of an empty table.
+- **app/gui.py**: Desktop application (tkinter/ttk). Regedit-style section tree on the left, Excel-style data table or an interactive chart on the right. Data-driven: sections are derived from the parser output. A loaded file opens on the summary panel, and with no file loaded the right pane shows the empty state (open action + recently opened files). Every label the GUI draws comes from `app/ui_text.py`.
 - **app/theme.py**: the single source of the palette (`SURFACE`, `TEXT_*`, `ACCENT`, `ACTIVITY_*`, `DANGER*`, ...) and of the font specs (`FONT_*`) the GUI paints. `app/gui.py` holds no colour literal of its own, so a palette change is a one-file edit.
-- **app/cli.py** (`app/cli.py:14`): CLI with `--json`, `--excel`, `--all`, `--summary` flags
+- **app/icons.py**: decodes `assets/icons/png/<size>/<name>.png` and caches the image per Tk interpreter; the size is chosen for the display scale (`nearest_size`), never resampled.
+- **app/i18n.py**: installs gettext from `locale/<lang>/LC_MESSAGES/tacho.mo`, owns `LANGUAGES` (34 entries), and persists the language and the *Translate file contents* preference in the per-user `settings.json`.
+- **app/ui_text.py**: the one display-text layer — `label()` humanises and translates section names and record keys, `data_text()` translates values decoded from the file and only when the preference is on.
+- **app/cli.py** (`app/cli.py:18`): CLI with `--json`, `--pdf`, `--excel`, `--csv`, `--all`, `--summary` flags; its output is always English.

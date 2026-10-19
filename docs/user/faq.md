@@ -69,7 +69,7 @@ The parser is deterministic-first and resilient: it decodes according to the EU 
 
 ### Does the tool check driving-time rules (EU 561/2006)?
 
-No. The tool is a **parser and integrity validator**: it decodes the recorded activities and verifies the digital signatures, but it does not report driving-time or rest-period compliance and does not estimate fines. (Internally the two rules it models — the daily and the continuous driving limit — are evaluated day by day, but every surface that would show them is hidden behind `app.gui.SHOW_DRIVING_INFRACTIONS` while their thresholds are being decided.) You can export the activity data to JSON or Excel and run your own compliance analysis on it.
+No. The tool is a **parser and integrity validator**: it decodes the recorded activities and verifies the digital signatures, but it does not report driving-time or rest-period compliance and does not estimate fines. You can export the activity data to JSON or Excel and run your own compliance analysis on it.
 
 ---
 
@@ -105,11 +105,42 @@ No. The application is **read-only**. It parses, analyzes, and exports data from
 
 ### Does the tool work on Linux?
 
-Yes. CI builds and verifies a **Linux x86_64 Flatpak**, alongside native Windows
+Yes. Releases include a **Linux x86_64 Flatpak** alongside native Windows
 and macOS builds. It needs Flatpak and, on Wayland, XWayland. Running from Python
-source also works.
-
-The published `v2.7.1` has no Flatpak: use a CI artifact until a release containing
-the Linux packaging job is published. See the
+source also works. See the
 [Linux installation guide](installation.md#linux-flatpak-x86_64) for downloads,
 installation, updates and sandbox permissions (home read/write, no network).
+
+---
+
+### In which languages is the interface available?
+
+34: English, the 23 other official EU languages, Norwegian, Icelandic, Russian,
+Ukrainian, Belarusian, Turkish, Serbian, Bosnian, Albanian and Macedonian. The
+language button in the top bar lists them, each in its own script, and remembers
+your choice. English stays the default, and anything a translation does not cover
+falls back to English.
+
+Labels **decoded from the file** (activity names, country names, record purposes,
+event descriptions) stay exactly as the decoder names them unless you tick
+**Translate file contents** in the same menu. Free text from the file — names,
+addresses, plates — identifiers and timestamps are never translated.
+
+---
+
+### Why is my exported report in English?
+
+Exports are deliberately language-neutral: they are the artefacts people file,
+share and compare, so they are written in English whatever the interface language
+is. The interface language and the *Translate file contents* switch do not change
+them.
+
+---
+
+### Can I open a file without the file dialog?
+
+The window accepts a dropped `.ddd` file (one file at a time; if you drop several,
+the first is opened and the status bar says so), and the empty pane lists the last
+8 files that were parsed successfully. Both are one click away from the same open
+action as the dialog. If drag & drop is unavailable in your build, the hint is not
+shown and everything else works unchanged.

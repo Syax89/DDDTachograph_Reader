@@ -87,6 +87,13 @@ tests or the coverage audit passed.
 | `test` (Python 3.10, 3.12, 3.13) | compiled translation catalogs still match their `.po` sources (`compile_translations.py --check`), then `pytest -q` |
 | `coverage` | semantic coverage audit against the committed mock baseline, failing on regression |
 
+Most GUI tests skip in the headless `test` job. On Python 3.12 a final leg installs
+the `fonts-dejavu-core` family and re-runs the GUI modules under `xvfb-run`, so the
+summary-fit sweep, the toolbar icons, the busy bar, the pane layout, the day-detail
+keyboard paths and the integrity badge are exercised with a real display. The font
+step is `continue-on-error`: a missing family is reported by the fit sweep itself
+rather than by an unrelated apt failure.
+
 ### Build artifacts vs release assets
 
 A branch, PR or manual run uploads ordinary GitHub Actions artifacts:
@@ -135,6 +142,14 @@ protection or required checks.
 | `tests/unit/test_coverage.py` | Byte coverage verification against mock and private DDD files |
 | `tests/unit/test_deterministic_padding.py` | Padding classification in the deterministic parser |
 | `tests/unit/test_export.py` | Export format correctness (Excel, CSV, PDF) |
+| `tests/unit/test_export_excel_layout.py` | Workbook sheets, typed cells, protected identifiers, row-limit disclosure |
+| `tests/unit/test_export_pdf_layout.py` | PDF cover, appendix, wide-record cards and the row cap |
+| `tests/unit/test_i18n.py` | Translator, settings, PO/MO tooling and the language menu |
+| `tests/unit/test_ui_text.py` | The display-text layer (`label()` / `data_text()`) and the translate-data preference |
+| `tests/unit/test_gui_layout.py` | Pane widths, autohiding scrollbars, summary block order |
+| `tests/unit/test_gui_summary_default.py` | The summary panel a file opens on, measured in DejaVu Sans |
+| `tests/unit/test_gui_icons.py`, `test_gui_icon_scale.py` | Icon set lookups, the display-scale mapping and the no-emoji rule |
+| `tests/unit/test_gui_accessibility.py` | Keyboard paths, contrast, monospace day log, elided verdict |
 | `tests/integration/test_fuzz.py` | Fuzzing with random/malformed byte sequences |
 | `tests/unit/test_gen22.py` | G2.2 specific tag decoders (GNSS, load/unload, border crossings) |
 | `tests/test_golden_snapshot.py` | Golden-file snapshot comparison for real DDD samples |
@@ -167,7 +182,7 @@ public CI and the real-file test skips when either prerequisite is unavailable.
 
 - Use `pytest` fixtures and assertions
 - Test files are prefixed `test_` and function names start with `test_`
-- Import decoders directly from `core.decoders` or `core.g2_decoders`
+- Import decoders from `core.decoders` (the facade re-exporting every decoder module)
 - For full pipeline tests, instantiate `TachoParser` with a test file or mock byte data
 - Use `tests/mock_data/` for static test fixtures
 - Use `tests/integration/generate_mock_ddd.py` to programmatically build DDD byte sequences

@@ -57,9 +57,9 @@ class DecoderRegistry:
 def __init__(self)
 ```
 
-Builds the full registry of ~80+ tag decoders via `_build()`. Each decoder is registered by tag ID and classified as container/signature as appropriate.
+Builds the full registry of 89 tag decoders via `_build()`. Each decoder is registered by tag ID and classified as container/signature as appropriate.
 
-**Registered tag categories** (from `core/registry/registry.py:40-471`):
+**Registered tag categories** (from `core/registry/registry.py:75-560`):
 
 | Category | Tag Range | Count | Description |
 |----------|-----------|-------|-------------|

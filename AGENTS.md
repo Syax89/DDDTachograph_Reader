@@ -9,18 +9,22 @@ Cross-platform (Windows/macOS/Linux) application for parsing, analyzing and visu
 - **Parser engine**: `core/parser/` — deterministic.py, record_array.py, vu_dispatcher.py (RecordArray walker), g1_walker.py
 - **Crypto**: `core/crypto/` — signature.py (root validator), vu_signature.py (ECDSA TREP + CVC chain), ef_signature.py (card data integrity)
 - **Utils**: `core/utils/` — ber_tlv, coverage, encoding, constants, logger, version, report_format, event_codes, tag_defs
-- **GUI**: `app/gui.py` — regedit-style tree + table viewer with Excel/CSV/JSON export
+- **GUI**: `app/gui.py` — regedit-style tree + table/chart viewer, summary-first load, PDF/Excel/CSV/JSON export
+- **Localization**: `app/i18n.py` (34 languages, per-user `settings.json`, `scripts/compile_translations.py`) and `app/ui_text.py` (the single display-text layer: `label()` for chrome, `data_text()` for values decoded from the file, gated by the *Translate file contents* preference). Exports stay English; `locale/<code>/LC_MESSAGES/tacho.po|.mo` holds one catalog per language.
+- **Presentation**: `app/theme.py` is the only palette/font source the GUI paints with — `app/gui.py` carries no colour literal.
 - **Icons**: `app/icons.py` — the only way the UI asks for an image: `icon(name, size, master)` decodes `assets/icons/png/<size>/<name>.png` (16 px tree rows and inline markers, 20 px toolbar), caches it per Tk interpreter so Tkinter cannot garbage-collect it into a blank row, and returns `None` for a missing file. The emoji the UI used before were drawn by whatever font the OS picked; nothing in `app/gui.py`/`app/cli.py` may carry one again (`tests/unit/test_gui_icons.py`). `assets/icons/README.md` is the designer's note, `assets/icons/svg/` the editable masters (Tk cannot read them; only `png/` is bundled by `build.spec`).
 - **CLI**: `app/cli.py` — full-featured CLI; `app/main.py` — compatibility entry point
-- **Export**: `app/export.py` — multi-sheet Excel + CSV + PDF
+- **Export**: `app/export.py` — multi-sheet Excel (typed cells, Summary index, Daily/Monthly split, 50 000-row report cap) + CSV (semicolon, UTF-8 BOM, section blocks) + PDF (cover, Technical Appendix, 1 500-row cap per section); JSON is the complete parsed structure written by the callers
 
 ## Running tests
 ```bash
 python3 -m pytest tests/ -v
 ```
-Requires: `pip install -r requirements.txt` (pytest, pyinstaller, cryptography, openpyxl, reportlab)
+Requires: `pip install -r requirements.txt` (pytest, pyinstaller, cryptography, openpyxl, reportlab, tkinterdnd2 — the last one optional, it only adds drag & drop).
 
-Tests use a conftest.py fixture that resets the DecoderRegistry singleton between tests.
+Run the app as a module from the repository root (`python -m app.gui`, `python -m app.cli`): invoking `app/gui.py` or `app/cli.py` by path fails, because the package root is then not on the import path.
+
+Tests use `tests/unit/conftest.py`, which resets the DecoderRegistry singleton between tests.
 
 ## CI and releases
 `.github/workflows/build.yml` builds Windows, macOS and Linux Flatpak on every branch push, PR and manual run (plus `--version`/`--smoke` smoke tests and, on Linux, an installed-Flatpak + Xvfb GUI smoke); the `All platforms verified` job fails unless all three succeeded. `.github/workflows/test.yml` is the separate lint/mypy, translation-catalog check, 3.10/3.12/3.13 pytest and semantic-coverage gate — it is not part of that platform gate. `.github/workflows/release.yml` runs on `v*` tags only (tag must match `core/utils/version.py`), and a single publisher publishes after all three platform packages exist. Details: `docs/developer/testing.md`.
@@ -41,4 +45,4 @@ All tag specifications are in `scripts/`:
 - Reg. EU 2021/1228 — G2.2 additional specs
 
 ## Coverage guarantee
-files in `DDD/`. `DeterministicParser._classify_gaps()` sweeps any bytes missed by the structural walk, classifying them as padding or tracked unknown ranges. Shared interval merging via `core/coverage_utils.merge_intervals()`. Coverage audit: `python3 scripts/coverage_audit.py`.
+Every tracked `.ddd` sample in `DDD/` is parsed with full byte coverage. `DeterministicParser._classify_gaps()` sweeps any bytes missed by the structural walk, classifying them as padding or tracked unknown ranges. Shared interval merging via `core/coverage_utils.merge_intervals()`. Coverage audit: `python3 scripts/coverage_audit.py`.

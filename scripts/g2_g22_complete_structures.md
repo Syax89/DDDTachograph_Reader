@@ -309,7 +309,7 @@ Il wrapper e la dimensione sono verificati: Annex 1C §2.166a definisce `recordT
 - **Annex reference**: Annex 1C (amended 2023/980) — LoadType, axle weights
 - **Encoding**: payload EF piatto
 - **Contiene**: timestamp + pesi per asse (2 byte ciascuno)
-- **Decoder**: `parse_g22_load_sensor_data` in `decoders.py:463`
+- **Decoder**: `parse_g22_load_sensor_data` in `core/decoders/card_g22.py`
 - **Stato**: ⚠️ EURISTICO (struttura parzialmente nota)
 
 **Struttura stimata**:
@@ -613,7 +613,7 @@ elif tag == 0x052A or tag == 0x0228:
 Il riferimento 0x0225 dovrebbe essere associato a 0x0525 (GNSS Accumulated Driving), non a 0x0528 (GNSS Enhanced Places).
 
 ### 11.5 — RecordArray header nel dispatch
-`decoders.py:173` controlla la presenza di un header RecordArray e, se presente, itera i record. Per i tag 0x052C-0x0533, anche quando verranno aggiunti decoder, questo meccanismo funzionera' automaticamente poiche' il RecordArray e' gestito in modo generico.
+`core/decoders/vu_g2.py` controlla la presenza di un header RecordArray e, se presente, itera i record. Per i tag 0x052C-0x0533, anche quando verranno aggiunti decoder, questo meccanismo funzionera' automaticamente poiche' il RecordArray e' gestito in modo generico.
 
 ---
 

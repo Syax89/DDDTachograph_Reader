@@ -48,11 +48,17 @@ def __init__(self, total_size: int)
 ```python
 class DeterministicParser:
     """
+    Deterministic parser that guarantees 100% byte coverage.
+
     Two-pass architecture:
     1. Structural pass: parse every byte through known STAP/BER-TLV
     2. Semantic pass: validate record sizes, checksums, field ranges
     """
 ```
+
+The structural pass is implemented; the semantic pass described in the class
+docstring is not — record-shape validation happens inside the decoders and in
+`TachoParser`'s post-processing phases.
 
 ### Constructor
 
@@ -71,7 +77,8 @@ def __init__(self, parser=None, registry: DecoderRegistry = None)
 def parse(self, raw_data: bytes, is_vu: bool) -> Dict[str, Any]
 ```
 
-Main entry point. Executes the two-pass deterministic parse.
+Main entry point. Executes the structural pass: every byte of the file is
+walked and accounted for.
 
 **Parameters:**
 | Parameter | Type | Description |
