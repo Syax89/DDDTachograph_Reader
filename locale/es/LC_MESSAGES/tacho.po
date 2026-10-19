@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% del archivo"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Vence en {days} días"
+msgid "  Due in {days} days"
+msgstr "  Vence en {days} días"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ CADUCADA (hace {days} días)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  CADUCADA (hace {days} días)"
 
 msgid "# Drivers"
 msgstr "# Conductores"
@@ -294,8 +294,8 @@ msgstr "Certificados CVC (decodificados)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Tarjeta ausente del tacógrafo desde {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Discrepancia en la firma de los datos de la tarjeta"
+msgid "Signature mismatch"
+msgstr "Discrepancia en la firma"
 
 msgid "Card inserted"
 msgstr "Tarjeta insertada"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s registrados | {gaps} huecos internos"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} filas · {columns} columnas"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Doble clic para ver todos los detalles"
+msgid "Double-click for full details"
+msgstr "Doble clic para ver todos los detalles"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Retirada"
@@ -892,106 +892,100 @@ msgstr "▲ Retirada"
 msgid "▼ Insertion"
 msgstr "▼ Inserción"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  ARCHIVO DAÑADO / PARCIAL"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "ARCHIVO DAÑADO / PARCIAL"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  SECCIONES DAÑADAS (datos descartados)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "SECCIONES DAÑADAS (datos descartados)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Fallos del decodificador"
+msgid "Decoder Failures"
+msgstr "Fallos del decodificador"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  ESTE ARCHIVO ESTÁ INCOMPLETO O DAÑADO"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "ESTE ARCHIVO ESTÁ INCOMPLETO O DAÑADO"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} advertencia(s) de integridad — haga clic para ver detalles"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} advertencia(s) de integridad — haga clic para ver detalles"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  SECCIONES PRESENTES"
+msgid "SECTIONS PRESENT"
+msgstr "SECCIONES PRESENTES"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  FALTAN SECCIONES OBLIGATORIAS"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "FALTAN SECCIONES OBLIGATORIAS"
 
-msgid "❌  Parse error"
-msgstr "❌  Error de análisis"
+msgid "Parse error"
+msgstr "Error de análisis"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Truncado (no se alcanzó el final del archivo)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Truncado (no se alcanzó el final del archivo)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Certificados incompletos"
+msgid "CARDHOLDER"
+msgstr "TITULAR DE LA TARJETA"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  TITULAR DE LA TARJETA"
+msgid "Driver / Cardholder"
+msgstr "Conductor / titular de la tarjeta"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Conductor / titular de la tarjeta"
-
-msgid "💻  VU INFO"
-msgstr "💻  INFO DE LA VU"
+msgid "VU INFO"
+msgstr "INFO DE LA VU"
 
 msgid "Open DDD file"
 msgstr "Abrir archivo DDD"
 
-msgid "📄  File Info"
-msgstr "📄  Info del archivo"
+msgid "File Info"
+msgstr "Info del archivo"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  RANGO DE FECHAS"
+msgid "DATE RANGE"
+msgstr "RANGO DE FECHAS"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  COMPLETITUD"
+msgid "COMPLETENESS"
+msgstr "COMPLETITUD"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARÁMETROS"
+msgid "PARAMETERS"
+msgstr "PARÁMETROS"
 
-msgid "📊  STATISTICS"
-msgstr "📊  ESTADÍSTICAS"
+msgid "STATISTICS"
+msgstr "ESTADÍSTICAS"
 
-msgid "📡  SENSOR"
-msgstr "📡  SENSOR DE MOVIMIENTO"
+msgid "SENSOR"
+msgstr "SENSOR DE MOVIMIENTO"
 
-msgid "📡  Sensor"
-msgstr "📡  Sensor de movimiento"
+msgid "Sensor"
+msgstr "Sensor de movimiento"
 
 msgid "Export"
 msgstr "Exportar"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation} {annex}"
+msgid "{generation}{annex}"
+msgstr "{generation} {annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  FIRMAS"
+msgid "SIGNATURES"
+msgstr "FIRMAS"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Seguridad y certificados"
+msgid "Security & Certificates"
+msgstr "Seguridad y certificados"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  BLOQUEO ACTUAL"
+msgid "CURRENT LOCK"
+msgstr "BLOQUEO ACTUAL"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  BLOQUEO ACTUAL"
+msgid "ASSOCIATED VEHICLE"
+msgstr "VEHÍCULO ASOCIADO"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  VEHÍCULO ASOCIADO"
+msgid "VEHICLE"
+msgstr "VEHÍCULO"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  VEHÍCULO"
+msgid "Vehicle"
+msgstr "Vehículo"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Vehículo"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "RECUPERADO DE DATOS DAÑADOS"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  RECUPERADO DE DATOS DAÑADOS"
+msgid "Raw / Unparsed Data"
+msgstr "Datos brutos / sin analizar"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Datos brutos / sin analizar"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  DETALLES DE LA TARJETA"
+msgid "CARD DETAILS"
+msgstr "DETALLES DE LA TARJETA"
 
 msgid "Additional Info"
 msgstr "Información adicional"
@@ -1488,8 +1482,8 @@ msgstr "Tarjeta de taller"
 msgid "Workshop Card Expiry"
 msgstr "Caducidad tarjeta de taller"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Generación 1  [Anexo 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Generación 1  [Anexo 1B]"
 
 msgid "Activity Chart"
 msgstr "Gráfico de actividad"
@@ -2383,3 +2377,39 @@ msgstr "Conducción diaria {driven} — límite {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Conducción continua {driven} sin una pausa de {pause} min — límite {limit}"
+
+msgid "FILE"
+msgstr "ARCHIVO"
+
+msgid "  Filename"
+msgstr "  Nombre de archivo"
+
+msgid "  Origin"
+msgstr "  Origen"
+
+msgid "  Period covered"
+msgstr "  Periodo cubierto"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "TOTALS"
+msgstr "TOTALES"
+
+msgid "  Drive"
+msgstr "  Conducción"
+
+msgid "  Work"
+msgstr "  Otro trabajo"
+
+msgid "  Rest"
+msgstr "  Descanso"
+
+msgid "  Available"
+msgstr "  Disponibilidad"
+
+msgid "INTEGRITY"
+msgstr "INTEGRIDAD"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Cobertura en octetos"

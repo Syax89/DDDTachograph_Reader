@@ -206,7 +206,7 @@ def test_plural_acronyms_keep_the_acronym_and_the_plural(key, expected):
     ("Daily Activities", "Daily Activities"),
     ("Origin details", "Origin details"),
     ("Byte-accounted coverage", "Byte-accounted coverage"),
-    ("\U0001f510  Security & Certificates", "\U0001f510  Security & Certificates"),
+    ("Security & Certificates", "Security & Certificates"),
     ("Field \u203a Value", "Field \u203a Value"),
     ("  Card present: {from_time} \u2013 {to_time}",
      "  Card present: {from_time} \u2013 {to_time}"),

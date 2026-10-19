@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% a fájlból"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  {days} nap múlva esedékes"
+msgid "  Due in {days} days"
+msgstr "  {days} nap múlva esedékes"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ LEJÁRT ({days} nappal ezelőtt)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  LEJÁRT ({days} nappal ezelőtt)"
 
 msgid "# Drivers"
 msgstr "# Vezetők"
@@ -294,8 +294,8 @@ msgstr "CVC-tanúsítványok (dekódolva)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "A kártya {time} óta nincs a tachográfban"
 
-msgid "Card data signature mismatch"
-msgstr "A kártyaadatok aláírása nem egyezik"
+msgid "Signature mismatch"
+msgstr "Az aláírás nem egyezik"
 
 msgid "Card inserted"
 msgstr "Kártya behelyezve"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s rögzítve | {gaps} belső hézag"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} sor · {columns} oszlop"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Kattintson duplán a teljes részletekért"
+msgid "Double-click for full details"
+msgstr "Kattintson duplán a teljes részletekért"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Kivétel"
@@ -892,106 +892,100 @@ msgstr "▲ Kivétel"
 msgid "▼ Insertion"
 msgstr "▼ Behelyezés"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  SÉRÜLT / RÉSZLEGES FÁJL"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "SÉRÜLT / RÉSZLEGES FÁJL"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  SÉRÜLT SZAKASZOK (adatok elvetve)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "SÉRÜLT SZAKASZOK (adatok elvetve)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Dekóderhibák"
+msgid "Decoder Failures"
+msgstr "Dekóderhibák"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  EZ A FÁJL HIÁNYOS VAGY SÉRÜLT"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "EZ A FÁJL HIÁNYOS VAGY SÉRÜLT"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} integritási figyelmeztetés — kattintson a részletekért"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} integritási figyelmeztetés — kattintson a részletekért"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  SZAKASZOK MEGVANNAK"
+msgid "SECTIONS PRESENT"
+msgstr "SZAKASZOK MEGVANNAK"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  HIÁNYZÓ KÖTELEZŐ SZAKASZOK"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "HIÁNYZÓ KÖTELEZŐ SZAKASZOK"
 
-msgid "❌  Parse error"
-msgstr "❌  Feldolgozási hiba"
+msgid "Parse error"
+msgstr "Feldolgozási hiba"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Csonkolt (nem érte el a fájl végét)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Csonkolt (nem érte el a fájl végét)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Hiányos tanúsítványok"
+msgid "CARDHOLDER"
+msgstr "KÁRTYATULAJDONOS"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  KÁRTYATULAJDONOS"
+msgid "Driver / Cardholder"
+msgstr "Vezető / kártyatulajdonos"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Vezető / kártyatulajdonos"
-
-msgid "💻  VU INFO"
-msgstr "💻  VU-INFO"
+msgid "VU INFO"
+msgstr "VU-INFO"
 
 msgid "Open DDD file"
 msgstr "DDD-fájl megnyitása"
 
-msgid "📄  File Info"
-msgstr "📄  Fájlinformáció"
+msgid "File Info"
+msgstr "Fájlinformáció"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  DÁTUMTARTOMÁNY"
+msgid "DATE RANGE"
+msgstr "DÁTUMTARTOMÁNY"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  TELJESSÉG"
+msgid "COMPLETENESS"
+msgstr "TELJESSÉG"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMÉTEREK"
+msgid "PARAMETERS"
+msgstr "PARAMÉTEREK"
 
-msgid "📊  STATISTICS"
-msgstr "📊  STATISZTIKA"
+msgid "STATISTICS"
+msgstr "STATISZTIKA"
 
-msgid "📡  SENSOR"
-msgstr "📡  ÉRZÉKELŐ"
+msgid "SENSOR"
+msgstr "ÉRZÉKELŐ"
 
-msgid "📡  Sensor"
-msgstr "📡  Érzékelő"
+msgid "Sensor"
+msgstr "Érzékelő"
 
 msgid "Export"
 msgstr "Exportálás"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation} {annex}"
+msgid "{generation}{annex}"
+msgstr "{generation} {annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  ALÁÍRÁSOK"
+msgid "SIGNATURES"
+msgstr "ALÁÍRÁSOK"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Biztonság és tanúsítványok"
+msgid "Security & Certificates"
+msgstr "Biztonság és tanúsítványok"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  JELENLEGI ZÁR"
+msgid "CURRENT LOCK"
+msgstr "JELENLEGI ZÁR"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  JELENLEGI ZÁR"
+msgid "ASSOCIATED VEHICLE"
+msgstr "KAPCSOLT JÁRMŰ"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  KAPCSOLT JÁRMŰ"
+msgid "VEHICLE"
+msgstr "JÁRMŰ"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  JÁRMŰ"
+msgid "Vehicle"
+msgstr "Jármű"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Jármű"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "SÉRÜLT ADATOKBÓL HELYREÁLLÍTVA"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  SÉRÜLT ADATOKBÓL HELYREÁLLÍTVA"
+msgid "Raw / Unparsed Data"
+msgstr "Nyers / feldolgozatlan adatok"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Nyers / feldolgozatlan adatok"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  KÁRTYAADATOK"
+msgid "CARD DETAILS"
+msgstr "KÁRTYAADATOK"
 
 msgid "Additional Info"
 msgstr "További adatok"
@@ -1488,8 +1482,8 @@ msgstr "Műhelykártya"
 msgid "Workshop Card Expiry"
 msgstr "Műhelykártya lejárata"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  1. generáció  [1B. melléklet]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "1. generáció  [1B. melléklet]"
 
 msgid "Activity Chart"
 msgstr "Aktivitásdiagram"
@@ -2383,3 +2377,39 @@ msgstr "Napi vezetés {driven} — határ {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Folyamatos vezetés {driven} {pause} perc szünet nélkül — határ {limit}"
+
+msgid "FILE"
+msgstr "FÁJL"
+
+msgid "  Filename"
+msgstr "  Fájlnév"
+
+msgid "  Origin"
+msgstr "  Eredet"
+
+msgid "  Period covered"
+msgstr "  Lefedett időszak"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "TOTALS"
+msgstr "ÖSSZESEN"
+
+msgid "  Drive"
+msgstr "  Vezetés"
+
+msgid "  Work"
+msgstr "  Egyéb munka"
+
+msgid "  Rest"
+msgstr "  Pihenő"
+
+msgid "  Available"
+msgstr "  Rendelkezésre állás"
+
+msgid "INTEGRITY"
+msgstr "INTEGRITÁS"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Bájtlefedettség"

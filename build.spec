@@ -31,6 +31,14 @@ window_png = os.path.join(icons_path, "Assets.xcassets", "AppIcon.appiconset", "
 if os.path.exists(window_png):
     added_files.append((window_png, "AppIcons"))
 
+# Interface icon set (app/icons.py). Only the PNG tree is bundled: the SVG
+# masters in assets/icons/svg are the editable source, and Tk cannot read them.
+# The set keeps its png/<size>/<name> layout inside the bundle, because that is
+# the layout app/icons.py resolves (_MEIPASS/assets/icons/png/<size>/<name>.png).
+ui_icons_png = os.path.join(base_path, "assets", "icons", "png")
+if os.path.isdir(ui_icons_png):
+    added_files.append((ui_icons_png, os.path.join("assets", "icons", "png")))
+
 # NOTE: core/ must NOT go in datas — PyInstaller collects it automatically
 # from hiddenimports; listing it in datas duplicates every module in the
 # dist build. reportlab is needed for the PDF export (lazy import in

@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% súboru"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Za {days} dní"
+msgid "  Due in {days} days"
+msgstr "  Za {days} dní"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ EXSPIROVANÉ (pred {days} dňami)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  EXSPIROVANÉ (pred {days} dňami)"
 
 msgid "# Drivers"
 msgstr "# Vodiči"
@@ -294,8 +294,8 @@ msgstr "Certifikáty CVC (dekódované)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Karta nie je v tachografe k {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Nesúlad podpisu dát karty"
+msgid "Signature mismatch"
+msgstr "Nesúlad podpisu"
 
 msgid "Card inserted"
 msgstr "Karta vložená"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s zaznamenaných | {gaps} vnútorných medzier"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} riadkov · {columns} stĺpcov"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Dvojkliknutím zobrazíte všetky podrobnosti"
+msgid "Double-click for full details"
+msgstr "Dvojkliknutím zobrazíte všetky podrobnosti"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Vytiahnutie"
@@ -892,106 +892,100 @@ msgstr "▲ Vytiahnutie"
 msgid "▼ Insertion"
 msgstr "▼ Vloženie"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  POŠKODENÝ / ČIASTOČNÝ SÚBOR"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "POŠKODENÝ / ČIASTOČNÝ SÚBOR"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  POŠKODENÉ SEKCIE (údaje zahodené)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "POŠKODENÉ SEKCIE (údaje zahodené)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Zlyhania dekodéra"
+msgid "Decoder Failures"
+msgstr "Zlyhania dekodéra"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  TENTO SÚBOR JE NEÚPLNÝ ALEBO POŠKODENÝ"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "TENTO SÚBOR JE NEÚPLNÝ ALEBO POŠKODENÝ"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} upozornení na integritu — kliknutím zobrazíte podrobnosti"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} upozornení na integritu — kliknutím zobrazíte podrobnosti"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  SEKCIE PRÍTOMNÉ"
+msgid "SECTIONS PRESENT"
+msgstr "SEKCIE PRÍTOMNÉ"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  CHÝBAJÚ POVINNÉ SEKCIE"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "CHÝBAJÚ POVINNÉ SEKCIE"
 
-msgid "❌  Parse error"
-msgstr "❌  Chyba parsovania"
+msgid "Parse error"
+msgstr "Chyba parsovania"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Skrátené (koniec súboru sa nedosiahol)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Skrátené (koniec súboru sa nedosiahol)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Neúplné certifikáty"
+msgid "CARDHOLDER"
+msgstr "DRŽITEĽ KARTY"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  DRŽITEĽ KARTY"
+msgid "Driver / Cardholder"
+msgstr "Vodič / držiteľ karty"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Vodič / držiteľ karty"
-
-msgid "💻  VU INFO"
-msgstr "💻  INFORMÁCIE O VU"
+msgid "VU INFO"
+msgstr "INFORMÁCIE O VU"
 
 msgid "Open DDD file"
 msgstr "Otvoriť súbor DDD"
 
-msgid "📄  File Info"
-msgstr "📄  Informácie o súbore"
+msgid "File Info"
+msgstr "Informácie o súbore"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  ROZSAH DÁTUMOV"
+msgid "DATE RANGE"
+msgstr "ROZSAH DÁTUMOV"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  KOMPLETNOSŤ"
+msgid "COMPLETENESS"
+msgstr "KOMPLETNOSŤ"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMETRE"
+msgid "PARAMETERS"
+msgstr "PARAMETRE"
 
-msgid "📊  STATISTICS"
-msgstr "📊  ŠTATISTIKY"
+msgid "STATISTICS"
+msgstr "ŠTATISTIKY"
 
-msgid "📡  SENSOR"
-msgstr "📡  SNÍMAČ"
+msgid "SENSOR"
+msgstr "SNÍMAČ"
 
-msgid "📡  Sensor"
-msgstr "📡  Snímač"
+msgid "Sensor"
+msgstr "Snímač"
 
 msgid "Export"
 msgstr "Exportovať"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation} {annex}"
+msgid "{generation}{annex}"
+msgstr "{generation} {annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  PODPISY"
+msgid "SIGNATURES"
+msgstr "PODPISY"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Zabezpečenie a certifikáty"
+msgid "Security & Certificates"
+msgstr "Zabezpečenie a certifikáty"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  AKTUÁLNY ZÁMOK"
+msgid "CURRENT LOCK"
+msgstr "AKTUÁLNY ZÁMOK"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  AKTUÁLNY ZÁMOK"
+msgid "ASSOCIATED VEHICLE"
+msgstr "PRIDRUŽENÉ VOZIDLO"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  PRIDRUŽENÉ VOZIDLO"
+msgid "VEHICLE"
+msgstr "VOZIDLO"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  VOZIDLO"
+msgid "Vehicle"
+msgstr "Vozidlo"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Vozidlo"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "OBNOVENÉ Z POŠKODENÝCH DÁT"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  OBNOVENÉ Z POŠKODENÝCH DÁT"
+msgid "Raw / Unparsed Data"
+msgstr "Surové / nesparsované údaje"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Surové / nesparsované údaje"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  PODROBNOSTI KARTY"
+msgid "CARD DETAILS"
+msgstr "PODROBNOSTI KARTY"
 
 msgid "Additional Info"
 msgstr "Ďalšie informácie"
@@ -1488,8 +1482,8 @@ msgstr "Servisná karta"
 msgid "Workshop Card Expiry"
 msgstr "Platnosť servisnej karty"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Generácia 1  [Dodatok 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Generácia 1  [Dodatok 1B]"
 
 msgid "Activity Chart"
 msgstr "Graf aktivity"
@@ -2383,3 +2377,39 @@ msgstr "Denná jazda {driven} — limit {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Nepretržitá jazda {driven} bez prestávky {pause} min — limit {limit}"
+
+msgid "FILE"
+msgstr "SÚBOR"
+
+msgid "  Filename"
+msgstr "  Názov súboru"
+
+msgid "  Origin"
+msgstr "  Pôvod"
+
+msgid "  Period covered"
+msgstr "  Pokryté obdobie"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "TOTALS"
+msgstr "SPOLU"
+
+msgid "  Drive"
+msgstr "  Jazda"
+
+msgid "  Work"
+msgstr "  Práca"
+
+msgid "  Rest"
+msgstr "  Odpočinok"
+
+msgid "  Available"
+msgstr "  Pohotovosť"
+
+msgid "INTEGRITY"
+msgstr "INTEGRITA"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Pokrytie podľa bajtov"

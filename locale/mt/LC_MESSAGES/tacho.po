@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% tal-fajl"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Dovut fi {days} jum"
+msgid "  Due in {days} days"
+msgstr "  Dovut fi {days} jum"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ SKADUT ({days} ġranet ilu)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  SKADUT ({days} ġranet ilu)"
 
 msgid "# Drivers"
 msgstr "# Sewwieqa"
@@ -294,8 +294,8 @@ msgstr "Ċertifikati CVC (dekodifikati)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Il-karta mhix fit-takografu minn {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Firma tad-data tal-karta ma taqbilx"
+msgid "Signature mismatch"
+msgstr "Il-firma ma taqbilx"
 
 msgid "Card inserted"
 msgstr "Karta mdaħħla"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s irreġistrati | {gaps} distakki interni"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} ringieli · {columns} kolonni"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Ikklikkja darbtejn għad-dettalji kollha"
+msgid "Double-click for full details"
+msgstr "Ikklikkja darbtejn għad-dettalji kollha"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Tneħħija"
@@ -892,106 +892,100 @@ msgstr "▲ Tneħħija"
 msgid "▼ Insertion"
 msgstr "▼ Daħlien"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  FAJL KORROTT / PARZJALI"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "FAJL KORROTT / PARZJALI"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  SEZZJONIJIET KORROTTI (data mwarrba)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "SEZZJONIJIET KORROTTI (data mwarrba)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Fallimenti tad-dekodifikatur"
+msgid "Decoder Failures"
+msgstr "Fallimenti tad-dekodifikatur"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  DAN IL-FAJL MHUX KOMPLET JEW KORROTT"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "DAN IL-FAJL MHUX KOMPLET JEW KORROTT"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} twissija dwar l-integrità — ikklikkja għad-dettalji"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} twissija dwar l-integrità — ikklikkja għad-dettalji"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  SEZZJONIJIET PREŻENTI"
+msgid "SECTIONS PRESENT"
+msgstr "SEZZJONIJIET PREŻENTI"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  SEZZJONIJIET OBBLIGATORJI NIEQSA"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "SEZZJONIJIET OBBLIGATORJI NIEQSA"
 
-msgid "❌  Parse error"
-msgstr "❌  Żball ta' dekodifikazzjoni"
+msgid "Parse error"
+msgstr "Żball ta' dekodifikazzjoni"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Maqtugħ (ma wasalx għall-aħħar tal-fajl)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Maqtugħ (ma wasalx għall-aħħar tal-fajl)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Ċertifikati mhux kompleti"
+msgid "CARDHOLDER"
+msgstr "DETENTUR TAL-KARTA"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  DETENTUR TAL-KARTA"
+msgid "Driver / Cardholder"
+msgstr "Sewwieq / detentur tal-karta"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Sewwieq / detentur tal-karta"
-
-msgid "💻  VU INFO"
-msgstr "💻  INFORMAZZJONI VU"
+msgid "VU INFO"
+msgstr "INFORMAZZJONI VU"
 
 msgid "Open DDD file"
 msgstr "Iftaħ fajl DDD"
 
-msgid "📄  File Info"
-msgstr "📄  Informazzjoni tal-fajl"
+msgid "File Info"
+msgstr "Informazzjoni tal-fajl"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  FIRXA TA' DATI"
+msgid "DATE RANGE"
+msgstr "FIRXA TA' DATI"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  KOMPLETEZZA"
+msgid "COMPLETENESS"
+msgstr "KOMPLETEZZA"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMETRI"
+msgid "PARAMETERS"
+msgstr "PARAMETRI"
 
-msgid "📊  STATISTICS"
-msgstr "📊  STATISTIKA"
+msgid "STATISTICS"
+msgstr "STATISTIKA"
 
-msgid "📡  SENSOR"
-msgstr "📡  SENSUR"
+msgid "SENSOR"
+msgstr "SENSUR"
 
-msgid "📡  Sensor"
-msgstr "📡  Sensur"
+msgid "Sensor"
+msgstr "Sensur"
 
 msgid "Export"
 msgstr "Esportazzjoni"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  FIREM"
+msgid "SIGNATURES"
+msgstr "FIREM"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Sigurtà u ċertifikati"
+msgid "Security & Certificates"
+msgstr "Sigurtà u ċertifikati"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  IL-LOCK ATTWALI"
+msgid "CURRENT LOCK"
+msgstr "IL-LOCK ATTWALI"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  IL-LOCK ATTWALI"
+msgid "ASSOCIATED VEHICLE"
+msgstr "VETTURA ASSOĊJATA"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  VETTURA ASSOĊJATA"
+msgid "VEHICLE"
+msgstr "VETTURA"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  VETTURA"
+msgid "Vehicle"
+msgstr "Vettura"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Vettura"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "IRKUPRAT MINN DATA KORROTTA"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  IRKUPRAT MINN DATA KORROTTA"
+msgid "Raw / Unparsed Data"
+msgstr "Data mhux maħduma / mhux dekodifikata"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Data mhux maħduma / mhux dekodifikata"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  DETTALJI TAL-KARTA"
+msgid "CARD DETAILS"
+msgstr "DETTALJI TAL-KARTA"
 
 msgid "Additional Info"
 msgstr "Informazzjoni addizzjonali"
@@ -1488,8 +1482,8 @@ msgstr "Karta tal-garaxx"
 msgid "Workshop Card Expiry"
 msgstr "Skadenza tal-karta tal-garaxx"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Ġenerazzjoni 1  [Anness 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Ġenerazzjoni 1  [Anness 1B]"
 
 msgid "Activity Chart"
 msgstr "Grafiku tal-attività"
@@ -2383,3 +2377,39 @@ msgstr "Sewqan ta’ kuljum {driven} — limitu {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Sewqan kontinwu {driven} mingħajr pawża ta’ {pause} min — limitu {limit}"
+
+msgid "FILE"
+msgstr "FJOL"
+
+msgid "  Filename"
+msgstr "  Isem tal-fajl"
+
+msgid "  Origin"
+msgstr "  Oriġini"
+
+msgid "  Period covered"
+msgstr "  Perjodu kopert"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "TOTALS"
+msgstr "TOTAL"
+
+msgid "  Drive"
+msgstr "  Sewqan"
+
+msgid "  Work"
+msgstr "  Xogħol"
+
+msgid "  Rest"
+msgstr "  Mistrieħ"
+
+msgid "  Available"
+msgstr "  Disponibbli"
+
+msgid "INTEGRITY"
+msgstr "INTEGRITÀ"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Kopertura skont il-bytes"

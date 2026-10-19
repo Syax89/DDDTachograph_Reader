@@ -19,6 +19,7 @@ All are consumer-layer (``app/gui.py``) and exercise the widget logic with
 mocks plus real Tk widgets. The Tk tests skip cleanly with no display
 (``xvfb-run`` in the gate).
 """
+import itertools
 import sys
 from unittest.mock import Mock
 
@@ -34,6 +35,7 @@ from app.gui import (
     TachoExplorer,
     _fmt_seconds_duration,
 )
+from app.i18n import _ as tr
 
 DAY = "01/05/2025"
 ISO = "2025-05-01"
@@ -177,19 +179,40 @@ _NOW_DRIVER = {
 }
 
 
+#: The overview node's label. Plain text: the icon in front of it is a row
+#: image from the commissioned set (app/icons.py), not a character.
+SUMMARY_LABEL = tr("Summary")
+
+
 def _populate_tree_sections(data):
     """Run the real ``_populate_tree`` with a mocked tree; return the app and
-    the labels of every section it created."""
+    the labels of every section it created.
+
+    Every mocked section gets a *distinct* iid (``section-0``, ``section-1``,
+    …) rather than one shared ``"section"`` string. With a single shared iid
+    any assertion about *which* node was auto-selected was vacuous — it could
+    not tell the file overview (now first in the tree, and what a freshly
+    parsed file opens on) from the Driver / Cardholder panel it used to open
+    on, so ``== "section"`` stayed true no matter who claimed the selection.
+    Distinct iids also give ``tree.exists()`` something real to answer; the
+    overview's final auto-selection is guarded by it.
+    """
+    ids = itertools.count()
+
+    def _next_iid(*_args, **_kwargs):
+        return f"section-{next(ids)}"
+
     app = object.__new__(TachoExplorer)
     app.tree = Mock()
     app.tree.get_children.return_value = []
-    app.tree.insert.return_value = "section"
+    app.tree.exists.return_value = True
+    app.tree.insert.side_effect = _next_iid
     app.current_file = "sample.ddd"
     app._payloads = {}
     app._integrity_label = Mock(return_value="OK")
     app._populate_unparsed = Mock()
     app._populate_security = Mock()
-    app._add_section = Mock(return_value="section")
+    app._add_section = Mock(side_effect=_next_iid)
     app._populate_tree(data)
     return app, [call.args[1] for call in app._add_section.call_args_list]
 
@@ -197,23 +220,40 @@ def _populate_tree_sections(data):
 def test_all_na_driver_section_is_not_created():
     """G-F8: an untouched ``TachoResult.driver`` is every field "N/A" — a
     truthy string, so ``any(drv.values())`` created and auto-selected a
-    phantom "Driver / Cardholder" panel full of "N/A"."""
+    phantom "Driver / Cardholder" panel full of "N/A".
+
+    Both halves of that still hold, and the intent is unchanged: the phantom
+    panel must not be created, and must not be what the window opens on. What
+    the window opens on is now the file overview, so the assertion names it —
+    the first section ``_populate_tree`` builds is the summary (``section-0``),
+    and that is where ``_auto_select_iid`` points. See
+    ``tests/unit/test_gui_summary_default.py`` for the default itself.
+    """
     app, labels = _populate_tree_sections(
         {"metadata": {"is_vu": False}, "driver": dict(_NOW_DRIVER)})
 
     assert not any("Driver / Cardholder" in label for label in labels)
-    assert app.__dict__.get("_auto_select_iid") is None
+    assert labels[0] == SUMMARY_LABEL, "the overview is built first"
+    assert app.__dict__.get("_auto_select_iid") == "section-0"
 
 
 def test_driver_section_is_still_created_for_real_data():
-    """The guard must still fire for a driver with a usable value."""
+    """The guard must still fire for a driver with a usable value.
+
+    The section is a tree node, not the default view: the file overview is what
+    a parsed file opens on now, for cards and VUs alike, so the selection
+    assertion follows the same contract as the all-"N/A" case. The driver
+    panel's own rendering is covered by
+    ``tests/unit/test_gui_summary_default.py``.
+    """
     data = {"metadata": {"is_vu": False},
             "driver": {**_NOW_DRIVER, "firstname": "MARIO",
                        "surname": "ROSSI", "card_number": "IT1234567890"}}
     app, labels = _populate_tree_sections(data)
 
     assert any("Driver / Cardholder" in label for label in labels)
-    assert app.__dict__.get("_auto_select_iid") == "section"
+    assert labels[0] == SUMMARY_LABEL, "the overview is built first"
+    assert app.__dict__.get("_auto_select_iid") == "section-0"
 
 
 # ── GUI-STALE-TABLE (XG-F4) ────────────────────────────────────────────

@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% failist"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Aegub {days} päeva pärast"
+msgid "  Due in {days} days"
+msgstr "  Aegub {days} päeva pärast"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ AEGUNUD ({days} päeva tagasi)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  AEGUNUD ({days} päeva tagasi)"
 
 msgid "# Drivers"
 msgstr "# Juhte"
@@ -294,8 +294,8 @@ msgstr "CVC-sertifikaadid (dekodeeritud)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kaart puudub sõidumeerikust alates {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Kaardi andmete allkiri ei klapi"
+msgid "Signature mismatch"
+msgstr "Allkiri ei klapi"
 
 msgid "Card inserted"
 msgstr "Kaart sisestatud"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s salvestatud | {gaps} sisemist lünka"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} rida · {columns} veergu"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Kõigi andmete jaoks tee topeltklõps"
+msgid "Double-click for full details"
+msgstr "Kõigi andmete jaoks tee topeltklõps"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Eemaldamine"
@@ -892,106 +892,100 @@ msgstr "▲ Eemaldamine"
 msgid "▼ Insertion"
 msgstr "▼ Sisestamine"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  RIKUTUD / PUUDULIK FAIL"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "RIKUTUD / PUUDULIK FAIL"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  RIKUTUD JAOTISED (andmed kõrvale jäetud)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "RIKUTUD JAOTISED (andmed kõrvale jäetud)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Dekooderi tõrked"
+msgid "Decoder Failures"
+msgstr "Dekooderi tõrked"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  SEE FAIL ON PUUDULIK VÕI RIKUTUD"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "SEE FAIL ON PUUDULIK VÕI RIKUTUD"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} terviklikkuse hoiatust — klõpsa detailide jaoks"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} terviklikkuse hoiatust — klõpsa detailide jaoks"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  JAOTISED OLEMAS"
+msgid "SECTIONS PRESENT"
+msgstr "JAOTISED OLEMAS"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  KOHUSTUSLIKUD JAOTISED PUUDUVAD"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "KOHUSTUSLIKUD JAOTISED PUUDUVAD"
 
-msgid "❌  Parse error"
-msgstr "❌  Dekodeerimise viga"
+msgid "Parse error"
+msgstr "Dekodeerimise viga"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Katkestatud (faili lõpuni ei jõutud)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Katkestatud (faili lõpuni ei jõutud)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Puudulikud sertifikaadid"
+msgid "CARDHOLDER"
+msgstr "KAARDIOMANIK"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  KAARDIOMANIK"
+msgid "Driver / Cardholder"
+msgstr "Juht / kaardiomanik"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Juht / kaardiomanik"
-
-msgid "💻  VU INFO"
-msgstr "💻  VU TEAVE"
+msgid "VU INFO"
+msgstr "VU TEAVE"
 
 msgid "Open DDD file"
 msgstr "Ava DDD-fail"
 
-msgid "📄  File Info"
-msgstr "📄  Faili teave"
+msgid "File Info"
+msgstr "Faili teave"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  KUUPÄEVAVAHEMIK"
+msgid "DATE RANGE"
+msgstr "KUUPÄEVAVAHEMIK"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  TÄIELIKKUS"
+msgid "COMPLETENESS"
+msgstr "TÄIELIKKUS"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMEETRID"
+msgid "PARAMETERS"
+msgstr "PARAMEETRID"
 
-msgid "📊  STATISTICS"
-msgstr "📊  STATISTIKA"
+msgid "STATISTICS"
+msgstr "STATISTIKA"
 
-msgid "📡  SENSOR"
-msgstr "📡  ANDUR"
+msgid "SENSOR"
+msgstr "ANDUR"
 
-msgid "📡  Sensor"
-msgstr "📡  Andur"
+msgid "Sensor"
+msgstr "Andur"
 
 msgid "Export"
 msgstr "Eksport"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  ALLKIRJAD"
+msgid "SIGNATURES"
+msgstr "ALLKIRJAD"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Turvalisus ja sertifikaadid"
+msgid "Security & Certificates"
+msgstr "Turvalisus ja sertifikaadid"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  PRAEGUNE LUKUSTUS"
+msgid "CURRENT LOCK"
+msgstr "PRAEGUNE LUKUSTUS"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  PRAEGUNE LUKUSTUS"
+msgid "ASSOCIATED VEHICLE"
+msgstr "SEOTUD SÕIDUK"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  SEOTUD SÕIDUK"
+msgid "VEHICLE"
+msgstr "SÕIDUK"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  SÕIDUK"
+msgid "Vehicle"
+msgstr "Sõiduk"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Sõiduk"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "TAASTATUD KAHJUSTATUD ANDMETEST"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  TAASTATUD KAHJUSTATUD ANDMETEST"
+msgid "Raw / Unparsed Data"
+msgstr "Töötlemata toorandmed"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Töötlemata toorandmed"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  KAARDI ANDMED"
+msgid "CARD DETAILS"
+msgstr "KAARDI ANDMED"
 
 msgid "Additional Info"
 msgstr "Lisainfo"
@@ -1488,8 +1482,8 @@ msgstr "Töökojakaart"
 msgid "Workshop Card Expiry"
 msgstr "Töökojakaardi kehtivus"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Põlvkond 1  [Lisa 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Põlvkond 1  [Lisa 1B]"
 
 msgid "Activity Chart"
 msgstr "Aktiivsuse diagramm"
@@ -2383,3 +2377,39 @@ msgstr "Päevane sõit {driven} — piir {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Katkematu sõit {driven} ilma {pause} min pausita — piir {limit}"
+
+msgid "FILE"
+msgstr "FAIL"
+
+msgid "  Filename"
+msgstr "  Failinimi"
+
+msgid "  Origin"
+msgstr "  Päritolu"
+
+msgid "  Period covered"
+msgstr "  Hõlmatud periood"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "TOTALS"
+msgstr "KOKKU"
+
+msgid "  Drive"
+msgstr "  Sõit"
+
+msgid "  Work"
+msgstr "  Töö"
+
+msgid "  Rest"
+msgstr "  Puhkus"
+
+msgid "  Available"
+msgstr "  Saadaval"
+
+msgid "INTEGRITY"
+msgstr "TERVIIKLIKKUS"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Baidipõhine kaetus"

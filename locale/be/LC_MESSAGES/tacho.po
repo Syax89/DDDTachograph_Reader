@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% файла"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Тэрмін праз {days} дзён"
+msgid "  Due in {days} days"
+msgstr "  Тэрмін праз {days} дзён"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ ПРАТЭРМІНАВАНА ({days} дзён таму)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  ПРАТЭРМІНАВАНА ({days} дзён таму)"
 
 msgid "# Drivers"
 msgstr "# Кіроўцаў"
@@ -294,8 +294,8 @@ msgstr "Сертыфікаты CVC (дэкадавана)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Картка адсутнічае ў тахографе з {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Подпіс даных карткі не супадае"
+msgid "Signature mismatch"
+msgstr "Подпіс не супадае"
 
 msgid "Card inserted"
 msgstr "Картка ўстаўлена"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} с запісана | {gaps} унутраных разры�
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} радкоў · {columns} слупкоў"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Падвойны пстрык для поўнай інфармацыі"
+msgid "Double-click for full details"
+msgstr "Падвойны пстрык для поўнай інфармацыі"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Выманне"
@@ -892,106 +892,100 @@ msgstr "▲ Выманне"
 msgid "▼ Insertion"
 msgstr "▼ Устаўка"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  ПАШКОДЖАНЫ / НЯПОЎНЫ ФАЙЛ"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "ПАШКОДЖАНЫ / НЯПОЎНЫ ФАЙЛ"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  ПАШКОДЖАНЫЯ РАЗДЗЕЛЫ (даныя адкінуты)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "ПАШКОДЖАНЫЯ РАЗДЗЕЛЫ (даныя адкінуты)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Памылкі дэкадара"
+msgid "Decoder Failures"
+msgstr "Памылкі дэкадара"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  ГЭТЫ ФАЙЛ НЯПОЎНЫ АБО ПАШКОДЖАНЫ"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "ГЭТЫ ФАЙЛ НЯПОЎНЫ АБО ПАШКОДЖАНЫ"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} папярэджанняў пра цэласнасць — націсніце для падрабязнасцей"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} папярэджанняў пра цэласнасць — націсніце для падрабязнасцей"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  РАЗДЗЕЛЫ ПРЫСУТНІЯ"
+msgid "SECTIONS PRESENT"
+msgstr "РАЗДЗЕЛЫ ПРЫСУТНІЯ"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  АДСУТНІЧАЮЦЬ АБАВЯЗКОВЫЯ РАЗДЗЕЛЫ"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "АДСУТНІЧАЮЦЬ АБАВЯЗКОВЫЯ РАЗДЗЕЛЫ"
 
-msgid "❌  Parse error"
-msgstr "❌  Памылка разбору"
+msgid "Parse error"
+msgstr "Памылка разбору"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Абрэзана (не дасягнуты канец файла)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Абрэзана (не дасягнуты канец файла)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Няпоўныя сертыфікаты"
+msgid "CARDHOLDER"
+msgstr "УЛАДАЛЬНІК КАРТКІ"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  УЛАДАЛЬНІК КАРТКІ"
+msgid "Driver / Cardholder"
+msgstr "Кіроўца / уладальнік карткі"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Кіроўца / уладальнік карткі"
-
-msgid "💻  VU INFO"
-msgstr "💻  ІНФА ПРА VU"
+msgid "VU INFO"
+msgstr "ІНФА ПРА VU"
 
 msgid "Open DDD file"
 msgstr "Адкрыць файл DDD"
 
-msgid "📄  File Info"
-msgstr "📄  Інфармацыя пра файл"
+msgid "File Info"
+msgstr "Інфармацыя пра файл"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  ДЫЯПАЗОН ДАТ"
+msgid "DATE RANGE"
+msgstr "ДЫЯПАЗОН ДАТ"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  ПАЎНАТА"
+msgid "COMPLETENESS"
+msgstr "ПАЎНАТА"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  ПАРАМЕТРЫ"
+msgid "PARAMETERS"
+msgstr "ПАРАМЕТРЫ"
 
-msgid "📊  STATISTICS"
-msgstr "📊  СТАТЫСТЫКА"
+msgid "STATISTICS"
+msgstr "СТАТЫСТЫКА"
 
-msgid "📡  SENSOR"
-msgstr "📡  ДАТЧЫК"
+msgid "SENSOR"
+msgstr "ДАТЧЫК"
 
-msgid "📡  Sensor"
-msgstr "📡  Датчык"
+msgid "Sensor"
+msgstr "Датчык"
 
 msgid "Export"
 msgstr "Экспарт"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  ПОДПІСЫ"
+msgid "SIGNATURES"
+msgstr "ПОДПІСЫ"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Бяспека і сертыфікаты"
+msgid "Security & Certificates"
+msgstr "Бяспека і сертыфікаты"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  БЯГУЧАЕ БЛАКАВАННЕ"
+msgid "CURRENT LOCK"
+msgstr "БЯГУЧАЕ БЛАКАВАННЕ"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  БЯГУЧАЕ БЛАКАВАННЕ"
+msgid "ASSOCIATED VEHICLE"
+msgstr "ЗВЯЗАНЫ ТРАНСПАРТНЫ СРОДАК"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  ЗВЯЗАНЫ ТРАНСПАРТНЫ СРОДАК"
+msgid "VEHICLE"
+msgstr "ТРАНСПАРТ"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  ТРАНСПАРТНЫ СРОДАК"
+msgid "Vehicle"
+msgstr "Транспартны сродак"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Транспартны сродак"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "АДНОЎЛЕНА З ПАШКОДЖАНЫХ ДАНЫХ"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  АДНОЎЛЕНА З ПАШКОДЖАНЫХ ДАНЫХ"
+msgid "Raw / Unparsed Data"
+msgstr "Неапрацаваныя / неразгледжаныя даныя"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Неапрацаваныя / неразгледжаныя даныя"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  ДАНЫЯ КАРТКІ"
+msgid "CARD DETAILS"
+msgstr "ДАНЫЯ КАРТКІ"
 
 msgid "Additional Info"
 msgstr "Дадатковая інфармацыя"
@@ -1488,8 +1482,8 @@ msgstr "Картка майстэрні"
 msgid "Workshop Card Expiry"
 msgstr "Тэрмін дзеяння карткі майстэрні"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Пакаленне 1  [Дадатак 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Пакаленне 1  [Дадатак 1B]"
 
 msgid "Activity Chart"
 msgstr "Графік актыўнасці"
@@ -2383,3 +2377,39 @@ msgstr "Штодзённае кіраванне {driven} — мяжа {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Бесперапыннае кіраванне {driven} без перапынку {pause} хв — мяжа {limit}"
+
+msgid "FILE"
+msgstr "ФАЙЛ"
+
+msgid "  Filename"
+msgstr "  Імя файла"
+
+msgid "  Origin"
+msgstr "  Крыніца"
+
+msgid "  Period covered"
+msgstr "  Ахоплены перыяд"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "TOTALS"
+msgstr "ПАДСУМКІ"
+
+msgid "  Drive"
+msgstr "  Кіраванне"
+
+msgid "  Work"
+msgstr "  Праца"
+
+msgid "  Rest"
+msgstr "  Адпачынак"
+
+msgid "  Available"
+msgstr "  Даступны"
+
+msgid "INTEGRITY"
+msgstr "ЦЭЛАСНАСЦЬ"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Пакрыццё ў байтах"
