@@ -40,9 +40,14 @@ def test_the_tree_starts_at_its_natural_width_not_half_the_window(window):
     window.update()
     assert _pane(window).sashpos(0) == _px(SASH_START)
     # The table gets the rest: it was 411 px at this size when the sash sat in
-    # the middle, and File Info's value column was clipped there.
+    # the middle, and File Info's value column was clipped there. The sash now
+    # starts 52 px further right than it did (312, so that the tree can show
+    # its widest row in full), which costs the table 52 px of its own, so the
+    # floor is the one that still fits: the File Info value column keeps all
+    # ten of its cells — measured, in both panes, in
+    # tests/unit/test_gui_accessibility.py::test_the_tree_pane_still_leaves_the_file_info_table_its_values.
     open_file(window, STATUS_CASES[0][1])
-    assert window.table.tv.winfo_width() >= _px(560)
+    assert window.table.tv.winfo_width() >= _px(520)
 
 
 def test_a_drag_of_the_sash_is_not_undone_by_a_later_resize(window):
