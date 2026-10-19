@@ -6644,7 +6644,16 @@ class TachoExplorer(tk.Tk):
         self.table.tv.heading("Value", text="")
         self.table.tv.column("Field", width=_px(220) - gutter,
                              minwidth=_px(140), anchor=tk.W, stretch=False)
-        self.table.tv.column("Value", width=_px(100), minwidth=_px(60), anchor=tk.W, stretch=True)
+        # A stretch column only grows on a *resize*. The table comes back from a
+        # chart at the width it left with, so no resize fires and the Value
+        # column stayed at the 100 px placeholder until the node was clicked a
+        # second time. Settle the layout and give it its width now.
+        self.table.tv.update_idletasks()
+        value_w = _px(100)
+        available = self.table.tv.winfo_width()
+        if available > _px(220) + _px(100):
+            value_w = available - _px(220) - 4
+        self.table.tv.column("Value", width=value_w, minwidth=_px(60), anchor=tk.W, stretch=True)
         self.table._fitted = True
         self.table._summary_mode = True
         self.table._render(self.table._all_rows, summary=True)
