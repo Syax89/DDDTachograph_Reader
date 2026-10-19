@@ -709,7 +709,8 @@ def test_footer_strings_never_overlap_for_a_long_file_name(tmp_path):
         assert left_edge < page_w
     # A file name too long for the footer is shortened, not run into the page
     # number.
-    assert left[0][1].endswith("\u2026  ·  TachoReader v2.7.1")
+    from core.utils.version import __version__
+    assert left[0][1].endswith(f"\u2026  ·  TachoReader v{__version__}")
 
 
 # ── 9. Correction leg: disclosure, labels, pagination, placeholders ────────
