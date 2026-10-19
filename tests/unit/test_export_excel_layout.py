@@ -675,6 +675,89 @@ def test_card_identifier_columns_are_never_time_typed(tmp_path):
     assert checked, "the fixture must produce identifier columns"
 
 
+# ── producer timestamps keep their typed cells ─────────────────────────────
+
+
+def _producer_timestamp_data():
+    """Payloads decoded by the real producers, not hand-written records.
+
+    The workbook's time columns are chosen by label, so the regression fixture
+    has to come from the decoders themselves: a 28-byte
+    ``VuSensorExternalGNSSCoupledRecord`` (tag 0x0532) and a 19-byte
+    GNSSAccumulatedDriving card record. Both publish a real TimeReal.
+    """
+    import struct
+
+    from core.decoders.card_g22 import parse_g22_gnss_accumulated_driving
+    from core.decoders.vu_g2 import parse_g2_vu_record
+
+    stamp = int(datetime.datetime(2026, 3, 4, 10, 15,
+                                 tzinfo=datetime.timezone.utc).timestamp())
+    data = {}
+    parse_g2_vu_record(
+        struct.pack(">BHH", 0x21, 28, 1) + bytes(range(8)) + b"A" * 16
+        + struct.pack(">I", stamp), data, 0x0532)
+    record = (struct.pack(">I", stamp) + struct.pack(">I", stamp) + b"\x05"
+              + (41 * 1000 + 300).to_bytes(3, "big")
+              + (12 * 1000 + 150).to_bytes(3, "big")
+              + b"\x01" + (123456).to_bytes(3, "big"))
+    parse_g22_gnss_accumulated_driving(struct.pack(">H", 1) + record, data)
+    return data
+
+
+def test_producer_timestamps_export_as_dates_not_text(tmp_path):
+    """A decoded date/time column is a typed cell, never its own text.
+
+    The coupling date of an external GNSS sensor and the GNSS timestamp of an
+    accumulated driving record are published by the decoders and were typed
+    before the semantic column policy became an explicit allow-list; both came
+    back as plain ``"2026-03-04 10:15Z"`` strings, so a spreadsheet could no
+    longer sort or filter them as time.
+    """
+    data = _producer_timestamp_data()
+    assert data["sensor_gnss_couplings"][0]["coupling_date"] == "2026-03-04T10:15:00+00:00"
+    assert data["gnss_ad_records"][0]["gnss_timestamp"] == "2026-03-04T10:15:00+00:00"
+
+    wb = _load(tmp_path, data)
+
+    ws = wb["Sensor GNSS Couplings"]
+    headers, rows = _table(ws, "Sensor Serial")
+    coupling = rows[0][headers.index("Coupling Date")]
+    assert coupling == datetime.datetime(2026, 3, 4, 10, 15)
+    cell = ws.cell(row=_header_row(ws, "Sensor Serial") + 1,
+                   column=headers.index("Coupling Date") + 1)
+    assert cell.number_format == 'yyyy-mm-dd hh:mm"Z"'      # the zone is kept
+
+    headers, rows = _table(wb["GNSS Accumulated Driving"], "Timestamp")
+    assert isinstance(rows[0][headers.index("Timestamp")], datetime.datetime)
+    assert rows[0][headers.index("GNSS Timestamp")] == datetime.datetime(2026, 3, 4, 10, 15)
+
+
+def test_odometer_columns_stay_numbers_beside_a_time_column(tmp_path):
+    """Number semantics win over time semantics on the same label suffix.
+
+    ``Odometer Begin``/``Odometer End`` end in ``Begin``/``End`` but hold
+    kilometres (shown as ``1 086 906`` in the shared report), so they must stay
+    numeric while the timestamp columns of the same table stay dates.
+    """
+    data = {"vehicle_sessions": [{
+        "vehicle_plate": "AA123BB",
+        "vehicle_nation": "Italy",
+        "start": "2018-08-22T12:56:00+00:00",
+        "end": "2018-08-23T12:06:00+00:00",
+        "odometer_begin": 1086906,
+        "odometer_end": 1087020,
+        "distance": 114,
+    }]}
+    wb = _load(tmp_path, data)
+
+    headers, rows = _table(wb["Vehicles Used"], "Start")
+    assert rows[0][headers.index("Odometer Begin")] == 1086906
+    assert rows[0][headers.index("Odometer End")] == 1087020
+    assert isinstance(rows[0][headers.index("Start")], datetime.datetime)
+    assert isinstance(rows[0][headers.index("End")], datetime.datetime)
+
+
 # ── Summary index ──────────────────────────────────────────────────────────
 
 
@@ -685,6 +768,12 @@ def _contents_column_width(ws):
 def _estimated_lines(text, width):
     per_line = max(int(width) - 2, 10)
     return max(-(-len(str(text)) // per_line), 1)
+
+
+def _displayed_lines(text, width):
+    """Lines a cell shows: a hard linebreak starts a new line, then wrapping."""
+    return sum(_estimated_lines(line, width)
+               for line in str(text).replace("\r\n", "\n").replace("\r", "\n").split("\n"))
 
 
 def test_summary_index_never_blank_never_clipped(tmp_path):
@@ -825,3 +914,116 @@ def test_over_long_section_note_keeps_its_row_limit_disclosure(tmp_path, monkeyp
     assert text.startswith("\u2026")                  # and the cut is visible
     assert height <= 409.5                            # Excel's hard cap
     assert height >= 15 * _estimated_lines(text, width)   # what is left fits
+
+
+# ── multi-line text keeps every line it displays ───────────────────────────
+
+
+def _summary_value_row(ws, label):
+    """The Summary row whose label cell is *label*."""
+    for row in ws.iter_rows(min_row=1, max_col=1):
+        if row[0].value == label:
+            return row[0].row
+    raise AssertionError(f"summary row {label!r} not found")
+
+
+def test_summary_shows_every_line_of_a_multiline_source_filename(tmp_path):
+    """A filename with hard linebreaks is sized for all of its lines.
+
+    ``metadata.filename`` is whatever ``os.path.basename`` returns, and a POSIX
+    filename may contain linebreaks. The Summary sizes each row from its own
+    text, so the ``File`` row must hold three lines — a fixed one-line height
+    showed only the first one (the row was clipped, not wrapped).
+    """
+    from app.engine import TachoParser          # the real parser route
+
+    source = tmp_path / "first line\nsecond line\nthird line.ddd"
+    source.write_bytes(bytes(range(256)) * 4)
+    data = TachoParser(str(source)).parse()
+    assert data["metadata"]["filename"] == "first line\nsecond line\nthird line.ddd"
+
+    wb = _load(tmp_path, data, name="multiline.xlsx")
+    summary = wb["Summary"]
+
+    file_row = _summary_value_row(summary, "File")
+    assert summary.cell(row=file_row, column=2).value == (
+        "first line\nsecond line\nthird line.ddd")
+    height = summary.row_dimensions[file_row].height
+    assert height >= 15 * 3, f"the File row is {height}pt: only one line fits"
+    assert height <= 409.5
+
+    # Sized per row, not raised for the whole sheet: a single-line fact keeps
+    # its one-line height.
+    single = _summary_value_row(summary, "Generation")
+    assert summary.row_dimensions[single].height == 15
+
+
+def test_multiline_note_is_elided_to_what_the_row_can_show(tmp_path, monkeypatch):
+    """A hard-broken note past 409.5pt is cut and still fits after the cut.
+
+    Eliding from the front must count the linebreaks that survive the cut,
+    otherwise the shortened note is itself built from more lines than the row
+    can show — and the appended row-limit disclosure would be invisible again.
+    """
+    import core.utils.report_format as report_format
+
+    # Several hundred hard lines, as a note assembled from per-line text could
+    # be; the disclosure is appended last, outside this description.
+    monkeypatch.setitem(report_format.SECTION_DESCRIPTIONS, "events",
+                       "A description line that must be trimmed away.\n" * 120)
+    data = {"events": [{"description": f"Event {index}",
+                        "begin": "2026-06-01T10:30:00+00:00"} for index in range(7)]}
+    with patch("app.export._EXCEL_MAX_ROWS", 3):
+        wb = _load(tmp_path, data)
+
+    text, width, height = _merged_note(wb["Events"])
+    assert "3 of 7" in text and "JSON" in text        # the disclosure survived
+    assert text.startswith("\u2026")                   # and the cut is visible
+    assert height <= 409.5                             # Excel's hard cap
+    assert height >= 15 * _displayed_lines(text, width)   # what is left fits
+
+
+def test_many_short_hard_lines_never_elide_the_row_limit_disclosure(tmp_path, monkeypatch):
+    """Short hard lines must be trimmed by lines, not by an estimated width.
+
+    55 three-word lines exceed Excel's 409.5pt row cap by *line count*, while
+    the whole note is still shorter than a row's worth of characters. Cutting
+    "one wrapped line" of characters per overflow line therefore removed many
+    real lines at once and dropped the entire appended row-limit disclosure.
+    The section description is substituted here: this is the shared estimator
+    under test, not a claim that a decoder emits line-broken descriptions.
+    """
+    import core.utils.report_format as report_format
+
+    monkeypatch.setitem(report_format.SECTION_DESCRIPTIONS, "events", "Event detail\n" * 55)
+    data = {"events": [{"description": f"Event {index}",
+                        "begin": "2026-06-01T10:30:00+00:00"} for index in range(7)]}
+    with patch("app.export._EXCEL_MAX_ROWS", 3):
+        wb = _load(tmp_path, data)
+
+    text, width, height = _merged_note(wb["Events"])
+    assert "3 of 7" in text and "JSON" in text        # the disclosure survived
+    assert text.startswith("\u2026")                   # and the cut is visible
+    assert height <= 409.5                             # Excel's hard cap
+    assert height >= 15 * _displayed_lines(text, width)   # what is left fits
+    # Short lines are kept as lines: the surviving tail is many lines, not the
+    # ~58 characters one estimated "line" of this width would have kept.
+    assert _displayed_lines(text, width) > 10
+
+
+def test_short_hard_lines_within_the_row_cap_are_kept_verbatim(tmp_path, monkeypatch):
+    """The control: a multi-line note that fits is never cut at all."""
+    import core.utils.report_format as report_format
+
+    monkeypatch.setitem(report_format.SECTION_DESCRIPTIONS, "events", "Event detail\n" * 10)
+    data = {"events": [{"description": f"Event {index}",
+                        "begin": "2026-06-01T10:30:00+00:00"} for index in range(7)]}
+    with patch("app.export._EXCEL_MAX_ROWS", 3):
+        wb = _load(tmp_path, data)
+
+    text, width, height = _merged_note(wb["Events"])
+    assert text.startswith("Event detail\n")            # nothing was elided
+    assert text.count("Event detail") == 10             # every line is there
+    assert "3 of 7" in text and "JSON" in text
+    assert height == 15 * _displayed_lines(text, width)
+    assert height <= 409.5
