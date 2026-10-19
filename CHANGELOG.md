@@ -84,7 +84,8 @@ keep their label next to the icon; tree nodes, the status badge, the integrity
 banner and the summary block headers carry theirs on the row. The image is chosen
 for the display scale rather than stretched, so a high-DPI screen draws a larger
 file. Status icons differ by shape as well as colour (circle/check, triangle/!,
-circle/cross, circle/?). The command line has no icon set and prints words.
+circle/cross, circle/?). The command line has no icon set: it prints plain words instead of the old
+emoji, so a script that matched that text needs updating.
 
 **Loading says what it is doing.** The progress bar keeps moving until the file
 is on screen, Open and Export stay disabled meanwhile, and a second open or a
@@ -104,7 +105,7 @@ colours that were too close to their background now meet a 4.5:1 contrast, the
 day-detail log uses a monospace font on Windows and Linux as well as macOS, and
 column headings sit over the columns they label.
 
-**Without a mouse.** The window is fully operable from the keyboard:
+**From the keyboard.** The main parts of the window can be used without a mouse:
 
 | Key | What it does |
 |-----|--------------|
@@ -117,8 +118,9 @@ column headings sit over the columns they label.
 | Double-click | Open a day node, like `Return` |
 
 **Less noise, more meaning.** The internal record-type code is no longer a
-column on screen — it belongs to the record, not to the reader, and the exports
-keep it. A section's record tally now reads as names and counts ("Vu Calibration
+column on screen — it belongs to the record, not to the reader. The exports
+keep it: as a column when the rows of a section differ, or as a one-line note
+beside the section title when every row has the same type. A section's record tally now reads as names and counts ("Vu Calibration
 Record ×2") instead of hex keys. Every calibration purpose is named, including
 the Gen-2 codes *Entry of VRN by company* and *Time adjustment without
 calibration*, and a reserved or manufacturer-specific byte says so instead of
@@ -212,8 +214,8 @@ events recorded by the unit, whose peak can be higher than any sampled speed.
   It reads and writes files in your home directory and has no network access, so
   USB sticks and other mounts need an explicit override:
   `flatpak override --user --filesystem=/run/media/$USER io.github.Syax89.TachoReader`.
-  On Wayland it runs through XWayland. Copies are x86_64 only, the bundle is an
-  unsigned sideload rather than a Flathub listing, and updating means installing
+  On Wayland it runs through XWayland. The bundle is x86_64 only and is an
+  unsigned sideload rather than a Flathub listing, so updating means installing
   the next release file.
 - **Windows** ships `TachoReader-v<version>-windows-x64.zip` and **macOS**
   `TachoReader-v<version>-macos.dmg`. Neither is code-signed or notarized, so
@@ -231,23 +233,26 @@ events recorded by the unit, whose peak can be higher than any sampled speed.
   included. The cover's activity totals are computed from **all** daily records
   in the file, so they can be larger than the capped tables below them — the
   cover says so, and the JSON export holds everything.
-- The Excel workbook prints at most 50,000 report rows per data section,
+- The Excel workbook holds at most 50,000 report rows per data section,
   counted on the shared report rows (monthly subtotals included) before the
   daily/monthly split; a section that hits the limit says so on its own sheet and
   in the Summary. Key/value sheets, the TREP signature list and the VU
   certificate list are not capped. Excel cannot make one row taller than
   409.5 pt — about 27 wrapped lines at the Summary's width — so a Summary value
   longer than that is clipped on screen and in print while the cell keeps the
-  full text.
+  full text. The workbook follows the standard format and was checked in
+  LibreOffice Calc; it was not opened in Microsoft Excel itself before release.
 - JSON is the complete parsed output — every decoded field the parser produces,
   including raw tags and the verification results — and **not** a reversible copy
   of the original download. Keep the `.ddd` file itself for archival or forensic
   use.
 - CSV is one semicolon-separated UTF-8 (with BOM) block per section, carrying the
   compact report text: use JSON when you need the full decoded structure.
-- Loading a file never modifies it, and the reader writes nothing unless you ask
-  for an export. An export destination you name yourself can overwrite an
-  existing file, so save to a distinct path and keep the original `.ddd`.
+- Loading a file never modifies it. The reader writes only its small settings
+  file (language, the *Translate file contents* choice and the recent-file paths)
+  and the exports you ask for; an export destination you name yourself can
+  overwrite an existing file, so save to a distinct path and keep the original
+  `.ddd`.
 - Parsing and verification are local and offline: no upload and no telemetry.
 - The reader decodes and verifies; it does not assess driving-time or
   rest-period compliance and does not estimate penalties.
