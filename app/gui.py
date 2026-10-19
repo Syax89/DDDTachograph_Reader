@@ -278,7 +278,8 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence", "record_t
                # the verdict lives in the JSON, the table keeps its columns.
                "normative", "spec_reference", "conformance_reason",
                "low_confidence_fields", "end_semantics",
-               "manufacturer_error_code"}
+               "manufacturer_error_code",
+               "event_fault_version", "type_status", "manufacturer_status"}
 # Descriptive columns pushed to table start.
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
 # Technical columns pushed to table end.

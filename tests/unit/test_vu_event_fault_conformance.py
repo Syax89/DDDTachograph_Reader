@@ -24,7 +24,7 @@ from core.decoders.vu_g1 import _parse_trep_03_events_faults
 from core.parser import vu_dispatcher
 from core.parser.vu_dispatcher import (
     VU_EVENT_RECORD_SIZE, VU_FAULT_RECORD_SIZE, walk_vu_record_arrays)
-from core.utils.event_codes import EVENT_TYPES, FAULT_TYPES
+from core.utils.event_codes import EVENT_FAULT_VERSION_2, EVENT_TYPES, FAULT_TYPES
 from core.utils.report_format import humanize_key, visible_columns
 from tests.unit.real_data import real_ddd_files, requires_real_files
 
@@ -91,8 +91,15 @@ def _g1_overview_body():
             + bytes([0x1A]) + text("AB123CD", 14))
 
 
-def _decode(record_type, record):
-    return vu_dispatcher.decode_vu_record(record_type, record)
+def _decode(record_type, record, version=EVENT_FAULT_VERSION_2):
+    """Decode one record as if it came from a '33'H (version 2) section.
+
+    The point-2.70 assignment is version-specific; these layout/conformance
+    tests are written against the version-2 table, so they say so instead of
+    relying on a default. The unknown-version and version-1 behaviour of the
+    type byte has its own suite (``test_vu_event_fault_versioning.py``).
+    """
+    return vu_dispatcher.decode_vu_record(record_type, record, version=version)
 
 
 class TestRecordLayout(unittest.TestCase):
@@ -129,9 +136,11 @@ class TestEventRecordDecode(unittest.TestCase):
         self.assertEqual(out["confidence"], "high")
         self.assertEqual(out["spec_reference"], "Annex 1C App.1 2.198")
         self.assertNotIn("conformance_reason", out)
-        # Only the manufacturer-specific pair is outside the standard.
-        self.assertEqual(out["low_confidence_fields"],
-                         ["manufacturer_code", "manufacturer_error_code"])
+        # Only the manufacturer-specific payload is outside the standard: the
+        # code byte itself is a registered JRC manufacturer (0xA2), so it is
+        # identified, while the proprietary 3-byte error code stays opaque.
+        self.assertEqual(out["manufacturer"], "Stoneridge Electronics AB")
+        self.assertEqual(out["low_confidence_fields"], ["manufacturer_error_code"])
 
     def test_fault_record_is_90_bytes_without_similar_events(self):
         out = _decode(0x18, _fault_record())

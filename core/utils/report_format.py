@@ -23,7 +23,12 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
                # export, not a table column — and it has no translated label.
                "normative", "spec_reference", "conformance_reason",
                "low_confidence_fields", "end_semantics",
-               "manufacturer_error_code"}
+               "manufacturer_error_code",
+               # Which point-2.70 table was applied to an event/fault type byte
+               # and how it assigns it (`assigned`/`reserved`/`manufacturer_
+               # specific`/`unknown_version`), plus whether the manufacturer code
+               # byte is in the JRC registry: technical status, JSON only.
+               "event_fault_version", "type_status", "manufacturer_status"}
 
 # Canonical trust verdicts for a parsed download. Consumers (GUI badge, rename
 # tooling, reports) must classify with these rather than by substring-matching

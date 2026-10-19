@@ -182,14 +182,23 @@ Cosa e' **verificato** (HIGH, `core/parser/vu_dispatcher.py::decode_event_fault_
   `normative=True` / `confidence="high"` / `spec_reference="Annex 1C App.1 2.198"|"…2.201"`
   quando tutti i campi normativi sono validi; `normative=False` /
   `confidence="low"` + `conformance_reason` quando no (record comunque emesso).
+- `ManufacturerCode` (§2.94 / §2.95): risolto contro il registro ufficiale della
+  Commissione (https://dtc.jrc.europa.eu/dtc_manufacturer_code.php), copiato in
+  modo statico in `core/utils/manufacturer_codes.py`: **65 codici assegnati**,
+  nessun accesso di rete a runtime. Un codice registrato viene mostrato con il
+  nome dell'azienda (colonna `Manufacturer`, header gia' tradotto) e non e' piu'
+  marcato come non interpretato; i byte non assegnati o sentinella ('00'H,
+  'FF'H, ...) restano esplicitamente sconosciuti
+  (`manufacturer_status = "not_registered"`) e a bassa confidenza. Il registro
+  identifica il costruttore, non i suoi codici diagnostici.
 
 Cosa resta **NON verificato** (dichiarato, non dedotto):
 
-- `manufacturerSpecificEventFaultData`: `manufacturerCode` (elenco ufficiale sul
-  sito del laboratorio competente, non riportato in Gazzetta) e i 3 byte di
-  `manufacturerSpecificErrorCode`. Restano grezzi (`manufacturer_code`,
-  `manufacturer_error_code` esadecimale) e sono gli unici campi marcati a bassa
-  confidenza (`low_confidence_fields`) su un record conforme.
+- I **3 byte** di `manufacturerSpecificErrorCode` (§2.95) restano opachi:
+  nessuna mappatura ufficiale a livello di byte e' pubblica, quindi vengono
+  esportati verbatim (`manufacturer_error_code`, esadecimale minuscolo) e restano
+  a bassa confidenza (`low_confidence_fields`). Non sono i numeri di avviso/DTC
+  dei manuali utente e '000000' **non** viene letto come "nessun errore".
 - `SimilarEventsNumber` (§2.151) dice "0 non e' usato", ma record reali hanno 0
   (52 dei 121 eventi del corpus): il valore viene mostrato senza far fallire la
   conformita', perche' la VU lo scrive davvero.
@@ -207,10 +216,24 @@ Cosa resta **NON verificato** (dichiarato, non dedotto):
   Un codice fuori da questo insieme non rende non conforme il record: viene
   segnalato in `low_confidence_fields` (`event_type_code` / `fault_type_code`),
   perche' il testo non ne definisce il significato.
-  Limite noto (`shortcut:` nel codice): la tabella v2 viene usata per ogni file
-  Gen2, quindi '0F'/'1C'/'3A' sono accettati anche in un download Gen2-versione-1
-  dove quella versione dice ancora RFU; si potra' distinguere quando il parser
-  sapra' riconoscere la versione 1 dalla 2.
+- La tabella applicata e' quella della **sezione**, non del file (il vecchio
+  limite `shortcut:` e' stato rimosso). L'Allegato 7 (DDP_011) assegna il tipo di
+  trasferimento "Events and faults" a TRTP '03'H (generazione 1), '23'H
+  ("generation 2, version 1", Reg. 2018/502) e '33'H ("generation 2, version 2",
+  Reg. 2021/1228); `event_fault_version_for_trep` traduce il marker di sezione e
+  `decode_event_fault_record(version=...)` usa la tabella corrispondente:
+  - sezione '23'H: '0F'/'1C'/'3A' sono "Reserved for future use", come dice quella
+    versione (`type_status = "reserved"`), mai "GNSS anomaly"/"internal sensor
+    fault"/"incoerenza dati di moto";
+  - sezione '33'H: valgono le descrizioni v2 (`type_status = "assigned"`);
+  - contesto non risolto (record isolato, array per-tag senza sezione, TREP '03'
+    di generazione 1, altra sezione): la descrizione e'
+    "Unknown event"/"Unknown fault" con `type_status = "unknown_version"` — non
+    "reserved" e mai un default v2;
+  - `metadata.generation` non viene mai usato per decidere: una VU v2 puo'
+    produrre download in formato v1 e un file puo' contenere entrambe le sezioni.
+  Ogni record esporta `event_fault_version` e `type_status` (entrambi nascosti
+  dalle tabelle, come `normative`).
 - Storico: nel testo originale del 2016 (il PDF dell'Allegato 1C non ancora
   modificato) quei codici risultano RFU. E' la ragione per cui la tabella era
   stata marcata "non verificata": oggi lo e', contro gli atti di modifica.

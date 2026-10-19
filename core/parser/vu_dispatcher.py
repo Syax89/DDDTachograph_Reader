@@ -30,9 +30,14 @@ from core import decoders
 from core.decoders.common import is_known_nation
 from core.utils.constants import (
     RECORD_ARRAY_MAX_RECORDS, RECORD_ARRAY_MAX_SIZE, VU_MAX_TOTAL_RECORDS)
-from core.utils.event_codes import (EVENT_TYPES, FAULT_TYPES, describe_event,
-                                    describe_fault, describe_calibration_purpose,
-                                    describe_control_type, describe_record_purpose)
+from core.utils.event_codes import (
+    EVENT_FAULT_VERSION_1, EVENT_FAULT_VERSION_2, EVENT_FAULT_VERSION_UNKNOWN,
+    EVENT_FAULT_VERSIONS, describe_event, describe_event_fault_type,
+    describe_fault, describe_calibration_purpose, describe_control_type,
+    describe_record_purpose, event_fault_type_status, TYPE_ASSIGNED)
+from core.utils.manufacturer_codes import (
+    MANUFACTURER_STATUS_NOT_REGISTERED, MANUFACTURER_STATUS_REGISTERED,
+    manufacturer_name)
 
 _log = get_logger(__name__)
 
@@ -759,15 +764,27 @@ _DEFINED_CARD_GENERATIONS = frozenset((0x01, 0x02))
 # This is a *plausibility* bound, not a rule of the standard: TimeReal itself runs
 # to 2^32-1 (2106-02-07), and outer values are treated as a corrupt field.
 _PLAUSIBLE_TIME = (946684800, 4102444800)
-# EventFaultType codes the amended standard assigns a meaning to:
-# "Generation 2, version 2" (Reg. 2016/799 App.1 point 2.70 as replaced by
-# Reg. 2021/1228 Annex point (n)(ii); add gen1/2018-502 subset). Everything else is
-# RFU (1D-1F, 26-2F, 3B-3F, 41-4F, 50-7F) or manufacturer specific (80-FF).
+# EventFaultType (point 2.70) has a different value assignment per *schema
+# version*, and the version belongs to the section, not to the file. Annex 1C
+# Appendix 7 / DDP_011 fixes it by TREP: "Events and faults" is TRTP '03'H for a
+# generation-1 download, '23'H for "generation 2, version 1" (Reg. 2018/502) and
+# '33'H for "generation 2, version 2" (Reg. 2021/1228 point (n)(ii)). Any other
+# context — another section, an isolated record, the tag-keyed adapter that sees
+# one array with no stream around it — resolves to ``unknown``: version 2 is
+# never assumed, because '0F'H/'1C'H/'3A'H mean something only there.
 #
-# shortcut: the version-2 table is used for every Gen2 download, so 0F/1C/3A are
-# accepted in a Gen2-version-1 file, where that version still says RFU. Upgrade
-# when the parser can tell version 1 from version 2.
-_DEFINED_EVENT_FAULT_TYPES = frozenset(EVENT_TYPES) | frozenset(FAULT_TYPES)
+# ``metadata.generation`` is the *file's* hardware generation, a whole-file
+# property: a version-2 VU can still produce a version-1 download, so it must
+# never upgrade a section (and is not consulted here at all).
+EVENT_FAULT_VERSION_BY_TREP = {
+    0x23: EVENT_FAULT_VERSION_1,
+    0x33: EVENT_FAULT_VERSION_2,
+}
+
+
+def event_fault_version_for_trep(trep):
+    """The point-2.70 schema version an Events&Faults TREP section carries."""
+    return EVENT_FAULT_VERSION_BY_TREP.get(trep, EVENT_FAULT_VERSION_UNKNOWN)
 
 
 def _is_empty_card_slot(slot):
@@ -840,7 +857,7 @@ def _event_fault_problems(is_event, rec, begin_ts, end_ts):
     return problems
 
 
-def decode_event_fault_record(rec, is_event):
+def decode_event_fault_record(rec, is_event, version=EVENT_FAULT_VERSION_UNKNOWN):
     """Decode a Gen2 VuEventRecord (91) / VuFaultRecord (90) with its verdict.
 
     A record whose bytes match the standard is decoded field by field and
@@ -848,20 +865,34 @@ def decode_event_fault_record(rec, is_event):
     record that does not match keeps the 10-byte prefix decode of older versions
     and is reported ``normative: False`` / ``confidence: "low"`` with a
     ``conformance_reason``. Neither is ever dropped.
+
+    *version* is the point-2.70 schema version of the section the record came
+    from — ``generation2version1`` for a '23'H Events&Faults section,
+    ``generation2version2`` for a '33'H one, ``unknown`` for anything else
+    (isolated record, tag-keyed array, another section). The default is
+    ``unknown`` on purpose: the version-2 meanings of '0F'H/'1C'H/'3A'H are never
+    assumed, they are only used where the section says version 2.
     """
     if len(rec) < 10:
         return None  # not even the standard prefix is present
+    if version not in EVENT_FAULT_VERSIONS:
+        version = EVENT_FAULT_VERSION_UNKNOWN
     spec = VU_EVENT_SPEC if is_event else VU_FAULT_SPEC
     type_code = rec[0]
     begin_ts = struct.unpack(">I", rec[2:6])[0]
     end_ts = struct.unpack(">I", rec[6:10])[0]
+    type_status = event_fault_type_status(type_code, version)
     out = {
         "type_code": type_code,
-        "description": describe_event(type_code) if is_event else describe_fault(type_code),
+        "description": describe_event_fault_type(type_code, is_event, version),
         "record_purpose": rec[1],
         "begin": _iso(begin_ts),
         "end": _iso(end_ts),
         "spec_reference": spec,
+        # Bookkeeping, never a column: which point-2.70 table was used, and how
+        # that table assigns this byte (see ``event_codes.TYPE_*``).
+        "event_fault_version": version,
+        "type_status": type_status,
         "low_confidence_fields": list(_MANUFACTURER_FIELDS),
     }
     expected = VU_EVENT_RECORD_SIZE if is_event else VU_FAULT_RECORD_SIZE
@@ -879,30 +910,37 @@ def decode_event_fault_record(rec, is_event):
 
     for off, name in _CARD_SLOT_OFFSETS:
         out[name] = decode_full_card_number_gen(rec, off)
+    manufacturer_code = rec[87] if is_event else rec[86]
+    manufacturer_error = rec[88:91] if is_event else rec[87:90]
+    name = manufacturer_name(manufacturer_code)
+    out["manufacturer_code"] = manufacturer_code
+    out["manufacturer_error_code"] = manufacturer_error.hex()
+    out["manufacturer"] = name
+    out["manufacturer_status"] = (MANUFACTURER_STATUS_REGISTERED if name is not None
+                                  else MANUFACTURER_STATUS_NOT_REGISTERED)
+    # An unregistered byte keeps the old "value not interpretable" mark; a
+    # registered one identifies the manufacturer, so only the proprietary
+    # 3-byte error code stays uninterpretable (no public wire-level mapping).
+    low = [] if name is not None else ["manufacturer_code"]
+    low.append("manufacturer_error_code")
+    if is_event and rec[86] == 0:
+        # §2.151: "0 is not used" — but 52 of the 121 events in the real corpus
+        # carry 0, so the value is outside the standard's value assignment while
+        # the record structure is perfectly valid. Flag the field alone; the
+        # record stays normative.
+        low.append("similar_events")
+    if type_status != TYPE_ASSIGNED:
+        # Not a code this version defines (RFU, manufacturer specific, or a
+        # version-2-only code in a section we could not resolve): the field is
+        # not interpretable, the structure still is, so flag the field and keep
+        # the record conformant. The key is the one the emitted record carries.
+        low.append("event_type_code" if is_event else "fault_type_code")
+    out["low_confidence_fields"] = low
     if is_event:
         out["similar_events"] = rec[86]
-        if rec[86] == 0:
-            # §2.151: "0 is not used" — but 52 of the 121 events in the real
-            # corpus carry 0, so the value is outside the standard's value
-            # assignment while the record structure is perfectly valid. Flag the
-            # field alone; the record stays normative.
-            out["low_confidence_fields"] = [*_MANUFACTURER_FIELDS, "similar_events"]
-        out["manufacturer_code"] = rec[87]
-        out["manufacturer_error_code"] = rec[88:91].hex()
         if type_code == TIME_CONFLICT_EVENT:
             # §2.198: begin is the recording equipment time, end the GNSS time.
             out["end_semantics"] = "GNSS date and time"
-    else:
-        out["manufacturer_code"] = rec[86]
-        out["manufacturer_error_code"] = rec[87:90].hex()
-
-    type_key = "event_type_code" if is_event else "fault_type_code"
-    if type_code not in _DEFINED_EVENT_FAULT_TYPES:
-        # Outside the amended value assignment (RFU, or manufacturer specific whose
-        # meaning is not published): the field is not interpretable, the structure
-        # still is, so flag the field and keep the record conformant. The key is
-        # the one the emitted record carries.
-        out["low_confidence_fields"] = [*out["low_confidence_fields"], type_key]
 
     problems = _event_fault_problems(is_event, rec, begin_ts, end_ts)
     out["normative"] = not problems
@@ -934,9 +972,13 @@ _RECORD_DECODERS = {
     0x21: decode_sensor_gnss_coupled,
 }
 
-def _decode_record(record_type, rec):
+def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN):
     """Decode a single record by recordType. Returns a dict (always includes
-    record_type, size, confidence)."""
+    record_type, size, confidence).
+
+    *version* is the point-2.70 schema version of the containing section, used
+    only by the event/fault records; see :func:`decode_event_fault_record`.
+    """
     name, confidence = RECORD_TYPES.get(record_type, (f"Unknown_0x{record_type:02X}", "low"))
     out = {"record_type": f"0x{record_type:02X}", "name": name,
            "size": len(rec), "confidence": confidence}
@@ -980,7 +1022,8 @@ def _decode_record(record_type, rec):
         out["odometer_km"] = _u24(rec[0:3])
         return out
     if record_type in (0x15, 0x18):
-        decoded = decode_event_fault_record(rec, is_event=(record_type == 0x15))
+        decoded = decode_event_fault_record(rec, is_event=(record_type == 0x15),
+                                            version=version)
         if decoded:
             out.update(decoded)
         else:
@@ -1046,13 +1089,18 @@ def _decode_record(record_type, rec):
     return out
 
 
-def decode_vu_record(record_type, rec):
+def decode_vu_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN):
     """Decode one isolated VU RecordArray record in the canonical app shape.
 
     This deliberately accepts a single record, not a complete TREP stream, so
     the tag-keyed adapter can share semantics without calling the stream walker.
+
+    Having no section, an isolated record has no point-2.70 schema version: the
+    default ``unknown`` says so instead of assuming a generation-2 version-2
+    meaning for '0F'H/'1C'H/'3A'H. Callers that *do* know the section (the stream
+    walker) pass ``version=`` explicitly.
     """
-    return _decode_record(record_type, rec)
+    return _decode_record(record_type, rec, version)
 
 
 def iter_vu_sections(data, state=None):
@@ -1136,6 +1184,11 @@ def walk_vu_record_arrays(data, results):
     results["_vu_walk_complete"] = False
 
     for sec in iter_vu_sections(data, state):
+        # The section fixes the EventFaultType assignment (DDP_011), each one
+        # independently: a download may mix a '23'H and a '33'H Events&Faults
+        # section, and the file-wide ``metadata.generation`` says nothing about
+        # either of them.
+        section_version = event_fault_version_for_trep(sec["trep"])
         current = {"trep": sec["trep"], "name": TREP_SECTIONS.get(sec["trep"], f"TREP_0x{sec['trep']:02X}"),
                    "records": {}}
         for (pos, rt, rs, nr, _end) in sec["records"]:
@@ -1152,7 +1205,8 @@ def walk_vu_record_arrays(data, results):
                     capped = True
                     break
                 rec = data[rpos:rpos + rs]
-                current["records"].setdefault(rt, []).append(decode_vu_record(rt, rec))
+                current["records"].setdefault(rt, []).append(
+                    decode_vu_record(rt, rec, version=section_version))
                 rpos += rs
                 total_records += 1
         _emit_section(current, results)
@@ -1241,7 +1295,10 @@ def _emit_section(section, results):
     # VuEventRecord (0x15) → events, VuFaultRecord (0x18) → faults. Each record
     # carries its own conformance verdict (``normative``) from the decoder, so
     # the sources keep their keys/columns and gain the fields the standard
-    # defines plus the one manufacturer-specific pair.
+    # defines plus the one manufacturer-specific pair. The point-2.70 schema
+    # version resolved from this section (``event_fault_version``) and the
+    # registry status of the manufacturer byte travel with the record — both are
+    # JSON bookkeeping and stay out of every table (``HIDDEN_KEYS``).
     for rt, key in ((0x15, "events"), (0x18, "faults")):
         type_key = "event_type_code" if key == "events" else "fault_type_code"
         for r in recs.get(rt, []):
@@ -1258,7 +1315,12 @@ def _emit_section(section, results):
                 "card_driver_end": r.get("card_driver_end"),
                 "card_codriver_end": r.get("card_codriver_end"),
                 "manufacturer_code": r.get("manufacturer_code"),
+                "manufacturer": r.get("manufacturer"),
                 "manufacturer_error_code": r.get("manufacturer_error_code"),
+                "manufacturer_status": r.get("manufacturer_status"),
+                "event_fault_version": r.get("event_fault_version",
+                                            EVENT_FAULT_VERSION_UNKNOWN),
+                "type_status": r.get("type_status"),
                 "normative": bool(r.get("normative")),
                 "spec_reference": r.get("spec_reference"),
                 "low_confidence_fields": r.get("low_confidence_fields") or [],

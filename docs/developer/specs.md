@@ -58,15 +58,63 @@ and reports on the emitted event/fault:
 | `normative` | `True` when all standard-defined fields validate (size, card slots — a slot carries a tachograph card, `CardType` 1..5 — record purpose, time), `False` otherwise |
 | `spec_reference` | `"Annex 1C App.1 2.198"` / `"Annex 1C App.1 2.201"` |
 | `conformance_reason` | Why `normative` is `False` (absent when conformant) |
-| `low_confidence_fields` | Fields whose value the standard does not define: `manufacturer_code` and `manufacturer_error_code` on every record, plus `similar_events` when it is `0` (§2.151 says 0 is "not used", yet real units write it), plus `event_type_code`/`fault_type_code` when the code is RFU or manufacturer specific in the amended `EventFaultType` assignment (point 2.70, "Generation 2, version 2" — Reg. 2018/502 + Reg. 2021/1228). In all those cases the record itself stays conformant |
+| `event_fault_version` | Which point-2.70 table was applied: `generation2version1` (section TREP `0x23`), `generation2version2` (TREP `0x33`) or `unknown` (any other context) |
+| `type_status` | How that table assigns the type byte: `assigned`, `reserved` (RFU in it), `manufacturer_specific` (`0x80`..`0xFF`) or `unknown_version` (a version-2-only code in a section whose version is unknown) |
+| `manufacturer` | Registered manufacturer name for the `manufacturerCode` byte, or `None` when the byte is not in the registry |
+| `manufacturer_status` | `registered` / `not_registered` for that byte |
+| `low_confidence_fields` | Fields whose value the standard does not define: `manufacturer_error_code` on every conforming record, `manufacturer_code` only when it is not a registered code, plus `similar_events` when it is `0` (§2.151 says 0 is "not used", yet real units write it), plus `event_type_code`/`fault_type_code` when `type_status` is not `assigned`. In all those cases the record itself stays conformant |
 | `end_semantics` | Present only on a time-conflict event (`EventFaultType '0B'H`): `end` holds the GNSS time, not an end |
+
+#### The type byte is read against its section's list
+
+Point 2.70 exists in two generation-2 variants and they differ: Reg. (EU)
+2018/502 replaced the text under the "Generation 2" heading ("Generation 2,
+version 1"), and Reg. (EU) 2021/1228 point (n)(ii) renamed that heading
+"Generation 2, version 1" and added a "Generation 2, version 2" table which
+assigns `'0F'H` GNSS anomaly, `'1C'H` inconsistency between motion data and
+stored driver activity data and `'3A'H` internal sensor fault — bytes the
+version-1 table still calls RFU (after `'0E'H`, `'1B'H` and `'39'H`
+respectively). Appendix 7 (DDP_011) decides which one applies: the
+events-and-faults data transfer type is TRTP `03` for a generation-1 download,
+`23` for "generation 2, version 1" and `33` for "generation 2, version 2".
+
+So the version is resolved per **section**, from the marker that introduces it
+(`event_fault_version_for_trep`), never from `metadata.generation`: a version-2
+unit may legitimately answer a legacy request with version-1 sections, and a
+download may mix both. Consequences:
+
+- a version-1 section describes `0F`/`1C`/`3A` as `Reserved for future use` and
+  never with the version-2 wording;
+- an unresolved context (isolated record, tag-keyed array, a section that is not
+  an events-and-faults one, generation-1 TREP `03`) describes them as `Unknown
+  event`/`Unknown fault` and flags the field — "unknown" is not reported as
+  "reserved", and version 2 is never assumed;
+- every other code keeps the exact description it always had, and the record's
+  conformance verdict is untouched: an unassigned or version-specific code is a
+  *field-level* flag, not a structural defect.
+
+#### Manufacturer identity vs the manufacturer error code
+
+§2.94/§2.95 leave the last four bytes to the manufacturer: a `ManufacturerCode`
+byte whose value assignment lives in the Commission's registry
+(https://dtc.jrc.europa.eu/dtc_manufacturer_code.php), plus a 3-byte
+`manufacturerSpecificErrorCode` that is vendor-defined. `core/utils/manufacturer_codes.py`
+holds a static copy of the registry — **all 65 assigned codes**, no runtime
+network access — so a registered byte is reported by name and is no longer
+marked uninterpreted; unassigned/sentinel bytes (`'00'H`, `'FF'H`, …) stay
+unknown and low confidence.
+
+The three error bytes are **still opaque**: the exports keep them verbatim
+(`manufacturer_error_code`, lowercase hex) and marked low confidence, because no
+official wire-level mapping exists. They are not the dashboard warning or DTC
+numbers a user manual lists, and `000000` is not interpreted as "no error".
 
 Times are checked against a **plausibility window** (2000-2100), not a rule of the
 standard (`TimeReal` itself runs to 2106): a time outside it is treated as a
 corrupt field, which is the fail-closed choice. A record whose size is not 91/90
 keeps the prefix view (`raw_tail_hex`) and is reported non-conforming — it is
 surfaced, never dropped. Verification status (including the two amending acts
-behind the type table) is in `scripts/g22_verification_status.md` §8.
+behind the type tables) is in `scripts/g22_verification_status.md` §8.
 
 `metadata.decode_paths` counts how the emitted events/faults were decoded:
 `{"vu_events": {"normative": N, "non_normative": M}, ...}`, where
@@ -77,11 +125,13 @@ reasons), `metadata.heuristic_fields` and a WARNING — records from that route
 carry no verdict at all, so they can never pass for the deterministic one.
 
 The conformance keys stay in the JSON: `normative`, `spec_reference`,
-`conformance_reason`, `low_confidence_fields`, `end_semantics` and
-`manufacturer_error_code` are hidden from the tables (GUI and reports), exactly
-like `confidence`. The visible `Events`/`Faults` columns are the ones the
+`conformance_reason`, `low_confidence_fields`, `end_semantics`,
+`manufacturer_error_code`, `event_fault_version`, `type_status` and
+`manufacturer_status` are hidden from the tables (GUI and reports), exactly like
+`confidence`. The visible `Events`/`Faults` columns are the ones the
 generation-1 records already used (card-and-generation slots, similar events,
-manufacturer code), so no new translatable label is introduced.
+manufacturer code) plus `manufacturer`, whose header is the existing translated
+`Manufacturer` label, so no new translatable label is introduced.
 
 ### `scripts/tachograph.asn`
 
