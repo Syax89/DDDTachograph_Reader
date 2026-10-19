@@ -719,6 +719,40 @@ def _without_indicator(layout):
 SASH_START = 260
 
 
+def _autohide(scrollbar, show, hide):
+    """A ``yscrollcommand`` that hides the bar while everything is visible.
+
+    An always-on bar with a full thumb scrolls nothing and takes ~14 px from the
+    table beside it.
+    """
+    def command(first, last):
+        scrollbar.set(first, last)
+        if float(first) <= 0.0 and float(last) >= 1.0:
+            hide()
+        else:
+            show()
+    return command
+
+
+def _wrap_at_underscores(text, font, width):
+    """Break a name with no spaces after its underscores, to fit *width* px.
+
+    Tk wraps only at whitespace, so a long file name such as
+    ``VU_FW847FB_XLRTEM4300G274169_VERIFIED_05BC0642C1.ddd`` was cut mid-word
+    ("VERIFIE" / "D_05BC..."). A part longer than the width is left to Tk.
+    """
+    measure = tkfont.Font(font=font).measure
+    lines, line = [], ""
+    for part in re.findall(r"[^_]*_|[^_]+", text):
+        if line and measure(line + part) > width:
+            lines.append(line)
+            line = part
+        else:
+            line += part
+    lines.append(line)
+    return "\n".join(lines)
+
+
 class DataTable(ttk.Frame):
     """Header-only treeview: grid with sortable columns and filter."""
 
@@ -764,7 +798,9 @@ class DataTable(ttk.Frame):
                                style=row_style)
         ysb = ttk.Scrollbar(body, orient=tk.VERTICAL, command=self.tv.yview)
         xsb = ttk.Scrollbar(body, orient=tk.HORIZONTAL, command=self.tv.xview)
-        self.tv.configure(yscrollcommand=ysb.set, xscrollcommand=xsb.set)
+        self.tv.configure(
+            yscrollcommand=_autohide(ysb, ysb.grid, ysb.grid_remove),
+            xscrollcommand=xsb.set)
 
         self.tv.grid(row=0, column=0, sticky="nsew")
         ysb.grid(row=0, column=1, sticky="ns")
@@ -3466,8 +3502,11 @@ class TachoExplorer(tk.Tk):
         left = ttk.Frame(pw)
         pw.add(left, weight=0)
         scroll = ttk.Scrollbar(left, orient=tk.VERTICAL)
-        self.tree = ttk.Treeview(left, show="tree", yscrollcommand=scroll.set,
-                                  selectmode="browse")
+        self.tree = ttk.Treeview(left, show="tree", selectmode="browse")
+        self.tree.configure(yscrollcommand=_autohide(
+            scroll,
+            lambda: scroll.pack(side=tk.RIGHT, fill=tk.Y, before=self.tree),
+            scroll.pack_forget))
         scroll.config(command=self.tree.yview)
         scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.tree.pack(fill=tk.BOTH, expand=True)
@@ -3580,6 +3619,10 @@ class TachoExplorer(tk.Tk):
             try:
                 if label.winfo_exists():
                     label.configure(wraplength=wrap)
+                    full = getattr(label, "_full_name", None)
+                    if full:
+                        label.configure(text=_wrap_at_underscores(
+                            full, FONT_SUBTITLE_BOLD, wrap))
             except tk.TclError:
                 continue  # a row destroyed by _refresh_recent_files
 
@@ -3621,8 +3664,10 @@ class TachoExplorer(tk.Tk):
         row = ttk.Frame(self.recent_list, cursor="hand2")
         row.pack(fill=tk.X, pady=_px(2))
         wrap = self._wrap_labels[0].cget("wraplength")
-        name = ttk.Label(row, text=os.path.basename(path),
+        base = os.path.basename(path)
+        name = ttk.Label(row, text=_wrap_at_underscores(base, FONT_SUBTITLE_BOLD, wrap),
                          font=FONT_SUBTITLE_BOLD, anchor=tk.W, wraplength=wrap)
+        name._full_name = base  # re-broken when the pane is resized
         name.pack(fill=tk.X)
         directory = ttk.Label(row, text=os.path.dirname(path), font=FONT_SMALL,
                               foreground=SLATE, anchor=tk.W, wraplength=wrap)
@@ -6450,6 +6495,22 @@ class TachoExplorer(tk.Tk):
         rows.append((_("  Period covered"), period, False))
         rows.append(sep)
 
+        # ── INTEGRITY: the same verdict (and coverage, when reported) the
+        # File Info section and the status badge already show. ──
+        rows.append(_SummaryHeader(_("INTEGRITY"), icon="integrity-locked"))
+        rows.append((_("  Status"), info.get(_("Integrity"), ""), False))
+        # The percentage alone, not File Info's "100.0% (1 234 567 / 1 234 567
+        # bytes)": that string states the same number three times and is 241 px
+        # wide, which does not fit this panel's 187 px value column in *any* of
+        # the 34 catalogs (the percentage is 48 px and fits in all of them).
+        # File Info is the detail page — its columns auto-fit — so the byte
+        # arithmetic stays there, on the row the overview is summarising.
+        coverage_pct = (data.get("coverage") or {}).get("byte_accounted_pct")
+        if coverage_pct is not None:
+            rows.append((_("  Byte-accounted coverage"), f"{coverage_pct}%",
+                         False))
+        rows.append(sep)
+
         # ── DRIVER / CARDHOLDER: card files only, and only when the card
         # carries something worth showing (GUI-BOGUS-DRIVER, G-F8: an untouched
         # TachoResult keeps every driver field at the truthy "N/A" sentinel).
@@ -6491,22 +6552,6 @@ class TachoExplorer(tk.Tk):
         rows.append((_("  Available"),
                      _fmt_duration_minutes(totals["AVAILABLE"]), False))
         rows.append((_("  Days with activity"), str(len(days)), False))
-        rows.append(sep)
-
-        # ── INTEGRITY: the same verdict (and coverage, when reported) the
-        # File Info section and the status badge already show. ──
-        rows.append(_SummaryHeader(_("INTEGRITY"), icon="integrity-locked"))
-        rows.append((_("  Status"), info.get(_("Integrity"), ""), False))
-        # The percentage alone, not File Info's "100.0% (1 234 567 / 1 234 567
-        # bytes)": that string states the same number three times and is 241 px
-        # wide, which does not fit this panel's 187 px value column in *any* of
-        # the 34 catalogs (the percentage is 48 px and fits in all of them).
-        # File Info is the detail page — its columns auto-fit — so the byte
-        # arithmetic stays there, on the row the overview is summarising.
-        coverage_pct = (data.get("coverage") or {}).get("byte_accounted_pct")
-        if coverage_pct is not None:
-            rows.append((_("  Byte-accounted coverage"), f"{coverage_pct}%",
-                         False))
 
         return [_("Field"), _("Value")], rows
 
