@@ -103,7 +103,9 @@ def _salvage_card_image(chunk, results) -> List[str]:
     try:
         _decode_embedded_card_image(chunk, scratch)
     except Exception as exc:  # noqa: BLE001 - salvage must never break parsing
-        _log.debug("Salvage card-image decode failed: %s", exc)
+        # WARNING, not DEBUG: this is already the last-resort route, so a
+        # failure here means those bytes stay undecoded and must be visible.
+        _log.warning("Salvage card-image decode failed: %s", exc)
         return []
 
     gained = []

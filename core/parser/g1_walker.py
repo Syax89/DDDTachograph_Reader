@@ -380,8 +380,10 @@ def walk_g1_vu(data, results):
             handler(body, results)
         except Exception as exc:  # a decoder bug must not break the walk
             dispatch_failed = True
-            _log.debug("G1 VU TREP %02X dispatch failed at 0x%X: %s",
-                       msg["trep"], msg["pos"], exc)
+            # WARNING, not DEBUG: this is a swallowed decode error whose only
+            # other trace is the fallback the caller now declares.
+            _log.warning("G1 VU TREP %02X dispatch failed at 0x%X: %s",
+                         msg["trep"], msg["pos"], exc)
 
     complete = complete and not dispatch_failed
     _log.debug("G1 VU walk: %d messages, complete=%s", len(messages), complete)

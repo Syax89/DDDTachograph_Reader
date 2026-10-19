@@ -1,9 +1,19 @@
 """Centralised event & fault type descriptions per EU tachograph legislation.
 
 References:
-  - Regulation (EEC) 3821/85 Annex 1B §2.70 (G1 EventFaultType)
-  - Regulation (EU) 2016/799 Annex 1C §2.86 (G2 EventFaultType)
-  - Regulation (EU) 2021/1228 / 2023/980 (G2.2 amendments)
+  - Regulation (EEC) 3821/85 Annex 1B §2.70 (generation 1 EventFaultType)
+  - Regulation (EU) 2016/799 Annex 1C, Appendix 1, point 2.70 (EventFaultType),
+    as amended by Reg. (EU) 2018/502 Annex (29)(h) ("Generation 2, version 1")
+    and Reg. (EU) 2021/1228 Annex (30)(n)(i)/(ii) ("Generation 2, version 2")
+  - Regulation (EU) 2023/980 (generation 2 version 2 amendments)
+
+The two dicts below carry the generation-2 *version 2* assignment of point 2.70,
+read from the amending acts; :data:`EVENT_TYPES_V1` / :data:`FAULT_TYPES_V1` are
+the *version 1* tables (the same minus the three codes 2021/1228 introduced), and
+:func:`describe_event_fault_type` picks the right one for a resolved section
+version. :func:`describe_event` / :func:`describe_fault` keep their historical
+default (the version-2 wording) for callers that have no section context, such
+as the generation-1 and card decoders.
 
 ``EventFaultType`` is a single byte shared by events and faults:
   '00'H..'0F'H  general events
@@ -83,6 +93,110 @@ FAULT_TYPES: dict[int, str] = {
     # Card faults ('40'H..'4F'H)
     0x40: "Card fault, no further details",
 }
+
+# ── EventFaultType assignment per schema version (point 2.70) ──────────────
+#
+# Point 2.70 comes in two generation-2 variants and they are *not*
+# interchangeable: Reg. 2018/502 Annex (29)(h) replaced the text under the
+# "Generation 2" heading ("Generation 2, version 1"), and Reg. 2021/1228 Annex
+# (30)(n)(i) renamed that header "Generation 2, version 1" while (30)(n)(ii)
+# added the "Generation 2, version 2" table. Which one a record is read against
+# is a property of the section that carries it — Appendix 7: the request table
+# DDP_011 gives the transfer types, and DDP_031 defines the per-TREP data
+# structures "under the SID 76 Hex, the TREP 03, 23 or 33 Hex":
+#
+#   generation 1                                    TREP '03'H
+#   generation 2, version 1                         TREP '23'H
+#   generation 2, version 2                         TREP '33'H
+#
+# The version-2 table is the one in EVENT_TYPES/FAULT_TYPES above. The version-1
+# table is that table minus the three codes the 2021/1228 amendment introduced,
+# because the 2018/502 text still calls them RFU: after '0E'H the v1 list
+# continues with "RFU", likewise after '1B'H and after '39'H.
+EVENT_FAULT_VERSION_1 = "generation2version1"
+EVENT_FAULT_VERSION_2 = "generation2version2"
+EVENT_FAULT_VERSION_UNKNOWN = "unknown"
+EVENT_FAULT_VERSIONS = (EVENT_FAULT_VERSION_1, EVENT_FAULT_VERSION_2,
+                        EVENT_FAULT_VERSION_UNKNOWN)
+
+#: Codes the version-2 amendment defines and version 1 still calls RFU:
+#: '0F'H GNSS anomaly, '1C'H motion/activity inconsistency, '3A'H internal
+#: sensor fault. Reading any of them as its version-2 meaning in a version-1
+#: (or unknown-version) section would fabricate an event.
+GEN2_V2_ONLY_TYPES: frozenset[int] = frozenset({0x0F, 0x1C, 0x3A})
+
+#: "Generation 2, version 1" tables (Reg. 2018/502): identical to version 2 for
+#: every shared code, with '0F'H/'1C'H/'3A'H left RFU.
+EVENT_TYPES_V1: dict[int, str] = {
+    code: name for code, name in EVENT_TYPES.items()
+    if code not in GEN2_V2_ONLY_TYPES}
+FAULT_TYPES_V1: dict[int, str] = {
+    code: name for code, name in FAULT_TYPES.items()
+    if code not in GEN2_V2_ONLY_TYPES}
+
+# How a single EventFaultType byte relates to one version's value assignment.
+TYPE_ASSIGNED = "assigned"                  # the version names this code
+TYPE_RESERVED = "reserved"                  # the version says RFU
+TYPE_MANUFACTURER_SPECIFIC = "manufacturer_specific"   # '80'H..'FF'H, all versions
+TYPE_UNKNOWN_VERSION = "unknown_version"     # defined only by v2; section version unknown
+
+
+def _version_tables(version):
+    """The (event, fault) tables of *version*; unknown resolves to the v1 subset.
+
+    The subset is the only set of codes *every* candidate version agrees on, so
+    an unresolved section can still describe a shared code and never gains a
+    version-2-only meaning.
+    """
+    if version == EVENT_FAULT_VERSION_2:
+        return EVENT_TYPES, FAULT_TYPES
+    return EVENT_TYPES_V1, FAULT_TYPES_V1
+
+
+def assigned_types(version=EVENT_FAULT_VERSION_UNKNOWN) -> frozenset[int]:
+    """Every EventFaultType code *version* gives a meaning to.
+
+    ``EventFaultType`` is one byte shared by events and faults, so the answer is
+    the union of both tables (a fault record carrying '0B'H still names the
+    time-conflict event).
+    """
+    event_table, fault_table = _version_tables(version)
+    return frozenset(event_table) | frozenset(fault_table)
+
+
+def event_fault_type_status(code, version=EVENT_FAULT_VERSION_UNKNOWN) -> str:
+    """One of the ``TYPE_*`` constants: how *version* assigns the byte *code*."""
+    if not isinstance(code, int) or not 0x00 <= code <= 0xFF:
+        return TYPE_UNKNOWN_VERSION
+    if code >= 0x80:
+        # '80'H..'FF'H is manufacturer specific in every version.
+        return TYPE_MANUFACTURER_SPECIFIC
+    if code in assigned_types(version):
+        return TYPE_ASSIGNED
+    if (version not in (EVENT_FAULT_VERSION_1, EVENT_FAULT_VERSION_2)
+            and code in GEN2_V2_ONLY_TYPES):
+        # A version-2-only code in a section whose version we could not resolve:
+        # calling it RFU would state more than we know.
+        return TYPE_UNKNOWN_VERSION
+    return TYPE_RESERVED
+
+
+def describe_event_fault_type(code, is_event, version=EVENT_FAULT_VERSION_UNKNOWN) -> str:
+    """Describe an EventFaultType byte against *version*'s value assignment.
+
+    The shared codes keep the exact wording :func:`describe_event` /
+    :func:`describe_fault` give them. Only the three version-2-only codes differ
+    by version: version 1 calls them "Reserved for future use" (what its table
+    says), an unresolved version says "Unknown", and neither claims the
+    "GNSS anomaly" / "inconsistency" / "internal sensor fault" meaning.
+    """
+    if code not in GEN2_V2_ONLY_TYPES or version == EVENT_FAULT_VERSION_2:
+        return describe_event(code) if is_event else describe_fault(code)
+    if version == EVENT_FAULT_VERSION_1:
+        return f"Reserved for future use (0x{code:02X})"
+    return (f"Unknown event (0x{code:02X})" if is_event
+            else f"Unknown fault (0x{code:02X})")
+
 
 # ── Specific condition types (Annex 1B / Annex 1C §2.154) ──────────────────
 #

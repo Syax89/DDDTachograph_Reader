@@ -1,3 +1,93 @@
+## [Unreleased]
+
+### Long manufacturer names are readable in Excel and keep their letters in the PDF
+
+- Excel: a manufacturer name wider than its column now wraps in the cell and the
+  row is sized for the wrapping the cell really does — the lines are the ones
+  word wrapping produces, not a character count, so the tail of a long name is
+  no longer cut off in a narrow column (the 161-character official name of code
+  `0xA1` was the visible case, beside a populated neighbour cell). Only a value
+  whose right-hand neighbours are populated needs this: text with empty cells
+  beside it spills across them and prints in full, so those cells and rows are
+  exactly as before. The cell keeps its exact text — no newline, ellipsis or
+  shortened name — and Excel's own 409.5 pt row-height ceiling still applies.
+- PDF: the extended-Latin characters the public manufacturer registry uses — the
+  Lithuanian `Ė` in the official name of code `0xB1` — are set in a font bundled
+  with the application instead of being drawn as a black square, and the bundled
+  font and licence are the official DejaVu Sans 2.37 release files. Text the
+  report's own font already covers keeps Helvetica and its layout, so other
+  reports do not change. If that font is missing from an installation, the PDF
+  export fails and says why rather than returning a complete-looking report with
+  a boxed identity.
+
+### Gen2 vehicle-unit events and faults are decoded in full, with a verdict
+
+Vehicle-unit downloads (Gen2 and Gen2.2) store events and faults as
+`VuEventRecord` (91 bytes) and `VuFaultRecord` (90 bytes). The reader used to
+decode only the first ten bytes of each record and mark all of them low
+confidence.
+
+- Every field the standard defines is now decoded: event/fault type and record
+  purpose, begin and end time, and the four card-and-generation slots (driver and
+  co-driver, at the beginning and at the end of the event). The
+  `Events`/`Faults` tables gain those columns under the names the generation-1
+  records already use, so the interface needs no new translation.
+- Each record now carries a verdict in the exported data: whether it matches the
+  standard (`normative`), the reference it was checked against (`Annex 1C App.1
+  2.198` for events, `… 2.201` for faults) and, when it does not match, a short
+  reason. A record that does not match is still exported, marked low confidence.
+- The manufacturer-specific part of the record is the only thing the standard
+  leaves open, so only those two fields (manufacturer code and the 3-byte
+  manufacturer error code) are marked low confidence on an otherwise conforming
+  record. The similar-events counter joins them when it is 0, a value the
+  standard says is not used but real units do write, and so does the event or
+  fault type when the code has no assigned meaning (reserved, or a
+  manufacturer-specific one).
+- A time-conflict event records the VU clock in the begin time and the GNSS clock
+  in the end time; those records say so (`end_semantics`) instead of presenting
+  the GNSS time as an end.
+- No decode step switches to a backup route silently any more: a fallback to the
+  heuristic byte scan is logged at warning level and recorded in
+  `metadata.decode_paths`, and nothing recovered that way can look conformant.
+
+### Event and fault type codes are read against the right version of the list
+
+The event/fault type byte has two lists in force and they are not the same: the
+"Generation 2, version 1" list (Reg. (EU) 2018/502 Annex (29)(h)) and the
+"Generation 2, version 2" list (Reg. (EU) 2021/1228 Annex (30)(n)(ii)), which
+added `0x0F` (GNSS anomaly),
+`0x1C` (inconsistency between motion data and stored driver activity data) and
+`0x3A` (internal sensor fault). Which list applies is a property of the *section*
+the record travels in — Annex 1C Appendix 7 assigns the events-and-faults
+transfer type `0x23` to version 1 and `0x33` to version 2 (DDP_011 is the
+request table, DDP_031 the data structures per TREP) — not of the unit or the
+file.
+
+- Each event and fault is now described against the list of its own section, and
+  the exported data records which one was used (`event_fault_version`) and how
+  that list assigns the byte (`type_status`: assigned, reserved, manufacturer
+  specific, or unknown version). A single download may carry both sections, and
+  each is read on its own.
+- In a version-1 section those three bytes are still "Reserved for future use",
+  which is what that list says; they are no longer shown with their version-2
+  meaning, and a record is not marked non-conforming either way.
+- Where the version cannot be known — a record shown on its own, a tag-keyed
+  array with no section around it, a section that is not an events-and-faults
+  one — the type is reported as unknown instead of being guessed as version 2.
+  The file's own generation label is never used to decide this: a version-2 unit
+  can produce a version-1 download.
+- The manufacturer code in the same record is resolved against the manufacturer
+  list the regulation has the laboratory competent for interoperability tests
+  publish (§2.94, Annex 1C requirement 454; all 65 assigned codes, built in, no
+  network access): the `Events`/`Faults` tables gain a **Manufacturer** column
+  with the registered name and the code is no longer labelled as uninterpreted.
+  Unassigned and "no information" values (`0x00`, `0xFF`, …) stay unknown. The
+  three manufacturer error bytes stay exactly as recorded and low confidence:
+  their meaning is the vendor's own, no verified three-byte wire-format mapping
+  was obtained, and `000000` is not read as "no error".
+
+---
+
 ## [2.8.0] - 2026-10-19
 
 This release is about reading a file comfortably. The window can run in 34

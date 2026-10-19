@@ -46,10 +46,10 @@ crittografico è del layer `signature_validator`).
 | 0x12 | VuDetailedSpeedBlock | 64 | ✅ high (sintesi) |
 | 0x13 | VuDownloadablePeriod | 8 | ✅ high |
 | 0x14 | VuDownloadActivityData | 59 | ✅ medium |
-| 0x15 | VuEventRecord | 91 | ✅ medium (prefisso) |
+| 0x15 | VuEventRecord | 91 | ✅ high (G2: Annex 1C App.1 §2.198, verdetto per record) |
 | 0x16 | VuGNSSADRecord | 56/57 | ✅ high (GPS validato) |
 | 0x17 | VuITSConsentRecord | 20 | ✅ high |
-| 0x18 | VuFaultRecord | 90 | ✅ medium (prefisso) |
+| 0x18 | VuFaultRecord | 90 | ✅ high (G2: Annex 1C App.1 §2.201, verdetto per record) |
 | 0x19 | VuIdentification | 126/138 | ✅ medium (fabbricante) |
 | 0x1A | VuOverSpeedingControlData | 9 | ✅ high |
 | 0x1B | VuOverSpeedingEventRecord | 32 | ✅ high |
@@ -85,10 +85,10 @@ crittografico è del layer `signature_validator`).
 | 0x11 | 32 | VuControlActivityRecord | G2/2.2 | spesso noOfRecords=0 |
 | 0x13 | 8 | VuDownloadablePeriod ✓ | G2/2.2 | **size 8 = spec** |
 | 0x14 | 59 | (da identificare) | G2/2.2 | |
-| 0x15 | 91 | VuEventRecord | G2/2.2 | |
+| 0x15 | 91 | VuEventRecord ✓ | G2/2.2 | layout CONFERMATO: `decode_event_fault_record()` |
 | 0x16 | 56/57 | VuActivityDailyRecord / faults | G2/2.2 | size G2=56, G2.2=57 |
 | 0x17 | 20 | SensorExternalGNSSCoupledRecord | G2/2.2 | size 20 = spec |
-| 0x18 | 90 | VuFaultRecord | G2 | |
+| 0x18 | 90 | VuFaultRecord ✓ | G2/2.2 | layout CONFERMATO: `decode_event_fault_record()` |
 | 0x19 | 126/138 | (da identificare) | G2/2.2 | |
 | 0x1A | 9 | VuTimeAdjustmentRecord | G2/2.2 | |
 | 0x1B | 32 | (da identificare) | G2/2.2 | |

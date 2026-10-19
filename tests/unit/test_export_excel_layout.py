@@ -1027,3 +1027,233 @@ def test_short_hard_lines_within_the_row_cap_are_kept_verbatim(tmp_path, monkeyp
     assert "3 of 7" in text and "JSON" in text
     assert height == 15 * _displayed_lines(text, width)
     assert height <= 409.5
+
+
+# ── values wider than their column: wrapped and sized, never cut ───────────
+#
+# A column is capped at 55 characters (``_write_table_sheet``), and a data cell
+# only spills past its own edge when the cell to its right is empty. Two real
+# fields break both assumptions at once: the official manufacturer name of code
+# 0xA1 is 161 characters long, and the "Similar Events" cell beside it holds a
+# count. The workbook then showed the name cut mid-word in a spreadsheet while
+# the cell value, the JSON export and the printed report were all complete — a
+# presentation loss, and the one a reader never notices.
+
+#: The official JRC-registry name of manufacturer code 0xA1 (161 characters).
+LONG_OFFICIAL_NAME = (
+    "AUMOVIO Germany GmbH (formerly Continental Automotive Technologies GmbH - "
+    "Continental Automotive GmbH - Siemens AG - Siemens VDO Automotive - "
+    "Siemens Automotive)")
+
+#: The official JRC-registry name of manufacturer code 0xB1.
+UNICODE_OFFICIAL_NAME = 'U\u017dDAROJI AKCIN\u0116 BENDROV\u0116 "LODVILA"'
+
+
+def _event_with_manufacturer(name):
+    return {"description": "Over speeding", "begin": "2026-06-01T10:30:00+00:00",
+            "manufacturer": name, "similar_events": 3}
+
+
+def _data_column(ws, header):
+    """``(column index, width)`` of the column headed *header* on the first table."""
+    header_row = _header_rows(ws)[0]
+    headers = [cell.value for cell in ws[header_row]]
+    column = headers.index(header) + 1
+    return column, ws.column_dimensions[openpyxl.utils.get_column_letter(column)].width
+
+
+def test_a_value_wider_than_its_column_is_wrapped_and_its_row_grown(tmp_path):
+    data = _data()
+    data["events"] = [_event_with_manufacturer(LONG_OFFICIAL_NAME)]
+    wb = _load(tmp_path, data)
+    ws = wb["Events"]
+
+    column, width = _data_column(ws, "Manufacturer")
+    assert width <= 55, "the column keeps its cap: the row grows, not the sheet"
+    row = _header_rows(ws)[0] + 1
+    cell = ws.cell(row=row, column=column)
+
+    # The fact is the value, and the value is never rewritten to fit: no
+    # inserted newline, no ellipsis, no shortened name.
+    assert cell.value == LONG_OFFICIAL_NAME
+    assert "\n" not in cell.value and "\u2026" not in cell.value
+
+    lines = _displayed_lines(cell.value, width)
+    assert lines > 1, "the name really does not fit the column"
+    assert cell.alignment.wrap_text is True
+    assert cell.alignment.vertical == "top"
+    height = ws.row_dimensions[row].height or 15
+    assert height >= 15 * lines, f"row height {height} cannot show {lines} lines"
+    assert height <= 409.5
+
+    # Nothing was moved out of the way: the neighbour keeps its value.
+    similar_column, _width = _data_column(ws, "Similar Events")
+    assert ws.cell(row=row, column=similar_column).value == "3"
+
+
+def test_a_value_that_fits_keeps_the_unwrapped_short_row(tmp_path):
+    """The control: a name that fits its column is presented exactly as before."""
+    data = _data()
+    data["events"] = [_event_with_manufacturer(UNICODE_OFFICIAL_NAME)]
+    wb = _load(tmp_path, data)
+    ws = wb["Events"]
+
+    column, width = _data_column(ws, "Manufacturer")
+    row = _header_rows(ws)[0] + 1
+    cell = ws.cell(row=row, column=column)
+    assert len(cell.value) <= width
+    assert not cell.alignment.wrap_text
+    assert cell.alignment.vertical == "top"
+    assert ws.row_dimensions[row].height is None, "a short row keeps its default height"
+
+
+def test_a_multiline_value_is_shown_in_full_and_keeps_its_breaks(tmp_path):
+    data = _data()
+    data["events"] = [{"description": "first line\nsecond line\nthird line",
+                       "begin": "2026-06-01T10:30:00+00:00"}]
+    wb = _load(tmp_path, data)
+    ws = wb["Events"]
+
+    column, width = _data_column(ws, "Description")
+    row = _header_rows(ws)[0] + 1
+    cell = ws.cell(row=row, column=column)
+    assert cell.value == "first line\nsecond line\nthird line"
+    assert _displayed_lines(cell.value, width) == 3
+    assert cell.alignment.wrap_text is True
+    assert (ws.row_dimensions[row].height or 15) >= 15 * 3
+
+
+def test_wrapping_a_long_value_leaves_the_rest_of_the_sheet_alone(tmp_path):
+    """Filter, freeze, print setup, stripes and short rows survive the fix."""
+    data = _data()
+    data["events"] = [_event_with_manufacturer(LONG_OFFICIAL_NAME),
+                      _event_with_manufacturer("Actia S.A.")]
+    wb = _load(tmp_path, data)
+    ws = wb["Events"]
+
+    header_row = _header_rows(ws)[0]
+    headers, rows = _table(ws, "Description")
+    assert ws.freeze_panes == f"A{header_row + 1}"
+    assert ws.auto_filter.ref == (
+        f"A{header_row}:"
+        f"{openpyxl.utils.get_column_letter(len(headers))}{header_row + len(rows)}")
+    assert ws.max_column == len(headers)
+    assert ws.print_title_rows in (f"{header_row}:{header_row}",
+                                   f"${header_row}:${header_row}")
+    # Only the long row grew; the short second row keeps its height and stripe.
+    assert ws.row_dimensions[header_row + 1].height
+    assert ws.row_dimensions[header_row + 2].height is None
+    assert ws.cell(row=header_row + 2, column=1).fill.fgColor.rgb.endswith("EFF4FA")
+
+
+# ── the row is sized for the wrapping the cell really does ─────────────────
+#
+# Sizing a row from the character count (``ceil(len / per_line)``) is a lower
+# bound, not the truth: a cell breaks at word boundaries, so a column of short
+# words needs one line per word. The worker here is written in the test on
+# purpose — this is the number the exporter has to meet, not a restatement of
+# its own helper.
+
+
+def _word_wrapped_lines(text, width):
+    """Lines greedy word wrapping puts in a *width*-column cell."""
+    per_line = max(int(width) - 2, 10)
+    total = 0
+    for hard in str(text).replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        lines = [""]
+        for word in hard.split(" "):
+            room = per_line - len(lines[-1]) - (1 if lines[-1] else 0)
+            if len(word) <= room:                    # joins the current line
+                lines[-1] = (lines[-1] + " " if lines[-1] else "") + word
+            elif len(word) <= per_line:              # a line of its own
+                lines.append(word)
+            else:                                    # too wide: the cell breaks it
+                while word:
+                    room = per_line - len(lines[-1]) - (1 if lines[-1] else 0)
+                    if room <= 0:
+                        lines.append("")
+                        continue
+                    lines[-1] = (lines[-1] + " " if lines[-1] else "") + word[:room]
+                    word = word[room:]
+        total += len(lines)
+    return total
+
+
+def test_a_long_name_after_short_rows_gets_a_row_sized_for_word_wrapping(tmp_path):
+    """Column width comes from the first 200 rows; the 201st is still readable.
+
+    With 200 short rows the column is 17 wide, and the official 161-character
+    name needs far more lines than its character count suggests — this is the
+    row that used to be one line short and lost its tail.
+    """
+    data = _data()
+    data["events"] = [_event_with_manufacturer("Actia S.A.") for _ in range(201)]
+    data["events"].append(_event_with_manufacturer(LONG_OFFICIAL_NAME))
+    wb = _load(tmp_path, data)
+    ws = wb["Events"]
+
+    column, width = _data_column(ws, "Manufacturer")
+    assert width == 17, "the width still comes from the first 200 rows only"
+    letter = openpyxl.utils.get_column_letter(column)
+    cell = next(cell for cell in ws[letter] if cell.value == LONG_OFFICIAL_NAME)
+    assert cell.value == LONG_OFFICIAL_NAME, "the value is never rewritten to fit"
+
+    lines = _word_wrapped_lines(cell.value, width)
+    assert lines > _estimated_lines(cell.value, width), (
+        "this is the case where the character count is not the answer")
+    height = ws.row_dimensions[cell.row].height or 15
+    assert height >= 15 * lines, f"row height {height} cannot show {lines} lines"
+
+
+def test_three_words_that_fit_by_count_but_not_by_wrapping_grow_the_row(tmp_path):
+    """86 characters, 3 words of 28: two lines by count, three lines for real."""
+    words = " ".join(["W" * 28] * 3)
+    data = _data()
+    data["events"] = [_event_with_manufacturer(words)]
+    wb = _load(tmp_path, data)
+    ws = wb["Events"]
+
+    column, width = _data_column(ws, "Manufacturer")
+    cell = ws.cell(row=_header_rows(ws)[0] + 1, column=column)
+    assert cell.value == words
+    assert _estimated_lines(words, width) == 2 < _word_wrapped_lines(words, width) == 3
+    assert cell.alignment.wrap_text is True
+    assert (ws.row_dimensions[cell.row].height or 15) >= 45
+
+
+def test_a_value_spilling_into_empty_cells_is_left_unwrapped(tmp_path):
+    """Nothing on the right to clip it: the row is exactly as it was before.
+
+    A too-wide value overflows into the empty cells beside it and prints in
+    full, so wrapping it only added height to rows that never needed any (the
+    Daily Activities "Notes" column, the last one on its sheet).
+    """
+    data = _data()
+    data["events"] = [{"description": "Over speeding",
+                       "begin": "2026-06-01T10:30:00+00:00",
+                       "manufacturer": LONG_OFFICIAL_NAME}]
+    wb = _load(tmp_path, data)
+    ws = wb["Events"]
+    column, width = _data_column(ws, "Manufacturer")
+    row = _header_rows(ws)[0] + 1
+
+    assert len(LONG_OFFICIAL_NAME) > width
+    # No event carries a "Similar Events" count here, so Manufacturer is the
+    # last column of the table: every cell to its right is empty.
+    assert ws.max_column == column
+    cell = ws.cell(row=row, column=column)
+    assert cell.value == LONG_OFFICIAL_NAME
+    assert not cell.alignment.wrap_text
+    assert cell.alignment.vertical == "top"
+    assert ws.row_dimensions[row].height is None, "the row keeps its default height"
+
+    # The same value beside a populated neighbour is clipped there, so it
+    # wraps and the row grows — that is still the fix.
+    data["events"] = [_event_with_manufacturer(LONG_OFFICIAL_NAME)]
+    ws = _load(tmp_path, data, name="neighbour.xlsx")["Events"]
+    column, width = _data_column(ws, "Manufacturer")
+    row = _header_rows(ws)[0] + 1
+    cell = ws.cell(row=row, column=column)
+    assert cell.alignment.wrap_text is True
+    assert (ws.row_dimensions[row].height or 15) >= 15 * _word_wrapped_lines(
+        cell.value, width)
