@@ -1,15 +1,22 @@
 """Export of parsed tachograph data to Excel, CSV and PDF.
 
 All exports share the formatting in :mod:`core.report_format` (readable
-timestamps, humanised column names, nested structures rendered as text), so
-the three formats present the same content consistently.
+timestamps, humanised column names, nested structures rendered as text), so the
+three formats present the same facts and the same text. They present those
+facts differently: the PDF is a paginated summary report, the CSV is one text
+block per section, and the workbook is the working copy — it adds typed cells
+for the columns with a known semantics, moves the monthly activity subtotals to
+their own sheet, and indexes its sheets from the Summary.
 """
 import logging
 import re
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from xml.sax.saxutils import escape
 
-from core.utils.report_format import records_to_table, section_tables, summary_rows
+from core.utils.report_format import (
+    DICT_SECTIONS, VERDICT_CORRUPT, integrity_verdict, records_to_table,
+    section_tables, summary_rows,
+)
 from core.utils.activity_stats import compute_activity_totals
 
 _log = logging.getLogger("export")
@@ -128,105 +135,680 @@ def _spreadsheet_value(value):
     return value
 
 
+# ── Excel presentation ───────────────────────────────────────────────────────
+#
+# The workbook is the format a reader works *with*: it filters, sorts and sums.
+# That only works if a cell carries a value a spreadsheet understands, so a
+# column is typed when — and only when — its semantics are known here, and a
+# value is converted only when it is exactly the canonical shape the shared
+# report formatter prints. Identifiers, codes, sentinels (``N/A``), malformed
+# values and every unknown column stay protected text: a card number with a
+# leading zero, a 16-digit serial or a VIN must never be rounded or re-shaped
+# by a number cell.
+
+#: Worksheet colours — the same restrained navy/blue pair the PDF cover uses.
+_EXCEL_NAVY = "1F4E79"
+_EXCEL_STRIPE = "EFF4FA"
+_EXCEL_SUBTOTAL = "D6E4F0"
+_EXCEL_ALERT = "FFF2CC"
+_EXCEL_BAD = "F8D7DA"
+
+#: ``summary_rows`` labels whose value reports a parse/integrity problem. The
+#: summary tints them so a partial download cannot be mistaken for a clean one.
+_EXCEL_PROBLEM_LABELS = frozenset({
+    "Missing mandatory sections",
+    "Corrupted sections (data discarded)",
+    "Structural walk",
+    "Recovered data (low confidence)",
+    "Parse warnings",
+    "Decoder failures",
+    "Origin",
+})
+
+#: Marker ``core.utils.report_format`` prefixes to an unattributed-time
+#: duration (``"⚠ 08:00"``). Excel moves it to a Notes column so the duration
+#: column stays numeric, and states in words what it means.
+_EXCEL_UNKNOWN_MARK = "\u26a0"
+_EXCEL_UNKNOWN_NOTE = "Unknown time: not attributed to Drive, Work, Rest or Available"
+
+#: The shared activity report marks a monthly subtotal row with this suffix on
+#: its first cell; that exact marker is what splits the two activity sheets.
+_EXCEL_MONTH_TOTAL_SUFFIX = " TOTAL"
+_EXCEL_MONTHLY_SHEET = "Monthly Activities"
+
+#: Excel shows nine hours as ``09:31``, not ``9.53``: the shared ``(h)`` unit
+#: would be a lie in a duration-formatted cell.
+_EXCEL_DURATION_SUFFIX = " (h:mm)"
+_EXCEL_DURATION_FORMAT = "[h]:mm"
+#: A UTC timestamp keeps its zone in the cell: the shared formatter only appends
+#: ``Z`` for a real UTC offset, and Excel itself has no time zones.
+_EXCEL_UTC_FORMAT = 'yyyy-mm-dd hh:mm"Z"'
+
+#: Columns whose values are a time or a date — an explicit allow-list of the
+#: labels the shared formatter derives from real time/date fields, inventoried
+#: over the real corpus *and* over the labels the decoders/parser generate for
+#: columns the corpus does not exercise (``Coupling Date``, ``GNSS Timestamp``).
+#: A suffix rule (``… Begin``/``… End``) also matches identifier columns ("Card
+#: Driver Begin" holds a card number, not a time), so the semantics of a time
+#: column are named here instead: a label that is not listed stays protected
+#: text, which is lossless — a date-shaped identifier keeps its exact
+#: characters. ``_EXCEL_NUMBER_LABELS`` is checked first, so an ``Odometer …``
+#: column called ``Begin``/``End`` stays a number.
+_EXCEL_TIME_LABELS = frozenset({
+    "Begin", "Begin Time", "Calibration Country Timestamp", "Card Expiry",
+    "Control Time", "Coupling Date", "Date", "Download Period Begin",
+    "Download Period End", "Download Time", "Downloading Time", "End",
+    "End Time", "First Overspeed Since", "GNSS Timestamp", "Insertion Time",
+    "Last Control Time", "Lock In Time", "Lock Out Time", "Manufacturing Date",
+    "New Time", "Next Calibration Date", "Old Time", "Pairing Date",
+    "Software Installation Date", "Start", "Timestamp", "Withdrawal Time",
+})
+
+#: Odometer readings and measured metrics, published as numbers so they can be
+#: summed and sorted. Everything else (codes, counters, sizes, serials, hex)
+#: stays text on purpose.
+_EXCEL_NUMBER_LABELS = frozenset({
+    "Odometer km", "Odometer KM", "Odometer", "New Odometer", "Old Odometer",
+    "Odometer Begin", "Odometer End",
+    "Odometer Insertion KM", "Odometer Withdrawal KM",
+    "Odometer Value", "Odometer Midnight",
+    "Distance", "Max Speed KMH", "Average Speed KMH", "Speed Limit",
+})
+
+#: Canonical value shapes (see the note above).
+_EXCEL_UTC_STAMP_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})Z$")
+_EXCEL_DAY_DATE_RE = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
+_EXCEL_ISO_DATE_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
+#: A date-only cell displays the shape of the text it came from, so the
+#: workbook does not silently reshape ``04/03/2026`` into ``2026-03-04``.
+_EXCEL_DAY_DATE_FORMAT = "dd/mm/yyyy"
+_EXCEL_ISO_DATE_FORMAT = "yyyy-mm-dd"
+_EXCEL_INT_RE = re.compile(r"^-?(?:\d{1,3}(?: \d{3})+|\d+)$")
+_EXCEL_DECIMAL_RE = re.compile(r"^-?\d+\.\d{1,6}$")
+_EXCEL_DURATION_RE = re.compile(r"^(\d+):([0-5]\d)$")
+
+#: An auto-filter button sits on the right of its header cell and eats about
+#: three characters of it, so every filtered column gets that much extra.
+_EXCEL_FILTER_PADDING = 3
+
+#: A sheet's note row (the section description and, on a capped section, the
+#: row-limit disclosure) must be readable in *any* table width, so the merged
+#: note span is guaranteed to hold at least this many characters (the table's
+#: last column is widened when a narrow table cannot reach it).
+_EXCEL_NOTE_MIN_WIDTH = 60
+#: Excel refuses a row height above 409.5pt: a longer note cannot be shown in
+#: full, so it is elided (visibly) from the front and keeps its disclosure.
+_EXCEL_MAX_ROW_HEIGHT = 409.5
+_EXCEL_NOTE_LINE_HEIGHT = 15
+#: Width of the Summary's value / Contents column, in characters. The wrapped
+#: rows are sized from this same number, so text and height cannot drift apart.
+_EXCEL_SUMMARY_VALUE_WIDTH = 78
+
+#: Sections exposed as key/value sheets are never row-capped (they are a few
+#: dozen facts, not a record list) — see ``report_format.DICT_SECTIONS``.
+_EXCEL_UNCAPPED_LABELS = frozenset(label for _key, label in DICT_SECTIONS)
+
+_EXCEL_SCOPE_NOTE = (
+    "Excel workbook — every sheet is one table from the parsed report. Tables are "
+    "previews: nested values are shown as compact text, not as the full decoded "
+    "structure, and the JSON export carries the complete parsed results."
+)
+_EXCEL_MONTHLY_DESCRIPTION = (
+    "Monthly subtotals from the Daily Activities report — same slot-aware "
+    "arithmetic, one highlighted row per month. These subtotal rows count against "
+    "the same row limit as the day rows, so a month whose subtotal fell past the "
+    "limit has no row here; nothing is totalled that the preview did not retain."
+)
+
+
+def _excel_count(value):
+    """A row count as the reports print numbers: ``12 345``."""
+    return f"{value:,}".replace(",", " ")
+
+
+def _excel_per_line(width):
+    """Characters a *width*-column merged span shows per line (conservative)."""
+    return max(int(width) - 2, 10)
+
+
+def _excel_wrapped_lines(text, width):
+    """Lines *text* needs in a *width*-column span, so nothing is clipped.
+
+    A hard linebreak is a displayed line of its own — ``os.path.basename`` can
+    hand the Summary a file name that contains one — and ``\\r\\n``/``\\r``
+    break too; each hard line then wraps on its own.
+    """
+    per_line = _excel_per_line(width)
+    return sum(
+        max(-(-len(line) // per_line), 1)
+        for line in str(text).replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    )
+
+
+def _excel_note_height(text, width):
+    """Row height (points) that shows all of *text* at *width*, up to Excel's cap."""
+    return min(_EXCEL_NOTE_LINE_HEIGHT * _excel_wrapped_lines(text, width),
+               _EXCEL_MAX_ROW_HEIGHT)
+
+
+def _excel_note_text(text, width):
+    """*text* trimmed to what a 409.5pt row can show, keeping its disclosure.
+
+    Excel cannot grow a row past 409.5pt. A note longer than that many lines is
+    elided from the *front* — the row-limit disclosure the exporter appends last
+    is the part that must survive — and the elision is marked, so the cut is
+    visible rather than silent.
+
+    The cut point is measured on the kept text itself: the longest suffix that
+    really fits is kept. Subtracting an estimated line width instead would
+    over-delete a note built from short hard lines — each break costs a whole
+    line whether it holds 3 characters or 300 — taking the disclosure with it.
+    """
+    text = str(text)
+    capacity = int(_EXCEL_MAX_ROW_HEIGHT) // _EXCEL_NOTE_LINE_HEIGHT
+    if _excel_wrapped_lines(text, width) <= capacity:
+        return text
+    low, high = 0, len(text)      # low never fits; an empty tail always does
+    while high - low > 1:
+        middle = (low + high) // 2
+        if _excel_wrapped_lines("\u2026 " + text[middle:].lstrip(), width) <= capacity:
+            high = middle
+        else:
+            low = middle
+    return "\u2026 " + text[high:].lstrip()
+
+
+def _excel_verdict(data):
+    """The shared integrity verdict, or ``None`` when it cannot be read.
+
+    Tinting a summary row is decoration. A result container the shared
+    classifier cannot walk (a malformed ``metadata``/``ef_signature_verification``
+    shape) must still export — every fact is written either way — and must not
+    be tinted as if it had been classified: no tint is never a trust claim.
+    ``core.utils.report_format.integrity_verdict`` is shared with the other
+    exports and is not changed for this.
+    """
+    try:
+        return integrity_verdict(data)
+    except (AttributeError, TypeError, ValueError):
+        _log.debug("No summary integrity tint: unreadable result container",
+                   exc_info=True)
+        return None
+
+
+def _excel_row_limit_note(exported, available):
+    """The in-workbook disclosure of the row limit (never only in the log)."""
+    return (
+        f"Row limit: {_excel_count(exported)} of {_excel_count(available)} rows "
+        f"exported — this preview stops at the {_excel_count(_EXCEL_MAX_ROWS)}-row "
+        "report limit. The JSON export (or the original DDD file) holds the "
+        "complete data."
+    )
+
+
+def _excel_contents(description, sheet_name, *, key_value):
+    """A one-line index entry for a sheet, never blank.
+
+    The shared section descriptions are the source; a section that has none
+    (card certificates, the card-application tables) gets a fallback derived
+    from what the sheet *is* — its kind and its name — not invented content.
+    The text is never truncated: the Summary wraps it and sizes the row, so a
+    long entry is fully visible instead of being cut at the column edge.
+    """
+    text = str(description or "").strip().split(". ")[0].rstrip(".")
+    if text:
+        return text
+    if key_value:
+        return f"Key/value table — {sheet_name}: field and value pairs, one per row."
+    return f"Records table — {sheet_name}: one row per exported record."
+
+
+def _excel_sheet_link(sheet_name):
+    """Internal hyperlink location for *sheet_name* (quoted, ``'`` doubled)."""
+    return "'" + str(sheet_name).replace("'", "''") + "'!A1"
+
+
+def _excel_sheet_name(label, used):
+    """A unique worksheet name Excel accepts, honouring *used* (mutable).
+
+    Excel caps a sheet name at 31 characters and forbids ``[ ] * ? : / \\``; a
+    name may not start or end with an apostrophe either. The existing
+    ``_2``/``_3`` disambiguation is kept, so two sections whose labels only
+    differ in a forbidden character still get their own sheet.
+    """
+    base = _SHEET_NAME_RE.sub("_", str(label)).strip().strip("'").strip()
+    name = base[:31] or "Sheet"
+    if name not in used:
+        used.add(name)
+        return name
+    stem = name[:28].rstrip("_") or "Sheet"
+    suffix = 2
+    while f"{stem}_{suffix}"[:31] in used:
+        suffix += 1
+    name = f"{stem}_{suffix}"[:31]
+    used.add(name)
+    return name
+
+
+def _excel_column_kinds(headers):
+    """Per-column value semantics of one table (``see the constants above``)."""
+    kinds = []
+    for header in headers:
+        label = str(header)
+        if label.endswith(_EXCEL_DURATION_SUFFIX):
+            kinds.append("duration")
+        elif label in _EXCEL_NUMBER_LABELS:
+            kinds.append("number")
+        elif label in _EXCEL_TIME_LABELS:
+            kinds.append("time")
+        else:
+            kinds.append("text")
+    return kinds
+
+
+def _excel_typed_value(kind, value):
+    """``(cell value, number format)`` for one cell of a typed column.
+
+    A value that is not exactly the canonical shape stays protected text, so a
+    sentinel, a placeholder, a malformed value or an unknown column never turns
+    into an invented number or date.
+    """
+    if kind == "text" or not isinstance(value, str):
+        return _spreadsheet_value(value), None
+    text = value.strip()
+    if kind == "duration":
+        match = _EXCEL_DURATION_RE.fullmatch(text)
+        if match:
+            minutes = int(match.group(1)) * 60 + int(match.group(2))
+            return timedelta(minutes=minutes), _EXCEL_DURATION_FORMAT
+        return _spreadsheet_value(value), None
+    if kind == "number":
+        if _EXCEL_INT_RE.fullmatch(text):
+            return int(text.replace(" ", "")), None
+        if _EXCEL_DECIMAL_RE.fullmatch(text):
+            return float(text), None
+        return _spreadsheet_value(value), None
+    stamp = _EXCEL_UTC_STAMP_RE.fullmatch(text)
+    if stamp:
+        try:
+            # Excel cannot store a time zone, so the zone lives in the format
+            # (``…"Z"``) and the displayed text stays what the report printed.
+            return datetime(*(int(part) for part in stamp.groups())), _EXCEL_UTC_FORMAT
+        except ValueError:
+            return _spreadsheet_value(value), None
+    for pattern, order, number_format in (
+            (_EXCEL_DAY_DATE_RE, (3, 2, 1), _EXCEL_DAY_DATE_FORMAT),
+            (_EXCEL_ISO_DATE_RE, (1, 2, 3), _EXCEL_ISO_DATE_FORMAT)):
+        match = pattern.fullmatch(text)
+        if match:
+            parts = [int(part) for part in match.groups()]
+            try:
+                return date(*(parts[position - 1] for position in order)), number_format
+            except ValueError:
+                return _spreadsheet_value(value), None
+    return _spreadsheet_value(value), None
+
+
+def _excel_split_activity_rows(rows):
+    """Split the shared activity report rows into day rows and subtotals.
+
+    ``build_monthly_activity_report`` interleaves each day with the subtotal of
+    its month, the subtotal marked by an exact ``"MM/YYYY TOTAL"`` first cell.
+    Daily Activities keeps the day rows, Monthly Activities the subtotals — the
+    rows themselves are never recomputed here.
+
+    The unattributed-time marker the shared report prefixes to an Unknown
+    duration moves out of that cell into a per-row note, so the duration column
+    stays numeric and the warning still travels with the row.
+
+    Returns ``(day_rows, month_rows, has_notes)``.
+    """
+    days, notes, months = [], [], []
+    has_notes = False
+    for row in rows:
+        cells = list(row)
+        first = cells[0] if cells else None
+        if isinstance(first, str) and first.endswith(_EXCEL_MONTH_TOTAL_SUFFIX):
+            months.append(cells)
+            continue
+        note = ""
+        for index, cell in enumerate(cells):
+            if isinstance(cell, str) and cell.startswith(_EXCEL_UNKNOWN_MARK):
+                duration = cell[len(_EXCEL_UNKNOWN_MARK):].strip()
+                if _EXCEL_DURATION_RE.fullmatch(duration):
+                    cells[index] = duration
+                    note = _EXCEL_UNKNOWN_NOTE
+                    has_notes = True
+        days.append(cells)
+        notes.append(note)
+    if has_notes:
+        days = [cells + [note] for cells, note in zip(days, notes, strict=True)]
+    return days, months, has_notes
+
+
 class ExportManager:
 
     # ── Excel ────────────────────────────────────────────────────────────
 
     @staticmethod
     def export_to_excel(data, filepath):
-        """Multi-sheet .xlsx: Summary, signature details (VU), one sheet per
-        data section. Styled headers, row stripes, auto-filter, frozen panes;
-        sections are truncated at _EXCEL_MAX_ROWS."""
+        """Multi-sheet .xlsx: a navigable Summary, the VU signature material and
+        one sheet per data section.
+
+        Every table is rectangular and built for reading and filtering: wrapped
+        navy header band, frozen header row, auto-filter, hidden gridlines,
+        landscape fit-to-width printing with the header repeated on each page,
+        and column widths that leave room for the filter button. A cell is typed
+        only where the column's semantics are known (day dates, UTC timestamps,
+        odometers and measured speeds, activity durations) — identifiers, codes,
+        ``N/A`` sentinels and malformed values stay protected text.
+
+        Daily Activities keeps the day rows only; the shared report's monthly
+        subtotal rows move to their own Monthly Activities sheet, highlighted as
+        the subtotals they are. The 50 000-row report limit is unchanged and is
+        still applied to the shared rows — subtotal rows included — *before*
+        that split, so the monthly sheet can only show subtotals the preview
+        retained. A capped section says so on its own sheet and in the Summary,
+        with the exported/available row counts and the JSON alternative.
+        """
         from openpyxl import Workbook
         from openpyxl.styles import Alignment, Font, PatternFill
         from openpyxl.utils import get_column_letter
+        from openpyxl.worksheet.hyperlink import Hyperlink
 
+        TITLE_FONT = Font(bold=True, size=14, color=_EXCEL_NAVY)
+        SUBTITLE_FONT = Font(italic=True, size=9, color="595959")
+        SECTION_FONT = Font(bold=True, size=11, color=_EXCEL_NAVY)
         HEADER_FONT = Font(bold=True, color="FFFFFF")
-        HEADER_FILL = PatternFill("solid", fgColor="1F4E79")
-        TITLE_FONT = Font(bold=True, size=14, color="1F4E79")
-        STRIPE_FILL = PatternFill("solid", fgColor="EFF4FA")
+        HEADER_FILL = PatternFill("solid", fgColor=_EXCEL_NAVY)
+        STRIPE_FILL = PatternFill("solid", fgColor=_EXCEL_STRIPE)
+        SUBTOTAL_FILL = PatternFill("solid", fgColor=_EXCEL_SUBTOTAL)
+        ALERT_FILL = PatternFill("solid", fgColor=_EXCEL_ALERT)
+        BAD_FILL = PatternFill("solid", fgColor=_EXCEL_BAD)
+        SUBTOTAL_FONT = Font(bold=True)
+        LINK_FONT = Font(color="0563C1", underline="single")
+        TOP = Alignment(vertical="top")
+        TOP_RIGHT = Alignment(vertical="top", horizontal="right")
 
         wb = Workbook()
+        #: ``(sheet name, exported data rows, one-line contents)`` per sheet.
+        index = []
+        #: ``(section label, exported rows, available rows)`` for capped sections.
+        limited = []
+        #: Sections with no displayable column: stated in the Summary, not only
+        #: in the log, so a missing sheet is never silent.
+        skipped = []
 
-        def _autosize(ws, headers, rows):
+        def _print_setup(ws, *, title_row=None, orientation="landscape"):
+            """Print-ready table: hidden gridlines, landscape, fit to one page
+            wide, and the header row repeated on every printed page."""
+            ws.sheet_view.showGridLines = False
+            if title_row:
+                ws.print_title_rows = f"{title_row}:{title_row}"
+            ws.page_setup.orientation = orientation
+            ws.page_setup.fitToWidth = 1
+            ws.page_setup.fitToHeight = 0
+            ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+        def _write_table_sheet(ws, headers, rows, description="", *, subtotal_rows=()):
+            """One rectangular table sheet: description, header, rows."""
+            kinds = _excel_column_kinds(headers)
+            widths = []
             for idx, header in enumerate(headers, start=1):
                 width = len(str(header))
                 for row in rows[:200]:
-                    if idx <= len(row):
+                    if idx <= len(row) and row[idx - 1] is not None:
                         width = max(width, len(str(row[idx - 1])))
-                ws.column_dimensions[get_column_letter(idx)].width = min(max(width + 2, 9), 55)
+                widths.append(min(max(width + _EXCEL_FILTER_PADDING + 2, 9), 55))
+                ws.column_dimensions[get_column_letter(idx)].width = widths[-1]
 
-        def _write_table(ws, headers, rows, start_row=1):
-            for c, header in enumerate(headers, start=1):
-                cell = ws.cell(row=start_row, column=c, value=_spreadsheet_value(header))
+            header_row = 1
+            if description:
+                # The note must be readable at *any* table width — a one-column
+                # table is the narrow case. The table's last column is widened
+                # until the merged note span holds _EXCEL_NOTE_MIN_WIDTH
+                # characters (the table itself stays rectangular: no phantom
+                # columns, no data column but the last one touched), and the
+                # row is sized from that real width with no line cap, so
+                # "Row limit: N of M rows exported … JSON … complete data."
+                # cannot be cut off inside the cell.
+                deficit = _EXCEL_NOTE_MIN_WIDTH - sum(widths)
+                if deficit > 0:
+                    widths[-1] += deficit
+                    ws.column_dimensions[get_column_letter(len(widths))].width = widths[-1]
+                note_width = sum(widths)
+                note = _excel_note_text(description, note_width)
+                ws.merge_cells(start_row=1, start_column=1, end_row=1,
+                               end_column=len(headers))
+                cell = ws.cell(row=1, column=1, value=_spreadsheet_value(note))
+                cell.font = SUBTITLE_FONT
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
+                ws.row_dimensions[1].height = _excel_note_height(note, note_width)
+                header_row = 2
+
+            for col, header in enumerate(headers, start=1):
+                cell = ws.cell(row=header_row, column=col,
+                               value=_spreadsheet_value(str(header)))
                 cell.font = HEADER_FONT
                 cell.fill = HEADER_FILL
-                cell.alignment = Alignment(vertical="center")
-            for r, row in enumerate(rows, start=start_row + 1):
-                for c, value in enumerate(row, start=1):
-                    cell = ws.cell(row=r, column=c, value=_spreadsheet_value(value))
-                    if (r - start_row) % 2 == 0:
+                cell.alignment = Alignment(vertical="center", wrap_text=True)
+            header_lines = 1
+            for idx, header in enumerate(headers):
+                per_line = max(int(widths[idx]) - 1, 1)
+                header_lines = max(header_lines, -(-len(str(header)) // per_line))
+            ws.row_dimensions[header_row].height = 15 * min(header_lines, 3)
+
+            for offset, row in enumerate(rows):
+                excel_row = header_row + 1 + offset
+                is_subtotal = offset in subtotal_rows
+                for col in range(1, len(headers) + 1):
+                    raw = row[col - 1] if col <= len(row) else None
+                    value, number_format = _excel_typed_value(kinds[col - 1], raw)
+                    cell = ws.cell(row=excel_row, column=col, value=value)
+                    if number_format:
+                        cell.number_format = number_format
+                    typed = isinstance(value, (int, float, date, datetime, timedelta))
+                    cell.alignment = TOP_RIGHT if typed else TOP
+                    if is_subtotal:
+                        cell.font = SUBTOTAL_FONT
+                        cell.fill = SUBTOTAL_FILL
+                    elif offset % 2 == 1:
                         cell.fill = STRIPE_FILL
-            ws.freeze_panes = ws.cell(row=start_row + 1, column=1)
+
+            ws.freeze_panes = f"A{header_row + 1}"
             if rows:
                 last_col = get_column_letter(len(headers))
-                ws.auto_filter.ref = f"A{start_row}:{last_col}{start_row + len(rows)}"
-            _autosize(ws, headers, rows)
+                ws.auto_filter.ref = f"A{header_row}:{last_col}{header_row + len(rows)}"
+            _print_setup(ws, title_row=header_row)
 
-        # Summary sheet
-        ws = wb.active
-        ws.title = "Summary"
-        ws.cell(row=1, column=1, value="DDD Tachograph Report").font = TITLE_FONT
-        row = 3
+        def _add_sheet(label, description, headers, rows, *, subtotal_rows=(),
+                       key_value=False):
+            name = _excel_sheet_name(label, used_names)
+            sheet = wb.create_sheet(name)
+            _write_table_sheet(sheet, headers, rows, description,
+                               subtotal_rows=subtotal_rows)
+            index.append((name, len(rows),
+                          _excel_contents(description, name, key_value=key_value)))
+
+        # ── Summary (the facts and the scope note; the warnings and the sheet
+        # index are appended once every sheet exists) ────────────────────
+        summary = wb.active
+        summary.title = "Summary"
+        _print_setup(summary, orientation="portrait")
+        summary.column_dimensions["A"].width = 30
+        summary.column_dimensions["B"].width = _EXCEL_SUMMARY_VALUE_WIDTH
+        summary.column_dimensions["C"].width = 9
+        summary.cell(row=1, column=1, value="DDD Tachograph Report").font = TITLE_FONT
+        note = summary.cell(row=2, column=1, value=_spreadsheet_value(_EXCEL_SCOPE_NOTE))
+        note.font = SUBTITLE_FONT
+        note.alignment = Alignment(wrap_text=True, vertical="top")
+        summary.merge_cells(start_row=2, start_column=1, end_row=2, end_column=3)
+        summary.row_dimensions[2].height = _excel_note_height(
+            _EXCEL_SCOPE_NOTE, 30 + _EXCEL_SUMMARY_VALUE_WIDTH + 9)
+
+        verdict = _excel_verdict(data)
+        row = 4
+        summary.cell(row=row, column=1, value="File Summary").font = SECTION_FONT
+        row += 1
         for field, value in summary_rows(data):
-            if field or value:
-                ws.cell(row=row, column=1, value=_spreadsheet_value(field)).font = Font(bold=True)
-                ws.cell(row=row, column=2, value=_spreadsheet_value(value))
+            if not (field or value):
+                row += 1
+                continue
+            label_cell = summary.cell(row=row, column=1, value=_spreadsheet_value(field))
+            label_cell.font = Font(bold=True)
+            label_cell.alignment = TOP
+            value_cell = summary.cell(row=row, column=2, value=_spreadsheet_value(value))
+            value_cell.alignment = Alignment(vertical="top", wrap_text=True)
+            if field in _EXCEL_PROBLEM_LABELS:
+                label_cell.fill = ALERT_FILL
+                value_cell.fill = ALERT_FILL
+            elif field == "Integrity" and verdict == VERDICT_CORRUPT:
+                value_cell.fill = BAD_FILL
+            summary.row_dimensions[row].height = _excel_note_height(
+                "" if value is None else value, _EXCEL_SUMMARY_VALUE_WIDTH)
             row += 1
-        ws.column_dimensions["A"].width = 26
-        ws.column_dimensions["B"].width = 70
 
-        # Signature details (VU)
+        # ── TREP signature material and VU certificates (kept, uncapped) ──
         used_names = {"Summary"}
-        sv = data.get("signature_verification") or {}
-        treps = sv.get("treps") or []
+        sv = data.get("signature_verification")
+        treps = (sv.get("treps") or []) if isinstance(sv, dict) else []
         if treps:
             headers, rows = records_to_table(treps)
-            trep_sheet = "TREP Signatures"[:31]
-            wsx = wb.create_sheet(trep_sheet)
-            used_names.add(trep_sheet)
-            _write_table(wsx, headers, rows)
+            if headers:
+                _add_sheet("TREP Signatures",
+                           "Signature verification of each TREP block (VU files).",
+                           headers, rows)
+            else:
+                _log.warning("Skipping 'TREP Signatures': no visible export columns")
+                skipped.append("TREP Signatures")
         certs = data.get("vu_certificates") or []
         if certs:
             headers, rows = records_to_table(certs)
-            cert_sheet = "VU Certificates"[:31]
-            wsx = wb.create_sheet(cert_sheet)
-            used_names.add(cert_sheet)
-            _write_table(wsx, headers, rows)
+            if headers:
+                _add_sheet("VU Certificates",
+                           "Certificates found in the file (VU files).",
+                           headers, rows)
+            else:
+                _log.warning("Skipping 'VU Certificates': no visible export columns")
+                skipped.append("VU Certificates")
 
-        # Data sections
-        for label, desc, headers, rows, truncated in section_tables(data, max_rows=_EXCEL_MAX_ROWS):
+        # ── Data sections ────────────────────────────────────────────────
+        for label, desc, headers, rows, _truncated in section_tables(data):
             if not headers:
                 _log.warning("Skipping '%s': no visible export columns", label)
+                skipped.append(label)
                 continue
-            if truncated:
-                _log.warning("Truncating '%s' to %d rows (Excel limit)", label, _EXCEL_MAX_ROWS)
-            safe_label = _SHEET_NAME_RE.sub("_", label)[:31].strip()
-            if safe_label in used_names:
-                idx = 2
-                base = safe_label[:28].rstrip("_")
-                while f"{base}_{idx}" in used_names:
-                    idx += 1
-                safe_label = f"{base}_{idx}"[:31]
-            used_names.add(safe_label)
-            wsx = wb.create_sheet(safe_label)
-            if desc:
-                wsx.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
-                cell = wsx.cell(row=1, column=1, value=_spreadsheet_value(desc))
-                cell.font = Font(italic=True, color="666666", size=9)
-                _write_table(wsx, headers, rows, start_row=2)
+            if label in _EXCEL_UNCAPPED_LABELS:
+                retained = rows
             else:
-                _write_table(wsx, headers, rows)
+                retained = rows[:_EXCEL_MAX_ROWS]
+            if len(retained) < len(rows):
+                limited.append((label, len(retained), len(rows)))
+                _log.warning("Truncating '%s' to %d rows (Excel limit)",
+                             label, _EXCEL_MAX_ROWS)
+                desc = f"{desc} {_excel_row_limit_note(len(retained), len(rows))}".strip()
+
+            if label == "Daily Activities":
+                day_rows, month_rows, has_notes = _excel_split_activity_rows(retained)
+                duration_headers = [
+                    header.replace(" (h)", _EXCEL_DURATION_SUFFIX)
+                    if str(header).endswith(" (h)") else header
+                    for header in headers
+                ]
+                daily_note = ("Monthly subtotal rows are listed on the separate "
+                              "Monthly Activities sheet.")
+                if has_notes:
+                    daily_note = (f"{daily_note} The Notes column carries the status "
+                                  "text that is kept out of the numeric durations.")
+                _add_sheet(label, f"{desc} {daily_note}".strip(), duration_headers + (
+                    ["Notes"] if has_notes else []), day_rows)
+                if month_rows:
+                    monthly_desc = _EXCEL_MONTHLY_DESCRIPTION
+                    if len(retained) < len(rows):
+                        monthly_desc = (f"{monthly_desc} "
+                                        f"{_excel_row_limit_note(len(retained), len(rows))}")
+                    _add_sheet(_EXCEL_MONTHLY_SHEET, monthly_desc,
+                               ["Month"] + duration_headers[1:], month_rows,
+                               subtotal_rows=range(len(month_rows)))
+                continue
+
+            _add_sheet(label, desc, headers, retained,
+                       key_value=label in _EXCEL_UNCAPPED_LABELS)
+
+        # ── Summary: warnings, limits and the sheet index ────────────────
+        row += 1
+        summary.cell(row=row, column=1, value="Warnings and limits").font = SECTION_FONT
+        row += 1
+        limit_rows = [
+            (f"Row limit — {label}",
+             f"{_excel_count(exported)} of {_excel_count(available)} rows exported. "
+             "The JSON export (or the original DDD file) holds the complete data.")
+            for label, exported, available in limited
+        ] or [("Row limit",
+               f"No section reached the {_excel_count(_EXCEL_MAX_ROWS)}-row report "
+               "limit: every table is complete.")]
+        limit_rows.append((
+            "Nested values",
+            "Shown as compact report text rather than the full decoded structure — "
+            "the JSON export carries that."))
+        limit_rows.append((
+            "Uncapped sheets",
+            "Key/value sheets (card application, VU information, sensor "
+            "identification, …), the TREP signature list and the VU certificate "
+            "list are not row-capped."))
+        for label in skipped:
+            limit_rows.append((
+                f"No visible columns — {label}",
+                "Every value this section carries is internal bookkeeping, so no "
+                "sheet was written for it. The JSON export keeps the raw values."))
+        if any(name == _EXCEL_MONTHLY_SHEET for name, _count, _contents in index):
+            limit_rows.append((
+                "Monthly Activities",
+                "Holds only the monthly subtotal rows the row limit retained; a "
+                "month cut before its subtotal has no total row, and Daily "
+                "Activities holds the day rows only."))
+        for label, value in limit_rows:
+            label_cell = summary.cell(row=row, column=1, value=_spreadsheet_value(label))
+            label_cell.font = Font(bold=True)
+            label_cell.alignment = TOP
+            value_cell = summary.cell(row=row, column=2, value=_spreadsheet_value(value))
+            value_cell.alignment = Alignment(vertical="top", wrap_text=True)
+            summary.row_dimensions[row].height = _excel_note_height(
+                value, _EXCEL_SUMMARY_VALUE_WIDTH)
+            row += 1
+
+        row += 1
+        summary.cell(row=row, column=1,
+                     value="Sheets in this workbook").font = SECTION_FONT
+        row += 1
+        for col, title in ((1, "Sheet"), (2, "Contents"), (3, "Rows")):
+            cell = summary.cell(row=row, column=col, value=title)
+            cell.font = HEADER_FONT
+            cell.fill = HEADER_FILL
+            cell.alignment = Alignment(vertical="center",
+                                       horizontal="right" if col == 3 else "left")
+        row += 1
+        for name, count, contents in index:
+            link_cell = summary.cell(row=row, column=1, value=_spreadsheet_value(name))
+            # An internal jump to this workbook's own sheet — never an external
+            # target and never a HYPERLINK() formula. The location is quoted and
+            # its apostrophes doubled exactly as Excel's own reference syntax
+            # requires, so a sheet called "Driver's Card" still resolves.
+            link_cell.hyperlink = Hyperlink(ref=link_cell.coordinate,
+                                            location=_excel_sheet_link(name),
+                                            display=name)
+            link_cell.font = LINK_FONT
+            link_cell.alignment = TOP
+            contents_cell = summary.cell(row=row, column=2,
+                                         value=_spreadsheet_value(contents))
+            # Wrapped and sized to the real column width: an index entry is
+            # always fully visible, never cut at the column edge.
+            contents_cell.alignment = Alignment(vertical="top", wrap_text=True)
+            summary.row_dimensions[row].height = _excel_note_height(
+                contents, _EXCEL_SUMMARY_VALUE_WIDTH)
+            count_cell = summary.cell(row=row, column=3, value=count)
+            count_cell.alignment = TOP_RIGHT
+            row += 1
 
         wb.save(filepath)
 
