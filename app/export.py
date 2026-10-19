@@ -186,18 +186,21 @@ _EXCEL_UTC_FORMAT = 'yyyy-mm-dd hh:mm"Z"'
 
 #: Columns whose values are a time or a date — an explicit allow-list of the
 #: labels the shared formatter derives from real time/date fields, inventoried
-#: over the frozen real corpus. A suffix rule (``… Begin``/``… End``) also
-#: matches identifier columns ("Card Driver Begin" holds a card number, not a
-#: time), so the semantics of a time column are named here instead: a label
-#: that is not listed stays protected text, which is lossless — a date-shaped
-#: identifier keeps its exact characters.
+#: over the real corpus *and* over the labels the decoders/parser generate for
+#: columns the corpus does not exercise (``Coupling Date``, ``GNSS Timestamp``).
+#: A suffix rule (``… Begin``/``… End``) also matches identifier columns ("Card
+#: Driver Begin" holds a card number, not a time), so the semantics of a time
+#: column are named here instead: a label that is not listed stays protected
+#: text, which is lossless — a date-shaped identifier keeps its exact
+#: characters. ``_EXCEL_NUMBER_LABELS`` is checked first, so an ``Odometer …``
+#: column called ``Begin``/``End`` stays a number.
 _EXCEL_TIME_LABELS = frozenset({
     "Begin", "Begin Time", "Calibration Country Timestamp", "Card Expiry",
-    "Control Time", "Date", "Download Period Begin", "Download Period End",
-    "Download Time", "Downloading Time", "End", "End Time",
-    "First Overspeed Since", "Insertion Time", "Last Control Time",
-    "Lock In Time", "Lock Out Time", "Manufacturing Date", "New Time",
-    "Next Calibration Date", "Old Time", "Pairing Date",
+    "Control Time", "Coupling Date", "Date", "Download Period Begin",
+    "Download Period End", "Download Time", "Downloading Time", "End",
+    "End Time", "First Overspeed Since", "GNSS Timestamp", "Insertion Time",
+    "Last Control Time", "Lock In Time", "Lock Out Time", "Manufacturing Date",
+    "New Time", "Next Calibration Date", "Old Time", "Pairing Date",
     "Software Installation Date", "Start", "Timestamp", "Withdrawal Time",
 })
 
@@ -269,8 +272,17 @@ def _excel_per_line(width):
 
 
 def _excel_wrapped_lines(text, width):
-    """Lines *text* needs in a *width*-column span, so nothing is clipped."""
-    return max(-(-len(str(text)) // _excel_per_line(width)), 1)
+    """Lines *text* needs in a *width*-column span, so nothing is clipped.
+
+    A hard linebreak is a displayed line of its own — ``os.path.basename`` can
+    hand the Summary a file name that contains one — and ``\\r\\n``/``\\r``
+    break too; each hard line then wraps on its own.
+    """
+    per_line = _excel_per_line(width)
+    return sum(
+        max(-(-len(line) // per_line), 1)
+        for line in str(text).replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    )
 
 
 def _excel_note_height(text, width):
@@ -282,15 +294,28 @@ def _excel_note_height(text, width):
 def _excel_note_text(text, width):
     """*text* trimmed to what a 409.5pt row can show, keeping its disclosure.
 
-    Excel cannot grow a row past 409.5pt. A note longer than that many wrapped
-    lines is elided from the *front* — the row-limit disclosure the exporter
-    appends last is the part that must survive — and the elision is marked, so
-    the cut is visible rather than silent.
+    Excel cannot grow a row past 409.5pt. A note longer than that many lines is
+    elided from the *front* — the row-limit disclosure the exporter appends last
+    is the part that must survive — and the elision is marked, so the cut is
+    visible rather than silent.
+
+    The cut point is measured on the kept text itself: the longest suffix that
+    really fits is kept. Subtracting an estimated line width instead would
+    over-delete a note built from short hard lines — each break costs a whole
+    line whether it holds 3 characters or 300 — taking the disclosure with it.
     """
-    if _excel_wrapped_lines(text, width) * _EXCEL_NOTE_LINE_HEIGHT <= _EXCEL_MAX_ROW_HEIGHT:
-        return str(text)
-    capacity = (int(_EXCEL_MAX_ROW_HEIGHT) // _EXCEL_NOTE_LINE_HEIGHT) * _excel_per_line(width)
-    return "\u2026 " + str(text)[-(capacity - 2):].lstrip()
+    text = str(text)
+    capacity = int(_EXCEL_MAX_ROW_HEIGHT) // _EXCEL_NOTE_LINE_HEIGHT
+    if _excel_wrapped_lines(text, width) <= capacity:
+        return text
+    low, high = 0, len(text)      # low never fits; an empty tail always does
+    while high - low > 1:
+        middle = (low + high) // 2
+        if _excel_wrapped_lines("\u2026 " + text[middle:].lstrip(), width) <= capacity:
+            high = middle
+        else:
+            low = middle
+    return "\u2026 " + text[high:].lstrip()
 
 
 def _excel_verdict(data):
