@@ -24,6 +24,47 @@ def _missing(value):
     return not value or value == "N/A"
 
 
+def _newest_known_time(results):
+    """Newest epoch second this file already established, or None.
+
+    Used as the plausibility horizon for records synthesized by the emergency
+    heuristic scans: the vehicle unit cannot record an event after the moment
+    the download was taken, so a guessed record dated beyond the newest time
+    the file itself already carries is a scanner false positive, not data.
+    """
+    newest = None
+
+    def _offer(value):
+        nonlocal newest
+        if not isinstance(value, str) or not value:
+            return
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        try:
+            ts = int(parsed.timestamp())
+        except (OverflowError, OSError, ValueError):
+            return
+        if 946684800 <= ts <= 4102444800 and (newest is None or ts > newest):
+            newest = ts
+
+    _offer((results.get("metadata") or {}).get("current_datetime"))
+    for section in ("activities", "events", "faults", "places", "overspeeding_events",
+                    "control_activities", "download_activities", "card_iw_records",
+                    "time_adjustments"):
+        for rec in results.get(section) or []:
+            if not isinstance(rec, dict):
+                continue
+            for key in ("begin_time", "end_time", "timestamp", "begin", "end",
+                        "control_time", "downloading_time", "insertion_time",
+                        "old_time", "new_time"):
+                _offer(rec.get(key))
+    return newest
+
+
 def parse_vu_vehicle_identification(val, results):
     """Parse VU_VehicleIdentification (tag 0x0001 in VU context)."""
     if len(val) < 32:
@@ -482,9 +523,15 @@ def _parse_trep_02_activities(data, results):
 
         daily_count = 0
         seen_days = set()
+        horizon = _newest_known_time(results)
         while scan + 10 <= len(data):
             ts = struct.unpack(">I", data[scan:scan+4])[0]
             if not (946684800 <= ts <= 4102444800):
+                scan += 1
+                continue
+            if horizon is not None and ts > horizon:
+                # A guessed day can never postdate what the file itself already
+                # established (the VU records nothing after its own download).
                 scan += 1
                 continue
 
@@ -542,6 +589,8 @@ def _parse_trep_02_activities(data, results):
                         "changes_count": no_changes,
                         "changes": changes,
                         "driver": f"{surname_s} {firstname_s}".strip(),
+                        # Synthesized by the timestamp scan, not the spec layout.
+                        "confidence": "low",
                     })
                     daily_count += 1
                 skip_to = min((b for b in daily_boundaries if b > scan), default=-1)
@@ -1005,6 +1054,7 @@ def _parse_trep_03_events_faults_heuristic(data, results):
         # for exactly that reason (audit: BATCH8_RETROSPECTIVE_REVIEW B8-R1).
         pos = 1
         structured_count = 0
+        horizon = _newest_known_time(results)
         seen_fault_keys = {
             (f.get("fault_type"), f.get("begin_time"), f.get("end_time"), f.get("fault_purpose"))
             for f in results.get("faults", []) if isinstance(f, dict)
@@ -1014,18 +1064,25 @@ def _parse_trep_03_events_faults_heuristic(data, results):
             for e in results.get("events", []) if isinstance(e, dict)
         }
         while pos + 82 <= len(data) and structured_count < 500:
-            if 0x01 <= data[pos] <= 0xFF:
+            # A record this scan synthesizes may never postdate the newest time
+            # the file itself already established (see _newest_known_time).
+            begin_ts = struct.unpack(">I", data[pos + 2:pos + 6])[0]
+            end_ts = struct.unpack(">I", data[pos + 6:pos + 10])[0]
+            in_horizon = horizon is None or (
+                begin_ts <= horizon
+                and not (946684800 <= end_ts <= 4102444800 and end_ts > horizon))
+            if in_horizon and 0x01 <= data[pos] <= 0xFF:
                 fault = _parse_vu_fault_record(data, pos)
                 if fault is not None:
                     fkey = (fault.get("fault_type"), fault.get("begin_time"), fault.get("end_time"),
                             fault.get("fault_purpose"))
                     if fkey not in seen_fault_keys:
                         seen_fault_keys.add(fkey)
-                        results.setdefault("faults", []).append(fault)
+                        results.setdefault("faults", []).append({**fault, "confidence": "low"})
                     pos += 82
                     structured_count += 1
                     continue
-            if pos + 83 <= len(data):
+            if in_horizon and pos + 83 <= len(data):
                 evt = _parse_vu_event_record(data, pos)
                 if evt is not None:
                     ekey = (evt["event_type"], evt["begin_time"], evt["end_time"],
@@ -1041,6 +1098,7 @@ def _parse_trep_03_events_faults_heuristic(data, results):
                             "end_time": evt["end_time"],
                             "similar_events": evt.get("similar_events", 0),
                             "card_driver_begin": evt.get("card_driver_begin"),
+                            "confidence": "low",
                         })
                     pos += 83
                     structured_count += 1
@@ -1062,7 +1120,12 @@ def _parse_trep_03_events_faults_heuristic(data, results):
             if 0x01 <= ev_type <= 0x0C:
                 ts1 = struct.unpack(">I", data[pos + 1:pos + 5])[0]
                 ts2 = struct.unpack(">I", data[pos + 5:pos + 9])[0]
-                if 946684800 <= ts1 <= 4102444800 and 946684800 <= ts2 <= 4102444800:
+                # ~73% of arbitrary 4-byte values fall inside the plausible
+                # window, so the range check alone invents records; a candidate
+                # dated after the horizon is rejected, not appended.
+                # shortcut: past-dated false positives still pass, upgrade when a validated structural walk exists.
+                within_horizon = horizon is None or (ts1 <= horizon and ts2 <= horizon)
+                if within_horizon and 946684800 <= ts1 <= 4102444800 and 946684800 <= ts2 <= 4102444800:
                     tskey = (ts1, ev_type)
                     if tskey not in seen_timestamps:
                         seen_timestamps.add(tskey)
@@ -1076,6 +1139,7 @@ def _parse_trep_03_events_faults_heuristic(data, results):
                                 "begin_time": dt1,
                                 "end_time": dt2,
                                 "driver": f"{surname} {firstname}".strip(),
+                                "confidence": "low",
                             })
                     pos += 9
                     continue
