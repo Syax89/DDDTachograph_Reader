@@ -40,7 +40,7 @@
 
 **MSCA** (Member State Certificate Authority) — National-level CA that issues card and VU certificates. Each EU member state operates its own MSCA. MSCA certificates are signed by ERCA.
 
-**Certificate Chain** — The hierarchy: ERCA (root) → MSCA (intermediate) → Card/VU (leaf). Validated by `SignatureValidator.validate_tacho_chain()` (`core/crypto/signature.py:187`).
+**Certificate Chain** — The hierarchy: ERCA (root) → MSCA (intermediate) → Card/VU (leaf). Validated by `SignatureValidator.validate_tacho_chain()` (`core/crypto/signature.py:276`).
 
 ## Core Architecture Components
 
@@ -52,11 +52,11 @@
 
 **G1VuWalker** (`core/parser/g1_walker.py`) — Deterministic SID/TREP message walk for G1 VU downloads (Annex 1B §2.2.6), including per-message RSA signatures.
 
-**DecoderRegistry** (`core/registry/registry.py:28`) — Centralized registry mapping tag IDs to decoder functions. Each entry contains metadata: container flag, record size, annex reference, generation, card/VU scope.
+**DecoderRegistry** (`core/registry/registry.py:49`) — Centralized registry mapping tag IDs to decoder functions. Each entry contains metadata: container flag, record size, annex reference, generation, card/VU scope.
 
 **DeterministicParser** (`core/parser/deterministic.py`) — The structural parser. Guarantees 100% byte coverage through sequential parsing with `CoverageTracker`; routes VU downloads to the dedicated stream walkers.
 
-**CoverageTracker** (`core/parser/deterministic.py:18`) — Tracks covered byte ranges, classifies them (Tag, Padding, Unknown), and produces coverage reports.
+**CoverageTracker** (`core/parser/deterministic.py:46`) — Tracks covered byte ranges, classifies them (Tag, Padding, Unknown), and produces coverage reports.
 
 ## Data Fields & Records
 
@@ -86,7 +86,7 @@
 
 ## Regulations
 
-**EU 561/2006** — The main driving and rest time regulation (4.5h continuous driving limit, daily/weekly rest minimums). Background context: this project parses recorded activities, and computes per-day breaches of the two rules it models (`core/utils/activity_stats.evaluate_driving_rules`), but does **not** report them in the UI yet — the surfaces are hidden behind `app.gui.SHOW_DRIVING_INFRACTIONS` while their thresholds are being decided.
+**EU 561/2006** — The main driving and rest time regulation (4.5h continuous driving limit, daily/weekly rest minimums). Background context: this project parses recorded activities, and computes per-day breaches of the two rules it models (`core/utils/activity_stats.evaluate_driving_rules`), but does **not** report them anywhere: every UI surface that could show a breach is behind `app.gui.SHOW_DRIVING_INFRACTIONS` (shipped off), and the exports carry no compliance verdict.
 
 ## Other Terms
 

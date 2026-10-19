@@ -22,7 +22,7 @@ Card files carry no `0x76` header, so header sniffing always yields G1 for them;
 flowchart LR
     A["First byte"] -->|"0x76"| B[VU]
     A -->|"other"| C[Card]
-    B -->|"G2/G2.2"| H["RecordArray stream walk\n(vu_record_dispatcher)"]
+    B -->|"G2/G2.2"| H["RecordArray stream walk\n(vu_dispatcher.walk_vu_record_arrays)"]
     C -->|"G1"| G["STAP walk\nmode=stap"]
     C -->|"G2/G2.2 EFs"| F["BER-TLV walk\nmode=ber"]
 ```

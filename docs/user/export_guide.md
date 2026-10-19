@@ -1,43 +1,44 @@
 # Export Guide — Formats and Best Practices
 
-The DDD Tachograph Reader supports four export formats. All exports share the same formatting layer (readable timestamps, humanised column names, full English country names for nations), so the formats present the same facts with the same text. They present them differently, and each section below says how: the workbook additionally types the cells it can type and splits the activity report into a daily and a monthly sheet, while the PDF is a paginated summary and the CSV one text block per section. This guide explains each format, its contents, and when to use it.
+The DDD Tachograph Reader writes four formats: JSON, Excel, CSV and PDF. Excel,
+CSV and PDF are built from one shared report layer — readable timestamps,
+humanised column names, full country names — so the same field is called the
+same thing in each. They are not interchangeable copies of one another: the PDF
+and the workbook are previews with explicit row limits and print layout, the CSV
+is uncapped text, and the JSON is the parser's complete output rather than a
+section-by-section report. This guide says what each format contains, where it
+stops, and which one to use.
+
+All exports are written in **English**, whatever the interface language is.
 
 ---
 
 ## JSON (.json)
 
-**What it contains**: The complete parsed result as a structured JSON object, including metadata, driver info, vehicle info, all activity records, GNSS data, events/faults, signature verification status, and raw tag data.
+**What it contains**: the complete parsed output of the reader as one object —
+`metadata` (file name, generation, parse time, integrity verdict, file size,
+coverage, reader version, origin, decoder failures), `driver`, `vehicle`,
+`activities`, every decoded record list (`events`, `faults`, `places`,
+`calibrations`, `vehicle_sessions`, GNSS and G2.2 records, VU records, …),
+`raw_tags`, `coverage`, `sections`, `generations`, and the verification results
+(`signature_verification`, `ef_signature_verification`).
+
+Binary fields are written as hexadecimal strings and sets as sorted lists.
+
+**It is not a reversible copy of the original download.** The JSON holds what the
+reader decoded, not the bytes of the `.ddd` file, so it cannot be turned back
+into a tachograph download. Keep the original file for archival or forensic
+purposes; use JSON for the decoded structure.
 
 **Best for**:
-- Further data processing in scripts or other applications
+- Further processing in scripts or other applications
 - Integration with fleet management systems
-- Developers who need the full data structure
-- Archival of parsed data for later re-analysis
+- Complete decoded data for later re-analysis (as opposed to a report preview)
 
 **How to export**:
 - GUI: **Export → JSON (.json)**
-- CLI: `python app/cli.py file.ddd --json output.json`
-
-**Example structure** (abridged):
-```json
-{
-  "metadata": {
-    "filename": "CARD_001.ddd",
-    "generation": "G2.2",
-    "integrity_check": "Verified",
-    "coverage_pct": 100.0
-  },
-  "driver": {
-    "surname": "Rossi",
-    "firstname": "Marco",
-    "card_number": "IT1234567890"
-  },
-  "vehicle": { ... },
-  "activities": [ ... ],
-  "events": [ ... ],
-  "signature_verification": { ... }
-}
-```
+- CLI: `python -m app.cli file.ddd --json output.json` (add `--quiet` in scripts:
+  the default invocation also prints the human summary)
 
 ---
 
@@ -47,7 +48,7 @@ The DDD Tachograph Reader supports four export formats. All exports share the sa
 
 | Sheet | Contents |
 |-------|----------|
-| **Summary** | File, driver and vehicle facts, the file-state warnings, the row-limit disclosure and an index of every sheet (a clickable link, a one-line description and its row count) |
+| **Summary** | File, driver and vehicle facts, the file-state warnings, the row-limit disclosure and an index of every sheet (a link, a one-line description and its row count) |
 | **TREP Signatures** | Per-block signature verification details (VU files) |
 | **VU Certificates** | Certificates found in the file (VU files) |
 | **Daily Activities** | One row per day: date, odometer, Drive/Work/Rest/Available/Unknown/Total |
@@ -57,9 +58,11 @@ The DDD Tachograph Reader supports four export formats. All exports share the sa
 
 Every table is rectangular: a wrapped navy header band, a frozen header row, an
 auto-filter, hidden gridlines, column widths that leave room for the filter
-button, and landscape printing fitted to one page wide with the header repeated
-on every page. Rows are striped, descriptions are wrapped above the header, and
-the monthly subtotal rows are bold and shaded.
+button, and print setup (landscape, fitted to one page wide, header row repeated)
+written into the sheet. Rows are striped, descriptions are wrapped above the
+header, and the monthly subtotal rows are bold and shaded. Print setup is part of
+the file; how a sheet actually prints depends on the printer, the paper and the
+spreadsheet application you print from.
 
 **Typed cells — what a spreadsheet can work with**:
 
@@ -74,9 +77,8 @@ the monthly subtotal rows are bold and shaded.
   allow-list of the labels the report gives real time and date fields. A column
   whose name merely *ends* like a time is not one: `Card Driver Begin`,
   `Card Driver End`, `Card Codriver Begin` and `Card Codriver End` hold card
-  identifiers (registration nation + card number), so they always stay text and
-  a date-shaped identifier (`2026-03-04`, `04/03/2026`) keeps its exact
-  characters.
+  identifiers (registration nation + card number), so they always stay text and a
+  date-shaped identifier keeps its exact characters.
 - **Numbers**: odometers (`Odometer km`, `Odometer KM`, `Odometer Begin/End`,
   `Distance`) and measured speeds (`Max Speed KMH`, `Average Speed KMH`,
   `Speed Limit`) are numeric cells, so they sort and sum.
@@ -90,16 +92,16 @@ the monthly subtotal rows are bold and shaded.
   never guessed into a date or a number.
 - **Unknown time is a note, not a number**: the Daily Activities `Unknown (h:mm)`
   cell stays numeric and a `Notes` column says what the value is. Unknown time
-  just means the record does not attribute those minutes to Drive, Work, Rest or
+  means the record does not attribute those minutes to Drive, Work, Rest or
   Available — it is not by itself a sign of a corrupt file.
 
-**Two activity sheets, one report**: the rows come from the same monthly activity
-report the PDF and CSV print, and the arithmetic is the same slot-aware engine.
-The Excel workbook splits that report so a filter range only ever holds one kind
-of row: `Daily Activities` contains day rows only, `Monthly Activities` the
-monthly subtotal rows. Both are subject to the same 50,000-row limit, counted on
-the report rows *including* the subtotal rows, so a month whose subtotal row was
-cut simply has no row on the monthly sheet — no total is invented for it.
+**Two activity sheets, one report**: the activity rows come from the same
+slot-aware activity report the PDF and CSV print. The workbook splits that report
+so a filter range only ever holds one kind of row: `Daily Activities` contains day
+rows only, `Monthly Activities` the monthly subtotal rows. Both are subject to the
+same 50,000-row limit, counted on the report rows *including* the subtotal rows,
+so a month whose subtotal row was cut simply has no row on the monthly sheet — no
+total is invented for it.
 
 **Limits, stated inside the file**: a section with more report rows than the
 50,000-row limit says so on its own sheet ("Row limit: 3 of 7 rows exported …")
@@ -112,19 +114,25 @@ the VU certificate list are not row-capped.
 The disclosure is meant to be read, so the sheet note is never squeezed into a
 narrow table: its merged span is guaranteed at least 60 characters (a one-column
 table's last column is widened to reach that) and the row height is computed from
-that real width with no line cap, up to Excel's 409.5-point row limit — beyond
-which the note is elided from the front, marked with `…`, so the row-limit
-statement itself survives. Data rows are never wrapped.
+that real width, up to Excel's 409.5-point row limit — beyond which the note is
+elided from the front, marked with `…`, so the row-limit statement itself
+survives. Data rows are never wrapped.
+
+**Known limitation — very long Summary values.** Excel refuses a row taller than
+409.5 pt, which is about 27 wrapped lines at the Summary's column width. A
+Summary **value** longer than that is clipped visually, on screen and in print,
+while the cell keeps the full text (it is still there for a copy, a formula or
+the formula bar). No data is lost, but the row cannot be read in one glance; the
+same value is also in the JSON.
 
 **The Summary index**: every sheet gets an entry. Sections that carry a
 description show its first sentence; a section without one (card certificates,
-the card-application tables) gets a fallback that says what the sheet is — a
-records table or a key/value table, named after the sheet. Entries are wrapped
-and the row is sized to its text, so no entry is blank and none is cut at the
-column edge.
+the card-application tables) gets a fallback that says what the sheet is.
+Entries are wrapped and the row is sized to its text, so no entry is blank and
+none is cut at the column edge.
 
 **A preview, not the parsed structure**: nested values are shown as the same
-compact report text the other exports use — not as their full decoded detail —
+compact report text the other reports use — not as their full decoded detail —
 and coverage/verification statements are the file's own, never a claim the export
 produced. Use JSON for the complete decoded structure.
 
@@ -135,22 +143,43 @@ produced. Use JSON for the complete decoded structure.
 
 **How to export**:
 - GUI: **Export → Excel (.xlsx)**
-- CLI: `python app/cli.py file.ddd --excel report.xlsx` (requires `openpyxl`)
+- CLI: `python -m app.cli file.ddd --excel report.xlsx` (requires `openpyxl`)
 
 ---
 
 ## CSV (.csv)
 
-**What it contains**: All data sections in a single CSV file. Each section gets a title row, its own header, and its rows, separated by a blank line — readable in any spreadsheet application.
+**What it contains**: All sections in one file, one block after another. Each
+block starts with a `=== SECTION NAME ===` marker row, then the section's
+description, then its column header and its rows, and blocks are separated by a
+blank line. The file is UTF-8 with a BOM (so a spreadsheet opens accented names
+correctly) and uses a semicolon as the delimiter.
+
+Two details you will notice when reading the raw text:
+
+- Every cell that would otherwise start with `=`, `+`, `-` or `@` is prefixed with
+  an apostrophe, so a spreadsheet treats it as text and never as a formula. The
+  section markers start with `=`, so they appear as `'=== EVENTS ===` in the raw
+  file and as `=== EVENTS ===` once a spreadsheet opens it.
+- Nested values are the same compact report text as in the other reports, and
+  internal bookkeeping keys are left out. It is not the full decoded structure —
+  that is JSON.
+
+There is **no explicit row cap** on the CSV: every report row of every section is
+written. The row order and the section order are the shared report order.
 
 **Best for**:
 - Import into database systems or other software
 - Quick data inspection
-- Lightweight format when file size matters
+- A lightweight text format when file size matters
 
 **How to export**:
 - GUI: **Export → CSV (.csv)**
-- CLI: `python app/cli.py file.ddd --csv report.csv`
+- CLI: `python -m app.cli file.ddd --csv report.csv`
+
+There is no "export every file to one ZIP of CSVs" action in the GUI or the CLI:
+one loaded file produces one CSV, and a batch means one run per file in a shell
+loop.
 
 ---
 
@@ -165,12 +194,12 @@ produced. Use JSON for the complete decoded structure.
    download's full retention period. The file state shows the integrity verdict,
    download completeness and every partial-parse warning the parser recorded —
    missing mandatory sections, discarded sections, recovered data, decoder
-   failures. The totals grid lists Drive, Work, Rest, Available, Unknown and
-   Total plus days with activity, events and faults.
+   failures. The totals grid lists Drive, Work, Rest, Available, Unknown and Total
+   plus days with activity, events and faults.
 2. **Operational sections** — **Daily Activities** month by month (each month on
-   its own page, `h:mm` durations, bold shaded monthly subtotals, headers
-   repeated when a table continues), followed by the remaining record sections
-   in their usual order.
+   its own page, `h:mm` durations, bold shaded monthly subtotals, headers repeated
+   when a table continues), followed by the remaining record sections in their
+   usual order.
 3. **Technical Appendix** — signature checks, certificates, calibrations and
    workshops, vehicle-unit/sensor/card identification, and the file-level parse
    details (file size, byte coverage, reader version).
@@ -184,37 +213,37 @@ produced. Use JSON for the complete decoded structure.
   Drive, Work, Rest or Available (minutes before the day's first status entry, an
   unrecognised status code, or a card slot with no activity).
 - Drive and Work are summed across the two card slots; Rest, Available and
-  Unknown are kept at the maximum across slots. A day with two drivers (crew)
-  can therefore show more than `24:00` in total.
+  Unknown are kept at the maximum across slots. A day with two drivers (crew) can
+  therefore show more than `24:00` in total.
 - Each day is summed with the same slot-aware engine the monthly table uses, so
   per-day figures match. The cover totals cover **every** daily record in the
   input, while the printed tables stop at the row limit: past it the Daily
   Activities table is a subset and the cover is the complete figure.
-- Records wider than ten columns (calibrations, certificates, power
-  interruptions, VU identifications) are printed as one field/value card per
-  record — "Record 2 of 7" — so no field is squeezed into an unreadable column.
-  A record long enough to need two pages repeats its record number and header.
+- Records wider than ten columns (calibrations, certificates, power interruptions,
+  VU identifications) are printed as one field/value card per record — "Record 2
+  of 7" — so no field is squeezed into an unreadable column. A record long enough
+  to need two pages repeats its record number and header.
 - A list-based section is cut at 1,500 rows and says so on the page, naming the
   rows exported and pointing at the JSON export (Excel has its own limit). That
   applies to the daily activities table and to every record table (events,
   places, detailed speed, …). The monthly subtotal rows are rows of the same cap,
   so a long month can be cut before its subtotal — its heading then says it is a
-  partial month instead of showing an empty month name, and a capped section
-  whose retained rows carry no displayable value still discloses the cut without
-  printing an empty grid. Dictionary sections (card application, VU
-  information, sensor identification, …) and the special TREP / VU-certificate
-  lists are not capped and keep their existing behaviour.
+  partial month instead of showing an empty month name, and a capped section whose
+  retained rows carry no displayable value still discloses the cut without
+  printing an empty grid. Dictionary sections (card application, VU information,
+  sensor identification, …) and the special TREP / VU-certificate lists are not
+  capped and keep their existing behaviour.
 - The PDF is a **summary**: nested structures are flattened into readable text
   (an absent card slot as `—`, a certificate as a truncated digest). Use JSON for
   the complete decoded structure, or Excel to work with the rows.
 
 **Best for**:
 - Reports for audits or record-keeping
-- Printed records for physical archives
+- A printable document for a file
 
 **How to export**:
 - GUI: **Export → PDF (.pdf)**
-- CLI: `python app/cli.py file.ddd --pdf report.pdf` (requires `reportlab`)
+- CLI: `python -m app.cli file.ddd --pdf report.pdf` (requires `reportlab`)
 
 ---
 
@@ -222,7 +251,7 @@ produced. Use JSON for the complete decoded structure.
 
 | Need | Best Format |
 |------|------------|
-| "I need the raw data for my own scripts" | JSON |
+| "I need the complete decoded data for my own scripts" | JSON |
 | "My boss wants a spreadsheet to review" | Excel |
 | "We need a printable report" | PDF |
 | "I'm importing into our ERP system" | CSV |

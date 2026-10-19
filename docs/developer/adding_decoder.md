@@ -142,11 +142,12 @@ Create test cases in `tests/`:
 ```python
 # In tests/test_new_decoder.py or append to an existing test file
 
+# Hypothetical decoder from Step 1, to show the shape of a record test.
 def test_parse_vehicle_authorization():
     """Verify parsing of VuVehicleAuthorizationRecord."""
     import struct
     from datetime import datetime, timezone
-    from core.g2_decoders import parse_g22_vehicle_authorization
+    from core.decoders import parse_g22_vehicle_authorization
 
     ts = int(datetime(2025, 6, 15, tzinfo=timezone.utc).timestamp())
     ts_end = int(datetime(2026, 6, 15, tzinfo=timezone.utc).timestamp())

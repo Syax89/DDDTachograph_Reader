@@ -40,17 +40,36 @@ The tool supports all three generations of digital tachographs:
 
 ---
 
-## What's New in v2.5
+## Highlights
 
-- **Interactive daily activity timeline** — driving / work / availability / rest on a 24-hour chart, with crew (dual-slot) support and out-of-scope markers.
-- **Vehicles driven per day** — for driver-card activity views, the vehicle(s) used each day, with switch-over times on multi-vehicle days.
-- **Detailed speed graph** — the speed curve with overspeeding event markers and a shaded over-speed zone.
-- **Dashboards + monthly summaries** — KPI cards and per-month totals for activities and speed.
-- **Corrupt / partial download recovery** — deterministic-first parsing with best-effort salvage; recovered data is clearly flagged.
-- **TREP completeness inventory** and **origin detection** (driver card vs VU download).
+- **34 languages** — the window can run in English, the 23 other official EU
+  languages, Norwegian, Icelandic, Russian, Ukrainian, Belarusian, Turkish,
+  Serbian, Bosnian, Albanian or Macedonian, with a separate switch for
+  translating the labels decoded from the file.
+- **Summary first** — a file opens on one page with its identity, integrity,
+  activity totals and file state, and the window is fully usable from the
+  keyboard.
+- **Recent files and drag & drop** — the last 8 successfully opened files are one
+  click away, and a `.ddd` file can be dropped on the window.
+- **Interactive daily activity timeline** — driving / work / availability / rest
+  on a 24-hour chart, with crew (dual-slot) support and out-of-scope markers.
+- **Vehicles driven per day** — for driver-card activity views, the vehicle(s)
+  used each day, with switch-over times on multi-vehicle days.
+- **Detailed speed graph** — the speed envelope as a band with a mean line,
+  shaded recording gaps, overspeeding event markers and per-day cards.
+- **Dashboards + monthly summaries** — KPI cards and per-month totals for
+  activities and speed.
+- **Corrupt / partial download recovery** — deterministic-first parsing with
+  best-effort salvage; recovered data is clearly flagged.
+- **TREP completeness inventory** and **origin detection** (driver card vs VU
+  download).
+- **Excel and PDF reports built for reading** — typed spreadsheet cells with a
+  Summary index, and a PDF with a structured cover and a Technical Appendix.
 - **Full country names** everywhere instead of raw nation codes.
 
-A visual product tour is available on the [project README](https://github.com/Syax89/DDDTachograph_Reader#product-tour).
+Release-by-release notes are in the [CHANGELOG](../../CHANGELOG.md). A visual
+product tour is available on the
+[project README](https://github.com/Syax89/DDDTachograph_Reader#product-tour).
 
 ---
 
@@ -61,11 +80,10 @@ A visual product tour is available on the [project README](https://github.com/Sy
    - macOS: `TachoReader-v<version>-macos.dmg`
    - Linux (x86_64): `TachoReader-v<version>-linux-x86_64.flatpak`
 2. **Launch** the application (extract the zip and run `TachoReader.exe` on Windows; open the DMG and drag `TachoReader.app` to Applications on macOS; install and run the Flatpak on Linux — see [Installation](installation.md#linux-flatpak-x86_64)).
-3. **Click "Open DDD file"** and select your `.ddd` file.
+3. **Click "Open DDD file"** (or drop a `.ddd` file on the window) and select your `.ddd` file.
 4. **Explore** the parsed data in the section tree, open the activity or speed charts, and export to PDF, Excel, CSV, or JSON.
 
-If the release page has no Linux package yet, the current Linux build can be
-downloaded as a CI artifact instead; the
-[Installation Guide](installation.md#downloading-a-build-from-ci) explains how.
+The window opens in English. To use another language, click the language button in
+the top bar and choose one from **Language**; see the [GUI Guide](gui_guide.md#languages).
 
 For command-line usage, see the [CLI Guide](cli_guide.md).

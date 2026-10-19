@@ -18,6 +18,8 @@ Cross-platform (Windows/macOS/Linux) application for parsing, analyzing and visu
 - **Parsing entry point**: `app/engine.py` — `TachoParser.parse()`
 - **Tag dispatch**: `core/parser/deterministic.py` — `DeterministicParser._dispatch_decoder()`
 - **Decoder registry**: `core/registry/registry.py` — `DecoderRegistry`
+- **Display text**: `app/ui_text.py` — `label()` for chrome, `data_text()` for file-decoded values
+- **Translations**: `python3 scripts/compile_translations.py` (add `--check` to verify the `.mo` files)
 - **Run tests**: `python -m pytest tests/ -v`
 - **Coverage audit**: `python3 scripts/coverage_audit.py`
 - **CI workflows**: [`build.yml`](../../.github/workflows/build.yml) (Windows/macOS/Linux builds), [`test.yml`](../../.github/workflows/test.yml) (lint/tests/coverage), [`release.yml`](../../.github/workflows/release.yml) (tagged releases)
@@ -55,10 +57,18 @@ DDDTachograph_Reader/
 │   ├── crypto/                  # Signature / certificate-chain validation
 │   └── utils/                   # Constants, logging, BER-TLV, coverage, tag defs
 ├── app/engine.py                # Main TachoParser entry point
-├── app/export.py                # Excel/CSV/PDF export
-├── app/gui.py                   # Desktop GUI (tkinter: tree + Excel-style table)
+├── app/export.py                # Excel / CSV / PDF report writers
+├── app/gui.py                   # Desktop GUI (tkinter: tree + table/charts)
+├── app/i18n.py                  # gettext install, LANGUAGES, settings.json
+├── app/ui_text.py               # single display-text layer (label/data_text)
+├── app/theme.py                 # palette + font specs
+├── app/icons.py                 # icon lookup from assets/icons/png/<size>/
 ├── app/cli.py                   # CLI interface
 ├── app/main.py                  # Compatibility CLI entry point
+├── certs/                       # ERCA root certificates
+├── locale/<code>/LC_MESSAGES/   # Translation catalogs (.po) + compiled .mo
+├── assets/icons/                # Icon set (png/<size>/, svg/ masters)
+├── flatpak/                     # Flatpak manifest + launcher (Linux bundle)
 ├── scripts/                     # Specification documentation + audits
 ├── tests/                       # Test suite
 └── DDD/                         # Optional private sample DDD files (not committed)

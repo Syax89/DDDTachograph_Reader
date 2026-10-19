@@ -8,11 +8,20 @@ python3 -m pytest tests/ -v
 ```
 
 ## Project Structure
-- `core/` — Parser engine (navigator, decoders, registry, models)
-- `app/engine.py` — Main entry point
-- `app/gui.py` — Desktop application (tkinter: tree view + Excel-style table)
+- `core/` — Parser engine (deterministic parser, decoders, registry, models, crypto, utils)
+- `app/engine.py` — Main `TachoParser` entry point
+- `app/gui.py` — Desktop application (tkinter: section tree + table, charts, exports)
+- `app/export.py` — PDF / Excel / CSV report writers
+- `app/i18n.py`, `app/ui_text.py` — gettext setup, settings file and the single display-text layer
+- `app/theme.py`, `app/icons.py` — palette/font source and the shipped icon set
+- `locale/<code>/LC_MESSAGES/` — translation catalogs and their compiled `.mo`
 - `tests/` — Test suite
-- `scripts/` — Tag specifications and verification docs
+- `scripts/` — Tag specifications, audits and catalog tooling
+- `docs/` — User, developer and API documentation
+
+Run everything from the repository root: `python -m app.gui`, `python -m app.cli`.
+Invoking `app/gui.py` or `app/cli.py` by path fails, because the package root is
+then not on the import path.
 
 ## How to Add a New Decoder
 1. Add the decoder function in the matching `core/decoders/` module (`card_ef.py`, `card_g22.py`, `cert.py`, `vu_g1.py`, `vu_g2.py`, or `common.py`) and re-export it from `core/decoders/__init__.py`

@@ -1,236 +1,261 @@
-# Unreleased
-- **The Excel workbook is typed, navigable and honest about its limits**: the
-  cells a spreadsheet can actually work with are now real values instead of text
-  that only looked like one. The daily `Date` column and the timestamp columns
-  (`Begin`, `End`, `Timestamp`, `Insertion Time`, `Card Expiry`, …) are date and
-  date-time cells, a UTC timestamp keeping its zone in the cell format
-  (`2024-11-26 04:28Z`) because Excel has no time zones; odometers and measured
-  speeds are numbers; and the activity duration columns are numeric durations
-  formatted `[h]:mm`, so a monthly `48:00` stays a duration a reader can sum
-  instead of turning into `2.00`. Conversion is semantic and allow-listed: a
-  column is typed only when its label has a known meaning and a value only when
-  it is exactly the canonical shape the report prints, so card numbers, licence
-  numbers, VINs, serials, plates, certificate references, hex material, codes and
-  counters keep their exact characters (a leading zero survives, a 16-digit
-  number is not rounded to 15) and `N/A`, placeholders, malformed values and
-  unknown columns stay protected text. The unattributed-time marker no longer
-  sits in a numeric cell: the `Unknown (h:mm)` column stays numeric and a `Notes`
-  column says in words what the value is. `Daily Activities` now holds the day
-  rows only — the monthly subtotal rows moved to a separate, highlighted
-  `Monthly Activities` sheet, extracted from the same shared activity report (the
-  slot-aware arithmetic is untouched and the monthly sheet's figures equal the
-  sum of the day rows it splits from). The 50,000-row report limit is unchanged
-  and is still counted on the report rows *including* the subtotal rows, before
-  that split, so a month whose subtotal was cut has no row and no invented total.
-  A capped section now discloses the cut inside the workbook — on its own sheet
-  and in the Summary, with the exported and available row counts and a pointer at
-  the JSON export or the original file — including when the limit retained no
-  visible row at all, while the key/value sheets, the TREP signature list and the
-  VU certificate list stay uncapped. The Summary is a readable overview: every
-  shared summary fact (zeros and `False` included), the parse/integrity problem
-  rows tinted so a partial download cannot pass for a clean one, a warnings and
-  limits block that also states that nested values are compact report text rather
-  than the full decoded structure, and an index of every sheet with its row
-  count and an internal quoted/escaped hyperlink (never an external target and
-  never a `HYPERLINK` formula). Tables gained a wrapped header band, column
-  widths that leave room for the filter button, frozen headers, hidden
-  gridlines, print title rows and landscape fit-to-width printing, with no
-  styling or print range extending past the data: the note row of a table — the
-  section description and the row-limit disclosure — is guaranteed a readable
-  merged width (at least 60 characters, widening a narrow table's last column)
-  and a row height computed from that real width with no line cap, so the
-  disclosure cannot be clipped in a one-column sheet, while data rows are never
-  wrapped; the Summary index never shows a blank `Contents` cell (a section
-  without a description gets a fallback naming what the sheet is, a records table
-  or a key/value table) and wraps and sizes each entry instead of cutting it at
-  the column edge; a date-only cell keeps the shape of its source text
-  (`dd/mm/yyyy` displays as `dd/mm/yyyy`, ISO as `yyyy-mm-dd`) while still
-  storing the exact calendar date; and the integrity tint no longer decides
-  whether the file exports — the tint is decoration, so a top-level container the
-  shared classifier cannot walk (`metadata` or `ef_signature_verification` of an
-  unexpected shape) still writes every summary fact, without a tint, instead of
-  raising, with `integrity_verdict` itself unchanged.
-  Time columns are now an explicit allow-list of the labels that carry a real
-  time or date, so the card-identifier columns (`Card Driver Begin/End`,
-  `Card Codriver Begin/End`) can never be turned into dates and a date-shaped
-  identifier keeps its exact characters. CSV and PDF output are unchanged.
-- **The PDF report is restructured and legible**: the cover now names the file,
-  its source and generation, the generation time, the activity period taken from
-  the daily records in the file (explicitly UTC and explicitly *not* a claim
-  about the download's full retention period), the identity facts, the file state
-  (integrity, download completeness and every partial-parse warning the parser
-  recorded) and a compact totals grid — Drive, Work, Rest, Available, Unknown,
-  Total in the single `h:mm` style the tables use, plus days with activity,
-  events and faults. Every bucket still comes from the one slot-aware totals
-  engine, so every per-day figure matches the monthly table, but the totals are
-  no longer promised to equal that table: the cover sums every daily record in
-  the input, while past the 1,500-row limit the printed tables (monthly subtotal
-  rows included in the same cap) are a subset, and the cover says so. It also
-  states that Unknown time is unattributed rather than proof of a corrupt file. The
-  bogus `N/A N/A` driver line on vehicle-unit files and the second, standalone
-  printing of the driver's name are gone. Monthly activity tables print `(h:mm)`
-  headers, right-aligned numeric Paragraphs (not merely TableStyle alignment),
-  bold shaded monthly subtotals and a full 31-day month — the first one too — on
-  a single page. Records wider than ten columns (calibrations, certificates,
-  power interruptions, VU identifications) are printed as one field/value card
-  per record with explicit record numbering instead of being crushed into
-  unreadable columns, and a card longer than a page repeats its record number and
-  header. Certificates, signature checks, calibrations/workshops and
-  VU/sensor/card identification now follow the operational data in a named
-  Technical Appendix (ending with a `File & Parse Details` block) instead of
-  trailing the contents; Excel and CSV keep the existing section order. The
-  1,500-row cap now warns on the page for activities as well, names the rows
-  exported and points at the JSON export (a capped section whose retained rows
-  show no value still discloses the cut instead of vanishing), a month cut off
-  before its subtotal is labelled as partial instead of showing an empty month
-  name, the cover's period is labelled as *dated* days so it no longer reads as
-  the activity-day count, blank pages and header-only trailing pages are gone (a
-  section heading and its description move with the first data of the section,
-  and a card value taller than a page is split rather than raising an error), and
-  a long file name is shortened in the footer rather than run into the page
-  number. No new options, graphs or
-  dependencies, and nested structures are still summarised as text — the PDF is a
-  summary; use JSON for the complete decoded structure.
-- **Keyboard, contrast and layout fixes from the design review**: the tree pane
-  starts 52 px wider (312 instead of 260) so that no node of a fully expanded
-  G2 card or vehicle-unit file is cut mid-word — "EF Signatures (Card Data
-  Integrity)" needed 285 px in a 241 px column — while the File Info table
-  still prints all ten of its values at the 900x560 minimum. Names no fixed
-  width fits (a G2.2 card, most translations) get a horizontal scrollbar on the
-  tree, shown only when a node overflows. The integrity verdict in the top bar is no
-  longer clipped silently: it ends in an ellipsis when the bar has no room for
-  it (the English wording needs 317 px, the Greek 462, and the bar leaves about
-  a third of that with a file open) and the whole sentence is readable on hover.
-  Seven foregrounds that measured 1.72:1-4.26:1 on the surface they are drawn
-  on now clear 4.5:1 (the footer warning and the partial-file badge, the
-  day-detail time column, the secondary labels, and the three labels that named
-  the X11 colour `gray` instead of a palette entry); the chart fills they shared
-  their colours with — the rest bar, the timeline's section rules — keep the
-  shades they were drawn in. The day-detail log is monospace on Windows and
-  Linux too (`Menlo` exists on macOS only, and Tk substituted a proportional
-  font without complaining), Return opens the day detail from the tree and
-  collapses any other row, the integrity banner is reachable with Tab and opens
-  on Return or space with a visible focus, Ctrl+C copies the selected table rows
-  as tab-separated text, column headings sit over their own cells instead of
-  centred over left-aligned ones, the empty state's "Open DDD file" button
-  carries the toolbar's icon, "EF Signature Verification" is drawn with the
-  integrity icon instead of a second shield, and a colour map nothing read is
-  gone from `DayDetailWindow`.
-- **The busy bar keeps moving while a file loads**: opening a `.ddd` file used
-  to grey out Open and Export, show a spinning bar and then freeze that bar for
-  the whole render — 116-400 ms on the sample files under Xvfb, up to 86 % of the
-  time the window spends "busy", which reads as a hang. The render still runs on
-  the main thread (the parsed result must not be touched from a worker), but it
-  now yields to the event loop between slices of work, so the bar animates while
-  the tree is built and the window repaints. Nothing else about the load
-  changes: the same tree, the same file overview selected at the end, Open and
-  Export disabled until it is over, and a second open or a drop during the
-  render is refused instead of running a second render on top of the first.
-- **Driving-time infractions, hidden for now**: the Summary no longer states a
-  `DRIVING-TIME RULES` block (how many days the rules flag, and the two limits
-  applied), and the remaining infraction surfaces — the red row on a day that
-  breaks the daily or the continuous driving limit, the `!` next to that day's
-  Drive total, the tooltip that explains it, and the `Days over 9 h` card on the
-  Daily Activities dashboard — sit behind one switch
-  (`app.gui.SHOW_DRIVING_INFRACTIONS`, shipped off) while their thresholds are
-  decided. The rules are still evaluated day by day, so flipping that single
-  name brings those four dashboard surfaces back — but not the overview block,
-  which was removed rather than gated and would have to be written again.
-  File-integrity and calibration warnings are untouched, and the exports never
-  reported the flag. Six now-unused msgids were dropped from all 33 catalogs
-  (791 → 785 entries each).
-- **Icons drawn, not typed**: every place the interface used an emoji now draws
-  a PNG from a commissioned monochrome icon set (`assets/icons/`, 28 icons at
-  six sizes, with the designer's SVG masters), so the same build looks the same
-  on Windows, macOS and Linux instead of depending on the emoji font each system
-  happens to ship. The toolbar buttons lead with an icon and keep their label;
-  tree nodes, the status badge, the integrity banner, the activity header and
-  the summary panel's section headers carry theirs on the row. The four status
-  icons differ by shape (circle/check, triangle/!, circle/cross, circle/?), not
-  only by colour, and `COMPLETENESS` and `PARAMETERS` no longer share the glyph
-  `TOTALS` and `STATISTICS` use. The CLI, which has no icon set to draw, prints
-  words instead of the emoji it used to.
-- **Detailed-speed plot reads as a signal**: the min–max envelope is a filled
-  band under a 2 px mean line instead of a picket fence of bars, the plot opens
-  on the hours the day actually has samples in (zoom still reaches the full
-  day), horizontal gridlines carry the km/h scale, and time labels thin out on
-  a narrow window instead of crowding. Stretches the unit recorded nothing in
-  are shaded (and explained in the legend), so a hole is no longer confused
-  with a vehicle standing still; the "internal gaps" figure now counts those
-  holes rather than the sampling interval. Red marks only what is above the
-  speed limit: a segment crossing the limit is cut at the crossing.
-- **Linux Flatpak release**: the Linux x86_64 build now ships as a Flatpak
-  bundle (`io.github.Syax89.TachoReader`) using the same PyInstaller build spec
-  as the native Windows and macOS builds, and CI installs the exported bundle
-  and smoke-tests its GUI, so what CI verifies is the package users install.
-- **All three platforms on every build**: branch pushes, pull requests and
-  manual runs build Windows, macOS and Linux, with an aggregate
-  **All platforms verified** check that fails on any failed, cancelled or
-  skipped platform. Tagged releases start publication only after all three
-  platform jobs succeed and the non-empty zip, dmg and flatpak are all present.
-- **Cleaner details panel**: the summary views (Driver / Cardholder, Vehicle, …)
-  no longer show an empty heading bar above the rows, and the section dividers
-  are bands instead of rows of dash characters. The horizontal scrollbar now
-  appears only when a column really runs off the edge, instead of sitting under
-  every table.
-- **Speed chart summary cards and legend**: the detailed-speed view now shows
-  its key numbers (max and average speed, time above the limit, time moving and
-  the number of overspeeding events the unit recorded) as dashboard-style cards
-  above the plot instead of one dense grey line, and a legend explains the
-  dashed limit line and the red dots — those dots are overspeeding events
-  recorded by the unit, whose peak can be higher than any sampled speed.
+## [2.8.0] - 2026-10-19
 
-### ✨ New Features
+This release is about reading a file comfortably. The window can run in 34
+languages, it opens on a one-page summary of the loaded file and can be used
+from the keyboard, the Excel and PDF reports were rebuilt as documents you can
+read, filter and print, and the Linux build now ships as an installable Flatpak
+bundle. Parsing, activity arithmetic and signature verification are unchanged:
+what changed is how the results are shown and how you get them out.
 
-- **Multilingual UI (34 languages)**: the desktop application can be used in
-  English, the 24 EU languages, Norwegian, Icelandic, Russian, Ukrainian,
-  Belarusian, Turkish, Serbian, Bosnian, Albanian and Macedonian. A Language menu
-  in the top bar switches language; the choice is remembered in the per-user
-  settings file and applied at the next start. English stays the default and the
-  msgid language, so a missing translation always falls back to English.
-- **Optional translation of file-decoded labels**: the window around the table —
-  window title, section names, table title, column headers, filter bar, menus and
-  buttons — always follows the selected language. Everything drawn *inside* the
-  table (every cell, whatever produced it: activity names, event and fault
-  descriptions, record purposes, specific conditions, country names, signature
-  statuses, card and chip labels, slot names) is translated only while
-  *Translate file contents* in the Language menu is ticked; untick it and the
-  cells show exactly what the decoder produced. The preference is stored next to
-  the language and applies immediately. Free text carried by the file, raw
-  identifiers, timestamps and exported reports are never translated.
-- **Packaged gettext catalogs**: `scripts/compile_translations.py` compiles
-  `locale/<code>/LC_MESSAGES/tacho.po` to `.mo` using only the standard library,
-  validates every entry (placeholders, format specs, duplicates, no empty
-  translations) and `--check` fails when a `.mo` is stale. The compiled catalogs
-  are included in the PyInstaller bundle and a CI step verifies they are current.
-- **Tests/docs**: `tests/unit/test_i18n.py` covers the translator, settings
-  handling, PO/MO tooling, the language menu and the restart path; CONTRIBUTING
-  documents how to add or update a language.
-- **Empty state with recent files**: before a file is opened the right pane now
-  shows `Open a DDD file` — the same open action as the top bar — and, under it,
-  the last 8 files that were parsed *successfully* (`feat(ui)`): name in bold,
-  folder underneath, one click to reopen, and entries whose file no longer
-  exists are hidden without being forgotten. The history is stored next to the
-  language preference in `settings.json` and is rebuilt every time the empty
-  state appears; a failed open is never recorded.
-- **Drag & drop**: a `.ddd` file dropped anywhere on the window is opened
-  through the very same entry point as the file dialog, so the busy guard,
-  recent-files recording and parse-error reporting are shared; dropping several
-  files opens the first and says so in the status bar, dropping a folder (or a
-  file that no longer exists) opens nothing and says why. `tkinterdnd2` is
-  optional: without it — or without a `tkdnd` binary for the platform — the
-  window starts with drag & drop silently disabled and no "or drop it here"
-  hint, everything else unchanged.
+---
 
-### ♻️ Refactoring
+### The interface in 34 languages
 
-- **Single palette and font source**: `refactor(ui)` — every colour and every
-  font spec the desktop UI paints now lives in `app/theme.py` (`SURFACE`,
-  `ACCENT`, `ACTIVITY_*`, `FONT_*`, ...), and `app/gui.py` no longer contains a
-  single raw `#rrggbb` literal. The change is visually inert: the palette was
-  dumped widget by widget before and after, and the two snapshots are identical.
+The top bar has a language button: a globe followed by the name of the language
+in use. **Language** inside it lists English, the 23 other official EU
+languages, and Norwegian, Icelandic, Russian, Ukrainian, Belarusian, Turkish,
+Serbian, Bosnian, Albanian and Macedonian — 34 in total.
 
-# v2.7.0 (2026-10-03)
+- Every language is written in its own script, so a reader who cannot follow the
+  current interface can still find theirs. The list is split into three columns
+  to stay usable on a small screen, and the active language is ticked.
+- The program's own text is translated: window and dialog titles, the status
+  bar, menus, toolbar buttons, tree section names, table column headers, record
+  field names, chart legends and tooltips, and the words used for activity
+  kinds, countries, record types, signature verdicts, event and fault
+  descriptions and yes/no values.
+- Choosing a language restarts the application window in that language and
+  reopens the file you were viewing. The choice is remembered the next time you
+  start the program. A switch is refused while a file is loading or an export is
+  running, so no work is lost, and a language that cannot be saved leaves the
+  previous one in place with a warning.
+- English is the default and the source text: anything a catalog does not
+  translate falls back to English, so the window is never half-empty. The
+  program never picks a language from the operating system on its own — only the
+  menu changes it.
+
+**Translate file contents** is the second entry in the same menu, below a
+separator, and it is a separate decision. With it turned on, values *decoded
+from the file* are translated as well: activity names, country names, record
+purposes, specific conditions, event and fault descriptions, signature statuses,
+card and chip labels. It is off by default, so every cell shows exactly what the
+decoder produced; turning it on re-renders the open file in place, with no
+restart.
+
+Either way, these are never translated: free text carried by the file (driver,
+company and workshop names, addresses, plates), identifiers and codes,
+timestamps, and the exported reports, which are always English.
+
+Adding or correcting a language is a translation file rather than a code change:
+`locale/<code>/LC_MESSAGES/tacho.po`. The steps and the translation rules are
+in [CONTRIBUTING.md](https://github.com/Syax89/DDDTachograph_Reader/blob/v2.8.0/CONTRIBUTING.md).
+
+---
+
+### The window
+
+**A file opens on its Summary.** The first node in the tree is **Summary**, and
+it is what the right pane shows after a load: the file and the period it covers,
+then the integrity verdict, the cardholder, the vehicle and the activity totals,
+in that order, so a warning is never pushed below the fold of a small window.
+Values are labelled rows with an icon per block, and a value wider than the
+panel is shown in full when you hover over it.
+
+**An empty pane that helps.** Before a file is open the right pane shows
+**Open a DDD file** — the same action as the toolbar — and **Recent files**: the
+last 8 files that were parsed successfully, name in bold, folder underneath, one
+click to reopen. A file that is no longer there (an unplugged USB stick, a
+deleted download) disappears from the list without being forgotten, and a file
+that failed to parse is never added.
+
+**Drag and drop.** Dropping a `.ddd` file on the window opens it through the same
+path as the file dialog, so the busy handling, the recent-files entry and the
+error reporting are the same. It takes one file: dropping several opens the first
+and the status bar says so, dropping a folder opens nothing and says why, and a
+drop that arrives while a file is loading or being drawn is ignored rather than
+queued. Drag and drop comes from the optional `tkinterdnd2` package; when it or
+its platform binary is missing, the window starts normally with the feature off
+and no "or drop it here" hint.
+
+**Icons from a set, not from a font.** Every icon in the interface is a
+monochrome PNG shipped with the application, so a toolbar button or a tree node
+no longer depends on the emoji font a machine happens to have. Toolbar buttons
+keep their label next to the icon; tree nodes, the status badge, the integrity
+banner and the summary block headers carry theirs on the row. The image is chosen
+for the display scale rather than stretched, so a high-DPI screen draws a larger
+file. Status icons differ by shape as well as colour (circle/check, triangle/!,
+circle/cross, circle/?). The command line has no icon set and prints words.
+
+**Loading says what it is doing.** The progress bar keeps moving until the file
+is on screen, Open and Export stay disabled meanwhile, and a second open or a
+drop is refused instead of starting a second load. If a file fails to parse, the
+error appears once loading has finished, the previous file's name, generation
+badge and integrity banner are cleared so they cannot be mistaken for the file
+that just failed, and a previously loaded file stays on screen and exportable
+with a status line naming it. With nothing loaded before, the pane returns to the
+empty state.
+
+**Layout and readability.** The tree pane starts wider, so a fully expanded G2
+card or vehicle-unit tree is not cut mid-word, and names too wide for any fixed
+pane get a horizontal scrollbar. Tree and table scrollbars appear only while the
+content does not fit. The integrity verdict is shortened with an ellipsis when
+the top bar runs out of room and is readable in full on hover. Seven foreground
+colours that were too close to their background now meet a 4.5:1 contrast, the
+day-detail log uses a monospace font on Windows and Linux as well as macOS, and
+column headings sit over the columns they label.
+
+**Without a mouse.** The window is fully operable from the keyboard:
+
+| Key | What it does |
+|-----|--------------|
+| `Tab` / `Shift+Tab` | Move focus through the toolbar, the tree and the table; while a warning is showing, the integrity banner is in the chain too |
+| `↑` `↓` `←` `→` | Move through the tree and open or collapse nodes |
+| `Return` | On a day node, open the day detail; on other rows, open or close them; on the banner, open the integrity details |
+| `Space` | On the integrity banner, open the integrity details |
+| `Ctrl+F` | Focus the filter box when the current view has one |
+| `Ctrl+C` (`Cmd+C` on macOS) | Copy the selected table row as tab-separated text |
+| Double-click | Open a day node, like `Return` |
+
+**Less noise, more meaning.** The internal record-type code is no longer a
+column on screen — it belongs to the record, not to the reader, and the exports
+keep it. A section's record tally now reads as names and counts ("Vu Calibration
+Record ×2") instead of hex keys. Every calibration purpose is named, including
+the Gen-2 codes *Entry of VRN by company* and *Time adjustment without
+calibration*, and a reserved or manufacturer-specific byte says so instead of
+showing a bare number. Summary values keep the full panel width even right after
+you return from a chart.
+
+---
+
+### Charts
+
+**Daily activity timeline.** Activity names in the bands, the legend and the
+tooltips follow the selected language. Crew days are still drawn per slot, the
+out-of-scope and specific-condition markers are unchanged, and for a driver card
+the info line still names the vehicle or vehicles driven that day with each
+plate's start–end window.
+
+**Detailed speed (vehicle units).** The min–max envelope is a filled band under a
+2 px mean line, horizontal gridlines carry the km/h scale, and time labels thin
+out on a narrow window instead of crowding. Stretches the unit recorded nothing
+in are shaded and explained in the legend, so a gap is not read as a vehicle
+standing still, and the "internal gaps" figure counts those holes. Red marks only
+what is above the speed limit — a segment that crosses the limit is cut at the
+crossing. Cards above the plot give the day's maximum and average speed, time
+above the limit, time moving and the overspeeding events the unit recorded, and
+the legend explains the dashed limit line and the red dots. Those dots are
+events recorded by the unit, whose peak can be higher than any sampled speed.
+
+---
+
+### Excel and PDF reports
+
+**Excel (`Export → Excel (.xlsx)`, or `python -m app.cli file.ddd --excel report.xlsx`)**
+
+- Cells a spreadsheet can work with are real values: day dates, UTC timestamps
+  (keeping their zone in the cell format, `2024-11-26 04:28Z`, since Excel has no
+  time zones), odometers and measured speeds as numbers, and activity durations
+  as `[h]:mm` durations, so a monthly `48:00` stays a duration instead of
+  becoming `2.00`.
+- A column is typed only when its meaning is known, and a value only when it is
+  exactly the shape the report prints. Card numbers, licence numbers, VINs,
+  serials, plates, certificate references, hex material, codes and counters keep
+  their exact characters — a leading zero survives, a 16-digit number is not
+  rounded — and `N/A`, placeholders and malformed values stay text.
+- `Daily Activities` holds the day rows only. The monthly subtotal rows moved to
+  their own highlighted `Monthly Activities` sheet, split from the same
+  slot-aware activity report.
+- `Summary` is both an overview and an index: every summary fact (zeros
+  included), the parse and integrity problem rows tinted, a warnings-and-limits
+  block, and one entry per sheet with its row count and an internal link.
+- Every table has a wrapped header band, a frozen header row, an auto-filter,
+  hidden gridlines, striped rows, print titles and landscape fit-to-width
+  printing, with a note row wide and tall enough to read.
+
+**PDF (`Export → PDF (.pdf)`, or `python -m app.cli file.ddd --pdf report.pdf`)**
+
+- The cover names the file, its source and generation, the time the report was
+  generated, the activity period taken from the daily records (UTC, and
+  explicitly not a claim about the download's retention period), the identity
+  facts, the file state — integrity, download completeness and every
+  partial-parse warning the parser recorded — and a totals grid: Drive, Work,
+  Rest, Available, Unknown and Total in `h:mm`, plus days with activity, events
+  and faults.
+- The operational data follows in the usual order, then a named **Technical
+  Appendix** holds certificates, signature checks, calibrations and workshops,
+  unit, sensor and card identification, and a closing *File & Parse Details*
+  block.
+- Records wider than ten columns (calibrations, certificates, power
+  interruptions, VU identifications) print as one field/value card per record,
+  numbered, instead of being squeezed into unreadable columns; a card longer than
+  a page repeats its record number and header.
+- A list section stops at 1,500 rows and says so on the page, naming the rows
+  exported and pointing at the JSON export. A month cut before its subtotal is
+  labelled as partial rather than shown with an empty name. Blank and
+  header-only trailing pages are gone, and a long file name is shortened in the
+  footer instead of running into the page number.
+
+---
+
+### Linux, Windows and macOS packages
+
+- **Linux (x86_64)** ships as a Flatpak bundle,
+  `TachoReader-v<version>-linux-x86_64.flatpak`:
+
+  ```bash
+  flatpak install --user ./TachoReader-vX.Y.Z-linux-x86_64.flatpak
+  flatpak run io.github.Syax89.TachoReader
+  ```
+
+  It is self-contained — Python, Tk, the dependencies and the translations are
+  all inside it — and fetches only the `org.freedesktop.Platform` 25.08 runtime.
+  It reads and writes files in your home directory and has no network access, so
+  USB sticks and other mounts need an explicit override:
+  `flatpak override --user --filesystem=/run/media/$USER io.github.Syax89.TachoReader`.
+  On Wayland it runs through XWayland. Copies are x86_64 only, the bundle is an
+  unsigned sideload rather than a Flathub listing, and updating means installing
+  the next release file.
+- **Windows** ships `TachoReader-v<version>-windows-x64.zip` and **macOS**
+  `TachoReader-v<version>-macos.dmg`. Neither is code-signed or notarized, so
+  SmartScreen or Gatekeeper may warn or block the first launch; which prompt you
+  see and whether it can be bypassed depends on the OS version and on policies
+  your organization may set. The steps for each platform are in
+  [docs/user/installation.md](https://github.com/Syax89/DDDTachograph_Reader/blob/v2.8.0/docs/user/installation.md).
+
+---
+
+### Limits worth knowing
+
+- The interface is translated; **the exported reports are English only**.
+- The PDF prints at most 1,500 report rows per section, monthly subtotals
+  included. The cover's activity totals are computed from **all** daily records
+  in the file, so they can be larger than the capped tables below them — the
+  cover says so, and the JSON export holds everything.
+- The Excel workbook prints at most 50,000 report rows per data section,
+  counted on the shared report rows (monthly subtotals included) before the
+  daily/monthly split; a section that hits the limit says so on its own sheet and
+  in the Summary. Key/value sheets, the TREP signature list and the VU
+  certificate list are not capped. Excel cannot make one row taller than
+  409.5 pt — about 27 wrapped lines at the Summary's width — so a Summary value
+  longer than that is clipped on screen and in print while the cell keeps the
+  full text.
+- JSON is the complete parsed output — every decoded field the parser produces,
+  including raw tags and the verification results — and **not** a reversible copy
+  of the original download. Keep the `.ddd` file itself for archival or forensic
+  use.
+- CSV is one semicolon-separated UTF-8 (with BOM) block per section, carrying the
+  compact report text: use JSON when you need the full decoded structure.
+- Loading a file never modifies it, and the reader writes nothing unless you ask
+  for an export. An export destination you name yourself can overwrite an
+  existing file, so save to a distinct path and keep the original `.ddd`.
+- Parsing and verification are local and offline: no upload and no telemetry.
+- The reader decodes and verifies; it does not assess driving-time or
+  rest-period compliance and does not estimate penalties.
+- Drag and drop needs `tkinterdnd2`. The PDF and Excel exports need `reportlab`
+  and `openpyxl` when the CLI is run from source; `requirements.txt` and the
+  packaged builds include all three.
+
+## [2.7.0] - 2026-10-03
 
 ## 🎉 Major Release: Batch 6-20 Campaign Complete
 

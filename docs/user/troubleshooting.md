@@ -46,7 +46,7 @@
 
 ## GUI Won't Start
 
-**Symptom**: Running `python app/gui.py` produces an error or the window doesn't appear.
+**Symptom**: Running `python -m app.gui` produces an error or the window doesn't appear.
 
 **Common fixes**:
 
@@ -64,6 +64,62 @@
    ```bash
    brew install python-tk
    ```
+4. **Wrong invocation**: `python app/gui.py` fails with `ModuleNotFoundError: No module named 'app'` because the package root is not on the import path. Run it as a module from the repository root: `python -m app.gui`.
+
+---
+
+## Drag & Drop Does Nothing
+
+**Symptom**: You drop a `.ddd` file on the window and nothing happens, and the empty
+pane has no "or drop it here" hint.
+
+**Explanation**: drag & drop comes from the optional `tkinterdnd2` package and the
+`tkdnd` binary it ships with. When either is missing, the application starts
+normally with drag & drop silently disabled — the hint is not shown, and nothing
+else changes.
+
+**Fix**: install the package when running from source
+(`pip install -r requirements.txt` installs it) and restart. The packaged builds
+include it. Opening files through **Open DDD file** or the recent-files list always
+works.
+
+---
+
+## The Language Did Not Change
+
+**Symptom**: You picked a language and the window still shows the old one, or the
+tick jumped back.
+
+**Explanation**: switching language restarts the application window in the new
+language and reopens the file you were viewing. The switch is refused — and the
+menu returns to the active language — while a file is being parsed, drawn or
+exported, so that no work is lost. The same happens if the per-user settings file
+cannot be written; a warning is shown.
+
+**Fix**: wait until the file is on screen (or the export has finished) and choose
+the language again. If the warning reappears, check that the settings file is
+writable: `%APPDATA%\TachoReader\settings.json` on Windows,
+`~/Library/Application Support/TachoReader/settings.json` on macOS,
+`~/.config/TachoReader/settings.json` on Linux.
+
+Note that **Translate file contents**, the tick under the language list, does not
+restart anything — it re-renders the open file in place, so it changes the cells
+immediately rather than the window's own text.
+
+---
+
+## Recent Files Is Empty or a File Disappeared
+
+**Symptom**: The empty pane shows no **Recent files**, or a file you used
+yesterday is missing from the list.
+
+**Explanation**: the list holds the last 8 files that were parsed **successfully**
+and only shows the ones that still exist. A file on an unplugged USB stick or a
+deleted download is hidden without being forgotten, so it reappears once the
+drive is mounted again; a file that failed to parse is never added.
+
+**Fix**: reopen the file from its current location; it will be recorded again.
+The history lives in the same per-user `settings.json` as the language.
 
 ---
 
@@ -77,7 +133,25 @@
 pip install -r requirements.txt
 ```
 
-Note that `reportlab` is only needed for PDF export and `openpyxl` only for Excel export — parsing and JSON output work without them.
+Note that `reportlab` is only needed for PDF export and `openpyxl` only for Excel export — parsing and JSON output work without them. The GUI still starts without `tkinterdnd2`; it just has no drag & drop.
+
+A `ModuleNotFoundError: No module named 'core'` (or `'app'`) means the entry point
+was called by path instead of as a module: run `python -m app.cli file.ddd` or
+`python -m app.gui` from the repository root.
+
+---
+
+## "Export Unavailable" When Saving a PDF or Excel File
+
+**Symptom**: The Export menu shows a warning instead of asking where to save.
+
+**Explanation**: PDF export needs `reportlab` and Excel export needs `openpyxl`.
+When one of them is missing (typically in a source checkout), that format is
+unavailable and the dialog says so; CSV and JSON keep working.
+
+**Fix**: `pip install -r requirements.txt`, or install the single package
+(`pip install reportlab` / `pip install openpyxl`). The packaged Windows, macOS and
+Linux builds include both.
 
 ---
 
@@ -87,7 +161,7 @@ Large `.ddd` files (90+ days of data, or vehicle unit files with detailed speed 
 
 1. **Use the CLI for batch processing**: The command-line interface is faster than the GUI for processing many files in a shell loop.
 2. **Export to JSON first, then analyze**: Parse the file once with JSON output, then use the JSON for repeated analysis instead of re-parsing the binary `.ddd`.
-3. **The GUI stays responsive**: Parsing runs in a background thread; the progress bar in the status bar shows when work is in progress.
+3. **The GUI stays responsive**: the progress bar in the status bar keeps moving while a file loads, and the window is not frozen while it is drawn.
 
 ---
 
@@ -97,7 +171,7 @@ If none of the above resolves your problem:
 
 1. Run with verbose logging to capture detailed error information:
    ```bash
-   python app/cli.py file.ddd --verbose --summary
+   python -m app.cli file.ddd --verbose --summary
    ```
 2. Check the [FAQ](faq.md) for other common questions.
 3. Open a [GitHub issue](https://github.com/Syax89/DDDTachograph_Reader/issues) with the verbose output and a description of your environment (OS, Python version, file generation).

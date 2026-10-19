@@ -32,9 +32,22 @@
 - TREP completeness inventory and origin detection (driver card vs VU download)
 - Plausibility gating and best-effort salvage of partial/corrupted downloads
 - Tree structure for data exploration
+- Reports what it can verify and what it cannot: the reader is not a driving-time
+  or rest-period compliance tool and does not estimate penalties
+
+### Interface
+- Regedit-style section tree beside an Excel-style table or an interactive chart
+- Opens on a one-page **Summary** of the loaded file (identity, integrity, activity totals)
+- **34 languages** (English + 33 catalogs), with a separate, opt-in
+  *Translate file contents* switch for file-decoded labels
+- Empty state with the **last 8** successfully opened files, and optional **drag & drop**
+- Keyboard operation, own monochrome icon set sized for the display, contrast-checked palette
+- Activity timeline and detailed-speed charts with per-day dashboards
 
 ### Export
 - PDF, Excel, CSV, JSON export
+- Excel workbook with typed cells (real dates, numbers, durations) and a Summary index
+- PDF with a structured cover, a named Technical Appendix and field/value cards for wide records
 - Interactive GUI with tree navigation
 
 ---
@@ -75,9 +88,8 @@ and drag `TachoReader.app` to Applications. For Linux, see below.
 
 ### Linux (Flatpak, x86_64)
 
-Releases containing the Linux packaging job also ship a standalone Flatpak
-bundle, produced by CI using the same `build.spec` configuration as the native
-Windows and macOS builds:
+Every release also ships a standalone Flatpak bundle, produced by CI using the
+same `build.spec` configuration as the native Windows and macOS builds:
 
 ```bash
 flatpak install --user ./TachoReader-vX.Y.Z-linux-x86_64.flatpak
@@ -86,10 +98,6 @@ flatpak run io.github.Syax89.TachoReader
 
 Replace `vX.Y.Z` with the downloaded release version. For a CI build, extract
 the artifact ZIP and install the contained `TachoReader-linux-x86_64.flatpak`.
-
-> **Availability:** the Flatpak bundle is not part of the already-published
-> `v2.7.1` release — it appears with the next tagged release that includes the
-> Linux packaging job.
 
 The bundle is self-contained: Python, Tk and every Python dependency live inside
 it, and only the `org.freedesktop.Platform` 25.08 runtime is fetched (from
@@ -130,12 +138,24 @@ git clone https://github.com/Syax89/DDDTachograph_Reader.git
 cd DDDTachograph_Reader
 pip install -r requirements.txt
 
-# GUI
-python app/gui.py
+# GUI (run as a module from the repository root)
+python -m app.gui
 
 # CLI
-python app/cli.py path/to/file.ddd
+python -m app.cli path/to/file.ddd
 ```
+
+Run both **as modules** from the repository root: `python app/gui.py` and
+`python app/cli.py` fail with `ModuleNotFoundError` because the package root is
+then not on the import path. `python app/main.py path/to/file.ddd` also works —
+it is a compatibility entry point that delegates to the same CLI.
+
+The GUI is built on Python's built-in `tkinter`. The only extra GUI package is
+the optional `tkinterdnd2` (drag & drop), which `requirements.txt` installs and
+the packaged builds include; without it the window starts with drag & drop
+disabled. `cryptography` is needed to verify signatures, `reportlab` only to
+write a PDF and `openpyxl` only to write an `.xlsx`. **Python 3.10 or later is
+required.**
 
 ---
 
@@ -148,7 +168,11 @@ DDDTachograph_Reader/
 │   ├── main.py                 # CLI compatibility entry point
 │   ├── gui.py                  # GUI (tree + table, tkinter)
 │   ├── engine.py               # TachoParser entry point
-│   └── export.py               # PDF/Excel/CSV/JSON export
+│   ├── export.py               # PDF/Excel/CSV report writers
+│   ├── i18n.py                 # gettext install, language + settings (34 languages)
+│   ├── ui_text.py              # the one label/translation layer for display text
+│   ├── theme.py                # palette and font specs the GUI paints
+│   └── icons.py                # icon lookup from assets/icons/png/<size>/
 ├── core/
 │   ├── decoders/                # Field-level decoders and primitives
 │   ├── parser/                  # Deterministic, G1, and VU parsers
@@ -156,6 +180,8 @@ DDDTachograph_Reader/
 │   ├── crypto/                  # Certificate and signature validation
 │   └── utils/                   # Shared helpers, constants, and version
 ├── certs/                       # ERCA root certificates
+├── locale/                      # Translation catalogs (<code>/LC_MESSAGES/tacho.po|.mo)
+├── assets/icons/                # Icon set (png/<size>/<name>.png + SVG masters)
 ├── flatpak/                     # Flatpak manifest + desktop entry (Linux bundle)
 ├── tests/                       # Test suite
 ├── scripts/                     # Specifications and audits
@@ -177,20 +203,22 @@ DDDTachograph_Reader/
 
 ## Languages
 
-The interface ships in 34 languages: English plus the 24 official EU languages,
-Norwegian, Icelandic, Russian, Ukrainian, Belarusian, Turkish, Serbian, Bosnian,
-Albanian and Macedonian. Pick one from the **Language** menu in the top bar; the
-choice is stored in the per-user settings file and applied at the next start.
+The interface ships in 34 languages: English, the 23 other official EU languages,
+and Norwegian, Icelandic, Russian, Ukrainian, Belarusian, Turkish, Serbian,
+Bosnian, Albanian and Macedonian. The language button in the top bar shows the
+active language; **Language** inside it lists every language in its own script.
+Choosing one restarts the window in that language and reopens the file you were
+viewing, and the choice is remembered the next time you start the program.
 
-English is the source language and the default. The application's own text —
-menus, column headers, section names, messages — is translated. Labels *decoded
-from the file* (activity names, event and fault descriptions, record purposes,
-specific conditions, country names, signature statuses) are shown exactly as the
-decoder names them unless **Translate file contents** at the bottom of the
-Language menu is ticked. Free text carried by the file (driver names, plates,
-addresses, company names), identifiers and codes are never translated, nor are
-exported reports. See [CONTRIBUTING.md](CONTRIBUTING.md) to add a language or
-improve a translation.
+The application's own text — menus, buttons, section names, column headers,
+record field names, messages, chart legends — is always translated. Values
+*decoded from the file* (activity names, event and fault descriptions, record
+purposes, specific conditions, country names, signature statuses) are shown
+exactly as the decoder names them unless **Translate file contents** at the
+bottom of the same menu is ticked. Free text carried by the file (driver names,
+plates, addresses, company names), identifiers and codes are never translated,
+and **exported reports are always English**. See [CONTRIBUTING.md](CONTRIBUTING.md)
+to add a language or improve a translation.
 
 ---
 

@@ -7,17 +7,14 @@
 3. Extract the ZIP file to a folder of your choice.
 4. Double-click **`TachoReader.exe`** to launch.
 
-> **Note**: Windows SmartScreen may show a warning because the executable is not code-signed. Click "More info" → "Run anyway" to proceed.
+> **Note**: the Windows build is not code-signed, so Windows SmartScreen may warn the first time you run it. Which prompt appears — and whether it can be bypassed — depends on your Windows version and on policies your organization may set. If the control is offered, choose "More info" → "Run anyway" for this app; do not turn SmartScreen or Smart App Control off to get past it. Microsoft's guidance: [App & browser control in the Windows Security app](https://support.microsoft.com/en-us/windows/security/windows-security/app-browser-control-in-the-windows-security-app).
 
 ## macOS
 
 1. Go to the [GitHub Releases page](https://github.com/Syax89/DDDTachograph_Reader/releases/latest).
 2. Download **`TachoReader-v<version>-macos.dmg`**.
 3. Open the disk image and drag `TachoReader.app` to Applications.
-4. **Right-click** the `TachoReader` app and select **Open** (this bypasses Gatekeeper on first run).
-5. If prompted, confirm you want to open the application.
-
-> **Why right-click?** macOS Gatekeeper blocks unsigned applications. The right-click → Open method allows you to run the app after confirming.
+4. The app is not notarized with an Apple Developer ID, so Gatekeeper may block the first launch. Depending on your macOS version, either open **System Settings → Privacy & Security** and choose **Open Anyway** for the app after a blocked attempt, or **Control-click** (or right-click) the app and choose **Open**. Apple's guidance: [Open a Mac app from an unidentified developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac). Do not disable Gatekeeper permanently to work around this.
 
 ## Linux (Flatpak, x86_64)
 
@@ -42,11 +39,12 @@ the `org.freedesktop.Platform` 25.08 runtime is fetched, from Flathub, as its
 dependency. There is one bundle per release and it is **x86_64 only**: no
 aarch64/ARM build exists.
 
-> **Availability:** the Flatpak is not part of the already-published `v2.7.1`
-> release. It is available now as a build artifact from the branch CI runs, and
-> as a proper release asset from the next `v*` tag that includes the Linux
-> packaging job. See [Downloading a build from CI](#downloading-a-build-from-ci)
-> below and the [CI section of the README](../../README.md#continuous-integration).
+> **Signed or not?** The bundle is an unsigned local file, not a Flathub
+> listing: Flatpak installs it as a sideload, updates are a manual install of
+> the next release file, and only the x86_64 architecture is built. See
+> [Downloading a build from CI](#downloading-a-build-from-ci) for artifacts and
+> the [CI section of the README](../../README.md#continuous-integration) for how
+> the packages are produced.
 
 **Sandbox:** the app gets read/write access to your home directory and no
 network access, so `.ddd` files and exports work inside your home. Files
@@ -106,12 +104,18 @@ The GUI is built on Python's built-in `tkinter`; the only extra GUI package is t
 ### Launching
 
 ```bash
-# GUI
-python app/gui.py
+# GUI (run as a module from the repository root; a file path opens it directly)
+python -m app.gui
+python -m app.gui file.ddd
 
 # CLI
-python app/main.py file.ddd
+python -m app.cli file.ddd
 ```
+
+Run both **as modules**: invoking `app/gui.py` or `app/cli.py` by path fails with
+`ModuleNotFoundError`, because the package root is then not on the import path.
+`python app/main.py file.ddd` also works — it is a compatibility entry point that
+delegates to the same CLI, not a separate one.
 
 ## Verification
 
@@ -119,16 +123,12 @@ The commands below check a **source checkout**; they do not apply to the
 packaged builds. After installation, verify everything works:
 
 ```bash
-python app/main.py --help
+python -m app.cli --help
+python -m app.gui --version
 ```
 
-Or with the advanced CLI:
-
-```bash
-python app/cli.py --help
-```
-
-The help text should display the available options and example commands without errors.
+The help text should display the available options and example commands without
+errors, and `--version` should print the reader version (`TachoReader 2.8.0`).
 
 For the released builds, verify the installed app instead:
 

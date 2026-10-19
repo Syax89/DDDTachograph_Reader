@@ -98,7 +98,7 @@ Questi 7 tag hanno dimensioni puramente stimate dal codice euristico, senza conf
 
 ### Bug #2 — Tag 0x052C-0x0533 non in G2_VU_RECORD_DECODERS
 - **Problema**: `G2_VU_RECORD_DECODERS` non include entries per i tag 0x052C-0x0533.
-- **Conseguenza**: `parse_g2_vu_record` in `decoders.py:167` fa `return` immediato per questi tag.
+- **Conseguenza**: `parse_g2_vu_record` in `core/decoders/vu_g2.py` fa `return` immediato per questi tag.
 - **Fix**: Aggiungere le entries mancanti con i decoder appropriati.
 
 ### Bug #3 — Discrepanza size VuCardIWRecord

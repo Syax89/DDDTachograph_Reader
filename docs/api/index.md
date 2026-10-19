@@ -7,4 +7,4 @@
 - [DeterministicParser](deterministic_parser.md) — Schema-driven two-pass parser
 
 ## Export
-- [ExportManager](export_manager.md) — Excel/CSV export
+- [ExportManager](export_manager.md) — Excel, CSV and PDF report writers

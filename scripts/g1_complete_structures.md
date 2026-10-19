@@ -29,7 +29,7 @@
 - **Dimensione record**: 18+ byte (variabile)
 - **Numero record**: 1
 - **Stato decoder**: ⚠️ PARZIALE — decoder euristico, non basato sulla struttura ASN.1 esatta
-- **Decoder function**: `parse_ef_icc()` (decoders.py:726)
+- **Decoder function**: `parse_ef_icc()` — `core/decoders/card_ef.py`
 
 **Struttura** (da C# config):
 | Offset | Size | Nome | Tipo | Note |
@@ -53,7 +53,7 @@
 - **Dimensione record**: 8 byte
 - **Numero record**: 1
 - **Stato decoder**: ⚠️ PARZIALE — restituisce solo hex dump, senza parsed fields
-- **Decoder function**: `parse_ef_ic()` (decoders.py:743)
+- **Decoder function**: `parse_ef_ic()` — `core/decoders/card_ef.py`
 
 **Struttura** (da C# config):
 | Offset | Size | Nome | Tipo | Note |
@@ -72,7 +72,7 @@
 - **Dimensione record**: 20+ byte (variabile)
 - **Numero record**: 1
 - **Stato decoder**: ⚠️ EURISTICO — usa regex per estrarre numero carta e nome azienda
-- **Decoder function**: `parse_card_issuer_identification()` (decoders.py:878)
+- **Decoder function**: `parse_card_issuer_identification()` — `core/decoders/card_ef.py`
 
 **Nota**: La struttura esatta di questo tag non è documentata nel file config C# di riferimento (non presente in `DriverCardData.config`). Il decoder usa pattern-matching euristici (regex su `[A-Z]\d{13,20}` per numeri carta italiani). **NON basato su specifica**.
 
@@ -85,7 +85,7 @@
 - **Dimensione record**: 8+ byte (variabile)
 - **Numero record**: 1
 - **Stato decoder**: ⚠️ PARZIALE — solo campi base + scan euristico nome azienda
-- **Decoder function**: `parse_g2_card_icc_identification()` (decoders.py:654)
+- **Decoder function**: `parse_g2_card_icc_identification()` — `core/decoders/card_ef.py`
 
 **Struttura** (G2, da Annex 1C):
 | Offset | Size | Nome | Tipo | Note |
@@ -108,7 +108,7 @@
 - **Dimensione record**: 23 byte (fissi)
 - **Numero record**: 1
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `parse_card_identification()` (decoders.py:307)
+- **Decoder function**: `parse_card_identification()` — `core/decoders/card_ef.py`
 
 **Struttura** (G2):
 | Offset | Size | Nome | Tipo | Note |
@@ -152,7 +152,7 @@
 - **Dimensione record**: 78 byte (fissi)
 - **Numero record**: 1
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `parse_driver_card_holder_identification()` (decoders.py:313)
+- **Decoder function**: `parse_driver_card_holder_identification()` — `core/decoders/card_ef.py`
 
 **Struttura**:
 | Offset | Size | Nome | Tipo | Note |
@@ -173,7 +173,7 @@
 - **Dimensione record**: 10 byte (fissi)
 - **Numero record**: 1
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `parse_g1_app_identification()` (decoders.py:512)
+- **Decoder function**: `parse_g1_app_identification()` — `core/decoders/card_ef.py`
 
 **Struttura** (da C# `DriverCardData.config`, Identifier="0x0501"):
 | Offset | Size | Nome | Tipo | Note |
@@ -197,7 +197,7 @@
 - **Dimensione record**: 24 byte per evento (fissi)
 - **Numero record**: 6 gruppi × `NoOfEventsPerType` eventi ciascuno
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `parse_g1_events_data()` (decoders.py:535)
+- **Decoder function**: `parse_g1_events_data()` — `core/decoders/card_ef.py`
 
 **Struttura** (da C# `DriverCardData.config`):
 ```
@@ -236,7 +236,7 @@ CardEventData ::= SEQUENCE (SIZE(6)) OF {      -- 6 gruppi di eventi
 - **Dimensione record**: 24 byte per guasto (fissi)
 - **Numero record**: 2 gruppi × `NoOfFaultsPerType` guasti ciascuno
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `parse_g1_faults_data()` (decoders.py:571)
+- **Decoder function**: `parse_g1_faults_data()` — `core/decoders/card_ef.py`
 
 **Struttura** (da C# `DriverCardData.config`):
 ```
@@ -269,7 +269,7 @@ CardFaultData ::= SEQUENCE (SIZE(2)) OF {       -- 2 gruppi di guasti
 - **Dimensione record**: Variabile (buffer ciclico: 4 byte header + N record giornalieri)
 - **Numero record**: 1 (il buffer contiene 366+ giorni)
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `parse_cyclic_buffer_activities()` (decoders.py:106)
+- **Decoder function**: `parse_cyclic_buffer_activities()` — `core/decoders/common.py`
 
 **Struttura buffer ciclico**:
 | Offset | Size | Nome | Tipo | Note |
@@ -312,7 +312,7 @@ CardFaultData ::= SEQUENCE (SIZE(2)) OF {       -- 2 gruppi di guasti
 - **Dimensione record**: 31 byte (G1), 35 byte (G2)
 - **Numero record**: `NoOfCardVehicleRecords` (da 0x0501)
 - **Stato decoder**: ✅ CORRETTO (dopo fix B2)
-- **Decoder function**: `parse_g1_vehicles_used()` (decoders.py:234)
+- **Decoder function**: `parse_g1_vehicles_used()` — `core/decoders/card_ef.py`
 
 **Struttura G1** (31 byte, da C# config):
 | Offset | Size | Nome | Tipo | Note |
@@ -355,7 +355,7 @@ CardFaultData ::= SEQUENCE (SIZE(2)) OF {       -- 2 gruppi di guasti
 - **Dimensione record**: 10 byte (G1 base), 12/13/27 byte (varianti)
 - **Numero record**: `NoOfCardPlaceRecords` (da 0x0501)
 - **Stato decoder**: ⚠️ PARZIALE — record size determinato euristicamente
-- **Decoder function**: `parse_g1_places()` (decoders.py:603)
+- **Decoder function**: `parse_g1_places()` — `core/decoders/card_ef.py`
 
 **Struttura G1 base** (10 byte, da C# config):
 | Offset | Size | Nome | Tipo | Note |
@@ -387,7 +387,7 @@ CardFaultData ::= SEQUENCE (SIZE(2)) OF {       -- 2 gruppi di guasti
 - **Dimensione record**: 19 byte (fissi)
 - **Numero record**: 1
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `parse_g1_current_usage()` (decoders.py:298)
+- **Decoder function**: `parse_g1_current_usage()` — `core/decoders/card_ef.py`
 
 **Struttura** (da C# config):
 | Offset | Size | Nome | Tipo | Note |
@@ -409,7 +409,7 @@ CardFaultData ::= SEQUENCE (SIZE(2)) OF {       -- 2 gruppi di guasti
 - **Dimensione record**: 46 byte per record (da C# config), ma il decoder usa 24 byte
 - **Numero record**: variabile
 - **Stato decoder**: ❌ NON CONFORME — dimensione record errata, campi missing
-- **Decoder function**: `parse_control_activity_data()` (decoders.py:767)
+- **Decoder function**: `parse_control_activity_data()` — `core/decoders/card_ef.py`
 
 **Struttura corretta** (da C# config, 46 byte per record):
 | Offset | Size | Nome | Tipo | Note |
@@ -435,7 +435,7 @@ CardFaultData ::= SEQUENCE (SIZE(2)) OF {       -- 2 gruppi di guasti
 - **Dimensione record**: 105 byte (G1) o 161 byte (G2)
 - **Numero record**: variabile
 - **Stato decoder**: ⚠️ PARZIALE — campi mancanti, ordine potenzialmente errato
-- **Decoder function**: `parse_calibration_data()` (decoders.py:320)
+- **Decoder function**: `parse_calibration_data()` — `core/decoders/card_ef.py`
 
 **Struttura G1** (105 byte, da C# `VehicleUnitData.config`):
 | Offset | Size | Nome | Tipo | Note |
@@ -495,7 +495,7 @@ CardFaultData ::= SEQUENCE (SIZE(2)) OF {       -- 2 gruppi di guasti
 - **Dimensione record**: 4 byte per download (TimeReal)
 - **Numero record**: variabile (accumulato)
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `parse_card_download()` (decoders.py:786)
+- **Decoder function**: `parse_card_download()` — `core/decoders/card_ef.py`
 
 **Struttura** (da C# config):
 | Offset | Size | Nome | Tipo | Note |
@@ -525,7 +525,7 @@ Questi tag appartengono al dominio VU (Vehicle Unit) e in G1 sono record sequenz
 - **Dimensione record**: 65 + 78 = 143 byte (fissi)
 - **Numero record**: 1
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `parse_g1_identification()` (decoders.py:210)
+- **Decoder function**: `parse_g1_identification()` — `core/decoders/card_ef.py`
 
 **Struttura** (da C# config):
 
@@ -558,7 +558,7 @@ Questi tag appartengono al dominio VU (Vehicle Unit) e in G1 sono record sequenz
 - **Dimensione record**: 53 byte (fissi)
 - **Numero record**: 1
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `parse_g1_driving_licence()` (decoders.py:229)
+- **Decoder function**: `parse_g1_driving_licence()` — `core/decoders/card_ef.py`
 
 **Struttura** (da C# config):
 | Offset | Size | Nome | Tipo | Note |
@@ -578,7 +578,7 @@ Questi tag appartengono al dominio VU (Vehicle Unit) e in G1 sono record sequenz
 - **Dimensione record**: 5 byte per condizione
 - **Numero record**: max 56 (da C# config: `Count="56"`)
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `parse_specific_conditions()` (decoders.py:802)
+- **Decoder function**: `parse_specific_conditions()` — `core/decoders/card_ef.py`
 
 **Struttura** (da C# config):
 | Offset | Size | Nome | Tipo | Note |
@@ -598,7 +598,7 @@ Questi tag appartengono al dominio VU (Vehicle Unit) e in G1 sono record sequenz
 - **Nome**: G2_VehiclesUsed
 - **Dimensione record**: 35 byte (G2)
 - **Stato decoder**: ✅ CORRETTO (dispatchato a `parse_g1_vehicles_used` con auto-detect G2)
-- **Decoder function**: `parse_g1_vehicles_used()` (decoders.py:234)
+- **Decoder function**: `parse_g1_vehicles_used()` — `core/decoders/card_ef.py`
 - **Nota**: Vedi Tag 0x0505 per la struttura G2 dettagliata (35 byte).
 
 ---
@@ -697,7 +697,7 @@ Questi tag appartengono al dominio VU (Vehicle Unit) e in G1 sono record sequenz
 - **Dimensione record**: Variabile
 - **Numero record**: Variabile
 - **Stato decoder**: ⚠️ EURISTICO — solo decode_string + regex per estrarre testo
-- **Decoder function**: `parse_company_holder_data()` (decoders.py:896)
+- **Decoder function**: `parse_company_holder_data()` — `core/decoders/card_ef.py`
 
 **Nota**: Il decoder è puramente euristico (estrazione testo), non basato su specifica.
 
@@ -712,7 +712,7 @@ Questi tag appartengono al dominio VU (Vehicle Unit) e in G1 sono record sequenz
 - **Dimensione**: Variabile (diverse centinaia di byte)
 - **Numero record**: 1 (container con record sequenziali)
 - **Stato decoder**: ⚠️ EURISTICO — parsa VIN, plate, company info via regex
-- **Decoder function**: `parse_g1_vu_overview()` (decoders.py:909)
+- **Decoder function**: `parse_g1_vu_overview()` — `core/decoders/vu_g1.py`
 
 **Contenuto** (da C# `VehicleUnitData.config`):
 Il container 0x7601 contiene record sequenziali (NON STAP, NON BER-TLV) in ordine fisso:
@@ -739,7 +739,7 @@ Il container 0x7601 contiene record sequenziali (NON STAP, NON BER-TLV) in ordin
 - **Dimensione**: Variabile (grande, contiene tutti i record giornalieri)
 - **Numero record**: 1 (container)
 - **Stato decoder**: ⚠️ EURISTICO — parsato via TREP parser + G2 RecordArray
-- **Decoder function**: `_parse_trep_02_activities()` (decoders.py:1000)
+- **Decoder function**: `_parse_trep_02_activities()` — `core/decoders/vu_g1.py`
 
 **Contenuto** (da C# config):
 1. ActivityDate (4 byte)
@@ -761,7 +761,7 @@ Il container 0x7601 contiene record sequenziali (NON STAP, NON BER-TLV) in ordin
 - **Dimensione**: Variabile
 - **Numero record**: 1 (container)
 - **Stato decoder**: ⚠️ EURISTICO — parsato via TREP parser
-- **Decoder function**: `_parse_trep_03_events_faults()` (decoders.py:1136)
+- **Decoder function**: `_parse_trep_03_events_faults()` — `core/decoders/vu_g1.py`
 
 **Contenuto** (da C# config):
 1. VuFaultData (collection di VuFaultRecord)
@@ -795,7 +795,7 @@ Il container 0x7601 contiene record sequenziali (NON STAP, NON BER-TLV) in ordin
 - **Dimensione**: Variabile
 - **Numero record**: 1 (container)
 - **Stato decoder**: ✅ CORRETTO
-- **Decoder function**: `_parse_trep_04_speed()` (decoders.py:1202)
+- **Decoder function**: `_parse_trep_04_speed()` — `core/decoders/vu_g1.py`
 
 **Contenuto** (da C# config):
 1. SpeedInfo (collection of SpeedInfoBlock)
@@ -814,7 +814,7 @@ Il container 0x7601 contiene record sequenziali (NON STAP, NON BER-TLV) in ordin
 - **Dimensione**: Variabile
 - **Numero record**: 1 (container)
 - **Stato decoder**: ⚠️ EURISTICO — parsato via TREP parser
-- **Decoder function**: `_parse_trep_05_technical()` (decoders.py:1246)
+- **Decoder function**: `_parse_trep_05_technical()` — `core/decoders/vu_g1.py`
 
 **Contenuto** (da C# config):
 1. VuIdentification (manufacturer name, address, part number, serial, software version)
@@ -942,7 +942,7 @@ Il container 0x7601 contiene record sequenziali (NON STAP, NON BER-TLV) in ordin
 | 0xFE | EUR | Europe |
 | 0xFF | WLD | World |
 
-**Nota**: Tabella completa disponibile in `decoders.py:get_nation()` (65 entry). Sopra solo estratti rappresentativi.
+**Nota**: Tabella completa disponibile in `core/decoders/common.py` (`get_nation()`) (65 entry). Sopra solo estratti rappresentativi.
 
 ---
 
