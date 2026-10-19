@@ -45,7 +45,7 @@ These are the three generations of digital tachographs:
 - **G2 (Generation 2)**: First-generation Smart Tachograph (Annex 1C, Reg. EU 2016/799). Uses BER-TLV encoding. Adds GNSS recording and remote communication.
 - **G2.2 (Generation 2.2)**: Second-generation Smart Tachograph (Reg. EU 2023/980). Adds new fields (border crossings, load/unload operations, trailer registrations) and enhanced security.
 
-The application automatically detects which generation a file belongs to from the file header (`0x7631` = G2.2, `0x7621`/`0x7622` = G2, otherwise G1).
+The application detects the generation of a vehicle-unit download from its file header (`0x7631` = G2.2, `0x7621`/`0x7622` = G2, other leading TREP markers = G1). Driver cards carry no such header: their generation is decided from generation-specific evidence in the decoded card data.
 
 ---
 

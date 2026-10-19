@@ -79,7 +79,8 @@ Builds the full registry of 89 tag decoders via `_build()`. Each decoder is regi
 ### Method: `get_decoder(tag)`
 
 ```python
-def get_decoder(self, tag: int) -> Optional[TagDecoder]
+def get_decoder(self, tag: int, *, generation: Optional[str] = None, is_vu: Optional[bool] = None,
+                dtype: Optional[int] = None, parent_tag: Optional[int] = None) -> Optional[TagDecoder]
 ```
 
 Look up a decoder by tag ID.
@@ -103,19 +104,20 @@ print(dec.card_only)    # True
 ### Method: `is_container(tag)`
 
 ```python
-def is_container(self, tag: int) -> bool
+def is_container(self, tag: int, *, generation: Optional[str] = None, is_vu: Optional[bool] = None,
+                 dtype: Optional[int] = None, parent_tag: Optional[int] = None) -> bool
 ```
 
 Checks if a tag is known to contain nested sub-tags.
 
-**Returns:** `True` if the tag is registered as a container OR matches the `0x7600` mask.
+**Returns:** `True` if the tag is registered as a container. An unregistered `0x76xx` tag counts only when its low byte is a defined VU TREP marker.
 
 ```python
 reg = DecoderRegistry()
 reg.is_container(0x7622)   # True  — G2_VU_Activities
-reg.is_container(0x0526)   # True  — G22_LoadUnloadOperations
+reg.is_container(0x0526)   # False — G22_CardPlaceAuthDailyWorkPeriod (leaf)
 reg.is_container(0x0520)   # False — G1_Identification (leaf)
-reg.is_container(0x7601)   # True  — matches 0x7600 mask
+reg.is_container(0x7601)   # True  — G1_VU_TechnicalData
 ```
 
 ---

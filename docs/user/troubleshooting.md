@@ -10,7 +10,7 @@
 
 1. **The file is not a tachograph download**: The reader expects the raw binary download from a card or vehicle unit. Files with other extensions such as `.esm`, `.tgd`, `.c1b`, and `.v1b` are usually the *same* EU download under a different name — open them via **All Files** in the dialog (or rename to `.ddd`). See the [FAQ](faq.md) for the one exception (`.esm` files that wrap or compress the payload).
 2. **File is corrupted or partial**: For VU downloads the reader reports TREP completeness and, when data is genuinely missing, shows a **CORRUPTED / PARTIAL FILE** page with what could be recovered. If the whole file fails at the first bytes, try downloading it again from the tachograph or card reader.
-3. **Unsupported generation**: If the file uses a future tachograph standard not yet implemented, the parser reports unparsed blocks, tracked as gap ranges in the **Raw Tags** section.
+3. **Unsupported generation**: If the file uses a future tachograph standard not yet implemented, the parser reports unparsed blocks, tracked as gap ranges in the **Raw / Unparsed Data** section.
 
 ---
 
@@ -18,7 +18,7 @@
 
 **Symptom**: A file parses successfully but some bytes are reported as unknown.
 
-**What this means**: A few regions could not be interpreted by the parser. They are swept up, classified as padding or tracked unknown ranges, and shown in the **Raw Tags** section — never silently dropped.
+**What this means**: A few regions could not be interpreted by the parser. They are swept up, classified as padding or tracked unknown ranges, and shown in the **Raw / Unparsed Data** section — never silently dropped.
 
 **What to do**:
 - Small unknown regions are usually padding or unused areas; the extracted data is still valid.
@@ -100,7 +100,7 @@ cannot be written; a warning is shown.
 the language again. If the warning reappears, check that the settings file is
 writable: `%APPDATA%\TachoReader\settings.json` on Windows,
 `~/Library/Application Support/TachoReader/settings.json` on macOS,
-`~/.config/TachoReader/settings.json` on Linux.
+`~/.config/TachoReader/settings.json` on Linux (`$XDG_CONFIG_HOME/TachoReader/settings.json` when `XDG_CONFIG_HOME` is set).
 
 Note that **Translate file contents**, the tick under the language list, does not
 restart anything — it re-renders the open file in place, so it changes the cells

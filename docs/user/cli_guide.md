@@ -97,8 +97,9 @@ exists and is not a directory, the CLI stops with an error. A bare `--all` uses
 
 Exports are written as they are generated: if one format fails (for example a
 missing `reportlab`), the others are still produced, the failure is reported on
-standard error as `Warning: … generation failed: …`, and the process exits
-non-zero.
+standard error as a `Warning: …` line (for a missing `reportlab`: `Warning: PDF export
+requires reportlab (pip install reportlab): …`; other failures read
+`Warning: … generation failed: …`), and the process exits non-zero.
 
 ### Verbose Output
 
