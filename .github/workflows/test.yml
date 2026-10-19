@@ -85,7 +85,7 @@ jobs:
       # display so the row render, the tint tag, the hover tooltips, the
       # toolbar's labels and icons, the file overview a parse lands on (and the
       # all-catalog fit sweep of its rows), the progress bar's re-entrancy
-      # guards, the hidden-infraction switch, the formatted cells, the integrity
+      # guards, the pane layout, the hidden-infraction switch, the formatted cells, the integrity
       # badge and the batch-18 GUI cases are exercised in CI too. Every module
       # here is one this work stream added or changed and each of them skips
       # without a display, so leaving one out means it never runs at all.
@@ -96,6 +96,7 @@ jobs:
         tests/unit/test_gui_driving_rules.py
         tests/unit/test_gui_toolbar_buttons.py
         tests/unit/test_gui_summary_default.py
+        tests/unit/test_gui_layout.py
         tests/unit/test_gui_icons.py
         tests/unit/test_gui_icon_scale.py
         tests/unit/test_gui_busy_bar.py

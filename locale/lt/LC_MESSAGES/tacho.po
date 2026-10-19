@@ -880,8 +880,8 @@ msgid "{recorded:,} s recorded | {gaps} internal gaps"
 msgstr "{recorded:,} s įrašyta | {gaps} vidinių tarpų"
 
 #, python-brace-format
-msgid "{rows} rows · {columns} columns"
-msgstr "{rows} eilutės · {columns} stulpeliai"
+msgid "Rows: {rows} · Columns: {columns}"
+msgstr "Eilutės: {rows} · Stulpeliai: {columns}"
 
 msgid "Double-click for full details"
 msgstr "Dukart spustelėkite, kad matytumėte visą informaciją"
