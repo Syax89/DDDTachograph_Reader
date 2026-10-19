@@ -1,37 +1,33 @@
 """ManufacturerCode → manufacturer name, from the official JRC registry.
 
-``ManufacturerCode`` is a single byte (Annex 1C Appendix 1 §2.94 for the smart
-tachograph; §2.93 in the card layout). The value assignment is **not** in the
-regulation: it is the registry the European Commission maintains at
-https://dtc.jrc.europa.eu/dtc_manufacturer_code.php ("database registration to
-be managed by the European Commission", §2.94). This module is a static copy of
-that page, taken 2026-10 and covering **all 65 assigned codes**; there is no
-networking at runtime and no refresh path.
+``ManufacturerCode`` is a single byte (§2.94). Its value assignment is **not** in
+the regulation: §2.94 says the laboratory competent for interoperability tests
+maintains and publishes the list of manufacturer codes on its web site (Annex 1C
+requirement 454). This module is a static copy of that list, covering **all 65
+assigned codes**; there is no networking at runtime and no refresh path.
 
-The table maps a *code to the registered applicant's name only*. It does not
-give any meaning to a manufacturer's proprietary diagnostic payload — the
-3-byte ``manufacturerSpecificErrorCode`` of §2.95 stays opaque (see
+The table maps a code to the registered applicant's name only. It says nothing
+about the 3-byte ``manufacturerSpecificErrorCode`` of §2.95, which stays raw —
+no verified three-byte wire-format mapping was obtained (see
 ``core/parser/vu_dispatcher.py``).
 
-Codes that are absent here are either unassigned or a "no information"
-sentinel ('00'H, 'FF'H, ...): they are reported as not registered, never
-guessed.
+Codes that are absent here are either unassigned or a "no information" sentinel
+('00'H, 'FF'H, ...): they are reported as not registered, never guessed.
 """
 from __future__ import annotations
 
 __all__ = ["MANUFACTURER_CODES", "MANUFACTURER_STATUS_NOT_REGISTERED",
-           "MANUFACTURER_STATUS_REGISTERED", "MANUFACTURER_STATUSES",
-           "REGISTRY_SOURCE", "manufacturer_name"]
+           "MANUFACTURER_STATUS_REGISTERED", "REGISTRY_SOURCE",
+           "manufacturer_name"]
 
-#: Where the table below comes from (the registry page, not the regulation).
-REGISTRY_SOURCE = "https://dtc.jrc.europa.eu/dtc_manufacturer_code.php"
+#: The exact page the table below was copied from (the published list, not the
+#: regulation). Pinned in the tests, so a mistyped host cannot slip back in.
+REGISTRY_SOURCE = "https://dtc.jrc.ec.europa.eu/dtc_manufacturer_code.php.html"
 
 #: Status of a decoded manufacturer-code byte: a registered code, or one the
 #: registry does not assign (unassigned range or a "no information" sentinel).
 MANUFACTURER_STATUS_REGISTERED = "registered"
 MANUFACTURER_STATUS_NOT_REGISTERED = "not_registered"
-MANUFACTURER_STATUSES = (MANUFACTURER_STATUS_REGISTERED,
-                         MANUFACTURER_STATUS_NOT_REGISTERED)
 
 #: ManufacturerCode byte → registered manufacturer name (65 entries).
 MANUFACTURER_CODES: dict[int, str] = {

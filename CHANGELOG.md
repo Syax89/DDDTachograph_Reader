@@ -33,12 +33,15 @@ confidence.
 ### Event and fault type codes are read against the right version of the list
 
 The event/fault type byte has two lists in force and they are not the same: the
-"Generation 2, version 1" list (Reg. (EU) 2018/502) and the "Generation 2,
-version 2" list (Reg. (EU) 2021/1228), which added `0x0F` (GNSS anomaly),
+"Generation 2, version 1" list (Reg. (EU) 2018/502 Annex (29)(h)) and the
+"Generation 2, version 2" list (Reg. (EU) 2021/1228 Annex (30)(n)(ii)), which
+added `0x0F` (GNSS anomaly),
 `0x1C` (inconsistency between motion data and stored driver activity data) and
 `0x3A` (internal sensor fault). Which list applies is a property of the *section*
-the record travels in — Appendix 7 assigns the events-and-faults data transfer
-type `0x23` to version 1 and `0x33` to version 2 — not of the unit or the file.
+the record travels in — Annex 1C Appendix 7 assigns the events-and-faults
+transfer type `0x23` to version 1 and `0x33` to version 2 (DDP_011 is the
+request table, DDP_031 the data structures per TREP) — not of the unit or the
+file.
 
 - Each event and fault is now described against the list of its own section, and
   the exported data records which one was used (`event_fault_version`) and how
@@ -53,14 +56,15 @@ type `0x23` to version 1 and `0x33` to version 2 — not of the unit or the file
   one — the type is reported as unknown instead of being guessed as version 2.
   The file's own generation label is never used to decide this: a version-2 unit
   can produce a version-1 download.
-- The manufacturer code in the same record is resolved against the European
-  Commission's manufacturer-code registry (all 65 assigned codes, built in, no
+- The manufacturer code in the same record is resolved against the manufacturer
+  list the regulation has the laboratory competent for interoperability tests
+  publish (§2.94, Annex 1C requirement 454; all 65 assigned codes, built in, no
   network access): the `Events`/`Faults` tables gain a **Manufacturer** column
   with the registered name and the code is no longer labelled as uninterpreted.
   Unassigned and "no information" values (`0x00`, `0xFF`, …) stay unknown. The
   three manufacturer error bytes stay exactly as recorded and low confidence:
-  their meaning is the vendor's own, no public mapping exists, and `000000` is
-  not read as "no error".
+  their meaning is the vendor's own, no verified three-byte wire-format mapping
+  was obtained, and `000000` is not read as "no error".
 
 ---
 

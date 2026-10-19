@@ -1,15 +1,15 @@
 """Version-aware EventFaultType assignment + manufacturer identity (Gen2 VU).
 
 ``EventFaultType`` (Annex 1C Appendix 1 point 2.70) has three value
-assignments, and the download request's TREP says which one applies to a
-section (Appendix 7, DDP_011):
+assignments, and the TREP of the section says which one applies (Appendix 7:
+DDP_011 is the request table, DDP_031 defines the per-TREP data structures):
 
 ===================  ====  ==========================================
 data transfer type   TRTP  point-2.70 table
 ===================  ====  ==========================================
 Events and faults     '03' generation 1 (Annex 1B)
-Events and faults     '23' "Generation 2, version 1" (Reg. 2018/502)
-Events and faults     '33' "Generation 2, version 2" (Reg. 2021/1228)
+Events and faults     '23' "Generation 2, version 1" (2018/502 (29)(h))
+Events and faults     '33' "Generation 2, version 2" (2021/1228 (30)(n)(ii))
 ===================  ====  ==========================================
 
 Version 2 added '0F'H (GNSS anomaly), '1C'H (motion/activity inconsistency)
@@ -19,9 +19,10 @@ against the file's hardware generation, and never against RGM/device names.
 
 The manufacturer half of the record is §2.95
 ``manufacturerSpecificEventFaultData``: a ``ManufacturerCode`` byte plus a
-3-byte vendor error code. The code byte is looked up in the European
-Commission's registry (65 assigned codes); the three bytes stay raw and
-low-confidence because no public wire-level mapping exists.
+3-byte vendor error code. The code byte is looked up in the list §2.94 has the
+laboratory competent for interoperability tests publish (65 assigned codes); the
+three bytes stay raw and low-confidence because no verified three-byte
+wire-format mapping was obtained.
 """
 import glob
 import os
@@ -41,9 +42,10 @@ from core.utils.event_codes import (
     EVENT_FAULT_VERSION_1, EVENT_FAULT_VERSION_2, EVENT_FAULT_VERSION_UNKNOWN,
     GEN2_V2_ONLY_TYPES, TYPE_ASSIGNED, TYPE_MANUFACTURER_SPECIFIC,
     TYPE_RESERVED, TYPE_UNKNOWN_VERSION, describe_event, describe_fault)
+from core.utils import manufacturer_codes
 from core.utils.manufacturer_codes import (
     MANUFACTURER_CODES, MANUFACTURER_STATUS_NOT_REGISTERED,
-    MANUFACTURER_STATUS_REGISTERED, manufacturer_name)
+    MANUFACTURER_STATUS_REGISTERED, REGISTRY_SOURCE, manufacturer_name)
 from core.utils.report_format import HIDDEN_KEYS as REPORT_HIDDEN_KEYS
 from core.utils.report_format import humanize_key, visible_columns
 
@@ -394,9 +396,9 @@ class TestIsolatedRoutes(unittest.TestCase):
 class TestManufacturerIdentity(unittest.TestCase):
     """The code byte is identity (official registry); the 3 bytes stay opaque."""
 
-    #: All 65 codes assigned in the Commission's registry
-    #: (https://dtc.jrc.europa.eu/dtc_manufacturer_code.php), transcribed as a
-    #: fixture so a wrong or missing entry in the table is caught.
+    #: All 65 codes assigned in the published registry
+    #: (https://dtc.jrc.ec.europa.eu/dtc_manufacturer_code.php.html), transcribed
+    #: as a fixture so a wrong or missing entry in the table is caught.
     OFFICIAL_CODES = frozenset({
         0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
         0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x28, 0x29,
@@ -425,6 +427,14 @@ class TestManufacturerIdentity(unittest.TestCase):
         0xA2: "Stoneridge Electronics AB",
         0xE0: "Turker Roll Paper Trade",
     }
+
+    def test_the_registry_source_is_the_exact_published_url(self):
+        self.assertEqual(REGISTRY_SOURCE,
+                         "https://dtc.jrc.ec.europa.eu/dtc_manufacturer_code.php.html")
+        # A mistyped host (…jrc.europa.eu…) would point the citation at a host
+        # that does not serve the list.
+        source_text = open(manufacturer_codes.__file__, encoding="utf-8").read()
+        self.assertNotIn("dtc.jrc.europa.eu", source_text)
 
     def test_the_table_holds_exactly_the_65_assigned_codes(self):
         self.assertEqual(frozenset(MANUFACTURER_CODES), self.OFFICIAL_CODES)
@@ -460,8 +470,9 @@ class TestManufacturerIdentity(unittest.TestCase):
                 self.assertIn("manufacturer_code", out["low_confidence_fields"])
 
     def test_no_error_code_is_invented_from_the_raw_bytes(self):
-        # §2.95 leaves the 3 bytes to the manufacturer: no "000000 ⇒ no error",
-        # no dashboard/DTC number, no mapping at all.
+        # §2.95 leaves the 3 bytes to the manufacturer, and no verified
+        # three-byte wire-format mapping was obtained: no "000000 ⇒ no error",
+        # no user-manual dashboard/DTC number mapped onto the binary field.
         for raw in (b"\x00\x00\x00", b"\xff\xff\xff", b"\xde\xad\xbe"):
             with self.subTest(raw=raw.hex()):
                 out = _decode(0x15, _event_record(error=raw), EVENT_FAULT_VERSION_2)

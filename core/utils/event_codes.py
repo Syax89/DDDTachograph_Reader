@@ -3,8 +3,8 @@
 References:
   - Regulation (EEC) 3821/85 Annex 1B §2.70 (generation 1 EventFaultType)
   - Regulation (EU) 2016/799 Annex 1C, Appendix 1, point 2.70 (EventFaultType),
-    as amended by Reg. (EU) 2018/502 ("Generation 2, version 1") and
-    Reg. (EU) 2021/1228 Annex point (n)(ii) ("Generation 2, version 2")
+    as amended by Reg. (EU) 2018/502 Annex (29)(h) ("Generation 2, version 1")
+    and Reg. (EU) 2021/1228 Annex (30)(n)(i)/(ii) ("Generation 2, version 2")
   - Regulation (EU) 2023/980 (generation 2 version 2 amendments)
 
 The two dicts below carry the generation-2 *version 2* assignment of point 2.70,
@@ -96,24 +96,23 @@ FAULT_TYPES: dict[int, str] = {
 
 # ── EventFaultType assignment per schema version (point 2.70) ──────────────
 #
-# Point 2.70 exists in three variants and they are *not* interchangeable. Which
-# one applies to a record is decided by the TREP section that carries it — the
-# data-transfer type of the download request (Annex 1C Appendix 7, DDP_011):
+# Point 2.70 comes in two generation-2 variants and they are *not*
+# interchangeable: Reg. 2018/502 Annex (29)(h) replaced the text under the
+# "Generation 2" heading ("Generation 2, version 1"), and Reg. 2021/1228 Annex
+# (30)(n)(i) renamed that header "Generation 2, version 1" while (30)(n)(ii)
+# added the "Generation 2, version 2" table. Which one a record is read against
+# is a property of the section that carries it — Appendix 7: the request table
+# DDP_011 gives the transfer types, and DDP_031 defines the per-TREP data
+# structures "under the SID 76 Hex, the TREP 03, 23 or 33 Hex":
 #
-#   generation 1 type of VU data download           TREP '03'H
-#   generation 2, version 1 type of VU download     TREP '23'H
-#   generation 2, version 2 type of VU download     TREP '33'H
+#   generation 1                                    TREP '03'H
+#   generation 2, version 1                         TREP '23'H
+#   generation 2, version 2                         TREP '33'H
 #
-# DDP_011 assigns 0x23 to "Generation 2, version 1" (Reg. 2018/502: the text
-# under the "Generation 2" heading) and 0x33 to "Generation 2, version 2"
-# (Reg. 2021/1228 Annex point (n)(ii): header renamed "Generation 2, version 1",
-# the version-2 table added). Anything else — another section, an isolated
-# record, a tag-keyed array — carries no version at all.
-#
-# The version-2 table is the one in EVENT_TYPES/FAULT_TYPES above. The
-# version-1 table is that table minus the three codes the 2021/1228 amendment
-# introduced, because Reg. 2018/502 still calls them RFU: after '0E'H the v1
-# text continues with "RFU", likewise after '1B'H and after '39'H.
+# The version-2 table is the one in EVENT_TYPES/FAULT_TYPES above. The version-1
+# table is that table minus the three codes the 2021/1228 amendment introduced,
+# because the 2018/502 text still calls them RFU: after '0E'H the v1 list
+# continues with "RFU", likewise after '1B'H and after '39'H.
 EVENT_FAULT_VERSION_1 = "generation2version1"
 EVENT_FAULT_VERSION_2 = "generation2version2"
 EVENT_FAULT_VERSION_UNKNOWN = "unknown"

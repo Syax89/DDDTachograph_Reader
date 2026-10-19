@@ -764,18 +764,18 @@ _DEFINED_CARD_GENERATIONS = frozenset((0x01, 0x02))
 # This is a *plausibility* bound, not a rule of the standard: TimeReal itself runs
 # to 2^32-1 (2106-02-07), and outer values are treated as a corrupt field.
 _PLAUSIBLE_TIME = (946684800, 4102444800)
-# EventFaultType (point 2.70) has a different value assignment per *schema
-# version*, and the version belongs to the section, not to the file. Annex 1C
-# Appendix 7 / DDP_011 fixes it by TREP: "Events and faults" is TRTP '03'H for a
-# generation-1 download, '23'H for "generation 2, version 1" (Reg. 2018/502) and
-# '33'H for "generation 2, version 2" (Reg. 2021/1228 point (n)(ii)). Any other
-# context — another section, an isolated record, the tag-keyed adapter that sees
-# one array with no stream around it — resolves to ``unknown``: version 2 is
-# never assumed, because '0F'H/'1C'H/'3A'H mean something only there.
+# The EventFaultType value assignment (point 2.70) belongs to the section, not to
+# the file, and comes in two generation-2 versions (see core/utils/event_codes.py
+# for the tables and the amending-act citations). Appendix 7 fixes which block
+# carries which: DDP_031 defines the events-and-faults data structures "under the
+# SID 76 Hex, the TREP 03, 23 or 33 Hex" and DDP_034 keeps SID and TREP in the
+# stored download; DDP_011 is the request table. Any other context — another
+# section, an isolated record, the tag-keyed adapter that sees one array with no
+# stream around it — is ``unknown``: version 2 is never assumed, because
+# '0F'H/'1C'H/'3A'H mean something only there.
 #
-# ``metadata.generation`` is the *file's* hardware generation, a whole-file
-# property: a version-2 VU can still produce a version-1 download, so it must
-# never upgrade a section (and is not consulted here at all).
+# ``metadata.generation`` is the *file's* hardware generation: a version-2 VU can
+# still produce a version-1 download, so it never upgrades a section.
 EVENT_FAULT_VERSION_BY_TREP = {
     0x23: EVENT_FAULT_VERSION_1,
     0x33: EVENT_FAULT_VERSION_2,
@@ -919,8 +919,8 @@ def decode_event_fault_record(rec, is_event, version=EVENT_FAULT_VERSION_UNKNOWN
     out["manufacturer_status"] = (MANUFACTURER_STATUS_REGISTERED if name is not None
                                   else MANUFACTURER_STATUS_NOT_REGISTERED)
     # An unregistered byte keeps the old "value not interpretable" mark; a
-    # registered one identifies the manufacturer, so only the proprietary
-    # 3-byte error code stays uninterpretable (no public wire-level mapping).
+    # registered one identifies the manufacturer, so only the vendor error code
+    # stays raw (no verified three-byte wire-format mapping was obtained).
     low = [] if name is not None else ["manufacturer_code"]
     low.append("manufacturer_error_code")
     if is_event and rec[86] == 0:
@@ -931,9 +931,8 @@ def decode_event_fault_record(rec, is_event, version=EVENT_FAULT_VERSION_UNKNOWN
         low.append("similar_events")
     if type_status != TYPE_ASSIGNED:
         # Not a code this version defines (RFU, manufacturer specific, or a
-        # version-2-only code in a section we could not resolve): the field is
-        # not interpretable, the structure still is, so flag the field and keep
-        # the record conformant. The key is the one the emitted record carries.
+        # version-2-only code in an unresolved section): flag the field, keep the
+        # record conformant. The key is the one the emitted record carries.
         low.append("event_type_code" if is_event else "fault_type_code")
     out["low_confidence_fields"] = low
     if is_event:

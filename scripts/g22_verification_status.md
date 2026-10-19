@@ -182,32 +182,36 @@ Cosa e' **verificato** (HIGH, `core/parser/vu_dispatcher.py::decode_event_fault_
   `normative=True` / `confidence="high"` / `spec_reference="Annex 1C App.1 2.198"|"…2.201"`
   quando tutti i campi normativi sono validi; `normative=False` /
   `confidence="low"` + `conformance_reason` quando no (record comunque emesso).
-- `ManufacturerCode` (§2.94 / §2.95): risolto contro il registro ufficiale della
-  Commissione (https://dtc.jrc.europa.eu/dtc_manufacturer_code.php), copiato in
-  modo statico in `core/utils/manufacturer_codes.py`: **65 codici assegnati**,
-  nessun accesso di rete a runtime. Un codice registrato viene mostrato con il
-  nome dell'azienda (colonna `Manufacturer`, header gia' tradotto) e non e' piu'
+- `ManufacturerCode` (§2.94 / §2.95): risolto contro l'elenco ufficiale che il
+  §2.94 affida al laboratorio competente per i test di interoperabilita', che lo
+  mantiene e pubblica sul proprio sito (requisito 454 dell'Allegato 1C):
+  https://dtc.jrc.ec.europa.eu/dtc_manufacturer_code.php.html — copiato in modo
+  statico in `core/utils/manufacturer_codes.py`: **65 codici assegnati**, nessun
+  accesso di rete a runtime. Un codice registrato viene mostrato con il nome
+  dell'azienda (colonna `Manufacturer`, header gia' tradotto) e non e' piu'
   marcato come non interpretato; i byte non assegnati o sentinella ('00'H,
   'FF'H, ...) restano esplicitamente sconosciuti
-  (`manufacturer_status = "not_registered"`) e a bassa confidenza. Il registro
+  (`manufacturer_status = "not_registered"`) e a bassa confidenza. L'elenco
   identifica il costruttore, non i suoi codici diagnostici.
 
 Cosa resta **NON verificato** (dichiarato, non dedotto):
 
-- I **3 byte** di `manufacturerSpecificErrorCode` (§2.95) restano opachi:
-  nessuna mappatura ufficiale a livello di byte e' pubblica, quindi vengono
+- I **3 byte** di `manufacturerSpecificErrorCode` (§2.95) restano opachi: non e'
+  stata ottenuta una mappatura verificata del formato a 3 byte, quindi vengono
   esportati verbatim (`manufacturer_error_code`, esadecimale minuscolo) e restano
   a bassa confidenza (`low_confidence_fields`). Non sono i numeri di avviso/DTC
-  dei manuali utente e '000000' **non** viene letto come "nessun errore".
+  che la documentazione di un costruttore elenca e '000000' **non** viene letto
+  come "nessun errore".
 - `SimilarEventsNumber` (§2.151) dice "0 non e' usato", ma record reali hanno 0
   (52 dei 121 eventi del corpus): il valore viene mostrato senza far fallire la
   conformita', perche' la VU lo scrive davvero.
 - La value assignment di `EventFaultType` (punto 2.70) e' stata **verificata** sul
-  testo degli atti di modifica: Reg. (UE) 2018/502 ("Generation 2, version 1") e
-  Reg. (UE) 2021/1228 Allegato punto (n)(ii) ("Generation 2, version 2"), che
-  assegna '00'..'0F'H (incl. '0C' RCM, '0D' assenza di posizione GNSS, '0E' GNSS
-  esterno, '0F' GNSS anomaly), '10'..'1C'H ('19' tamper GNSS, '1A'/'1B' GNSS
-  esterno, '1C' incoerenza dati di moto), '20'..'25'H, '30'..'3A'H ('36' GNSS
+  testo degli atti di modifica: Reg. (UE) 2018/502 Allegato (29)(h) ("Generation
+  2, version 1") e Reg. (UE) 2021/1228 Allegato (30)(n)(i)/(ii) ("Generation 2,
+  version 2"), che assegna '00'..'0F'H (incl. '0C' RCM, '0D' assenza di posizione
+  GNSS, '0E' GNSS esterno, '0F' GNSS anomaly), '10'..'1C'H ('19' tamper GNSS,
+  '1A'/'1B' GNSS esterno, '1C' incoerenza dati di moto), '20'..'25'H, '30'..'3A'H
+  ('36' GNSS
   interno, '37' GNSS esterno, '38' RCM, '39' ITS, '3A' sensore interno) e '40'H;
   sono RFU '1D'..'1F'H, '26'..'2F'H, '3B'..'3F'H, '41'..'4F'H, '50'..'7F'H, e
   '80'..'FF'H e' specifico del costruttore. Le due tabelle in
@@ -217,11 +221,15 @@ Cosa resta **NON verificato** (dichiarato, non dedotto):
   segnalato in `low_confidence_fields` (`event_type_code` / `fault_type_code`),
   perche' il testo non ne definisce il significato.
 - La tabella applicata e' quella della **sezione**, non del file (il vecchio
-  limite `shortcut:` e' stato rimosso). L'Allegato 7 (DDP_011) assegna il tipo di
+  limite `shortcut:` e' stato rimosso). L'Allegato 7 assegna il tipo di
   trasferimento "Events and faults" a TRTP '03'H (generazione 1), '23'H
-  ("generation 2, version 1", Reg. 2018/502) e '33'H ("generation 2, version 2",
-  Reg. 2021/1228); `event_fault_version_for_trep` traduce il marker di sezione e
-  `decode_event_fault_record(version=...)` usa la tabella corrispondente:
+  ("generation 2, version 1", Reg. 2018/502 Allegato (29)(h)) e '33'H
+  ("generation 2, version 2", Reg. 2021/1228 Allegato (30)(n)(i)/(ii)): DDP_011
+  e' la tabella delle richieste, DDP_031 definisce le strutture dati per TREP
+  ("under the SID 76 Hex, the TREP 03, 23 or 33 Hex") e DDP_034 conserva SID e
+  TREP nel file scaricato. `event_fault_version_for_trep` traduce il marker di
+  sezione e `decode_event_fault_record(version=...)` usa la tabella
+  corrispondente:
   - sezione '23'H: '0F'/'1C'/'3A' sono "Reserved for future use", come dice quella
     versione (`type_status = "reserved"`), mai "GNSS anomaly"/"internal sensor
     fault"/"incoerenza dati di moto";

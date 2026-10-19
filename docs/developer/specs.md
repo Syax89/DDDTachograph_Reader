@@ -68,15 +68,18 @@ and reports on the emitted event/fault:
 #### The type byte is read against its section's list
 
 Point 2.70 exists in two generation-2 variants and they differ: Reg. (EU)
-2018/502 replaced the text under the "Generation 2" heading ("Generation 2,
-version 1"), and Reg. (EU) 2021/1228 point (n)(ii) renamed that heading
-"Generation 2, version 1" and added a "Generation 2, version 2" table which
-assigns `'0F'H` GNSS anomaly, `'1C'H` inconsistency between motion data and
-stored driver activity data and `'3A'H` internal sensor fault — bytes the
-version-1 table still calls RFU (after `'0E'H`, `'1B'H` and `'39'H`
-respectively). Appendix 7 (DDP_011) decides which one applies: the
-events-and-faults data transfer type is TRTP `03` for a generation-1 download,
-`23` for "generation 2, version 1" and `33` for "generation 2, version 2".
+2018/502 Annex (29)(h) replaced the text under the "Generation 2" heading
+("Generation 2, version 1"), and Reg. (EU) 2021/1228 Annex (30)(n)(i) renamed
+that heading "Generation 2, version 1" while (30)(n)(ii) added a "Generation 2,
+version 2" table which assigns `'0F'H` GNSS anomaly, `'1C'H` inconsistency
+between motion data and stored driver activity data and `'3A'H` internal sensor
+fault — bytes the version-1 table still calls RFU (after `'0E'H`, `'1B'H` and
+`'39'H` respectively). Appendix 7 decides which one applies: DDP_011 is the
+request table (the events-and-faults transfer type is TRTP `03` for a
+generation-1 download, `23` for "generation 2, version 1" and `33` for
+"generation 2, version 2"), and DDP_031 defines the per-TREP data structures
+"under the SID 76 Hex, the TREP 03, 23 or 33 Hex" — DDP_034 keeps SID and TREP
+in the stored download.
 
 So the version is resolved per **section**, from the marker that introduces it
 (`event_fault_version_for_trep`), never from `metadata.generation`: a version-2
@@ -95,19 +98,21 @@ download may mix both. Consequences:
 
 #### Manufacturer identity vs the manufacturer error code
 
-§2.94/§2.95 leave the last four bytes to the manufacturer: a `ManufacturerCode`
-byte whose value assignment lives in the Commission's registry
-(https://dtc.jrc.europa.eu/dtc_manufacturer_code.php), plus a 3-byte
-`manufacturerSpecificErrorCode` that is vendor-defined. `core/utils/manufacturer_codes.py`
-holds a static copy of the registry — **all 65 assigned codes**, no runtime
-network access — so a registered byte is reported by name and is no longer
-marked uninterpreted; unassigned/sentinel bytes (`'00'H`, `'FF'H`, …) stay
-unknown and low confidence.
+§2.94/§2.95 leave the last four bytes to the manufacturer. `ManufacturerCode`'s
+value assignment is not in the regulation: §2.94 says the laboratory competent
+for interoperability tests maintains and publishes the list of manufacturer
+codes on its web site (Annex 1C requirement 454) —
+https://dtc.jrc.ec.europa.eu/dtc_manufacturer_code.php.html.
+`core/utils/manufacturer_codes.py` holds a static copy of that list — **all 65
+assigned codes**, no runtime network access — so a registered byte is reported
+by name and is no longer marked uninterpreted; unassigned/sentinel bytes
+(`'00'H`, `'FF'H`, …) stay unknown and low confidence.
 
-The three error bytes are **still opaque**: the exports keep them verbatim
-(`manufacturer_error_code`, lowercase hex) and marked low confidence, because no
-official wire-level mapping exists. They are not the dashboard warning or DTC
-numbers a user manual lists, and `000000` is not interpreted as "no error".
+The 3-byte `manufacturerSpecificErrorCode` is **still opaque**: the exports keep
+it verbatim (`manufacturer_error_code`, lowercase hex) and marked low
+confidence, because no verified three-byte wire-format mapping was obtained. It
+is not the dashboard warning or DTC numbers a manufacturer's documentation
+lists, and `000000` is not interpreted as "no error".
 
 Times are checked against a **plausibility window** (2000-2100), not a rule of the
 standard (`TimeReal` itself runs to 2106): a time outside it is treated as a
