@@ -11,6 +11,7 @@ Two things must stay true, because the refactor was supposed to be invisible:
 """
 import ast
 import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -24,13 +25,23 @@ THEME_PATH = REPO_ROOT / "app" / "theme.py"
 HEX_RE = re.compile(r"#[0-9a-fA-F]{6}\b")
 HEX_VALUE_RE = re.compile(r"#[0-9a-f]{6}\Z")
 
-#: Every colour value the UI used before the palette was centralised
-#: (``git show 413bfb8:app/gui.py`` and a ``#rrggbb`` grep).
+#: Every colour value the palette declares (``git show 413bfb8:app/gui.py`` plus
+#: a ``#rrggbb`` grep for the inventory it started from).
+#:
+#: Five values are *not* the ones that shipped, on purpose, plus one that is new:
+#: the contrast batch darkened ``WARNING``, ``CAUTION``, ``MUTED``, ``SLATE`` and
+#: ``TEXT_SUBTLE``, and added ``TEXT_FAINT_TEXT`` for the foreground that used to
+#: be drawn in ``TEXT_FAINT`` (which keeps its value — it is a 1 px divider now),
+#: until each cleared 4.5:1 on the background it is drawn on;
+#: ``tests/unit/test_theme_contrast.py`` pins every pair. Three values left with
+#: the day-detail colour map that nothing read (``#546e7a``, ``#6a1b9a``,
+#: ``#b71c1c``, see ``DayDetailWindow``): a palette entry nothing paints is dead
+#: weight, which is what ``test_every_colour_constant_is_used_by_the_gui`` says.
 SHIPPED_COLOURS = {
     "#1565c0", "#17212b", "#1c2733", "#263238", "#2e7d32", "#37474f",
-    "#536273", "#546e7a", "#5d4037", "#607d8b", "#6a1b9a", "#6b7280",
-    "#757575", "#78909c", "#7b1fa2", "#90a4ae", "#9e9e9e", "#b6c3d6",
-    "#b71c1c", "#bbdefb", "#bdbdbd", "#c3d1e6", "#c5cfdb",
+    "#536273", "#587380", "#5a707b", "#5d4037", "#5d7480", "#6b7280",
+    "#6f6f6f", "#78909c", "#7b1fa2", "#90a4ae", "#9e9e9e", "#ad5700",
+    "#b6c3d6", "#bbdefb", "#bdbdbd", "#c14400", "#c3d1e6", "#c5cfdb",
     # Added after the refactor: GAP_BAND, the band that marks a stretch the
     # unit recorded no sample in, then ACTIVITY_DRIVE_TINT, the 25 % tint of
     # ACTIVITY_DRIVE that fills the detailed-speed envelope. No existing value
@@ -39,8 +50,8 @@ SHIPPED_COLOURS = {
     "#c4d8ef", "#e0d9cf",
     "#c62828",
     "#cdd7e4", "#d0d0d0", "#d2ddec", "#d32f2f", "#d9e1ea", "#dbe4f0",
-    "#e3e9f2", "#e3f2fd", "#e65100", "#e8edf2", "#edf1f5", "#ef6c00",
-    "#f0f0f0", "#f2f6fb", "#f4f6f9", "#f57c00", "#f8f9fa", "#f9a825",
+    "#e3e9f2", "#e3f2fd", "#e8edf2", "#edf1f5", "#ef6c00",
+    "#f0f0f0", "#f2f6fb", "#f4f6f9", "#f8f9fa", "#f9a825",
     "#fafafa", "#ffcdd2", "#fffde7", "#ffffcc", "#ffffff",
 }
 
@@ -85,7 +96,7 @@ def test_gen_colors_keeps_its_keys_and_values():
         "G1 (Digital)": "#2e7d32",
         "G2 (Smart)": "#1565c0",
         "G2.2 (Smart V2)": "#6a1b9a",
-        "Unknown": "#757575",
+        "Unknown": "#6f6f6f",
     }
 
 
@@ -120,13 +131,38 @@ def test_font_specs_are_the_tuples_that_shipped():
     assert theme.FONT_BADGE == ("", 12, "bold")
     assert theme.FONT_KPI_VALUE == ("", 14, "bold")
     assert theme.FONT_CANVAS_TITLE == ("TkDefaultFont", 11, "bold")
-    # The mono choice is the macOS-only one, deliberately kept as it was.
-    assert theme.FONT_MONO == ("Menlo", 11)
-    assert theme.FONT_MONO_BOLD == ("Menlo", 11, "bold")
-    assert theme.FONT_MONO_NORMAL == ("Menlo", 11, "normal")
-    assert theme.FONT_MONO_ITALIC == ("Menlo", 11, "italic")
-    assert theme.FONT_MONO_SMALL == ("Menlo", 10)
-    assert theme.FONT_MONO_LARGE == ("Menlo", 12, "bold")
+    # The mono family is the platform's own (see
+    # test_the_mono_font_is_fixed_pitch_on_this_platform): Menlo on
+    # macOS exactly as before, Courier New on Windows and fontconfig's generic
+    # "Monospace" on X11, where Menlo does not exist and Tk substituted a
+    # proportional font.
+    assert theme.FONT_MONO == (theme._mono_family, 11)
+    assert theme.FONT_MONO_BOLD == (theme._mono_family, 11, "bold")
+    assert theme.FONT_MONO_NORMAL == (theme._mono_family, 11, "normal")
+    assert theme.FONT_MONO_ITALIC == (theme._mono_family, 11, "italic")
+    assert theme.FONT_MONO_SMALL == (theme._mono_family, 10)
+    assert theme.FONT_MONO_LARGE == (theme._mono_family, 12, "bold")
+
+
+@pytest.mark.parametrize(("platform", "family"), [
+    ("darwin", "Menlo"),
+    ("win32", "Courier New"),
+    ("linux", "Monospace"),
+    ("freebsd14", "Monospace"),
+])
+def test_the_mono_family_is_the_one_that_platform_has(platform, family):
+    """``Menlo`` exists on macOS only, and Tk substitutes a *proportional*
+    font without complaining when it is asked for elsewhere.
+
+    Every branch is checked on every machine: a family chosen by an ``if`` at
+    import time can only ever be verified for the platform that is running.
+    """
+    assert theme.mono_family(platform) == family
+
+
+def test_the_mono_family_follows_the_platform_this_runs_on():
+    assert theme.mono_family() == theme.mono_family(sys.platform)
+    assert theme.FONT_MONO[0] == theme.mono_family()
 
 
 def test_font_constants_are_plain_tuples():
@@ -198,14 +234,6 @@ def test_activity_colours_come_from_the_activity_constants():
         assert gui.ACTIVITY_COLORS[code] == getattr(theme, name), code
 
 
-def test_day_detail_map_uses_the_activity_constants():
-    """The day-detail colour map names the activity, not the accent."""
-    import app.gui as gui
-
-    assert gui.DayDetailWindow.COLORS["DRIVE"] == theme.ACTIVITY_DRIVE
-    assert gui.DayDetailWindow.COLORS["REST"] == theme.ACTIVITY_REST
-
-
 def _colours_dict_values(path, target):
     """Return the dict literal assigned to ``target`` as ``{key: ast node}``."""
     tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -215,13 +243,6 @@ def _colours_dict_values(path, target):
             assert isinstance(node.value, ast.Dict), target
             return {key.value: value for key, value in zip(
                 node.value.keys, node.value.values, strict=True)}
-        if isinstance(node, ast.ClassDef) and node.name == "DayDetailWindow":
-            for inner in node.body:
-                if isinstance(inner, ast.Assign) and any(
-                        isinstance(t, ast.Name) and t.id == target
-                        for t in inner.targets):
-                    return {key.value: value for key, value in zip(
-                        inner.value.keys, inner.value.values, strict=True)}
     raise AssertionError(f"{target} not found in {path}")
 
 
@@ -236,11 +257,6 @@ def test_activity_colour_maps_reference_the_activity_names():
     for code, value in colours.items():
         assert isinstance(value, ast.Name), (code, ast.dump(value))
         assert value.id.startswith("ACTIVITY_"), code
-
-    detail = _colours_dict_values(GUI_PATH, "COLORS")
-    for code in ("DRIVE", "REST"):
-        assert isinstance(detail[code], ast.Name), code
-        assert detail[code].id.startswith("ACTIVITY_"), code
 
 
 def test_dashboard_drive_cards_use_the_activity_colours():
@@ -268,3 +284,22 @@ def test_dashboard_drive_cards_use_the_activity_colours():
     assert colours["Avg Drive / day"] == theme.ACTIVITY_DRIVE
     assert colours["Max Drive / day"] == theme.ACTIVITY_DRIVE
 
+
+# ── the day-detail colour map that nothing read ───────────────────────────
+
+def test_the_day_detail_window_has_no_unused_colour_map():
+    """``DayDetailWindow.COLORS`` was dead code and is gone.
+
+    It named the seven activity colours for the summary lines of the day-detail
+    log, but no ``t_<activity>`` tag was ever configured from it, so the log
+    stayed monochrome while the map sat unused — and it was the only user of
+    three palette entries (the work marker's duller shade, the deepest red and
+    the G2.2 purple). Colour-coding those lines is *not* approved: several
+    activity colours do not clear 4.5:1 as text (see
+    ``tests/unit/test_theme_contrast.py``).
+    """
+    import app.gui as gui
+
+    assert not hasattr(gui.DayDetailWindow, "COLORS")
+    assert "DayDetailWindow.COLORS" not in (REPO_ROOT / "app" / "gui.py").read_text(
+        encoding="utf-8")

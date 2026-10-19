@@ -86,9 +86,12 @@ jobs:
       # toolbar's labels and icons, the file overview a parse lands on (and the
       # all-catalog fit sweep of its rows), the progress bar's re-entrancy
       # guards, the pane layout, the hidden-infraction switch, the formatted cells, the integrity
-      # badge and the batch-18 GUI cases are exercised in CI too. Every module
-      # here is one this work stream added or changed and each of them skips
-      # without a display, so leaving one out means it never runs at all.
+      # badge, the batch-18 GUI cases and the accessibility batch (the tree
+      # width, the monospace font, the elided verdict, the keyboard paths into
+      # the day detail / integrity banner / clipboard, the heading anchors and
+      # the two icons) are exercised in CI too. Every module here is one this
+      # work stream added or changed and each of them skips without a display,
+      # so leaving one out means it never runs at all.
       # xvfb-run ships with the ubuntu-latest image.
       if: matrix.python-version == '3.12'
       run: >
@@ -104,6 +107,7 @@ jobs:
         tests/unit/test_gui_formatting.py
         tests/unit/test_gui_integrity_badge.py
         tests/unit/test_batch18_gui.py
+        tests/unit/test_gui_accessibility.py
         -q
 
   coverage:

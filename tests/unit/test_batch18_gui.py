@@ -268,6 +268,7 @@ def _parse_done_app():
     app.btn_export = Mock()
     app.status = Mock()
     app.tree = Mock()
+    app._fit_tree_column = Mock()
     app.after_idle = Mock()
     return app
 
