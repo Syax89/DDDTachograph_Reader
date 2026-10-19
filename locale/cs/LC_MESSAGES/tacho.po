@@ -294,6 +294,15 @@ msgstr "Certifikáty CVC (dekódované)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Karta není v tachografu od {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Zadání registrační značky podnikem"
+
+msgid "Manufacturer specific"
+msgstr "Specifické pro výrobce"
+
+msgid "Reserved for future use"
+msgstr "Rezervováno pro budoucí použití"
+
 msgid "Signature mismatch"
 msgstr "Nesoulad podpisu"
 
@@ -781,6 +790,9 @@ msgstr "Čas >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Čas nad {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Úprava času bez kalibrace"
 
 msgid "Time moving"
 msgstr "Čas v pohybu"

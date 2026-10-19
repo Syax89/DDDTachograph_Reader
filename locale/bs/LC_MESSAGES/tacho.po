@@ -294,6 +294,15 @@ msgstr "CVC certifikati (dekodirano)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kartica nije u tahografu od {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Unos registarskog broja od strane preduzeća"
+
+msgid "Manufacturer specific"
+msgstr "Specifično za proizvođača"
+
+msgid "Reserved for future use"
+msgstr "Rezervisano za buduću upotrebu"
+
 msgid "Signature mismatch"
 msgstr "Potpis se ne poklapa"
 
@@ -781,6 +790,9 @@ msgstr "Vrijeme >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Vrijeme iznad {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Podešavanje vremena bez kalibracije"
 
 msgid "Time moving"
 msgstr "Vrijeme u pokretu"

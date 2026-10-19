@@ -103,14 +103,22 @@ def _camel_word(match: "re.Match[str]") -> str:
 #: A label that ends in a calendar date (``Daily Activities 01/01/2025``,
 #: ``Detailed Speed 2024-12-14``): the date is data, so the catalogs hold one
 #: ``... {date}`` / ``... {day}`` entry per label instead of one per day.
+#: A label whose last word is a code in brackets: ``Reserved (0x07)``.
+_CODED_RE = re.compile(r"(.+?) \((0x[0-9A-Fa-f]{2})\)")
 _DATED_RE = re.compile(r"(.+?) (\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})")
 
 
 def _translate(text: str) -> str:
     """``_(text)``, falling back to the label's placeholder form when it ends in a date."""
     out = _(text)
+    if out != text:
+        return out
+    coded = _CODED_RE.fullmatch(text)
+    if coded:   # "Manufacturer specific (0x83)": the code is not translatable
+        head = _(coded[1])
+        return text if head == coded[1] else f"{head} ({coded[2]})"
     match = _DATED_RE.fullmatch(text)
-    if out != text or not match:
+    if not match:
         return out
     for name in ("date", "day"):
         template = f"{match[1]} {{{name}}}"

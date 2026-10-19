@@ -294,6 +294,15 @@ msgstr "CVC-varmenteet (purettu)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kortti ei ole ajopiirturissa {time} alkaen"
 
+msgid "Entry of VRN by company"
+msgstr "Rekisteritunnuksen syöttö yrityksen toimesta"
+
+msgid "Manufacturer specific"
+msgstr "Valmistajakohtainen"
+
+msgid "Reserved for future use"
+msgstr "Varattu tulevaa käyttöä varten"
+
 msgid "Signature mismatch"
 msgstr "Allekirjoitus ei täsmää"
 
@@ -781,6 +790,9 @@ msgstr "Aika >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Aika yli {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Ajan säätö ilman kalibrointia"
 
 msgid "Time moving"
 msgstr "Aika liikkeessä"

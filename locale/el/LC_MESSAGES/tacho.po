@@ -294,6 +294,15 @@ msgstr "Πιστοποιητικά CVC (αποκωδικοποιημένα)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Η κάρτα απουσιάζει από τον ταχογράφο από τις {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Καταχώριση αριθμού κυκλοφορίας από την επιχείρηση"
+
+msgid "Manufacturer specific"
+msgstr "Ειδικό του κατασκευαστή"
+
+msgid "Reserved for future use"
+msgstr "Δεσμευμένο για μελλοντική χρήση"
+
 msgid "Signature mismatch"
 msgstr "Ασυμφωνία υπογραφής"
 
@@ -781,6 +790,9 @@ msgstr "Χρόνος >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Χρόνος άνω των {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Ρύθμιση ώρας χωρίς βαθμονόμηση"
 
 msgid "Time moving"
 msgstr "Χρόνος σε κίνηση"
