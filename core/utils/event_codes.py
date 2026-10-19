@@ -1,9 +1,14 @@
 """Centralised event & fault type descriptions per EU tachograph legislation.
 
 References:
-  - Regulation (EEC) 3821/85 Annex 1B §2.70 (G1 EventFaultType)
-  - Regulation (EU) 2016/799 Annex 1C §2.86 (G2 EventFaultType)
-  - Regulation (EU) 2021/1228 / 2023/980 (G2.2 amendments)
+  - Regulation (EEC) 3821/85 Annex 1B §2.70 (generation 1 EventFaultType)
+  - Regulation (EU) 2016/799 Annex 1C, Appendix 1, point 2.70 (EventFaultType),
+    as amended by Reg. (EU) 2018/502 ("Generation 2, version 1") and
+    Reg. (EU) 2021/1228 Annex point (n)(ii) ("Generation 2, version 2")
+  - Regulation (EU) 2023/980 (generation 2 version 2 amendments)
+
+The two dicts below carry the generation-2 *version 2* assignment of point 2.70,
+read from the amending acts; the version-1 set is a subset of it.
 
 ``EventFaultType`` is a single byte shared by events and faults:
   '00'H..'0F'H  general events

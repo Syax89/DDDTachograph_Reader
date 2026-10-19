@@ -1,3 +1,37 @@
+## [Unreleased]
+
+### Gen2 vehicle-unit events and faults are decoded in full, with a verdict
+
+Vehicle-unit downloads (Gen2 and Gen2.2) store events and faults as
+`VuEventRecord` (91 bytes) and `VuFaultRecord` (90 bytes). The reader used to
+decode only the first ten bytes of each record and mark all of them low
+confidence.
+
+- Every field the standard defines is now decoded: event/fault type and record
+  purpose, begin and end time, and the four card-and-generation slots (driver and
+  co-driver, at the beginning and at the end of the event). The
+  `Events`/`Faults` tables gain those columns under the names the generation-1
+  records already use, so the interface needs no new translation.
+- Each record now carries a verdict in the exported data: whether it matches the
+  standard (`normative`), the reference it was checked against (`Annex 1C App.1
+  2.198` for events, `… 2.201` for faults) and, when it does not match, a short
+  reason. A record that does not match is still exported, marked low confidence.
+- The manufacturer-specific part of the record is the only thing the standard
+  leaves open, so only those two fields (manufacturer code and the 3-byte
+  manufacturer error code) are marked low confidence on an otherwise conforming
+  record. The similar-events counter joins them when it is 0, a value the
+  standard says is not used but real units do write, and so does the event or
+  fault type when the code has no assigned meaning (reserved, or a
+  manufacturer-specific one).
+- A time-conflict event records the VU clock in the begin time and the GNSS clock
+  in the end time; those records say so (`end_semantics`) instead of presenting
+  the GNSS time as an end.
+- No decode step switches to a backup route silently any more: a fallback to the
+  heuristic byte scan is logged at warning level and recorded in
+  `metadata.decode_paths`, and nothing recovered that way can look conformant.
+
+---
+
 ## [2.8.0] - 2026-10-19
 
 This release is about reading a file comfortably. The window can run in 34

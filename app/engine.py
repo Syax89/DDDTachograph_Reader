@@ -11,9 +11,37 @@ from core.registry.registry import DecoderRegistry
 from core.registry.models import TachoResult, build_generations_tree
 from core.utils.version import __version__
 from core import decoders
+from core.decoders.common import mark_heuristic
 from core.utils.logger import decoder_failure_count, decoder_failures, reset_decoder_failures
 
 logger = logging.getLogger(__name__)
+
+#: Result keys that are bookkeeping, not decoded data: the generation-1/2 walk
+#: publishes ``vu_record_arrays`` as it goes and writes ``metadata`` continuously,
+#: so neither may count as "the walk wrote records".
+_BOOKKEEPING_KEYS = frozenset({"metadata", "vu_record_arrays"})
+
+
+def _result_records(results):
+    """The decoded record collections of a parse result (never bookkeeping)."""
+    return {key: value for key, value in results.items()
+            if isinstance(value, (list, dict))
+            and key not in _BOOKKEEPING_KEYS
+            and not str(key).startswith("_")}
+
+
+def _results_size(results):
+    """Total length of the decoded record collections: "has the walk written yet".
+
+    ``_declare_vu_fallback`` compares this before and after the deterministic
+    walk. A walk that wrote nothing can still be backed by the byte scan; a walk
+    that wrote *something* and then failed must never be rescanned, because the
+    scan reads the same bytes and would duplicate whatever already landed — and
+    that is true wherever inside the walk it failed, including half-way through
+    emitting the very first section. Bookkeeping is excluded on purpose: a section
+    that emitted no records must not look like walk output.
+    """
+    return sum(len(value) for value in _result_records(results).values())
 
 
 def _parse_timestamp(value):
@@ -306,8 +334,9 @@ class TachoParser:
         """Semantic pass for VU downloads (the structural pass above is layout-only).
 
         G2/G2.2: RecordArray stream dispatch + ECDSA download signature
-        verification. G1: deterministic TREP walk. Both fall back to the
-        byte-scan heuristic when the primary path recovers nothing.
+        verification. G1: deterministic TREP walk. When the deterministic path
+        cannot vouch for the file, the byte-scan heuristic may still recover
+        data — but the switch is declared (WARNING + metadata), never silent.
         """
         self.results["metadata"]["is_vu"] = self.is_vu
         if not self.is_vu:
@@ -319,6 +348,8 @@ class TachoParser:
             # stream keyed by recordType — dispatch it instead of the
             # legacy regex/timestamp heuristics (which recover almost
             # nothing for these files).
+            fallback_reason = None
+            written_before = _results_size(self.results)
             try:
                 from core.parser.vu_dispatcher import walk_vu_record_arrays
                 walker_success = walk_vu_record_arrays(self.raw_data, self.results)
@@ -328,13 +359,18 @@ class TachoParser:
                 complete = bool(self.results.get("_vu_walk_complete", False))
                 # Only fall back to heuristic if the walker produced NO results
                 if not walker_success or not self.results.get("vu_record_arrays"):
-                    decoders.parse_vu_download_messages(self.raw_data, self.results)
-                    complete = False  # heuristic fallback cannot vouch for EOF
+                    fallback_reason = "RecordArray walk produced no sections"
+                    complete = False
             except Exception as exc:
-                logger.debug("VU RecordArray dispatch failed: %s", exc, exc_info=False)
-                if not self.results.get("vu_record_arrays"):
-                    decoders.parse_vu_download_messages(self.raw_data, self.results)
+                # The traceback is diagnostic detail; the fallback itself is
+                # declared at WARNING by _declare_vu_fallback below.
+                logger.debug("VU RecordArray dispatch raised: %s", exc, exc_info=True)
                 complete = False
+                fallback_reason = f"RecordArray walk raised {type(exc).__name__}: {exc}"
+            if fallback_reason:
+                self._declare_vu_fallback(
+                    fallback_reason,
+                    walker_wrote=_results_size(self.results) > written_before)
             if not complete:
                 logger.warning("VU download incomplete: %s",
                                "record cap reached" if self.results.get("_vu_walk_record_cap")
@@ -351,24 +387,83 @@ class TachoParser:
                     verification_time=self._signature_timestamp())
                 self.results["vu_certificates"] = decode_vu_certificates(self.raw_data)
             except Exception as exc:
-                logger.debug("VU signature verification unavailable: %s", exc, exc_info=False)
+                logger.warning("VU signature verification unavailable: %s", exc,
+                               exc_info=False)
                 self.results["signature_verification"] = {"overall": "unavailable"}
         else:
             # G1 VU: deterministic TREP walk (Annex 1B §2.2.6) with
             # the byte-scan heuristic as fallback for files the walk
             # cannot validate (truncated/non-standard downloads).
+            reason = "G1 deterministic walk did not cover the file"
             try:
                 from core.parser.g1_walker import walk_g1_vu
                 _messages, complete = walk_g1_vu(self.raw_data, self.results)
             except Exception as exc:
-                logger.debug("G1 VU walk failed: %s", exc, exc_info=False)
+                logger.debug("G1 VU walk raised: %s", exc, exc_info=True)
                 complete = False
                 _messages = []
+                reason = f"G1 walk raised {type(exc).__name__}: {exc}"
             if not complete:
-                decoders.parse_vu_download_messages(self.raw_data, self.results)
+                # Gen1 keeps its long-standing recovery unchanged: an incomplete
+                # walk always falls through to the byte scan (which dedupes only
+                # byte-identical records), exactly as before. What is new is that
+                # the switch is declared and everything the scan adds is marked
+                # heuristic; the Gen2 never-rescan guard must not leak in here.
+                self._declare_vu_fallback(reason)
             present = sorted({m["trep"] for m in (_messages or [])})
             self._build_trep_report(generation, complete_walk=complete,
                                     present_treps=present)
+
+    def _declare_vu_fallback(self, reason, walker_wrote=False):
+        """Declare a VU decode route switch and recover what the scan still can.
+
+        The deterministic walk is the only path that can vouch for a record
+        conforming to the standard, so nothing a backup route recovers may look
+        spec-verified: the gained sections are marked heuristic
+        (``metadata.heuristic_fields``) and the switch itself is recorded in
+        ``metadata.decode_paths`` and logged at WARNING. Records the scan
+        produces never carry ``normative``/``confidence: high``, so a backup
+        route cannot launder a record into looking standard-conformant.
+
+        The scan re-reads the *whole* stream, so on the Gen2 RecordArray path it
+        runs only when the walk wrote nothing at all: ``walker_wrote`` says so
+        wherever inside the walk it failed. ``vu_record_arrays`` is deliberately
+        *not* consulted — it is bookkeeping that exists even for a section that
+        emitted no records, and a record-less walk must not block the scan.
+
+        The Gen1 TREP walk keeps its long-standing recovery **unchanged**: it calls
+        this without ``walker_wrote``, so its scan always runs, exactly as before
+        this change. That scan dedupes only byte-identical records, so over an
+        incomplete walk it can still add records decoded from bytes the walk had
+        already read — pre-existing behaviour, deliberately untouched. What this
+        change adds there is visibility: everything the scan adds is marked
+        heuristic, by its own sub-parsers (``vu_events_faults_TREP03``,
+        ``vu_activities_TREP02``, …) and by the ``vu_fallback_scan`` entry written
+        here. The never-rescan-over-written-records guard is Gen2-only.
+        """
+        paths = self.results.setdefault("metadata", {}).setdefault("decode_paths", {})
+        paths.setdefault("fallback", []).append(reason)
+        # The byte scan re-reads the whole stream, so it only runs when the
+        # deterministic walk wrote no records: a partly-emitted stream would
+        # otherwise be decoded twice, once per route.
+        if walker_wrote:
+            logger.warning("VU deterministic decode fell back (%s): the affected "
+                           "sections stay partial, no heuristic rescan", reason)
+            return
+        before = {key: len(value) for key, value in _result_records(self.results).items()}
+        decoders.parse_vu_download_messages(self.raw_data, self.results)
+        # Everything the scan added, whatever kind of record it is (overview
+        # fields live in a mapping, not in a list) — not just the keys the caller
+        # happens to care about.
+        gained = sorted(key for key, value in _result_records(self.results).items()
+                        if len(value) > before.get(key, 0))
+        if gained:
+            mark_heuristic(self.results, "vu_fallback_scan", gained)
+        # The sentence and metadata.heuristic_fields must describe the same set.
+        marked = sorted((self.results.get("metadata") or {}).get("heuristic_fields") or {})
+        logger.warning("VU deterministic decode fell back (%s): heuristic byte "
+                       "scan recovered %s; sections marked heuristic: %s", reason,
+                       ", ".join(gained) or "nothing", ", ".join(marked) or "none")
 
     def _build_trep_report(self, generation, complete_walk=True, present_treps=None):
         """Summarise TREP completeness (mandatory read / total) into metadata.

@@ -431,7 +431,9 @@ def parse_g1_events_data(val, results):
             })
             off += rec_size
     except (struct.error, IndexError, ValueError) as exc:
-        _log.debug("Events data parse failed: %s", exc)
+        # WARNING, not DEBUG: a swallowed event decode error would otherwise be
+        # indistinguishable from a file that simply has no events.
+        _log.warning("Events data parse failed: %s", exc)
 
 def parse_g1_faults_data(val, results):
     """Parse CardFaultData (tag 0x0503) — CardFaultRecords of 24 bytes.
@@ -474,7 +476,8 @@ def parse_g1_faults_data(val, results):
             })
             off += rec_size
     except (struct.error, IndexError, ValueError) as exc:
-        _log.debug("Faults data parse failed: %s", exc)
+        # WARNING, not DEBUG: see parse_g1_events_data.
+        _log.warning("Faults data parse failed: %s", exc)
 
 def _decode_place_records(val, off, stride):
     """Decode PlaceRecords from EF Places content using the given pointer

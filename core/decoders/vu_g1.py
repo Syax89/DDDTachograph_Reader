@@ -362,7 +362,8 @@ def parse_vu_download_messages(raw_data, results):
             elif trep == 0x05:
                 _parse_trep_05_technical(data, results)
     except (struct.error, IndexError, ValueError) as exc:
-        _log.debug("VU download messages parse failed: %s", exc)
+        # This is the backup route: a swallowed error here must be visible.
+        _log.warning("VU download messages parse failed: %s", exc)
 
 def _parse_trep_02_activities(data, results):
     """Parse TREP 02 (Activities) message: card holder + daily activity records.
@@ -810,6 +811,11 @@ def _parse_trep_03_events_faults(data, results):
                   zip(("events", "faults"), before, after, strict=False) if a > b]
         if gained:
             _mark_heuristic(results, "vu_events_faults_TREP03", gained)
+            # A route switch must never be silent: the non-standard TREP 03
+            # layout produced these records, so they are heuristic, not
+            # spec-verified (metadata.heuristic_fields says the same).
+            _log.warning("TREP 03 (events/faults) layout did not match Annex 1B; "
+                         "heuristic scan supplied %s", ", ".join(gained))
 
 def _parse_trep_03_structured(data, results):
     """Count-prefixed TREP 03 walk. Returns True when the structure validates."""

@@ -273,7 +273,12 @@ _BADGE_WORDS = {
 # (e.g. "_key" dedup markers) are always hidden — see _columns_for.
 # ``record_type`` is the file's internal record code: of no use on screen, it is
 # kept for the exports, where it sits next to the section title.
-HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence", "record_type"}
+HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence", "record_type",
+               # Same conformance bookkeeping report_format.HIDDEN_KEYS hides:
+               # the verdict lives in the JSON, the table keeps its columns.
+               "normative", "spec_reference", "conformance_reason",
+               "low_confidence_fields", "end_semantics",
+               "manufacturer_error_code"}
 # Descriptive columns pushed to table start.
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
 # Technical columns pushed to table end.

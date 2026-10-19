@@ -27,9 +27,12 @@ from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
 from core import decoders
+from core.decoders.common import is_known_nation
 from core.utils.constants import (
     RECORD_ARRAY_MAX_RECORDS, RECORD_ARRAY_MAX_SIZE, VU_MAX_TOTAL_RECORDS)
-from core.utils.event_codes import describe_event, describe_fault, describe_calibration_purpose, describe_control_type, describe_record_purpose
+from core.utils.event_codes import (EVENT_TYPES, FAULT_TYPES, describe_event,
+                                    describe_fault, describe_calibration_purpose,
+                                    describe_control_type, describe_record_purpose)
 
 _log = get_logger(__name__)
 
@@ -62,10 +65,10 @@ RECORD_TYPES = {
     0x12: ("VuDetailedSpeedBlock", "low"),         # detailed speed
     0x13: ("VuDownloadablePeriod", "high"),        # (8)
     0x14: ("VuDownloadActivityData", "medium"),    # (59)
-    0x15: ("VuEventRecord", "medium"),             # (91)
+    0x15: ("VuEventRecord", "high"),               # (91) §2.198 full decode
     0x16: ("VuGNSSADRecord", "high"),              # (56/57) GNSS accumulated driving
     0x17: ("VuITSConsentRecord", "low"),           # (20)
-    0x18: ("VuFaultRecord", "medium"),             # (90)
+    0x18: ("VuFaultRecord", "high"),               # (90) §2.201 full decode
     0x19: ("VuIdentification", "low"),             # (126/138)
     0x1A: ("VuOverSpeedingControlData", "high"),   # (9)
     0x1B: ("VuOverSpeedingEventRecord", "medium"), # (32)
@@ -712,22 +715,201 @@ def decode_load_unload(rec):
     }
 
 
-def _decode_event_fault_prefix(rec):
-    """Common Gen2 VuEventRecord / VuFaultRecord prefix (10 bytes):
-    eventType(1) + eventRecordPurpose(1) + eventBeginTime(4) + eventEndTime(4).
-    The remaining bytes (card numbers, similar-events count, manufacturer data)
-    are surfaced raw — their exact layout is not verified here."""
-    if len(rec) < 10:
+# ── Gen2 VuEventRecord (0x15) / VuFaultRecord (0x18) ─────────────────────
+#
+# Reg. (EU) 2016/799, Annex 1C Appendix 1 (generation 2 layouts):
+#   §2.198 VuEventRecord = eventType(1) + eventRecordPurpose(1) +
+#          eventBeginTime(4) + eventEndTime(4) +
+#          4 × FullCardNumberAndGeneration(19) + similarEventsNumber(1) +
+#          manufacturerSpecificEventFaultData(4) = 91 bytes
+#   §2.201 VuFaultRecord = the same without similarEventsNumber = 90 bytes
+#   §2.74  FullCardNumberAndGeneration = FullCardNumber(18) + generation(1)
+#   §2.73  FullCardNumber = cardType(1 EquipmentType) + nation(1) + number(16)
+#   §2.95  ManufacturerSpecificEventFaultData = manufacturerCode(1) +
+#          OCTET STRING SIZE(3)
+#
+# The manufacturer-specific pair is the ONLY part of the record the standard
+# leaves to the manufacturer, so only those two fields are low confidence; every
+# other field can be checked against the standard, which is what
+# ``decode_event_fault_record`` reports through ``normative``.
+VU_EVENT_RECORD_SIZE = 91
+VU_FAULT_RECORD_SIZE = 90
+VU_EVENT_SPEC = "Annex 1C App.1 2.198"
+VU_FAULT_SPEC = "Annex 1C App.1 2.201"
+# EventFaultType '0B'H (§2.70 generation 2): for a time conflict the two
+# timestamps are redefined — begin is the recording equipment time and end is
+# the GNSS time, i.e. ``end`` is not an end at all (see decode_* below).
+TIME_CONFLICT_EVENT = 0x0B
+# Fields whose value the standard does not define (manufacturer-specific).
+_MANUFACTURER_FIELDS = ["manufacturer_code", "manufacturer_error_code"]
+# FullCardNumberAndGeneration slots: driver/codriver at begin, then at end.
+_CARD_SLOT_OFFSETS = (
+    (10, "card_driver_begin"), (29, "card_codriver_begin"),
+    (48, "card_driver_end"), (67, "card_codriver_end"))
+# EquipmentType (§2.67) codes that identify a *tachograph card*, i.e. the only
+# values a FullCardNumber slot can carry: 1 driver, 2 workshop, 3 control,
+# 4 company, 5 manufacturing. 0 designates a Member State/Europe (certificates),
+# 6..15 are other equipment (VU, motion sensor, GNSS facility, RCM, ITS, plaque,
+# adapter, ERCA, MSCA, external GNSS connection), 16 is "Unused" (SealDataVu only)
+# and 17..255 are RFU.
+_TACHOGRAPH_CARD_TYPES = frozenset(range(0x01, 0x06))
+# Generation (§2.75): '01'H generation 1, '02'H generation 2; rest RFU.
+_DEFINED_CARD_GENERATIONS = frozenset((0x01, 0x02))
+# TimeReal plausibility bound used across the decoders (2000-01-01..2100-01-01).
+# This is a *plausibility* bound, not a rule of the standard: TimeReal itself runs
+# to 2^32-1 (2106-02-07), and outer values are treated as a corrupt field.
+_PLAUSIBLE_TIME = (946684800, 4102444800)
+# EventFaultType codes the amended standard assigns a meaning to:
+# "Generation 2, version 2" (Reg. 2016/799 App.1 point 2.70 as replaced by
+# Reg. 2021/1228 Annex point (n)(ii); add gen1/2018-502 subset). Everything else is
+# RFU (1D-1F, 26-2F, 3B-3F, 41-4F, 50-7F) or manufacturer specific (80-FF).
+#
+# shortcut: the version-2 table is used for every Gen2 download, so 0F/1C/3A are
+# accepted in a Gen2-version-1 file, where that version still says RFU. Upgrade
+# when the parser can tell version 1 from version 2.
+_DEFINED_EVENT_FAULT_TYPES = frozenset(EVENT_TYPES) | frozenset(FAULT_TYPES)
+
+
+def _is_empty_card_slot(slot):
+    """True for the two empty-slot encodings real vehicle units write.
+
+    Either all-0xFF (no card known at that instant), or cardType 0 + nation 0 +
+    a blank card number + generation 0xFF, which is what manufacturer 162 units
+    write when the slot never held a card.
+    """
+    if slot == b"\xff" * 19:
+        return True
+    return (slot[0] == 0x00 and slot[1] in (0x00, 0xFF) and slot[18] in (0x00, 0xFF)
+            and not slot[2:18].strip(b"\x00 "))
+
+
+def _card_slot_problem(name, slot):
+    """Return why a FullCardNumberAndGeneration slot is malformed, else None.
+
+    An empty slot is not a defect: "no card in this slot" is a legal state of an
+    event record, and both encodings above are in use in the field.
+    """
+    if _is_empty_card_slot(slot):
         return None
-    begin = struct.unpack(">I", rec[2:6])[0]
-    end = struct.unpack(">I", rec[6:10])[0]
-    return {
-        "type_code": rec[0],
+    if slot[0] not in _TACHOGRAPH_CARD_TYPES:
+        # One wording that is true for every rejected value: the field identifies a
+        # tachograph card, and only 1..5 are cards.
+        return (f"{name}: card type 0x{slot[0]:02X} cannot appear in a card slot "
+                f"(a tachograph card is 1..5; 6..15 are other equipment, "
+                f"16 is Unused, 17+ RFU)")
+    if slot[18] not in _DEFINED_CARD_GENERATIONS:
+        return f"{name}: card generation 0x{slot[18]:02X} is not a defined Generation"
+    # A card slot carries a Member State that issued the card. 0x00 is "no
+    # information available", 0xFD/0xFE are the EC/Europe and 0xFF is "World":
+    # none of them is an issuing country, and neither are unassigned codes.
+    if not is_known_nation(slot[1]) or slot[1] in (0x00, 0xFD, 0xFE, 0xFF):
+        return (f"{name}: issuing member state 0x{slot[1]:02X} is not a Member State "
+                f"(no information / EC / Europe / World are not issuing countries)")
+    number = slot[2:18]
+    if any(b < 0x20 or b > 0x7E for b in number) or not number.strip():
+        return f"{name}: card number is not 16 printable characters"
+    return None
+
+
+def _event_fault_problems(is_event, rec, begin_ts, end_ts):
+    """Every way a correctly sized record can still break the standard.
+
+    The type code is not one of them: a code the amended assignment does not
+    define (RFU, or a manufacturer-specific one whose meaning is not public) is
+    flagged through ``low_confidence_fields`` while the record stays conformant —
+    the structure is what the standard fixes there.
+    """
+    problems = [p for p in (_card_slot_problem(name, rec[off:off + 19])
+                            for off, name in _CARD_SLOT_OFFSETS) if p]
+    purpose = rec[1]
+    # EventFaultRecordPurpose (§2.69): '00'..'07'H defined, '08'..'7F'H RFU,
+    # '80'..'FF'H manufacturer specific (meaning unknown, but not a defect).
+    if 0x07 < purpose < 0x80:
+        problems.append(f"record purpose 0x{purpose:02X} is RFU")
+    if not _PLAUSIBLE_TIME[0] <= begin_ts <= _PLAUSIBLE_TIME[1]:
+        problems.append(f"begin time {begin_ts} is outside the 2000-2100 "
+                        f"plausibility window")
+    # endTime 0 marks an event/fault that has not ended (purpose '07'H).
+    elif end_ts != 0 and not _PLAUSIBLE_TIME[0] <= end_ts <= _PLAUSIBLE_TIME[1]:
+        problems.append(f"end time {end_ts} is outside the 2000-2100 "
+                        f"plausibility window")
+    # A time conflict is the one record whose two timestamps are not ordered:
+    # they are the VU clock and the GNSS clock (§2.198).
+    elif end_ts and end_ts < begin_ts and not (is_event and rec[0] == TIME_CONFLICT_EVENT):
+        problems.append("end time precedes begin time")
+    return problems
+
+
+def decode_event_fault_record(rec, is_event):
+    """Decode a Gen2 VuEventRecord (91) / VuFaultRecord (90) with its verdict.
+
+    A record whose bytes match the standard is decoded field by field and
+    reported ``normative: True`` / ``confidence: "high"`` for those fields; a
+    record that does not match keeps the 10-byte prefix decode of older versions
+    and is reported ``normative: False`` / ``confidence: "low"`` with a
+    ``conformance_reason``. Neither is ever dropped.
+    """
+    if len(rec) < 10:
+        return None  # not even the standard prefix is present
+    spec = VU_EVENT_SPEC if is_event else VU_FAULT_SPEC
+    type_code = rec[0]
+    begin_ts = struct.unpack(">I", rec[2:6])[0]
+    end_ts = struct.unpack(">I", rec[6:10])[0]
+    out = {
+        "type_code": type_code,
+        "description": describe_event(type_code) if is_event else describe_fault(type_code),
         "record_purpose": rec[1],
-        "begin": _iso(begin),
-        "end": _iso(end),
-        "raw_tail_hex": rec[10:].hex(),
+        "begin": _iso(begin_ts),
+        "end": _iso(end_ts),
+        "spec_reference": spec,
+        "low_confidence_fields": list(_MANUFACTURER_FIELDS),
     }
+    expected = VU_EVENT_RECORD_SIZE if is_event else VU_FAULT_RECORD_SIZE
+    if len(rec) != expected:
+        out.update(
+            normative=False,
+            confidence="low",
+            conformance_reason=(
+                f"record is {len(rec)} bytes, the standard defines {expected}"),
+            # Size does not match the standard, so nothing after the prefix can
+            # be interpreted by offsets: keep the old prefix + raw tail view.
+            raw_tail_hex=rec[10:].hex(),
+        )
+        return out
+
+    for off, name in _CARD_SLOT_OFFSETS:
+        out[name] = decode_full_card_number_gen(rec, off)
+    if is_event:
+        out["similar_events"] = rec[86]
+        if rec[86] == 0:
+            # §2.151: "0 is not used" — but 52 of the 121 events in the real
+            # corpus carry 0, so the value is outside the standard's value
+            # assignment while the record structure is perfectly valid. Flag the
+            # field alone; the record stays normative.
+            out["low_confidence_fields"] = [*_MANUFACTURER_FIELDS, "similar_events"]
+        out["manufacturer_code"] = rec[87]
+        out["manufacturer_error_code"] = rec[88:91].hex()
+        if type_code == TIME_CONFLICT_EVENT:
+            # §2.198: begin is the recording equipment time, end the GNSS time.
+            out["end_semantics"] = "GNSS date and time"
+    else:
+        out["manufacturer_code"] = rec[86]
+        out["manufacturer_error_code"] = rec[87:90].hex()
+
+    type_key = "event_type_code" if is_event else "fault_type_code"
+    if type_code not in _DEFINED_EVENT_FAULT_TYPES:
+        # Outside the amended value assignment (RFU, or manufacturer specific whose
+        # meaning is not published): the field is not interpretable, the structure
+        # still is, so flag the field and keep the record conformant. The key is
+        # the one the emitted record carries.
+        out["low_confidence_fields"] = [*out["low_confidence_fields"], type_key]
+
+    problems = _event_fault_problems(is_event, rec, begin_ts, end_ts)
+    out["normative"] = not problems
+    out["confidence"] = "low" if problems else "high"
+    if problems:
+        out["conformance_reason"] = "; ".join(problems)
+    return out
 
 
 _RECORD_DECODERS = {
@@ -798,11 +980,9 @@ def _decode_record(record_type, rec):
         out["odometer_km"] = _u24(rec[0:3])
         return out
     if record_type in (0x15, 0x18):
-        prefix = _decode_event_fault_prefix(rec)
-        if prefix:
-            out.update(prefix)
-            type_code = prefix.get("type_code")
-            out["description"] = describe_event(type_code) if record_type == 0x15 else describe_fault(type_code)
+        decoded = decode_event_fault_record(rec, is_event=(record_type == 0x15))
+        if decoded:
+            out.update(decoded)
         else:
             out["raw_hex"] = rec[:48].hex()
         return out
@@ -947,6 +1127,13 @@ def walk_vu_record_arrays(data, results):
     total_records = 0
     capped = False
     unmapped = set()
+    # Published up-front as the live list (and the walk declared incomplete):
+    # sections are emitted as they are walked, so a failure mid-walk must leave
+    # both the already-emitted records and their section list in place — the
+    # caller can then tell "sections exist, walk incomplete" from "nothing came
+    # out" and must not re-scan the same bytes on top of them.
+    results["vu_record_arrays"] = sections
+    results["_vu_walk_complete"] = False
 
     for sec in iter_vu_sections(data, state):
         current = {"trep": sec["trep"], "name": TREP_SECTIONS.get(sec["trep"], f"TREP_0x{sec['trep']:02X}"),
@@ -968,22 +1155,37 @@ def walk_vu_record_arrays(data, results):
                 current["records"].setdefault(rt, []).append(decode_vu_record(rt, rec))
                 rpos += rs
                 total_records += 1
+        _emit_section(current, results)
+        # Only once its records reached the results: a failure while emitting a
+        # section must not announce a section the user never got.
         sections.append({
             "trep": f"0x{current['trep']:02X}",
             "section": current["name"],
             "record_counts": {f"0x{rt:02X}": len(v) for rt, v in current["records"].items()},
         })
-        _emit_section(current, results)
         if capped:
             break
 
-    results["vu_record_arrays"] = sections
     results["_vu_walk_complete"] = not capped and not state.get("truncated", False)
     if capped:
         results["_vu_walk_record_cap"] = VU_MAX_TOTAL_RECORDS
     if unmapped:
         results["vu_unmapped_record_types"] = sorted(f"0x{rt:02X}" for rt in unmapped)
     return sections
+
+
+def _count_decode_path(results, key, normative):
+    """Tally how an emitted event/fault was decoded: ``metadata.decode_paths``.
+
+    ``non_normative`` counts records the *deterministic* path decoded but whose
+    fields failed the conformance check. Records recovered by a backup route are
+    never counted here: those are declared by ``decode_paths.fallback``,
+    ``heuristic_fields`` and a WARNING, and carry no verdict at all.
+    """
+    meta = results.setdefault("metadata", {})
+    bucket = meta.setdefault("decode_paths", {}).setdefault(
+        key, {"normative": 0, "non_normative": 0})
+    bucket["normative" if normative else "non_normative"] += 1
 
 
 def _emit_section(section, results):
@@ -1036,22 +1238,41 @@ def _emit_section(section, results):
         if r.get("begin"):
             results.setdefault(VU_RECORD_RESULT_KEYS[0x12], []).append(r)
 
-    # VuEventRecord (0x15) → events, VuFaultRecord (0x18) → faults.
-    # Only the standard prefix is decoded; flagged confidence: low.
+    # VuEventRecord (0x15) → events, VuFaultRecord (0x18) → faults. Each record
+    # carries its own conformance verdict (``normative``) from the decoder, so
+    # the sources keep their keys/columns and gain the fields the standard
+    # defines plus the one manufacturer-specific pair.
     for rt, key in ((0x15, "events"), (0x18, "faults")):
+        type_key = "event_type_code" if key == "events" else "fault_type_code"
         for r in recs.get(rt, []):
-            if r.get("begin"):
-                type_code = r.get("type_code")
-                desc = describe_event(type_code) if key == "events" else describe_fault(type_code)
-                results.setdefault(key, []).append({
-                    "description": desc,
-                    "event_type_code" if key == "events" else "fault_type_code": type_code,
-                    "record_purpose": r.get("record_purpose"),
-                    "begin": r.get("begin"),
-                    "end": r.get("end") or "N/A",
-                    "confidence": "low",
-                    "source": "vu_recordarray",
-                })
+            if r.get("type_code") is None:
+                continue  # too short to hold even the standard prefix
+            record = {
+                "description": r.get("description"),
+                type_key: r["type_code"],
+                "record_purpose": r.get("record_purpose"),
+                "begin": r.get("begin") or "N/A",
+                "end": r.get("end") or "N/A",
+                "card_driver_begin": r.get("card_driver_begin"),
+                "card_codriver_begin": r.get("card_codriver_begin"),
+                "card_driver_end": r.get("card_driver_end"),
+                "card_codriver_end": r.get("card_codriver_end"),
+                "manufacturer_code": r.get("manufacturer_code"),
+                "manufacturer_error_code": r.get("manufacturer_error_code"),
+                "normative": bool(r.get("normative")),
+                "spec_reference": r.get("spec_reference"),
+                "low_confidence_fields": r.get("low_confidence_fields") or [],
+                "confidence": r.get("confidence", "low"),
+                "source": "vu_recordarray",
+            }
+            if key == "events":
+                record["similar_events"] = r.get("similar_events")
+            if r.get("end_semantics"):
+                record["end_semantics"] = r["end_semantics"]
+            if r.get("conformance_reason"):
+                record["conformance_reason"] = r["conformance_reason"]
+            results.setdefault(key, []).append(record)
+            _count_decode_path(results, f"vu_{key}", record["normative"])
 
     # Daily activities: an Activities section carries date(0x06)+odometer(0x05)+
     # activityChangeInfo(0x01). Rebuild a daily record matching results['activities'].

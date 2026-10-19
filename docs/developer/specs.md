@@ -43,6 +43,46 @@ Verification status report for all G2.2 tags, grouped by confidence level:
 **LOW confidence** — Pure reverse-engineering, no published specification:
 - 7 tags where both field names and sizes are heuristic deductions from byte patterns in DDD files (e.g., `0x0529` LoadSensorData, `0x0531` VuSensorFaultData)
 
+### VU event and fault records (Gen2, recordType 0x15 / 0x18)
+
+`VuEventRecord` (Annex 1C Appendix 1 §2.198, 91 bytes) and `VuFaultRecord`
+(§2.201, 90 bytes) are the one part of the VU RecordArray stream decoded *with a
+per-record conformance verdict*. `core/parser/vu_dispatcher.py::decode_event_fault_record`
+decodes every field the standard defines — `eventType`, `eventRecordPurpose`,
+the two `TimeReal`s, the four `FullCardNumberAndGeneration` slots,
+`similarEventsNumber` (events only) and `manufacturerSpecificEventFaultData` —
+and reports on the emitted event/fault:
+
+| Key | Meaning |
+|---|---|
+| `normative` | `True` when all standard-defined fields validate (size, card slots — a slot carries a tachograph card, `CardType` 1..5 — record purpose, time), `False` otherwise |
+| `spec_reference` | `"Annex 1C App.1 2.198"` / `"Annex 1C App.1 2.201"` |
+| `conformance_reason` | Why `normative` is `False` (absent when conformant) |
+| `low_confidence_fields` | Fields whose value the standard does not define: `manufacturer_code` and `manufacturer_error_code` on every record, plus `similar_events` when it is `0` (§2.151 says 0 is "not used", yet real units write it), plus `event_type_code`/`fault_type_code` when the code is RFU or manufacturer specific in the amended `EventFaultType` assignment (point 2.70, "Generation 2, version 2" — Reg. 2018/502 + Reg. 2021/1228). In all those cases the record itself stays conformant |
+| `end_semantics` | Present only on a time-conflict event (`EventFaultType '0B'H`): `end` holds the GNSS time, not an end |
+
+Times are checked against a **plausibility window** (2000-2100), not a rule of the
+standard (`TimeReal` itself runs to 2106): a time outside it is treated as a
+corrupt field, which is the fail-closed choice. A record whose size is not 91/90
+keeps the prefix view (`raw_tail_hex`) and is reported non-conforming — it is
+surfaced, never dropped. Verification status (including the two amending acts
+behind the type table) is in `scripts/g22_verification_status.md` §8.
+
+`metadata.decode_paths` counts how the emitted events/faults were decoded:
+`{"vu_events": {"normative": N, "non_normative": M}, ...}`, where
+`non_normative` counts records the deterministic path decoded but whose fields
+failed the conformance check. A switch to the heuristic byte scan is a different
+thing and is declared separately by `metadata.decode_paths.fallback` (a list of
+reasons), `metadata.heuristic_fields` and a WARNING — records from that route
+carry no verdict at all, so they can never pass for the deterministic one.
+
+The conformance keys stay in the JSON: `normative`, `spec_reference`,
+`conformance_reason`, `low_confidence_fields`, `end_semantics` and
+`manufacturer_error_code` are hidden from the tables (GUI and reports), exactly
+like `confidence`. The visible `Events`/`Faults` columns are the ones the
+generation-1 records already used (card-and-generation slots, similar events,
+manufacturer code), so no new translatable label is introduced.
+
 ### `scripts/tachograph.asn`
 
 Formal **ASN.1 schema** defining the complete tachograph data model. Used as the reference for:

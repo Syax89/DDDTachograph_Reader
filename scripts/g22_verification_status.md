@@ -138,3 +138,81 @@ I riferimenti normativi provengono principalmente da:
 ---
 
 *Report generato il 2026-06-08*
+
+---
+
+## 8. Record VU di eventi e guasti (recordType 0x15 / 0x18) — VERIFICATO
+
+> Aggiornamento 2026-10-19. Fonte: Reg. (UE) 2016/799, Allegato 1C, Appendice 1
+> (le pagine ASN.1 del PDF ufficiale sono immagini; i tipi sono stati letti via OCR
+> 300 dpi delle pagine 113-117, 121 e 152-155).
+
+`VuEventRecord` (§2.198, generazione 2) = 91 byte, `VuFaultRecord` (§2.201,
+generazione 2) = 90 byte. Layout verificato campo per campo e confermato su tutti
+i 6 download VU Gen2/G2.2 reali in `DDD/` (121 eventi, 14 guasti, nessuna
+dimensione diversa):
+
+```
+eventType(1) + eventRecordPurpose(1) + eventBeginTime(4) + eventEndTime(4) +
+4 x FullCardNumberAndGeneration(19: cardType(1)+nation(1)+cardNumber(16)+generation(1))
+  = cardNumberAndGen{Driver,Codriver}Slot{Begin,End}
++ similarEventsNumber(1)              # solo VuEventRecord
++ manufacturerSpecificEventFaultData(4: manufacturerCode(1) + OCTET STRING(3))
+```
+
+Cosa e' **verificato** (HIGH, `core/parser/vu_dispatcher.py::decode_event_fault_record`):
+
+- dimensioni 91/90 e offset di ogni campo;
+- `FullCardNumberAndGeneration` (§2.74: `FullCardNumber` §2.73 + `Generation` §2.75);
+- `EquipmentType` (§2.67): uno slot `FullCardNumber` puo' contenere solo una
+  carta tachigrafica, cioe' i valori 1..5 (driver, officina, controllo,
+  azienda, produzione). I valori 6..15 sono altre apparecchiature (VU, sensor,
+  GNSS, RCM, ITS, plaque, adapter, ERCA, MSCA, GNSS esterno), 16 e' "Unused"
+  (solo SealDataVu) e 17..255 sono RFU: uno slot con uno di questi valori non
+  e' conforme;
+- `EventFaultRecordPurpose` (§2.69: '00'..'07'H definiti, '08'..'7F'H RFU,
+  '80'..'FF'H specifici del costruttore);
+- `TimeReal` e il caso speciale dell'evento di **time conflict** ('0B'H, §2.70 +
+  §2.198): `eventBeginTime` = data/ora dell'apparecchio di registrazione,
+  `eventEndTime` = data/ora GNSS (non una fine). Il record viene annotato con
+  `end_semantics = "GNSS date and time"` invece di presentare il valore come fine;
+- le due codifiche di **slot vuoto** osservate sui file reali: `FF`x19, oppure
+  cardType 0 + nation 0 + 16 spazi + generation 0xFF.
+- Per ogni record emesso il decoder produce un verdetto esplicito:
+  `normative=True` / `confidence="high"` / `spec_reference="Annex 1C App.1 2.198"|"…2.201"`
+  quando tutti i campi normativi sono validi; `normative=False` /
+  `confidence="low"` + `conformance_reason` quando no (record comunque emesso).
+
+Cosa resta **NON verificato** (dichiarato, non dedotto):
+
+- `manufacturerSpecificEventFaultData`: `manufacturerCode` (elenco ufficiale sul
+  sito del laboratorio competente, non riportato in Gazzetta) e i 3 byte di
+  `manufacturerSpecificErrorCode`. Restano grezzi (`manufacturer_code`,
+  `manufacturer_error_code` esadecimale) e sono gli unici campi marcati a bassa
+  confidenza (`low_confidence_fields`) su un record conforme.
+- `SimilarEventsNumber` (§2.151) dice "0 non e' usato", ma record reali hanno 0
+  (52 dei 121 eventi del corpus): il valore viene mostrato senza far fallire la
+  conformita', perche' la VU lo scrive davvero.
+- La value assignment di `EventFaultType` (punto 2.70) e' stata **verificata** sul
+  testo degli atti di modifica: Reg. (UE) 2018/502 ("Generation 2, version 1") e
+  Reg. (UE) 2021/1228 Allegato punto (n)(ii) ("Generation 2, version 2"), che
+  assegna '00'..'0F'H (incl. '0C' RCM, '0D' assenza di posizione GNSS, '0E' GNSS
+  esterno, '0F' GNSS anomaly), '10'..'1C'H ('19' tamper GNSS, '1A'/'1B' GNSS
+  esterno, '1C' incoerenza dati di moto), '20'..'25'H, '30'..'3A'H ('36' GNSS
+  interno, '37' GNSS esterno, '38' RCM, '39' ITS, '3A' sensore interno) e '40'H;
+  sono RFU '1D'..'1F'H, '26'..'2F'H, '3B'..'3F'H, '41'..'4F'H, '50'..'7F'H, e
+  '80'..'FF'H e' specifico del costruttore. Le due tabelle in
+  `core/utils/event_codes.py` corrispondono esattamente alla tabella v2 (test:
+  `test_type_tables_match_the_amended_regulation`).
+  Un codice fuori da questo insieme non rende non conforme il record: viene
+  segnalato in `low_confidence_fields` (`event_type_code` / `fault_type_code`),
+  perche' il testo non ne definisce il significato.
+  Limite noto (`shortcut:` nel codice): la tabella v2 viene usata per ogni file
+  Gen2, quindi '0F'/'1C'/'3A' sono accettati anche in un download Gen2-versione-1
+  dove quella versione dice ancora RFU; si potra' distinguere quando il parser
+  sapra' riconoscere la versione 1 dalla 2.
+- Storico: nel testo originale del 2016 (il PDF dell'Allegato 1C non ancora
+  modificato) quei codici risultano RFU. E' la ragione per cui la tabella era
+  stata marcata "non verificata": oggi lo e', contro gli atti di modifica.
+- `VuOverSpeedingEventRecord` (0x1B) e `VuPowerSupplyInterruptionRecord` (0x1F)
+  non sono stati ri-verificati qui.

@@ -17,7 +17,13 @@ _ISO_RE = re.compile(
 
 # Internal bookkeeping keys never shown in exports.
 HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
-               "non_zero_regions", "name", "size", "confidence", "counters_raw"}
+               "non_zero_regions", "name", "size", "confidence", "counters_raw",
+               # Per-record conformance verdict (Gen2 VU events/faults): like
+               # `confidence`, it is analysis bookkeeping carried by the JSON
+               # export, not a table column — and it has no translated label.
+               "normative", "spec_reference", "conformance_reason",
+               "low_confidence_fields", "end_semantics",
+               "manufacturer_error_code"}
 
 # Canonical trust verdicts for a parsed download. Consumers (GUI badge, rename
 # tooling, reports) must classify with these rather than by substring-matching
