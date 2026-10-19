@@ -28,7 +28,8 @@ def test_gui_column_order_and_filtering_are_unchanged():
         "_key": "dedupe",
     }]
 
-    assert _columns_for(records, None) == ["purpose", "description", "value", "record_type"]
+    # ``record_type`` (the file's internal record code) is not shown: it lives in the exports.
+    assert _columns_for(records, None) == ["purpose", "description", "value"]
     assert _columns_for(["scalar"], None) == ["Value"]
 
 

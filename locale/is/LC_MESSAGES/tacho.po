@@ -294,6 +294,15 @@ msgstr "CVC-skirteini (afkóðuð)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kort ekki í akstursritanum frá {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Skráning skráningarnúmers af hálfu fyrirtækis"
+
+msgid "Manufacturer specific"
+msgstr "Sértækt fyrir framleiðanda"
+
+msgid "Reserved for future use"
+msgstr "Frátekið fyrir framtíðarnotkun"
+
 msgid "Signature mismatch"
 msgstr "Undirskrift stenst ekki"
 
@@ -781,6 +790,9 @@ msgstr "Tími >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Tími yfir {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Tímastilling án kvörðunar"
 
 msgid "Time moving"
 msgstr "Tími á hreyfingu"

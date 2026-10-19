@@ -294,6 +294,15 @@ msgstr "CVC сертификати (декодирани)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Картата липсва в тахографа към {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Въвеждане на регистрационния номер от фирмата"
+
+msgid "Manufacturer specific"
+msgstr "Специфично за производителя"
+
+msgid "Reserved for future use"
+msgstr "Резервирано за бъдеща употреба"
+
 msgid "Signature mismatch"
 msgstr "Подписът не съвпада"
 
@@ -781,6 +790,9 @@ msgstr "Време >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Време над {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Корекция на времето без калибриране"
 
 msgid "Time moving"
 msgstr "Време в движение"

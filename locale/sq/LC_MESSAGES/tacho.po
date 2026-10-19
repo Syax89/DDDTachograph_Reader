@@ -294,6 +294,15 @@ msgstr "Certifikatat CVC (të dekoduara)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Karta nuk është në tahograf që nga {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Futja e targës nga kompania"
+
+msgid "Manufacturer specific"
+msgstr "Specifik për prodhuesin"
+
+msgid "Reserved for future use"
+msgstr "I rezervuar për përdorim në të ardhmen"
+
 msgid "Signature mismatch"
 msgstr "Nënshkrim i pasaktë"
 
@@ -781,6 +790,9 @@ msgstr "Kohë >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Kohë mbi {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Rregullimi i orës pa kalibrim"
 
 msgid "Time moving"
 msgstr "Kohë në lëvizje"

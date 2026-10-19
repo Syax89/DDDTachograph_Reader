@@ -294,6 +294,15 @@ msgstr "CVC sertifikaları (çözüldü)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kart {time} itibarıyla takografda yok"
 
+msgid "Entry of VRN by company"
+msgstr "Şirket tarafından plaka girişi"
+
+msgid "Manufacturer specific"
+msgstr "Üreticiye özgü"
+
+msgid "Reserved for future use"
+msgstr "Gelecekte kullanım için ayrılmıştır"
+
 msgid "Signature mismatch"
 msgstr "İmza uyuşmuyor"
 
@@ -781,6 +790,9 @@ msgstr "Zaman >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "{limit} km/h üzerinde süre"
+
+msgid "Time adjustment without calibration"
+msgstr "Kalibrasyon olmadan saat ayarı"
 
 msgid "Time moving"
 msgstr "Hareket halinde süre"

@@ -294,6 +294,15 @@ msgstr "Certificados CVC (decodificados)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Tarjeta ausente del tacógrafo desde {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Introducción de la matrícula por la empresa"
+
+msgid "Manufacturer specific"
+msgstr "Específico del fabricante"
+
+msgid "Reserved for future use"
+msgstr "Reservado para uso futuro"
+
 msgid "Signature mismatch"
 msgstr "Discrepancia en la firma"
 
@@ -781,6 +790,9 @@ msgstr "Tiempo >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Tiempo por encima de {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Ajuste de la hora sin calibración"
 
 msgid "Time moving"
 msgstr "Tiempo en movimiento"

@@ -294,6 +294,15 @@ msgstr "CVC-certifikater (afkodet)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kort ikke i takografen pr. {time}"
 
+msgid "Entry of VRN by company"
+msgstr "Indtastning af registreringsnummer foretaget af virksomheden"
+
+msgid "Manufacturer specific"
+msgstr "Producentspecifik"
+
+msgid "Reserved for future use"
+msgstr "Reserveret til fremtidig brug"
+
 msgid "Signature mismatch"
 msgstr "Signatur stemmer ikke"
 
@@ -781,6 +790,9 @@ msgstr "Tid >90 km/h"
 #, python-brace-format
 msgid "Time above {limit} km/h"
 msgstr "Tid over {limit} km/h"
+
+msgid "Time adjustment without calibration"
+msgstr "Tidsjustering uden kalibrering"
 
 msgid "Time moving"
 msgstr "Tid i bevægelse"
