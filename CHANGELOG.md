@@ -1,19 +1,19 @@
 ## [Unreleased]
 
-### Exported reports no longer clip or box the characters they carry
+### Long manufacturer names are readable in Excel and keep their letters in the PDF
 
-- The Excel workbook wraps a value that is wider than its column and grows that
-  row, instead of leaving the reader with the text cut at the column edge — the
-  161-character official manufacturer name of code `0xA1` was the visible case,
-  beside a populated neighbour cell. The cell keeps its exact text: no newline,
-  ellipsis or shortened name is written into it, and rows that already fit are
-  unchanged.
-- The PDF report sets the characters its own font does not have — the Lithuanian
-  `Ė` in the official name of code `0xB1` — in a bundled font, instead of drawing
-  a black square over each one. Every other report keeps Helvetica and its
-  layout. The font ships with the application together with its licence; if it is
-  missing from an installation, the PDF export fails and says why rather than
-  returning a complete-looking report with a boxed identity.
+- Excel: a manufacturer name wider than its column now wraps in the cell and the
+  row grows, instead of the name being cut at the column edge (the 161-character
+  official name of code `0xA1` was the visible case, beside a populated neighbour
+  cell). The cell keeps its exact text — no newline, ellipsis or shortened name —
+  rows that already fit are unchanged, and Excel's own 409.5 pt row-height
+  ceiling still applies.
+- PDF: the extended-Latin characters the public manufacturer registry uses — the
+  Lithuanian `Ė` in the official name of code `0xB1` — are set in a font bundled
+  with the application instead of being drawn as a black square. Text the report's
+  own font already covers keeps Helvetica and its layout, so other reports do not
+  change. If that font is missing from an installation, the PDF export fails and
+  says why rather than returning a complete-looking report with a boxed identity.
 
 ### Gen2 vehicle-unit events and faults are decoded in full, with a verdict
 
