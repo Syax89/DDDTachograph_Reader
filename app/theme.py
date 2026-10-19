@@ -23,6 +23,7 @@ The tuple constants are font *specs*, not ``tkfont.Font`` objects: Tk resolves
 family sizes per display, so the UI must keep passing tuples (or a canvas-owned
 ``Font`` built from one) exactly as before.
 """
+import sys
 
 # ── Neutral surfaces ───────────────────────────────────────────────────────
 #: Window/application background (classic-widget palette, ttk ``darkcolor``).
@@ -56,17 +57,27 @@ TEXT_SECONDARY = "#37474f"
 #: Day-detail body text: the strongest foreground in the UI.
 TEXT_STRONG = "#263238"
 #: Section subtitle under a page title.
-TEXT_SUBTLE = "#607d8b"
+TEXT_SUBTLE = "#587380"
 #: Chart axis labels and row annotations.
 TEXT_MUTED = "#536273"
-#: Faint annotations: the day-detail time column.
+#: Faint annotations. **Not text any more**: this is the section divider drawn
+#: on the activity timeline (a 1 px line, not a glyph), and it keeps the value
+#: it shipped with so the chart looks the same. Text that used to be drawn in
+#: it takes :data:`TEXT_FAINT_TEXT`.
 TEXT_FAINT = "#90a4ae"
+#: The faintest *foreground* the UI draws — the day-detail time column. Same
+#: hue as :data:`TEXT_FAINT`, darkened until it clears 4.5:1 on the white it is
+#: written on (it was 2.59:1, well under AA): see ``tests/unit/test_theme_contrast.py``.
+TEXT_FAINT_TEXT = "#5d7480"
 #: Small caption above a KPI value.
 TEXT_LABEL = "#6b7280"
 #: Grey used for "unknown"/placeholder information.
-MUTED = "#757575"
-#: Blue-grey: the rest activity, table meta text, secondary KPI values.
-SLATE = "#78909c"
+MUTED = "#6f6f6f"
+#: Blue-grey foreground: day-detail count/odometer columns, section subtitles,
+#: secondary KPI values. It is *not* :data:`ACTIVITY_REST`'s value any more:
+#: that stays the lighter "rest" blue-grey the chart draws, and only this
+#: foreground was darkened to clear 4.5:1 as text.
+SLATE = "#5a707b"
 
 # ── Borders and widget chrome ──────────────────────────────────────────────
 BORDER = "#c5cfdb"
@@ -85,8 +96,6 @@ BUTTON_PRESSED_BG = "#c3d1e6"
 #: Primary accent: selection, links, G2 files, primary buttons. Activity
 #: colours are separate (see the ``ACTIVITY_*`` block below).
 ACCENT = "#1565c0"
-#: Secondary accent: G2.2 files and manual entries.
-ACCENT_PURPLE = "#6a1b9a"
 #: Verified/insertion green.
 SUCCESS = "#2e7d32"
 #: Resting background of the small "link" buttons (`?`, slot toggle).
@@ -99,14 +108,14 @@ HOVER_BG = "#bbdefb"
 DANGER = "#c62828"
 #: The brighter red used for the speed-limit gridline and markers.
 DANGER_STRONG = "#d32f2f"
-#: Deepest red: a card that was withdrawn.
-DANGER_DARK = "#b71c1c"
 #: Pale red band behind an overspeeding interval.
 DANGER_BAND = "#ffcdd2"
-#: Warnings (partial/incomplete data).
-WARNING = "#e65100"
-#: Softer warning (unverified but not failed).
-CAUTION = "#f57c00"
+#: Warnings (partial/incomplete data). The hue is the shipped one, darkened
+#: from #e65100 (3.50:1 on :data:`SURFACE`) so the verdict reads at 4.7:1.
+WARNING = "#c14400"
+#: Softer warning (unverified but not failed). Darkened from #f57c00
+#: (2.50:1) to 4.7:1, same hue.
+CAUTION = "#ad5700"
 
 # ── Activities ─────────────────────────────────────────────────────────────
 #: Drive bar/marker. The value is :data:`ACCENT`'s today — the two roles are
@@ -117,12 +126,12 @@ ACTIVITY_DRIVE = "#1565c0"
 #: detailed-speed min–max envelope. Light enough that the mean line and the
 #: red over-limit parts still read on top of it.
 ACTIVITY_DRIVE_TINT = "#c4d8ef"
-#: Rest bar/marker. Same value as :data:`SLATE` today, for the same reason.
+#: Rest bar/marker. This *is* the shade the chart draws; :data:`SLATE` used to
+#: share it, but the foreground was darkened for contrast and this fill was
+#: deliberately left alone.
 ACTIVITY_REST = "#78909c"
 #: Work bar.
 ACTIVITY_WORK = "#ef6c00"
-#: Work marker in the day-detail log (deliberately duller than the bar).
-ACTIVITY_WORK_MUTED = "#546e7a"
 #: Available bar.
 ACTIVITY_AVAILABLE = "#f9a825"
 #: Ferry/train crossings.
@@ -156,7 +165,9 @@ DASHBOARD_TOOLTIP_BG = "#ffffcc"
 GEN_COLORS = {
     "G1 (Digital)": SUCCESS,
     "G2 (Smart)": ACCENT,
-    "G2.2 (Smart V2)": ACCENT_PURPLE,
+    # G2.2's purple. It used to be the ACCENT_PURPLE token, whose only other
+    # user was the day-detail colour map that no longer exists.
+    "G2.2 (Smart V2)": "#6a1b9a",
     "Unknown": MUTED,
 }
 
@@ -177,13 +188,47 @@ FONT_KPI_VALUE = ("", 14, "bold")        # dashboard KPI number
 FONT_CANVAS_TITLE = ("TkDefaultFont", 11, "bold")  # summary drawn on a canvas
 
 # Monospace log text of the day-detail window.
-# shortcut: Menlo only exists on macOS, add per-platform fallback later
-FONT_MONO = ("Menlo", 11)
-FONT_MONO_BOLD = ("Menlo", 11, "bold")
-FONT_MONO_NORMAL = ("Menlo", 11, "normal")
-FONT_MONO_ITALIC = ("Menlo", 11, "italic")
-FONT_MONO_SMALL = ("Menlo", 10)
-FONT_MONO_LARGE = ("Menlo", 12, "bold")
+#
+# "Menlo" exists on macOS only: on Windows and X11 Tk does not fail on an
+# unknown family, it quietly substitutes the default *proportional* font, and
+# the log's columns stopped lining up. So the family is chosen per platform:
+#
+# * macOS: Menlo, the system monospace, exactly as before;
+# * Windows: Courier New, the fixed-pitch family every Windows Tk has;
+# * everything else: "Monospace", fontconfig's generic fixed-pitch family. A
+#   generic name is used instead of one font's name (DejaVu Sans Mono) because
+#   it is the one request every X11 desktop answers with *its* monospace font —
+#   DejaVu Sans Mono, Liberation Mono, Noto Sans Mono… — so there is no distro
+#   whose default install leaves it unresolved.
+
+
+def mono_family(platform=None):
+    """The fixed-pitch family to ask Tk for on *platform* (default: this one).
+
+    A function rather than an ``if`` at import time so every platform's answer
+    is reachable from a test on any machine — a branch that only runs on the
+    interpreter that happens to be on the runner is a branch nothing checks.
+    """
+    if platform is None:
+        platform = sys.platform
+    if platform == "darwin":
+        return "Menlo"
+    if platform == "win32":
+        return "Courier New"
+    return "Monospace"
+
+
+#: Lower case on purpose: ``_colour_constants()`` in the palette test collects
+#: every *upper-case* string constant of this module, and this one is a family
+#: name, not a colour.
+_mono_family = mono_family()
+
+FONT_MONO = (_mono_family, 11)
+FONT_MONO_BOLD = (_mono_family, 11, "bold")
+FONT_MONO_NORMAL = (_mono_family, 11, "normal")
+FONT_MONO_ITALIC = (_mono_family, 11, "italic")
+FONT_MONO_SMALL = (_mono_family, 10)
+FONT_MONO_LARGE = (_mono_family, 12, "bold")
 
 #: Backwards-compatible aliases: the names the palette used while it lived in
 #: ``TachoExplorer.__init__``/``app.gui``.

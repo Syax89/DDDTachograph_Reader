@@ -1,4 +1,29 @@
 # Unreleased
+- **Keyboard, contrast and layout fixes from the design review**: the tree pane
+  starts 52 px wider (312 instead of 260) so that no node of a fully expanded
+  G2 card or vehicle-unit file is cut mid-word — "EF Signatures (Card Data
+  Integrity)" needed 285 px in a 241 px column — while the File Info table
+  still prints all ten of its values at the 900x560 minimum. Names no fixed
+  width fits (a G2.2 card, most translations) get a horizontal scrollbar on the
+  tree, shown only when a node overflows. The integrity verdict in the top bar is no
+  longer clipped silently: it ends in an ellipsis when the bar has no room for
+  it (the English wording needs 317 px, the Greek 462, and the bar leaves about
+  a third of that with a file open) and the whole sentence is readable on hover.
+  Seven foregrounds that measured 1.72:1-4.26:1 on the surface they are drawn
+  on now clear 4.5:1 (the footer warning and the partial-file badge, the
+  day-detail time column, the secondary labels, and the three labels that named
+  the X11 colour `gray` instead of a palette entry); the chart fills they shared
+  their colours with — the rest bar, the timeline's section rules — keep the
+  shades they were drawn in. The day-detail log is monospace on Windows and
+  Linux too (`Menlo` exists on macOS only, and Tk substituted a proportional
+  font without complaining), Return opens the day detail from the tree and
+  collapses any other row, the integrity banner is reachable with Tab and opens
+  on Return or space with a visible focus, Ctrl+C copies the selected table rows
+  as tab-separated text, column headings sit over their own cells instead of
+  centred over left-aligned ones, the empty state's "Open DDD file" button
+  carries the toolbar's icon, "EF Signature Verification" is drawn with the
+  integrity icon instead of a second shield, and a colour map nothing read is
+  gone from `DayDetailWindow`.
 - **The busy bar keeps moving while a file loads**: opening a `.ddd` file used
   to grey out Open and Export, show a spinning bar and then freeze that bar for
   the whole render — 116-400 ms on the sample files under Xvfb, up to 86 % of the

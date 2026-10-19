@@ -6,6 +6,7 @@ import pytest
 pytest.importorskip("tkinter")
 
 from app.gui import TachoExplorer
+from app.theme import WARNING
 
 
 def _vu_data(**signature_verification):
@@ -29,7 +30,7 @@ def test_untrusted_vu_trep_signatures_use_warning_badge():
 
     app._update_status_badge(_vu_data(all_treps_valid=True, msca_to_vu=False, root_anchored=False))
 
-    assert app.lbl_status.config.call_args.kwargs["foreground"] == "#e65100"
+    assert app.lbl_status.config.call_args.kwargs["foreground"] == WARNING
 
 
 def test_vu_chain_ok_but_trep_signatures_failed_warns_not_clean():
@@ -55,7 +56,7 @@ def test_vu_chain_ok_but_trep_signatures_failed_warns_not_clean():
 
     kwargs = app.lbl_status.config.call_args.kwargs
     assert kwargs["text"] != "", "badge must not be empty for an unverified VU"
-    assert kwargs["foreground"] == "#e65100"
+    assert kwargs["foreground"] == WARNING
 
 
 def test_gui_rejects_structured_parse_error_before_rendering():

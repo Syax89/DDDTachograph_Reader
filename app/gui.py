@@ -98,12 +98,12 @@ from app.i18n import (  # noqa: E402
 from app import icons  # noqa: E402
 from app import ui_text  # noqa: E402
 from app.theme import (  # noqa: E402  (re-exported: GEN_COLORS/ROW_*/HEADER_BG)
-    ACCENT, ACCENT_PURPLE, ACTIVITY_AVAILABLE, ACTIVITY_DRIVE, ACTIVITY_DRIVE_TINT,
+    ACCENT, ACTIVITY_AVAILABLE, ACTIVITY_DRIVE, ACTIVITY_DRIVE_TINT,
     ACTIVITY_EVENT,
     ACTIVITY_FERRY, ACTIVITY_REST, ACTIVITY_UNKNOWN, ACTIVITY_WORK,
-    ACTIVITY_WORK_MUTED, ACTIVE_BG, BORDER,
+    ACTIVE_BG, BORDER,
     BUTTON_PRESSED_BG, CAUTION, CARD_BORDER, CHART_GRID_MAJOR, CHART_GRID_MINOR, GAP_BAND,
-    CONTROL_HOVER_BG, DANGER, DANGER_BAND, DANGER_DARK, DANGER_STRONG,
+    CONTROL_HOVER_BG, DANGER, DANGER_BAND, DANGER_STRONG,
     DASHBOARD_TOOLTIP_BG, FIELD_BG, FONT_BADGE, FONT_BODY, FONT_CANVAS_TITLE,
     FONT_CAPTION, FONT_CAPTION_BOLD, FONT_HEADING, FONT_KPI_VALUE, FONT_MONO,
     FONT_MONO_BOLD, FONT_MONO_ITALIC, FONT_MONO_LARGE, FONT_MONO_NORMAL,
@@ -111,7 +111,8 @@ from app.theme import (  # noqa: E402  (re-exported: GEN_COLORS/ROW_*/HEADER_BG)
     FONT_PAGE_TITLE, FONT_SMALL, FONT_SUBTITLE, FONT_SUBTITLE_BOLD, FONT_TITLE,
     GEN_COLORS, HEADER_BG, HOVER_BG, LINK_BUTTON_BG, MUTED, ROW_EVEN, ROW_ODD,
     SCROLLBAR_BG, SCROLLBAR_HOVER_BG, SLATE, SUCCESS, SURFACE, SURFACE_ALT,
-    SURFACE_RAISED, SURFACE_SUNKEN, TEXT_FAINT, TEXT_LABEL, TEXT_MUTED,
+    SURFACE_RAISED, SURFACE_SUNKEN, TEXT_FAINT, TEXT_FAINT_TEXT, TEXT_LABEL,
+    TEXT_MUTED,
     TEXT_PRIMARY, TEXT_SECONDARY, TEXT_STRONG, TEXT_SUBTLE, TOGGLE_BG,
     TOOLTIP_BG, TOOLTIP_BORDER, TOOLTIP_FG, WARNING, WHITE)
 
@@ -716,7 +717,18 @@ def _without_indicator(layout):
 
 
 #: Initial width of the tree pane; the data table gets the rest.
-SASH_START = 260
+#:
+#: 260 px clipped five rows of a fully expanded G2 card tree. The widest of
+#: them, "EF Signatures (Card Data Integrity)" at depth 2, needs 285 px in the
+#: font the tree draws (DejaVu Sans at 10 pt): 39 px of row chrome — one
+#: indent step per level plus the 1 px the item padding absorbs — and 246 px of
+#: text. The tree shares its pane with a 15 px scrollbar when the rows do not
+#: fit, and the treeview keeps 4 px of its own, so a 260 px sash left the
+#: column 241 px. 312 px gives it 293 px: 8 px over the widest row, and 52 px
+#: that the File Info table can spare at the 900x560 minimum — its Value column
+#: still fits every one of the ten cells there
+#: (``tests/unit/test_gui_accessibility.py`` measures both sides).
+SASH_START = 312
 
 
 def _autohide(scrollbar, show, hide):
@@ -753,6 +765,47 @@ def _wrap_at_underscores(text, font, width):
     return "\n".join(lines)
 
 
+def _right_padding(frame):
+    """Right-hand padding of a ``ttk.Frame`` (``padding`` takes 1, 2 or 4 values)."""
+    parts = [int(float(v)) for v in re.findall(r"\d+(?:\.\d+)?", str(frame.cget("padding")))]
+    if not parts:
+        return 0
+    if len(parts) >= 3:           # left top right [bottom]
+        return parts[2]
+    return parts[0]               # 1 value: all sides; 2: (x, y)
+
+
+def _pack_padx(widget):
+    """Total horizontal padding (both sides) a packed widget is placed with."""
+    padx = widget.pack_info().get("padx", 0)
+    if isinstance(padx, (tuple, list)):
+        return sum(int(v) for v in padx) if len(padx) > 1 else 2 * int(padx[0])
+    return 2 * int(padx)
+
+
+def _elide_to_width(text, font, width):
+    """Shorten *text* to fit *width* px, marking the cut with an ellipsis.
+
+    Tk clips a label silently — the words simply stop, with nothing to say
+    that they were cut — which is not something the UI may do to a translated
+    integrity verdict. Trimming to whole characters and ending the visible part
+    with "…" says "there is more" without changing the wording itself.
+    """
+    ellipsis = "\u2026"
+    if width <= 0 or font.measure(ellipsis) > width:
+        return ""
+    # Longest prefix that fits together with the ellipsis: a binary search, so
+    # the measure cost stays logarithmic in a sentence that can be 460 px wide.
+    low, high = 0, len(text)
+    while low < high:
+        middle = (low + high + 1) // 2
+        if font.measure(text[:middle].rstrip() + ellipsis) <= width:
+            low = middle
+        else:
+            high = middle - 1
+    return text[:low].rstrip() + ellipsis
+
+
 class DataTable(ttk.Frame):
     """Header-only treeview: grid with sortable columns and filter."""
 
@@ -763,7 +816,7 @@ class DataTable(ttk.Frame):
         head.pack(fill=tk.X, padx=8, pady=(8, 2))
         self.title_lbl = ttk.Label(head, text="", font=FONT_TITLE)
         self.title_lbl.pack(side=tk.LEFT)
-        self.count_lbl = ttk.Label(head, text="", foreground="gray")
+        self.count_lbl = ttk.Label(head, text="", foreground=TEXT_MUTED)
         self.count_lbl.pack(side=tk.LEFT, padx=(8, 0))
         filt = ttk.Frame(self)
         self.filt_bar = filt
@@ -830,6 +883,31 @@ class DataTable(ttk.Frame):
 
         self.tv.bind("<Configure>", lambda e: self._schedule_fit())
 
+        # The table is the only way out of the file with its data in a form
+        # another program can take, and a treeview copies nothing by itself.
+        # Ctrl+C (Cmd+C on macOS) copies what is selected as one tab-separated
+        # line per row, in column order and without the headings — the shape a
+        # spreadsheet pastes into columns.
+        for sequence in ("<Control-c>", "<Control-C>"):
+            self.tv.bind(sequence, self._copy_selection)
+        if sys.platform == "darwin":
+            self.tv.bind("<Command-c>", self._copy_selection)
+
+    def _copy_selection(self, _event=None):
+        """Put the selected rows on the clipboard (TSV, no header).
+
+        Returns ``"break"`` so the key does not fall through to the class
+        binding, which would copy something else (or nothing).
+        """
+        selected = self.tv.selection()
+        if not selected:
+            return "break"
+        rows = ["\t".join(str(cell) for cell in self.tv.item(iid, "values"))
+                for iid in selected]
+        self.clipboard_clear()
+        self.clipboard_append("\n".join(rows))
+        return "break"
+
     def _sync_xscroll(self):
         """Show the horizontal scrollbar only when a column runs off the edge.
 
@@ -871,7 +949,10 @@ class DataTable(ttk.Frame):
 
         self.tv["columns"] = self._cols
         for c in self._cols:
-            self.tv.heading(c, text=str(c),
+            # The heading is anchored like the cells under it (clam centres a
+            # heading by default, which left every title floating over the
+            # middle of a left-aligned column).
+            self.tv.heading(c, text=str(c), anchor=tk.W,
                             command=lambda col=c: self._sort_by(col))
             min_w = max(len(str(c)) * _px(9) + _px(24), _px(60))
             self.tv.column(c, minwidth=min_w, anchor=tk.W, stretch=False)
@@ -1033,8 +1114,11 @@ class DataTable(ttk.Frame):
         self._all_rows.sort(key=key, reverse=descending)
         self._sort_state[col] = not descending
         for c in self._cols:
+            # Re-stating the anchor keeps the sort arrow on the same side as
+            # the cells it heads, on the dashboard (centred columns) too.
             self.tv.heading(c, text=str(c) + (" \u25be" if c == col and descending
-                                              else " \u25b4" if c == col else ""))
+                                              else " \u25b4" if c == col else ""),
+                            anchor=self.tv.column(c, "anchor"))
         self._apply_filter()
 
 
@@ -1278,7 +1362,7 @@ class DetailedSpeedChart(ttk.Frame):
         self.canvas.bind("<ButtonPress-1>", self._start_selection)
         self.canvas.bind("<B1-Motion>", self._extend_selection)
         self.canvas.bind("<ButtonRelease-1>", self._finish_selection)
-        self.summary_lbl = ttk.Label(self, foreground="gray", anchor=tk.W)
+        self.summary_lbl = ttk.Label(self, foreground=TEXT_MUTED, anchor=tk.W)
         self.summary_lbl.pack(fill=tk.X, padx=8, pady=(2, 8))
         self._day = ""
         self._samples = []
@@ -2006,7 +2090,7 @@ class ActivityTimelineChart(ttk.Frame):
         self.canvas.bind("<Configure>", lambda _event: self._schedule_draw())
         self.canvas.bind("<Motion>", self._show_hover)
         self.canvas.bind("<Leave>", lambda _event: self.canvas.delete("act_hover"))
-        self.summary_lbl = ttk.Label(self, foreground="gray", anchor=tk.W,
+        self.summary_lbl = ttk.Label(self, foreground=TEXT_MUTED, anchor=tk.W,
                                      justify=tk.LEFT)
         self.summary_lbl.pack(fill=tk.X, padx=8, pady=(2, 8))
         self._day = ""
@@ -2455,25 +2539,6 @@ class DayDetailWindow(tk.Toplevel):
 
     _open_windows: dict[tuple, "DayDetailWindow"] = {}
 
-    COLORS = {
-        "DRIVE":      ACTIVITY_DRIVE,
-        "WORK":       ACTIVITY_WORK_MUTED,
-        "REST":       ACTIVITY_REST,
-        "AVAILABLE":  TEXT_FAINT,
-        "UNKNOWN":    SLATE,
-        "CARD_IN":    SUCCESS,
-        "CARD_OUT":   DANGER_DARK,
-        "MANUAL":     ACCENT_PURPLE,
-        "EVENT":      ACTIVITY_EVENT,
-        "FAULT":      ACTIVITY_EVENT,
-        "CONDITION":  ACTIVITY_EVENT,
-        "PLACES":     ACTIVITY_EVENT,
-        "OVERSPEED":  ACTIVITY_EVENT,
-        "POWER":      ACTIVITY_EVENT,
-        "BORDER":     ACTIVITY_EVENT,
-        "LOADUNLD":   ACTIVITY_EVENT,
-    }
-
     def __init__(self, parent, day, activities, day_km, changes_count,
                  driver_info, slot_schedule, markers, oos_events,
                  vehicle_info, data, is_vu=False, initial_slot=1):
@@ -2589,7 +2654,7 @@ class DayDetailWindow(tk.Toplevel):
                                 font=FONT_MONO_SMALL)
         self.text.tag_configure("t_hdr", foreground=TEXT_SECONDARY,
                                 font=FONT_MONO_LARGE)
-        self.text.tag_configure("t_time", foreground=TEXT_FAINT,
+        self.text.tag_configure("t_time", foreground=TEXT_FAINT_TEXT,
                                 font=FONT_MONO_SMALL)
         self.text.tag_configure("t_count", foreground=SLATE,
                                 font=FONT_MONO_SMALL)
@@ -3485,8 +3550,28 @@ class TachoExplorer(tk.Tk):
         self.lbl_file = ttk.Label(top, text=_("No file loaded"),
                                   font=FONT_SUBTITLE_BOLD)
         self.lbl_file.pack(side=tk.LEFT)
+        # The integrity verdict is as long as its wording, and the bar runs out
+        # of room long before the longest translated one does at the 900 px
+        # minimum: with a file open the label has ~100-230 px left of the
+        # generation badge, where the English "Certificate chain not anchored
+        # to a trusted root" needs 317 px and the Greek one 462. Tk clips a
+        # label without a mark of its own, so the label keeps the full string,
+        # shows an elided one that ends in an ellipsis when it does not fit,
+        # and hands the whole verdict to a tooltip. See _fit_status.
+        self._status_text = ""
+        self._status_icon = None
+        self._status_tip = None
+        self._status_font = None
         self.lbl_status = ttk.Label(top, text="", font=FONT_BODY)
         self.lbl_status.pack(side=tk.LEFT, padx=(6, 0))
+        # Two triggers, because either side can change without the other: a
+        # wider window moves the right-hand block (the top level's event), and
+        # a new file name moves this label's own left edge (its own event).
+        self.bind("<Configure>",
+                  lambda event: self._fit_status() if event.widget is self else None)
+        self.lbl_status.bind("<Configure>", lambda _e: self._fit_status())
+        self.lbl_status.bind("<Enter>", self._show_status_tip)
+        self.lbl_status.bind("<Leave>", lambda _e: self._hide_status_tip())
         self.lbl_gen = ttk.Label(top, text="")
         self.lbl_gen.pack(side=tk.RIGHT, padx=8)
 
@@ -3502,17 +3587,28 @@ class TachoExplorer(tk.Tk):
         left = ttk.Frame(pw)
         pw.add(left, weight=0)
         scroll = ttk.Scrollbar(left, orient=tk.VERTICAL)
+        hscroll = ttk.Scrollbar(left, orient=tk.HORIZONTAL)
         self.tree = ttk.Treeview(left, show="tree", selectmode="browse")
-        self.tree.configure(yscrollcommand=_autohide(
-            scroll,
-            lambda: scroll.pack(side=tk.RIGHT, fill=tk.Y, before=self.tree),
-            scroll.pack_forget))
+        self.tree.configure(
+            yscrollcommand=_autohide(
+                scroll,
+                lambda: scroll.pack(side=tk.RIGHT, fill=tk.Y, before=self.tree),
+                scroll.pack_forget),
+            # Shown only for a node whose label is wider than the pane (see
+            # _fit_tree_column): a fixed pane width cannot fit every file's
+            # node names in every language.
+            xscrollcommand=_autohide(
+                hscroll,
+                lambda: hscroll.pack(side=tk.BOTTOM, fill=tk.X, before=self.tree),
+                hscroll.pack_forget))
         scroll.config(command=self.tree.yview)
+        hscroll.config(command=self.tree.xview)
         scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.tree.pack(fill=tk.BOTH, expand=True)
-        self.tree.column("#0", width=_px(340), minwidth=_px(200))
+        self.tree.column("#0", width=_px(200), minwidth=_px(200))
         self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
         self.tree.bind("<Double-1>", self._on_tree_double_click)
+        self.tree.bind("<Return>", self._on_tree_return)
         # Right: table
         right = ttk.Frame(pw)
         pw.add(right, weight=1)
@@ -3531,12 +3627,24 @@ class TachoExplorer(tk.Tk):
         self.status.pack(side=tk.LEFT, fill=tk.X, expand=True)
         # The warning icon is the banner's, and arrives with the warnings
         # (see _check_integrity): a banner with no text shows no icon either.
+        # A label that opens a dialog on click is a button, and a button the
+        # keyboard cannot reach is one only the mouse can use. It takes focus
+        # while it is showing a warning (see _check_integrity: with no text it
+        # is not in the tab chain at all), draws the focus with the palette's
+        # active-background colour, and opens the same dialog on Return or
+        # space as on a click.
         self.integrity_banner = ttk.Label(status_bar, text="", anchor=tk.E,
                                            padding=(6, 2), cursor="hand2",
-                                           compound=tk.LEFT)
+                                           compound=tk.LEFT, takefocus=False)
         self.integrity_banner.pack(side=tk.RIGHT)
         self.integrity_banner.bind(
             "<Button-1>", lambda _e: self._show_integrity_details())
+        self.integrity_banner.bind(
+            "<Return>", lambda _e: self._activate_integrity_banner())
+        self.integrity_banner.bind(
+            "<space>", lambda _e: self._activate_integrity_banner())
+        self.integrity_banner.bind("<FocusIn>", self._on_banner_focus_in)
+        self.integrity_banner.bind("<FocusOut>", self._on_banner_focus_out)
         self._integrity_warnings = []
         self.progress = ttk.Progressbar(status_bar, mode="indeterminate", length=_px(160))
         # packed only while a parse is running \u2014 see _start_parse/_finish_parse
@@ -3550,6 +3658,49 @@ class TachoExplorer(tk.Tk):
             self.after(100, lambda: self._start_parse(self._initial_file))
 
     # ── Empty state (no file loaded) ────────────────────────
+
+    def _fit_tree_column(self):
+        """Make the tree's column as wide as its widest node.
+
+        The pane is a fixed width, and node names are not: a G2.2 card has
+        "Driver Card Application Identification V 2" and the Greek catalog
+        "Τοποθεσία κάρτας και επαλήθευση για ημερήσια περίοδο εργασίας". A
+        column at least as wide as the widest label, collapsed nodes included,
+        lets the horizontal scrollbar reach the end of any of them (it only
+        appears when one overflows) instead of cutting the name off.
+        """
+        try:
+            style = ttk.Style(self)
+            font = tkfont.Font(font=style.lookup("Treeview", "font") or "TkDefaultFont")
+            indent = int(float(style.lookup("Treeview", "indent") or 20))
+            needed = 0
+
+            visited = 0
+
+            def visit(parent, depth):
+                nonlocal needed, visited
+                for iid in self.tree.get_children(parent):
+                    visited += 1
+                    if visited % 64 == 0:
+                        # A file can have thousands of day nodes: keep the busy
+                        # bar turning while they are measured.
+                        self._pump_render()
+                    width = indent * (depth + 1) - 1 + font.measure(self.tree.item(iid, "text")) + _px(8)
+                    image = self.tree.item(iid, "image")
+                    if isinstance(image, (tuple, list)):   # Tk hands back a 1-tuple
+                        image = image[0] if image else ""
+                    if image:
+                        width += int(self.tk.call("image", "width", str(image))) + _px(4)
+                    needed = max(needed, width)
+                    visit(iid, depth + 1)
+
+            visit("", 0)
+            width = max(needed, _px(200))
+            self.tree.column("#0", width=width, minwidth=width)
+        except Exception:
+            # Cosmetic: a tree that could not be measured keeps its column
+            # width and must never turn a file that parsed into a render error.
+            _log.debug("tree column not fitted: %s", traceback.format_exc())
 
     def _place_sash(self, pw, event):
         """Give the tree its natural width once the panes have a real size."""
@@ -3578,8 +3729,14 @@ class TachoExplorer(tk.Tk):
                           font=FONT_PAGE_TITLE, anchor=tk.CENTER,
                           justify=tk.CENTER, wraplength=_px(420))
         title.pack(fill=tk.X)
-        ttk.Button(centre, text=_("Open DDD file"),
-                   command=self._open_file).pack(pady=(_px(12), _px(20)))
+        # The same control as the toolbar's open button, so it leads with the
+        # same icon: an iconless twin of a button that has one reads as a
+        # different action.
+        self.btn_open_empty = ttk.Button(
+            centre, text=_("Open DDD file"),
+            image=_icon("toolbar-open", 20, centre) or "", compound=tk.LEFT,
+            command=self._open_file)
+        self.btn_open_empty.pack(pady=(_px(12), _px(20)))
 
         # Advertised only when the drop target really registered: a hint that
         # nothing can honour is worse than no hint at all.
@@ -3750,6 +3907,7 @@ class TachoExplorer(tk.Tk):
         self._rendering = True
         try:
             self._populate_tree(self.current_data)
+            self._fit_tree_column()
         except _RenderAbandoned:
             return  # the window was closed while the tree was being rebuilt
         finally:
@@ -4014,8 +4172,10 @@ class TachoExplorer(tk.Tk):
         """
         self.lbl_file.config(text=_("No file loaded"))
         self.lbl_gen.config(text="")
-        self.lbl_status.config(text="", image="")
-        self.integrity_banner.config(text="", image="")
+        self._set_status_text("", None)
+        self._release_banner_focus()
+        self.integrity_banner.config(text="", image="", takefocus=False,
+                                     background=SURFACE)
         self._integrity_warnings = []
         self._integrity_file = ""
         self.title(f"Tacho Explorer v{__version__}")
@@ -4229,6 +4389,7 @@ class TachoExplorer(tk.Tk):
             # reach the screen before the tree rebuild starts, not after it.
             self._pump_render(force=True)
             self._populate_tree(data)
+            self._fit_tree_column()
             self._update_top_bar(data)
             self.btn_export.config(state=tk.NORMAL)
             target = getattr(self, "_auto_select_iid", None)
@@ -4398,7 +4559,7 @@ class TachoExplorer(tk.Tk):
             self.integrity_banner.config(
                 text=_("{count} integrity warning(s) \u2014 click for details").format(
                     count=len(warnings)),
-                foreground=WARNING,
+                foreground=WARNING, takefocus=True, background=SURFACE,
                 image=_icon("status-warning", 16, self.integrity_banner) or "")
             header = _("The file may be incomplete or corrupted.\n\n{filename}\n\n").format(
                 filename=os.path.basename(path))
@@ -4408,8 +4569,43 @@ class TachoExplorer(tk.Tk):
             # Valid file: no green tick, no banner — the absence of a warning
             # is the "all good" signal. The image is cleared with the text: a
             # label keeps the image it was configured with, and a lone warning
-            # triangle over an empty label is a warning about nothing.
-            self.integrity_banner.config(text="", image="")
+            # triangle over an empty label is a warning about nothing. An empty
+            # banner also leaves the tab chain, and loses the focus tint a
+            # previous file's warnings may have left on it.
+            self._release_banner_focus()
+            self.integrity_banner.config(text="", image="", takefocus=False,
+                                         background=SURFACE)
+
+    def _activate_integrity_banner(self):
+        """Return/space on the banner: the same dialog a click opens."""
+        if self.integrity_banner.cget("text"):
+            self._show_integrity_details()
+        return "break"
+
+    def _release_banner_focus(self):
+        """Keyboard focus must not stay on a banner that has just been emptied."""
+        try:
+            if self.focus_get() is self.integrity_banner:
+                self.tree.focus_set()
+        except Exception:             # popdown Tk cannot name, or a half-built window
+            pass
+
+    def _on_banner_focus_in(self, _event=None):
+        """Draw the banner's keyboard focus without losing its text's contrast.
+
+        The status bar is a sunken frame, so a focus *ring* would move the
+        label by a pixel; a filled background marks the focused control
+        without touching the layout. The tint is the palette's own active-
+        background colour, and it is dark enough to be seen, which is exactly
+        why the warning orange (4.7:1 on the bar, 4.0:1 on the tint) gives way
+        to the body foreground while the control has focus. The words and the
+        warning icon do not change.
+        """
+        self.integrity_banner.configure(background=ACTIVE_BG,
+                                       foreground=TEXT_PRIMARY)
+
+    def _on_banner_focus_out(self, _event=None):
+        self.integrity_banner.configure(background=SURFACE, foreground=WARNING)
 
     def _show_integrity_details(self):
         """Show the collected integrity warnings on demand (banner click)."""
@@ -4553,9 +4749,8 @@ class TachoExplorer(tk.Tk):
         # An empty image name clears a previous badge: a label keeps the image
         # it was configured with, and a clean file must not inherit the last
         # file's warning icon.
-        self.lbl_status.config(text=text, foreground=color,
-                               image=_icon(badge, 16, self) if badge else "",
-                               compound=tk.LEFT)
+        self._set_status_text(text, _icon(badge, 16, self) if badge else None,
+                              foreground=color)
         # Also update the window title with a compact status (problems only).
         # The window title is plain text: it has no icon slot, so it carries the
         # short word for the badge instead of a glyph.
@@ -4563,6 +4758,125 @@ class TachoExplorer(tk.Tk):
                  _BADGE_WORDS.get(badge or "", ""),
                  os.path.basename(self.current_file or "")]
         self.title("  ".join(p for p in parts if p))
+
+    # ── Toolbar verdict: elided text and its hover reveal ───
+
+    def _set_status_text(self, text, image, foreground=None):
+        """Store the whole verdict (and its icon) and show as much as fits."""
+        self._status_text = text or ""
+        self._status_icon = image
+        options = {"text": self._status_text, "image": image or "",
+                   "compound": tk.LEFT}
+        if foreground is not None:
+            options["foreground"] = foreground
+        self.lbl_status.config(**options)
+        self._fit_status()
+
+    def _status_label_font(self):
+        """The font the verdict is drawn with, for measuring it."""
+        if self._status_font is None:
+            self._status_font = tkfont.Font(font=self.lbl_status.cget("font"))
+        return self._status_font
+
+    def _status_available_width(self):
+        """How many pixels the verdict may use, with the right-hand block kept.
+
+        Everything here is deliberately independent of the label's current
+        text, because the answer decides that text: an elided label is narrower
+        than the space it was given, so measuring *its* width would elide it
+        again on the next pass, and each pass would find a different number
+        (pack squeezes the generation badge out of the bar at one width and
+        lets it back in at another — the two widths then oscillate forever).
+        So the width is the window's, minus the fixed left block the label
+        starts after, minus what the right-hand block *asks* for.
+        """
+        reserved = 0
+        for neighbour in (self.lbl_gen, self.btn_lang):
+            try:
+                # What it asks for plus the padx it is packed with, on both
+                # sides: the badge is packed with padx=8, which is 16 px.
+                reserved += neighbour.winfo_reqwidth() + _pack_padx(neighbour)
+            except tk.TclError:          # a window that is being torn down
+                continue
+        # The label's x is relative to the *bar* it is packed in, which is
+        # inset by the frame's padding; the window's width is not. Mixing the
+        # two overstated the budget by that padding.
+        left = self.lbl_status.winfo_rootx() - self.winfo_rootx()
+        bar = self.lbl_status.master
+        available = (self.winfo_width() - left - reserved
+                     - _right_padding(bar))
+        # What the label adds around its text (the icon, its gap and the
+        # widget's own padding) is read off the label itself: the difference
+        # between what it asks for and what its current text measures does not
+        # depend on which text that is.
+        font = self._status_label_font()
+        available -= (self.lbl_status.winfo_reqwidth()
+                      - font.measure(self.lbl_status.cget("text")))
+        return available
+
+    def _fit_status(self):
+        """Show the whole verdict, or as much of it as ends in an ellipsis.
+
+        Runs on every resize of the label and whenever the verdict changes, so
+        a longer translation, a narrower window or a new file is reflected
+        immediately instead of staying clipped.
+        """
+        label = self.lbl_status
+        if not self._status_text:
+            # Nothing to reveal any more: a tip left on screen would describe a
+            # file that is no longer loaded.
+            self._hide_status_tip()
+        if not self._status_text or not isinstance(label, tk.Widget):
+            # No window to measure (a stub in a test): the plain text stands.
+            return
+        if label.winfo_width() <= 1:
+            # Not laid out yet — the <Configure> that follows the first pack
+            # fits it.
+            return
+        available = self._status_available_width()
+        font = self._status_label_font()
+        shown = self._status_text
+        if available <= 0:
+            # No room at all: keep a mark of the cut, so the label stays
+            # something to hover (and reaches its tooltip) instead of blank.
+            shown = "\u2026"
+        elif font.measure(shown) > available:
+            shown = _elide_to_width(shown, font, available)
+        if label.cget("text") != shown:
+            label.config(text=shown)
+            self._hide_status_tip()
+
+    def _show_status_tip(self, _event=None):
+        """Reveal the whole verdict when the label had to shorten it."""
+        if not self._status_text or self.lbl_status.cget("text") == self._status_text:
+            self._hide_status_tip()
+            return
+        if self._status_tip is None:
+            self._status_tip = tk.Label(self, text="", bg=DASHBOARD_TOOLTIP_BG,
+                                        relief=tk.SOLID, borderwidth=1,
+                                        font=FONT_SMALL, fg=TEXT_SECONDARY,
+                                        padx=6, pady=2, justify=tk.LEFT)
+        tip = self._status_tip
+        tip.config(text=self._status_text, wraplength=_px(420))
+        tip.update_idletasks()
+        # Under the label, kept inside the window: a tooltip that runs off the
+        # right edge would hide the very words it exists to show. Both edges
+        # are measured from the window's own origin, because the label's
+        # winfo_x/y are relative to the toolbar frame it is packed in.
+        x = min(self.lbl_status.winfo_rootx() - self.winfo_rootx(),
+                max(0, self.winfo_width() - tip.winfo_reqwidth() - _px(4)))
+        y = (self.lbl_status.winfo_rooty() - self.winfo_rooty()
+             + self.lbl_status.winfo_height())
+        tip.place(x=x, y=y)
+        tip.lift()
+
+    def _hide_status_tip(self):
+        """Hide the verdict reveal, if one is showing."""
+        try:
+            if self._status_tip is not None:
+                self._status_tip.place_forget()
+        except Exception:             # a half-built or torn-down window
+            pass
 
     # ── Tree construction ───────────────────────────────────
 
@@ -5103,8 +5417,12 @@ class TachoExplorer(tk.Tk):
             for item_name, item_data in sec.items():
                 if isinstance(item_data, dict) and item_data:
                     cols, rows = _kv_rows(item_data)
+                    # Not the shield of the "Security & Certificates" group
+                    # above: this node reports the data-integrity check, and the
+                    # set's integrity glyph says so. (The overview's INTEGRITY
+                    # block carries the same one, for the same reason.)
                     self._add_section("", ui_text.label(item_name),
-                                      cols, rows, icon="security")
+                                      cols, rows, icon="integrity-locked")
 
         # The overview is the view a freshly parsed file opens on — for a card
         # and for a VU alike. It is set last on purpose: the section-specific
@@ -5288,10 +5606,10 @@ class TachoExplorer(tk.Tk):
 
         self.table.tv["columns"] = self.table._cols
         for c in self.table._cols:
-            self.table.tv.heading(c, text=str(c),
+            anchor = tk.W if c == _("Date") else tk.CENTER
+            self.table.tv.heading(c, text=str(c), anchor=anchor,
                                   command=lambda col=c: self.table._sort_by(col))
             min_w = max(len(str(c)) * _px(9) + _px(20), _px(60))
-            anchor = tk.W if c == _("Date") else tk.CENTER
             self.table.tv.column(c, minwidth=min_w, anchor=anchor, stretch=True)
 
         self.table.tv.tag_configure("total",
@@ -6172,14 +6490,32 @@ class TachoExplorer(tk.Tk):
         if not iid:
             return
         self.tree.selection_set(iid)
+        self._open_day_detail(iid)
+
+    def _on_tree_return(self, _event=None):
+        """Return on a day node opens the day detail, like a double click.
+
+        Every other node keeps the treeview's own Return — it opens or closes
+        the row — so this handler only claims the key for the nodes that have
+        a window behind them, and lets the class binding have the rest by
+        *not* returning ``"break"``.
+        """
+        sel = self.tree.selection()
+        if not sel:
+            return None
+        return "break" if self._open_day_detail(sel[0]) else None
+
+    def _open_day_detail(self, iid):
+        """Open the day-detail window for *iid*; ``False`` when it has none."""
         payload = self._payloads.get(iid)
         if not payload or payload[0] != "__activity_chart__":
-            return
+            return False
         day, is_vu, activities, day_km, changes_count, driver_info, slot_schedule, markers, oos_events, vehicle_info = payload[1:]
         data = getattr(self, "_opened_data", None) or {}
         DayDetailWindow(self, day, activities, day_km, changes_count,
                         driver_info, slot_schedule, markers, oos_events,
                         vehicle_info, data, is_vu=is_vu)
+        return True
 
     def _on_tree_select(self, _event):
         """Tree selection → show the node's stored payload in the table."""
