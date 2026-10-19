@@ -370,3 +370,14 @@ def test_mock_download_keeps_the_labels_english_until_catalogs_cover_them(explor
 
     assert label("events") == "Events"
     assert "Events Data" in _tree_labels(explorer)
+
+
+def test_a_label_ending_in_a_date_uses_the_placeholder_entry(monkeypatch):
+    """One ``... {date}`` catalog entry serves every day (issue #13)."""
+    import app.ui_text as ui_text
+    catalog = {"Daily Activities {date}": "Tag {date}", "Detailed Speed {day}": "V {day}"}
+    monkeypatch.setattr(ui_text, "_", lambda s: catalog.get(s, s))
+    assert label("Daily Activities 01/01/2025") == "Tag 01/01/2025"
+    assert label("Daily Activities 31/12/2031") == "Tag 31/12/2031"
+    assert label("Detailed Speed 2024-12-14") == "V 2024-12-14"
+    assert label("Other 01/01/2025") == "Other 01/01/2025"

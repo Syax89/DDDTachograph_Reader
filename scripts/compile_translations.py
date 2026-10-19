@@ -16,6 +16,7 @@ Every entry is validated against its English source (the msgid):
   ``{percent:.2%}``, nor lose a field);
 * an empty msgstr (an untranslated entry) is an error — it would blank the UI
   text instead of falling back to English;
+* a msgid may not embed a calendar date (use a ``{date}`` placeholder);
 * duplicate msgids and non-string fragments (``msgid 42``) are errors.
 
 A translation is allowed to be *identical* to the msgid: technical constants
@@ -35,6 +36,7 @@ a bundle that ignores the last translation update.
 import ast
 import glob
 import os
+import re
 import string
 import struct
 import sys
@@ -154,6 +156,8 @@ def parse_po(path):
             _check_entry(msgid, msgstr)
         except CatalogError as exc:
             fail(str(exc))
+        if re.search(r"\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2}", msgid):
+            fail(f"msgid {msgid!r} embeds a date: use a {{date}} placeholder")
         if msgid in seen:
             fail(f"duplicate msgid {msgid!r}")
         seen.add(msgid)
