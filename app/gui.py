@@ -715,6 +715,10 @@ def _without_indicator(layout):
     return stripped
 
 
+#: Initial width of the tree pane; the data table gets the rest.
+SASH_START = 260
+
+
 class DataTable(ttk.Frame):
     """Header-only treeview: grid with sortable columns and filter."""
 
@@ -818,7 +822,7 @@ class DataTable(ttk.Frame):
         self.filt_bar.pack(fill=tk.X, padx=8, pady=(0, 4), before=self.tv.master)
         self.title_lbl.config(text=title)
         self.count_lbl.config(
-            text=_("{rows} rows \u00b7 {columns} columns").format(
+            text=_("Rows: {rows} \u00b7 Columns: {columns}").format(
                 rows=len(rows), columns=len(columns))
             + (f"   \u2014   {meta}" if meta else ""))
         self.filter_var.set("")
@@ -3452,10 +3456,15 @@ class TachoExplorer(tk.Tk):
 
         pw = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
         pw.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
+        # ttk starts a two-pane window with the sash in the middle, which gave the
+        # tree (whose widest label is ~175 px) 47 % of the window at the minimum
+        # size and left the data table 411 px. Place it once, on first layout;
+        # after that the user's drag is never overridden.
+        self._sash_bind = pw.bind("<Configure>", lambda e, pw=pw: self._place_sash(pw, e))
 
         # Left: tree
         left = ttk.Frame(pw)
-        pw.add(left, weight=1)
+        pw.add(left, weight=0)
         scroll = ttk.Scrollbar(left, orient=tk.VERTICAL)
         self.tree = ttk.Treeview(left, show="tree", yscrollcommand=scroll.set,
                                   selectmode="browse")
@@ -3467,7 +3476,7 @@ class TachoExplorer(tk.Tk):
         self.tree.bind("<Double-1>", self._on_tree_double_click)
         # Right: table
         right = ttk.Frame(pw)
-        pw.add(right, weight=3)
+        pw.add(right, weight=1)
         self.table = DataTable(right)
         self.table.pack(fill=tk.BOTH, expand=True)
         self.speed_chart = DetailedSpeedChart(right)
@@ -3502,6 +3511,13 @@ class TachoExplorer(tk.Tk):
             self.after(100, lambda: self._start_parse(self._initial_file))
 
     # ── Empty state (no file loaded) ────────────────────────
+
+    def _place_sash(self, pw, event):
+        """Give the tree its natural width once the panes have a real size."""
+        if event.width < _px(400):
+            return
+        pw.unbind("<Configure>", self._sash_bind)
+        pw.sashpos(0, _px(SASH_START))
 
     def _build_empty_state(self, parent):
         """The placeholder the right pane shows while no file is loaded.
@@ -4988,7 +5004,7 @@ class TachoExplorer(tk.Tk):
                 "Generation 2.2": _("Annex 1C \u00b7 2023/980"),
             }
             annex = annex_map.get(gen_name, "")
-            annex_suffix = f"  [{annex}]" if annex else ""
+            annex_suffix = f" [{annex}]" if annex else ""
             gnode = self.tree.insert(
                 "", tk.END,
                 text=_("{generation}{annex}").format(
