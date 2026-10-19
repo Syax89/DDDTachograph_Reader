@@ -100,6 +100,26 @@ def _camel_word(match: "re.Match[str]") -> str:
     return word
 
 
+#: A label that ends in a calendar date (``Daily Activities 01/01/2025``,
+#: ``Detailed Speed 2024-12-14``): the date is data, so the catalogs hold one
+#: ``... {date}`` / ``... {day}`` entry per label instead of one per day.
+_DATED_RE = re.compile(r"(.+?) (\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2})")
+
+
+def _translate(text: str) -> str:
+    """``_(text)``, falling back to the label's placeholder form when it ends in a date."""
+    out = _(text)
+    match = _DATED_RE.fullmatch(text)
+    if out != text or not match:
+        return out
+    for name in ("date", "day"):
+        template = f"{match[1]} {{{name}}}"
+        got = _(template)
+        if got != template:
+            return got.format(**{name: match[2]})
+    return text
+
+
 def humanize(key) -> str:
     """Map a raw key to a space separated English label; never raise.
 
@@ -119,7 +139,7 @@ def humanize(key) -> str:
 
 def label(key) -> str:
     """The translated label for *key*: the only entry point the GUI needs."""
-    return _(humanize(key))
+    return _translate(humanize(key))
 
 
 def configure_translate_data(flag) -> None:
@@ -150,7 +170,7 @@ def data_text(text):
     """
     if not _translate_data or not isinstance(text, str):
         return text
-    return _(text)
+    return _translate(text)
 
 
 #: Activity codes the tachograph file stores, and the word the decoder gives
