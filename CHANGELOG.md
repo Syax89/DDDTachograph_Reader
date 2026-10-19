@@ -7,8 +7,11 @@
   recorded) and a compact totals grid — Drive, Work, Rest, Available, Unknown,
   Total in the single `h:mm` style the tables use, plus days with activity,
   events and faults. Every bucket still comes from the one slot-aware totals
-  engine, so the cover cannot contradict the monthly table, and the cover states
-  that Unknown time is unattributed rather than proof of a corrupt file. The
+  engine, so every per-day figure matches the monthly table, but the totals are
+  no longer promised to equal that table: the cover sums every daily record in
+  the input, while past the 1,500-row limit the printed tables (monthly subtotal
+  rows included in the same cap) are a subset, and the cover says so. It also
+  states that Unknown time is unattributed rather than proof of a corrupt file. The
   bogus `N/A N/A` driver line on vehicle-unit files and the second, standalone
   printing of the driver's name are gone. Monthly activity tables print `(h:mm)`
   headers, right-aligned numeric Paragraphs (not merely TableStyle alignment),
@@ -22,10 +25,15 @@
   Technical Appendix (ending with a `File & Parse Details` block) instead of
   trailing the contents; Excel and CSV keep the existing section order. The
   1,500-row cap now warns on the page for activities as well, names the rows
-  exported and points at the JSON export, a month cut off before its subtotal is
-  labelled as partial instead of showing an empty month name, blank pages and
-  header-only trailing pages are gone, and a long file name is shortened in the
-  footer rather than run into the page number. No new options, graphs or
+  exported and points at the JSON export (a capped section whose retained rows
+  show no value still discloses the cut instead of vanishing), a month cut off
+  before its subtotal is labelled as partial instead of showing an empty month
+  name, the cover's period is labelled as *dated* days so it no longer reads as
+  the activity-day count, blank pages and header-only trailing pages are gone (a
+  section heading and its description move with the first data of the section,
+  and a card value taller than a page is split rather than raising an error), and
+  a long file name is shortened in the footer rather than run into the page
+  number. No new options, graphs or
   dependencies, and nested structures are still summarised as text — the PDF is a
   summary; use JSON for the complete decoded structure.
 - **Keyboard, contrast and layout fixes from the design review**: the tree pane

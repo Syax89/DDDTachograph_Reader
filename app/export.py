@@ -322,15 +322,18 @@ class ExportManager:
         cover_note_style = ParagraphStyle("TachoCoverNote", parent=styles["BodyText"],
                                           fontSize=7.5, leading=9.5, textColor=TEXT_GRAY,
                                           spaceBefore=1.5, spaceAfter=1)
+        # keepWithNext groups a heading (and the description under it) with the
+        # first flowable of its section, so a pagination boundary can never leave
+        # "VU Identifications" alone above a card that starts on the next page.
         section_style = ParagraphStyle("TachoSection", parent=styles["Heading2"],
                                        textColor=PRIMARY, fontSize=13, spaceBefore=10,
-                                       spaceAfter=4, leading=16)
+                                       spaceAfter=4, leading=16, keepWithNext=1)
         cover_heading_style = ParagraphStyle("TachoCoverHeading", parent=section_style,
                                              fontSize=10.5, spaceBefore=9,
                                              spaceAfter=3, leading=13)
         month_style = ParagraphStyle("TachoMonth", parent=styles["Heading3"],
                                      textColor=PRIMARY, fontSize=11, spaceBefore=5,
-                                     spaceAfter=2, leading=14)
+                                     spaceAfter=2, leading=14, keepWithNext=1)
         cell_style = ParagraphStyle("TachoCell", parent=styles["BodyText"],
                                     fontSize=8, leading=10)
         cell_right_style = ParagraphStyle("TachoCellRight", parent=cell_style,
@@ -364,7 +367,7 @@ class ExportManager:
                                           textColor=PRIMARY, fontSize=8.5, leading=11)
         note_style = ParagraphStyle("TachoNote", parent=styles["BodyText"],
                                     fontSize=7.2, leading=9, textColor=colors.grey,
-                                    spaceBefore=2, spaceAfter=1)
+                                    spaceBefore=2, spaceAfter=1, keepWithNext=1)
 
         #: Left-aligned style → its right-aligned twin (numeric cells).
         _RIGHT_OF = {
@@ -541,7 +544,10 @@ class ExportManager:
                         _value_cell(right_label),
                         _value_cell(right_value),
                     ])
-                table = LongTable(data, colWidths=widths, repeatRows=2)
+                # splitInRow keeps a value taller than the page: reportlab
+                # fragments the row itself, so the record number and Field/Value
+                # header repeat instead of raising LayoutError.
+                table = LongTable(data, colWidths=widths, repeatRows=2, splitInRow=1)
                 table.spaceBefore = 3
                 cmds = [
                     ("SPAN", (0, 0), (-1, 0)),
@@ -589,12 +595,18 @@ class ExportManager:
             return _build_table(data, widths, right_from_column=[1, 3, 5],
                                 stripe=False, shade_rows=shaded, pad=2.5)
 
-        def _row_limit_note():
+        def _row_limit_note(showed_rows=True):
             limit = _pdf_number(_PDF_MAX_ROWS)
+            if showed_rows:
+                lead = (f"Showing the first {limit} rows of this section: the export "
+                        f"stopped at the {limit}-row report limit. ")
+            else:
+                lead = (f"This section stopped at the {limit}-row report limit before a "
+                        "row with displayable values was reached, so no table is printed "
+                        "here. ")
             return Paragraph(_pdf_text(
-                f"Showing the first {limit} rows of this section: the export stopped at "
-                f"the {limit}-row report limit. The JSON export holds the complete parsed "
-                "results (the Excel export has its own row limit)."), note_style)
+                lead + "The JSON export holds the complete parsed results (the Excel "
+                "export has its own row limit)."), note_style)
 
         # ── activity helpers ──────────────────────────────────────────────
 
@@ -659,13 +671,17 @@ class ExportManager:
 
         def _informative(value):
             """False for a placeholder that says nothing (``N/A``, ``—``)."""
-            tokens = set(str(value).replace("/", " ").split())
-            return bool(tokens - {"N/A", "N/A.", "—", "-", "None"})
+            placeholders = {"N/A", "N/A.", "—", "-", "/", "None"}
+            return any(token.strip(",;") not in placeholders
+                       for token in str(value).split())
 
         identity, state, appendix_details = [], [], []
         for field, value in summary:
             if field in _PDF_COVER_IDENTITY_LABELS:
-                (identity if _informative(value) else appendix_details).append((field, value))
+                # "N/A N/A" (an unavailable name beside a real card number) says
+                # nothing and is dropped rather than printed as if it were a name.
+                if _informative(value):
+                    identity.append((field, value))
             elif field in _PDF_COVER_STATE_LABELS:
                 state.append((field, value))
             elif field not in _PDF_SUBTITLE_LABELS and field != "Parsed at":
@@ -674,7 +690,8 @@ class ExportManager:
         story = []
 
         # ═══════ COVER ═══════
-        source = "Vehicle Unit" if meta.get("is_vu") else "Driver Card"
+        source = summary_lookup.get("Source") or (
+            "Vehicle Unit" if meta.get("is_vu") else "Driver Card")
         subtitle = "  ·  ".join(
             part for part in (str(meta.get("filename") or ""),
                               str(meta.get("generation") or ""), source) if part)
@@ -696,8 +713,8 @@ class ExportManager:
             months = {(stamp.year, stamp.month) for stamp in dates}
             story.append(Paragraph(_pdf_text(
                 f"{first.strftime('%d/%m/%Y')} \u2013 {last.strftime('%d/%m/%Y')} (UTC)"
-                f"  ·  {len(dates)} day{'s' if len(dates) != 1 else ''} with activity"
-                f"  ·  {len(months)} month{'s' if len(months) != 1 else ''}"),
+                f"  ·  {len(dates)} dated day{'s' if len(dates) != 1 else ''}"
+                f"  ·  {len(months)} month{'s' if len(months) != 1 else ''} represented"),
                 cover_line_style))
             story.append(Paragraph(_pdf_text(
                 "Day dates are UTC and come only from the daily-activity records in this "
@@ -719,8 +736,11 @@ class ExportManager:
             story.append(Paragraph(_pdf_text("No integrity information was recorded "
                                              "for this file."), cover_line_style))
 
-        # Activity totals: the same five buckets and the same slot-aware engine
-        # the monthly table uses, so the cover can never contradict it.
+        # Activity totals: the five buckets, summed by the same slot-aware engine
+        # over *every* input day. Known limit: the Daily Activities table is
+        # capped at _PDF_MAX_ROWS rows (monthly subtotals included), so the cover
+        # can be complete while the table is a subset; per-day arithmetic is the
+        # same, and the cover note says so instead of promising equality.
         totals = {"drive": 0, "work": 0, "rest": 0, "available": 0, "unknown": 0}
         active_days = 0
         for day in activities:
@@ -750,9 +770,11 @@ class ExportManager:
                 "unrecognised status code, or a card slot with no activity recorded."),
                 cover_note_style))
             story.append(Paragraph(_pdf_text(
-                "These totals add up every day reported in the Daily Activities table, so "
-                "the cover and the table cannot disagree; the per-slot aggregation rule is "
-                "stated in that section's legend."), cover_note_style))
+                "These totals add up every daily record in the input, including days past "
+                "the row limit that the Daily Activities table cannot print: once the "
+                "limit is reached that table is a subset, while these totals stay "
+                "complete. Each day uses the same slot-aware arithmetic as the table, so "
+                "per-day figures match."), cover_note_style))
         else:
             story.append(Paragraph(_pdf_text("No daily activity records in this file."),
                                    cover_line_style))
@@ -761,7 +783,9 @@ class ExportManager:
         operational, appendix = [], []
         for label, desc, headers, rows, truncated in section_tables(
                 data, max_rows=_PDF_MAX_ROWS):
-            if not headers or not rows or not _has_content(rows):
+            if not headers or not rows or (not _has_content(rows) and not truncated):
+                # A blank *uncapped* section has nothing to report and is skipped.
+                # A blank *capped* section still has to disclose the cap (below).
                 _log.warning("PDF: skipping '%s' (no displayable content)", label)
                 continue
             entry = (label, desc, headers, rows, truncated)
@@ -770,11 +794,14 @@ class ExportManager:
         def _record_section(label, desc, headers, rows, truncated, *, force_break=False):
             if force_break:
                 story.append(CondPageBreak(avail_height - 1))
-            else:
-                story.append(CondPageBreak(55 * mm))
             story.append(Paragraph(_pdf_text(label), section_style))
             if desc:
                 story.append(Paragraph(_pdf_text(desc), note_style))
+            if not _has_content(rows):
+                # Only reachable for a capped section whose retained rows are all
+                # blank: disclose the cut, print no grid, do not imply rows shown.
+                story.append(_row_limit_note(showed_rows=False))
+                return
             if len(headers) > _PDF_WIDE_COLUMNS:
                 story.append(Paragraph(_pdf_text(
                     f"{len(rows)} record(s), {len(headers)} fields each — shown one "
@@ -789,7 +816,6 @@ class ExportManager:
                 story.append(_row_limit_note())
 
         def _activity_section(desc, headers, rows, truncated):
-            story.append(CondPageBreak(55 * mm))
             story.append(Paragraph(_pdf_text("Daily Activities"), section_style))
             if desc:
                 story.append(Paragraph(_pdf_text(desc), note_style))
@@ -852,7 +878,6 @@ class ExportManager:
                 if not headers or not rows or not _has_content(rows):
                     _log.warning("PDF: skipping '%s' (no displayable content)", label)
                     continue
-                story.append(CondPageBreak(40 * mm))
                 story.append(Paragraph(_pdf_text(label), cover_heading_style))
                 if len(headers) > _PDF_WIDE_COLUMNS:
                     story.extend(_record_cards(headers, rows))
@@ -863,8 +888,8 @@ class ExportManager:
             for label, desc, headers, rows, truncated in appendix:
                 _record_section(label, desc, headers, rows, truncated)
             if appendix_details:
-                story.append(CondPageBreak(40 * mm))
-                story.append(Paragraph("File & Parse Details", cover_heading_style))
+                story.append(Paragraph(_pdf_text("File & Parse Details"),
+                                       cover_heading_style))
                 story.append(_field_table(appendix_details))
 
         # ═══════ FOOTER ═══════
