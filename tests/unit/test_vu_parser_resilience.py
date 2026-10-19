@@ -45,7 +45,7 @@ def test_genuine_trep11_with_trailer_is_accepted():
     # A real sensor-only download (Overview + Sensor + Trailer) must still
     # recognise its TREP 0x11 because a genuine 0x76 0x14 trailer follows.
     from tests.unit.real_data import require_real_file
-    path = require_real_file("VU_FS000FR_XLRTEH4300G000000_VERIFIED_95537A1054.ddd")
+    path = require_real_file("VU_*_VERIFIED_95537A1054.ddd")
     data = open(path, "rb").read()
     treps = [m["trep"] for m in g1_walker.iter_g1_vu_messages(data)]
 

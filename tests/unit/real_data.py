@@ -5,6 +5,7 @@ and are intentionally excluded from version control (see ``.gitignore``). Tests
 that require them should cleanly skip when the folder is not present
 (e.g. in CI) instead of failing.
 """
+import glob
 import os
 import unittest
 
@@ -21,10 +22,18 @@ def real_ddd_files():
 
 
 def require_real_file(name):
-    """Return a named private fixture or skip only tests that require it."""
+    """Return a named private fixture or skip only tests that require it.
+
+    ``name`` may use ``*``/``?`` glob characters (e.g. match by the file's
+    hash suffix): the private names carry plates, VINs and card numbers and
+    must never be embedded in tracked code.
+    """
     path = os.path.join(DDD_DIR, name)
     if not os.path.isfile(path):
-        raise unittest.SkipTest(f"Private DDD fixture not available: {name}")
+        matches = sorted(glob.glob(path))
+        if not matches:
+            raise unittest.SkipTest(f"Private DDD fixture not available: {name}")
+        path = matches[0]
     return path
 
 
