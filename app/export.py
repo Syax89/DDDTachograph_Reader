@@ -184,12 +184,22 @@ _EXCEL_DURATION_FORMAT = "[h]:mm"
 #: ``Z`` for a real UTC offset, and Excel itself has no time zones.
 _EXCEL_UTC_FORMAT = 'yyyy-mm-dd hh:mm"Z"'
 
-#: Columns whose values are a time or a date. The shared formatter derives these
-#: labels from the decoder keys (``begin_time``, ``expiry_date``,
-#: ``card_expiry``); a value still has to match a canonical shape below, so a
-#: card number in a "Card Driver Begin" column is never mistaken for a time.
-_EXCEL_TIME_LABELS = re.compile(r"(?:^| )(?:Time|Date|Timestamp|Begin|End|Start)$")
-_EXCEL_TIME_EXTRA_LABELS = frozenset({"Card Expiry", "First Overspeed Since"})
+#: Columns whose values are a time or a date — an explicit allow-list of the
+#: labels the shared formatter derives from real time/date fields, inventoried
+#: over the frozen real corpus. A suffix rule (``… Begin``/``… End``) also
+#: matches identifier columns ("Card Driver Begin" holds a card number, not a
+#: time), so the semantics of a time column are named here instead: a label
+#: that is not listed stays protected text, which is lossless — a date-shaped
+#: identifier keeps its exact characters.
+_EXCEL_TIME_LABELS = frozenset({
+    "Begin", "Begin Time", "Calibration Country Timestamp", "Card Expiry",
+    "Control Time", "Date", "Download Period Begin", "Download Period End",
+    "Download Time", "Downloading Time", "End", "End Time",
+    "First Overspeed Since", "Insertion Time", "Last Control Time",
+    "Lock In Time", "Lock Out Time", "Manufacturing Date", "New Time",
+    "Next Calibration Date", "Old Time", "Pairing Date",
+    "Software Installation Date", "Start", "Timestamp", "Withdrawal Time",
+})
 
 #: Odometer readings and measured metrics, published as numbers so they can be
 #: summed and sorted. Everything else (codes, counters, sizes, serials, hex)
@@ -206,6 +216,10 @@ _EXCEL_NUMBER_LABELS = frozenset({
 _EXCEL_UTC_STAMP_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})Z$")
 _EXCEL_DAY_DATE_RE = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
 _EXCEL_ISO_DATE_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
+#: A date-only cell displays the shape of the text it came from, so the
+#: workbook does not silently reshape ``04/03/2026`` into ``2026-03-04``.
+_EXCEL_DAY_DATE_FORMAT = "dd/mm/yyyy"
+_EXCEL_ISO_DATE_FORMAT = "yyyy-mm-dd"
 _EXCEL_INT_RE = re.compile(r"^-?(?:\d{1,3}(?: \d{3})+|\d+)$")
 _EXCEL_DECIMAL_RE = re.compile(r"^-?\d+\.\d{1,6}$")
 _EXCEL_DURATION_RE = re.compile(r"^(\d+):([0-5]\d)$")
@@ -213,6 +227,19 @@ _EXCEL_DURATION_RE = re.compile(r"^(\d+):([0-5]\d)$")
 #: An auto-filter button sits on the right of its header cell and eats about
 #: three characters of it, so every filtered column gets that much extra.
 _EXCEL_FILTER_PADDING = 3
+
+#: A sheet's note row (the section description and, on a capped section, the
+#: row-limit disclosure) must be readable in *any* table width, so the merged
+#: note span is guaranteed to hold at least this many characters (the table's
+#: last column is widened when a narrow table cannot reach it).
+_EXCEL_NOTE_MIN_WIDTH = 60
+#: Excel refuses a row height above 409.5pt: a longer note cannot be shown in
+#: full, so it is elided (visibly) from the front and keeps its disclosure.
+_EXCEL_MAX_ROW_HEIGHT = 409.5
+_EXCEL_NOTE_LINE_HEIGHT = 15
+#: Width of the Summary's value / Contents column, in characters. The wrapped
+#: rows are sized from this same number, so text and height cannot drift apart.
+_EXCEL_SUMMARY_VALUE_WIDTH = 78
 
 #: Sections exposed as key/value sheets are never row-capped (they are a few
 #: dozen facts, not a record list) — see ``report_format.DICT_SECTIONS``.
@@ -236,6 +263,54 @@ def _excel_count(value):
     return f"{value:,}".replace(",", " ")
 
 
+def _excel_per_line(width):
+    """Characters a *width*-column merged span shows per line (conservative)."""
+    return max(int(width) - 2, 10)
+
+
+def _excel_wrapped_lines(text, width):
+    """Lines *text* needs in a *width*-column span, so nothing is clipped."""
+    return max(-(-len(str(text)) // _excel_per_line(width)), 1)
+
+
+def _excel_note_height(text, width):
+    """Row height (points) that shows all of *text* at *width*, up to Excel's cap."""
+    return min(_EXCEL_NOTE_LINE_HEIGHT * _excel_wrapped_lines(text, width),
+               _EXCEL_MAX_ROW_HEIGHT)
+
+
+def _excel_note_text(text, width):
+    """*text* trimmed to what a 409.5pt row can show, keeping its disclosure.
+
+    Excel cannot grow a row past 409.5pt. A note longer than that many wrapped
+    lines is elided from the *front* — the row-limit disclosure the exporter
+    appends last is the part that must survive — and the elision is marked, so
+    the cut is visible rather than silent.
+    """
+    if _excel_wrapped_lines(text, width) * _EXCEL_NOTE_LINE_HEIGHT <= _EXCEL_MAX_ROW_HEIGHT:
+        return str(text)
+    capacity = (int(_EXCEL_MAX_ROW_HEIGHT) // _EXCEL_NOTE_LINE_HEIGHT) * _excel_per_line(width)
+    return "\u2026 " + str(text)[-(capacity - 2):].lstrip()
+
+
+def _excel_verdict(data):
+    """The shared integrity verdict, or ``None`` when it cannot be read.
+
+    Tinting a summary row is decoration. A result container the shared
+    classifier cannot walk (a malformed ``metadata``/``ef_signature_verification``
+    shape) must still export — every fact is written either way — and must not
+    be tinted as if it had been classified: no tint is never a trust claim.
+    ``core.utils.report_format.integrity_verdict`` is shared with the other
+    exports and is not changed for this.
+    """
+    try:
+        return integrity_verdict(data)
+    except (AttributeError, TypeError, ValueError):
+        _log.debug("No summary integrity tint: unreadable result container",
+                   exc_info=True)
+        return None
+
+
 def _excel_row_limit_note(exported, available):
     """The in-workbook disclosure of the row limit (never only in the log)."""
     return (
@@ -244,6 +319,23 @@ def _excel_row_limit_note(exported, available):
         "report limit. The JSON export (or the original DDD file) holds the "
         "complete data."
     )
+
+
+def _excel_contents(description, sheet_name, *, key_value):
+    """A one-line index entry for a sheet, never blank.
+
+    The shared section descriptions are the source; a section that has none
+    (card certificates, the card-application tables) gets a fallback derived
+    from what the sheet *is* — its kind and its name — not invented content.
+    The text is never truncated: the Summary wraps it and sizes the row, so a
+    long entry is fully visible instead of being cut at the column edge.
+    """
+    text = str(description or "").strip().split(". ")[0].rstrip(".")
+    if text:
+        return text
+    if key_value:
+        return f"Key/value table — {sheet_name}: field and value pairs, one per row."
+    return f"Records table — {sheet_name}: one row per exported record."
 
 
 def _excel_sheet_link(sheet_name):
@@ -282,7 +374,7 @@ def _excel_column_kinds(headers):
             kinds.append("duration")
         elif label in _EXCEL_NUMBER_LABELS:
             kinds.append("number")
-        elif label in _EXCEL_TIME_EXTRA_LABELS or _EXCEL_TIME_LABELS.search(label):
+        elif label in _EXCEL_TIME_LABELS:
             kinds.append("time")
         else:
             kinds.append("text")
@@ -319,12 +411,14 @@ def _excel_typed_value(kind, value):
             return datetime(*(int(part) for part in stamp.groups())), _EXCEL_UTC_FORMAT
         except ValueError:
             return _spreadsheet_value(value), None
-    for pattern, order in ((_EXCEL_DAY_DATE_RE, (3, 2, 1)), (_EXCEL_ISO_DATE_RE, (1, 2, 3))):
+    for pattern, order, number_format in (
+            (_EXCEL_DAY_DATE_RE, (3, 2, 1), _EXCEL_DAY_DATE_FORMAT),
+            (_EXCEL_ISO_DATE_RE, (1, 2, 3), _EXCEL_ISO_DATE_FORMAT)):
         match = pattern.fullmatch(text)
         if match:
             parts = [int(part) for part in match.groups()]
             try:
-                return date(*(parts[position - 1] for position in order)), None
+                return date(*(parts[position - 1] for position in order)), number_format
             except ValueError:
                 return _spreadsheet_value(value), None
     return _spreadsheet_value(value), None
@@ -431,12 +525,6 @@ class ExportManager:
             ws.page_setup.fitToHeight = 0
             ws.sheet_properties.pageSetUpPr.fitToPage = True
 
-        def _wrapped_height(text, total_width, line_height=15, max_lines=4):
-            """Row height for wrapped text, so no line is silently clipped."""
-            per_line = max(int(total_width * 1.1), 20)
-            lines = min(max(-(-len(str(text)) // per_line), 1), max_lines)
-            return line_height * lines
-
         def _write_table_sheet(ws, headers, rows, description="", *, subtotal_rows=()):
             """One rectangular table sheet: description, header, rows."""
             kinds = _excel_column_kinds(headers)
@@ -451,12 +539,26 @@ class ExportManager:
 
             header_row = 1
             if description:
+                # The note must be readable at *any* table width — a one-column
+                # table is the narrow case. The table's last column is widened
+                # until the merged note span holds _EXCEL_NOTE_MIN_WIDTH
+                # characters (the table itself stays rectangular: no phantom
+                # columns, no data column but the last one touched), and the
+                # row is sized from that real width with no line cap, so
+                # "Row limit: N of M rows exported … JSON … complete data."
+                # cannot be cut off inside the cell.
+                deficit = _EXCEL_NOTE_MIN_WIDTH - sum(widths)
+                if deficit > 0:
+                    widths[-1] += deficit
+                    ws.column_dimensions[get_column_letter(len(widths))].width = widths[-1]
+                note_width = sum(widths)
+                note = _excel_note_text(description, note_width)
                 ws.merge_cells(start_row=1, start_column=1, end_row=1,
                                end_column=len(headers))
-                cell = ws.cell(row=1, column=1, value=_spreadsheet_value(description))
+                cell = ws.cell(row=1, column=1, value=_spreadsheet_value(note))
                 cell.font = SUBTITLE_FONT
                 cell.alignment = Alignment(wrap_text=True, vertical="top")
-                ws.row_dimensions[1].height = _wrapped_height(description, sum(widths))
+                ws.row_dimensions[1].height = _excel_note_height(note, note_width)
                 header_row = 2
 
             for col, header in enumerate(headers, start=1):
@@ -494,17 +596,14 @@ class ExportManager:
                 ws.auto_filter.ref = f"A{header_row}:{last_col}{header_row + len(rows)}"
             _print_setup(ws, title_row=header_row)
 
-        def _contents(description):
-            """A one-line index entry for *description*."""
-            text = str(description).strip().split(". ")[0].rstrip(".")
-            return text if len(text) <= 110 else text[:107] + "\u2026"
-
-        def _add_sheet(label, description, headers, rows, *, subtotal_rows=()):
+        def _add_sheet(label, description, headers, rows, *, subtotal_rows=(),
+                       key_value=False):
             name = _excel_sheet_name(label, used_names)
             sheet = wb.create_sheet(name)
             _write_table_sheet(sheet, headers, rows, description,
                                subtotal_rows=subtotal_rows)
-            index.append((name, len(rows), _contents(description)))
+            index.append((name, len(rows),
+                          _excel_contents(description, name, key_value=key_value)))
 
         # ── Summary (the facts and the scope note; the warnings and the sheet
         # index are appended once every sheet exists) ────────────────────
@@ -512,16 +611,17 @@ class ExportManager:
         summary.title = "Summary"
         _print_setup(summary, orientation="portrait")
         summary.column_dimensions["A"].width = 30
-        summary.column_dimensions["B"].width = 78
+        summary.column_dimensions["B"].width = _EXCEL_SUMMARY_VALUE_WIDTH
         summary.column_dimensions["C"].width = 9
         summary.cell(row=1, column=1, value="DDD Tachograph Report").font = TITLE_FONT
         note = summary.cell(row=2, column=1, value=_spreadsheet_value(_EXCEL_SCOPE_NOTE))
         note.font = SUBTITLE_FONT
         note.alignment = Alignment(wrap_text=True, vertical="top")
         summary.merge_cells(start_row=2, start_column=1, end_row=2, end_column=3)
-        summary.row_dimensions[2].height = 30
+        summary.row_dimensions[2].height = _excel_note_height(
+            _EXCEL_SCOPE_NOTE, 30 + _EXCEL_SUMMARY_VALUE_WIDTH + 9)
 
-        verdict = integrity_verdict(data)
+        verdict = _excel_verdict(data)
         row = 4
         summary.cell(row=row, column=1, value="File Summary").font = SECTION_FONT
         row += 1
@@ -539,6 +639,8 @@ class ExportManager:
                 value_cell.fill = ALERT_FILL
             elif field == "Integrity" and verdict == VERDICT_CORRUPT:
                 value_cell.fill = BAD_FILL
+            summary.row_dimensions[row].height = _excel_note_height(
+                "" if value is None else value, _EXCEL_SUMMARY_VALUE_WIDTH)
             row += 1
 
         # ── TREP signature material and VU certificates (kept, uncapped) ──
@@ -605,7 +707,8 @@ class ExportManager:
                                subtotal_rows=range(len(month_rows)))
                 continue
 
-            _add_sheet(label, desc, headers, retained)
+            _add_sheet(label, desc, headers, retained,
+                       key_value=label in _EXCEL_UNCAPPED_LABELS)
 
         # ── Summary: warnings, limits and the sheet index ────────────────
         row += 1
@@ -645,6 +748,8 @@ class ExportManager:
             label_cell.alignment = TOP
             value_cell = summary.cell(row=row, column=2, value=_spreadsheet_value(value))
             value_cell.alignment = Alignment(vertical="top", wrap_text=True)
+            summary.row_dimensions[row].height = _excel_note_height(
+                value, _EXCEL_SUMMARY_VALUE_WIDTH)
             row += 1
 
         row += 1
@@ -671,7 +776,11 @@ class ExportManager:
             link_cell.alignment = TOP
             contents_cell = summary.cell(row=row, column=2,
                                          value=_spreadsheet_value(contents))
-            contents_cell.alignment = TOP
+            # Wrapped and sized to the real column width: an index entry is
+            # always fully visible, never cut at the column edge.
+            contents_cell.alignment = Alignment(vertical="top", wrap_text=True)
+            summary.row_dimensions[row].height = _excel_note_height(
+                contents, _EXCEL_SUMMARY_VALUE_WIDTH)
             count_cell = summary.cell(row=row, column=3, value=count)
             count_cell.alignment = TOP_RIGHT
             row += 1

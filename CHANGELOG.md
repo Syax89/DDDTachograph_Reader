@@ -35,8 +35,25 @@
   never a `HYPERLINK` formula). Tables gained a wrapped header band, column
   widths that leave room for the filter button, frozen headers, hidden
   gridlines, print title rows and landscape fit-to-width printing, with no
-  styling or print range extending past the data. CSV and PDF output are
-  unchanged.
+  styling or print range extending past the data: the note row of a table — the
+  section description and the row-limit disclosure — is guaranteed a readable
+  merged width (at least 60 characters, widening a narrow table's last column)
+  and a row height computed from that real width with no line cap, so the
+  disclosure cannot be clipped in a one-column sheet, while data rows are never
+  wrapped; the Summary index never shows a blank `Contents` cell (a section
+  without a description gets a fallback naming what the sheet is, a records table
+  or a key/value table) and wraps and sizes each entry instead of cutting it at
+  the column edge; a date-only cell keeps the shape of its source text
+  (`dd/mm/yyyy` displays as `dd/mm/yyyy`, ISO as `yyyy-mm-dd`) while still
+  storing the exact calendar date; and the integrity tint no longer decides
+  whether the file exports — the tint is decoration, so a top-level container the
+  shared classifier cannot walk (`metadata` or `ef_signature_verification` of an
+  unexpected shape) still writes every summary fact, without a tint, instead of
+  raising, with `integrity_verdict` itself unchanged.
+  Time columns are now an explicit allow-list of the labels that carry a real
+  time or date, so the card-identifier columns (`Card Driver Begin/End`,
+  `Card Codriver Begin/End`) can never be turned into dates and a date-shaped
+  identifier keeps its exact characters. CSV and PDF output are unchanged.
 - **The PDF report is restructured and legible**: the cover now names the file,
   its source and generation, the generation time, the activity period taken from
   the daily records in the file (explicitly UTC and explicitly *not* a claim

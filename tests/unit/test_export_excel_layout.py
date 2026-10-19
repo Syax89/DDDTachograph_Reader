@@ -18,7 +18,7 @@ openpyxl = pytest.importorskip("openpyxl")
 
 from app.export import ExportManager  # noqa: E402
 from core.utils.report_format import (  # noqa: E402
-    build_monthly_activity_report, summary_rows,
+    DICT_SECTIONS, EXPORT_SECTIONS, build_monthly_activity_report, summary_rows,
 )
 
 # A day whose status entries leave 00:00-08:00 unattributed: Drive 4 h,
@@ -104,8 +104,8 @@ def _export(tmp_path, data=None, name="workbook.xlsx"):
     return path
 
 
-def _load(tmp_path, data=None):
-    return openpyxl.load_workbook(_export(tmp_path, data))
+def _load(tmp_path, data=None, name="workbook.xlsx"):
+    return openpyxl.load_workbook(_export(tmp_path, data, name=name))
 
 
 def _header_row(ws, first_header):
@@ -131,6 +131,18 @@ def _table(ws, first_header):
         for row in range(header_row + 1, ws.max_row + 1)
     ]
     return headers, rows
+
+
+def _header_rows(ws):
+    """Rows carrying the navy header band (the tables' own header rows)."""
+    rows = []
+    for row in ws.iter_rows():
+        for cell in row:
+            fill = cell.fill.fgColor.rgb if cell.fill is not None else None
+            if isinstance(fill, str) and fill.endswith("1F4E79") and cell.font.bold:
+                rows.append(cell.row)
+                break
+    return rows
 
 
 def _sheet_text(ws):
@@ -517,3 +529,299 @@ def test_csv_export_still_lists_monthly_subtotals_inline(tmp_path):
         text = handle.read()
     assert "=== DAILY ACTIVITIES ===" in text
     assert "06/2026 TOTAL" in text and "07/2026 TOTAL" in text
+
+
+# ── malformed containers (the summary tint is decoration only) ─────────────
+#
+# The workbook must export every top-level shape the previous exporter
+# exported. Colouring a summary row is presentation: a container the shared
+# classifier cannot read means "no tint", never an exception and never a
+# trust claim.
+
+#: Containers named in the review where the *base* exporter succeeded.
+_MALFORMED_SUMMARY_SHAPES = [
+    {"metadata": "invalid shape", "events": [{"description": "hello"}]},
+    {"metadata": ["invalid shape"], "events": [{"description": "hello"}]},
+    {"metadata": {"integrity_check": "Verified"},
+     "ef_signature_verification": "invalid shape"},
+    {"metadata": {"integrity_check": "Verified"},
+     "ef_signature_verification": {"verified": None}},
+    {"coverage": "x", "metadata": None},
+    {"metadata": None, "coverage": None},
+]
+
+#: Every top-level key ``export_to_excel`` reads, and the malformed shapes a
+#: truncated/partial parse result can carry in it.
+_MALFORMED_VALUES: list = [None, "invalid shape", 7, ["invalid shape"], [None], [1], {}]
+_FUZZ_KEYS = (
+    ["metadata", "coverage", "driver", "vehicle", "signature_verification",
+     "ef_signature_verification", "vu_certificates", "certificates"]
+    + [key for key, _label in EXPORT_SECTIONS]
+    + [key for key, _label in DICT_SECTIONS]
+)
+
+#: Combinations that already fail on the shared/base exporter too (an integer
+#: ``vu_certificates`` is iterated there as well: ``TypeError: 'int' object is
+#: not iterable``). Kept, and stated, so a real regression cannot hide.
+_PRE_EXISTING_CRASHES = (("vu_certificates", 7),)
+
+
+def _summary_pairs(ws):
+    """``{label: value}`` of the Summary's field/value rows."""
+    pairs = {}
+    for row in range(1, ws.max_row + 1):
+        label = ws.cell(row=row, column=1).value
+        if label is not None:
+            pairs[label] = ws.cell(row=row, column=2).value
+    return pairs
+
+
+@pytest.mark.parametrize("extra", _MALFORMED_SUMMARY_SHAPES)
+def test_malformed_containers_still_export_every_summary_fact(tmp_path, extra):
+    data = {"events": [{"description": "hello"}], **extra}
+    wb = _load(tmp_path, data)
+    ws = wb["Summary"]
+
+    # Every fact the shared summary derives from these containers is written.
+    pairs = _summary_pairs(ws)
+    for field, value in summary_rows(data):
+        if field and value not in (None, ""):
+            assert field in pairs, f"missing summary fact {field!r}"
+    assert "Events" in wb.sheetnames
+
+    # ... and a shape the classifier cannot read is not tinted at all: no
+    # "corrupt" claim and no "trusted" styling is invented from it.
+    integrity_row = next(row for row in range(1, ws.max_row + 1)
+                         if ws.cell(row=row, column=1).value == "Integrity")
+    value_cell = ws.cell(row=integrity_row, column=2)
+    assert not (value_cell.fill.fgColor.rgb or "").endswith("F8D7DA")
+
+
+def test_unreadable_integrity_still_tints_a_real_corrupt_verdict(tmp_path):
+    """The tint that *is* meant to show keeps working when it can be read."""
+    data = _data()
+    data["metadata"]["parse_error"] = "truncated download"
+    wb = _load(tmp_path, data)
+    ws = wb["Summary"]
+    row = next(row for row in range(1, ws.max_row + 1)
+               if ws.cell(row=row, column=1).value == "Integrity")
+    assert (ws.cell(row=row, column=2).fill.fgColor.rgb or "").endswith("F8D7DA")
+
+
+def _fuzz_seed():
+    """A result whose integrity path is walkable, so every branch is reached."""
+    data = deepcopy(_data())
+    data["metadata"]["integrity_check"] = "Verified (test)"
+    data["ef_signature_verification"] = {"verified": 3, "failed": 0, "skipped": 0}
+    return data
+
+
+@pytest.mark.parametrize("key", _FUZZ_KEYS)
+def test_malformed_section_values_never_break_the_workbook(tmp_path, key):
+    for index, value in enumerate(_MALFORMED_VALUES):
+        if any(key == crash_key and value == crash_value
+               for crash_key, crash_value in _PRE_EXISTING_CRASHES):
+            continue
+        data = _fuzz_seed()
+        data[key] = deepcopy(value)
+        _load(tmp_path, data, name=f"malformed-{key}-{index}.xlsx")
+
+
+# ── identifier columns are never dates ─────────────────────────────────────
+
+
+def test_card_identifier_columns_are_never_time_typed(tmp_path):
+    data = {
+        "events": [
+            {"description": "A", "begin": "2026-06-01T10:30:00+00:00",
+             "card_driver_begin": "2026-03-04"},
+            {"description": "B", "begin": "2026-06-01T11:30:00+00:00",
+             "card_driver_begin": "04/03/2026"},
+        ],
+        "faults": [
+            {"description": "F1", "begin": "2026-06-01T10:30:00+00:00",
+             "card_driver_begin": "I100000021247001",
+             "card_driver_end": "2026-03-04",
+             "card_codriver_begin": "04/03/2026",
+             "card_codriver_end": "2026-03-04"},
+        ],
+    }
+    wb = _load(tmp_path, data)
+    ws = wb["Events"]
+    headers, rows = _table(ws, "Description")
+    column = headers.index("Card Driver Begin")
+    assert [row[column] for row in rows] == ["2026-03-04", "04/03/2026"]
+
+    # The real timestamp column beside it keeps its typed cell.
+    assert isinstance(rows[0][headers.index("Begin")], datetime.datetime)
+
+    # No identifier column anywhere in the workbook is a date cell.
+    checked = 0
+    for sheet in wb.worksheets:
+        for header_row in _header_rows(sheet):
+            identifiers = [
+                cell.column for cell in sheet[header_row]
+                if isinstance(cell.value, str)
+                and str(cell.value).startswith("Card ")
+                and str(cell.value).split()[-1] in ("Begin", "End")
+            ]
+            for row in sheet.iter_rows(min_row=header_row + 1):
+                for cell in row:
+                    if cell.column in identifiers and cell.value is not None:
+                        checked += 1
+                        assert not isinstance(
+                            cell.value, (datetime.date, datetime.datetime)), (
+                            f"{sheet.title}!{cell.coordinate} = {cell.value!r} is a date")
+    assert checked, "the fixture must produce identifier columns"
+
+
+# ── Summary index ──────────────────────────────────────────────────────────
+
+
+def _contents_column_width(ws):
+    return ws.column_dimensions["B"].width
+
+
+def _estimated_lines(text, width):
+    per_line = max(int(width) - 2, 10)
+    return max(-(-len(str(text)) // per_line), 1)
+
+
+def test_summary_index_never_blank_never_clipped(tmp_path):
+    data = _data()
+    data["certificates"] = [{"format": "ERCA", "serial": "01", "subject": "MSCA"}]
+    data["card_application"] = {"application_id": "Tachograph", "generation": "G2"}
+    wb = _load(tmp_path, data)
+
+    # A section with no shared description is still indexed (Driver Card
+    # Certificates and the card application tables have none today).
+    assert {"Driver Card Certificates", "Card Application"} <= set(wb.sheetnames)
+    summary = wb["Summary"]
+    width = _contents_column_width(summary)
+    header_row = _header_row(summary, "Sheet")
+
+    for row in range(header_row + 1, summary.max_row + 1):
+        cell = summary.cell(row=row, column=2)
+        text = str(cell.value or "")
+        assert text.strip(), f"blank Contents cell for {summary.cell(row=row, column=1).value!r}"
+        assert not text.endswith("\u2026"), f"clipped Contents entry: {text!r}"
+        assert cell.alignment.wrap_text is True
+        height = summary.row_dimensions[row].height or 15
+        assert height >= 15 * _estimated_lines(text, width), (
+            f"row {row} too short for {text!r} at width {width}")
+    indexed = {summary.cell(row=row, column=1).value
+               for row in range(header_row + 1, summary.max_row + 1)}
+    assert indexed == set(wb.sheetnames) - {"Summary"}
+
+
+def test_summary_index_fallback_is_derived_and_deterministic(tmp_path):
+    data = _data()
+    data["certificates"] = [{"format": "ERCA", "serial": "01"}]
+    data["card_application"] = {"application_id": "Tachograph"}
+    first = _load(tmp_path, data, name="index-a.xlsx")
+    second = _load(tmp_path, data, name="index-b.xlsx")
+
+    def entries(wb):
+        ws = wb["Summary"]
+        header_row = _header_row(ws, "Sheet")
+        return {ws.cell(row=row, column=1).value: ws.cell(row=row, column=2).value
+                for row in range(header_row + 1, ws.max_row + 1)}
+
+    one, two = entries(first), entries(second)
+    assert one == two
+    # The fallback says what the sheet *is* — it does not invent content.
+    assert "record" in str(one["Driver Card Certificates"]).lower()
+    assert "key" in str(one["Card Application"]).lower()
+
+
+# ── row-limit warning visibility ───────────────────────────────────────────
+
+
+def _merged_note(ws):
+    """``(text, total merged width, row height)`` of the note row."""
+    cell = ws.cell(row=1, column=1)
+    span = max((rng.max_col - rng.min_col + 1 for rng in ws.merged_cells.ranges),
+               default=1)
+    width = sum(ws.column_dimensions[openpyxl.utils.get_column_letter(column)].width
+                for column in range(1, span + 1))
+    return str(cell.value), width, (ws.row_dimensions[1].height or 15)
+
+
+def test_row_limit_warning_is_readable_in_a_one_column_table(tmp_path):
+    data = {"events": [{"description": f"Event {index}"} for index in range(7)]}
+    with patch("app.export._EXCEL_MAX_ROWS", 3):
+        wb = _load(tmp_path, data)
+
+    ws = wb["Events"]
+    headers, rows = _table(ws, "Description")
+    assert headers == ["Description"]                       # the narrow case
+    assert len(rows) == 3
+
+    text, width, height = _merged_note(ws)
+    assert "3 of 7" in text and "JSON" in text
+    assert width >= 60, f"merged note width {width} is too narrow to read"
+    lines = _estimated_lines(text, width)
+    assert height >= 15 * lines
+    assert height <= 409.5                                  # Excel's hard cap
+    # Only the note row (and the wrapped header band) wrap: data rows never do.
+    for row in ws.iter_rows(min_row=_header_row(ws, "Description") + 1):
+        for cell in row:
+            assert not cell.alignment.wrap_text
+
+
+def test_row_limit_warning_is_readable_in_an_ordinary_table(tmp_path):
+    data = _data()
+    data["events"] = [{"description": f"Event {index}",
+                       "begin": "2026-06-01T10:30:00+00:00"} for index in range(7)]
+    with patch("app.export._EXCEL_MAX_ROWS", 3):
+        wb = _load(tmp_path, data)
+    text, width, height = _merged_note(wb["Events"])
+    assert "3 of 7" in text
+    assert width >= 60
+    assert height >= 15 * _estimated_lines(text, width)
+    assert height <= 409.5
+
+
+# ── date display shape ─────────────────────────────────────────────────────
+
+
+def test_date_only_cells_display_the_source_shape(tmp_path):
+    data = _data()
+    data["sensor_daily_records"] = [
+        {"date": "2024-03-20", "max_speed": 90, "average_speed": 40},
+    ]
+    wb = _load(tmp_path, data)
+
+    # dd/mm/yyyy source → dd/mm/yyyy display (the report's own shape).
+    ws = wb["Daily Activities"]
+    header_row = _header_row(ws, "Date")
+    cell = ws.cell(row=header_row + 1, column=1)
+    assert cell.value.date() == datetime.date(2026, 6, 29)
+    assert cell.number_format == "dd/mm/yyyy"
+
+    # ISO source → ISO display.
+    ws = wb["Sensor Daily Records"]
+    headers, rows = _table(ws, "Date")
+    column = headers.index("Date")
+    sensor_cell = ws.cell(row=_header_row(ws, "Date") + 1, column=column + 1)
+    assert sensor_cell.value.date() == datetime.date(2024, 3, 20)
+    assert rows[0][column].date() == datetime.date(2024, 3, 20)
+    assert sensor_cell.number_format == "yyyy-mm-dd"
+
+
+def test_over_long_section_note_keeps_its_row_limit_disclosure(tmp_path, monkeypatch):
+    """Past Excel's 409.5pt row limit the note is elided, never the disclosure."""
+    import core.utils.report_format as report_format
+
+    monkeypatch.setitem(report_format.SECTION_DESCRIPTIONS, "events",
+                       "A description that is far too long to fit in one row. " * 40)
+    data = {"events": [{"description": f"Event {index}",
+                        "begin": "2026-06-01T10:30:00+00:00"} for index in range(7)]}
+    with patch("app.export._EXCEL_MAX_ROWS", 3):
+        wb = _load(tmp_path, data)
+
+    text, width, height = _merged_note(wb["Events"])
+    assert "3 of 7" in text and "JSON" in text       # the disclosure survived
+    assert text.startswith("\u2026")                  # and the cut is visible
+    assert height <= 409.5                            # Excel's hard cap
+    assert height >= 15 * _estimated_lines(text, width)   # what is left fits
