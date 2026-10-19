@@ -47,7 +47,7 @@ The DDD Tachograph Reader supports four export formats. All exports share the sa
 
 | Sheet | Contents |
 |-------|----------|
-| **Summary** | File, driver and vehicle facts, the file-state warnings, the row-limit disclosure and an index of every sheet (a clickable link plus its row count) |
+| **Summary** | File, driver and vehicle facts, the file-state warnings, the row-limit disclosure and an index of every sheet (a clickable link, a one-line description and its row count) |
 | **TREP Signatures** | Per-block signature verification details (VU files) |
 | **VU Certificates** | Certificates found in the file (VU files) |
 | **Daily Activities** | One row per day: date, odometer, Drive/Work/Rest/Available/Unknown/Total |
@@ -66,7 +66,17 @@ the monthly subtotal rows are bold and shaded.
 - **Dates and times**: the daily `Date` column is a real date cell, and a timestamp
   column (`Begin`, `End`, `Timestamp`, `Insertion Time`, `Card Expiry`, …) is a
   real date-time cell. Timestamps are UTC and keep their zone in the cell format
-  (`2024-11-26 04:28Z`), because Excel has no time zones.
+  (`2024-11-26 04:28Z`), because Excel has no time zones. A date without a time
+  keeps the shape of the text it came from: a `dd/mm/yyyy` value displays
+  `dd/mm/yyyy`, an ISO value displays `yyyy-mm-dd`, and the stored value is the
+  exact calendar date either way.
+- **Only named columns are typed**: the time/date columns are an explicit
+  allow-list of the labels the report gives real time and date fields. A column
+  whose name merely *ends* like a time is not one: `Card Driver Begin`,
+  `Card Driver End`, `Card Codriver Begin` and `Card Codriver End` hold card
+  identifiers (registration nation + card number), so they always stay text and
+  a date-shaped identifier (`2026-03-04`, `04/03/2026`) keeps its exact
+  characters.
 - **Numbers**: odometers (`Odometer km`, `Odometer KM`, `Odometer Begin/End`,
   `Distance`) and measured speeds (`Max Speed KMH`, `Average Speed KMH`,
   `Speed Limit`) are numeric cells, so they sort and sum.
@@ -98,6 +108,20 @@ available row count and points at the JSON export (or the original `.ddd` file)
 for the complete data. The disclosure is in the workbook even when the limit
 retains no visible row at all. The key/value sheets, the TREP signature list and
 the VU certificate list are not row-capped.
+
+The disclosure is meant to be read, so the sheet note is never squeezed into a
+narrow table: its merged span is guaranteed at least 60 characters (a one-column
+table's last column is widened to reach that) and the row height is computed from
+that real width with no line cap, up to Excel's 409.5-point row limit — beyond
+which the note is elided from the front, marked with `…`, so the row-limit
+statement itself survives. Data rows are never wrapped.
+
+**The Summary index**: every sheet gets an entry. Sections that carry a
+description show its first sentence; a section without one (card certificates,
+the card-application tables) gets a fallback that says what the sheet is — a
+records table or a key/value table, named after the sheet. Entries are wrapped
+and the row is sized to its text, so no entry is blank and none is cut at the
+column edge.
 
 **A preview, not the parsed structure**: nested values are shown as the same
 compact report text the other exports use — not as their full decoded detail —
