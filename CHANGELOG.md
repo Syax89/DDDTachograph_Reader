@@ -1,4 +1,59 @@
 # Unreleased
+- **The Excel workbook is typed, navigable and honest about its limits**: the
+  cells a spreadsheet can actually work with are now real values instead of text
+  that only looked like one. The daily `Date` column and the timestamp columns
+  (`Begin`, `End`, `Timestamp`, `Insertion Time`, `Card Expiry`, …) are date and
+  date-time cells, a UTC timestamp keeping its zone in the cell format
+  (`2024-11-26 04:28Z`) because Excel has no time zones; odometers and measured
+  speeds are numbers; and the activity duration columns are numeric durations
+  formatted `[h]:mm`, so a monthly `48:00` stays a duration a reader can sum
+  instead of turning into `2.00`. Conversion is semantic and allow-listed: a
+  column is typed only when its label has a known meaning and a value only when
+  it is exactly the canonical shape the report prints, so card numbers, licence
+  numbers, VINs, serials, plates, certificate references, hex material, codes and
+  counters keep their exact characters (a leading zero survives, a 16-digit
+  number is not rounded to 15) and `N/A`, placeholders, malformed values and
+  unknown columns stay protected text. The unattributed-time marker no longer
+  sits in a numeric cell: the `Unknown (h:mm)` column stays numeric and a `Notes`
+  column says in words what the value is. `Daily Activities` now holds the day
+  rows only — the monthly subtotal rows moved to a separate, highlighted
+  `Monthly Activities` sheet, extracted from the same shared activity report (the
+  slot-aware arithmetic is untouched and the monthly sheet's figures equal the
+  sum of the day rows it splits from). The 50,000-row report limit is unchanged
+  and is still counted on the report rows *including* the subtotal rows, before
+  that split, so a month whose subtotal was cut has no row and no invented total.
+  A capped section now discloses the cut inside the workbook — on its own sheet
+  and in the Summary, with the exported and available row counts and a pointer at
+  the JSON export or the original file — including when the limit retained no
+  visible row at all, while the key/value sheets, the TREP signature list and the
+  VU certificate list stay uncapped. The Summary is a readable overview: every
+  shared summary fact (zeros and `False` included), the parse/integrity problem
+  rows tinted so a partial download cannot pass for a clean one, a warnings and
+  limits block that also states that nested values are compact report text rather
+  than the full decoded structure, and an index of every sheet with its row
+  count and an internal quoted/escaped hyperlink (never an external target and
+  never a `HYPERLINK` formula). Tables gained a wrapped header band, column
+  widths that leave room for the filter button, frozen headers, hidden
+  gridlines, print title rows and landscape fit-to-width printing, with no
+  styling or print range extending past the data: the note row of a table — the
+  section description and the row-limit disclosure — is guaranteed a readable
+  merged width (at least 60 characters, widening a narrow table's last column)
+  and a row height computed from that real width with no line cap, so the
+  disclosure cannot be clipped in a one-column sheet, while data rows are never
+  wrapped; the Summary index never shows a blank `Contents` cell (a section
+  without a description gets a fallback naming what the sheet is, a records table
+  or a key/value table) and wraps and sizes each entry instead of cutting it at
+  the column edge; a date-only cell keeps the shape of its source text
+  (`dd/mm/yyyy` displays as `dd/mm/yyyy`, ISO as `yyyy-mm-dd`) while still
+  storing the exact calendar date; and the integrity tint no longer decides
+  whether the file exports — the tint is decoration, so a top-level container the
+  shared classifier cannot walk (`metadata` or `ef_signature_verification` of an
+  unexpected shape) still writes every summary fact, without a tint, instead of
+  raising, with `integrity_verdict` itself unchanged.
+  Time columns are now an explicit allow-list of the labels that carry a real
+  time or date, so the card-identifier columns (`Card Driver Begin/End`,
+  `Card Codriver Begin/End`) can never be turned into dates and a date-shaped
+  identifier keeps its exact characters. CSV and PDF output are unchanged.
 - **The PDF report is restructured and legible**: the cover now names the file,
   its source and generation, the generation time, the activity period taken from
   the daily records in the file (explicitly UTC and explicitly *not* a claim
