@@ -205,6 +205,10 @@ def _dense_day(gap=True, speed=lambda second: 60 + second % 6):
 
 
 def _drawn(root, samples, speed_limit=None):
+    # A fixed window: the plot's width and height set the column width and the
+    # gridline step, so letting them follow the display scale made the exact
+    # counts below depend on the machine.
+    root.geometry("1100x760")
     chart = DetailedSpeedChart(root)
     chart.pack(fill="both", expand=True)
     root.update()
@@ -263,19 +267,52 @@ def test_one_filled_envelope_per_run_and_a_hole_between_them(root):
 def test_a_steep_jump_is_filled_as_two_polygons(root):
     """Bands that do not overlap must not share one polygon (Tk cancels it).
 
-    The 07:00 step from 10 km/h to 100 km/h jumps further than a column is
-    tall, so one run must be filled by two simple polygons that touch.
+    A step from 10 km/h to 100 km/h jumps further than a column is tall, so a
+    run must be cut into simple polygons that touch. Whether the step lands on
+    a column edge (two pieces) or inside one column (whose band then overlaps
+    both neighbours, so one piece is correct) depends on the plot's width, i.e.
+    on the display scale and font: the test therefore moves the step across
+    successive offsets until one cuts, checks the piece count against the bins actually drawn,
+    and requires that at least one offset really produced a cut.
     """
-    samples = _dense_day(gap=False,
-                         speed=lambda second: 10 if second < 7 * 3600 else 100)
+    cut_seen = False
+    for offset in range(120):          # a column is far fewer than 120 s wide
+        step = 7 * 3600 + offset
+        samples = _dense_day(gap=False,
+                             speed=lambda second, step=step: 10 if second < step else 100)
 
-    chart = _drawn(root, samples)
+        chart = _drawn(root, samples)
 
-    pieces = envelope_fill_pieces(chart._series[0])
-    assert len(chart._series) == 1                      # no hole: one run
-    assert len(pieces) == 2                             # ...but two fill pieces
-    assert pieces[0][-1].column + 1 == pieces[1][0].column  # touching at the jump
-    assert len(chart.canvas.find_withtag("speed_envelope")) == 2
+        run = chart._series[0]
+        pieces = envelope_fill_pieces(run)
+        assert len(chart._series) == 1                  # no hole: one run
+        cuts = sum(1 for a, b in zip(run, run[1:], strict=False)
+                   if min(a.high, b.high) < max(a.low, b.low))
+        assert len(pieces) == cuts + 1
+        for left, right in zip(pieces, pieces[1:], strict=False):
+            assert left[-1].column + 1 == right[0].column   # touching at the jump
+        assert len(chart.canvas.find_withtag("speed_envelope")) == len(pieces)
+        cut_seen = cut_seen or len(pieces) > 1
+        chart.destroy()
+        if cut_seen and offset >= 3:
+            break
+    assert cut_seen, "no offset put the step on a column edge: the cut is untested"
+
+
+def test_envelope_fill_pieces_cuts_only_where_the_bands_stop_overlapping():
+    """The rule itself, with no chart and no display scale involved."""
+    def bin_(column, low, high):
+        return SpeedBin(column=column, low=low, high=high,
+                        mean=(low + high) / 2, over_limit=False)
+
+    flat = [bin_(0, 10, 12), bin_(1, 11, 13), bin_(2, 12, 14)]
+    assert [len(p) for p in envelope_fill_pieces(flat)] == [3]
+    jump = [bin_(0, 10, 10), bin_(1, 10, 10), bin_(2, 100, 100), bin_(3, 99, 100)]
+    pieces = envelope_fill_pieces(jump)
+    assert [len(p) for p in pieces] == [2, 2]
+    assert pieces[0][-1].column + 1 == pieces[1][0].column
+    straddling = [bin_(0, 10, 10), bin_(1, 10, 100), bin_(2, 100, 100)]
+    assert [len(p) for p in envelope_fill_pieces(straddling)] == [3]
 
 
 def test_the_envelope_spans_the_column_min_and_max(root):

@@ -22,6 +22,20 @@ _NUMBER_TEXT_RE = re.compile(
 )
 
 
+#: Characters the PDF's own font (Helvetica) cannot draw: reportlab prints a
+#: black square for them, so the PDF gets a plain stand-in. The shared report
+#: rows keep the original (Excel and CSV show it fine).
+_PDF_STAND_INS = {"\u26a0": "!"}
+
+
+def _pdf_plain(value):
+    """*value* as text the PDF's font can draw."""
+    text = str(value)
+    for char, stand_in in _PDF_STAND_INS.items():
+        text = text.replace(char, stand_in)
+    return text
+
+
 def _spreadsheet_value(value):
     """Prevent text from being interpreted as a spreadsheet formula."""
     if not isinstance(value, str):
@@ -189,7 +203,7 @@ class ExportManager:
         )
 
         def _pdf_text(value):
-            return escape(str(value))
+            return escape(_pdf_plain(value))
 
         PRIMARY = colors.HexColor("#1F4E79")
         STRIPE = colors.HexColor("#EFF4FA")
