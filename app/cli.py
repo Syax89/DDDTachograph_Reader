@@ -17,7 +17,7 @@ from core.utils.activity_stats import compute_activity_totals
 
 def main():
     parser = argparse.ArgumentParser(
-        description="🚛 DDD Tachograph Reader CLI - Digital Tachograph File Analyzer",
+        description="DDD Tachograph Reader CLI - Digital Tachograph File Analyzer",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -57,7 +57,7 @@ Examples:
         enable_debug()
 
     if not os.path.isfile(args.file):
-        print(f"❌ File not found: {args.file}", file=sys.stderr)
+        print(f"Error: file not found: {args.file}", file=sys.stderr)
         sys.exit(1)
 
     # Parse
@@ -66,7 +66,7 @@ Examples:
         ddd = TachoParser(args.file)
         result = ddd.parse()
     except Exception as e:
-        print(f"❌ Parsing error: {e}", file=sys.stderr)
+        print(f"Error: parsing failed: {e}", file=sys.stderr)
         if args.verbose:
             import traceback
             traceback.print_exc()
@@ -76,7 +76,7 @@ Examples:
     if parse_error:
         message = (parse_error.get("message", "Unknown parse error")
                    if isinstance(parse_error, dict) else str(parse_error))
-        print(f"❌ Parsing error: {message}", file=sys.stderr)
+        print(f"Error: parsing failed: {message}", file=sys.stderr)
         sys.exit(1)
 
     # Auto-generate output basename
@@ -105,13 +105,13 @@ Examples:
     if args.all is not None:
         out_dir = args.all if args.all != "auto" else f"{basename}_output"
         if os.path.exists(out_dir) and not os.path.isdir(out_dir):
-            print(f"❌ --all output path exists and is not a directory: {out_dir}",
+            print(f"Error: --all output path exists and is not a directory: {out_dir}",
                   file=sys.stderr)
             sys.exit(1)
         try:
             os.makedirs(out_dir, exist_ok=True)
         except OSError as e:
-            print(f"❌ Cannot create output directory {out_dir}: {e}", file=sys.stderr)
+            print(f"Error: cannot create output directory {out_dir}: {e}", file=sys.stderr)
             sys.exit(1)
         # A bare ``--json``/``--pdf``/... stores the value "auto"; treat it as
         # unset here so the file is written into the --all directory rather
@@ -137,7 +137,7 @@ Examples:
             generated.append(("JSON", json_path))
         except Exception as e:
             export_failed = True
-            print(f"⚠️ JSON generation error: {e}", file=sys.stderr)
+            print(f"Warning: JSON generation failed: {e}", file=sys.stderr)
             if args.verbose:
                 import traceback
                 traceback.print_exc()
@@ -151,10 +151,11 @@ Examples:
             generated.append(("PDF", pdf_path))
         except ImportError as e:
             export_failed = True
-            print(f"⚠️ PDF export requires reportlab (pip install reportlab): {e}", file=sys.stderr)
+            print(f"Warning: PDF export requires reportlab (pip install reportlab): {e}",
+                  file=sys.stderr)
         except Exception as e:
             export_failed = True
-            print(f"⚠️ PDF generation error: {e}", file=sys.stderr)
+            print(f"Warning: PDF generation failed: {e}", file=sys.stderr)
             if args.verbose:
                 import traceback
                 traceback.print_exc()
@@ -168,7 +169,7 @@ Examples:
             generated.append(("Excel", excel_path))
         except Exception as e:
             export_failed = True
-            print(f"⚠️ Excel generation error: {e}", file=sys.stderr)
+            print(f"Warning: Excel generation failed: {e}", file=sys.stderr)
             if args.verbose:
                 import traceback
                 traceback.print_exc()
@@ -182,7 +183,7 @@ Examples:
             generated.append(("CSV", csv_path))
         except Exception as e:
             export_failed = True
-            print(f"⚠️ CSV generation error: {e}", file=sys.stderr)
+            print(f"Warning: CSV generation failed: {e}", file=sys.stderr)
             if args.verbose:
                 import traceback
                 traceback.print_exc()
@@ -196,7 +197,7 @@ Examples:
         print(json.dumps(result, indent=2, ensure_ascii=False, cls=BytesEncoder))
 
     if not args.quiet and generated:
-        print("\n📁 Generated files:")
+        print("\nGenerated files:")
         for fmt, path in generated:
             size = os.path.getsize(path)
             print(f"   {fmt}: {path} ({format_size(size)})")
@@ -228,7 +229,7 @@ def print_summary(data):
     activities = data.get("activities", [])
 
     print("=" * 60)
-    print("🚛 DDD TACHOGRAPH READER - SUMMARY")
+    print("DDD TACHOGRAPH READER - SUMMARY")
     print("=" * 60)
 
     # File info — ``metadata.file_type``/``type`` is not populated by any
@@ -238,10 +239,10 @@ def print_summary(data):
     if not _is_present(file_type):
         file_type = "Vehicle Unit" if meta.get("is_vu") else "Driver Card"
     gen = meta.get("generation", "N/D")
-    print(f"\n📄 File: {meta.get('filename', 'N/D')} ({file_type}, Gen {gen})")
+    print(f"\nFile: {meta.get('filename', 'N/D')} ({file_type}, Gen {gen})")
 
     # Signature
-    print(f"🔐 Integrity: {meta.get('integrity_check', 'N/D')}")
+    print(f"Integrity: {meta.get('integrity_check', 'N/D')}")
 
     # Driver — when no card data was decoded the ``driver`` dict carries the
     # truthy sentinel "N/A" in every field (core/registry/models.py), so the
@@ -253,7 +254,7 @@ def print_summary(data):
     card = driver.get("card_number") or ""
     identity = " ".join(p for p in (first, name) if _is_present(p))
     if identity:
-        print(f"\n👤 Driver: {identity}")
+        print(f"\nDriver: {identity}")
     if _is_present(card):
         print(f"   Card: {card}")
 
@@ -261,7 +262,7 @@ def print_summary(data):
     vin = vehicle.get("vin", "N/A")
     plate = vehicle.get("plate", vehicle.get("registration", "N/A"))
     if _is_present(vin) or _is_present(plate):
-        print(f"\n🚗 Vehicle: {plate} (VIN: {vin})")
+        print(f"\nVehicle: {plate} (VIN: {vin})")
 
     # Activities summary
     if activities:
@@ -283,11 +284,11 @@ def print_summary(data):
             avail_min += totals["AVAILABLE"]
         days = len(dates)
 
-        print(f"\n📊 Activity ({len(activities)} daily blocks, {days} days):")
-        print(f"   🟦 Drive:     {drive_min // 60}h {drive_min % 60}m")
-        print(f"   🟨 Work:      {work_min // 60}h {work_min % 60}m")
-        print(f"   🟧 Available: {avail_min // 60}h {avail_min % 60}m")
-        print(f"   🟩 Rest:      {rest_min // 60}h {rest_min % 60}m")
+        print(f"\nActivity ({len(activities)} daily blocks, {days} days):")
+        print(f"   Drive:     {drive_min // 60}h {drive_min % 60}m")
+        print(f"   Work:      {work_min // 60}h {work_min % 60}m")
+        print(f"   Available: {avail_min // 60}h {avail_min % 60}m")
+        print(f"   Rest:      {rest_min // 60}h {rest_min % 60}m")
 
     # TREP completeness (VU only)
     trep_report = meta.get("trep_report")
@@ -295,9 +296,9 @@ def print_summary(data):
         from core.parser.trep_inventory import format_trep_summary
         summary = format_trep_summary(trep_report)
         if trep_report.get("is_partial"):
-            print(f"\n\u26a0\ufe0f  {summary}")
+            print(f"\nWarning: {summary}")
         else:
-            print(f"\n\u2705  {summary}")
+            print(f"\nOK: {summary}")
 
     print("\n" + "=" * 60)
 

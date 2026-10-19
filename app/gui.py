@@ -18,6 +18,7 @@ import json
 import queue
 import functools
 import threading
+import time
 import traceback
 import logging
 from bisect import bisect_left
@@ -61,6 +62,17 @@ def _px(value):
     Design sizes throughout the UI are authored for a 96-DPI (100%) screen;
     on high-DPI Windows displays they are multiplied by the DPI ratio so the
     layout keeps its intended physical size instead of shrinking.
+
+    **This is not a pure scale factor, and the icons do not read it.** It is
+    the *identity* everywhere except high-DPI Windows: on macOS Tk scales a
+    Retina window itself, and on X11 a pixel is a pixel — only the font sizes
+    follow the screen there (``tk scaling``, set in
+    :meth:`TachoExplorer.__init__`). So ``_px`` cannot answer "how big is this
+    display"; :func:`_ui_scale` does, from that same ``tk scaling`` value, and
+    the two agree on Windows (``_px`` multiplies by ``_WIN_SCALE ==
+    DPI/96``). Anything derived from a display scale — the icon files, the tree
+    row height, the summary gutter — takes it from :func:`_ui_scale`; ``_px``
+    keeps scaling the layout exactly as before, so a 100% display is untouched.
     """
     if sys.platform == "win32" and _WIN_SCALE > 1.0:
         return int(round(value * _WIN_SCALE))
@@ -77,12 +89,13 @@ from core.utils.report_format import (  # noqa: E402
     NATION_COLS, VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
     fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
 from core.utils.activity_stats import (  # noqa: E402
-    DAILY_DRIVE_LIMIT_MIN, QUALIFYING_BREAK_MIN, RULE_CONTINUOUS_DRIVING,
-    RULE_DAILY_DRIVING, evaluate_driving_rules)
+    DAILY_DRIVE_LIMIT_MIN, QUALIFYING_BREAK_MIN,
+    RULE_CONTINUOUS_DRIVING, RULE_DAILY_DRIVING, evaluate_driving_rules)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 from app.i18n import (  # noqa: E402
     LANGUAGES, _, add_recent_file, install, save_language, save_translate_data,
     saved_language, saved_recent_files, saved_translate_data)
+from app import icons  # noqa: E402
 from app import ui_text  # noqa: E402
 from app.theme import (  # noqa: E402  (re-exported: GEN_COLORS/ROW_*/HEADER_BG)
     ACCENT, ACCENT_PURPLE, ACTIVITY_AVAILABLE, ACTIVITY_DRIVE, ACTIVITY_DRIVE_TINT,
@@ -110,6 +123,151 @@ except ImportError:
     ExportManager = None  # type: ignore[assignment,misc]
 
 
+#: Longest the render of a freshly parsed file may hold the main thread before
+#: it pumps the event loop again.
+#:
+#: A ``ttk.Progressbar`` in indeterminate mode animates from a Tk *timer*, and
+#: timers are delivered only while the loop runs — so a render that never yields
+#: freezes the busy bar for exactly as long as it takes, which the user reads as
+#: a hang (greyed buttons, motionless bar). One frame at 60 Hz is short enough
+#: that the bar keeps moving and long enough that pumping stays cheap next to
+#: the work it interrupts. See ``TachoExplorer._pump_render``.
+_RENDER_PUMP_INTERVAL = 1 / 60
+
+
+class _RenderAbandoned(Exception):
+    """The window went away while a render was pumping its event loop.
+
+    Raised by :meth:`TachoExplorer._pump_render` and absorbed by the render it
+    interrupts: with the window gone there is nothing left to draw and no widget
+    left to restore, so the render stops there instead of walking a destroyed
+    widget tree and leaving a traceback behind.
+    """
+
+
+#: True once an icon lookup has failed loudly (see :func:`_icon`).
+_ICON_FAILURE_LOGGED = False
+
+#: Tk's ``scaling`` is pixels per *point* (72 per inch); a logical pixel is
+#: 1/96 inch. The ratio between the two is what turns Tk's value — the one
+#: fonts are already sized by — into a display scale: 96 dpi is
+#: ``96/72 * 72/96 == 1.0``.
+_SCALE_PER_TK_UNIT = 72.0 / 96.0
+
+
+def _ui_scale(master=None):
+    """The display scale of *master*'s window: 1.0 at 100 %, 2.0 at 200 %.
+
+    Derived from Tk's own ``scaling``, the value :class:`TachoExplorer` sets in
+    :meth:`~TachoExplorer.__init__` (and that every font is already sized by),
+    so the icons have no separate notion of "how big is this display" to fall
+    out of step with the text they sit beside. Dividing out the 72-per-inch
+    point gives the ratio to the 96 dpi the layout is authored at:
+
+    * Windows sets ``scaling`` to ``DPI/72``, so this yields ``DPI/96`` — the
+      same factor :func:`_px` multiplies layout pixels by;
+    * macOS sets it to 1.0 (Tk scales a Retina window itself, and a
+      ``PhotoImage`` pixel is drawn as a *point* there), so this stays 1.0 and
+      the 16 px files keep their logical size — asking for the 32 px one would
+      draw an icon twice as large;
+    * X11 sets it from the screen's real DPI, which is the only half of a Linux
+      HiDPI window that scales today: fonts follow ``scaling``, ``_px`` is the
+      identity there (see its docstring). The icons follow the fonts, which is
+      what they are drawn next to.
+
+    A window that cannot answer (no ``tk scaling``: a stub interpreter in a
+    test) is treated as 100 %: 16 px, today's behaviour. So is anything below
+    100 %: the set's smallest file is the size the layout is authored for, and
+    nothing is resampled, so a display that reports less cannot make the icons
+    smaller than the design (that is also what keeps macOS — ``scaling`` 1.0,
+    i.e. 0.75 by this arithmetic — exactly where it is today).
+    """
+    if master is None:
+        master = getattr(tk, "_default_root", None)
+    try:
+        scale = float(master.tk.call("tk", "scaling")) * _SCALE_PER_TK_UNIT
+    except Exception:
+        return 1.0
+    return max(1.0, scale)
+
+
+def _icon_px(size=16, master=None):
+    """The delivered file size for a *logical* icon size at *master*'s scale."""
+    return icons.nearest_size(size, _ui_scale(master))
+
+
+def _tree_row_height(master=None):
+    """Row height that holds the row icon at *master*'s display scale.
+
+    A tree row carries a 16-logical-px icon (section nodes, summary headers),
+    and the file drawn for it grows with the scale while ``rowheight`` is a
+    fixed number in device pixels — which is how a scaled icon ends up clipped
+    by its own row. So the row is the taller of the design height and the image
+    plus a little room. At 100 % this is the design height unchanged (16 + 8 is
+    exactly 24), i.e. today's layout.
+    """
+    return max(_px(_TREE_ROW_HEIGHT),
+               _icon_px(16, master) + _px(_ROW_ICON_PADDING))
+
+
+def _summary_icon_gutter(master=None):
+    """Width of the summary panel's icon gutter (column ``#0``), in device px.
+
+    ``_SUMMARY_ICON_GUTTER`` is the design width for the 16 px icons; at a
+    higher scale the file drawn in it is larger, so the gutter grows with it.
+    It is a floor too: at 100 % this is the design width, unchanged.
+    """
+    return max(_px(_SUMMARY_ICON_GUTTER),
+               _icon_px(16, master) + _px(_SUMMARY_ICON_MARGIN))
+
+
+def _icon(name, size=16, master=None):
+    """The commissioned icon *name* at *size* logical px, or ``None``.
+
+    *size* is a **request**, not a file: 16 (tree rows, inline markers) or 20
+    (toolbar) is the size the icon has on a 100 % display, which is also the
+    size the surrounding layout is authored in. Which of the delivered files is
+    drawn is decided for the scale of the window that will draw it — a 32 px
+    file beside text that is twice as tall at 200 % (:func:`_ui_scale`,
+    :func:`app.icons.nearest_size`). Nothing is resampled: the set ships 16 to
+    48 px for exactly this.
+
+    Wraps :func:`app.icons.icon` for widget options: the set is a data file, so
+    a bundle that lost ``assets/icons`` (or a headless caller with no Tk root)
+    must cost a blank icon, never a traceback. The image itself is cached by
+    :mod:`app.icons`, which also keeps it alive — Tkinter blanks a row whose
+    ``PhotoImage`` nothing references any more. The cache is keyed by the
+    *resolved* size, so two windows at two scales never share an image.
+
+    *master* is the widget the image will be shown in: a ``PhotoImage`` belongs
+    to one Tk interpreter, so the icon has to be decoded in the window that
+    will draw it (and it is the widget asked for its ``scaling`` above).
+    """
+    global _ICON_FAILURE_LOGGED
+    try:
+        return icons.icon(name, _icon_px(size, master), master=master)
+    except Exception:
+        # Logged once at WARNING: a bundle that lost the set would otherwise
+        # show twenty blank icons and say nothing about why.
+        detail = traceback.format_exc()
+        if not _ICON_FAILURE_LOGGED:
+            _ICON_FAILURE_LOGGED = True
+            _log.warning("icons unavailable (%r): %s", name, detail)
+        else:
+            _log.debug("icon %r unavailable: %s", name, detail)
+        return None
+
+
+#: Badge icon -> the character the *window title* shows for it. The title bar is
+#: plain text (a window manager draws it, and it has no room for an icon), so
+#: the status is spelled out there instead of drawn.
+_BADGE_WORDS = {
+    "status-warning": "!",
+    "status-error": "\u00d7",
+    "status-unknown": "?",
+}
+
+
 # Internal keys to hide from columns (service noise). Keys starting with "_"
 # (e.g. "_key" dedup markers) are always hidden — see _columns_for.
 HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence"}
@@ -118,6 +276,39 @@ LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_pur
 # Technical columns pushed to table end.
 TRAILING_KEYS = ["record_type"]
 SPEED_LIMIT_KMH = 90
+
+#: Whether the driving-time infractions are *shown*. **False by default.**
+#:
+#: This is the one switch for every infraction surface of the UI: the red row
+#: tint on a flagged day of the Daily-Activities dashboard, the ``!`` marker in
+#: that day's Drive cell, the tooltip that names the broken rule with the
+#: measured value, and the "Days over {hours} h" KPI card. Turning those back on
+#: is flipping this single name — no other change is needed for *them*.
+#:
+#: It does **not** bring back the file overview's "DRIVING-TIME RULES" block.
+#: That block (the flagged-day count and the three limits) was removed from
+#: ``_build_overview_summary`` outright, not put behind this switch, so
+#: restoring it would mean writing the code again — its msgids (the title, the
+#: count and the three limits) are gone from the catalogs too.
+#:
+#: Why off: the owner reviewed the build and decided that, for a *file
+#: analyzer*, the driving-time rules of Reg. (EC) 561/2006 are not needed yet.
+#: Their thresholds (9 h of daily driving, 4 h 30 min of continuous driving, the
+#: 45 min break that resets it) are still being decided, and a red row painted
+#: on a rule whose limits are not final reads as a verdict the product does not
+#: stand behind.
+#:
+#: Hide, do not destroy: the evaluation is untouched and still runs on every day
+#: (``core.utils.activity_stats.evaluate_driving_rules``, called in
+#: :meth:`TachoExplorer._show_daily_summary`), so the numbers behind the switch
+#: are already computed when it flips.
+#:
+#: It deliberately does **not** hide anything about the file itself: the
+#: integrity warnings (the ``status-warning`` triangles on the banner, on the
+#: status badge, on ``Decoder Failures`` and on ``CORRUPTED / PARTIAL FILE``),
+#: the calibration "due in N days" text and the chart event markers all stay
+#: visible — a damaged or expiring file is not a driving-time breach.
+SHOW_DRIVING_INFRACTIONS = False
 
 
 # ── Section definitions ──
@@ -227,6 +418,29 @@ def _rows_for(records, transformer):
     return headers, rows
 
 
+class _SummaryHeader(tuple):
+    """A summary section row: ``(label, value, True)`` that also names its icon.
+
+    The summary panel renders its section headers as rows, and the commission
+    asked for a distinct glyph per section — ``TOTALS``, ``STATISTICS``,
+    ``COMPLETENESS`` and ``PARAMETERS`` all shared one by accident. The icon
+    therefore travels *with the row* (as an attribute, not as a text prefix),
+    which is also what lets :meth:`DataTable._render` draw it instead of typing
+    it: the tuple itself stays the ``(label, value, is_header)`` shape every
+    caller and test already reads.
+    """
+
+    icon: str
+
+    def __new__(cls, label, *, icon=None, value=""):
+        # ``icon``/``value`` are keyword-only on purpose: passed positionally, a
+        # value would be read as an icon name, and the row would silently lose
+        # the text it was given.
+        row = super().__new__(cls, (label, value, True))
+        row.icon = icon
+        return row
+
+
 def _kv_rows(d):
     """Convert a dict to (Field, Value) rows, flattening nested dicts one level."""
     rows = []
@@ -239,6 +453,55 @@ def _kv_rows(d):
         else:
             rows.append([field, fmt_val(v, key=k)])
     return ([_("Field"), _("Value")], rows)
+
+
+def _summary_block(rows):
+    """Return the first block of a ``(label, value, is_header)`` summary page.
+
+    ``_build_driver_summary`` and ``_build_vehicle_summary`` each build a whole
+    panel of stacked blocks separated by blank ``("", "", True)`` rows. The
+    file overview reuses one block of each (the identity, the vehicle) by
+    calling the builder and taking its leading block, so the two pages can
+    never disagree about the same facts.
+    """
+    block = []
+    for index, row in enumerate(rows):
+        if index and row[2]:
+            break  # a separator row or the next block header ends the block
+        block.append(row)
+    return block
+
+
+def _drop_empty_values(rows):
+    """Drop the ``N/A`` rows of a borrowed block, keeping headers.
+
+    The section builders emit a handful of rows unconditionally, with the
+    model's ``"N/A"`` sentinel (``core/registry/models.py``) as the value. On a
+    section page that reads as "we looked and found nothing"; in a one-page
+    overview it is noise, so an unknown fact is simply not listed.
+    """
+    return [row for row in rows
+            if row[2] or str(row[1]).strip() not in ("", "N/A")]
+
+
+def _activity_days(activities):
+    """Return one file's activity days as ``[(sort_key, display_text), ...]``.
+
+    The sort key is the ISO form :func:`_activity_to_iso` derives, because the
+    decoders emit ``dd/mm/yyyy`` (which sorts lexicographically wrong); the
+    display text is the day exactly as the file recorded it, like the Date
+    column of the Daily-Activities dashboard. A day recorded twice (two
+    download sections, or both card slots) is counted once.
+    """
+    days = {}
+    for record in activities if isinstance(activities, list) else []:
+        if not isinstance(record, dict):
+            continue
+        raw = record.get("date")
+        if raw in (None, ""):
+            continue
+        days.setdefault(_activity_to_iso(str(raw)), str(raw))
+    return sorted(days.items())
 
 
 def _utc_speed_block(block):
@@ -351,11 +614,19 @@ def _fmt_seconds_duration(seconds):
     return f"{minutes} min {rest} s" if rest else f"{minutes} min"
 
 
-def detailed_speed_by_day(data):
-    """Return UTC detailed-speed samples grouped by ISO date."""
+def detailed_speed_by_day(data, on_progress=None):
+    """Return UTC detailed-speed samples grouped by ISO date.
+
+    *on_progress* is called once per speed block. The GUI passes its event-loop
+    pump there (see ``TachoExplorer._pump_render``): one block holds thousands
+    of one-second samples, so a file's worth of them is long enough to freeze
+    the busy bar if the loop is never given a turn.
+    """
     grouped = {}
     blocks = list(data.get("speed_blocks") or [])
     for block in blocks:
+        if on_progress is not None:
+            on_progress()
         decoded = _utc_speed_block(block)
         if decoded is None:
             continue
@@ -369,10 +640,15 @@ def detailed_speed_by_day(data):
     return {day: sorted(samples.items()) for day, samples in grouped.items()}
 
 
-def detailed_speed_blocks_by_day(blocks):
-    """Group raw records by every UTC day for which they contain a sample."""
+def detailed_speed_blocks_by_day(blocks, on_progress=None):
+    """Group raw records by every UTC day for which they contain a sample.
+
+    *on_progress* behaves as in :func:`detailed_speed_by_day`.
+    """
     grouped = {}
     for block in blocks if isinstance(blocks, list) else []:
+        if on_progress is not None:
+            on_progress()
         decoded = _utc_speed_block(block)
         if decoded is None:
             continue
@@ -399,18 +675,44 @@ class _TableRow(list):
     that was attached to a row *position* used to be lost on the first header
     click: the tint of a day that breaks a driving-time rule, the month-total
     emphasis, and the tooltip that belongs to one specific day. Keeping the row
-    tag and a stable key on the row itself makes them travel with it — sorting
-    only reorders the list, filtering only drops entries.
+    tag, the row icon and a stable key on the row itself makes them travel with
+    it — sorting only reorders the list, filtering only drops entries.
     """
 
-    __slots__ = ("tag", "key")
+    __slots__ = ("tag", "key", "icon")
 
-    def __init__(self, values, tag=None, key=None):
+    def __init__(self, values, tag=None, key=None, icon=None):
         super().__init__(values)
         #: Row tag; ``None`` means "use the display-position zebra stripe".
         self.tag = tag
         #: Stable identity of the row, used to look up per-row tooltips.
         self.key = key
+        #: Icon name of a summary section row (see ``_SummaryHeader``).
+        self.icon = icon
+
+
+def _without_indicator(layout):
+    """A ttk item *layout* with the expander indicator taken out.
+
+    A ``Treeview`` reserves the indicator's width (about 19 px in the clam
+    theme) *before* the row image, so an image in a narrow tree column is
+    painted past its right edge: the summary panel's 16 px icons showed three
+    columns of themselves and looked blank. That panel is a flat list — no row
+    ever has children — so the indicator is dead space there.
+
+    Derived from the active theme's own layout, so the image, the text and the
+    row height stay exactly as the theme draws them. A theme that names its
+    elements differently simply keeps its indicator.
+    """
+    stripped = []
+    for element in layout:
+        name, options = element
+        options = dict(options)
+        if "children" in options:
+            options["children"] = _without_indicator(options["children"])
+        if name != "Treeitem.indicator":
+            stripped.append((name, options))
+    return stripped
 
 
 class DataTable(ttk.Frame):
@@ -428,7 +730,11 @@ class DataTable(ttk.Frame):
         filt = ttk.Frame(self)
         self.filt_bar = filt
         filt.pack(fill=tk.X, padx=8, pady=(0, 4))
-        ttk.Label(filt, text="\U0001f50e").pack(side=tk.LEFT)
+        # The magnifier belongs to the filter row, not to the text: it is an
+        # image from the commissioned set, so it looks the same on every
+        # platform (an emoji here was drawn by whichever font the OS picked).
+        self.filter_icon = ttk.Label(filt, image=_icon("search", 16, self) or "")
+        self.filter_icon.pack(side=tk.LEFT)
         self.filter_var = tk.StringVar()
         self.filter_var.trace_add("write", lambda *_args: self._schedule_filter())
         self.filter_entry = ttk.Entry(filt, textvariable=self.filter_var)
@@ -436,7 +742,22 @@ class DataTable(ttk.Frame):
         body = ttk.Frame(self)
         body.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
 
-        self.tv = ttk.Treeview(body, show="headings", selectmode="browse")
+        # Rows draw their icon in the tree column (see _show_summary); ttk's
+        # expander indicator would push that icon out of the gutter, and no row
+        # of this table is ever expandable, so the panel gets a style without
+        # it. Invisible in every other view: they hide column #0 entirely with
+        # show="headings".
+        try:
+            ttk.Style(self).layout(
+                "Summary.Treeview.Item",
+                _without_indicator(ttk.Style(self).layout("Treeview.Item")))
+            row_style = "Summary.Treeview"
+        except tk.TclError:      # a theme that cannot describe its layout
+            _log.debug("treeview item layout not customised: %s",
+                       traceback.format_exc())
+            row_style = "Treeview"
+        self.tv = ttk.Treeview(body, show="headings", selectmode="browse",
+                               style=row_style)
         ysb = ttk.Scrollbar(body, orient=tk.VERTICAL, command=self.tv.yview)
         xsb = ttk.Scrollbar(body, orient=tk.HORIZONTAL, command=self.tv.xview)
         self.tv.configure(yscrollcommand=ysb.set, xscrollcommand=xsb.set)
@@ -575,7 +896,10 @@ class DataTable(ttk.Frame):
         self._all_rows = [
             _TableRow(values,
                       tag=tags[i] if tags is not None and i < len(tags) else None,
-                      key=keys[i] if keys is not None and i < len(keys) else None)
+                      key=keys[i] if keys is not None and i < len(keys) else None,
+                      # A summary section row already names its icon; carrying it
+                      # here keeps it across the rebuild a sort or a filter does.
+                      icon=getattr(values, "icon", None))
             for i, values in enumerate(rows)
         ]
         self._render(self._all_rows)
@@ -584,13 +908,33 @@ class DataTable(ttk.Frame):
         """Stable key of a displayed row (see :meth:`set_rows`), or ``None``."""
         return self._iid_keys.get(iid)
 
-    def _render(self, rows, summary=False):
+    def _render(self, rows, summary=None):
+        """Draw *rows*; ``summary`` defaults to the mode the panel is in.
+
+        ``_apply_filter`` and ``_sort_by`` re-render without naming a mode, and
+        the summary panel is re-rendered by its own timers (setting the filter
+        box schedules one), so a hard default of "not a summary" used to redraw
+        the section headers as plain rows a third of a second after they
+        appeared — losing their band and their icon. The panel's mode is
+        ``_summary_mode``; callers that build a different kind of panel set that
+        flag instead of passing an argument.
+        """
+        if summary is None:
+            summary = self._summary_mode
         self.tv.delete(*self.tv.get_children())
         self._iid_keys = {}
         for i, r in enumerate(rows):
+            image = ""
             if summary and len(r) >= 3 and r[2]:
                 tag = "summary_header"
                 vals = list(r[:2])
+                # The section header carries its icon in the panel's icon
+                # gutter (column #0, see _show_summary): the icon belongs to
+                # the row, not to the text, so the label stays translatable
+                # and searchable without a glyph glued to it.
+                icon_name = getattr(r, "icon", None)
+                if icon_name:
+                    image = _icon(icon_name, 16, self.tv) or ""
             elif summary:
                 tag = "even" if i % 2 == 0 else "odd"
                 vals = list(r[:2])   # the third field only marks a section row
@@ -605,10 +949,10 @@ class DataTable(ttk.Frame):
             vals = [_bool_text(v) if isinstance(v, bool) else v for v in vals]
             key = getattr(r, "key", None)
             if key is None:
-                self.tv.insert("", tk.END, values=vals, tags=(tag,))
+                self.tv.insert("", tk.END, values=vals, tags=(tag,), image=image)
             else:
                 iid = self.tv.insert("", tk.END, values=vals, tags=(tag,),
-                                     iid=str(key))
+                                     image=image, iid=str(key))
                 self._iid_keys[iid] = key
 
     def _schedule_filter(self):
@@ -666,6 +1010,20 @@ _KPI_GRID_PAD = 5
 _KPI_WIDTH_SLACK = 4
 #: Width of the small legend glyphs (the dot and the dashed line sample).
 _LEGEND_GLYPH_WIDTH = 18
+#: Width of the summary panel's icon gutter (the tree column holding the
+#: 16 px section icons). Taken out of the Field column, so the Value column
+#: keeps the width it had before the icons arrived. It is the *design* width,
+#: for a 100 % display: at a higher scale the file drawn in it is larger, so
+#: the gutter grows (see :func:`_summary_icon_gutter`).
+_SUMMARY_ICON_GUTTER = 22
+#: Height of one tree row at 100 %, in logical px.
+_TREE_ROW_HEIGHT = 24
+#: Room a row icon needs around itself (vertical padding, and the gutter's
+#: horizontal margin). Both are chosen so the design values above are exactly
+#: what they are at 100 % — 16 + 8 is 24, 16 + 6 is 22 — and only take over
+#: when a scaled display asks for a larger file.
+_ROW_ICON_PADDING = 8
+_SUMMARY_ICON_MARGIN = 6
 
 
 def _flow_rows(widths, available):
@@ -1596,8 +1954,13 @@ class ActivityTimelineChart(ttk.Frame):
         self.detail_btn.pack(side=tk.RIGHT, padx=(8, 0))
         self.detail_btn.bind("<Enter>", lambda e: e.widget.configure(bg=HOVER_BG))
         self.detail_btn.bind("<Leave>", lambda e: e.widget.configure(bg=LINK_BUTTON_BG))
-        self.info_lbl = ttk.Label(self, foreground=TEXT_SECONDARY, anchor=tk.W)
-        self.info_lbl.pack(fill=tk.X, padx=8, pady=(0, 4))
+        # The day's facts — date, distance, driver, vehicle — each carry their
+        # own icon, so they are one small label each instead of a single
+        # joined string: an emoji inside one label cannot be replaced by an
+        # image, and the icon belongs to the part, not to the text.
+        self.info_bar = ttk.Frame(self)
+        self.info_bar.pack(fill=tk.X, padx=8, pady=(0, 4))
+        self._info_labels: list = []
         self.canvas = tk.Canvas(self, background=WHITE, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=8, pady=(2, 2))
         self.canvas.bind("<Configure>", lambda _event: self._schedule_draw())
@@ -1651,35 +2014,50 @@ class ActivityTimelineChart(ttk.Frame):
         self.detail_btn.unbind("<Button-1>")
         self.detail_btn.bind("<Button-1>", _open_detail)
         self.title_lbl.config(text=_("Daily Activities - {day} (UTC)").format(day=day))
-        info_parts = [f"\U0001f4c5 {day}"]
+        info_parts = [("date-range", day)]
         if is_vu:
-            info_parts.append(f"\U0001f6e3 {day_km} km")
+            # No icon for the day's distance: the set has no road/odometer
+            # glyph, and "123 km" already says what the number is.
+            info_parts.append((None, f"{day_km} km"))
         if changes_count:
-            info_parts.append(_("{count} changes").format(count=changes_count))
+            info_parts.append((None, _("{count} changes").format(count=changes_count)))
         if driver_info:
-            info_parts.append(f"\U0001f464 {driver_info}")
+            info_parts.append(("driver", driver_info))
         vehicle_info = vehicle_info or []
         if not is_vu and vehicle_info:
-            info_parts.append(self._format_vehicles(vehicle_info))
+            info_parts.append(("vehicle", self._format_vehicles(vehicle_info)))
         self._info_parts = info_parts
-        self.info_lbl.config(text="  |  ".join(info_parts))
+        self._show_info_parts(info_parts)
         self._schedule_draw()
+
+    def _show_info_parts(self, parts):
+        """Render the ``(icon name, text)`` info line, one label per part."""
+        for label in self._info_labels:
+            label.destroy()
+        self._info_labels = []
+        for index, (icon_name, text) in enumerate(parts):
+            image = _icon(icon_name, 16, self.info_bar) if icon_name else None
+            label = ttk.Label(self.info_bar, text=text, foreground=TEXT_SECONDARY,
+                              image=image or "", compound=tk.LEFT)
+            label.pack(side=tk.LEFT, padx=(8 if index else 0, 2))
+            self._info_labels.append(label)
 
     @staticmethod
     def _format_vehicles(vehicles):
         """Format the vehicles-driven label for a day.
 
         One vehicle → just the plate. Multiple → each plate with its
-        start–end time window so the switch-over is visible.
+        start–end time window so the switch-over is visible. The vehicle icon
+        is the row's, not the text's (see :meth:`_show_info_parts`).
         """
         def _hhmm(dt):
             return dt.strftime("%H:%M") if dt is not None else "?"
 
         if len(vehicles) == 1:
-            return f"\U0001f69b {vehicles[0]['plate']}"
+            return str(vehicles[0]['plate'])
         parts = [f"{v['plate']} ({_hhmm(v['start'])}\u2013{_hhmm(v['end'])})"
                  for v in vehicles]
-        return "\U0001f69b " + ", ".join(parts)
+        return ", ".join(parts)
 
     @staticmethod
     def _parse_time(time_str):
@@ -1822,12 +2200,26 @@ class ActivityTimelineChart(ttk.Frame):
 
             slot_blocks = self._slots.get(slot_name, [])
 
-            # Slot label
+            # Slot label: the cardholder section is the driver's, so it leads
+            # with the driver icon (drawn, not typed: see app/icons.py). The
+            # canvas needs the image object on its own item, hence the offset
+            # for the text that follows it.
+            label_icon = None
             if slot_name == "Cardholder" and self._driver_name:
-                label_text = f"\U0001f464 {self._driver_name}"
+                label_text = self._driver_name
+                label_icon = _icon("driver", 16, canvas)
             else:
                 label_text = _(slot_name)
-            canvas.create_text(left, section_top + header_h // 3,
+            label_y = section_top + header_h // 3
+            label_x = left
+            if label_icon is not None:
+                canvas.create_image(left, label_y, image=label_icon, anchor=tk.W)
+                # The offset is the *image's* width, not the 16 px it was
+                # requested at: on a scaled display the file drawn here is
+                # larger (see _icon), and a fixed offset would print the name on
+                # top of it. At 100 % this is 16 + 2 = 18, exactly as before.
+                label_x = left + label_icon.width() + _px(2)
+            canvas.create_text(label_x, label_y,
                                text=label_text, anchor=tk.W,
                                fill=TEXT_STRONG, font=FONT_CANVAS_TITLE)
 
@@ -2724,6 +3116,18 @@ def _resource_path(rel):
 
 
 class TachoExplorer(tk.Tk):
+    #: Idle defaults for the busy/render state read by ``_parse_done``,
+    #: ``_start_parse`` and ``_pump_render``. They exist on the class as well as
+    #: on the instance because a tkinter widget resolves a missing attribute
+    #: through ``Misc.__getattr__``, which forwards to ``self.tk`` — and on the
+    #: widget-less ``object.__new__(TachoExplorer)`` twins the GUI tests build
+    #: there is no ``self.tk``, so a *missing* attribute recurses until the
+    #: interpreter gives up. An attribute that always answers keeps them alive.
+    _destroyed = False
+    _rendering = False
+    _parsing = False
+    _pump_due = 0.0
+
     def __init__(self, initial_file=None):
         super().__init__()
         # The saved UI language must be loaded before the first _() call below.
@@ -2861,13 +3265,31 @@ class TachoExplorer(tk.Tk):
         style.configure("Sash", background=SURFACE, bordercolor=BORDER,
                         lightcolor=SURFACE, darkcolor=SURFACE)
         style.configure("TProgressbar", background=ACCENT, troughcolor=ACTIVE_BG)
-        style.configure("Treeview", rowheight=_px(24))
+        # The row height must hold the row icon at this display's scale, which
+        # is why it is derived from the image rather than written down: a
+        # 16 px icon in a 24 px row is today's layout (16 + 8 == _px(24)), and
+        # at 200 % the 32 px file gets a 40 px row instead of being clipped by
+        # the one it is drawn in. "Summary.Treeview" inherits this value.
+        style.configure("Treeview", rowheight=_tree_row_height(self))
 
         self.current_data = None
         self.current_file = None
         self._payloads = {}  # iid -> (title, columns, rows, meta)
+        # Reveal label for a summary cell wider than its column, and its
+        # <Motion>/<Leave> bindings (see _bind_summary_reveal).
+        self._summary_tip_lbl = None
+        self._summary_motion_bind = None
+        self._summary_leave_bind = None
+        self._summary_header_font = None
         self._destroyed = False
         self._parsing = False
+        # True while the tree is being rebuilt from scratch: the render owns the
+        # tree (and the selection) until it ends, so an open, a drop or a
+        # <<TreeviewSelect>> delivered by the render's own event-loop pump is
+        # refused instead of running a second render on top of the first.
+        self._rendering = False
+        # monotonic() timestamp of the next event-loop pump (see _pump_render).
+        self._pump_due = 0.0
         self._exporting = False
         self._parse_queue = queue.Queue()
         self._export_queue = queue.Queue()
@@ -2932,7 +3354,9 @@ class TachoExplorer(tk.Tk):
         through the same entry point as the dialog, so recent files, the busy
         guard and the error reporting are shared, not reimplemented.
         """
-        if self._parsing:
+        if self._parsing or self._rendering:
+            # Mid-parse, or mid-render: the drop is refused rather than queued,
+            # and never opens a second render on top of the one running.
             return "copy"
         paths = []
         for part in (data, *extra):
@@ -2953,10 +3377,19 @@ class TachoExplorer(tk.Tk):
     def _build_ui(self):
         top = ttk.Frame(self, padding=(10, 8))
         top.pack(fill=tk.X)
+        # The three toolbar controls lead with an icon from the commissioned
+        # set, in front of their label (compound=LEFT). This is the fix for the
+        # decorated glyphs that used to sit here: those were characters drawn
+        # from a platform font, and a missing fallback left an empty box ahead
+        # of the label. A PNG cannot go missing that way.
         self.btn_open = ttk.Button(top, text=_("Open DDD file"),
+                                   image=_icon("toolbar-open", 20, top) or "",
+                                   compound=tk.LEFT,
                                    command=self._open_file)
         self.btn_open.pack(side=tk.LEFT, padx=(0, 8))
         self.btn_export = ttk.Menubutton(top, text=_("Export"),
+                                         image=_icon("toolbar-export", 20, top) or "",
+                                         compound=tk.LEFT,
                                          state=tk.DISABLED)
         export_menu = tk.Menu(self.btn_export, tearoff=0,
                               background=WHITE, foreground=TEXT_PRIMARY,
@@ -2968,15 +3401,16 @@ class TachoExplorer(tk.Tk):
         export_menu.add_command(label=_("JSON (.json)"), command=self._export_json)
         self.btn_export["menu"] = export_menu
         self.btn_export.pack(side=tk.LEFT, padx=(0, 14))
-        # Language menu: two entries only. The 34 languages live in their own
+        # The language menu: two entries only. The 34 languages live in their own
         # submenu (they are a long list and would otherwise bury the preference
         # below them), and the "translate file contents" choice sits under a
         # separator so the two decisions never read as one.
-        # The button carries the language's own name alone: a decorated glyph in
-        # front of it is drawn from a platform font, and a missing fallback
-        # leaves an empty box ahead of the name (same reason the Open/Export
-        # buttons are text-only).
-        self.btn_lang = ttk.Menubutton(top, text=LANGUAGES[self._language])
+        # The button leads with the globe icon and keeps the language's own name
+        # beside it — the name alone is what identifies the language, the icon
+        # only tells it apart from the other two controls.
+        self.btn_lang = ttk.Menubutton(top, text=LANGUAGES[self._language],
+                                       image=_icon("toolbar-language", 20, top) or "",
+                                       compound=tk.LEFT)
         lang_menu = tk.Menu(self.btn_lang, tearoff=0,
                             background=WHITE, foreground=TEXT_PRIMARY,
                             activebackground=ACCENT, activeforeground=WHITE,
@@ -3047,8 +3481,11 @@ class TachoExplorer(tk.Tk):
         self.status = ttk.Label(status_bar, text=_("Ready \u2014 open a .ddd file"),
                                 anchor=tk.W, padding=(6, 2))
         self.status.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        # The warning icon is the banner's, and arrives with the warnings
+        # (see _check_integrity): a banner with no text shows no icon either.
         self.integrity_banner = ttk.Label(status_bar, text="", anchor=tk.E,
-                                           padding=(6, 2), cursor="hand2")
+                                           padding=(6, 2), cursor="hand2",
+                                           compound=tk.LEFT)
         self.integrity_banner.pack(side=tk.RIGHT)
         self.integrity_banner.bind(
             "<Button-1>", lambda _e: self._show_integrity_details())
@@ -3183,9 +3620,10 @@ class TachoExplorer(tk.Tk):
         """Open a recent file through the very same route as the file picker.
 
         ``_open_file`` is the only other caller of :meth:`_start_parse`, and it
-        refuses to start while a parse runs; the same guard applies here.
+        refuses to start while a parse — or the render of its result — runs; the
+        same guard applies here.
         """
-        if self._parsing:
+        if self._parsing or self._rendering:
             return
         self._start_parse(path)
 
@@ -3200,7 +3638,25 @@ class TachoExplorer(tk.Tk):
         the same node is selected again. A settings write that fails leaves the
         previous choice in place, tells the user, and puts the menu tick back
         where it was — the same contract as a failed language switch.
+
+        Refused while a render owns the tree, and *before* anything is written:
+        the preference is process-global, and the rebuild that applies it is
+        refused in that state, so a toggle delivered by the render's own pump
+        would leave the setting and the menu tick on the new value with every
+        row still formatted the old way. Refusing the toggle keeps the two in
+        step.
+
+        ``_parsing`` alone is not enough to refuse it: while the worker runs
+        there is no render yet, ``_refresh_data_text`` deliberately does nothing
+        (the render that ends the parse formats every row with the live flag),
+        so the toggle is honoured there and applied by the coming render. Only
+        if that parse then *fails* does the retained tree keep the previous
+        formatting under the new tick — a pre-existing edge this guard does not
+        make worse, and not worth refusing a click the successful case applies.
         """
+        if self._rendering:
+            self._translate_data_var.set(self._translate_data)
+            return
         flag = bool(self._translate_data_var.get())
         if flag == self._translate_data:
             return
@@ -3221,10 +3677,22 @@ class TachoExplorer(tk.Tk):
         The selected node is remembered by its path of labels and selected
         again, so the visible section does not jump to the top.
         """
-        if not self.current_data or self._parsing:
-            return  # a running parse repopulates with the new flag when it ends
+        if not self.current_data or self._parsing or self._rendering:
+            # A running parse repopulates with the new flag when it ends, and a
+            # running render owns the tree: a second toggle arriving through the
+            # render's own event-loop pump would nest one rebuild in another.
+            return
         path = self._selected_path()
-        self._populate_tree(self.current_data)
+        # Same deal as a parse render: the tree is rebuilt from scratch, so the
+        # selection is this method's to set at the end and a <<TreeviewSelect>>
+        # delivered by the pump below must not render a half-built tree.
+        self._rendering = True
+        try:
+            self._populate_tree(self.current_data)
+        except _RenderAbandoned:
+            return  # the window was closed while the tree was being rebuilt
+        finally:
+            self._rendering = False
         self._update_top_bar(self.current_data)
         target = self._node_by_path(path) or getattr(self, "_auto_select_iid", None)
         if not (target and self.tree.exists(target)):
@@ -3275,10 +3743,18 @@ class TachoExplorer(tk.Tk):
         and lose its result, so the current language is kept and the menu radio
         silently returns to it. A settings write that fails does the same, after
         telling the user.
+
+        A render is busy time too, and it is not always a parse: the
+        translate-data rebuild (:meth:`_refresh_data_text`) raises
+        ``_rendering`` without ever setting ``_parsing``, and it pumps the event
+        loop while it rebuilds the tree. The pump delivers this menu command
+        exactly like any other, so the guard has to name ``_rendering`` as well
+        — otherwise the scheduled restart would run ``_shutdown`` and
+        ``destroy`` on top of a rebuild that is still walking the widgets.
         """
         if code == self._language:
             return
-        if self._parsing or self._exporting:
+        if self._parsing or self._exporting or self._rendering:
             self._restore_language_choice()
             return
         if not save_language(code):
@@ -3349,8 +3825,8 @@ class TachoExplorer(tk.Tk):
     # ── File open ──────────────────────────────────────────
 
     def _open_file(self):
-        """File-picker entry point; ignored while a parse is running."""
-        if self._parsing:
+        """File-picker entry point; ignored while a parse (or its render) runs."""
+        if self._parsing or self._rendering:
             return
         path = filedialog.askopenfilename(
             filetypes=[(_("DDD Files"), "*.ddd *.DDD"), (_("All Files"), "*.*")])
@@ -3361,6 +3837,13 @@ class TachoExplorer(tk.Tk):
     def _start_parse(self, path):
         """Run the parse on a worker thread so the UI stays responsive;
         results are marshalled back via a queue polled on the main loop."""
+        if self._parsing or self._rendering:
+            # A parse is already running, or the previous result is still being
+            # rendered onto the tree. Every entry point checks this before it
+            # gets here (_open_file, _open_recent, the drop handler); it is
+            # enforced here too because the render pumps the event loop, so a
+            # second open can now arrive *while* the tree is being rebuilt.
+            return
         self._parsing = True
         self.btn_open.config(state=tk.DISABLED)
         self.btn_export.config(state=tk.DISABLED)
@@ -3405,10 +3888,59 @@ class TachoExplorer(tk.Tk):
             self.progress.pack_forget()
         except Exception:
             pass
-        self.btn_open.config(state=tk.NORMAL)
-        if self.current_data:
-            # A failed re-open keeps the previously loaded file exportable.
-            self.btn_export.config(state=tk.NORMAL)
+        try:
+            self.btn_open.config(state=tk.NORMAL)
+            if self.current_data:
+                # A failed re-open keeps the previously loaded file exportable.
+                self.btn_export.config(state=tk.NORMAL)
+        except tk.TclError:
+            # The render pumps the event loop, so the window can be closed
+            # while it runs: there is no button left to re-enable.
+            pass
+
+    def _pump_render(self, force=False):
+        """Let the event loop turn while a render holds the main thread.
+
+        The render of a parsed file is one synchronous call: ``_parsing`` has to
+        stay True until it ends (Open, drop-to-open and the language restart are
+        all refused on it) and ``_finish_parse`` has to run in ``_parse_done``'s
+        ``finally``, so the work cannot be split into ``after`` slices — the
+        loop is pumped from *inside* the render instead, at most once per
+        :data:`_RENDER_PUMP_INTERVAL`. That is what keeps the indeterminate
+        progress bar animating (it is driven by a Tk timer) instead of freezing
+        for the whole render and reading as a hang.
+
+        Pumping processes whatever is pending, so the guards are what make it
+        safe: ``_rendering`` is True for the whole rebuild, and the open/drop
+        paths plus <<TreeviewSelect>> refuse while it is set. The render itself
+        stays on the main thread — nothing here touches Tk from a worker.
+
+        A pump must never break the render it interrupts: a widget-less test
+        double (``object.__new__(TachoExplorer)``) has nothing to pump, so that
+        failure is swallowed. A window that was *closed* mid-render is a
+        different case — there is nothing left to draw and no widget left to
+        restore — and is signalled with :class:`_RenderAbandoned` so the render
+        stops instead of walking a destroyed widget tree.
+        """
+        now = time.monotonic()
+        if not force and now < self._pump_due:
+            return
+        self._pump_due = now + _RENDER_PUMP_INTERVAL
+        if self._destroyed:
+            raise _RenderAbandoned
+        gone = False
+        try:
+            self.update()
+            gone = self._destroyed or not self.winfo_exists()
+        except Exception:  # noqa: BLE001 - a failed pump must not fail a render
+            # Two very different cases land here. A widget-less test double has
+            # no Tk interpreter at all (AttributeError) and must simply skip the
+            # pump; a window closed *inside* ``update()`` raises TclError, and
+            # ``_destroyed`` is what tells that apart — the render has to stop.
+            gone = self._destroyed
+            _log.debug("render pump skipped: %s", traceback.format_exc())
+        if gone:
+            raise _RenderAbandoned
 
     def _reset_file_display(self):
         """Clear every per-file display field a successful load sets.
@@ -3421,8 +3953,8 @@ class TachoExplorer(tk.Tk):
         """
         self.lbl_file.config(text=_("No file loaded"))
         self.lbl_gen.config(text="")
-        self.lbl_status.config(text="")
-        self.integrity_banner.config(text="")
+        self.lbl_status.config(text="", image="")
+        self.integrity_banner.config(text="", image="")
         self._integrity_warnings = []
         self._integrity_file = ""
         self.title(f"Tacho Explorer v{__version__}")
@@ -3449,7 +3981,19 @@ class TachoExplorer(tk.Tk):
     # ── Export ────────────────────────────────────────────
 
     def _run_export(self, kind, extension, filetypes, export_fn, requirement=""):
-        """Shared export flow: pick the destination, run, report the outcome."""
+        """Shared export flow: pick the destination, run, report the outcome.
+
+        Refused while a render runs: the destination picker opens a modal dialog,
+        which would hold the render (and the busy bar) for as long as the user
+        leaves it open — the very freeze the render pump exists to remove. The
+        toolbar disables Export for a parse, but the translate-data rebuild
+        (:meth:`_refresh_data_text`) leaves it enabled, so the guard is here.
+        Like every other busy refusal (Open, drop, the language menu) it is
+        silent: the window is busy for a fraction of a second, and the click can
+        simply be repeated.
+        """
+        if self._rendering:
+            return
         if not self.current_data:
             return
         if ExportManager is None:
@@ -3530,6 +4074,9 @@ class TachoExplorer(tk.Tk):
                          lambda d, p: ExportManager.export_to_csv(d, p))
 
     def _export_json(self):
+        if self._rendering:
+            # Same reason as _run_export: no modal picker on top of a render.
+            return
         if not self.current_data:
             return
         path = filedialog.asksaveasfilename(
@@ -3591,6 +4138,13 @@ class TachoExplorer(tk.Tk):
         """Render a parse result. Keeps partial data visible: a fatal error
         (no structural data recovered) shows an error and stops; otherwise the
         tree is rendered even when late phases failed or signatures are bad."""
+        if self._rendering:
+            # Never rebuild the tree a still-running render is walking. The
+            # render pumps the event loop, so a result queued behind it can
+            # arrive in the middle of it; the running render restores the UI
+            # state in its own finally, and this superseded result is dropped.
+            _log.warning("Dropping a parse result: another render is running")
+            return
         parse_error = (data.get("metadata") or {}).get("parse_error")
         has_data = bool(data.get("raw_tags") or data.get("generations")
                         or data.get("activities"))
@@ -3601,6 +4155,7 @@ class TachoExplorer(tk.Tk):
             return
         # Rendering's table sizing update() pumps the loop: stay busy until done.
         self._parsing = True
+        self._rendering = True
         try:
             self.current_data = data
             self.current_file = path
@@ -3609,6 +4164,9 @@ class TachoExplorer(tk.Tk):
             # under "Recent files". The path here is the one actually parsed,
             # so a file given on the command line is recorded too.
             add_recent_file(path)
+            # One pump before the heavy part: the status line and the busy bar
+            # reach the screen before the tree rebuild starts, not after it.
+            self._pump_render(force=True)
             self._populate_tree(data)
             self._update_top_bar(data)
             self.btn_export.config(state=tk.NORMAL)
@@ -3626,6 +4184,10 @@ class TachoExplorer(tk.Tk):
             # single deferred render of the chosen node.
             if target:
                 self._show_empty(os.path.basename(path), _("Loading\u2026"))
+                # Nothing pumps the loop between here and the end of this
+                # method: a pump would deliver this callback while _rendering is
+                # still set, and _on_tree_select would refuse it, leaving the
+                # pane on the placeholder.
                 self.after_idle(
                     lambda tid=target: self.tree.selection_set(tid)
                     if self.tree.exists(tid) else None)
@@ -3639,6 +4201,8 @@ class TachoExplorer(tk.Tk):
                     filename=os.path.basename(path),
                     generation=meta.get("generation", "?")))
             self._check_integrity(data, path)
+        except _RenderAbandoned:
+            _log.debug("window closed during the render: nothing left to draw")
         except Exception:
             _log.error("GUI render failed: %s", traceback.format_exc())
             messagebox.showerror(_("Rendering Error"),
@@ -3646,6 +4210,7 @@ class TachoExplorer(tk.Tk):
                                       detail=traceback.format_exc()))
             self.status.config(text=_("Ready \u2014 open a .ddd file"))
         finally:
+            self._rendering = False
             self._finish_parse()
 
     def _check_integrity(self, data, path):
@@ -3770,17 +4335,20 @@ class TachoExplorer(tk.Tk):
         self._integrity_file = os.path.basename(path)
         if warnings:
             self.integrity_banner.config(
-                text=_("\u26a0\ufe0f  {count} integrity warning(s) \u2014 click for details").format(
+                text=_("{count} integrity warning(s) \u2014 click for details").format(
                     count=len(warnings)),
-                foreground=WARNING)
+                foreground=WARNING,
+                image=_icon("status-warning", 16, self.integrity_banner) or "")
             header = _("The file may be incomplete or corrupted.\n\n{filename}\n\n").format(
                 filename=os.path.basename(path))
             messagebox.showwarning(_("File Integrity Warning"),
                                    header + "\n".join(warnings))
         else:
             # Valid file: no green tick, no banner — the absence of a warning
-            # is the "all good" signal.
-            self.integrity_banner.config(text="")
+            # is the "all good" signal. The image is cleared with the text: a
+            # label keeps the image it was configured with, and a lone warning
+            # triangle over an empty label is a warning about nothing.
+            self.integrity_banner.config(text="", image="")
 
     def _show_integrity_details(self):
         """Show the collected integrity warnings on demand (banner click)."""
@@ -3829,7 +4397,12 @@ class TachoExplorer(tk.Tk):
             if integrity_verdict(data) == VERDICT_VERIFIED:
                 return _("All signatures verified")
             if efv.get("failed", 0):
-                return _("Card data signature mismatch")
+                # "Signature mismatch", not "Card data signature mismatch": the
+                # qualifier repeated the file's own type (a card) and pushed the
+                # verdict to 205-374 px, wider than the summary panel's 187 px
+                # value column in 32 of 34 catalogs (see
+                # tests/unit/test_gui_summary_default.py).
+                return _("Signature mismatch")
             if efv.get("skipped", 0):
                 return _("EF signatures incomplete")
             # Chain-level failures must surface even when there is no signed EF
@@ -3875,22 +4448,27 @@ class TachoExplorer(tk.Tk):
         verdict = integrity_verdict(data)
 
         label = self._integrity_label(data)
+        # The badge is a status *icon* plus its words: the four status glyphs of
+        # the commissioned set are told apart by shape (circle/check,
+        # triangle/!, circle/cross, circle/?), so the meaning does not hang on
+        # the colour alone.
+        badge = None
 
         if is_vu:
             sv_ok = sv.get("all_treps_valid") is True
             vu_chain_ok = sv.get("msca_to_vu") is True
             if sv_ok and vu_chain_ok and sv.get("root_anchored"):
-                text, color = "", MUTED
+                text, color, badge = "", MUTED, None
             elif sv_ok:
-                text, color = "\u26a0\ufe0f  " + label, WARNING
+                text, color, badge = label, WARNING, "status-warning"
             elif verdict == VERDICT_CORRUPT:
-                text, color = "\u274c  " + label, DANGER
+                text, color, badge = label, DANGER, "status-error"
             elif verdict == VERDICT_PARTIAL:
-                text, color = "\u26a0\ufe0f  " + label, CAUTION
+                text, color, badge = label, CAUTION, "status-warning"
             elif "Incomplete" in integrity:
-                text, color = _("\u2753  Incomplete certificates"), MUTED
+                text, color, badge = _("Incomplete certificates"), MUTED, "status-unknown"
             elif "Error" in integrity:
-                text, color = _("\u274c  Parse error"), DANGER
+                text, color, badge = _("Parse error"), DANGER, "status-error"
             else:
                 # Reached only when the file is NOT fully trusted (the
                 # all-good case is returned above): VERDICT_UNVERIFIED with
@@ -3899,29 +4477,40 @@ class TachoExplorer(tk.Tk):
                 # ("Partial (VU - chain ok)"). Hiding the badge here read as
                 # a clean file; it must warn like every other non-verified
                 # VU state (R1, Batch 1 refutation).
-                text, color = "\u26a0\ufe0f  " + label, WARNING
+                text, color, badge = label, WARNING, "status-warning"
         elif verdict == VERDICT_VERIFIED:
-            text, color = "", MUTED
+            text, color, badge = "", MUTED, None
         elif verdict == VERDICT_CORRUPT or efv.get("failed", 0):
-            text, color = "\u274c  " + label, DANGER
+            text, color, badge = label, DANGER, "status-error"
         elif "Incomplete" in integrity:
-            text, color = _("\u2753  Incomplete certificates"), MUTED
+            text, color, badge = _("Incomplete certificates"), MUTED, "status-unknown"
         elif "Error" in integrity:
-            text, color = _("\u274c  Parse error"), DANGER
+            text, color, badge = _("Parse error"), DANGER, "status-error"
         else:
-            text, color = "\u26a0\ufe0f  " + label, WARNING
+            text, color, badge = label, WARNING, "status-warning"
 
-        self.lbl_status.config(text=text, foreground=color)
+        # An empty image name clears a previous badge: a label keeps the image
+        # it was configured with, and a clean file must not inherit the last
+        # file's warning icon.
+        self.lbl_status.config(text=text, foreground=color,
+                               image=_icon(badge, 16, self) if badge else "",
+                               compound=tk.LEFT)
         # Also update the window title with a compact status (problems only).
-        parts = [f"Tacho Explorer v{__version__}", text[:1].strip(),
+        # The window title is plain text: it has no icon slot, so it carries the
+        # short word for the badge instead of a glyph.
+        parts = [f"Tacho Explorer v{__version__}",
+                 _BADGE_WORDS.get(badge or "", ""),
                  os.path.basename(self.current_file or "")]
         self.title("  ".join(p for p in parts if p))
 
     # ── Tree construction ───────────────────────────────────
 
-    def _add_section(self, parent, label, columns, rows, meta="", summary=False):
+    def _add_section(self, parent, label, columns, rows, meta="", summary=False,
+                     icon=None):
+        """Add a tree node for a section; *icon* names its row icon."""
         text = label
-        iid = self.tree.insert(parent, tk.END, text=text)
+        iid = self.tree.insert(parent, tk.END, text=text,
+                               image=_icon(icon, 16, self.tree) or "")
         self._payloads[iid] = (label, columns, rows, meta, summary)
         return iid
 
@@ -3934,7 +4523,8 @@ class TachoExplorer(tk.Tk):
         """Add daily UTC graph and raw-record children under Detailed Speed."""
         node = self.tree.insert(parent, tk.END, text=_("Detailed Speed"))
         self._payloads[node] = ("__speed_summary__", raw_blocks, data)
-        raw_by_day = detailed_speed_blocks_by_day(raw_blocks)
+        raw_by_day = detailed_speed_blocks_by_day(
+            raw_blocks, on_progress=self._pump_render)
 
         # Per-day overspeeding events from file data
         oes_by_day = {}
@@ -3949,7 +4539,10 @@ class TachoExplorer(tk.Tk):
             except (ValueError, AttributeError):
                 continue
 
-        for day, samples in sorted(detailed_speed_by_day(data).items(), reverse=True):
+        for day, samples in sorted(
+                detailed_speed_by_day(data, on_progress=self._pump_render).items(),
+                reverse=True):
+            self._pump_render()
             day_node = self._add_speed_chart_day(node, day, samples, oes_by_day.get(day))
             blocks = raw_by_day.get(day, [])
             cols, rows = _rows_for(blocks, None) if blocks else ([_("Value")], [])
@@ -4141,6 +4734,7 @@ class TachoExplorer(tk.Tk):
         node = self.tree.insert(parent, tk.END, text=_("Daily Activities"))
         self._payloads[node] = ("__daily_summary__", activity_list, data)
         for day_data in reversed(activity_list):
+            self._pump_render()
             if not isinstance(day_data, dict):
                 continue
             date_str = day_data.get("date", day_data.get("timestamp", "?"))
@@ -4258,17 +4852,14 @@ class TachoExplorer(tk.Tk):
             self._add_section(day_node, _("Daily Activities {date}").format(date=date_str),
                               cols, rows)
 
-    def _populate_tree(self, data):
-        """Rebuild the section tree from the generations dict produced by
-        :func:`build_generations_tree`.  File info, driver/vehicle summary,
-        security and activities (day hierarchy) are handled separately."""
-        self.tree.delete(*self.tree.get_children())
-        self._payloads.clear()
-        self._auto_select_iid = None
-        self._opened_data = data
-        meta = data.get("metadata", {})
+    def _build_file_info(self, data):
+        """Return the File Info rows as a ``{label: value}`` dict.
 
-        # ── File Info (key/value) ──
+        One builder for the two places that show the same facts: the File Info
+        section (rendered through :func:`_kv_rows`) and the file overview's
+        FILE / INTEGRITY blocks, which read the entries they need out of it.
+        """
+        meta = data.get("metadata", {})
         is_vu = meta.get("is_vu", False)
         origin = meta.get("origin", "")
         if origin == "vehicle_unit" or (not origin and is_vu):
@@ -4306,14 +4897,44 @@ class TachoExplorer(tk.Tk):
             info[_("Decoder failures")] = meta["decoder_failure_count"]
         info[_("Parsed at")] = meta.get("parsed_at", "")
         info[_("App version")] = meta.get("app_version", "")
+        return info
+
+    def _populate_tree(self, data):
+        """Rebuild the section tree from the generations dict produced by
+        :func:`build_generations_tree`.  File info, driver/vehicle summary,
+        security and activities (day hierarchy) are handled separately."""
+        self.tree.delete(*self.tree.get_children())
+        self._payloads.clear()
+        self._auto_select_iid = None
+        self._opened_data = data
+        meta = data.get("metadata", {})
+        # A file with many sections and days spends hundreds of milliseconds
+        # here; the pumps below (and the ones inside the per-day and per-speed
+        # builders) are what keeps the busy bar moving instead of freezing.
+        self._pump_render()
+
+        # ── Summary (first node: the view a freshly parsed file opens on) ──
+        summary_iid = None
+        try:
+            cols, rows = self._build_overview_summary(data)
+        except Exception:
+            _log.debug("Summary section render failed: %s", traceback.format_exc())
+        else:
+            summary_iid = self._add_section(
+                "", _("Summary"), cols, rows, summary=True, icon="summary")
+
+        # ── File Info (key/value) ──
+        is_vu = meta.get("is_vu", False)
+        info = self._build_file_info(data)
         cols, rows = _kv_rows(info)
-        self._add_section("", _("\U0001f4c4  File Info"), cols, rows)
+        self._add_section("", _("File Info"), cols, rows, icon="file-info")
 
         # ── Decoder failures detail ──
         failures = meta.get("decoder_failures") or []
         if failures:
             cols, rows = _rows_for(failures, None)
-            self._add_section("", _("\u26a0\ufe0f  Decoder Failures"), cols, rows)
+            self._add_section("", _("Decoder Failures"), cols, rows,
+                              icon="status-warning")
 
         # ── Raw / Unparsed Data (only when bytes could not be decoded) ──
         self._populate_unparsed(data)
@@ -4330,7 +4951,8 @@ class TachoExplorer(tk.Tk):
         if not is_vu and any(v and v != "N/A" for v in drv.values()):
             cols, rows = self._build_driver_summary(data)
             self._auto_select_iid = self._add_section(
-                "", _("\U0001f464  Driver / Cardholder"), cols, rows, summary=True)
+                "", _("Driver / Cardholder"), cols, rows, summary=True,
+                icon="driver")
 
         if is_vu:
             try:
@@ -4338,19 +4960,19 @@ class TachoExplorer(tk.Tk):
                 if sensor:
                     cols, rows = self._build_sensor_summary(data)
                     self._auto_select_iid = self._add_section(
-                        "", _("\U0001f4e1  Sensor"), cols, rows, summary=True)
+                        "", _("Sensor"), cols, rows, summary=True, icon="sensor")
                 else:
                     cols, rows = self._build_vehicle_summary(data)
                     self._auto_select_iid = self._add_section(
-                        "", _("\U0001f69a  Vehicle"), cols, rows, summary=True)
+                        "", _("Vehicle"), cols, rows, summary=True, icon="vehicle")
             except Exception:
                 _log.debug("Vehicle section render failed: %s", traceback.format_exc())
             trep_report = meta.get("trep_report")
             if trep_report and trep_report.get("is_partial"):
                 cols, rows = self._build_trep_summary(trep_report, meta)
                 self._auto_select_iid = self._add_section(
-                    "", _("\u26a0\ufe0f  CORRUPTED / PARTIAL FILE"), cols, rows,
-                    summary=True)
+                    "", _("CORRUPTED / PARTIAL FILE"), cols, rows,
+                    summary=True, icon="status-warning")
 
         # ── Generations tree (single source of truth) ──
         generations = data.get("generations", {})
@@ -4369,10 +4991,12 @@ class TachoExplorer(tk.Tk):
             annex_suffix = f"  [{annex}]" if annex else ""
             gnode = self.tree.insert(
                 "", tk.END,
-                text=_("\U0001f4e6  {generation}{annex}").format(
-                    generation=_(gen_name), annex=annex_suffix))
+                text=_("{generation}{annex}").format(
+                    generation=_(gen_name), annex=annex_suffix),
+                image=_icon("generation", 16, self.tree) or "")
 
             for item_name, item_data in gen_items.items():
+                self._pump_render()
                 if item_name == "_RawTags":
                     continue
                 if item_name in ("DriverActivityData", "Daily Activities") and isinstance(item_data, list):
@@ -4409,6 +5033,7 @@ class TachoExplorer(tk.Tk):
                 self._add_section(gnode, ui_text.label(item_name), cols, rows)
 
         # ── Security ──
+        self._pump_render()
         self._populate_security(data)
 
         # Security section from generations tree (EF verification)
@@ -4417,8 +5042,17 @@ class TachoExplorer(tk.Tk):
             for item_name, item_data in sec.items():
                 if isinstance(item_data, dict) and item_data:
                     cols, rows = _kv_rows(item_data)
-                    self._add_section("", f"\U0001f510  {ui_text.label(item_name)}",
-                                      cols, rows)
+                    self._add_section("", ui_text.label(item_name),
+                                      cols, rows, icon="security")
+
+        # The overview is the view a freshly parsed file opens on — for a card
+        # and for a VU alike. It is set last on purpose: the section-specific
+        # auto-selection above stays untouched and becomes the fallback for a
+        # file whose overview could not be built (see the try/except at the top
+        # of this method, and _parse_done's "first child" fallback), so a failed
+        # overview never leaves the pane blank.
+        if summary_iid and self.tree.exists(summary_iid):
+            self._auto_select_iid = summary_iid
 
     def _populate_unparsed(self, data):
         """Surface bytes the structural walk could not decode.
@@ -4469,8 +5103,8 @@ class TachoExplorer(tk.Tk):
         columns = ([ui_text.label(c) for c in ("Location", "Offset", "Length", "Hex")]
                    if has_container
                    else [ui_text.label(c) for c in ("Offset", "Length", "Hex")])
-        self._add_section("", _("\U0001f9e9  Raw / Unparsed Data"),
-                          columns, rows, meta=meta)
+        self._add_section("", _("Raw / Unparsed Data"),
+                          columns, rows, meta=meta, icon="raw-data")
 
     def _populate_security(self, data):
         """Security group: signature verification summaries (card EF + VU
@@ -4483,7 +5117,8 @@ class TachoExplorer(tk.Tk):
         icc = data.get("card_icc") or {}
         if not sv and not efv and not certs and not cvc and not chip and not icc:
             return
-        gnode = self.tree.insert("", tk.END, text=_("\U0001f510  Security & Certificates"))
+        gnode = self.tree.insert("", tk.END, text=_("Security & Certificates"),
+                                 image=_icon("security", 16, self.tree) or "")
         if efv:
             ef_summary = {
                 _("Summary"): efv.get("summary", ""),
@@ -4545,7 +5180,8 @@ class TachoExplorer(tk.Tk):
         ``rule_tips`` (Drive column, the driving-time-rule explanation) are all
         keyed by *row key*, not by display position: the table is sortable and
         filterable, and a positional key handed the tooltip of the day that
-        happened to sit at that index after the reorder.
+        happened to sit at that index after the reorder. ``rule_tips`` is empty
+        while :data:`SHOW_DRIVING_INFRACTIONS` is off.
         """
         self._cleanup_dashboard()
         self._hide_empty_state()
@@ -4605,8 +5241,11 @@ class TachoExplorer(tk.Tk):
         # A day that breaks a driving-time rule (Reg. (EC) 561/2006 art. 6(1)
         # or art. 7). ttk.Treeview can only style a whole row, so the violation
         # tints the row; the Drive cell additionally carries the warning glyph
-        # so the day is recognisable without relying on colour.
-        self.table.tv.tag_configure("flagged", background=DANGER_BAND)
+        # so the day is recognisable without relying on colour. Both are hidden
+        # while :data:`SHOW_DRIVING_INFRACTIONS` is off — the tag is not even
+        # configured then, so the tint cannot reappear on a stale row either.
+        if SHOW_DRIVING_INFRACTIONS:
+            self.table.tv.tag_configure("flagged", background=DANGER_BAND)
 
         # Render with row tags. The rows carry their tag and a stable key from
         # here on, so a header click or a filter change cannot drop the tint of
@@ -4625,9 +5264,11 @@ class TachoExplorer(tk.Tk):
         ev_column = _("Ev")
         self._dashboard_ev_col = columns.index(ev_column) if ev_column in columns else -1
         self._dashboard_ev_tips = ev_tooltips or {}
-        # Tooltips for the Drive column: the ⚠ marker sits in that cell, so the
+        # Tooltips for the Drive column: the violation marker sits in that cell, so the
         # explanation of what it means has to be reachable there and not only
-        # on the driver/vehicle cell.
+        # on the driver/vehicle cell. With :data:`SHOW_DRIVING_INFRACTIONS` off
+        # there is no marker and ``rule_tips`` is empty, so the handler below
+        # shows nothing for that column.
         drive_column = _("Drive")
         self._dashboard_drive_col = (columns.index(drive_column)
                                      if drive_column in columns else -1)
@@ -4805,7 +5446,7 @@ class TachoExplorer(tk.Tk):
             self._tooltip_lbl.place_forget()
 
     def _cleanup_dashboard(self):
-        """Destroy any KPI card frame left over from a previous dashboard view."""
+        """Drop what only the previous view (dashboard or summary) needed."""
         if getattr(self, "_kpi_frame", None) is not None:
             self._kpi_frame.destroy()
             self._kpi_frame = None
@@ -4821,6 +5462,9 @@ class TachoExplorer(tk.Tk):
             except Exception:
                 pass
             self._dashboard_motion_bind = None
+        # Every view switch comes through here, so the summary panel's own
+        # reveal label (and its bindings on the table) is dropped here too.
+        self._cleanup_summary_tooltip()
 
     def _show_daily_summary(self, activity_list, data, _fast_refresh=False):
         """Dashboard for the 'Daily Activities' parent node.
@@ -5073,6 +5717,9 @@ class TachoExplorer(tk.Tk):
         totals_global = {"DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0}
         max_drive = 0
         # Days of the file that break a driving-time rule (see day_rules below).
+        # Counted only while the infractions are shown: the count exists for the
+        # "Days over {hours} h" KPI card, which :data:`SHOW_DRIVING_INFRACTIONS`
+        # hides as a whole (the evaluation itself still runs, every day).
         flagged_days = 0
         table_rows = []
         row_tags = []
@@ -5080,6 +5727,8 @@ class TachoExplorer(tk.Tk):
         ev_tooltips = {}
         # Drive-cell tooltips: the driving-time-rule explanation, keyed like the
         # others by row key so it follows the day through sorting/filtering.
+        # Empty while :data:`SHOW_DRIVING_INFRACTIONS` is off — the Drive cell
+        # then has nothing to explain, and the tooltip handler finds no text.
         rule_tips = {}
         row_idx = 0
 
@@ -5108,6 +5757,10 @@ class TachoExplorer(tk.Tk):
                 # continuous driving without a qualifying break). A crew day is
                 # judged per driver inside the helper, so the flag never comes
                 # from summing two drivers' independent driving time.
+                # Evaluated unconditionally — hiding the infractions
+                # (:data:`SHOW_DRIVING_INFRACTIONS`) must not stop the
+                # computation, so flipping the switch back is one line and the
+                # verdict is already there.
                 day_rules = evaluate_driving_rules(changes)
                 for act in totals_global:
                     totals_global[act] += day_tots[act]
@@ -5126,13 +5779,20 @@ class TachoExplorer(tk.Tk):
                 n_drv = len(drivers) if drivers else 0
 
                 km_str = f"{day_km:,}".replace(",", " ") if day_km else ""
-                ev_str = "\u26a0\ufe0f" if iso_date in event_dates else ""
-                # A broken driving-time rule is marked in the Drive cell with the
-                # same ⚠ glyph the Ev column uses, so the day stands out without
-                # relying on the row tint (ttk.Treeview has no per-cell colour).
+                # A table cell cannot hold an image (this is a headings-only
+                # Treeview), so both markers are ASCII: "!" for a day with an
+                # event and "!" next to the Drive total of a day that breaks a
+                # driving-time rule. The tooltip on the cell still explains
+                # which rule and by how much, and the flagged row keeps its
+                # tint — the mark is the shape signal for a colour-blind user.
+                # The driving-rule half of that is behind
+                # :data:`SHOW_DRIVING_INFRACTIONS` (off: the rule's thresholds
+                # are not final yet); the event marker is not, it is about the
+                # file's own events.
+                ev_str = "!" if iso_date in event_dates else ""
                 drive_str = _fmt_duration_minutes(day_tots["DRIVE"])
-                if day_rules.flagged:
-                    drive_str += " \u26a0\ufe0f"
+                if SHOW_DRIVING_INFRACTIONS and day_rules.flagged:
+                    drive_str += "  !"
                     flagged_days += 1
                 if is_vu:
                     odo_str = f"{odo:,}".replace(",", " ") if odo else ""
@@ -5153,15 +5813,17 @@ class TachoExplorer(tk.Tk):
                         _fmt_duration_minutes(day_tots["REST"]),
                         _fmt_duration_minutes(day_tots["AVAILABLE"]),
                     ])
-                row_tags.append("flagged" if day_rules.flagged else None)
+                row_tags.append("flagged"
+                                if SHOW_DRIVING_INFRACTIONS and day_rules.flagged
+                                else None)
                 if is_vu and names:
                     tooltips[row_idx] = names
                 elif not is_vu and card_vehicle_tip:
                     tooltips[row_idx] = card_vehicle_tip
-                if day_rules.flagged:
+                if SHOW_DRIVING_INFRACTIONS and day_rules.flagged:
                     # Say which rule and by how much, on the row's own tooltip
                     # (driver/vehicle column) and on the Drive cell that carries
-                    # the ⚠ marker: a red row alone tells the user nothing they
+                    # the marker in the Drive cell: a red row alone tells the user nothing they
                     # can verify.
                     explanation = _driving_rule_explanation(day_rules.breaches)
                     rule_tips[row_idx] = explanation
@@ -5171,7 +5833,10 @@ class TachoExplorer(tk.Tk):
                 if iso_date in event_dates:
                     ev_list = events_by_date.get(iso_date, [])
                     ev_text = "\n".join(ev_list)
-                    ev_text += "\n\n" + _("\u2139\ufe0f  Double-click for full details")
+                    # No info icon in the set: a tooltip is plain text
+                    # anyway, and "Double-click for full details" needs no
+                    # decoration to be understood.
+                    ev_text += "\n\n" + _("Double-click for full details")
                     ev_tooltips[row_idx] = ev_text
                 row_idx += 1
 
@@ -5226,15 +5891,18 @@ class TachoExplorer(tk.Tk):
             (_("Days"), str(day_count), TEXT_SECONDARY),
             (_("Avg Drive / day"), _fmt_duration_minutes(avg_drive), ACTIVITY_DRIVE),
             (_("Max Drive / day"), _fmt_duration_minutes(max_drive), ACTIVITY_DRIVE),
+        ]
+        if SHOW_DRIVING_INFRACTIONS:
             # Days over the daily driving limit of Reg. (EC) 561/2006 art. 6(1).
             # The count is of every *flagged* day, so a day flagged by art. 7
             # alone (continuous driving, with a daily total under 9 h) is
             # counted too: it broke the driving-time rules, and its own tooltip
             # names the rule that fired rather than this caption.
-            (_("Days over {hours} h").format(hours=DAILY_DRIVE_LIMIT_MIN // 60),
-             str(flagged_days),
-             DANGER if flagged_days else TEXT_SECONDARY),
-        ]
+            kpis.append(
+                (_("Days over {hours} h").format(
+                    hours=DAILY_DRIVE_LIMIT_MIN // 60),
+                 str(flagged_days),
+                 DANGER if flagged_days else TEXT_SECONDARY))
         if is_vu:
             kpis.append((_("Drivers"), str(driver_count), TEXT_SECONDARY))
         else:
@@ -5290,7 +5958,10 @@ class TachoExplorer(tk.Tk):
                             if lbl == label_text:
                                 # The value colour can depend on the value ("Days
                                 # over 9 h" is DANGER only while a day is
-                                # flagged), so keep both in sync.
+                                # flagged), so keep both in sync. That card is
+                                # only built while :data:`SHOW_DRIVING_INFRACTIONS`
+                                # is on; the loop simply finds nothing for it
+                                # otherwise.
                                 labels[1].config(text=val, fg=accent)
                                 break
 
@@ -5451,6 +6122,12 @@ class TachoExplorer(tk.Tk):
 
     def _on_tree_select(self, _event):
         """Tree selection → show the node's stored payload in the table."""
+        if self._rendering:
+            # A <<TreeviewSelect>> can arrive *during* a render: it pumps the
+            # event loop, and a click lands in a tree that is being rebuilt.
+            # The render owns the selection and sets it when it ends, so a
+            # mid-render selection is ignored rather than rendered on top.
+            return
         sel = self.tree.selection()
         if not sel:
             return
@@ -5554,18 +6231,268 @@ class TachoExplorer(tk.Tk):
         self.table.tv["columns"] = ["Field", "Value"]
         # No heading bar at all: the panel is labelled rows, not a two-column
         # table, and an empty grey strip above it reads as a loading glitch.
-        self.table.tv["show"] = ""
+        #
+        # "tree" (not "") because the tree column is the only place a Treeview
+        # can draw an image, and the section headers carry one: a narrow gutter
+        # holds each block's icon. The gutter is taken out of the Field column's
+        # width, so the Value column keeps exactly the width it had.
+        self.table.tv["show"] = "tree"
+        # The gutter is the *image's* width plus its margin at this display's
+        # scale (22 px at 100 %, where the icon is 16 px), and the Field column
+        # gives up exactly that much, so the value column keeps its width.
+        gutter = _summary_icon_gutter(self)
+        self.table.tv.column("#0", width=gutter, minwidth=gutter,
+                             stretch=False)
         self.table.tv.heading("Field", text="")
         self.table.tv.heading("Value", text="")
-        self.table.tv.column("Field", width=_px(220), minwidth=_px(140), anchor=tk.W, stretch=False)
+        self.table.tv.column("Field", width=_px(220) - gutter,
+                             minwidth=_px(140), anchor=tk.W, stretch=False)
         self.table.tv.column("Value", width=_px(100), minwidth=_px(60), anchor=tk.W, stretch=True)
         self.table._fitted = True
         self.table._summary_mode = True
         self.table._render(self.table._all_rows, summary=True)
         self.table._sync_xscroll()
         self.table.filt_bar.pack_forget()
+        self._bind_summary_reveal()
+
+    def _bind_summary_reveal(self):
+        """Let a summary cell that does not fit its column be read in full.
+
+        The panel's two columns are deliberately fixed and never auto-fit (see
+        :meth:`_show_summary`), and Tk *clips* an overlong cell instead of
+        wrapping it — so a value longer than the column was cut off with no way
+        to read the rest. That is not a wording problem to shorten away: the
+        values belong to the code that owns them, and they are long in ways the
+        panel cannot bound. The translated integrity verdicts are the worst case
+        — 11 of the 15 ``_integrity_label`` verdicts exceed the 187 px value
+        column in at least one of the 34 catalogs at the minimum window, and 5
+        of them in all 34 — and a period with no activity days, the VU origin
+        and the translated block headers can be just as wide.
+
+        So the value keeps its wording and the panel gains a reveal: hovering a
+        cell whose text does not fit shows the whole of it. This is the pattern
+        the activity dashboard already uses for its row tooltips — a ``Label``
+        placed over the treeview and driven by ``<Motion>`` (see
+        :meth:`_on_dashboard_motion`) — applied to the one panel that clips.
+        """
+        self._cleanup_summary_tooltip()
+        self._summary_tip_lbl = tk.Label(
+            self.table.tv, text="", bg=DASHBOARD_TOOLTIP_BG, relief=tk.SOLID,
+            borderwidth=1, font=FONT_SMALL, fg=TEXT_SECONDARY, padx=6, pady=2,
+            justify=tk.LEFT)
+        self._summary_motion_bind = self.table.tv.bind(
+            "<Motion>", self._on_summary_motion, add="+")
+        self._summary_leave_bind = self.table.tv.bind(
+            "<Leave>", self._on_summary_leave, add="+")
+
+    def _on_summary_motion(self, event):
+        """Reveal the full text of the summary cell under the pointer."""
+        text = self._clipped_summary_cell(event.x, event.y)
+        if text is None:
+            self._hide_summary_tooltip()
+            return
+        tip = self._summary_tip_lbl
+        tip.config(text=text, wraplength=_px(420))
+        # Keep the reveal inside the panel (the Value column, the one that
+        # clips, is the right-hand one): a label placed past the edge would be
+        # clipped by the treeview — the very problem it exists to solve.
+        tip.update_idletasks()
+        tip.place(x=min(event.x + 16,
+                        max(0, self.table.tv.winfo_width() - tip.winfo_reqwidth() - _px(4))),
+                  y=min(event.y + 16,
+                        max(0, self.table.tv.winfo_height() - tip.winfo_reqheight() - _px(4))))
+
+    def _on_summary_leave(self, _event):
+        """Hide the reveal when the pointer leaves the panel.
+
+        Tk raises ``<Leave>`` for the treeview both when the pointer leaves it
+        and when it moves onto the reveal label (a child of the treeview), and
+        tkinter does not expose the ``detail`` field that would tell the two
+        apart. Hiding on both is the safe half of that ambiguity: the worst case
+        is the reveal reappearing on the next ``<Motion>`` over a clipped cell,
+        and it never leaves the label stranded over an unrelated row.
+        """
+        self._hide_summary_tooltip()
+
+    def _clipped_summary_cell(self, x, y):
+        """The text of the cell at (x, y), when it is wider than its column.
+
+        ``None`` when there is no cell there, or when its text fits: the reveal
+        must never cover a value the panel already shows in full.
+        """
+        tv = self.table.tv
+        row_id = tv.identify_row(y)
+        col_id = tv.identify_column(x)
+        if not row_id or not col_id.startswith("#"):
+            return None
+        index = int(col_id[1:]) - 1
+        values = tv.item(row_id, "values")
+        if index < 0 or index >= len(values):
+            return None
+        text = str(values[index])
+        box = tv.bbox(row_id, col_id)
+        if not text or not box:
+            return None
+        if self._summary_cell_font(row_id).measure(text) <= box[2]:
+            return None
+        return text
+
+    def _summary_cell_font(self, row_id):
+        """The font the row's cells are drawn with.
+
+        Summary block headers are drawn with ``FONT_HEADING`` (see
+        :meth:`_DataTable._render`), so measuring a header with the body font
+        would report a clipped header as fitting — and leave a translated block
+        title that does not fit (bold is wider than the body font, and some
+        catalogs state a block name in a third more width than English does)
+        with no way to read it.
+        """
+        if "summary_header" in (self.table.tv.item(row_id, "tags") or ()):
+            if self._summary_header_font is None:
+                self._summary_header_font = tkfont.Font(font=FONT_HEADING)
+            return self._summary_header_font
+        return tkfont.nametofont("TkDefaultFont")
+
+    def _hide_summary_tooltip(self):
+        """Hide the reveal label, if one is showing."""
+        if self._summary_tip_lbl is not None:
+            self._summary_tip_lbl.place_forget()
+
+    def _cleanup_summary_tooltip(self):
+        """Drop the reveal label and its bindings: the panel is being replaced."""
+        self._hide_summary_tooltip()
+        for sequence, attribute in (("<Motion>", "_summary_motion_bind"),
+                                    ("<Leave>", "_summary_leave_bind")):
+            bind_id = getattr(self, attribute, None)
+            if bind_id is None:
+                continue
+            try:
+                self.table.tv.unbind(sequence, bind_id)
+            except tk.TclError:  # widget already destroyed
+                pass
+            setattr(self, attribute, None)
+        if self._summary_tip_lbl is not None:
+            try:
+                self._summary_tip_lbl.destroy()
+            except tk.TclError:  # widget already destroyed
+                pass
+            self._summary_tip_lbl = None
 
     # ── Summary builders ──────────────────────────────────────
+
+    def _build_overview_summary(self, data):
+        """One-page overview of the file: the view a freshly opened file shows.
+
+        Answers "what is this file" before any per-generation detail: which file
+        it is and what period it covers, whose card and/or which vehicle
+        recorded it, what it totals and how far the file verifies.
+
+        Nothing here is computed twice. Every block reuses the code that owns
+        the fact — the File Info dict (:meth:`_build_file_info`),
+        :meth:`_build_driver_summary`, :meth:`_build_vehicle_summary`,
+        ``_compute_activity_totals`` and :meth:`_integrity_label` — so the
+        overview cannot drift from the section it summarises. Rows use the
+        ``(label, value, is_header)`` shape the other summary panels already
+        render.
+
+        The driving-time rules used to state a fourth block here (how many days
+        the rules flag, and the three limits applied). It was removed on the
+        owner's decision: for a file *analyzer* the rules are not needed yet —
+        the limits behind them (9 h daily, 4 h 30 continuous, 45 min break) are
+        still being decided — and a page that reports a verdict nobody has
+        finalised is worse than one that stays silent. The evaluation itself is
+        untouched (``core.utils.activity_stats.evaluate_driving_rules``): the
+        Daily-Activities dashboard still computes it, behind
+        :data:`SHOW_DRIVING_INFRACTIONS`.
+
+        Rows whose value would not fit the panel's fixed value column are not
+        shortened here except where the value repeats itself (see the INTEGRITY
+        block); everything else stays the owning code's own wording and is
+        readable in full through the panel's hover reveal
+        (:meth:`_bind_summary_reveal`).
+
+        Returns:
+            tuple: ``(columns, rows)`` for ``_add_section(..., summary=True)``.
+        """
+        info = self._build_file_info(data)
+        sep = ("", "", True)
+        rows = []
+        days = _activity_days(data.get("activities"))
+
+        # ── FILE: identity of the file and the period it covers ──
+        rows.append(_SummaryHeader(_("FILE"), icon="file-info"))
+        rows.append((_("  Filename"), info.get(_("Filename"), ""), False))
+        rows.append((_("  Generation"), info.get(_("Generation"), "?"), False))
+        rows.append((_("  Origin"), info.get(_("Origin"), ""), False))
+        period = _("No activity data available.")
+        if days:
+            # Single spaces around the arrow (the dashboards' ranges keep their
+            # double): this panel's value column does not fit itself, so the row
+            # buys margin on purpose — 168 px in 187 px at 900x560, not 176 px.
+            period = _("{first} \u2192 {last}").format(
+                first=days[0][1], last=days[-1][1])
+        rows.append((_("  Period covered"), period, False))
+        rows.append(sep)
+
+        # ── DRIVER / CARDHOLDER: card files only, and only when the card
+        # carries something worth showing (GUI-BOGUS-DRIVER, G-F8: an untouched
+        # TachoResult keeps every driver field at the truthy "N/A" sentinel).
+        driver = data.get("driver") or {}
+        if not (data.get("metadata") or {}).get("is_vu") and \
+                any(value and value != "N/A" for value in driver.values()):
+            block = _drop_empty_values(
+                _summary_block(self._build_driver_summary(data)[1]))
+            if len(block) > 1:
+                rows.extend(block)
+                rows.append(sep)
+
+        # ── VEHICLE: a VU always recorded one; a card only when it was used
+        # in a vehicle (the decoders fill ``vehicle`` for both, see
+        # core/decoders/card_ef.py and core/parser/vu_dispatcher.py). ──
+        vehicle = data.get("vehicle") or {}
+        if any(str(vehicle.get(key) or "").strip() not in ("", "N/A")
+               for key in ("plate", "vin", "registration_nation")):
+            block = _drop_empty_values(
+                _summary_block(self._build_vehicle_summary(data)[1]))
+            if len(block) > 1:
+                rows.extend(block)
+                rows.append(sep)
+
+        # ── TOTALS, day by day (one pass) ──
+        totals = {"DRIVE": 0, "WORK": 0, "REST": 0, "AVAILABLE": 0}
+        for record in data.get("activities") or []:
+            changes = record.get("changes") if isinstance(record, dict) else None
+            if not isinstance(changes, list) or not changes:
+                continue
+            day_totals = _compute_activity_totals(changes)
+            for activity in totals:
+                totals[activity] += day_totals[activity]
+
+        rows.append(_SummaryHeader(_("TOTALS"), icon="statistics"))
+        rows.append((_("  Drive"), _fmt_duration_minutes(totals["DRIVE"]), False))
+        rows.append((_("  Work"), _fmt_duration_minutes(totals["WORK"]), False))
+        rows.append((_("  Rest"), _fmt_duration_minutes(totals["REST"]), False))
+        rows.append((_("  Available"),
+                     _fmt_duration_minutes(totals["AVAILABLE"]), False))
+        rows.append((_("  Days with activity"), str(len(days)), False))
+        rows.append(sep)
+
+        # ── INTEGRITY: the same verdict (and coverage, when reported) the
+        # File Info section and the status badge already show. ──
+        rows.append(_SummaryHeader(_("INTEGRITY"), icon="integrity-locked"))
+        rows.append((_("  Status"), info.get(_("Integrity"), ""), False))
+        # The percentage alone, not File Info's "100.0% (1 234 567 / 1 234 567
+        # bytes)": that string states the same number three times and is 241 px
+        # wide, which does not fit this panel's 187 px value column in *any* of
+        # the 34 catalogs (the percentage is 48 px and fits in all of them).
+        # File Info is the detail page — its columns auto-fit — so the byte
+        # arithmetic stays there, on the row the overview is summarising.
+        coverage_pct = (data.get("coverage") or {}).get("byte_accounted_pct")
+        if coverage_pct is not None:
+            rows.append((_("  Byte-accounted coverage"), f"{coverage_pct}%",
+                         False))
+
+        return [_("Field"), _("Value")], rows
 
     def _build_vehicle_summary(self, data):
         """Rich vehicle panel for fleet manager / mechanic."""
@@ -5581,7 +6508,7 @@ class TachoExplorer(tk.Tk):
         rows = []
         sep = ("", "", True)
 
-        rows.append((_("\U0001f697  VEHICLE"), "", True))
+        rows.append(_SummaryHeader(_("VEHICLE"), icon="vehicle"))
         rows.append((_("  Plate"), plate, False))
         rows.append((_("  VIN"), vin, False))
         if nation and nation not in ("N/A", ""):
@@ -5616,8 +6543,10 @@ class TachoExplorer(tk.Tk):
                     cal_soon = 0 <= days_left < 90
                 except Exception:
                     pass
-            icon = "\u274c " if cal_expired else ("\u26a0\ufe0f " if cal_soon else "")
-            rows.append(("\U0001f527  " + icon + "TACHOGRAPH", "", True))
+            # Untranslated, exactly as before: the label was a composed
+            # string, never a msgid, and inventing one would mean asking
+            # 33 catalogs for a translation nobody has written.
+            rows.append(_SummaryHeader("TACHOGRAPH", icon="tachograph"))
             # Tachograph device identity (from VuIdentification, fallback vu_info).
             vu_id = (data.get("vu_identifications") or [{}])[0] if data.get("vu_identifications") else {}
             tacho_make = (vu_id.get("manufacturer_name") or vu_info.get("manufacturer")
@@ -5634,9 +6563,11 @@ class TachoExplorer(tk.Tk):
             if next_date:
                 date_str = fmt_val(next_date)
                 if cal_expired:
-                    date_str += _("  \u274c EXPIRED ({days} days ago)").format(days=abs(days_left))
+                    # The warning is a word here, not a glyph: this is a value
+                    # cell of a table, where no image can be drawn.
+                    date_str += _("  EXPIRED ({days} days ago)").format(days=abs(days_left))
                 elif cal_soon:
-                    date_str += _("  \u26a0\ufe0f  Due in {days} days").format(days=days_left)
+                    date_str += _("  Due in {days} days").format(days=days_left)
                 rows.append((_("  Next calibration"), date_str, False))
             tyre = cal.get("tyre_size", "")
             speed = cal.get("authorised_speed_kmh", "")
@@ -5648,7 +6579,7 @@ class TachoExplorer(tk.Tk):
 
         if sensors:
             s = sensors[0] if isinstance(sensors[0], dict) else {}
-            rows.append((_("\U0001f4e1  SENSOR"), "", False))
+            rows.append(_SummaryHeader(_("SENSOR"), icon="sensor"))
             serial = s.get("sensor_serial", "")
             if serial:
                 rows.append((_("  Serial"), serial, False))
@@ -5668,7 +6599,7 @@ class TachoExplorer(tk.Tk):
             rows.append(sep)
 
         if vu_info:
-            rows.append((_("\U0001f4bb  VU INFO"), "", True))
+            rows.append(_SummaryHeader(_("VU INFO"), icon="vu-info"))
             # G1 VU keys (Mass Memory / old Continental VDO format)
             manufacturer = vu_info.get("manufacturer", vu_info.get("manufacturer_name", ""))
             if manufacturer:
@@ -5719,7 +6650,7 @@ class TachoExplorer(tk.Tk):
                 active_lock = lock
                 break
         if active_lock:
-            rows.append((_("\U0001f512  CURRENT LOCK"), "", True))
+            rows.append(_SummaryHeader(_("CURRENT LOCK"), icon="integrity-locked"))
             name = active_lock.get("company_name", "")
             if name:
                 rows.append((_("  Company"), name, False))
@@ -5735,7 +6666,7 @@ class TachoExplorer(tk.Tk):
                 if card_str:
                     rows.append((_("  Lock card"), card_str, False))
         elif locks:
-            rows.append((_("\U0001f513  CURRENT LOCK"), "", True))
+            rows.append(_SummaryHeader(_("CURRENT LOCK"), icon="integrity-unlocked"))
             rows.append((_("  Status"), _("Not locked"), False))
 
         # Activity summary
@@ -5745,7 +6676,7 @@ class TachoExplorer(tk.Tk):
         if activities or events:
             if rows and rows[-1] != sep:
                 rows.append(sep)
-            rows.append((_("\U0001f4ca  STATISTICS"), "", False))
+            rows.append(_SummaryHeader(_("STATISTICS"), icon="statistics"))
             rows.append((_("  Days with activities"), str(activities), False))
             rows.append((_("  Events"), str(events), False))
             rows.append((_("  Faults"), str(faults), False))
@@ -5761,23 +6692,24 @@ class TachoExplorer(tk.Tk):
         rows = []
         sep = ("", "", True)
 
-        rows.append((_("\u26a0\ufe0f  THIS FILE IS INCOMPLETE OR CORRUPTED"), "", True))
+        rows.append(_SummaryHeader(_("THIS FILE IS INCOMPLETE OR CORRUPTED"),
+                                   icon="status-warning"))
         rows.append((_("  Only the sections listed below could be read."), "", False))
         rows.append((_("  Missing or corrupted data is NOT shown."), "", False))
         rows.append(sep)
 
-        rows.append((_("\U0001f4ca  COMPLETENESS"), "", True))
+        rows.append(_SummaryHeader(_("COMPLETENESS"), icon="completeness"))
         rows.append((
             _("  Mandatory sections read"),
             f"{trep_report['mandatory_ok']}/{trep_report['mandatory_total']} "
             f"({trep_report['completeness_pct']}%)", False))
         if not trep_report.get("complete_walk", True):
             rows.append((_("  File structure"),
-                         _("\u274c  Truncated (did not reach end of file)"), False))
+                         _("Truncated (did not reach end of file)"), False))
         rows.append(sep)
 
         present = trep_report.get("present") or []
-        rows.append((_("\u2705  SECTIONS PRESENT"), "", True))
+        rows.append(_SummaryHeader(_("SECTIONS PRESENT"), icon="status-ok"))
         if present:
             for t in present:
                 rows.append((f"  {t['name']}", t["trep"], False))
@@ -5787,21 +6719,22 @@ class TachoExplorer(tk.Tk):
 
         missing = trep_report.get("mandatory_missing") or []
         if missing:
-            rows.append((_("\u274c  MISSING MANDATORY SECTIONS"), "", True))
+            rows.append(_SummaryHeader(_("MISSING MANDATORY SECTIONS"), icon="status-error"))
             for t in missing:
                 rows.append((f"  {t['name']}", t["trep"], False))
             rows.append(sep)
 
         suspect = trep_report.get("decoded_suspect") or []
         if suspect:
-            rows.append((_("\u26a0\ufe0f  CORRUPTED SECTIONS (data discarded)"), "", True))
+            rows.append(_SummaryHeader(_("CORRUPTED SECTIONS (data discarded)"),
+                                       icon="status-warning"))
             for t in suspect:
                 rows.append((f"  {t['name']}", t["trep"], False))
             rows.append(sep)
 
         salvaged = meta.get("salvage_recovered") or []
         if salvaged:
-            rows.append((_("\U0001f6e0\ufe0f  RECOVERED FROM DAMAGED DATA"), "", True))
+            rows.append(_SummaryHeader(_("RECOVERED FROM DAMAGED DATA"), icon="recovered"))
             rows.append((_("  Low-confidence recovery"), ", ".join(salvaged), False))
 
         cols = ["Field", "Value"]
@@ -5819,7 +6752,7 @@ class TachoExplorer(tk.Tk):
         rows = []
         sep = ("", "", True)
 
-        rows.append((_("\U0001f4e1  SENSOR"), "", True))
+        rows.append(_SummaryHeader(_("SENSOR"), icon="sensor"))
         approval = sensor.get("sensor_approval", "")
         nation = sensor.get("approval_nation", "")
         if approval:
@@ -5831,12 +6764,12 @@ class TachoExplorer(tk.Tk):
             rows.append((_("  Prefix"), prefix, False))
         rows.append(sep)
 
-        rows.append((_("\U0001f697  ASSOCIATED VEHICLE"), "", True))
+        rows.append(_SummaryHeader(_("ASSOCIATED VEHICLE"), icon="vehicle"))
         rows.append((_("  Plate"), plate, False))
         rows.append((_("  VIN"), vin, False))
         rows.append(sep)
 
-        rows.append((_("\U0001f4c5  DATE RANGE"), "", True))
+        rows.append(_SummaryHeader(_("DATE RANGE"), icon="date-range"))
         first = sensor.get("first_date", "N/A")
         last = sensor.get("last_date", "N/A")
         rows.append((_("  First date"), first, False))
@@ -5848,7 +6781,7 @@ class TachoExplorer(tk.Tk):
                 rows.append((_("  Actual range"), f"{unique[0]} \u2192 {unique[-1]}", False))
         rows.append(sep)
 
-        rows.append((_("\U0001f4ca  PARAMETERS"), "", True))
+        rows.append(_SummaryHeader(_("PARAMETERS"), icon="parameters"))
         spd_max = sensor.get("param_speed_max_kmh", "")
         spd_avg = sensor.get("param_speed_avg_kmh", "")
         dist = sensor.get("param_distance_km", "")
@@ -5873,7 +6806,7 @@ class TachoExplorer(tk.Tk):
         rows = []
         sep = ("", "", True)
 
-        rows.append((_("\U0001f464  CARDHOLDER"), "", True))
+        rows.append(_SummaryHeader(_("CARDHOLDER"), icon="driver"))
         surname = driver.get("surname", "")
         firstname = driver.get("firstname", "")
         name = f"{firstname} {surname}".strip()
@@ -5882,7 +6815,7 @@ class TachoExplorer(tk.Tk):
         rows.append((_("  Card number"), driver.get("card_number", "N/A"), False))
         rows.append(sep)
 
-        rows.append((_("\U0001faaa  CARD DETAILS"), "", True))
+        rows.append(_SummaryHeader(_("CARD DETAILS"), icon="card-details"))
         nation = driver.get("issuing_nation", "")
         if nation:
             rows.append((_("  Issuing nation"), ui_text.data_text(nation_full_name(nation)), False))
@@ -5909,7 +6842,7 @@ class TachoExplorer(tk.Tk):
             rows.append((_("  Language"), language, False))
         rows.append(sep)
 
-        rows.append((_("\U0001f4ca  STATISTICS"), "", True))
+        rows.append(_SummaryHeader(_("STATISTICS"), icon="statistics"))
         act_days = len(activities)
         total_changes = sum(len(a.get("changes") or [])
                             for a in activities if isinstance(a, dict))
@@ -5921,7 +6854,7 @@ class TachoExplorer(tk.Tk):
 
         if efv.get("summary"):
             rows.append(sep)
-            rows.append((_("\U0001f510  SIGNATURES"), "", True))
+            rows.append(_SummaryHeader(_("SIGNATURES"), icon="security"))
             rows.append((_("  EF verification"), efv["summary"], False))
 
         cols = ["Field", "Value"]

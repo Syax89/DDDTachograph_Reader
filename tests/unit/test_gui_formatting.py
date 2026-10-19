@@ -78,9 +78,19 @@ def _slot_view(activities, slot_label):
     return captured[0][2]  # table_rows
 
 
-def test_dashboard_slot_view_does_not_leak_the_other_slot():
+def test_dashboard_slot_view_does_not_leak_the_other_slot(monkeypatch):
     """Direction B of G-F7/XG-F6: keeping slot-less changes must not also leak
-    a real change from the *other* card slot into the wrong slot view."""
+    a real change from the *other* card slot into the wrong slot view.
+
+    The driving-time infractions are hidden by default
+    (``app.gui.SHOW_DRIVING_INFRACTIONS``), which is what the Drive-cell marker
+    below belongs to, so this test turns the one switch on to keep pinning the
+    marker *and* the slot semantics it sits next to. The switch-off twin right
+    after it asserts the same numbers with the marker gone.
+    """
+    import app.gui as gui
+
+    monkeypatch.setattr(gui, "SHOW_DRIVING_INFRACTIONS", True)
     activities = [{
         "date": "01/05/2025",
         "changes": [
@@ -91,18 +101,50 @@ def test_dashboard_slot_view_does_not_leak_the_other_slot():
         ],
     }]
 
-    # Both slot views also break art. 7 (an unbroken 8 h / 14 h stretch), so the
-    # Drive cell carries the driving-rule marker; the value before it is what
-    # this test pins.
+    # Both slot views also break art. 7 (an unbroken 8 h / 14 h stretch), so
+    # the Drive cell carries the driving-rule marker (an ASCII "!", because a
+    # treeview cell cannot hold an image); the value before it is what this
+    # test pins.
     row1 = next(r for r in _slot_view(activities, "Slot 1")
                 if r and r[0] == "01/05/2025")
-    assert row1[5] == "8h 00m \u26a0\ufe0f"    # Drive = First 00:00-08:00
+    assert row1[5] == "8h 00m  !"    # Drive = First 00:00-08:00
     assert row1[6] == "0h 00m"    # Work   = none (Second's must NOT leak in)
 
     row2 = next(r for r in _slot_view(activities, "Slot 2")
                 if r and r[0] == "01/05/2025")
     assert row2[6] == "10h 00m"   # Work   = Second 00:00-10:00
-    assert row2[5] == "14h 00m \u26a0\ufe0f"   # Drive = Second 10:00-24:00
+    assert row2[5] == "14h 00m  !"   # Drive = Second 10:00-24:00
+
+
+def test_dashboard_slot_view_has_no_rule_marker_while_the_infractions_are_hidden():
+    """The same day, the shipped default: identical numbers, no marker.
+
+    Hiding the infractions must not touch the slot arithmetic or the totals —
+    only the ``!`` the driving-time rules put in the Drive cell (and the KPI
+    card that counts it).
+    """
+    import app.gui as gui
+
+    assert gui.SHOW_DRIVING_INFRACTIONS is False
+    activities = [{
+        "date": "01/05/2025",
+        "changes": [
+            {"activity": "DRIVE", "time": "00:00", "slot": "First"},
+            {"activity": "REST",  "time": "08:00", "slot": "First"},
+            {"activity": "WORK",  "time": "00:00", "slot": "Second"},
+            {"activity": "DRIVE", "time": "10:00", "slot": "Second"},
+        ],
+    }]
+
+    row1 = next(r for r in _slot_view(activities, "Slot 1")
+                if r and r[0] == "01/05/2025")
+    assert row1[5] == "8h 00m"    # Drive = First 00:00-08:00, no "!"
+    assert row1[6] == "0h 00m"    # Work   = none (Second's must NOT leak in)
+
+    row2 = next(r for r in _slot_view(activities, "Slot 2")
+                if r and r[0] == "01/05/2025")
+    assert row2[6] == "10h 00m"   # Work   = Second 00:00-10:00
+    assert row2[5] == "14h 00m"   # Drive = Second 10:00-24:00, no "!"
 
 
 def test_day_detail_popup_receives_the_full_day_change_set(monkeypatch):

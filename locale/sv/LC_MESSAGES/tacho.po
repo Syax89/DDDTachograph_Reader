@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% av filen"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Förfaller om {days} dagar"
+msgid "  Due in {days} days"
+msgstr "  Förfaller om {days} dagar"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ UTGÅNGEN (för {days} dagar sedan)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  UTGÅNGEN (för {days} dagar sedan)"
 
 msgid "# Drivers"
 msgstr "# Förare"
@@ -294,8 +294,8 @@ msgstr "CVC-certifikat (avkodade)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Kortet saknas i färdskrivaren sedan {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Signatur för kortdata stämmer inte"
+msgid "Signature mismatch"
+msgstr "Signatur stämmer inte"
 
 msgid "Card inserted"
 msgstr "Kort isatt"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s registrerat | {gaps} interna luckor"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} rader · {columns} kolumner"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Dubbelklicka för fullständig information"
+msgid "Double-click for full details"
+msgstr "Dubbelklicka för fullständig information"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Uttag"
@@ -892,106 +892,100 @@ msgstr "▲ Uttag"
 msgid "▼ Insertion"
 msgstr "▼ Isättning"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  SKADAD / OFULLSTÄNDIG FIL"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "SKADAD / OFULLSTÄNDIG FIL"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  SKADADE AVSNITT (data borttagna)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "SKADADE AVSNITT (data borttagna)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Avkodarfel"
+msgid "Decoder Failures"
+msgstr "Avkodarfel"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  FILEN ÄR OFULLSTÄNDIG ELLER SKADAD"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "FILEN ÄR OFULLSTÄNDIG ELLER SKADAD"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} integritetsvarning(ar) — klicka för information"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} integritetsvarning(ar) — klicka för information"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  AVSNITT FINNS"
+msgid "SECTIONS PRESENT"
+msgstr "AVSNITT FINNS"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  OBLIGATORISKA AVSNITT SAKNAS"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "OBLIGATORISKA AVSNITT SAKNAS"
 
-msgid "❌  Parse error"
-msgstr "❌  Tolkningsfel"
+msgid "Parse error"
+msgstr "Tolkningsfel"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Avbruten (nådde inte filens slut)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Avbruten (nådde inte filens slut)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Ofullständiga certifikat"
+msgid "CARDHOLDER"
+msgstr "KORTINNEHAVARE"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  KORTINNEHAVARE"
+msgid "Driver / Cardholder"
+msgstr "Förare / kortinnehavare"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Förare / kortinnehavare"
-
-msgid "💻  VU INFO"
-msgstr "💻  VU-INFO"
+msgid "VU INFO"
+msgstr "VU-INFO"
 
 msgid "Open DDD file"
 msgstr "Öppna DDD-fil"
 
-msgid "📄  File Info"
-msgstr "📄  Filinformation"
+msgid "File Info"
+msgstr "Filinformation"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  DATUMINTERVALL"
+msgid "DATE RANGE"
+msgstr "DATUMINTERVALL"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  FULLSTÄNDIGHET"
+msgid "COMPLETENESS"
+msgstr "FULLSTÄNDIGHET"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMETRAR"
+msgid "PARAMETERS"
+msgstr "PARAMETRAR"
 
-msgid "📊  STATISTICS"
-msgstr "📊  STATISTIK"
+msgid "STATISTICS"
+msgstr "STATISTIK"
 
-msgid "📡  SENSOR"
-msgstr "📡  RÖRELSESENSOR"
+msgid "SENSOR"
+msgstr "RÖRELSESENSOR"
 
-msgid "📡  Sensor"
-msgstr "📡  Rörelsesensor"
+msgid "Sensor"
+msgstr "Rörelsesensor"
 
 msgid "Export"
 msgstr "Exportera"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation} {annex}"
+msgid "{generation}{annex}"
+msgstr "{generation} {annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  SIGNATURER"
+msgid "SIGNATURES"
+msgstr "SIGNATURER"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Säkerhet & certifikat"
+msgid "Security & Certificates"
+msgstr "Säkerhet & certifikat"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  AKTUELLT LÅS"
+msgid "CURRENT LOCK"
+msgstr "LÅS"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  INGET LÅS"
+msgid "ASSOCIATED VEHICLE"
+msgstr "ASSOCIERAT FORDON"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  ASSOCIERAT FORDON"
+msgid "VEHICLE"
+msgstr "FORDON"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  FORDON"
+msgid "Vehicle"
+msgstr "Fordon"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Fordon"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "ÅTERSTÄLLD FRÅN SKADADE DATA"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  ÅTERSTÄLLD FRÅN SKADADE DATA"
+msgid "Raw / Unparsed Data"
+msgstr "Rå / otolkade data"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Rå / otolkade data"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  KORTUPPGIFTER"
+msgid "CARD DETAILS"
+msgstr "KORTUPPGIFTER"
 
 msgid "Additional Info"
 msgstr "Ytterligare info"
@@ -1488,8 +1482,8 @@ msgstr "Verkstadskort"
 msgid "Workshop Card Expiry"
 msgstr "Verkstadskortets utgångsdatum"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Generation 1  [Bilaga 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Generation 1  [Bilaga 1B]"
 
 msgid "Activity Chart"
 msgstr "Aktivitetsdiagram"
@@ -2383,3 +2377,39 @@ msgstr "Daglig körtid {driven} — gräns {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Oavbruten körtid {driven} utan {pause} min rast — gräns {limit}"
+
+msgid "FILE"
+msgstr "FIL"
+
+msgid "  Filename"
+msgstr "  Filnamn"
+
+msgid "  Origin"
+msgstr "  Ursprung"
+
+msgid "  Period covered"
+msgstr "  Täckt period"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "TOTALS"
+msgstr "TOTALT"
+
+msgid "  Drive"
+msgstr "  Körning"
+
+msgid "  Work"
+msgstr "  Arbete"
+
+msgid "  Rest"
+msgstr "  Vila"
+
+msgid "  Available"
+msgstr "  Tillgänglig"
+
+msgid "INTEGRITY"
+msgstr "INTEGRITET"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Byte-redovisad täckning"

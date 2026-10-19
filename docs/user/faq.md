@@ -69,7 +69,7 @@ The parser is deterministic-first and resilient: it decodes according to the EU 
 
 ### Does the tool check driving-time rules (EU 561/2006)?
 
-No. The tool is a **parser and integrity validator**: it decodes the recorded activities and verifies the digital signatures, but it does not currently evaluate driving-time or rest-period rules and does not estimate fines. You can export the activity data to JSON or Excel and run your own compliance analysis on it.
+No. The tool is a **parser and integrity validator**: it decodes the recorded activities and verifies the digital signatures, but it does not report driving-time or rest-period compliance and does not estimate fines. (Internally the two rules it models — the daily and the continuous driving limit — are evaluated day by day, but every surface that would show them is hidden behind `app.gui.SHOW_DRIVING_INFRACTIONS` while their thresholds are being decided.) You can export the activity data to JSON or Excel and run your own compliance analysis on it.
 
 ---
 

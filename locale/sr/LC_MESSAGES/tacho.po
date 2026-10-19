@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% датотеке"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Рок за {days} дана"
+msgid "  Due in {days} days"
+msgstr "  Рок за {days} дана"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ ИСТЕКЛО ({days} дана раније)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  ИСТЕКЛО ({days} дана раније)"
 
 msgid "# Drivers"
 msgstr "# Возача"
@@ -294,8 +294,8 @@ msgstr "CVC сертификати (декодирано)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Картица није у тахографу од {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Потпис података картице се не поклапа"
+msgid "Signature mismatch"
+msgstr "Потпис се не поклапа"
 
 msgid "Card inserted"
 msgstr "Картица убачена"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} с забележено | {gaps} унутрашњих пр�
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} редова · {columns} колона"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Двоклик за све детаље"
+msgid "Double-click for full details"
+msgstr "Двоклик за све детаље"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Вађење"
@@ -892,106 +892,100 @@ msgstr "▲ Вађење"
 msgid "▼ Insertion"
 msgstr "▼ Убацивање"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  ОШТЕЋЕНА / НЕПОТПУНА ДАТОТЕКА"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "ОШТЕЋЕНА / НЕПОТПУНА ДАТОТЕКА"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  ОШТЕЋЕНИ ОДЕЉЦИ (подаци одбачени)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "ОШТЕЋЕНИ ОДЕЉЦИ (подаци одбачени)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Грешке декодера"
+msgid "Decoder Failures"
+msgstr "Грешке декодера"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  ОВА ДАТОТЕКА ЈЕ НЕПОТПУНА ИЛИ ОШТЕЋЕНА"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "ОВА ДАТОТЕКА ЈЕ НЕПОТПУНА ИЛИ ОШТЕЋЕНА"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} упозорења о интегритету — кликните за детаље"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} упозорења о интегритету — кликните за детаље"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  ОДЕЉЦИ ПРИСУТНИ"
+msgid "SECTIONS PRESENT"
+msgstr "ОДЕЉЦИ ПРИСУТНИ"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  НЕДОСТАЈУ ОБАВЕЗНИ ОДЕЉЦИ"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "НЕДОСТАЈУ ОБАВЕЗНИ ОДЕЉЦИ"
 
-msgid "❌  Parse error"
-msgstr "❌  Грешка при рашчлањивању"
+msgid "Parse error"
+msgstr "Грешка при рашчлањивању"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Скраћена (није достигнут крај датотеке)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Скраћена (није достигнут крај датотеке)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Непотпуни сертификати"
+msgid "CARDHOLDER"
+msgstr "ИМАЛАЦ КАРТИЦЕ"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  ИМАЛАЦ КАРТИЦЕ"
+msgid "Driver / Cardholder"
+msgstr "Возач / ималац картице"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Возач / ималац картице"
-
-msgid "💻  VU INFO"
-msgstr "💻  VU ИНФОРМАЦИЈЕ"
+msgid "VU INFO"
+msgstr "VU ИНФОРМАЦИЈЕ"
 
 msgid "Open DDD file"
 msgstr "Отвори DDD датотеку"
 
-msgid "📄  File Info"
-msgstr "📄  Информације о датотеци"
+msgid "File Info"
+msgstr "Информације о датотеци"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  ОПСЕГ ДАТУМА"
+msgid "DATE RANGE"
+msgstr "ОПСЕГ ДАТУМА"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  ПОТПУНОСТ"
+msgid "COMPLETENESS"
+msgstr "ПОТПУНОСТ"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  ПАРАМЕТРИ"
+msgid "PARAMETERS"
+msgstr "ПАРАМЕТРИ"
 
-msgid "📊  STATISTICS"
-msgstr "📊  СТАТИСТИКА"
+msgid "STATISTICS"
+msgstr "СТАТИСТИКА"
 
-msgid "📡  SENSOR"
-msgstr "📡  СЕНЗОР"
+msgid "SENSOR"
+msgstr "СЕНЗОР"
 
-msgid "📡  Sensor"
-msgstr "📡  Сензор"
+msgid "Sensor"
+msgstr "Сензор"
 
 msgid "Export"
 msgstr "Извоз"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  ПОТПИСИ"
+msgid "SIGNATURES"
+msgstr "ПОТПИСИ"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Безбедност и сертификати"
+msgid "Security & Certificates"
+msgstr "Безбедност и сертификати"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  ТРЕНУТНО ЗАКЉУЧАВАЊЕ"
+msgid "CURRENT LOCK"
+msgstr "БРАВА"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  ТРЕНУТНО ЗАКЉУЧАВАЊЕ"
+msgid "ASSOCIATED VEHICLE"
+msgstr "ПОВЕЗАНО ВОЗИЛО"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  ПОВЕЗАНО ВОЗИЛО"
+msgid "VEHICLE"
+msgstr "ВОЗИЛО"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  ВОЗИЛО"
+msgid "Vehicle"
+msgstr "Возило"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Возило"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "ОПОРАВЉЕНО ИЗ ОШТЕЋЕНИХ ПОДАТАКА"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  ОПОРАВЉЕНО ИЗ ОШТЕЋЕНИХ ПОДАТАКА"
+msgid "Raw / Unparsed Data"
+msgstr "Сирови / нерашчлањени подаци"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Сирови / нерашчлањени подаци"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  ДЕТАЉИ КАРТИЦЕ"
+msgid "CARD DETAILS"
+msgstr "ДЕТАЉИ КАРТИЦЕ"
 
 msgid "Additional Info"
 msgstr "Додатне информације"
@@ -1488,8 +1482,8 @@ msgstr "Картица радионице"
 msgid "Workshop Card Expiry"
 msgstr "Важење картице радионице"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Генерација 1  [Анекс 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Генерација 1  [Анекс 1B]"
 
 msgid "Activity Chart"
 msgstr "Графикон активности"
@@ -2383,3 +2377,39 @@ msgstr "Дневна вожња {driven} — ограничење {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Непрекидна вожња {driven} без паузе од {pause} мин — ограничење {limit}"
+
+msgid "FILE"
+msgstr "ДАТОТЕКА"
+
+msgid "  Filename"
+msgstr "  Назив датотеке"
+
+msgid "  Origin"
+msgstr "  Порекло"
+
+msgid "  Period covered"
+msgstr "  Обухваћени период"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "TOTALS"
+msgstr "УКУПНО"
+
+msgid "  Drive"
+msgstr "  Вожња"
+
+msgid "  Work"
+msgstr "  Рад"
+
+msgid "  Rest"
+msgstr "  Одмор"
+
+msgid "  Available"
+msgstr "  Доступан"
+
+msgid "INTEGRITY"
+msgstr "ИНТЕГРИТЕТ"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Покривеност бајтима"

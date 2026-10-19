@@ -50,7 +50,7 @@ msgid "  Days with activities"
 msgstr "  Laethanta le gníomhaíochtaí"
 
 msgid "  Days with activity"
-msgstr "  Laethanta le gníomhaíocht"
+msgstr "  Laethanta gníomhacha"
 
 msgid "  Digital map"
 msgstr "  Léarscáil dhigiteach"
@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% den chomhad"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Dlite i {days} lá"
+msgid "  Due in {days} days"
+msgstr "  Dlite i {days} lá"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ ÉAGTHA ({days} lá ó shin)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  ÉAGTHA ({days} lá ó shin)"
 
 msgid "# Drivers"
 msgstr "# Tiománaithe"
@@ -294,8 +294,8 @@ msgstr "Teastais CVC (díchódaithe)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Níl an cárta sa tacógraf ó {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Míthagairt i síniú shonraí an chárta"
+msgid "Signature mismatch"
+msgstr "Míthagairt sa síniú"
 
 msgid "Card inserted"
 msgstr "Cárta curtha isteach"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s taifeadta | {gaps} bhearna inmheánacha"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} sraith · {columns} colún"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Cliceáil faoi dhó le haghaidh na sonraí iomlána"
+msgid "Double-click for full details"
+msgstr "Cliceáil faoi dhó le haghaidh na sonraí iomlána"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Tarraingt amach"
@@ -892,106 +892,100 @@ msgstr "▲ Tarraingt amach"
 msgid "▼ Insertion"
 msgstr "▼ Cur isteach"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  COMHAD TRUAILLITHE / NEAMHIOMLÁN"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "COMHAD TRUAILLITHE / NEAMHIOMLÁN"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  RANNÓGA TRUAILLITHE (sonraí curtha ar ceal)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "RANNÓGA TRUAILLITHE (sonraí curtha ar ceal)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Teipeanna díchódóra"
+msgid "Decoder Failures"
+msgstr "Teipeanna díchódóra"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  TÁ AN COMHAD SEO NEAMHIOMLÁN NÓ TRUAILLITHE"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "TÁ AN COMHAD SEO NEAMHIOMLÁN NÓ TRUAILLITHE"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} rabhadh sláine — cliceáil le haghaidh sonraí"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} rabhadh sláine — cliceáil le haghaidh sonraí"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  RANNÓGA I LÁTHAIR"
+msgid "SECTIONS PRESENT"
+msgstr "RANNÓGA I LÁTHAIR"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  PRÍOMH-RANNÓGA AR IARRAIDH"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "PRÍOMH-RANNÓGA AR IARRAIDH"
 
-msgid "❌  Parse error"
-msgstr "❌  Earráid pharsála"
+msgid "Parse error"
+msgstr "Earráid pharsála"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Gearrtha (níor sroicheadh deireadh an chomhaid)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Gearrtha (níor sroicheadh deireadh an chomhaid)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Teastais neamhiomlána"
+msgid "CARDHOLDER"
+msgstr "SEALBHÓIR CÁRTA"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  SEALBHÓIR AN CHÁRTA"
+msgid "Driver / Cardholder"
+msgstr "Tiománaí / sealbhóir an chárta"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Tiománaí / sealbhóir an chárta"
-
-msgid "💻  VU INFO"
-msgstr "💻  EOLAS VU"
+msgid "VU INFO"
+msgstr "EOLAS VU"
 
 msgid "Open DDD file"
 msgstr "Oscail comhad DDD"
 
-msgid "📄  File Info"
-msgstr "📄  Eolas comhaid"
+msgid "File Info"
+msgstr "Eolas comhaid"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  RAON DÁTAÍ"
+msgid "DATE RANGE"
+msgstr "RAON DÁTAÍ"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  IOMLÁINE"
+msgid "COMPLETENESS"
+msgstr "IOMLÁINE"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMAIRÉADAIR"
+msgid "PARAMETERS"
+msgstr "PARAMAIRÉADAIR"
 
-msgid "📊  STATISTICS"
-msgstr "📊  STAITISTIC"
+msgid "STATISTICS"
+msgstr "STAITISTIC"
 
-msgid "📡  SENSOR"
-msgstr "📡  BRAITEOIR"
+msgid "SENSOR"
+msgstr "BRAITEOIR"
 
-msgid "📡  Sensor"
-msgstr "📡  Braiteoir"
+msgid "Sensor"
+msgstr "Braiteoir"
 
 msgid "Export"
 msgstr "Easpórtáil"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  SÍNITHE"
+msgid "SIGNATURES"
+msgstr "SÍNITHE"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Slándáil agus teastais"
+msgid "Security & Certificates"
+msgstr "Slándáil agus teastais"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  GLAS REATHA"
+msgid "CURRENT LOCK"
+msgstr "GLAS REATHA"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  GLAS REATHA"
+msgid "ASSOCIATED VEHICLE"
+msgstr "FEITHICIL GHAOLMHAR"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  FEITHICIL GHAOLMHAR"
+msgid "VEHICLE"
+msgstr "FEITHICIL"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  FEITHICIL"
+msgid "Vehicle"
+msgstr "Feithicil"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Feithicil"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "AISGHABHTHA Ó SHONRAÍ MILLTE"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  AISGHABHTHA Ó SHONRAÍ MILLTE"
+msgid "Raw / Unparsed Data"
+msgstr "Sonraí amha / neamhpharsáilte"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Sonraí amha / neamhpharsáilte"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  SONRAÍ AN CHÁRTA"
+msgid "CARD DETAILS"
+msgstr "SONRAÍ AN CHÁRTA"
 
 msgid "Additional Info"
 msgstr "Eolas breise"
@@ -1488,8 +1482,8 @@ msgstr "Cárta ceártain"
 msgid "Workshop Card Expiry"
 msgstr "Éag an chárta cheártain"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Glúin 1  [Iarscríbhinn 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Glúin 1  [Iarscríbhinn 1B]"
 
 msgid "Activity Chart"
 msgstr "Cairt ghníomhaíochta"
@@ -2383,3 +2377,39 @@ msgstr "Tiomáint laethúil {driven} — teorainn {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Tiomáint leanúnach {driven} gan sos {pause} nóim — teorainn {limit}"
+
+msgid "FILE"
+msgstr "COMHAD"
+
+msgid "  Filename"
+msgstr "  Ainm comhaid"
+
+msgid "  Origin"
+msgstr "  Bunús"
+
+msgid "  Period covered"
+msgstr "  Tréimhse clúdaithe"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "TOTALS"
+msgstr "IOMLÁN"
+
+msgid "  Drive"
+msgstr "  Tiomáint"
+
+msgid "  Work"
+msgstr "  Obair"
+
+msgid "  Rest"
+msgstr "  Scíth"
+
+msgid "  Available"
+msgstr "  Ar fáil"
+
+msgid "INTEGRITY"
+msgstr "SLÁINE"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Clúdach na mbeart"

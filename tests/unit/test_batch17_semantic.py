@@ -84,7 +84,7 @@ def test_summary_absent_card_prints_no_identity_block(capsys):
     }
     print_summary(data)
     out = capsys.readouterr().out
-    assert "👤 Driver" not in out
+    assert "Driver:" not in out
     assert "Card:" not in out
 
 
@@ -99,7 +99,7 @@ def test_summary_real_driver_still_printed(capsys):
     }
     print_summary(data)
     out = capsys.readouterr().out
-    assert "👤 Driver: MARIO ROSSI" in out
+    assert "Driver: MARIO ROSSI" in out
     assert "Card: I100000000000000" in out
 
 

@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% no faila"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Termiņš pēc {days} dienām"
+msgid "  Due in {days} days"
+msgstr "  Termiņš pēc {days} dienām"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ BEIGUSIES (pirms {days} dienām)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  BEIGUSIES (pirms {days} dienām)"
 
 msgid "# Drivers"
 msgstr "# Vadītāji"
@@ -294,8 +294,8 @@ msgstr "CVC sertifikāti (dekodēti)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Karte nav tahogrāfā no {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Kartes datu paraksts neatbilst"
+msgid "Signature mismatch"
+msgstr "Paraksts neatbilst"
 
 msgid "Card inserted"
 msgstr "Karte ievietota"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s ierakstīts | {gaps} iekšējās atstarpes"
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} rindas · {columns} kolonnas"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Dubultklikšķis, lai skatītu visu informāciju"
+msgid "Double-click for full details"
+msgstr "Dubultklikšķis, lai skatītu visu informāciju"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Izņemšana"
@@ -892,106 +892,100 @@ msgstr "▲ Izņemšana"
 msgid "▼ Insertion"
 msgstr "▼ Ievietošana"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  BOJĀTS / NEPILNĪGS FAILS"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "BOJĀTS / NEPILNĪGS FAILS"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  BOJĀTAS SADAĻAS (dati atmesti)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "BOJĀTAS SADAĻAS (dati atmesti)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Dekodētāja kļūdas"
+msgid "Decoder Failures"
+msgstr "Dekodētāja kļūdas"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  ŠIS FAILS IR NEPILNĪGS VAI BOJĀTS"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "ŠIS FAILS IR NEPILNĪGS VAI BOJĀTS"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} integritātes brīdinājumi — noklikšķiniet, lai skatītu detaļas"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} integritātes brīdinājumi — noklikšķiniet, lai skatītu detaļas"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  SADAĻAS IR"
+msgid "SECTIONS PRESENT"
+msgstr "SADAĻAS IR"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  TRŪKST OBLIGĀTO SADAĻU"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "TRŪKST OBLIGĀTO SADAĻU"
 
-msgid "❌  Parse error"
-msgstr "❌  Dekodēšanas kļūda"
+msgid "Parse error"
+msgstr "Dekodēšanas kļūda"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Nogriezts (netika sasniegtas faila beigas)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Nogriezts (netika sasniegtas faila beigas)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Nepilnīgi sertifikāti"
+msgid "CARDHOLDER"
+msgstr "KARTES TURĒTĀJS"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  KARTES TURĒTĀJS"
+msgid "Driver / Cardholder"
+msgstr "Vadītājs / kartes turētājs"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Vadītājs / kartes turētājs"
-
-msgid "💻  VU INFO"
-msgstr "💻  VU INFORMĀCIJA"
+msgid "VU INFO"
+msgstr "VU INFORMĀCIJA"
 
 msgid "Open DDD file"
 msgstr "Atvērt DDD failu"
 
-msgid "📄  File Info"
-msgstr "📄  Faila informācija"
+msgid "File Info"
+msgstr "Faila informācija"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  DATUMU INTERVALS"
+msgid "DATE RANGE"
+msgstr "DATUMU INTERVALS"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  PILNĪGUMS"
+msgid "COMPLETENESS"
+msgstr "PILNĪGUMS"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  PARAMETRI"
+msgid "PARAMETERS"
+msgstr "PARAMETRI"
 
-msgid "📊  STATISTICS"
-msgstr "📊  STATISTIKA"
+msgid "STATISTICS"
+msgstr "STATISTIKA"
 
-msgid "📡  SENSOR"
-msgstr "📡  SENSORS"
+msgid "SENSOR"
+msgstr "SENSORS"
 
-msgid "📡  Sensor"
-msgstr "📡  Sensors"
+msgid "Sensor"
+msgstr "Sensors"
 
 msgid "Export"
 msgstr "Eksports"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation}{annex}"
+msgid "{generation}{annex}"
+msgstr "{generation}{annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  PARAKSTI"
+msgid "SIGNATURES"
+msgstr "PARAKSTI"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Drošība un sertifikāti"
+msgid "Security & Certificates"
+msgstr "Drošība un sertifikāti"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  PAŠREIZĒJAIS BLOĶĒJUMS"
+msgid "CURRENT LOCK"
+msgstr "PAŠREIZĒJAIS BLOĶĒJUMS"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  PAŠREIZĒJAIS BLOĶĒJUMS"
+msgid "ASSOCIATED VEHICLE"
+msgstr "SAISTĪTAIS TRANSPORTLĪDZEKLIS"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  SAISTĪTAIS TRANSPORTLĪDZEKLIS"
+msgid "VEHICLE"
+msgstr "TRANSPORTLĪDZEKLIS"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  TRANSPORTLĪDZEKLIS"
+msgid "Vehicle"
+msgstr "Transportlīdzeklis"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Transportlīdzeklis"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "ATGŪTS NO BOJĀTIEM DATIEM"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  ATGŪTS NO BOJĀTIEM DATIEM"
+msgid "Raw / Unparsed Data"
+msgstr "Neapstrādāti / nedekodēti dati"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Neapstrādāti / nedekodēti dati"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  KARTES DATI"
+msgid "CARD DETAILS"
+msgstr "KARTES DATI"
 
 msgid "Additional Info"
 msgstr "Papildu informācija"
@@ -1488,8 +1482,8 @@ msgstr "Darbnīcas karte"
 msgid "Workshop Card Expiry"
 msgstr "Darbnīcas kartes derīguma termiņš"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  1. paaudze  [Pielikums 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "1. paaudze  [Pielikums 1B]"
 
 msgid "Activity Chart"
 msgstr "Aktivitātes diagramma"
@@ -2383,3 +2377,39 @@ msgstr "Dienas brauciens {driven} — limits {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Nepārtraukts brauciens {driven} bez {pause} min pārtraukuma — limits {limit}"
+
+msgid "FILE"
+msgstr "DATNE"
+
+msgid "  Filename"
+msgstr "  Faila nosaukums"
+
+msgid "  Origin"
+msgstr "  Izcelsme"
+
+msgid "  Period covered"
+msgstr "  Aptvertais periods"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "TOTALS"
+msgstr "KOPSUMMĀ"
+
+msgid "  Drive"
+msgstr "  Braukšana"
+
+msgid "  Work"
+msgstr "  Darbs"
+
+msgid "  Rest"
+msgstr "  Atpūta"
+
+msgid "  Available"
+msgstr "  Pieejams"
+
+msgid "INTEGRITY"
+msgstr "INTEGRITĀTE"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Baitu pārklājums"

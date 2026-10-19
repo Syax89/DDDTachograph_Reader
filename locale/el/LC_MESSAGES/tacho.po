@@ -50,7 +50,7 @@ msgid "  Days with activities"
 msgstr "  Ημέρες με δραστηριότητες"
 
 msgid "  Days with activity"
-msgstr "  Ημέρες με δραστηριότητα"
+msgstr "  Ημέρες δραστηριότητας"
 
 msgid "  Digital map"
 msgstr "  Ψηφιακός χάρτης"
@@ -192,12 +192,12 @@ msgid "  ·  {percent:.2f}% of file"
 msgstr "  ·  {percent:.2f}% του αρχείου"
 
 #, python-brace-format
-msgid "  ⚠️  Due in {days} days"
-msgstr "  ⚠️  Λήγει σε {days} ημέρες"
+msgid "  Due in {days} days"
+msgstr "  Λήγει σε {days} ημέρες"
 
 #, python-brace-format
-msgid "  ❌ EXPIRED ({days} days ago)"
-msgstr "  ❌ ΕΛΗΞΕ ({days} ημέρες πριν)"
+msgid "  EXPIRED ({days} days ago)"
+msgstr "  ΕΛΗΞΕ ({days} ημέρες πριν)"
 
 msgid "# Drivers"
 msgstr "# Οδηγοί"
@@ -294,8 +294,8 @@ msgstr "Πιστοποιητικά CVC (αποκωδικοποιημένα)"
 msgid "Card absent from the tachograph as of {time}"
 msgstr "Η κάρτα απουσιάζει από τον ταχογράφο από τις {time}"
 
-msgid "Card data signature mismatch"
-msgstr "Ασυμφωνία υπογραφής δεδομένων κάρτας"
+msgid "Signature mismatch"
+msgstr "Ασυμφωνία υπογραφής"
 
 msgid "Card inserted"
 msgstr "Κάρτα τοποθετημένη"
@@ -883,8 +883,8 @@ msgstr "{recorded:,} s καταγεγραμμένα | {gaps} εσωτερικά 
 msgid "{rows} rows · {columns} columns"
 msgstr "{rows} γραμμές · {columns} στήλες"
 
-msgid "ℹ️  Double-click for full details"
-msgstr "ℹ️  Διπλό κλικ για πλήρεις λεπτομέρειες"
+msgid "Double-click for full details"
+msgstr "Διπλό κλικ για πλήρεις λεπτομέρειες"
 
 msgid "▲ Withdrawal"
 msgstr "▲ Αφαίρεση"
@@ -892,106 +892,100 @@ msgstr "▲ Αφαίρεση"
 msgid "▼ Insertion"
 msgstr "▼ Εισαγωγή"
 
-msgid "⚠️  CORRUPTED / PARTIAL FILE"
-msgstr "⚠️  ΚΑΤΕΣΤΡΑΜΜΕΝΟ / ΜΕΡΙΚΟ ΑΡΧΕΙΟ"
+msgid "CORRUPTED / PARTIAL FILE"
+msgstr "ΚΑΤΕΣΤΡΑΜΜΕΝΟ / ΜΕΡΙΚΟ ΑΡΧΕΙΟ"
 
-msgid "⚠️  CORRUPTED SECTIONS (data discarded)"
-msgstr "⚠️  ΚΑΤΕΣΤΡΑΜΜΕΝΕΣ ΕΝΟΤΗΤΕΣ (δεδομένα απορρίφθηκαν)"
+msgid "CORRUPTED SECTIONS (data discarded)"
+msgstr "ΚΑΤΕΣΤΡΑΜΜΕΝΕΣ ΕΝΟΤΗΤΕΣ (δεδομένα απορρίφθηκαν)"
 
-msgid "⚠️  Decoder Failures"
-msgstr "⚠️  Αποτυχίες αποκωδικοποιητή"
+msgid "Decoder Failures"
+msgstr "Αποτυχίες αποκωδικοποιητή"
 
-msgid "⚠️  THIS FILE IS INCOMPLETE OR CORRUPTED"
-msgstr "⚠️  ΤΟ ΑΡΧΕΙΟ ΕΙΝΑΙ ΕΛΛΙΠΕΣ Ή ΚΑΤΕΣΤΡΑΜΜΕΝΟ"
+msgid "THIS FILE IS INCOMPLETE OR CORRUPTED"
+msgstr "ΤΟ ΑΡΧΕΙΟ ΕΙΝΑΙ ΕΛΛΙΠΕΣ Ή ΚΑΤΕΣΤΡΑΜΜΕΝΟ"
 
 #, python-brace-format
-msgid "⚠️  {count} integrity warning(s) — click for details"
-msgstr "⚠️  {count} προειδοποιήσεις ακεραιότητας — κλικ για λεπτομέρειες"
+msgid "{count} integrity warning(s) — click for details"
+msgstr "{count} προειδοποιήσεις ακεραιότητας — κλικ για λεπτομέρειες"
 
-msgid "✅  SECTIONS PRESENT"
-msgstr "✅  ΕΝΟΤΗΤΕΣ ΠΑΡΟΥΣΕΣ"
+msgid "SECTIONS PRESENT"
+msgstr "ΕΝΟΤΗΤΕΣ ΠΑΡΟΥΣΕΣ"
 
-msgid "❌  MISSING MANDATORY SECTIONS"
-msgstr "❌  ΛΕΙΠΟΥΝ ΥΠΟΧΡΕΩΤΙΚΕΣ ΕΝΟΤΗΤΕΣ"
+msgid "MISSING MANDATORY SECTIONS"
+msgstr "ΛΕΙΠΟΥΝ ΥΠΟΧΡΕΩΤΙΚΕΣ ΕΝΟΤΗΤΕΣ"
 
-msgid "❌  Parse error"
-msgstr "❌  Σφάλμα ανάλυσης"
+msgid "Parse error"
+msgstr "Σφάλμα ανάλυσης"
 
-msgid "❌  Truncated (did not reach end of file)"
-msgstr "❌  Κολοβό (δεν έφτασε στο τέλος του αρχείου)"
+msgid "Truncated (did not reach end of file)"
+msgstr "Κολοβό (δεν έφτασε στο τέλος του αρχείου)"
 
-msgid "❓  Incomplete certificates"
-msgstr "❓  Ελλιπή πιστοποιητικά"
+msgid "CARDHOLDER"
+msgstr "ΚΑΤΟΧΟΣ ΚΑΡΤΑΣ"
 
-msgid "👤  CARDHOLDER"
-msgstr "👤  ΚΑΤΟΧΟΣ ΚΑΡΤΑΣ"
+msgid "Driver / Cardholder"
+msgstr "Οδηγός / Κάτοχος κάρτας"
 
-msgid "👤  Driver / Cardholder"
-msgstr "👤  Οδηγός / Κάτοχος κάρτας"
-
-msgid "💻  VU INFO"
-msgstr "💻  ΣΤΟΙΧΕΙΑ VU"
+msgid "VU INFO"
+msgstr "ΣΤΟΙΧΕΙΑ VU"
 
 msgid "Open DDD file"
 msgstr "Άνοιγμα αρχείου DDD"
 
-msgid "📄  File Info"
-msgstr "📄  Στοιχεία αρχείου"
+msgid "File Info"
+msgstr "Στοιχεία αρχείου"
 
-msgid "📅  DATE RANGE"
-msgstr "📅  ΕΥΡΟΣ ΗΜΕΡΟΜΗΝΙΩΝ"
+msgid "DATE RANGE"
+msgstr "ΕΥΡΟΣ ΗΜΕΡΟΜΗΝΙΩΝ"
 
-msgid "📊  COMPLETENESS"
-msgstr "📊  ΠΛΗΡΟΤΗΤΑ"
+msgid "COMPLETENESS"
+msgstr "ΠΛΗΡΟΤΗΤΑ"
 
-msgid "📊  PARAMETERS"
-msgstr "📊  ΠΑΡΑΜΕΤΡΟΙ"
+msgid "PARAMETERS"
+msgstr "ΠΑΡΑΜΕΤΡΟΙ"
 
-msgid "📊  STATISTICS"
-msgstr "📊  ΣΤΑΤΙΣΤΙΚΑ"
+msgid "STATISTICS"
+msgstr "ΣΤΑΤΙΣΤΙΚΑ"
 
-msgid "📡  SENSOR"
-msgstr "📡  ΑΙΣΘΗΤΗΡΑΣ"
+msgid "SENSOR"
+msgstr "ΑΙΣΘΗΤΗΡΑΣ"
 
-msgid "📡  Sensor"
-msgstr "📡  Αισθητήρας"
+msgid "Sensor"
+msgstr "Αισθητήρας"
 
 msgid "Export"
 msgstr "Εξαγωγή"
 
 #, python-brace-format
-msgid "📦  {generation}{annex}"
-msgstr "📦  {generation} {annex}"
+msgid "{generation}{annex}"
+msgstr "{generation} {annex}"
 
-msgid "🔐  SIGNATURES"
-msgstr "🔐  ΥΠΟΓΡΑΦΕΣ"
+msgid "SIGNATURES"
+msgstr "ΥΠΟΓΡΑΦΕΣ"
 
-msgid "🔐  Security & Certificates"
-msgstr "🔐  Ασφάλεια & Πιστοποιητικά"
+msgid "Security & Certificates"
+msgstr "Ασφάλεια & Πιστοποιητικά"
 
-msgid "🔒  CURRENT LOCK"
-msgstr "🔒  ΤΡΕΧΟΝ ΚΛΕΙΔΩΜΑ"
+msgid "CURRENT LOCK"
+msgstr "ΤΡΕΧΟΝ ΚΛΕΙΔΩΜΑ"
 
-msgid "🔓  CURRENT LOCK"
-msgstr "🔓  ΤΡΕΧΟΝ ΚΛΕΙΔΩΜΑ"
+msgid "ASSOCIATED VEHICLE"
+msgstr "ΣΥΝΔΕΔΕΜΕΝΟ ΟΧΗΜΑ"
 
-msgid "🚗  ASSOCIATED VEHICLE"
-msgstr "🚗  ΣΥΝΔΕΔΕΜΕΝΟ ΟΧΗΜΑ"
+msgid "VEHICLE"
+msgstr "ΟΧΗΜΑ"
 
-msgid "🚗  VEHICLE"
-msgstr "🚗  ΟΧΗΜΑ"
+msgid "Vehicle"
+msgstr "Όχημα"
 
-msgid "🚚  Vehicle"
-msgstr "🚚  Όχημα"
+msgid "RECOVERED FROM DAMAGED DATA"
+msgstr "ΑΝΑΚΤΗΘΗΚΕ ΑΠΟ ΚΑΤΕΣΤΡΑΜΜΕΝΑ ΔΕΔΟΜΕΝΑ"
 
-msgid "🛠️  RECOVERED FROM DAMAGED DATA"
-msgstr "🛠️  ΑΝΑΚΤΗΘΗΚΕ ΑΠΟ ΚΑΤΕΣΤΡΑΜΜΕΝΑ ΔΕΔΟΜΕΝΑ"
+msgid "Raw / Unparsed Data"
+msgstr "Ακατέργαστα / Μη αναλυμένα δεδομένα"
 
-msgid "🧩  Raw / Unparsed Data"
-msgstr "🧩  Ακατέργαστα / Μη αναλυμένα δεδομένα"
-
-msgid "🪪  CARD DETAILS"
-msgstr "🪪  ΣΤΟΙΧΕΙΑ ΚΑΡΤΑΣ"
+msgid "CARD DETAILS"
+msgstr "ΣΤΟΙΧΕΙΑ ΚΑΡΤΑΣ"
 
 msgid "Additional Info"
 msgstr "Πρόσθετα στοιχεία"
@@ -1488,8 +1482,8 @@ msgstr "Κάρτα συνεργείου"
 msgid "Workshop Card Expiry"
 msgstr "Λήξη κάρτας συνεργείου"
 
-msgid "📦  Generation 1  [Annex 1B]"
-msgstr "📦  Γενιά 1  [Παράρτημα 1B]"
+msgid "Generation 1  [Annex 1B]"
+msgstr "Γενιά 1  [Παράρτημα 1B]"
 
 msgid "Activity Chart"
 msgstr "Γράφημα δραστηριότητας"
@@ -2383,3 +2377,39 @@ msgstr "Ημερήσια οδήγηση {driven} — όριο {limit}"
 
 msgid "Continuous driving {driven} without a {pause} min break — limit {limit}"
 msgstr "Συνεχής οδήγηση {driven} χωρίς διάλειμμα {pause} λεπ. — όριο {limit}"
+
+msgid "FILE"
+msgstr "ΑΡΧΕΙΟ"
+
+msgid "  Filename"
+msgstr "  Όνομα αρχείου"
+
+msgid "  Origin"
+msgstr "  Προέλευση"
+
+msgid "  Period covered"
+msgstr "  Καλυπτόμενη περίοδος"
+
+msgid "{first} → {last}"
+msgstr "{first} → {last}"
+
+msgid "TOTALS"
+msgstr "ΣΥΝΟΛΟ"
+
+msgid "  Drive"
+msgstr "  Οδήγηση"
+
+msgid "  Work"
+msgstr "  Εργασία"
+
+msgid "  Rest"
+msgstr "  Ανάπαυση"
+
+msgid "  Available"
+msgstr "  Διαθεσιμότητα"
+
+msgid "INTEGRITY"
+msgstr "ΑΚΕΡΑΙΟΤΗΤΑ"
+
+msgid "  Byte-accounted coverage"
+msgstr "  Κάλυψη σε byte"

@@ -1,4 +1,38 @@
 # Unreleased
+- **The busy bar keeps moving while a file loads**: opening a `.ddd` file used
+  to grey out Open and Export, show a spinning bar and then freeze that bar for
+  the whole render — 116-400 ms on the sample files under Xvfb, up to 86 % of the
+  time the window spends "busy", which reads as a hang. The render still runs on
+  the main thread (the parsed result must not be touched from a worker), but it
+  now yields to the event loop between slices of work, so the bar animates while
+  the tree is built and the window repaints. Nothing else about the load
+  changes: the same tree, the same file overview selected at the end, Open and
+  Export disabled until it is over, and a second open or a drop during the
+  render is refused instead of running a second render on top of the first.
+- **Driving-time infractions, hidden for now**: the Summary no longer states a
+  `DRIVING-TIME RULES` block (how many days the rules flag, and the two limits
+  applied), and the remaining infraction surfaces — the red row on a day that
+  breaks the daily or the continuous driving limit, the `!` next to that day's
+  Drive total, the tooltip that explains it, and the `Days over 9 h` card on the
+  Daily Activities dashboard — sit behind one switch
+  (`app.gui.SHOW_DRIVING_INFRACTIONS`, shipped off) while their thresholds are
+  decided. The rules are still evaluated day by day, so flipping that single
+  name brings those four dashboard surfaces back — but not the overview block,
+  which was removed rather than gated and would have to be written again.
+  File-integrity and calibration warnings are untouched, and the exports never
+  reported the flag. Six now-unused msgids were dropped from all 33 catalogs
+  (791 → 785 entries each).
+- **Icons drawn, not typed**: every place the interface used an emoji now draws
+  a PNG from a commissioned monochrome icon set (`assets/icons/`, 28 icons at
+  six sizes, with the designer's SVG masters), so the same build looks the same
+  on Windows, macOS and Linux instead of depending on the emoji font each system
+  happens to ship. The toolbar buttons lead with an icon and keep their label;
+  tree nodes, the status badge, the integrity banner, the activity header and
+  the summary panel's section headers carry theirs on the row. The four status
+  icons differ by shape (circle/check, triangle/!, circle/cross, circle/?), not
+  only by colour, and `COMPLETENESS` and `PARAMETERS` no longer share the glyph
+  `TOTALS` and `STATISTICS` use. The CLI, which has no icon set to draw, prints
+  words instead of the emoji it used to.
 - **Detailed-speed plot reads as a signal**: the min–max envelope is a filled
   band under a 2 px mean line instead of a picket fence of bars, the plot opens
   on the hours the day actually has samples in (zoom still reaches the full

@@ -156,7 +156,7 @@ def test_integrity_warning_text_is_pinned_to_the_verifier_numbers(monkeypatch):
         "\u2022 VU sections validated: G1 VU TREP signatures: 1/2 valid")
     assert not any("1/3" in w for w in app._integrity_warnings)
     assert app.integrity_banner.config.call_args.kwargs["text"] == (
-        "\u26a0\ufe0f  2 integrity warning(s) \u2014 click for details")
+        "2 integrity warning(s) \u2014 click for details")
 
 
 def test_fatal_parse_clears_the_previous_file_display(monkeypatch):

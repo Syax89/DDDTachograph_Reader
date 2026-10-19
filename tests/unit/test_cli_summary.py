@@ -21,7 +21,7 @@ def test_summary_vu_shaped_result_uses_metadata_integrity(capsys):
     }
     print_summary(data)
     out = capsys.readouterr().out
-    assert "🔐 Integrity: Verified (G1 VU chain and TREP signatures)" in out
+    assert "Integrity: Verified (G1 VU chain and TREP signatures)" in out
 
 
 def test_summary_driver_shaped_result_prints_integrity(capsys):
@@ -32,7 +32,7 @@ def test_summary_driver_shaped_result_prints_integrity(capsys):
     }
     print_summary(data)
     out = capsys.readouterr().out
-    assert "🔐 Integrity: Verified" in out
+    assert "Integrity: Verified" in out
 
 
 def test_summary_missing_metadata_integrity_defaults_to_nd(capsys):
@@ -40,7 +40,7 @@ def test_summary_missing_metadata_integrity_defaults_to_nd(capsys):
     data = {"metadata": {}}
     print_summary(data)
     out = capsys.readouterr().out
-    assert "🔐 Integrity: N/D" in out
+    assert "Integrity: N/D" in out
 
 
 def test_summary_activity_changes_none_does_not_crash(capsys):
@@ -48,7 +48,7 @@ def test_summary_activity_changes_none_does_not_crash(capsys):
     data = {"metadata": {}, "activities": [{"date": "01/01/2026", "changes": None}]}
     print_summary(data)
     out = capsys.readouterr().out
-    assert "📊 Activity" in out
+    assert "Activity (" in out
 
 
 def test_summary_vehicle_na_defaults_do_not_print_vehicle_line(capsys):
@@ -56,7 +56,7 @@ def test_summary_vehicle_na_defaults_do_not_print_vehicle_line(capsys):
     data = {"metadata": {}, "vehicle": {"vin": "N/A", "plate": "N/A", "registration_nation": "N/A"}}
     print_summary(data)
     out = capsys.readouterr().out
-    assert "🚗 Vehicle" not in out
+    assert "Vehicle:" not in out
 
 
 def test_summary_vehicle_real_plate_prints_vehicle_line(capsys):
@@ -64,4 +64,4 @@ def test_summary_vehicle_real_plate_prints_vehicle_line(capsys):
     data = {"metadata": {}, "vehicle": {"vin": "YV2RTY0C9HB000000", "plate": "FG000JH"}}
     print_summary(data)
     out = capsys.readouterr().out
-    assert "🚗 Vehicle: FG000JH (VIN: YV2RTY0C9HB000000)" in out
+    assert "Vehicle: FG000JH (VIN: YV2RTY0C9HB000000)" in out

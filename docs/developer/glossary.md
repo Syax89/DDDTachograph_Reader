@@ -86,7 +86,7 @@
 
 ## Regulations
 
-**EU 561/2006** — The main driving and rest time regulation (4.5h continuous driving limit, daily/weekly rest minimums). Background context only: this project parses recorded activities but does **not** evaluate driving-time rules.
+**EU 561/2006** — The main driving and rest time regulation (4.5h continuous driving limit, daily/weekly rest minimums). Background context: this project parses recorded activities, and computes per-day breaches of the two rules it models (`core/utils/activity_stats.evaluate_driving_rules`), but does **not** report them in the UI yet — the surfaces are hidden behind `app.gui.SHOW_DRIVING_INFRACTIONS` while their thresholds are being decided.
 
 ## Other Terms
 
