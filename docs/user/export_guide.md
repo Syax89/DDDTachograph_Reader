@@ -82,7 +82,49 @@ Sheets have styled headers, alternating row stripes, auto-filters, and frozen he
 
 ## PDF (.pdf)
 
-**What it contains**: A formatted report with a cover page (summary stats — total drive/work/rest hours, active days, event count) followed by the data section tables. Activities are also presented as a **monthly report**: each month on its own page, with daily Drive/Work/Rest/Available/Unknown columns (HH:MM), daily totals, and monthly subtotals. Very large sections are truncated to keep the document manageable.
+**What it contains**: an A4 landscape report in three parts.
+
+1. **Cover** — file name, source and generation, when the report was generated,
+   the activity period, the identity facts the file carries, the file state, and
+   a compact totals grid. The activity period is derived from the daily activity
+   records in the file only (day dates are UTC); it is not a statement about the
+   download's full retention period. The file state shows the integrity verdict,
+   download completeness and every partial-parse warning the parser recorded —
+   missing mandatory sections, discarded sections, recovered data, decoder
+   failures. The totals grid lists Drive, Work, Rest, Available, Unknown and
+   Total plus days with activity, events and faults.
+2. **Operational sections** — **Daily Activities** month by month (each month on
+   its own page, `h:mm` durations, bold shaded monthly subtotals, headers
+   repeated when a table continues), followed by the remaining record sections
+   in their usual order.
+3. **Technical Appendix** — signature checks, certificates, calibrations and
+   workshops, vehicle-unit/sensor/card identification, and the file-level parse
+   details (file size, byte coverage, reader version).
+
+**Reading the report**:
+
+- Durations are always `h:mm`: `00:00` means no time in that bucket, `07:15` is
+  7 h 15 min, `48:00` is two full days.
+- A leading `!` marks time the file leaves unattributed. Unknown time is not by
+  itself a sign of a corrupt file: it is time the record does not attribute to
+  Drive, Work, Rest or Available (minutes before the day's first status entry, an
+  unrecognised status code, or a card slot with no activity).
+- Drive and Work are summed across the two card slots; Rest, Available and
+  Unknown are kept at the maximum across slots. A day with two drivers (crew)
+  can therefore show more than `24:00` in total.
+- The cover and the monthly table are computed by the same slot-aware engine, so
+  their numbers always agree.
+- Records wider than ten columns (calibrations, certificates, power
+  interruptions, VU identifications) are printed as one field/value card per
+  record — "Record 2 of 7" — so no field is squeezed into an unreadable column.
+  A record long enough to need two pages repeats its record number and header.
+- A section longer than 1,500 rows is cut at that limit and says so on the page,
+  with the rows exported and a pointer to the JSON export (Excel has its own
+  limit). A month cut off before its subtotal is labelled as a partial month
+  instead of showing an empty month name.
+- The PDF is a **summary**: nested structures are flattened into readable text
+  (an absent card slot as `—`, a certificate as a truncated digest). Use JSON for
+  the complete decoded structure, or Excel to work with the rows.
 
 **Best for**:
 - Reports for audits or record-keeping
