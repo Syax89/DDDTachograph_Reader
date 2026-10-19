@@ -13,10 +13,13 @@ where the asset sits relative to the package and to a frozen bundle's
 runtime fallback — that a missing asset fails the export instead of returning a
 report with a boxed identity.
 """
+import base64
+import hashlib
 import os
 import re
 import shutil
 import sys
+import zlib
 
 import pytest
 
@@ -32,9 +35,24 @@ from core.utils.manufacturer_codes import MANUFACTURER_CODES  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 FONT = os.path.join(ROOT, "assets", "fonts", "DejaVuSans.ttf")
 LICENCE = os.path.join(ROOT, "assets", "fonts", "DejaVuSans.LICENSE")
+#: The official upstream release files, not a distribution rebuild: a Debian
+#: rebuild (759720 bytes) and its packaging copyright once shipped here, and the
+#: packaged licence is not the font's own notice. Pinned so a silent swap — an
+#: older release, a patched face, a different licence file — fails the suite.
+FONT_SHA256 = "7da195a74c55bef988d0d48f9508bd5d849425c1770dba5d7bfc6ce9ed848954"
+LICENCE_SHA256 = "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
 #: The one registry label the standard font cannot set (see the module docstring).
 UNICODE_LABEL = MANUFACTURER_CODES[0xB1]
 FALLBACK = export._PDF_FALLBACK_FONT
+
+
+def _winansi_can_draw(char, encoding):
+    """Can the report's own font encode *char*, so no fallback is needed?"""
+    try:
+        char.encode(encoding)
+    except UnicodeEncodeError:
+        return False
+    return True
 
 
 def _export_pdf(path, name=UNICODE_LABEL):
@@ -61,15 +79,23 @@ def unregistered_fallback(monkeypatch):
 def test_the_font_ships_in_the_package_where_the_export_looks_for_it():
     assert os.path.isfile(FONT), f"{FONT} must ship with the application"
     with open(FONT, "rb") as handle:
-        assert handle.read(4) in (b"\x00\x01\x00\x00", b"true", b"ttcf")
-    assert os.path.getsize(FONT) > 100_000, "a truncated font would box silently"
+        payload = handle.read()
+    assert payload[:4] in (b"\x00\x01\x00\x00", b"true", b"ttcf")
+    assert len(payload) > 100_000, "a truncated font would box silently"
+    assert hashlib.sha256(payload).hexdigest() == FONT_SHA256, (
+        "the bundled face is the official DejaVu Sans 2.37 release file")
 
 
 def test_the_upstream_licence_ships_beside_the_font():
-    text = open(LICENCE, encoding="utf-8").read()
-    assert "Bitstream Vera" in text                     # the face it derives from
-    assert "https://dejavu-fonts.github.io/" in text    # where it came from
-    assert "Permission is hereby granted" in text       # the licence itself
+    with open(LICENCE, "rb") as handle:
+        raw = handle.read()
+    assert hashlib.sha256(raw).hexdigest() == LICENCE_SHA256, (
+        "the licence is the DejaVu 2.37 release file, not a packaging copyright")
+    text = raw.decode("utf-8")
+    assert "Bitstream Vera Fonts Copyright" in text   # the face it derives from
+    assert "Arev Fonts Copyright" in text             # the imported glyphs
+    assert "Tavmjong Bah" in text                     # ... and their notice
+    assert "Permission is hereby granted" in text     # the licence itself
 
 
 def test_the_package_build_carries_the_font_directory():
@@ -169,3 +195,66 @@ def test_importing_the_exporter_does_not_import_reportlab():
          "import sys, app.export; print('reportlab' in sys.modules)"],
         cwd=ROOT, capture_output=True, text=True, check=True)
     assert result.stdout.strip() == "False", result.stdout + result.stderr
+
+
+# ── the glyphs really in the PDF, read back from its own bytes ─────────────
+#
+# "DejaVuSans" being somewhere in the file only says a face was written. What
+# proves the letters survived is the subset's own ToUnicode map: which code
+# points the embedded face declares. Nothing here imports a PDF library — the
+# objects are found in the raw bytes and the Flate/ASCII85 stream is decoded —
+# so the check holds whatever reportlab's object layout does.
+
+
+def _stream_bytes(pdf_bytes, number):
+    """The decoded payload of object *number* (ASCII85 and/or Flate)."""
+    body = re.search(rb"\b%d 0 obj(.*?)endobj" % number, pdf_bytes, re.S).group(1)
+    stream = body.partition(b"stream")[2].lstrip(b"\r\n")
+    stream = stream[:stream.rfind(b"endstream")]
+    try:
+        return zlib.decompress(stream)
+    except zlib.error:                       # reportlab may ASCII85 it first
+        return zlib.decompress(base64.a85decode(
+            stream, adobe=stream.lstrip().startswith(b"<~")))
+
+
+def _fallback_code_points(pdf_bytes):
+    """Code points the embedded DejaVu subset declares in its ToUnicode map.
+
+    The subset maps every byte 0x00-0x7F to itself (reportlab's default table),
+    so a character the report had to set in this face is exactly a mapping to a
+    different, non-zero code point.
+    shortcut: only bfchar destinations are read; extend it if reportlab starts
+    writing bfrange, the test then sees no entries and fails loudly.
+    """
+    font = re.search(
+        rb"/BaseFont\s*/[A-Z]{6}\+\w*DejaVuSans\b[^>]*?/ToUnicode\s+(\d+)\s+\d+\s+R",
+        pdf_bytes, re.S)
+    assert font, "the PDF embeds no DejaVu subset with a ToUnicode map"
+    cmap = _stream_bytes(pdf_bytes, int(font.group(1))).decode("latin-1")
+    assert "begincmap" in cmap
+    code_points = set()
+    for block in re.findall(r"beginbfchar(.*?)endbfchar", cmap, re.S):
+        for source, target in re.findall(r"<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>", block):
+            if int(target, 16) and int(target, 16) != int(source, 16):
+                code_points.add(int(target, 16))
+    return code_points
+
+
+def test_the_pdf_bytes_show_which_letters_needed_the_bundled_face(tmp_path):
+    """The embedded subset carries exactly the letters WinAnsi cannot draw.
+
+    Of the label's letters only "Ė" (U+0116) is outside the report's own
+    WinAnsi encoding — "Ž" (U+017D) is cp1252 0x8E and stays in Helvetica — so
+    that one code point is what the bundled face must have and declare. Setting
+    the same letter as a plain "E" would leave the subset with nothing to
+    declare, which is what this test refuses.
+    """
+    payload = _export_pdf(tmp_path / "glyphs.pdf")
+    encoding = pdfmetrics.getFont("Helvetica").encName
+    unsupported = {
+        ord(char) for char in UNICODE_LABEL
+        if not _winansi_can_draw(char, encoding)
+    }
+    assert unsupported == {0x0116}, "only Ė is outside the report's encoding"
+    assert _fallback_code_points(payload) == unsupported

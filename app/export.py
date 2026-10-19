@@ -160,6 +160,8 @@ def _pdf_markup(value):
         # _MEIPASS when frozen.
         base = getattr(sys, "_MEIPASS", None) or os.path.dirname(
             os.path.dirname(os.path.abspath(__file__)))
+        # DejaVu Sans 2.37, official dejavu-fonts-ttf-2.37.tar.bz2 —
+        # https://github.com/dejavu-fonts/dejavu-fonts/releases/tag/version_2_37
         path = os.path.join(base, "assets", "fonts", "DejaVuSans.ttf")
         if not os.path.isfile(path):
             # Fail closed: a boxed identity in a report that looks complete is
@@ -340,6 +342,39 @@ def _excel_wrapped_lines(text, width):
         max(-(-len(line) // per_line), 1)
         for line in str(text).replace("\r\n", "\n").replace("\r", "\n").split("\n")
     )
+
+
+def _excel_word_wrapped_lines(text, width):
+    """Lines *text* really needs in a *width*-column cell, breaking on words.
+
+    Excel wraps a cell at word boundaries, so counting characters
+    (:func:`_excel_wrapped_lines`) under-sizes a row of short words and its tail
+    is cut off on screen. The greedy simulation below uses the same per-line
+    budget: a word joins the current line only when it still fits with one
+    space, and a word longer than a line is broken, exactly as the cell breaks
+    it. Hard linebreaks split the text first, as in the character count.
+    """
+    per_line = _excel_per_line(width)
+    lines = 0
+    for hard in str(text).replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        count, used = 1, 0
+        for word in hard.split(" "):
+            size = len(word)
+            if used + (1 if used else 0) + size <= per_line:
+                used += (1 if used else 0) + size
+                continue
+            if used:                      # no room left: the word starts a line
+                count += 1
+                used = 0
+            if size > per_line:           # wider than a line: the cell breaks it
+                broken = -(-size // per_line)
+                count += broken - 1
+                used = size - per_line * (broken - 1)
+            else:
+                used = size
+        lines += count
+    # A row is only ever made taller than the character count, never shorter.
+    return max(lines, _excel_wrapped_lines(text, width))
 
 
 def _excel_note_height(text, width):
@@ -657,6 +692,15 @@ class ExportManager:
                 header_lines = max(header_lines, -(-len(str(header)) // per_line))
             ws.row_dimensions[header_row].height = 15 * min(header_lines, 3)
 
+            def _cell_clips(row, col):
+                """Does a populated cell right of *col* clip a too-wide value?
+
+                Text spills across empty neighbours and prints in full, so only
+                a value that something on its right would cover is wrapped.
+                """
+                return any(other is not None and other != ""
+                           for other in row[col:len(headers)])
+
             clipped = False
             for offset, row in enumerate(rows):
                 excel_row = header_row + 1 + offset
@@ -675,12 +719,15 @@ class ExportManager:
                         cell.fill = SUBTOTAL_FILL
                     elif offset % 2 == 1:
                         cell.fill = STRIPE_FILL
-                    if isinstance(value, str):
-                        # The neighbour cell holds a value, so text wider than
-                        # its column is clipped there: wrap it and grow the row.
-                        # The cell keeps its exact text (no newline, ellipsis or
-                        # shortening); cells that fit are left alone.
-                        lines = _excel_wrapped_lines(value, widths[col - 1])
+                    if isinstance(value, str) and _cell_clips(row, col):
+                        # A populated neighbour cell on the right clips text
+                        # wider than its column, so wrap it and grow the row for
+                        # the lines real word wrapping needs. The cell keeps its
+                        # exact text (no newline, ellipsis or shortening); cells
+                        # that fit, and cells with empty space to their right
+                        # (the value spills across it, as it always did), are
+                        # left alone with their own alignment and row height.
+                        lines = _excel_word_wrapped_lines(value, widths[col - 1])
                         if lines > 1:
                             cell.alignment = TOP_WRAP
                             row_lines = max(row_lines, lines)

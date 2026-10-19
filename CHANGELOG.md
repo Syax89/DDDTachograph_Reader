@@ -3,17 +3,22 @@
 ### Long manufacturer names are readable in Excel and keep their letters in the PDF
 
 - Excel: a manufacturer name wider than its column now wraps in the cell and the
-  row grows, instead of the name being cut at the column edge (the 161-character
-  official name of code `0xA1` was the visible case, beside a populated neighbour
-  cell). The cell keeps its exact text — no newline, ellipsis or shortened name —
-  rows that already fit are unchanged, and Excel's own 409.5 pt row-height
-  ceiling still applies.
+  row is sized for the wrapping the cell really does — the lines are the ones
+  word wrapping produces, not a character count, so the tail of a long name is
+  no longer cut off in a narrow column (the 161-character official name of code
+  `0xA1` was the visible case, beside a populated neighbour cell). Only a value
+  whose right-hand neighbours are populated needs this: text with empty cells
+  beside it spills across them and prints in full, so those cells and rows are
+  exactly as before. The cell keeps its exact text — no newline, ellipsis or
+  shortened name — and Excel's own 409.5 pt row-height ceiling still applies.
 - PDF: the extended-Latin characters the public manufacturer registry uses — the
   Lithuanian `Ė` in the official name of code `0xB1` — are set in a font bundled
-  with the application instead of being drawn as a black square. Text the report's
-  own font already covers keeps Helvetica and its layout, so other reports do not
-  change. If that font is missing from an installation, the PDF export fails and
-  says why rather than returning a complete-looking report with a boxed identity.
+  with the application instead of being drawn as a black square, and the bundled
+  font and licence are the official DejaVu Sans 2.37 release files. Text the
+  report's own font already covers keeps Helvetica and its layout, so other
+  reports do not change. If that font is missing from an installation, the PDF
+  export fails and says why rather than returning a complete-looking report with
+  a boxed identity.
 
 ### Gen2 vehicle-unit events and faults are decoded in full, with a verdict
 
