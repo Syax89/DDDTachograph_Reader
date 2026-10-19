@@ -728,6 +728,7 @@ def test_failed_render_holds_then_releases_the_busy_guard(explorer, monkeypatch)
     explorer._populate_tree = explode
 
     explorer._parse_done({"metadata": {}, "raw_tags": [{"tag": 1}]}, CURRENT_FILE)
+    explorer.update()   # the error box now waits for the idle loop, i.e. for the busy state to end
 
     assert seen == [True]
     assert dialogs == ["Rendering Error"]
