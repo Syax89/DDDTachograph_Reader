@@ -880,8 +880,8 @@ msgid "{recorded:,} s recorded | {gaps} internal gaps"
 msgstr "{recorded:,} s înregistrate | {gaps} goluri interne"
 
 #, python-brace-format
-msgid "{rows} rows · {columns} columns"
-msgstr "{rows} rânduri · {columns} coloane"
+msgid "Rows: {rows} · Columns: {columns}"
+msgstr "Rânduri: {rows} · Coloane: {columns}"
 
 msgid "Double-click for full details"
 msgstr "Dublu clic pentru detalii complete"
