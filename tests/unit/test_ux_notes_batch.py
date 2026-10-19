@@ -88,3 +88,38 @@ def test_the_vehicle_page_keeps_its_columns_after_a_chart(explorer):  # noqa: F8
 
     assert before > 300
     assert explorer.table.tv.column("Value", "width") == before
+
+
+# ── a warning box must not freeze the window in its "opening" state ───────────
+def test_the_integrity_warning_opens_after_the_file_is_on_screen(explorer, monkeypatch):  # noqa: F811
+    """A modal box opened from inside the render left the bar running, Open and
+    Export disabled and the pane on "Loading…" until it was closed (and for good
+    if it opened behind the window, e.g. after a drag & drop)."""
+    from app import gui
+    seen = []
+
+    class Spy:
+        def __getattr__(self, name):
+            return lambda *a, **k: seen.append((
+                name, explorer._parsing, explorer._rendering,
+                str(explorer.btn_open.cget("state")), bool(explorer.progress.winfo_ismapped())))
+
+    monkeypatch.setattr(gui, "messagebox", Spy())
+    path = MOCK_DIR / "mock_g2_vu.ddd"
+    if not path.exists():
+        pytest.skip("run tests/integration/generate_mock_ddd.py first")
+    explorer.geometry("1100x700")
+    explorer.update()
+    _parse_file(explorer, path)
+    _parse_file(explorer, MOCK_DIR / "mock_g2_card.ddd")      # a file is already open
+    # Force a flagged file through the real open path.
+    flagged = dict(explorer.current_data)
+    flagged["metadata"] = dict(flagged.get("metadata") or {}, integrity_check="Card data signature mismatch")
+    seen.clear()
+    explorer._parse_done(flagged, "/tmp/flagged.ddd")
+    explorer.update()
+
+    assert seen, "the warning was lost"
+    name, parsing, rendering, open_state, bar = seen[0]
+    assert (name, parsing, rendering, open_state, bar) == ("showwarning", False, False, "normal", False)
+    assert explorer.tree.selection(), "the pane must already show the file"

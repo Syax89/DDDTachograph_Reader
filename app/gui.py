@@ -4427,9 +4427,9 @@ class TachoExplorer(tk.Tk):
             _log.debug("window closed during the render: nothing left to draw")
         except Exception:
             _log.error("GUI render failed: %s", traceback.format_exc())
-            messagebox.showerror(_("Rendering Error"),
-                                  _("Failed to display file:\n{detail}").format(
-                                      detail=traceback.format_exc()))
+            self._warn_when_idle(_("Rendering Error"),
+                                 _("Failed to display file:\n{detail}").format(
+                                     detail=traceback.format_exc()), kind="showerror")
             self.status.config(text=_("Ready \u2014 open a .ddd file"))
         finally:
             self._rendering = False
@@ -4563,8 +4563,8 @@ class TachoExplorer(tk.Tk):
                 image=_icon("status-warning", 16, self.integrity_banner) or "")
             header = _("The file may be incomplete or corrupted.\n\n{filename}\n\n").format(
                 filename=os.path.basename(path))
-            messagebox.showwarning(_("File Integrity Warning"),
-                                   header + "\n".join(warnings))
+            self._warn_when_idle(_("File Integrity Warning"),
+                                 header + "\n".join(warnings))
         else:
             # Valid file: no green tick, no banner — the absence of a warning
             # is the "all good" signal. The image is cleared with the text: a
@@ -4575,6 +4575,21 @@ class TachoExplorer(tk.Tk):
             self._release_banner_focus()
             self.integrity_banner.config(text="", image="", takefocus=False,
                                          background=SURFACE)
+
+    def _warn_when_idle(self, title, message, kind="showwarning"):
+        """Show a warning box, but never while a file is still being opened.
+
+        The box is modal. Opened from inside the render, it froze the window in
+        its busy state — progress bar running, Open and Export disabled, the pane
+        still on its "Loading…" placeholder — until the box was closed; when it
+        opened behind the window (after a drag & drop from another application)
+        the program looked stuck loading for good. Deferred to the idle loop it
+        appears over a finished window, with the file already on screen.
+        """
+        if self._parsing or self._rendering:
+            self.after_idle(self._warn_when_idle, title, message, kind)
+            return
+        getattr(messagebox, kind)(title, message)
 
     def _activate_integrity_banner(self):
         """Return/space on the banner: the same dialog a click opens."""
