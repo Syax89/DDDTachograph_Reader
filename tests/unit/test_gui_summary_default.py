@@ -649,10 +649,12 @@ def test_summary_blocks_are_all_present_in_order(explorer):
 
     assert headers == [
         i18n._("FILE"),
+        # The verdict sits right under the file's identity: at the minimum
+        # window height it used to start below the fold.
+        i18n._("INTEGRITY"),
         i18n._("CARDHOLDER"),
         i18n._("VEHICLE"),
         i18n._("TOTALS"),
-        i18n._("INTEGRITY"),
     ]
 
 
