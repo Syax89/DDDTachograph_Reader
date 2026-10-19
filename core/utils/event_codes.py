@@ -133,6 +133,10 @@ def specific_condition_label(code, generation: str = "G2") -> str:
 #   0x02 first installation — first calibration after activation
 #   0x03 installation — first calibration in the current vehicle
 #   0x04 periodic inspection
+#   0x05 entry of VRN by company          (generation 2 only)
+#   0x06 time adjustment without calibration (generation 2 only)
+#   0x07-0x7F RFU, 0x80-0xFF manufacturer specific
+# Source: Reg. (EU) 2016/799, Annex 1C Appendix 1, CalibrationPurpose.
 
 CALIBRATION_PURPOSE: dict[int, str] = {
     0x00: "Reserved",
@@ -140,6 +144,8 @@ CALIBRATION_PURPOSE: dict[int, str] = {
     0x02: "First installation",
     0x03: "Installation (current vehicle)",
     0x04: "Periodic inspection",
+    0x05: "Entry of VRN by company",
+    0x06: "Time adjustment without calibration",
 }
 
 # ── Control type (Annex 1B §2.53 / Annex 1C req. 126) ──────────────────────
@@ -243,7 +249,11 @@ def describe_calibration_purpose(code) -> str:
     """Return a human-readable label for a CalibrationPurpose byte."""
     if code is None:
         return "Unknown"
-    return CALIBRATION_PURPOSE.get(code, f"0x{code:02X}")
+    if code in CALIBRATION_PURPOSE:
+        return CALIBRATION_PURPOSE[code]
+    if code >= 0x80:
+        return f"Manufacturer specific (0x{code:02X})"
+    return f"Reserved for future use (0x{code:02X})"
 
 
 def describe_control_type(code) -> str:
