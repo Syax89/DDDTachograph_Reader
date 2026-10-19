@@ -232,6 +232,30 @@ def _fmt_coords(lat, lon):
     return f"{lat:.5f}, {lon:.5f}"
 
 
+_HEX_KEY = re.compile(r"^0x[0-9A-Fa-f]{2}$")
+
+
+def _record_type_words(code):
+    """A record type's name as words: ``0x0C`` → ``Vu Calibration Record``."""
+    name = _RECORD_TYPE_MAP.get(int(code, 16))
+    if name is None:
+        return f"Record {code.upper().replace('0X', '0x')}"
+    name = name.replace("_", " ")
+    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", " ", name)
+
+
+def _fmt_record_counts(d):
+    """``{"0x06": 1, "0x01": 88}`` → ``Date Of Day Downloaded ×1, Vu Activity …``.
+
+    The per-section record count of the VU RecordArray summary. The hex code
+    alone told the reader nothing; the name says what the records are.
+    """
+    if not d or not all(_HEX_KEY.match(str(k)) and isinstance(v, int)
+                        and not isinstance(v, bool) for k, v in d.items()):
+        return None
+    return ", ".join(f"{_record_type_words(k)} \u00d7{v}" for k, v in d.items())
+
+
 def fmt_known_structure(d):
     """Render a known tachograph nested structure, or ``None`` if ``d`` is not one.
 
@@ -248,6 +272,9 @@ def fmt_known_structure(d):
         return _fmt_coords(geo.get("latitude_deg"), geo.get("longitude_deg"))
     if "latitude_deg" in d or "longitude_deg" in d:
         return _fmt_coords(d.get("latitude_deg"), d.get("longitude_deg"))
+    counts = _fmt_record_counts(d)
+    if counts is not None:
+        return counts
     if "card_number" in d:
         # FullCardNumber — an empty number means no card in the slot.
         return str(d["card_number"]).strip() or "—"
@@ -308,6 +335,8 @@ def fmt_scalar(v, key=None, *, include_code_label=False, label_translator=None):
         return h if len(h) <= 64 else h[:64] + "…"
     if isinstance(v, str):
         label = code_label(v, key=key) if include_code_label and key in _CODE_LABEL_KEYS else ""
+        if key == "trep":
+            label = ""   # the cell is "0x32": "(TREP 32)" only said the same again
         if label and label_translator:
             label = label_translator(label)
         text = fmt_iso(v)
