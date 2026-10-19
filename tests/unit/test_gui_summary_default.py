@@ -1367,3 +1367,49 @@ def test_a_really_parsed_card_file_opens_on_the_overview(explorer):
     assert i18n._("  Days with activity") in [row[0] for row in rows]
     # The driving-time-rules block is gone from every file, a real one included.
     assert i18n._("  Days flagged") not in [row[0] for row in rows]
+
+
+LOCKED = [{"company_name": "ACME Trasporti S.r.l.", "company_address": "Via Roma 1",
+           "lock_in_time": "2025-05-01 08:00:00", "lock_out_time": None,
+           "company_card": {"card_number": "I1234567890123"}}]
+UNLOCKED = [dict(LOCKED[0], lock_out_time="2025-05-02 08:00:00")]
+
+
+@pytest.mark.parametrize("locks, icon, status", [
+    (LOCKED, "integrity-locked", None),
+    (UNLOCKED, "integrity-unlocked", "Not locked"),
+])
+def test_the_current_lock_block_fits_every_catalog(explorer, locks, icon, status):
+    """No fixture file carries company locks, so the block is built from a dict.
+
+    The block lives on the VU's detail page (``_build_vehicle_summary``). Its
+    header and rows must fit the panel columns in all languages, and the
+    unlocked block must state ``Not locked``.
+    """
+    explorer.geometry(MINIMUM_SIZE)
+    explorer.update()
+    body, heading = measure_font(), measure_font(heading=True)
+    for lang in i18n.LANGUAGES:
+        i18n.install(lang)
+        data = vu_data(company_locks=locks)
+        open_file(explorer, data)
+        field_w, value_w = field_column_width(explorer), value_column_width(explorer)
+        _cols, rows = explorer._build_vehicle_summary(data)
+        title = i18n._("CURRENT LOCK")
+        headers = [r for r in rows if r[0] == title]
+        assert len(headers) == 1, f"{lang}: CURRENT LOCK header missing"
+        assert headers[0].icon == icon
+        assert heading.measure(title) <= field_w + value_w, (
+            f"{lang}: {title!r} is {heading.measure(title)} px wide")
+        block = rows[rows.index(headers[0]) + 1:]
+        if status:
+            assert block[0][:2] == (i18n._("  Status"), i18n._(status))
+        else:
+            assert row_value(block, i18n._("  Company")) == LOCKED[0]["company_name"]
+            assert row_value(block, i18n._("  Lock card")) == "I1234567890123"
+        for label, value, is_header in block:
+            if is_header:
+                break
+            assert body.measure(label) <= field_w, f"{lang}: label {label!r}"
+            if label != i18n._("  Address"):   # free text from the file, may be long
+                assert body.measure(str(value)) <= value_w, f"{lang}: {label!r} = {value!r}"
