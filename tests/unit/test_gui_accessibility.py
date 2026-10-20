@@ -215,7 +215,17 @@ def test_the_tree_pane_still_leaves_the_file_info_table_its_values(explorer, nam
             if index < len(row):
                 needed[column] = max(needed.get(column, 0),
                                      body_font.measure(str(row[index])))
-    assert len(explorer.table._all_rows) == 10
+    # Assert the exact rows, not a bare count: a row that appears (or vanishes)
+    # must be a deliberate change. The File Info section carries these ten facts for
+    # every file; "Decoder failures" is only added when the counter is non-zero (a
+    # real decoder failure, never a structural observation).
+    labels = [row[0] for row in explorer.table._all_rows]
+    assert labels == [
+        gui._("Filename"), gui._("Size"), gui._("Origin"), gui._("Generation"),
+        gui._("Integrity"), gui._("Byte-accounted coverage"), gui._("Unknown bytes"),
+        gui._("Structurally identified coverage"), gui._("Parsed at"),
+        gui._("App version"),
+    ], labels
     for column, width in widths.items():
         assert width >= needed.get(column, 0), (
             f"{column} column is {width} px, its widest cell needs "

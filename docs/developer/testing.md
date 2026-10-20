@@ -297,3 +297,19 @@ This produces a per-file breakdown of:
 - **`DDD/`**: Real-world DDD files from various tachograph models (G1, G2, G2.2). **Not committed** — contains personal data; tests depending on it skip when absent.
 - **`tests/mock_data/`**: Generated synthetic fixtures (run `python tests/integration/generate_mock_ddd.py`)
 - **`tests/integration/generate_mock_data.py`**: Programmatic test data generation; mock certificates for signature validation are written to a temporary directory at test time
+
+
+## Running every gate locally (mock data first)
+
+`tests/mock_data/` is generated from `tests/integration/generate_mock_ddd.py` and is
+git-ignored: a gate run without it silently *skips* every mock-dependent test (about 65
+tests), which is how a GUI regression once reached CI while the local run looked green.
+`scripts/run_gates.sh` therefore generates the mocks first and then runs, printing every
+real exit: headless pytest, `xvfb-run` pytest, ruff, mypy, the translation-catalog
+check, the corpus semantic-coverage audit, the **mock** semantic-coverage audit in the
+CI form (`--ddd-dir tests/mock_data --baseline scripts/mock_semantic_baseline.json`),
+and `git diff --check`.
+
+Expected skip counts with the mocks present: 292 headless (Tk tests need a display and
+run under xvfb) and 2 under xvfb (the git-ignored corpus semantic baseline and the
+missing golden snapshots for the private fixtures). A skipped *mock* test is a defect.

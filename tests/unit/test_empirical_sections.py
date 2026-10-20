@@ -114,3 +114,45 @@ def test_the_new_section_labels_are_translated(tmp_path):
                                 open(path, encoding="utf-8").read(), re.M))
         for label in ("Co-Driver Activities", "Manufacturer Extensions"):
             assert label in msgids, (path, label)
+
+
+# ── Item 3: the new sections and the note survive the real exporters ─────
+
+def test_the_empirical_sections_render_in_pdf_and_excel(tmp_path):
+    """Render through the real exporters and read the text back (no clipping)."""
+    import subprocess
+    import zipfile
+    from app.export import ExportManager
+
+    result = _parse(tmp_path, "render.ddd", _trep32(extra=[(0x88, 6, 2)]))
+    pdf = tmp_path / "render.pdf"
+    xlsx = tmp_path / "render.xlsx"
+    ExportManager.export_to_pdf(result, str(pdf))
+    ExportManager.export_to_excel(result, str(xlsx))
+
+    text = subprocess.run(["pdftotext", "-raw", str(pdf), "-"],
+                          capture_output=True, text=True).stdout
+    for needle in ("Co-Driver Activities", "Manufacturer Extensions", "0x88"):
+        assert needle in text, needle
+    # the note wraps across lines in the PDF, so assert its distinctive words
+    for word in ("Manufacturer-specific", "empirical layout", "low confidence",
+                 "raw bytes"):
+        assert word in text, word
+    # nothing is clipped: the section titles and the code survive whole
+    assert "Co-Driver" in text and "Activities" in text
+    assert "Manufacturer" in text and "Extensions" in text
+
+    with zipfile.ZipFile(xlsx) as archive:
+        sheet = "".join(archive.read(name).decode("utf-8", "ignore")
+                        for name in archive.namelist() if name.endswith(".xml"))
+    for needle in ("Co-Driver Activities", "Manufacturer Extensions", "0x88"):
+        assert needle in sheet, needle
+
+
+def test_the_manufacturer_extensions_table_row_count(tmp_path):
+    """The probe stream's extension table has one row per unmapped record type."""
+    result = _parse(tmp_path, "rows.ddd", _trep32(extra=[(0x88, 6, 2)]))
+    tables = {label: rows for label, _d, _h, rows, _t in rf.section_tables(result)}
+    rows = tables["Manufacturer Extensions"]
+    # 0x29 (the observed co-driver array) and 0x88 (a manufacturer type)
+    assert len(rows) == 2, [row[0] for row in rows]

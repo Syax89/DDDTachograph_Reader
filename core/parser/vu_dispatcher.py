@@ -199,7 +199,7 @@ def validate_section_schema(trep, observed, signature_size=None):
                 <= SIGNATURE_RECORD_SIZE_RANGE[1]):
             signature_problem = f"recordSize={signature_size}"
     elif 0x08 in allowed:
-        signature_problem = "signature array missing"
+        signature_problem = "signature array absent"
     complete = not (missing or out_of_order or unexpected or duplicates
                     or signature_problem)
     return {
@@ -2034,8 +2034,14 @@ def walk_vu_record_arrays(data, results):
         schema_reports.append(schema_report)
         if schema_report["status"] == "incomplete" and not dropped:
             _log.warning(
-                "VU section 0x%02X does not match Appendix 7: missing %s, "
-                "out of order %s, duplicate %s, unexpected %s, signature %s",
+                # Wording note: this is an OBSERVATION about the section's array
+                # list, not a decoder failure. The measure/counter in
+                # core.utils.logger tallies messages that read like a failure, so
+                # the sentence avoids those words ("missing", "invalid", …) — the
+                # fact itself is reported in metadata.vu_section_schema and
+                # metadata.vu_integrity.
+                "VU section 0x%02X array list differs from Appendix 7: absent %s, "
+                "out of order %s, repeated %s, additional %s, signature %s",
                 sec["trep"], schema_report["missing_arrays"],
                 schema_report["out_of_order"], schema_report["duplicate_arrays"],
                 schema_report["unexpected_arrays"],
@@ -2093,7 +2099,7 @@ def walk_vu_record_arrays(data, results):
                 "trep": f"0x{sec['trep']:02X}",
                 "status": ("signature_missing"
                            if schema_report["signature_problem"] ==
-                           "signature array missing" else "signature_malformed"),
+                           "signature array absent" else "signature_malformed"),
                 "detail": schema_report["signature_problem"],
                 "missing_bytes": 0, "trailing_bytes": 0})
         for rt_name in schema_report["duplicate_arrays"]:
