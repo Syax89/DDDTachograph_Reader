@@ -2328,3 +2328,9 @@ msgstr "Activiteiten van de tweede bestuurder"
 
 msgid "Manufacturer Extensions"
 msgstr "Fabrikantuitbreidingen"
+
+msgid "Decode units"
+msgstr "Gedecodeerde eenheden"
+
+msgid "Path"
+msgstr "Pad"

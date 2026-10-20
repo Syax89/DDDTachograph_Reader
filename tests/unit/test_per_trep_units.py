@@ -13,7 +13,7 @@ import pytest
 from app.engine import TachoParser
 from core.decoders import vu_g1
 from core.registry.registry import DecoderRegistry
-from tests.unit.real_data import real_ddd_files
+from tests.unit.real_data import real_ddd_files, require_real_file
 from tests.unit.test_g1_vu_semantics import (
     _g1_calibration, _overview_body, _trep03_body, _trep05_body)
 
@@ -176,6 +176,100 @@ def test_the_units_never_overlap_or_exceed_the_file(tmp_path):
     result = _parse(tmp_path, "spans.ddd", data)
     spans = sorted((unit["offset"], unit["offset"] + unit["length"])
                    for unit in _units(result))
-    for (start, end), (next_start, _next_end) in zip(spans, spans[1:], strict=False):
-        assert end <= next_start, (start, end, next_start)
+    for (_start, end), (next_start, _next_end) in zip(spans, spans[1:],
+                                                     strict=False):
+        assert end <= next_start, (end, next_start)
     assert spans[-1][1] <= len(data)
+
+
+# ── Every byte belongs to a unit ─────────────────────────────────────────
+
+def _coverage_ok(units, size):
+    spans = [(unit["offset"], unit["offset"] + unit["length"]) for unit in units]
+    spans.sort()
+    assert spans, "no units"
+    assert spans[0][0] == 0, spans[0]
+    for (_start, end), (next_start, _next_end) in zip(spans, spans[1:],
+                                                     strict=False):
+        assert end == next_start, (end, next_start)
+    assert spans[-1][1] == size, (spans[-1], size)
+
+
+def test_the_half_truncated_real_file_covers_every_byte(tmp_path):
+    path = require_real_file("*_3B330594AC.ddd")
+    with open(path, "rb") as handle:
+        raw = handle.read()
+    data = raw[:len(raw) // 2]
+    result = _parse(tmp_path, "half.ddd", data)
+    units = _units(result)
+    _coverage_ok(units, len(data))
+    assert result["metadata"]["vu_units_cover_file"] is True
+    # the normative part is untouched, and the leftover is ONE declared zone
+    normative = [unit for unit in units if unit["path"] == "normative"]
+    zones = [unit for unit in units if unit["path"] != "normative"]
+    assert len(zones) == 1, zones
+    assert zones[0]["length"] > 0
+    assert zones[0].get("reason")
+    assert len(normative) >= 40
+    # counts never exceed the intact file's
+    intact = _parse(tmp_path, "intact.ddd", raw)
+    for key in ("activities", "events", "faults", "places", "card_iw_records",
+                "specific_conditions"):
+        assert len(result.get(key) or []) <= len(intact.get(key) or []), key
+    # the normative part keeps the numbers the walk alone produced
+    assert len(result.get("activities") or []) >= 42
+    assert len(result.get("faults") or []) >= 3
+
+
+def test_a_tail_truncated_by_129_bytes_has_one_zone(tmp_path):
+    path = require_real_file("*_3B330594AC.ddd")
+    with open(path, "rb") as handle:
+        raw = handle.read()
+    data = raw[:-129]
+    result = _parse(tmp_path, "cut129.ddd", data)
+    units = _units(result)
+    _coverage_ok(units, len(data))
+    zones = [unit for unit in units if unit["path"] != "normative"]
+    assert len(zones) == 1, zones
+    assert (result["metadata"].get("trep_report") or {}).get("is_partial") is True
+
+
+def test_generation_2_units_cover_the_file_including_the_header(tmp_path):
+    from tests.unit import vu_synthetic as S
+    # two junk bytes between two sections: they are their own unit
+    stream = (S.section(0x31, S.record_array(0x0A, 17, [S.VIN.encode("ascii")]),
+                        S.signature_record())
+              + b"\xde\xad"
+              + S.section(0x24, S.record_array(
+                  0x12, 64, [struct.pack(">I", S.BASE_TIME) + bytes(60)]),
+                  S.signature_record()))
+    result = _parse(tmp_path, "g2cover.ddd", stream)
+    units = _units(result)
+    _coverage_ok(units, len(stream))
+    junk = [unit for unit in units if unit["path"] != "normative"]
+    assert len(junk) == 1, units
+    assert junk[0]["length"] == 2
+
+
+def test_an_intact_stream_is_fully_normative(tmp_path):
+    overview, events, technical = _three_message_stream()
+    data = overview + events + technical
+    result = _parse(tmp_path, "full.ddd", data)
+    units = _units(result)
+    _coverage_ok(units, len(data))
+    assert all(unit["path"] == "normative" for unit in units), units
+
+
+def test_the_decode_units_section_is_rendered_and_translated():
+    import glob
+    import re
+    from core.utils import report_format as rf
+    assert "vu_units" in [key for key, _label in rf.EXPORT_SECTIONS]
+    assert "Decode units" in [label for key, label in rf.EXPORT_SECTIONS
+                              if key == "vu_units"]
+    assert rf.section_description("vu_units")
+    for path in sorted(glob.glob("locale/*/LC_MESSAGES/tacho.po")):
+        msgids = set(re.findall(r'^msgid "(.*)"$',
+                                open(path, encoding="utf-8").read(), re.M))
+        for label in ("Decode units", "Path"):
+            assert label in msgids, (path, label)

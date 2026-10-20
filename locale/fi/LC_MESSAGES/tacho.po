@@ -2328,3 +2328,9 @@ msgstr "Toisen kuljettajan toiminnot"
 
 msgid "Manufacturer Extensions"
 msgstr "Valmistajalaajennukset"
+
+msgid "Decode units"
+msgstr "Dekoodatut yksiköt"
+
+msgid "Path"
+msgstr "Polku"

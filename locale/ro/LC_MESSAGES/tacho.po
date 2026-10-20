@@ -2328,3 +2328,9 @@ msgstr "Activitățile celui de-al doilea conducător"
 
 msgid "Manufacturer Extensions"
 msgstr "Extensii ale producătorului"
+
+msgid "Decode units"
+msgstr "Unități decodate"
+
+msgid "Path"
+msgstr "Cale"

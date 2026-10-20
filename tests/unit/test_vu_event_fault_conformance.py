@@ -742,8 +742,14 @@ class TestNoSilentBackup(unittest.TestCase):
         # decode_paths, the damage in vu_units/vu_integrity.
         units = results["metadata"]["vu_units"]
         self.assertTrue(units)
-        self.assertTrue(all(unit["path"] == "normative" for unit in units), units)
-        self.assertNotIn("heuristic_fields", results["metadata"])
+        # every byte is covered: the normative units plus one declared zone for the
+        # bytes they do not account for
+        self.assertTrue(results["metadata"]["vu_units_cover_file"])
+        zones = [unit for unit in units if unit["path"] != "normative"]
+        self.assertLessEqual(len(zones), 1, units)
+        if zones:
+            self.assertIn(zones[0]["path"], ("heuristic", "unreadable"))
+            self.assertTrue(zones[0].get("reason"))
         self.assertTrue(any("fell back" in line for line in captured.output))
         self.assertGreaterEqual(len(results["faults"]), 1)
         recovered = [f for f in results["faults"] if not f.get("normative")]
@@ -768,14 +774,19 @@ class TestNoSilentBackup(unittest.TestCase):
         finally:
             vu_dispatcher.walk_vu_record_arrays = original
 
+        # Corrected by the per-TREP rule: the recovery is bounded to the failed
+        # units, so the declaration names the cause and every unit the heuristic
+        # touched is listed in heuristic_fields (the two always agree).
         sections = sorted(results["metadata"]["heuristic_fields"])
         self.assertTrue(sections, "nothing was marked heuristic")
-        warning = next(line for line in captured.output
-                       if "heuristic byte scan recovered" in line)
-        for section in sections:
-            self.assertIn(section, warning,
-                          f"{section} is in heuristic_fields but not in the warning")
-        self.assertNotIn("recovered nothing", warning)
+        warning = next(line for line in captured.output if "fell back" in line)
+        for unit in results["metadata"].get("vu_heuristic_units") or []:
+            self.assertIn(f"vu_trep{unit['trep'][2:].upper()}", sections)
+        # the warning names a cause from the closed vocabulary (and the
+        # classification with it), whichever applies to this stream
+        self.assertTrue(any(cause in warning for cause in (
+            "file_truncated", "count_exceeds_eof", "unknown_or_misplaced_section",
+            "normative_layout_not_matched", "normative_decoder_exception")), warning)
 
     def test_record_less_section_then_failure_still_scans(self):
         # A section that emits no records leaves the result mappings untouched, so

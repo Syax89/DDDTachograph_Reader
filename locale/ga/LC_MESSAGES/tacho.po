@@ -2328,3 +2328,9 @@ msgstr "Gníomhaíochtaí an dara tiománaí"
 
 msgid "Manufacturer Extensions"
 msgstr "Breisithe monaróra"
+
+msgid "Decode units"
+msgstr "Aonaid díchódaithe"
+
+msgid "Path"
+msgstr "Conair"

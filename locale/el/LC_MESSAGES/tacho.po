@@ -2328,3 +2328,9 @@ msgstr "Δραστηριότητες δεύτερου οδηγού"
 
 msgid "Manufacturer Extensions"
 msgstr "Επεκτάσεις κατασκευαστή"
+
+msgid "Decode units"
+msgstr "Μονάδες αποκωδικοποίησης"
+
+msgid "Path"
+msgstr "Διαδρομή"

@@ -2328,3 +2328,9 @@ msgstr "Дзейнасць другога кіроўцы"
 
 msgid "Manufacturer Extensions"
 msgstr "Пашырэнні вытворцы"
+
+msgid "Decode units"
+msgstr "Адзінкі дэкадавання"
+
+msgid "Path"
+msgstr "Шлях"

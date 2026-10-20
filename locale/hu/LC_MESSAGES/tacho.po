@@ -2328,3 +2328,9 @@ msgstr "Második sofőr tevékenységei"
 
 msgid "Manufacturer Extensions"
 msgstr "Gyártói kiterjesztések"
+
+msgid "Decode units"
+msgstr "Dekódolt egységek"
+
+msgid "Path"
+msgstr "Útvonal"

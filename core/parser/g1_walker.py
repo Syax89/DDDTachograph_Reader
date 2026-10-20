@@ -378,6 +378,26 @@ def iter_g1_vu_messages(data):
         pos = end
 
 
+def _uncovered_ranges(covered, size):
+    """Byte ranges of ``[0, size)`` that no unit covers, merged and ordered."""
+    ranges = sorted((max(0, start), min(size, end)) for start, end in covered)
+    gaps = []
+    cursor = 0
+    for start, end in ranges:
+        if start > cursor:
+            gaps.append((cursor, start))
+        cursor = max(cursor, end)
+    if cursor < size:
+        gaps.append((cursor, size))
+    return [(start, end) for start, end in gaps if end > start]
+
+
+def _result_records(results):
+    """Mapping of result keys to the lists they hold (records published so far)."""
+    return {key: value for key, value in (results or {}).items()
+            if isinstance(value, list)}
+
+
 def walk_g1_vu(data, results):
     """Semantic dispatch of a G1 VU download via the deterministic walk.
 
@@ -516,12 +536,47 @@ def walk_g1_vu(data, results):
             units[-1]["path"] = path
             heuristic_units.append(dict(units[-1]))
 
+    # Every byte must belong to a unit. Whatever the walk did not cover — a
+    # truncated last message, trailing junk, the remainder after a failed resync —
+    # becomes ONE zone: the scoped heuristic runs on exactly those bytes and its
+    # records are tagged as before; if it recovers nothing the zone is unreadable.
+    covered = [(msg["pos"], msg["end"]) for msg in messages]
+    covered.extend((region["offset"], region["offset"] + region["bytes"])
+                   for region in card_regions)
+    for (start, end) in _uncovered_ranges(covered, len(data)):
+        recovered = False
+        before = {key: len(value) for key, value in _result_records(results).items()}
+        try:
+            from core.decoders.vu_g1 import parse_vu_download_messages
+            parse_vu_download_messages(data[start:end], results, base_offset=start)
+            # "Recovered" means it actually added something: a zone the scan could
+            # read nothing distinct from is unreadable, not heuristic.
+            recovered = any(len(value) > before.get(key, 0)
+                            for key, value in _result_records(results).items())
+        except Exception as exc:                        # the last resort
+            _log.warning("VU unclaimed zone 0x%X-0x%X: heuristic failed: %s",
+                         start, end, exc)
+        units.append({
+            "trep": "0x00",
+            "offset": start,
+            "length": end - start,
+            "path": "heuristic" if recovered else "unreadable",
+            "reason": ("bytes no normative unit accounted for "
+                       "(truncated message, junk or resync remainder)"),
+        })
+        if recovered:
+            heuristic_units.append(dict(units[-1]))
+    units.sort(key=lambda unit: unit["offset"])
     if units:
         # Per-unit provenance: what was decoded normatively, what needed the
-        # heuristic on its own byte range, and what stayed unreadable.
-        results.setdefault("metadata", {})["vu_units"] = units
+        # heuristic on its own byte range, and what stayed unreadable. Non
+        # overlapping, ordered, and their lengths sum to the file size.
+        metadata = results.setdefault("metadata", {})
+        metadata["vu_units"] = units
+        metadata["vu_units_cover_file"] = (
+            sum(unit["length"] for unit in units) == len(data))
     if heuristic_units:
-        results["metadata"]["vu_heuristic_units"] = heuristic_units
+        results.setdefault("metadata", {})["vu_heuristic_units"] = heuristic_units
         # A unit decoded by the backup route is marked exactly like before: the
         # section names the heuristic touched.
         _mark_heuristic_sections(results)

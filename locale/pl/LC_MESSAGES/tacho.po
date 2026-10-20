@@ -2328,3 +2328,9 @@ msgstr "Czynności drugiego kierowcy"
 
 msgid "Manufacturer Extensions"
 msgstr "Rozszerzenia producenta"
+
+msgid "Decode units"
+msgstr "Zdekodowane jednostki"
+
+msgid "Path"
+msgstr "Ścieżka"

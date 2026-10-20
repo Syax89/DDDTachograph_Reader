@@ -2328,3 +2328,9 @@ msgstr "Antrojo vairuotojo veikla"
 
 msgid "Manufacturer Extensions"
 msgstr "Gamintojo plėtiniai"
+
+msgid "Decode units"
+msgstr "Dekoduoti vienetai"
+
+msgid "Path"
+msgstr "Kelias"

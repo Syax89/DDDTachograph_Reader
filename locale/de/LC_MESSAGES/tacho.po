@@ -2328,3 +2328,9 @@ msgstr "Aktivitäten des zweiten Fahrers"
 
 msgid "Manufacturer Extensions"
 msgstr "Herstellerspezifische Erweiterungen"
+
+msgid "Decode units"
+msgstr "Dekodierte Einheiten"
+
+msgid "Path"
+msgstr "Pfad"

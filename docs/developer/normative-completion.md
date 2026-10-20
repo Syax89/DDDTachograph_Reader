@@ -644,3 +644,14 @@ publish a record under a foreign identity. Per-unit provenance is published in
 `metadata.vu_heuristic_units` and in `metadata.heuristic_fields` (`vu_trepNN`). An
 intact file has only `normative` units and never touches the heuristic; a file with a
 heuristic or unreadable unit is partial; manufacturer extensions are not failures.
+
+### 15.5 Every byte belongs to a unit
+
+After the walk, every byte range that no normative unit covers — a truncated last
+message, junk, a resync remainder, the header of a late section, a TREP 00 interface
+body — becomes **one zone unit** (`trep: 0x00`) with a `reason`. The scoped scan is
+offered exactly those bytes (and their file offset); if it adds records the zone is
+`heuristic` (and the sections stay marked), otherwise `unreadable`. The invariant
+`sum(unit.length) == file size` is published as `metadata.vu_units_cover_file` and
+asserted for the intact corpus, the mocks and the damaged variants. The units are shown
+as the `Decode units` section in the window and in every export.

@@ -2328,3 +2328,9 @@ msgstr "Otrā vadītāja darbības"
 
 msgid "Manufacturer Extensions"
 msgstr "Ražotāja paplašinājumi"
+
+msgid "Decode units"
+msgstr "Atšifrētās vienības"
+
+msgid "Path"
+msgstr "Ceļš"

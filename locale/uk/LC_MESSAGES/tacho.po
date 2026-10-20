@@ -2328,3 +2328,9 @@ msgstr "Дії другого водія"
 
 msgid "Manufacturer Extensions"
 msgstr "Розширення виробника"
+
+msgid "Decode units"
+msgstr "Декодовані одиниці"
+
+msgid "Path"
+msgstr "Шлях"

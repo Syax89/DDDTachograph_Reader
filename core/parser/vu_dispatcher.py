@@ -2116,11 +2116,17 @@ def walk_vu_record_arrays(data, results):
         if any(f["trep"] == f"0x{sec['trep']:02X}"
                and f["status"] == "schema_violation" for f in ()):
             unit_path = "heuristic"
+        unit_length = (max((end for (_p, _rt, _rs, _nr, end) in sec["records"]),
+                           default=sec["marker"] + 2) - sec["marker"])
+        if sec.get("interface"):
+            # TREP 00 has no RecordArray: its body is the two transfer bytes.
+            unit_length = 2 + len(sec["interface"])
+        elif sec.get("card_tlv"):
+            unit_length = 2 + int(sec["card_tlv"].get("bytes") or 0)
         results.setdefault("metadata", {}).setdefault("vu_units", []).append({
             "trep": f"0x{sec['trep']:02X}",
             "offset": sec["marker"],
-            "length": (max((end for (_p, _rt, _rs, _nr, end) in sec["records"]),
-                           default=sec["marker"] + 2) - sec["marker"]),
+            "length": unit_length,
             "path": unit_path,
         })
         sections.append({
@@ -2189,6 +2195,7 @@ def walk_vu_record_arrays(data, results):
             "vu_walk_truncated_bytes", int(state.get("trailing_bytes") or 0))
     if capped:
         results["_vu_walk_record_cap"] = VU_MAX_TOTAL_RECORDS
+    _cover_units_with_zones(data, results, schema_reports)
     if unmapped:
         results["vu_unmapped_record_types"] = sorted(f"0x{rt:02X}" for rt in unmapped)
         # The same fact, but renderable: one row per record type with its code, the
@@ -2208,6 +2215,59 @@ def walk_vu_record_arrays(data, results):
         results["unmapped_record_types"] = sorted(rows,
                                                  key=lambda row: row["record_type"])
     return sections
+
+
+def _cover_units_with_zones(data, results, schema_reports):
+    """Every byte belongs to a unit: close the gaps of a G2/G2.2 walk.
+
+    The walk yields one unit per RecordArray section; whatever lies between two
+    sections (resync junk, the 2-byte header of a section that started late) or after
+    the last one becomes ONE zone. The scoped heuristic is offered exactly those bytes
+    and the zone is "heuristic" when it recovered something distinct, "unreadable"
+    otherwise.
+    """
+    metadata = results.setdefault("metadata", {})
+    units = metadata.get("vu_units") or []
+    covered = [(unit["offset"], unit["offset"] + unit["length"]) for unit in units]
+    zones = _uncovered_ranges(covered, len(data))
+    for (start, end) in zones:
+        before = {key: len(value) for key, value in results.items()
+                  if isinstance(value, list)}
+        recovered = False
+        try:
+            from core.decoders.vu_g1 import parse_vu_download_messages
+            parse_vu_download_messages(data[start:end], results, base_offset=start)
+            recovered = any(len(value) > before.get(key, 0)
+                            for key, value in results.items()
+                            if isinstance(value, list))
+        except Exception as exc:                        # the last resort
+            _log.warning("VU unclaimed zone 0x%X-0x%X: heuristic failed: %s",
+                         start, end, exc)
+        units.append({
+            "trep": "0x00", "offset": start, "length": end - start,
+            "path": "heuristic" if recovered else "unreadable",
+            "reason": ("bytes no normative unit accounted for (header, junk or "
+                       "resync remainder)"),
+        })
+        if recovered:
+            metadata.setdefault("vu_heuristic_units", []).append(dict(units[-1]))
+    units.sort(key=lambda unit: unit["offset"])
+    metadata["vu_units"] = units
+    metadata["vu_units_cover_file"] = (
+        sum(unit["length"] for unit in units) == len(data))
+
+
+def _uncovered_ranges(covered, size):
+    """Byte ranges of ``[0, size)`` that no unit covers, merged and ordered."""
+    ranges = sorted((max(0, start), min(size, end)) for start, end in covered)
+    gaps, cursor = [], 0
+    for start, end in ranges:
+        if start > cursor:
+            gaps.append((cursor, start))
+        cursor = max(cursor, end)
+    if cursor < size:
+        gaps.append((cursor, size))
+    return [(start, end) for start, end in gaps if end > start]
 
 
 def _delegate_card_download(chunk, results):

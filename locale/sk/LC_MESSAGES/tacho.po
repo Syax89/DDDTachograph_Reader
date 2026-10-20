@@ -2328,3 +2328,9 @@ msgstr "Aktivity druhého vodiča"
 
 msgid "Manufacturer Extensions"
 msgstr "Rozšírenia výrobcu"
+
+msgid "Decode units"
+msgstr "Dekódované jednotky"
+
+msgid "Path"
+msgstr "Cesta"

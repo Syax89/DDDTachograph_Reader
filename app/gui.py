@@ -5479,6 +5479,7 @@ class TachoExplorer(tk.Tk):
         # Data outside the regulation is SHOWN like everything else, with the
         # informational note in the section's meta line (never a warning).
         for key, label, icon in (
+                ("vu_units", _("Decode units"), "generation"),
                 ("co_driver_activities", _("Co-Driver Activities"), "events"),
                 ("unmapped_record_types", _("Manufacturer Extensions"),
                  "status-unknown")):

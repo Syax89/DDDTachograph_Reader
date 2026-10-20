@@ -2328,3 +2328,9 @@ msgstr "İkinci sürücü etkinlikleri"
 
 msgid "Manufacturer Extensions"
 msgstr "Üretici uzantıları"
+
+msgid "Decode units"
+msgstr "Çözülen birimler"
+
+msgid "Path"
+msgstr "Yol"

@@ -2328,3 +2328,9 @@ msgstr "Дейности на втория водач"
 
 msgid "Manufacturer Extensions"
 msgstr "Разширения на производителя"
+
+msgid "Decode units"
+msgstr "Единици за декодиране"
+
+msgid "Path"
+msgstr "Път"

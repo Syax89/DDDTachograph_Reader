@@ -2328,3 +2328,9 @@ msgstr "Teise juhi tegevused"
 
 msgid "Manufacturer Extensions"
 msgstr "Tootjalaiendused"
+
+msgid "Decode units"
+msgstr "Dekodeeritud üksused"
+
+msgid "Path"
+msgstr "Tee"

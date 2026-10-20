@@ -2328,3 +2328,9 @@ msgstr "Actividades del segundo conductor"
 
 msgid "Manufacturer Extensions"
 msgstr "Extensiones del fabricante"
+
+msgid "Decode units"
+msgstr "Unidades decodificadas"
+
+msgid "Path"
+msgstr "Ruta"

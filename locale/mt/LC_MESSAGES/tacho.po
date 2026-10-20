@@ -2328,3 +2328,9 @@ msgstr "Attivitajiet tat-tieni sewwieq"
 
 msgid "Manufacturer Extensions"
 msgstr "Estensjonijiet tal-manifattur"
+
+msgid "Decode units"
+msgstr "Unitajiet dekodifikati"
+
+msgid "Path"
+msgstr "Mogħdija"

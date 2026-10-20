@@ -2328,3 +2328,9 @@ msgstr "Virkni annars ökumanns"
 
 msgid "Manufacturer Extensions"
 msgstr "Viðbætur framleiðanda"
+
+msgid "Decode units"
+msgstr "Afkóðuð einingar"
+
+msgid "Path"
+msgstr "Slóð"

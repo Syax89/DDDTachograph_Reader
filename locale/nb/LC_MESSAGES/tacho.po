@@ -2328,3 +2328,9 @@ msgstr "Andreførers aktiviteter"
 
 msgid "Manufacturer Extensions"
 msgstr "Produsentutvidelser"
+
+msgid "Decode units"
+msgstr "Dekodede enheter"
+
+msgid "Path"
+msgstr "Sti"

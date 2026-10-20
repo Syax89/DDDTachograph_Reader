@@ -244,6 +244,7 @@ EXPORT_SECTIONS = [
     ("ef_signature_verification", "EF Card Data Signatures"),
     ("certificates", "Driver Card Certificates"),
     ("sensor_daily_records", "Sensor Daily Records"),
+    ("vu_units", "Decode units"),
     ("co_driver_activities", "Co-Driver Activities"),
     ("unmapped_record_types", "Manufacturer Extensions"),
 ]
@@ -271,7 +272,8 @@ EMPIRICAL_NOTE = (
     "are preserved; this is information, not a defect.")
 
 #: Sections whose layout is not defined by the regulation.
-EMPIRICAL_SECTIONS = frozenset({"co_driver_activities", "unmapped_record_types",
+EMPIRICAL_SECTIONS = frozenset({"vu_units", "co_driver_activities",
+                                "unmapped_record_types",
                                 "sensor_daily_records", "sensor_info",
                                 "load_sensor_data", "locations"})
 
@@ -329,6 +331,11 @@ SECTION_DESCRIPTIONS = {
     "calibration_vins": "VINs (Vehicle Identification Numbers) extracted from calibration records.",
     "card_numbers": "Card numbers observed by the VU from inserted driver and company cards.",
     "vu_record_arrays": "Raw VU RecordArray data: structural audit of all VU memory sections.",
+    "vu_units": (
+        "One row per decoded unit (TREP or RecordArray section): where it starts, how "
+        "long it is and whether it was read by the normative decoder, recovered by the "
+        "byte scan inside its own range, or could not be read. The units are ordered, "
+        "never overlap and cover every byte of the file. This is information."),
     "co_driver_activities": (
         "Co-driver ActivityChangeInfo records of the Activities section. The record "
         "type 0x29 is not part of the Annex 1C array list: it is an observed "

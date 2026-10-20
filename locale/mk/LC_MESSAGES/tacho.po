@@ -2328,3 +2328,9 @@ msgstr "Активности на вториот возач"
 
 msgid "Manufacturer Extensions"
 msgstr "Проширувања на производителот"
+
+msgid "Decode units"
+msgstr "Декодирани единици"
+
+msgid "Path"
+msgstr "Пат"

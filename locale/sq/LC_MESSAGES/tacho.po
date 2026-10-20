@@ -2328,3 +2328,9 @@ msgstr "Aktivitetet e shoferit të dytë"
 
 msgid "Manufacturer Extensions"
 msgstr "Zgjerimet e prodhuesit"
+
+msgid "Decode units"
+msgstr "Njësi të dekoduara"
+
+msgid "Path"
+msgstr "Rruga"
