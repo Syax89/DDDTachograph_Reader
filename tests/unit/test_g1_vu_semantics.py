@@ -390,3 +390,63 @@ def test_g1_stored_fault_with_an_unusable_time_is_retained():
     assert fault["begin_time"] is None
     assert fault["begin_time_raw"] == 0xFF000000
     assert fault["time_status"] == "invalid"
+
+
+# ── F2: no value-based existence gate on the structured TREP 03 path ───────
+
+def test_trep03_all_corrupt_clocks_keeps_the_records_and_skips_the_scan():
+    body = _trep03_body(event_type=0x0A, fault_type=0x31)
+    body = bytearray(body)
+    struct.pack_into(">I", body, 1 + 2, 0)          # fault begin = 0
+    struct.pack_into(">I", body, 1 + 6, 0)          # fault end = 0
+    struct.pack_into(">I", body, 84 + 2, 0)         # event begin = 0
+    struct.pack_into(">I", body, 84 + 6, 0)         # event end = 0
+    results = _results()
+    assert _parse_trep_03_structured(bytes(body), results) is True
+    assert len(results["faults"]) == 1
+    assert len(results["events"]) == 1
+    assert results["faults"][0]["time_status"] == "invalid"
+    assert results["events"][0]["time_status"] == "invalid"
+    assert results["events"][0]["begin_time"] is None
+    # nothing was invented: an event keeps its own type, not a scan guess
+    assert results["events"][0]["type_code"] == 0x0A
+
+
+def test_trep03_mixed_good_and_bad_clocks_keeps_both():
+    body = bytearray(_trep03_body(event_type=0x0A, fault_type=0x31))
+    struct.pack_into(">I", body, 84 + 2, 0)         # only the event clock is bad
+    results = _results()
+    assert _parse_trep_03_structured(bytes(body), results) is True
+    assert [f["time_status"] for f in results["faults"]] == ["valid"]
+    assert [e["time_status"] for e in results["events"]] == ["invalid"]
+
+
+def test_trep03_zero_counts_emit_nothing_and_are_still_structural():
+    results = _results()
+    body = bytes([0, 0]) + struct.pack(">II", TIME, TIME) + bytes([0, 0, 0])
+    assert _parse_trep_03_structured(body, results) is True
+    assert results["faults"] == [] and results["events"] == []
+    # the control record is emitted even with no data (DDP_031 default value)
+    assert len(results["overspeeding_control"]) == 1
+
+
+def test_trep03_overspeed_records_with_an_unusable_clock_are_kept():
+    body = bytearray(_trep03_body(n_over=(31,), n_adj=()))
+    # the overspeed record starts after the 9-byte control block
+    start = len(body) - 1 - 31 - 1 + 1          # count byte + record
+    struct.pack_into(">I", body, start + 2, 5)  # begin = 5 (outside the calendar)
+    results = _results()
+    assert _parse_trep_03_structured(bytes(body), results) is True
+    rec = results["overspeeding_events"][0]
+    assert rec["begin"] is None
+    assert rec["begin_raw"] == 5
+    assert rec["time_status"] == "invalid"
+
+
+def test_trep03_truncated_body_still_fails_structurally():
+    """A count whose records do not fit the bytes is a decode failure (fallback
+    with a reason), never a silently shortened list."""
+    results = _results()
+    body = bytes([2]) + _trep03_body()[1:1 + 82]      # declares 2 faults, holds 1
+    assert _parse_trep_03_structured(body, results) is False
+    assert results.get("faults", []) == []

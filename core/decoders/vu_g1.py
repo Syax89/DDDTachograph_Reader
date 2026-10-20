@@ -1031,16 +1031,11 @@ def _parse_trep_03_structured(data, results):
                 events.append(rec)
             pos += 83
 
-        # Records can be empty (0xFF padding) but a populated structure must
-        # contain at least one usable timestamp, otherwise this is a
-        # false-positive message marker rather than a TREP 03 body. Individual
-        # records are no longer dropped for their time: they are kept with
-        # ``time_status: invalid`` and their raw value.
-        total = n_faults + n_events
-        usable = sum(1 for r in faults + events if r.get("time_status") == "valid")
-        if total > 0 and usable == 0:
-            return False
-
+        # No value-based existence gate: the count/size framing above is the
+        # structural proof that this is a TREP 03 body (DDP_031). A stored record
+        # is never dropped because its clock is unusable — it is kept with
+        # ``time_status: invalid`` and its raw value while the *interpretation*
+        # stays withheld. (The 2000..2100 window is a heuristic-scan gate only.)
         if pos + 9 > len(data):
             return False
         osc_last = struct.unpack(">I", data[pos:pos + 4])[0]
@@ -1057,26 +1052,26 @@ def _parse_trep_03_structured(data, results):
             rec = data[pos:pos + 31]
             begin_ts = struct.unpack(">I", rec[2:6])[0]
             end_ts = struct.unpack(">I", rec[6:10])[0]
-            if 946684800 <= begin_ts <= 4102444800:
-                overspeed.append({
-                    "description": describe_event_fault_type(
-                        rec[0], True, EVENT_FAULT_VERSION_G1),
-                    "event_fault_version": EVENT_FAULT_VERSION_G1,
-                    "type_status": event_fault_type_status(
-                        rec[0], EVENT_FAULT_VERSION_G1),
-                    "event_type": rec[0],
-                    "event_type_label": describe_event_fault_type(
-                        rec[0], True, EVENT_FAULT_VERSION_G1),
-                    "record_purpose": rec[1],
-                    "record_purpose_label": describe_record_purpose(rec[1]),
-                    "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
-                    "end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat()
-                    if 946684800 <= end_ts <= 4102444800 else "N/A",
-                    "max_speed_kmh": rec[10],
-                    "average_speed_kmh": rec[11],
-                    "card_driver": _parse_full_card_number(rec, 12),
-                    "similar_events": rec[30],
-                })
+            overspeed.append({
+                "description": describe_event_fault_type(
+                    rec[0], True, EVENT_FAULT_VERSION_G1),
+                "event_fault_version": EVENT_FAULT_VERSION_G1,
+                "type_status": event_fault_type_status(
+                    rec[0], EVENT_FAULT_VERSION_G1),
+                "event_type": rec[0],
+                "event_type_label": describe_event_fault_type(
+                    rec[0], True, EVENT_FAULT_VERSION_G1),
+                "record_purpose": rec[1],
+                "record_purpose_label": describe_record_purpose(rec[1]),
+                "begin": _g1_time(begin_ts),
+                "begin_raw": begin_ts,
+                "end": _g1_time(end_ts) or "N/A",
+                "time_status": "valid" if _g1_time(begin_ts) else "invalid",
+                "max_speed_kmh": rec[10],
+                "average_speed_kmh": rec[11],
+                "card_driver": _parse_full_card_number(rec, 12),
+                "similar_events": rec[30],
+            })
             pos += 31
 
         n_adj = data[pos]
@@ -1138,6 +1133,8 @@ def _parse_trep_03_structured(data, results):
                     "record_purpose": evt["event_purpose"],
                     "record_purpose_label": describe_record_purpose(evt["event_purpose"]),
                     "begin_time": evt["begin_time"],
+                    "begin_time_raw": evt.get("begin_time_raw"),
+                    "time_status": evt.get("time_status"),
                     "end_time": evt["end_time"],
                     "similar_events": evt["similar_events"],
                     "card_driver_begin": evt["card_driver_begin"],
@@ -1150,17 +1147,22 @@ def _parse_trep_03_structured(data, results):
                     "card_codriver_end": evt["card_codriver_end"],
                 })
 
-        if 946684800 <= osc_last <= 4102444800 or 946684800 <= osc_first <= 4102444800:
-            ctrl = {
-                "last_control_time": datetime.fromtimestamp(osc_last, tz=timezone.utc).isoformat()
-                if 946684800 <= osc_last <= 4102444800 else "N/A",
-                "first_overspeed_since": datetime.fromtimestamp(osc_first, tz=timezone.utc).isoformat()
-                if 946684800 <= osc_first <= 4102444800 else "N/A",
-                "number_of_overspeed": osc_count,
-            }
-            ctrl_list = results.setdefault("overspeeding_control", [])
-            if ctrl not in ctrl_list:
-                ctrl_list.append(ctrl)
+        # VuOverSpeedingControlData is a stored record ("default value if no
+        # data", DDP_031): it is emitted even when both clocks are unusable, in
+        # which case the time cells keep the table's N/A convention and the raw
+        # values travel next to them.
+        ctrl = {
+            "last_control_time": _g1_time(osc_last),
+            "last_control_time_raw": osc_last,
+            "first_overspeed_since": _g1_time(osc_first),
+            "first_overspeed_since_raw": osc_first,
+            "time_status": ("valid" if (_g1_time(osc_last) or _g1_time(osc_first))
+                            else "invalid"),
+            "number_of_overspeed": osc_count,
+        }
+        ctrl_list = results.setdefault("overspeeding_control", [])
+        if ctrl not in ctrl_list:
+            ctrl_list.append(ctrl)
 
         existing_overs = results.setdefault("overspeeding_events", [])
         seen = {(o.get("event_type"), o.get("begin"), o.get("end"), o.get("record_purpose"))
