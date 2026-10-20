@@ -38,7 +38,10 @@ CARD_ONLY_TAGS = {
 VU_ONLY_TAGS = {
     0x7601, 0x7602, 0x7603, 0x7604, 0x7605,          # G1 VU containers
     0x7621, 0x7622, 0x7623, 0x7624, 0x7625,          # G2 VU containers
-    0x7631, 0x7632, 0x7633, 0x7634, 0x7635,          # G2.2 VU containers
+    # G2.2 VU containers. 0x7634 is *not* a transfer: DDP_011/DDP_032 prescribe
+    # TREP '24'H for detailed speed in every generation. It is kept here only as
+    # an observed compatibility tag for origin detection, never as a TREP alias.
+    0x7631, 0x7632, 0x7633, 0x7634, 0x7635,
 }
 
 

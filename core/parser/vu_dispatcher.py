@@ -1738,7 +1738,11 @@ def iter_vu_sections(data, state=None):
         nr = struct.unpack(">H", data[pos + 3:pos + 5])[0]
         if rt < 0x01 or rt > 0x60 or rs > RECORD_ARRAY_MAX_SIZE or nr > RECORD_ARRAY_MAX_RECORDS or (rs == 0 and nr > 0 and rt != 0x60):
             # Resync one byte at a time: skipping a whole header width here
-            # could jump over the start of a valid RecordArray after junk.
+            # could jump over the start of a valid RecordArray after junk. It is
+            # never silent — every skipped byte is counted so the caller can tell
+            # a clean walk from one that had to tolerate junk.
+            if state is not None:
+                state["resync_bytes"] = state.get("resync_bytes", 0) + 1
             pos += 1
             continue
         if pos + 5 + rs * nr > n:
@@ -1857,7 +1861,15 @@ def walk_vu_record_arrays(data, results):
         results.setdefault("metadata", {})["vu_section_schema"] = schema_reports
     results["_vu_walk_complete"] = (not capped
                                    and not state.get("truncated", False)
-                                   and not state.get("trailing_bytes"))
+                                   and not state.get("trailing_bytes")
+                                   and not state.get("resync_bytes"))
+    if state.get("resync_bytes"):
+        # Junk inside a section's byte run: reported, and fatal to the
+        # completeness claim (a valid stream never needs it).
+        results.setdefault("metadata", {})["vu_walk_resync_bytes"] = int(
+            state["resync_bytes"])
+        _log.warning("VU walk resynchronised over %d byte(s) after a section "
+                     "boundary", state["resync_bytes"])
     if state.get("trailing_bytes"):
         # Bytes after the last complete RecordArray: carried in metadata so a
         # remainder is never silently absorbed by the walk, and fatal to the

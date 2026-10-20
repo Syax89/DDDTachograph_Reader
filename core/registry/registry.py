@@ -431,6 +431,11 @@ class DecoderRegistry:
                        annex_ref="Reg. EU 2023/980", generation="G2.2",
                        vu_only=True, container=True),
 
+            # Compatibility container entry only: TREP '34'H has no transfer
+            # definition (DDP_011/DDP_032 prescribe '24'H for detailed speed), so
+            # this tag never reaches the RecordArray walk, which rejects the
+            # alias. The name/annex reference describe the *speed container* the
+            # tag was observed to carry, not a sanctioned TREP.
             TagDecoder(0x7634, "G22_VU_Speed",
                        annex_ref="Reg. EU 2023/980", generation="G2.2",
                        vu_only=True, container=True),

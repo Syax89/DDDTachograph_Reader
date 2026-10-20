@@ -353,3 +353,58 @@ keys are now read from the nibbles the regulation specifies (corrected values),
 and the value vocabulary gained the third word `reserved` for the unassigned
 codes `0101`..`1111` — codes that previously read as `occupied`/`empty` by
 accident.
+
+## 9. All-TREP VU pass (generation 1, generation 2 v1, generation 2 v2)
+
+A later pass worked through every transfer of the VU download protocol against
+the primary texts. What changed is **decoding**, not presentation: no new
+translatable label was introduced, and every key added for bookkeeping is in
+both `HIDDEN_KEYS` sets (`core/utils/report_format.py`, `app/gui.py`).
+
+### 9.1 Now decoded from the regulation
+
+| Transfer | Decoded |
+|---|---|
+| G2.2 **TREP 00** | `DownloadInterfaceVersion` as two raw octets with the Annex 1C §2.60a codes; DDP_028a's "02,02 Hex" comment is carried alongside because the two texts of the same act disagree (`source_conflict: true`). No signature record belongs to this transfer, and the signature verifier says so instead of counting it invalid. |
+| **Overview** (01/21/31) | `CardSlotsStatus` per `'ccccdddd'` nibble (short word unchanged), `CurrentDateTime` published to `metadata.current_datetime`, VRN decoded through its declared code page, certificates parsed with the existing CVC layer (trust stays a separate verdict). |
+| **Activities** (02/22/32) | `EntryTypeDailyWorkPeriod` 0..5 (4/5 = "assumed by VU"), generation-local condition meanings, GNSS `0°/0°` as a real fix with ±90°/±180° range checks, GNSS-place variant chosen by the section's TREP, `PreviousVehicleInfo` + `ManualInputFlag` (already done at `6d72b34`), per-day IW association, zero-change days. |
+| **Events & faults** (03/23/33) | Generation-1 point-2.70 table (from the readable consolidated list: `0A`H Vehicle Motion Conflict) and the two generation-2 versions; over-speed and power-interruption records inherit the section version; short/empty time adjustments are kept with a completeness flag instead of being dropped. |
+| **Detailed speed** (04/24) | The normative 64-byte block is kept under the aggregated run with all 60 samples (FF = "no information"), and a block with an unusable time is kept rather than skipped. |
+| **Technical data** (05/25/35) | `ExtendedSerialNumber` (serial, BCD month, two-digit year suffix, manufacturer-specific type, registered manufacturer) for VU/sensor/coupled/calibration/card serials; `ExtendedSealIdentifier` (`manufacturerCode` 2 + `sealIdentifier` 8); calibration variants 222/252 chosen by the section generation; `CardStructureVersion` halves; the G1 **activation calibration** with empty VIN and `l = 0` is no longer gated away. |
+| **Card download** (06) | Inside a VU stream the region is bounded by the card's own STAP framing and handed to the card EF decoder; the resynchronisation fallback, if ever needed, is labelled in the report. |
+
+### 9.2 Structural claims, and what they do not claim
+
+* **Array order** is checked per section against Appendix 7 of Reg. (EU)
+  2021/1228 (DDP_029…DDP_033, printed as text in that act) and reported in
+  `metadata.vu_section_schema`: missing, out-of-order and unexpected arrays,
+  plus zero-record arrays (which are *normative* for empty sections). Every real
+  download validates `complete`. The check is descriptive — a schema defect is
+  not a recovery route and never sets `metadata.heuristic_fields`.
+* **Completeness** now requires that the walk consumed every byte: remaining
+  bytes are counted (`vu_walk_truncated_bytes` / `_g1_walk_trailing_bytes`) and
+  a byte-skip is counted too (`vu_walk_resync_bytes`). A cut signature can no
+  longer report a complete download.
+* **Signature structure ≠ cryptographic verification.** The per-TREP ECDSA
+  verdict is unchanged and separate.
+
+### 9.3 Explicitly unresolved (no source, nothing invented)
+
+* `EntryTypeDailyWorkPeriod` codes above 5 in generation 2 — the enumeration is
+  a figure in every accessible edition, so the decoder says "unknown" and never
+  "unassigned".
+* `digitalMapVersion` — the value assignment lives in the digital-map
+  specification on the Commission's secured site; bytes stay raw and the status
+  says unresolved.
+* The `ITSConsent` BOOLEAN wire rule — ASN.1 notation alone does not establish
+  BER/non-zero; the measured low-bit reading is kept next to the raw octet.
+* `manufacturerSpecificEventFaultData` octets — only the `ManufacturerCode` byte
+  has a published vocabulary.
+* Manufacturer-specific RecordTypes (`80`H..`FF`H) — no layout exists; the walk
+  reports them as unmapped/schema-incomplete rather than inventing fields.
+* The DDP_029 vs data-dictionary naming of the Overview registration array
+  (`VehicleRegistrationNumberRecordArray` vs `VehicleRegistrationIdentification`)
+  — both are accepted and the conflict is documented; no erratum is claimed.
+
+No compliance statement is made for the unresolved items above, and none of them
+is presented as a decoded field.

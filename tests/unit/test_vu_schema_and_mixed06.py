@@ -239,3 +239,17 @@ def test_certificate_record_uses_the_existing_cvc_parser():
     else:
         assert out["confidence"] == "high"
         assert "public_point" not in out
+
+
+def test_resynchronisation_is_counted_and_fails_completeness():
+    """Junk inside a section is tolerated but never silent."""
+    stream = (_overview_stream()
+              + b"\xde\xad\xbe\xef"                       # junk, no header/section
+              + S.section(0x24,
+                          S.record_array(0x12, 64,
+                                         [struct.pack(">I", TIME) + bytes(60)]),
+                          S.signature_record()))
+    results = _results()
+    walk_vu_record_arrays(stream, results)
+    assert results["metadata"]["vu_walk_resync_bytes"] >= 1
+    assert results["_vu_walk_complete"] is False
