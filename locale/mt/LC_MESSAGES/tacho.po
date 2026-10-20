@@ -2323,3 +2323,6 @@ msgstr "Verżjoni tal-interface tat-tniżżil"
 
 msgid "Entry Type Description"
 msgstr "Tip tad-dħul Deskrizzjoni"
+
+msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
+msgstr "Immaġni ta' karta tas-sewwieq imniżżla permezz tal-unità tal-vettura: l-ewwel żewġ bytes huma l-intestatura tat-trażmissjoni (SID + TREP 06) li żammet il-programm li salva l-fajl, mhux il-forma standard tal-ħażna ta' fajl tal-karta (DDP_050). Xi programmi oħra jirrappurtaw fajl bħal dan bħala korrott; id-data tal-karta hija sħiħa u l-firem tagħha jiġu vverifikati b'mod normali."

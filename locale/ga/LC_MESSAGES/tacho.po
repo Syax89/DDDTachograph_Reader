@@ -2323,3 +2323,6 @@ msgstr "Leagan den chomhéadan íoslódála"
 
 msgid "Entry Type Description"
 msgstr "Cineál iontrála Cur síos"
+
+msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
+msgstr "Íomhá cárta tiománaí a íoslódáladh trí aonad na feithicle: is é an chéad dá bheart an ceanntásc aistrithe (SID + TREP 06) a d'fhág an clár a shábháil an comhad, ní an ghnáthfhoirm stórála de chomhad cárta (DDP_050). Tuairiscíonn roinnt clár eile a leithéid de chomhad mar chomhad truaillithe; tá sonraí an chárta iomlán agus fíoraítear a shínithe go normalach."

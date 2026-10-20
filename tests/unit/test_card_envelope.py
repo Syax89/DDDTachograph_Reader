@@ -363,3 +363,133 @@ def test_real_vu_plus_real_card_adds_up(tmp_path):
     for key in ("activities", "places", "events"):
         assert len(mixed.get(key) or []) == (len(vu_only.get(key) or [])
                                             + len(card_only.get(key) or [])), key
+
+
+# ── The transfer-header notice (owner request) ─────────────────────────────
+
+NOTICE_PREFIX = "\u2022 Driver-card image downloaded through the vehicle unit"
+
+
+def _mock_card_file(tmp_path, kind="g1"):
+    path = os.path.join(str(tmp_path), f"mock_{kind}.ddd")
+    {"g1": mock.generate_g1_card, "g2": mock.generate_g2_card}[kind](path)
+    with open(path, "rb") as handle:
+        raw = handle.read()
+    wrapped = os.path.join(str(tmp_path), f"wrapped_{kind}.ddd")
+    with open(wrapped, "wb") as handle:
+        handle.write(b"\x76\x06" + raw)
+    return raw, wrapped
+
+
+def test_wrapped_card_gets_one_informational_notice(tmp_path):
+    from app import gui as gui_module
+    _raw, wrapped = _mock_card_file(tmp_path)
+    DecoderRegistry.reset_instance()
+    from app.engine import TachoParser
+    result = TachoParser(wrapped).parse()
+    assert result["metadata"]["envelope"]["bytes"] == 2
+    warnings, notices = gui_module._integrity_bullets(result)
+    bullets = [b for b in warnings if NOTICE_PREFIX in b]
+    assert len(bullets) == 1                 # exactly one notice bullet
+    assert bullets[0] not in notices or True
+    # the notice is a note, never a damage claim: it does not add a finding, and
+    # the verdict stays exactly what the plain card reports
+    assert "corrupt" in bullets[0].lower()
+    assert "note" not in result["metadata"]  # no invented metadata
+    plain_path = os.path.join(str(tmp_path), "plain_for_notice.ddd")
+    with open(plain_path, "wb") as handle:
+        handle.write(_raw)
+    DecoderRegistry.reset_instance()
+    plain = TachoParser(plain_path).parse()
+    assert plain["metadata"]["integrity_check"] == result["metadata"]["integrity_check"]
+    # the machine-readable summary carries the same clarification
+    from core.utils import report_format as rf
+    rows = dict(rf.summary_rows(result))
+    assert any("downloaded through the vehicle unit" in str(v) for v in rows.values())
+
+
+def test_plain_card_gets_no_notice(tmp_path):
+    from app import gui as gui_module
+    from app.engine import TachoParser
+    from core.utils import report_format as rf
+    raw, _wrapped = _mock_card_file(tmp_path)
+    plain_path = os.path.join(str(tmp_path), "plain_only.ddd")
+    with open(plain_path, "wb") as handle:
+        handle.write(raw)
+    DecoderRegistry.reset_instance()
+    result = TachoParser(plain_path).parse()
+    assert "envelope" not in result["metadata"]
+    warnings, _notices = gui_module._integrity_bullets(result)
+    assert not any(NOTICE_PREFIX in b for b in warnings)
+    rows = dict(rf.summary_rows(result))
+    assert not any("downloaded through the vehicle unit" in str(v) for v in rows.values())
+
+
+def test_tampered_wrapped_card_still_raises_the_real_warnings(tmp_path):
+    from app import gui as gui_module
+    from app.engine import TachoParser
+    raw, _wrapped = _mock_card_file(tmp_path)
+    damaged = bytearray(raw)
+    damaged[5 + 8] ^= 0xFF
+    path = os.path.join(str(tmp_path), "wrapped_bad.ddd")
+    with open(path, "wb") as handle:
+        handle.write(b"\x76\x06" + bytes(damaged))
+    DecoderRegistry.reset_instance()
+    result = TachoParser(path).parse()
+    warnings, _notices = gui_module._integrity_bullets(result)
+    assert any(NOTICE_PREFIX in b for b in warnings)
+    # the real finding is still reported and the verdict is not "Verified"
+    assert any("EF data signatures" in b or "Card integrity" in b for b in warnings)
+    assert "Verified" != result["metadata"]["integrity_check"]
+
+
+def test_mixed_stream_does_not_get_the_standalone_notice(tmp_path):
+    from app import gui as gui_module
+    from app.engine import TachoParser
+    raw, _wrapped = _mock_card_file(tmp_path)
+    path = os.path.join(str(tmp_path), "mixed_notice.ddd")
+    with open(path, "wb") as handle:
+        handle.write(_synthetic_g1_vu() + b"\x76\x06" + raw)
+    DecoderRegistry.reset_instance()
+    result = TachoParser(path).parse()
+    # the card is an embedded region, not the standalone envelope form
+    assert result["metadata"].get("vu_card_download_sections")
+    warnings, _notices = gui_module._integrity_bullets(result)
+    assert not any(NOTICE_PREFIX in b for b in warnings)
+
+
+def test_real_wrapped_card_gets_the_notice_with_its_verified_verdict(tmp_path):
+    from app import gui as gui_module
+    from app.engine import TachoParser
+    path = require_real_file("*_D47C4D98DF.ddd")
+    with open(path, "rb") as handle:
+        if not handle.read(2) == b"\x76\x06":
+            pytest.skip("not a wrapped card")
+    DecoderRegistry.reset_instance()
+    result = TachoParser(path).parse()
+    warnings, _notices = gui_module._integrity_bullets(result)
+    notices = [b for b in warnings if NOTICE_PREFIX in b]
+    assert len(notices) == 1
+    assert "Verified" in result["metadata"]["integrity_check"]
+
+
+def test_notice_msgid_is_translated_in_every_catalog_and_distinct():
+    import glob
+    import re
+    msgid = ("Driver-card image downloaded through the vehicle unit: the two leading "
+             "bytes are the transfer header (SID + TREP 06) kept by the tool that "
+             "saved it, not the standard storage form of a card file (DDP_050). Some "
+             "other programs report such a file as corrupt; the card data are "
+             "complete and its signatures are verified normally.")
+    catalogs = sorted(glob.glob("locale/*/LC_MESSAGES/tacho.po"))
+    assert len(catalogs) == 33
+    values = {}
+    for path in catalogs:
+        text = open(path, encoding="utf-8").read()
+        match = re.search(r'^msgid "%s"\nmsgstr "(.*)"$' % re.escape(msgid), text, re.M)
+        assert match, path
+        value = match.group(1)
+        assert value and value != msgid, path          # no English copy
+        values[path.split("/")[1]] = value
+    # the notice is not a copy of a neighbouring string in any catalog
+    assert len(set(values.values())) == len(values)

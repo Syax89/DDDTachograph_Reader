@@ -544,3 +544,33 @@ One row or column per datum, in the density and vocabulary of its neighbours:
 * a partial download reaches the user through the existing completeness channel
   (`metadata.vu_integrity` → `trep_report.is_partial`/`complete_walk` → the GUI banner
   and the export TREP sheet) — no new text and no new UI.
+
+## 15. The transfer header in front of a card image (customer notice)
+
+Some tools save a card download *exactly as the vehicle unit relayed it*, so the file
+starts with the SID `76` ("Positive response transfer data", Annex 1B §2.2.2.10 /
+DDP_012) and the TREP `06` (card download), followed by the card's own TLV records
+(tag = FID+`00`, signature = FID+`01`, two-byte length, the signature TLV directly
+after its file — DDP_041/042/044/046). The standard storage form of a card file has no
+such prefix: DDP_050 requires stripping headers, SIDs, TREPs, sub-message counters and
+checksums, while DDP_034 keeps SID+TREP for *VU data transfers* — which is precisely
+why a tool that saves a transfer verbatim produces the prefixed form.
+
+Neither form is corrupt and this reader decodes both identically (`§13`). Because other
+software rejects the prefixed form, the application says so instead of leaving the
+customer guessing:
+
+* the window adds ONE informational bullet to the established integrity list
+  (banner → "File Integrity Warning" dialog): the file is a card image downloaded
+  through the vehicle unit, the two leading bytes are the transfer header kept by the
+  saving tool and not the standard storage form, some other programs report such a
+  file as corrupt, and the card data are complete with its signatures verified
+  normally. It is phrased as a note — the file keeps its own verdict (`Verified` where
+  the signatures verified) and every real warning still fires unchanged;
+* the report summary carries the same clarification as a `Transfer header` row, so
+  the PDF/Excel/CSV exports say it too (and a plain card carries no such row).
+
+The notice is driven by the same model marker the envelope path already writes
+(`metadata.envelope`); a card embedded inside a VU stream is *not* the standalone
+storage-form question, so it does not get the notice — there the card's own verdict and
+generation are reported per region in `metadata.embedded_card_verdicts`.

@@ -2323,3 +2323,6 @@ msgstr "Верзија интерфејса за преузимање"
 
 msgid "Entry Type Description"
 msgstr "Тип уноса Опис"
+
+msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
+msgstr "Слика возачке картице преузета преко уређаја возила: прва два бајта су заглавље преноса (SID + TREP 06) које је задржао програм који је сачувао датотеку, а не стандардна форма чувања датотеке картице (DDP_050). Неки други програми пријављују такву датотеку као оштећену; подаци картице су потпуни и њихови потписи се проверавају нормално."

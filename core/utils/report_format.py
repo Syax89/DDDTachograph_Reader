@@ -737,6 +737,20 @@ def summary_rows(data):
             f"{coverage['structurally_identified_pct']}% "
             "(not a semantic decoding rate)",
         ))
+    envelope = meta.get("envelope")
+    if isinstance(envelope, dict) and envelope.get("type"):
+        # A card image relayed through the vehicle unit: the two leading bytes are
+        # the transfer header (SID + TREP 06) the saving tool kept, not the storage
+        # form DDP_050 describes. The data are the standard card's; this row says so
+        # in the report exactly as the window does, and it is not a defect line.
+        rows.append((
+            "Transfer header",
+            "Card image downloaded through the vehicle unit: the two leading bytes "
+            "are the transfer header (SID 76 + TREP 06) kept by the tool that saved "
+            "the file, not the standard storage form of a card file (DDP_050, which "
+            "strips them). Some other programs report such a file as corrupt; the "
+            "card data are complete and their signatures are verified normally.",
+        ))
     if meta.get("app_version"):
         rows.append(("Reader version", meta["app_version"]))
     if sv.get("summary"):

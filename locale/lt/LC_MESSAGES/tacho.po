@@ -2323,3 +2323,6 @@ msgstr "Atsisiuntimo sąsajos versija"
 
 msgid "Entry Type Description"
 msgstr "Įrašo tipas Aprašymas"
+
+msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
+msgstr "Vairuotojo kortelės atvaizdas, atsisiųstas per transporto priemonės įrenginį: pirmieji du baitai yra perdavimo antraštė (SID + TREP 06), kurią paliko failą išsaugojusi programa, o ne standartinė kortelės failo saugojimo forma (DDP_050). Kai kurios kitos programos tokį failą praneša kaip sugadintą; kortelės duomenys yra išsamūs ir jų parašai tikrinami įprastai."

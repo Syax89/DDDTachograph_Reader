@@ -2323,3 +2323,6 @@ msgstr "Latausrajapinnan versio"
 
 msgid "Entry Type Description"
 msgstr "Merkintätyyppi Kuvaus"
+
+msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
+msgstr "Ajoneuvoyksikön kautta ladattu kuljettajakortin kuva: kaksi ensimmäistä tavua ovat tallentaneen ohjelman säilyttämä siirto-otsake (SID + TREP 06), eivät korttitiedoston vakiomuotoinen tallennusmuoto (DDP_050). Jotkin muut ohjelmat ilmoittavat tällaisen tiedoston vioittuneeksi; kortin tiedot ovat täydelliset ja niiden allekirjoitukset varmennetaan normaalisti."
