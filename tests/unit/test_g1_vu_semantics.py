@@ -450,3 +450,57 @@ def test_trep03_truncated_body_still_fails_structurally():
     body = bytes([2]) + _trep03_body()[1:1 + 82]      # declares 2 faults, holds 1
     assert _parse_trep_03_structured(body, results) is False
     assert results.get("faults", []) == []
+
+
+# ── F5: a stored record's identity is its position, not its fields ─────────
+
+def test_two_locks_with_corrupt_clocks_and_the_same_card_are_both_kept():
+    body = bytearray(_overview_body(n_locks=2, n_controls=0))
+    # lock area starts after the 433-byte prefix + 58-byte download activity + the
+    # lock count byte; two records with clocks 0/1 and the same card+company.
+    base = 433 + 58 + 1
+    body[base:base + 8] = struct.pack(">II", 0, 1)
+    body[base + 98:base + 98 + 8] = struct.pack(">II", 1, 0)
+    results = _results()
+    parse_g1_vu_overview(bytes(body), results)
+    assert len(results["company_locks"]) == 2
+
+
+def test_three_controls_with_corrupt_clocks_are_all_kept():
+    body = _overview_body(n_locks=0, n_controls=3)
+    results = _results()
+    parse_g1_vu_overview(body, results)
+    # the fixture writes the same control three times: three stored records
+    assert len(results["control_activities"]) == 3
+
+
+def test_two_places_in_the_same_second_with_different_cards_are_kept():
+    body = bytearray(_trep02_body(entry_types=(0x00, 0x00)))
+    # same timestamp for both place records, different card number
+    places_start = 7 + 2 + 129 + 2 + 2 * 2 + 1
+    struct.pack_into(">I", body, places_start + 18, TIME + 300)
+    struct.pack_into(">I", body, places_start + 28 + 18, TIME + 300)
+    body[places_start + 30:places_start + 46] = b"S" + b"1" * 15
+    results = _results()
+    assert _parse_trep_02_g1_structured(bytes(body), results) is True
+    assert len(results["places"]) == 2
+
+
+def test_two_calibrations_with_the_same_fields_are_both_kept():
+    same = _g1_calibration(purpose=0x04)
+    results = _results()
+    _parse_trep_05_technical(_trep05_body([same, same]), results)
+    assert len(results["calibrations"]) == 2
+
+
+def test_revisit_of_the_same_body_is_still_emitted_once():
+    """Dedup survives for a re-read body: identity is the message offset."""
+    body = _trep03_body(event_type=0x0A, fault_type=0x31, n_over=(), n_adj=())
+    results = _results()
+    assert _parse_trep_03_structured(body, results, message_offset=4096) is True
+    assert _parse_trep_03_structured(body, results, message_offset=4096) is True
+    assert len(results["events"]) == 1
+    assert len(results["faults"]) == 1
+    # a different message carrying the same records keeps them
+    assert _parse_trep_03_structured(body, results, message_offset=8192) is True
+    assert len(results["events"]) == 2

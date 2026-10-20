@@ -24,6 +24,26 @@ def _mark_heuristic(results, section, fields):
     mark_heuristic(results, section, fields)
 
 
+def _body_identity(data, message_offset=None):
+    """Identity of the message body a record came from.
+
+    The deterministic walk yields each body exactly once, so a record's identity
+    is its position in the download — never a subset of its decoded fields (two
+    stored records may legitimately share a clock, a card or a purpose). When the
+    caller has no message offset (a unit test calling a parser directly) the body
+    bytes identify the message, which keeps revisit de-duplication working.
+    """
+    if message_offset is not None:
+        return f"msg:{message_offset}"
+    import hashlib
+    return "body:" + hashlib.sha1(bytes(data)).hexdigest()[:16]
+
+
+def _record_key(identity, index):
+    """Stable identity of one stored record inside its message body."""
+    return f"{identity}#{index}"
+
+
 def _g1_time(ts, *, with_seconds=True):
     """ISO-8601 UTC string for a plausible TimeReal, else ``None``.
 
@@ -102,7 +122,7 @@ def parse_vu_vehicle_identification(val, results):
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("VU vehicle identification parse failed: %s", exc)
 
-def _parse_g1_overview_tail(body, off, results):
+def _parse_g1_overview_tail(body, off, results, identity=None):
     """Parse the variable tail of a G1 TREP 01 Overview after the 433-byte
     fixed prefix (Annex 1B §2.2.6.1):
 
@@ -116,6 +136,7 @@ def _parse_g1_overview_tail(body, off, results):
 
     Returns True when the structure validates (bounds + plausible counts).
     """
+    identity = identity or _body_identity(body)
     try:
         if off + 58 + 2 > len(body):
             return False
@@ -138,6 +159,7 @@ def _parse_g1_overview_tail(body, off, results):
             # its raw value and an explicit status. Dropping it would silently
             # delete a control-relevant entry (Annex 1B §2.110).
             locks.append({
+                "_key": _record_key(identity, ("lock", len(locks))),
                 "lock_in_time": _g1_time(lock_in),
                 "lock_out_time": _g1_time(lock_out),
                 "lock_in_raw": lock_in,
@@ -162,6 +184,7 @@ def _parse_g1_overview_tail(body, off, results):
             # Same rule as the locks: a control record is kept even when its
             # timestamp is not a calendar date (§2.44/§2.133).
             controls.append({
+                "_key": _record_key(identity, ("control", len(controls))),
                 "control_type": rec[0],
                 # Generation 1 ControlType is 'cvpdxxxx'B (§2.44): the roadside
                 # calibration bit of generation 2 does not exist here.
@@ -190,21 +213,17 @@ def _parse_g1_overview_tail(body, off, results):
             results.setdefault("company_info", {}).setdefault("name", dl_company)
 
         existing_locks = results.setdefault("company_locks", [])
-        seen = {(lk.get("lock_in_time"), str(lk.get("company_card")))
-                for lk in existing_locks if isinstance(lk, dict)}
+        seen = {lk.get("_key") for lk in existing_locks if isinstance(lk, dict)}
         for lk in locks:
-            key = (lk["lock_in_time"], str(lk["company_card"]))
-            if key not in seen:
-                seen.add(key)
+            if lk["_key"] not in seen:
+                seen.add(lk["_key"])
                 existing_locks.append(lk)
 
         existing_ctrl = results.setdefault("control_activities", [])
-        seen = {(c.get("control_time"), c.get("control_type"))
-                for c in existing_ctrl if isinstance(c, dict)}
+        seen = {c.get("_key") for c in existing_ctrl if isinstance(c, dict)}
         for c in controls:
-            key = (c["control_time"], c["control_type"])
-            if key not in seen:
-                seen.add(key)
+            if c["_key"] not in seen:
+                seen.add(c["_key"])
                 existing_ctrl.append(c)
 
         _log.debug("VU overview tail: %d locks, %d controls", len(locks), len(controls))
@@ -259,7 +278,7 @@ def _card_slot_state(code):
         return "occupied"
     return "reserved"
 
-def parse_g1_vu_overview(val, results):
+def parse_g1_vu_overview(val, results, message_offset=None):
     """Parse G1 VU Overview (TREP 01, container 0x7601) — Annex 1B §4.5.3.2.2.
 
     Fixed prefix (433 bytes, from C# VehicleUnitData.config):
@@ -278,6 +297,7 @@ def parse_g1_vu_overview(val, results):
     Adds logging to indicate which fields were parsed via fixed-offset vs regex.
     """
     import re
+    identity = _body_identity(val, message_offset)
     fixed_fields_parsed = set()
     regex_fields_parsed = set()
     try:
@@ -355,7 +375,7 @@ def parse_g1_vu_overview(val, results):
                     _g1_card_slots(slot_status))
                 fixed_fields_parsed.add("card_slots")
 
-                if _parse_g1_overview_tail(body, 433, results):
+                if _parse_g1_overview_tail(body, 433, results, identity):
                     fixed_fields_parsed.update(
                         ("download_activity", "company_locks", "control_activities"))
             except (struct.error, IndexError, ValueError) as exc:
@@ -693,7 +713,7 @@ def _parse_trep_02_activities(data, results):
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 02 activities parse failed: %s", exc)
 
-def _parse_trep_02_g1_structured(data, results):
+def _parse_trep_02_g1_structured(data, results, message_offset=None):
     """Parse a G1 TREP 02 (Activities) message — Annex 1B §2.2.6.2:
 
       dateOfDay(4, TimeReal) + odometerValueMidnight(3) +
@@ -717,6 +737,7 @@ def _parse_trep_02_g1_structured(data, results):
     each followed by its 128-byte RSA signature). Returns True when the
     structure validates; the caller falls back to the heuristic otherwise.
     """
+    identity = _body_identity(data, message_offset)
     try:
         if len(data) < 11:
             return False
@@ -736,6 +757,7 @@ def _parse_trep_02_g1_structured(data, results):
             ins_ts = struct.unpack(">I", rec[94:98])[0]
             wdr_ts = struct.unpack(">I", rec[102:106])[0]
             iw_records.append({
+                "_key": _record_key(identity, ("iw", len(iw_records))),
                 "holder_surname": decode_string(rec[0:36]),
                 "holder_first_names": decode_string(rec[36:72]),
                 "card": _parse_full_card_number(rec, 72),
@@ -794,6 +816,7 @@ def _parse_trep_02_g1_structured(data, results):
             short, meaning = entry_type_daily_work_period(rec[22], "G1")
             if 946684800 <= ts <= 4102444800:
                 places.append({
+                    "_key": _record_key(identity, ("place", len(places))),
                     "timestamp": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
                     "entry_type": "START" if short == "BEGIN" else "END",
                     "entry_type_meaning": meaning,
@@ -822,6 +845,7 @@ def _parse_trep_02_g1_structured(data, results):
             label = specific_condition_label(rec[4], generation="G1")
             if 946684800 <= ts <= 4102444800:
                 conditions.append({
+                    "_key": _record_key(identity, ("condition", len(conditions))),
                     "timestamp": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
                     "condition": label,
                     "condition_status": ("assigned" if rec[4] in (0x01, 0x02, 0x03)
@@ -844,9 +868,9 @@ def _parse_trep_02_g1_structured(data, results):
                     "_key": dk,
                 })
         existing_iw = results.setdefault("card_iw_records", [])
-        seen = {(r.get("insertion_time"), str(r.get("card"))) for r in existing_iw if isinstance(r, dict)}
+        seen = {r.get("_key") for r in existing_iw if isinstance(r, dict)}
         for iw in iw_records:
-            key = (iw["insertion_time"], str(iw["card"]))
+            key = iw["_key"]
             if key not in seen:
                 seen.add(key)
                 # The insertion cycle belongs to the day whose TREP 02 message
@@ -861,9 +885,11 @@ def _parse_trep_02_g1_structured(data, results):
         # (a card was absent all day, for instance): the day is emitted with an
         # empty change list instead of disappearing from the report.
         activities = results.setdefault("activities", [])
-        if not any(a.get("date") == date_str and a.get("source") == "vu_trep02"
-                   for a in activities if isinstance(a, dict)):
+        day_key = _record_key(identity, "day")
+        if not any(a.get("_key") == day_key for a in activities
+                   if isinstance(a, dict)):
             activities.append({
+                "_key": day_key,
                 "date": date_str,
                 "odometer_km": odo_midnight,
                 "changes": changes,
@@ -873,17 +899,17 @@ def _parse_trep_02_g1_structured(data, results):
             })
 
         existing_places = results.setdefault("places", [])
-        seen = {(p.get("timestamp"), p.get("type_code")) for p in existing_places if isinstance(p, dict)}
+        seen = {p.get("_key") for p in existing_places if isinstance(p, dict)}
         for p in places:
-            key = (p["timestamp"], p["type_code"])
+            key = p["_key"]
             if key not in seen:
                 seen.add(key)
                 existing_places.append(p)
 
         existing_sc = results.setdefault("specific_conditions", [])
-        seen = {(c.get("timestamp"), c.get("type_code")) for c in existing_sc if isinstance(c, dict)}
+        seen = {c.get("_key") for c in existing_sc if isinstance(c, dict)}
         for c in conditions:
-            key = (c["timestamp"], c["type_code"])
+            key = c["_key"]
             if key not in seen:
                 seen.add(key)
                 existing_sc.append(c)
@@ -971,7 +997,7 @@ def _parse_vu_event_record(data, offset):
         "similar_events": rec[82],
     }
 
-def _parse_trep_03_events_faults(data, results):
+def _parse_trep_03_events_faults(data, results, message_offset=None):
     """Parse TREP 03 (Events & Faults) — Annex 1B §2.2.6.3 deterministic layout:
 
       VuFaultData:             noOfVuFaults(1) + VuFaultRecord(82)×N
@@ -984,7 +1010,7 @@ def _parse_trep_03_events_faults(data, results):
     128-byte RSA signature). Falls back to heuristic pattern matching if the
     count-prefixed structure does not validate.
     """
-    if not _parse_trep_03_structured(data, results):
+    if not _parse_trep_03_structured(data, results, message_offset=message_offset):
         before = (len(results.get("events") or []), len(results.get("faults") or []),
                   len(results.get("inserted_drivers") or []))
         _parse_trep_03_events_faults_heuristic(data, results)
@@ -1003,8 +1029,9 @@ def _parse_trep_03_events_faults(data, results):
             _log.warning("TREP 03 (events/faults) layout did not match Annex 1B; "
                          "heuristic scan supplied %s", ", ".join(gained))
 
-def _parse_trep_03_structured(data, results):
+def _parse_trep_03_structured(data, results, message_offset=None):
     """Count-prefixed TREP 03 walk. Returns True when the structure validates."""
+    identity = _body_identity(data, message_offset)
     try:
         if len(data) < 12:
             return False
@@ -1017,6 +1044,7 @@ def _parse_trep_03_structured(data, results):
         for _ in range(n_faults):
             rec = _parse_vu_fault_record(data, pos)
             if rec is not None:
+                rec["_key"] = _record_key(identity, ("fault", len(faults)))
                 faults.append(rec)
             pos += 82
 
@@ -1028,6 +1056,7 @@ def _parse_trep_03_structured(data, results):
         for _ in range(n_events):
             rec = _parse_vu_event_record(data, pos)
             if rec is not None:
+                rec["_key"] = _record_key(identity, ("event", len(events)))
                 events.append(rec)
             pos += 83
 
@@ -1053,6 +1082,7 @@ def _parse_trep_03_structured(data, results):
             begin_ts = struct.unpack(">I", rec[2:6])[0]
             end_ts = struct.unpack(">I", rec[6:10])[0]
             overspeed.append({
+                "_key": _record_key(identity, ("overspeed", len(overspeed))),
                 "description": describe_event_fault_type(
                     rec[0], True, EVENT_FAULT_VERSION_G1),
                 "event_fault_version": EVENT_FAULT_VERSION_G1,
@@ -1092,6 +1122,7 @@ def _parse_trep_03_structured(data, results):
             # uninterpreted byte instead of being dropped.
             complete = len(rec) == 98
             adjustments.append({
+                "_key": _record_key(identity, ("adjustment", len(adjustments))),
                 "old_time": _g1_time(old_ts) if old_ts is not None else None,
                 "new_time": _g1_time(new_ts) if new_ts is not None else None,
                 "old_time_raw": old_ts,
@@ -1110,22 +1141,21 @@ def _parse_trep_03_structured(data, results):
         # Keys include end time and record purpose: the VU stores distinct
         # records sharing the same (type, begin), e.g. one per record purpose.
         existing_faults = results.setdefault("faults", [])
-        seen = {(f.get("fault_type"), f.get("begin_time"), f.get("end_time"), f.get("fault_purpose"))
-                for f in existing_faults if isinstance(f, dict)}
+        seen = {f.get("_key") for f in existing_faults if isinstance(f, dict)}
         for f in faults:
-            key = (f.get("fault_type"), f.get("begin_time"), f.get("end_time"), f.get("fault_purpose"))
+            key = f["_key"]
             if key not in seen:
                 seen.add(key)
                 existing_faults.append(f)
 
         existing_events = results.setdefault("events", [])
-        seen = {(e.get("type_code"), e.get("begin_time"), e.get("end_time"), e.get("record_purpose"))
-                for e in existing_events if isinstance(e, dict)}
+        seen = {e.get("_key") for e in existing_events if isinstance(e, dict)}
         for evt in events:
-            key = (evt["event_type"], evt["begin_time"], evt["end_time"], evt["event_purpose"])
+            key = evt["_key"]
             if key not in seen:
                 seen.add(key)
                 existing_events.append({
+                    "_key": key,
                     "description": evt["description"],
                     "event_fault_version": evt["event_fault_version"],
                     "type_status": evt["type_status"],
@@ -1152,6 +1182,7 @@ def _parse_trep_03_structured(data, results):
         # which case the time cells keep the table's N/A convention and the raw
         # values travel next to them.
         ctrl = {
+            "_key": _record_key(identity, "overspeed_control"),
             "last_control_time": _g1_time(osc_last),
             "last_control_time_raw": osc_last,
             "first_overspeed_since": _g1_time(osc_first),
@@ -1161,23 +1192,22 @@ def _parse_trep_03_structured(data, results):
             "number_of_overspeed": osc_count,
         }
         ctrl_list = results.setdefault("overspeeding_control", [])
-        if ctrl not in ctrl_list:
+        if not any(c.get("_key") == ctrl["_key"] for c in ctrl_list
+                   if isinstance(c, dict)):
             ctrl_list.append(ctrl)
 
         existing_overs = results.setdefault("overspeeding_events", [])
-        seen = {(o.get("event_type"), o.get("begin"), o.get("end"), o.get("record_purpose"))
-                for o in existing_overs if isinstance(o, dict)}
+        seen = {o.get("_key") for o in existing_overs if isinstance(o, dict)}
         for o in overspeed:
-            key = (o["event_type"], o["begin"], o["end"], o["record_purpose"])
+            key = o["_key"]
             if key not in seen:
                 seen.add(key)
                 existing_overs.append(o)
 
         existing_adj = results.setdefault("time_adjustments", [])
-        seen = {(a.get("old_time"), a.get("new_time"), a.get("old_time_raw"))
-                for a in existing_adj if isinstance(a, dict)}
+        seen = {a.get("_key") for a in existing_adj if isinstance(a, dict)}
         for a in adjustments:
-            key = (a["old_time"], a["new_time"], a["old_time_raw"])
+            key = a["_key"]
             if key not in seen:
                 seen.add(key)
                 existing_adj.append(a)
@@ -1441,7 +1471,7 @@ def _parse_trep_04_speed(data, results):
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 04 speed parse failed: %s", exc)
 
-def _parse_trep_05_technical(data, results):
+def _parse_trep_05_technical(data, results, message_offset=None):
     """Parse TREP 05 (Technical Data) — Annex 1B §2.2.6.5 deterministic layout:
 
       VuIdentification (116): manufacturerName(36) + manufacturerAddress(36) +
@@ -1453,6 +1483,7 @@ def _parse_trep_05_technical(data, results):
     Falls back to regex VIN-scan heuristic when the structure does not validate.
     """
     import re
+    identity = _body_identity(data, message_offset)
     try:
         if len(data) < 50:
             _log.debug("TREP 05: data too short (len=%d)", len(data))
@@ -1515,10 +1546,12 @@ def _parse_trep_05_technical(data, results):
             if old_time_iso is None:
                 field_status["old_time"] = "TimeReal outside the calendar"
             return {
-                # The record identity no longer depends on a non-empty VIN: an
-                # activation record is keyed by its purpose and raw times too.
-                "_key": (f"{vin}|{old_time_iso}|{workshop_name}|{old_odo}|"
-                         f"{purpose}|{old_time_iso and chunk[155:159].hex()}"),
+                # Identity is the position of the record in its message body (two
+                # stored calibrations may decode to identical fields), with the
+                # decoded values kept as a human-readable companion.
+                "_key": _record_key(identity, ("calibration", len(decoded))),
+                "_fields_key": (f"{vin}|{old_time_iso}|{workshop_name}|{old_odo}|"
+                                f"{purpose}"),
                 # No ``confidence`` key: this record came from the normative
                 # 167-byte layout. The repo convention is that only synthesized
                 # records carry a low-confidence marker (see

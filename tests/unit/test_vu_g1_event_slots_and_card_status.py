@@ -137,11 +137,17 @@ def test_g1_event_keeps_the_rest_of_the_record(tmp_path):
     assert event["record_purpose"] == 0x00
 
 
-def test_g1_event_stream_still_deduplicates(tmp_path):
-    """Two identical records keep collapsing to one, exactly as before."""
+def test_g1_identical_stored_records_are_both_kept(tmp_path):
+    """Corrected (F5): the counter declares two stored events, so two are kept.
+
+    The old assertion collapsed byte-identical records to one, but a record's
+    identity is its position in the download, never a subset of its fields — the
+    VU may store the same event twice (same type, same clocks).
+    """
     results = parse(tmp_path, g1_stream(events=[event_record(), event_record()]))
 
-    assert len(results["events"]) == 1
+    assert len(results["events"]) == 2
+    assert [e["type_code"] for e in results["events"]] == [0x01, 0x01]
 
 
 def test_g1_distinct_events_are_both_kept(tmp_path):

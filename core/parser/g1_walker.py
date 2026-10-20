@@ -383,13 +383,16 @@ def walk_g1_vu(data, results):
         results.setdefault("metadata", {}).setdefault(
             "vu_integrity", []).extend(integrity)
 
-    def _dispatch_trep02(body, res):
+    def _dispatch_trep02(body, res, message_offset=None):
         # The walk yields exact bodies, so try the deterministic layout first:
         # the heuristic wrapper rejects short bodies (< 50 bytes) that are
         # legitimate card-not-inserted days (18-byte TREP 02 messages).
-        if not _parse_trep_02_g1_structured(body, res):
+        if not _parse_trep_02_g1_structured(body, res,
+                                            message_offset=message_offset):
             _parse_trep_02_activities(body, res)
 
+    # Each handler receives the message offset: a stored record's identity is its
+    # position in the download, never a subset of its decoded fields.
     dispatch = {
         0x01: parse_g1_vu_overview,
         0x02: _dispatch_trep02,
@@ -406,7 +409,10 @@ def walk_g1_vu(data, results):
         if handler is None:
             continue
         try:
-            handler(body, results)
+            if msg["trep"] in (0x01, 0x02, 0x03, 0x05):
+                handler(body, results, message_offset=msg["pos"])
+            else:
+                handler(body, results)
         except Exception as exc:  # a decoder bug must not break the walk
             dispatch_failed = True
             # WARNING, not DEBUG: this is a swallowed decode error whose only
