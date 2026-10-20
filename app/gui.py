@@ -11,6 +11,7 @@ section's content shown in table form (one row per record, one column per
 field), with column sorting and text filtering.
 """
 
+import gc
 import os
 import sys
 import re
@@ -3340,6 +3341,23 @@ def _integrity_bullets(data):
     return warnings + notices, notices
 
 
+def _gc_pause():
+    """Stop the collector (a pass over the previous file's big graph stalls every thread)."""
+    was_enabled = gc.isenabled()
+    gc.unfreeze()
+    gc.disable()
+    return was_enabled
+
+
+def _gc_resume(was_enabled):
+    """Park the finished result graph in the permanent generation and restore the GC."""
+    try:
+        gc.freeze()
+    finally:
+        if was_enabled:
+            gc.enable()
+
+
 class TachoExplorer(tk.Tk):
     #: Idle defaults for the busy/render state read by ``_parse_done``,
     #: ``_start_parse`` and ``_pump_render``. They exist on the class as well as
@@ -3351,6 +3369,7 @@ class TachoExplorer(tk.Tk):
     _destroyed = False
     _rendering = False
     _parsing = False
+    _gc_was_enabled = None      # None: the GC is not paused by a parse
     _pump_due = 0.0
 
     def __init__(self, initial_file=None):
@@ -4212,6 +4231,7 @@ class TachoExplorer(tk.Tk):
         its own, so other windows' timers are unaffected.
         """
         self._destroyed = True
+        self._resume_gc()       # the poll stops on _destroyed, so no _finish_parse may come
         DayDetailWindow.forget_all()
         try:
             # Cancel at Tcl level: `Misc.after_cancel` also deletes the callback's
@@ -4272,7 +4292,12 @@ class TachoExplorer(tk.Tk):
         self.progress.start(12)
 
         worker = threading.Thread(target=self._parse_worker, args=(path,), daemon=True)
-        worker.start()
+        self._gc_was_enabled = _gc_pause()
+        try:
+            worker.start()
+        except BaseException:
+            self._resume_gc()
+            raise
         self.after(50, self._poll_parse_queue)
 
     def _parse_worker(self, path):
@@ -4301,9 +4326,16 @@ class TachoExplorer(tk.Tk):
             load_trace.event("parse_result_delivered")
             self._parse_done(data, path)
 
+    def _resume_gc(self):
+        """Undo ``_gc_pause`` once (idempotent)."""
+        was_enabled, self._gc_was_enabled = self._gc_was_enabled, None
+        if was_enabled is not None:
+            _gc_resume(was_enabled)
+
     def _finish_parse(self):
         """Restore the idle UI state (progress bar, buttons) after a parse."""
         self._parsing = False
+        self._resume_gc()
         try:
             self.progress.stop()
             self.progress.pack_forget()
@@ -4674,6 +4706,7 @@ class TachoExplorer(tk.Tk):
             return
         load_trace.pump_report()
         load_trace.event("idle")
+        load_trace.idle_report()
 
     def _check_integrity(self, data, path):
             """Warn the user when a file shows signs of corruption or data loss."""

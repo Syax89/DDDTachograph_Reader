@@ -6,6 +6,7 @@ and the path is printed once to stderr. Only the file extension, size, generatio
 counts are ever written: no contents, identifiers, file name or directory.
 """
 import contextlib
+import gc
 import os
 import platform
 import sys
@@ -17,10 +18,12 @@ FILE_NAME = "ddd-reader-load-trace.txt"
 
 _T0 = time.monotonic()              # import time ~ process start (gui imports this first)
 _NULL = contextlib.nullcontext()
-_lock = threading.Lock()
+_lock = threading.RLock()          # re-entrant: a GC pass can fire inside event() itself
 _announced = False
 _stage = ""                         # innermost open span, to say where a slow update() ran
 _opens = 0
+_gc = {"hooked": False, "start": 0.0, "passes": 0, "total": 0.0, "max": 0.0}
+GC_MIN_SECONDS = 0.020
 _pump = {"calls": 0, "real": 0, "seconds": 0.0, "longest": 0.0, "longest_stage": ""}
 
 
@@ -68,6 +71,7 @@ def header(root, version):
               tk=root.tk.call("info", "patchlevel"),
               windowingsystem=root.tk.call("tk", "windowingsystem"),
               frozen=bool(getattr(sys, "frozen", False)), version=version)
+        _gc_state()
 
 
 def opened(path):
@@ -81,6 +85,28 @@ def opened(path):
             size = "?"
         event("open requested", **{"open number": _opens},
               ext=os.path.splitext(path)[1].lower(), size_bytes=size)
+        _gc_state()
+
+
+def _gc_callback(phase, info):
+    if phase == "start":
+        _gc["start"] = time.monotonic()
+        return
+    seconds = time.monotonic() - _gc["start"]
+    _gc["passes"] += 1
+    _gc["total"] += seconds
+    _gc["max"] = max(_gc["max"], seconds)
+    if seconds > GC_MIN_SECONDS:
+        event("gc_pass", generation=info.get("generation"), seconds=round(seconds, 4),
+              collected=info.get("collected"), during=_stage or "idle")
+
+
+def _gc_state():
+    if ENABLED:
+        if not _gc["hooked"]:
+            _gc["hooked"] = True
+            gc.callbacks.append(_gc_callback)
+        event("gc_state", enabled=gc.isenabled(), frozen=gc.get_freeze_count())
 
 
 def pump_call():
@@ -106,3 +132,12 @@ def pump_report():
               longest_update=round(_pump["longest"], 4),
               longest_stage=_pump["longest_stage"])
         _pump.update(calls=0, real=0, seconds=0.0, longest=0.0, longest_stage="")
+
+
+def idle_report():
+    """Idle line extras: GC totals since the last report, and the GC state."""
+    if ENABLED:
+        event("gc_summary", passes=_gc["passes"], total_seconds=round(_gc["total"], 4),
+              max_seconds=round(_gc["max"], 4))
+        _gc.update(passes=0, total=0.0, max=0.0)
+        _gc_state()
