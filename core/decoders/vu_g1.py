@@ -921,8 +921,10 @@ def _parse_vu_fault_record(data, offset):
     fault_purpose = rec[1]
     begin_ts = struct.unpack(">I", rec[2:6])[0]
     end_ts = struct.unpack(">I", rec[6:10])[0]
-    if begin_ts < 946684800 or begin_ts > 4102444800:
-        return None
+    # A stored fault with an unusable time is still a stored fault: the record is
+    # kept with `time_status: invalid` and its raw value, never deleted. The
+    # caller's structural gate decides whether the whole area looks like a
+    # false-positive marker.
     return {
         "description": describe_event_fault_type(
             fault_type, False, EVENT_FAULT_VERSION_G1),
@@ -930,8 +932,10 @@ def _parse_vu_fault_record(data, offset):
         "type_status": event_fault_type_status(fault_type, EVENT_FAULT_VERSION_G1),
         "fault_type": fault_type,
         "fault_purpose": fault_purpose,
-        "begin_time": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
-        "end_time": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if 946684800 <= end_ts <= 4102444800 else "N/A",
+        "begin_time_raw": begin_ts,
+        "time_status": "valid" if _g1_time(begin_ts) else "invalid",
+        "begin_time": _g1_time(begin_ts),
+        "end_time": _g1_time(end_ts) or "N/A",
         "card_driver_begin": _parse_full_card_number(rec, 10),
         "card_codriver_begin": _parse_full_card_number(rec, 28),
         "card_driver_end": _parse_full_card_number(rec, 46),
@@ -947,9 +951,9 @@ def _parse_vu_event_record(data, offset):
     evt_purpose = rec[1]
     begin_ts = struct.unpack(">I", rec[2:6])[0]
     end_ts = struct.unpack(">I", rec[6:10])[0]
-    if begin_ts < 946684800 or begin_ts > 4102444800:
-        return None
     return {
+        "begin_time_raw": begin_ts,
+        "time_status": "valid" if _g1_time(begin_ts) else "invalid",
         # Generation-1 assignment ('0A'H = Vehicle Motion Conflict from the
         # amended list; generation-2-only codes stay reserved).
         "description": describe_event_fault_type(
@@ -958,8 +962,8 @@ def _parse_vu_event_record(data, offset):
         "type_status": event_fault_type_status(evt_type, EVENT_FAULT_VERSION_G1),
         "event_type": evt_type,
         "event_purpose": evt_purpose,
-        "begin_time": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
-        "end_time": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat() if 946684800 <= end_ts <= 4102444800 else "N/A",
+        "begin_time": _g1_time(begin_ts),
+        "end_time": _g1_time(end_ts) or "N/A",
         "card_driver_begin": _parse_full_card_number(rec, 10),
         "card_codriver_begin": _parse_full_card_number(rec, 28),
         "card_driver_end": _parse_full_card_number(rec, 46),
@@ -1028,9 +1032,13 @@ def _parse_trep_03_structured(data, results):
             pos += 83
 
         # Records can be empty (0xFF padding) but a populated structure must
-        # decode mostly valid timestamps, otherwise this is a false positive.
+        # contain at least one usable timestamp, otherwise this is a
+        # false-positive message marker rather than a TREP 03 body. Individual
+        # records are no longer dropped for their time: they are kept with
+        # ``time_status: invalid`` and their raw value.
         total = n_faults + n_events
-        if total > 0 and (len(faults) + len(events)) < max(1, total // 2):
+        usable = sum(1 for r in faults + events if r.get("time_status") == "valid")
+        if total > 0 and usable == 0:
             return False
 
         if pos + 9 > len(data):
@@ -1238,7 +1246,10 @@ def _parse_trep_03_events_faults_heuristic(data, results):
                 and not (946684800 <= end_ts <= 4102444800 and end_ts > horizon))
             if in_horizon and 0x01 <= data[pos] <= 0xFF:
                 fault = _parse_vu_fault_record(data, pos)
-                if fault is not None:
+                # A byte scan has no structural proof, so a record whose time is
+                # unusable is a scanner false positive here. (The nominal
+                # count-aligned path keeps such records with time_status.)
+                if fault is not None and fault.get("time_status") == "valid":
                     fkey = (fault.get("fault_type"), fault.get("begin_time"), fault.get("end_time"),
                             fault.get("fault_purpose"))
                     if fkey not in seen_fault_keys:
@@ -1249,13 +1260,17 @@ def _parse_trep_03_events_faults_heuristic(data, results):
                     continue
             if in_horizon and pos + 83 <= len(data):
                 evt = _parse_vu_event_record(data, pos)
-                if evt is not None:
+                # Same rule as the fault scan above: no structural proof means an
+                # unusable timestamp is a false positive, not a record.
+                if evt is not None and evt.get("time_status") == "valid":
                     ekey = (evt["event_type"], evt["begin_time"], evt["end_time"],
                             evt.get("event_purpose"))
                     if ekey not in seen_event_keys:
                         seen_event_keys.add(ekey)
                         results.setdefault("events", []).append({
-                            "description": describe_event(evt["event_type"]),
+                            "description": evt["description"],
+                            "event_fault_version": evt["event_fault_version"],
+                            "type_status": evt["type_status"],
                             "type_code": evt["event_type"],
                             "record_purpose": evt.get("event_purpose"),
                             "record_purpose_label": describe_record_purpose(evt.get("event_purpose")),

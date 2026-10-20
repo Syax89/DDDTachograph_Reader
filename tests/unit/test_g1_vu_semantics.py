@@ -376,3 +376,15 @@ def test_g1_calibration_times_keep_hour_and_minute():
     # stays a calendar day for the existing table.
     assert "T" in cal["old_time_iso"]
     assert len(cal["timestamp"]) == 10
+
+
+def test_g1_stored_fault_with_an_unusable_time_is_retained():
+    """A stored fault is not deleted because its clock value is corrupt."""
+    body = bytearray(_trep03_body())
+    struct.pack_into(">I", body, 1 + 2, 0xFF000000)     # fault begin, first record
+    results = _results()
+    assert _parse_trep_03_structured(bytes(body), results) is True
+    fault = results["faults"][0]
+    assert fault["begin_time"] is None
+    assert fault["begin_time_raw"] == 0xFF000000
+    assert fault["time_status"] == "invalid"
