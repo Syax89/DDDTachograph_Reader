@@ -499,3 +499,28 @@ What that changed:
 | Card download inside a stream | bounded by the card's own two-byte STAP length (≤ 0xFFFE). A `76 06` wrapper keeps G1 framing but the card inside keeps its own generation |
 | Section structure | duplicates, unexpected arrays, an out-of-order slot, a missing/duplicated signature array and a signature size outside 64..132 are INTEGRITY findings (`metadata.vu_integrity`, partial) — never a reason to re-scan |
 | Calibration | `CalibrationPurpose` is generation-aware (G1 stops at 04); the variant label names the size actually decoded, with `calibration_variant_expected`/`_mismatch` beside it |
+
+## 13. A TREP 06 envelope and the embedded card
+
+Two shapes carry a card image: a **stand-alone** file that is the card plus the
+VU's `76 06` header, and a **card section inside** a VU stream.
+
+* Stand-alone: `core/parser/card_envelope.py` recognises the envelope structurally
+  (STAP walk, first element a card file, the stream closing at EOF or at the
+  tolerated `76 00` trailer) and the engine parses `raw[2:]` through the plain-card
+  pipeline — same generation detection (including the `Tachograph_G2` DF), same EF
+  signature verification, same certificate chain, same registry — then shifts every
+  offset by two and records `metadata.envelope`. The file is *not* a VU stream: no
+  TREP completeness report is produced. A header whose card image does not close is
+  not an envelope; it stays on the VU path and reports
+  `card_envelope_incomplete` in `metadata.vu_integrity`.
+* Inside a VU stream: the bounded region is parsed by the same plain-card pipeline
+  and its semantic keys are merged (generation-2 card EFs included), with its own
+  verdict, generation and EF counts reported per region in
+  `metadata.embedded_card_verdicts`. The VU keeps its own TREP decode and its own
+  verdict; the two are never folded together.
+
+A wrapped file must never be more or less trusted than its plain twin: for every
+damage class (a flipped EF byte, a missing signature element, a missing certificate,
+a cut inside the last element) the wrapped and plain routes print the same
+`integrity_check` and the same EF verdicts, and a cut image is never `Verified`.
