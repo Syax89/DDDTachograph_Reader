@@ -2334,3 +2334,12 @@ msgstr "Dekódolt egységek"
 
 msgid "Path"
 msgstr "Útvonal"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "A nap aktivitásváltozásai le lettek vágva a fájlban"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "A percintervallum sebességblokkja le lett vágva a fájlban"
+
+msgid "This record was cut off in the file"
+msgstr "Ez a rekord le lett vágva a fájlban"

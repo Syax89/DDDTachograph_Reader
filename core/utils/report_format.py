@@ -76,6 +76,9 @@ BOOKKEEPING_KEYS = frozenset({
     # labels that no catalog can tell apart, is exactly what the coherence rule
     # forbids).
     "sensor_serial_hex", "sensor_gnss_serial_hex", "rcm_serial_hex",
+    # A record whose own payload was cut: the machine flag and the declared count
+    # stay in the JSON, the informational `note` is what every surface shows.
+    "truncated", "declared_changes_count", "declared_minutes",
     "old_time_iso", "new_time_iso", "next_calibration_iso", "sensor_pairing_time",
     "rcm_serial_decoded",
     "digital_map_version_raw", "control_type_bits",
@@ -861,6 +864,49 @@ def _hoist_constant_record_type(headers, rows):
     return headers, [row[:idx] + row[idx + 1:] for row in rows], note
 
 
+def _add_note_column(key, items, headers, rows):
+    """Give a record whose payload was cut its own informational column.
+
+    Every export table ends up here, derived monthly report included: when any
+    record of the section carries a `note` — the informational text of a cut day or
+    speed block — the table gains a visible ``Note`` column, empty for the complete
+    records. Nothing is added when no record has a note, so an intact file's tables
+    are byte-for-byte what they were.
+    """
+    if "Note" in headers or not isinstance(items, list):
+        return headers, rows
+    flagged = [item for item in items
+               if isinstance(item, dict) and item.get("note")]
+    if not flagged:
+        return headers, rows
+    # Match on the rendered identity the table shows: the day date for activities,
+    # the minute range otherwise. A table without either still gets the column when
+    # it holds exactly one row (the whole section is that one cut record).
+    identity_keys = ("date",) if key == "activities" else ("begin_time_raw", "record_day")
+    wanted = {}
+    for item in flagged:
+        for name in identity_keys:
+            value = item.get(name)
+            if value not in (None, ""):
+                wanted.setdefault(fmt_value(value), fmt_value(item.get("note")))
+    column = [headers.index(h) for h in headers
+              if h in ("Date", "Time Range", "Day")]
+    new_rows, ran_out = [], False
+    for row in rows:
+        note = ""
+        for col in column:
+            if col < len(row) and fmt_value(row[col]) in wanted:
+                note = wanted[fmt_value(row[col])]
+                break
+        if not note and not column and len(rows) == 1 and len(flagged) == 1:
+            note = fmt_value(flagged[0].get("note"))
+        ran_out = ran_out or bool(note)
+        new_rows.append(list(row) + [note])
+    if not ran_out:
+        return headers, rows
+    return headers + ["Note"], new_rows
+
+
 def section_tables(data, max_rows=None):
     """Yield (label, description, headers, rows, truncated) for every populated export section."""
     for key, label in EXPORT_SECTIONS:
@@ -891,6 +937,7 @@ def section_tables(data, max_rows=None):
         headers, rows, type_note = _hoist_constant_record_type(headers, rows)
         if type_note:
             desc = f"{desc} {type_note}.".strip()
+        headers, rows = _add_note_column(key, items, headers, rows)
         truncated = False
         if max_rows is not None and len(rows) > max_rows:
             rows = rows[:max_rows]

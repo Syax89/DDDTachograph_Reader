@@ -2334,3 +2334,12 @@ msgstr "Avkodade enheter"
 
 msgid "Path"
 msgstr "Sökväg"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Ändringarna i aktivitet för denna dag klipptes av i filen"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Hastighetsblocket för detta minutintervall klipptes av i filen"
+
+msgid "This record was cut off in the file"
+msgstr "Denna post klipptes av i filen"

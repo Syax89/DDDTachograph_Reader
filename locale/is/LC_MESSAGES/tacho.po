@@ -2334,3 +2334,12 @@ msgstr "Afkóðuð einingar"
 
 msgid "Path"
 msgstr "Slóð"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Breytingar á virkni þessa dags voru klipptar í skránni"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Hraðablokkur þessa mínútubils var klipptur í skránni"
+
+msgid "This record was cut off in the file"
+msgstr "Þessi færsla var klippt í skránni"

@@ -2334,3 +2334,12 @@ msgstr "Atšifrētās vienības"
 
 msgid "Path"
 msgstr "Ceļš"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Šīs dienas aktivitātes izmaiņas failā tika nogrieztas"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Šī minūšu intervāla ātruma bloks failā tika nogriezts"
+
+msgid "This record was cut off in the file"
+msgstr "Šis ieraksts failā tika nogriezts"

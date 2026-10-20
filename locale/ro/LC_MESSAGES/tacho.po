@@ -2334,3 +2334,12 @@ msgstr "Unități decodate"
 
 msgid "Path"
 msgstr "Cale"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Modificările de activitate ale acestei zile au fost tăiate în fișier"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Blocul de viteză al acestui interval de minute a fost tăiat în fișier"
+
+msgid "This record was cut off in the file"
+msgstr "Această înregistrare a fost tăiată în fișier"

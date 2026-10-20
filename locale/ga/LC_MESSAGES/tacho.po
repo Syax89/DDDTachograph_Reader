@@ -2334,3 +2334,12 @@ msgstr "Aonaid díchódaithe"
 
 msgid "Path"
 msgstr "Conair"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Rinneadh athruithe gníomhaíochta an lae seo a ghearradh sa chomhad"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Rinneadh bloc luais an eatraimh nóiméad seo a ghearradh sa chomhad"
+
+msgid "This record was cut off in the file"
+msgstr "Rinneadh an taifead seo a ghearradh sa chomhad"

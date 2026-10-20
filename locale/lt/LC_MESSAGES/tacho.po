@@ -2334,3 +2334,12 @@ msgstr "Dekoduoti vienetai"
 
 msgid "Path"
 msgstr "Kelias"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Šios dienos veiklos pakeitimai buvo nukirpti faile"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Šio minučių intervalo greičio blokas buvo nukirptas faile"
+
+msgid "This record was cut off in the file"
+msgstr "Šis įrašas buvo nukirptas faile"

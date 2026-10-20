@@ -2334,3 +2334,12 @@ msgstr "Адзінкі дэкадавання"
 
 msgid "Path"
 msgstr "Шлях"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Змены дзейнасці за гэты дзень абрэзаны ў файле"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Блок скорасці гэтага інтэрвалу хвілін абрэзаны ў файле"
+
+msgid "This record was cut off in the file"
+msgstr "Гэты запіс абрэзаны ў файле"

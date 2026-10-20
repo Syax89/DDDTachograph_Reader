@@ -2334,3 +2334,12 @@ msgstr "Njësi të dekoduara"
 
 msgid "Path"
 msgstr "Rruga"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Ndryshimet e aktivitetit të kësaj dite u prenë në skedar"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Blloku i shpejtësisë i këtij intervali minutash u pre në skedar"
+
+msgid "This record was cut off in the file"
+msgstr "Ky rekord u pre në skedar"

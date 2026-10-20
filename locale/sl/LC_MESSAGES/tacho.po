@@ -2334,3 +2334,12 @@ msgstr "Dekodirane enote"
 
 msgid "Path"
 msgstr "Pot"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Spremembe dejavnosti tega dne so bile v datoteki odrezane"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Blok hitrosti tega minutnega intervala je bil v datoteki odrezan"
+
+msgid "This record was cut off in the file"
+msgstr "Ta zapis je bil v datoteki odrezan"

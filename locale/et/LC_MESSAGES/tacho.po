@@ -2334,3 +2334,12 @@ msgstr "Dekodeeritud üksused"
 
 msgid "Path"
 msgstr "Tee"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Selle päeva tegevuse muudatused lõigati failis ära"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Selle minutivahemiku kiirusplokk lõigati failis ära"
+
+msgid "This record was cut off in the file"
+msgstr "See kirje lõigati failis ära"

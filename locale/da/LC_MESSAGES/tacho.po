@@ -2334,3 +2334,12 @@ msgstr "Afkodningsenheder"
 
 msgid "Path"
 msgstr "Sti"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Ændringerne i aktivitet for denne dag blev afskåret i filen"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Hastighedsblokken for dette minutinterval blev afskåret i filen"
+
+msgid "This record was cut off in the file"
+msgstr "Denne post blev afskåret i filen"

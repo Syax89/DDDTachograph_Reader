@@ -2334,3 +2334,12 @@ msgstr "Gedecodeerde eenheden"
 
 msgid "Path"
 msgstr "Pad"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "De activiteitswijzigingen van deze dag zijn in het bestand afgekapt"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Het snelheidsblok van dit minutenbereik is in het bestand afgekapt"
+
+msgid "This record was cut off in the file"
+msgstr "Dit record is in het bestand afgekapt"

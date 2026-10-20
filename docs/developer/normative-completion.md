@@ -677,3 +677,12 @@ PDF read it, so the `Decode units` section actually renders. A schema violation 
 *normative* section (its records were decoded) and is reported as a finding; the runtime
 banner takes that bullet from the same helper the tests call. A walk that declared the
 zones instead of scanning records the route `vu_walk_incomplete`, which says what ran.
+
+### 15.6 A cut record says so
+
+A published record whose own payload the file cut carries `truncated: true`, the
+`declared_changes_count` when the header was readable, and an informational `note`
+that every surface renders (a `Note` column appears in that section's table only
+when such a record exists). Complete records never carry it, and no verdict of the
+file changes because of it: it is information, never an error. Card files are out of
+scope — their cut elementary files are declared by the card envelope.

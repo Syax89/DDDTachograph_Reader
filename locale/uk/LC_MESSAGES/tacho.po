@@ -2334,3 +2334,12 @@ msgstr "Декодовані одиниці"
 
 msgid "Path"
 msgstr "Шлях"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Зміни діяльності за цей день обрізані у файлі"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Блок швидкості цього інтервалу хвилин обрізаний у файлі"
+
+msgid "This record was cut off in the file"
+msgstr "Цей запис обрізаний у файлі"

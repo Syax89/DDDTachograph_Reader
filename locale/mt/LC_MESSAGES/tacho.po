@@ -2334,3 +2334,12 @@ msgstr "Unitajiet dekodifikati"
 
 msgid "Path"
 msgstr "Mogħdija"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Il-bidliet fl-attività ta’ dan il-jum inqatgħu fil-fajl"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Il-blokka tal-veloċità ta’ dan l-intervall tal-minuti nqatgħet fil-fajl"
+
+msgid "This record was cut off in the file"
+msgstr "Dan ir-rekord inqata’ fil-fajl"

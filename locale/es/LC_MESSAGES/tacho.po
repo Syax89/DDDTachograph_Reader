@@ -2334,3 +2334,12 @@ msgstr "Unidades decodificadas"
 
 msgid "Path"
 msgstr "Ruta"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Los cambios de actividad de este día se cortaron en el archivo"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "El bloque de velocidad de este intervalo de minutos se cortó en el archivo"
+
+msgid "This record was cut off in the file"
+msgstr "Este registro se cortó en el archivo"

@@ -27,6 +27,8 @@ from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
 from core import decoders
+from core.decoders.vu_g1 import (  # noqa: E402  (leaf: no parser import)
+    TRUNCATED_CHANGES_NOTE, TRUNCATED_RECORD_NOTE)
 from core.decoders.common import (
     decode_extended_serial_number, decode_previous_vehicle_info,
     describe_manual_input_flag, is_known_nation, serial_text,
@@ -1946,6 +1948,9 @@ def iter_vu_sections(data, state=None):
                 state["truncated"] = True
             if cur is not None:
                 cur["records"].append((pos, rt, rs, fits, pos + 5 + rs * fits))
+                # The array declared more records than the bytes hold: its last
+                # published record is cut and must say so.
+                cur.setdefault("cut_arrays", set()).add(pos)
             # Only the bytes AFTER the last complete record are a failed range, and
             # a resync marker is searched from there — with the full check, so a
             # real section that follows a lying count is still reached.
@@ -2045,14 +2050,30 @@ def walk_vu_record_arrays(data, results):
                 # presented as a known record type (D2-005). Its bytes are kept so
                 # the extension can be shown.
                 unmapped.setdefault(rt, (rt, rs, nr, data[rpos:rpos + rs * nr]))
-            for _ in range(nr):
+            cut_array = pos in sec.get("cut_arrays", ())
+            for index in range(nr):
                 if total_records >= VU_MAX_TOTAL_RECORDS:
                     capped = True
                     break
                 rec = data[rpos:rpos + rs]
-                current["records"].setdefault(rt, []).append(
-                    decode_vu_record(rt, rec, version=section_version,
-                                     trep=sec["trep"]))
+                decoded = decode_vu_record(rt, rec, version=section_version,
+                                           trep=sec["trep"])
+                if decoded.get("missing_bytes") and decoded.get("missing_bytes") > 0:
+                    # The record is shorter than any canonical size for its type:
+                    # its payload was cut. Published with what it has, flagged.
+                    decoded["truncated"] = True
+                    decoded["note"] = (TRUNCATED_CHANGES_NOTE
+                                       if decoded.get("changes") is not None
+                                       else TRUNCATED_RECORD_NOTE)
+                elif cut_array and index == nr - 1:
+                    # The array ran out of bytes inside this record: it is published
+                    # with what it has and carries the machine flag plus the
+                    # informational note (information, not an error).
+                    decoded["truncated"] = True
+                    decoded["note"] = (TRUNCATED_CHANGES_NOTE
+                                       if decoded.get("changes") is not None
+                                       else TRUNCATED_RECORD_NOTE)
+                current["records"].setdefault(rt, []).append(decoded)
                 rpos += rs
                 total_records += 1
         emitted = _emit_section(current, results) or {}

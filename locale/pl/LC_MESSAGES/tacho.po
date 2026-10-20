@@ -2334,3 +2334,12 @@ msgstr "Zdekodowane jednostki"
 
 msgid "Path"
 msgstr "Ścieżka"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Zmiany aktywności tego dnia zostały ucięte w pliku"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Blok prędkości tego przedziału minut został ucięty w pliku"
+
+msgid "This record was cut off in the file"
+msgstr "Ten zapis został ucięty w pliku"

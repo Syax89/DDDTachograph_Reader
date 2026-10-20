@@ -2334,3 +2334,12 @@ msgstr "Dekódované jednotky"
 
 msgid "Path"
 msgstr "Cesta"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Zmeny aktivity tohto dňa boli v súbore skrátené"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Blok rýchlosti tohto minútového intervalu bol v súbore skrátený"
+
+msgid "This record was cut off in the file"
+msgstr "Tento záznam bol v súbore skrátený"

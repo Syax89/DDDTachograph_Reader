@@ -2334,3 +2334,12 @@ msgstr "Çözülen birimler"
 
 msgid "Path"
 msgstr "Yol"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Bu günün etkinlik değişiklikleri dosyada kesildi"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Bu dakika aralığının hız bloğu dosyada kesildi"
+
+msgid "This record was cut off in the file"
+msgstr "Bu kayıt dosyada kesildi"

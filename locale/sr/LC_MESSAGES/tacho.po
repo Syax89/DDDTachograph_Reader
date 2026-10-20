@@ -2334,3 +2334,12 @@ msgstr "Декодиране јединице"
 
 msgid "Path"
 msgstr "Путања"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Промене активности овог дана су одсечене у датотеци"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Блок брзине овог интервала минута је одсечен у датотеци"
+
+msgid "This record was cut off in the file"
+msgstr "Овај запис је одсечен у датотеци"

@@ -2334,3 +2334,12 @@ msgstr "Dekoodatut yksiköt"
 
 msgid "Path"
 msgstr "Polku"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Tämän päivän toimintamuutokset katkaistiin tiedostossa"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Tämän minuuttivälin nopeuslohko katkaistiin tiedostossa"
+
+msgid "This record was cut off in the file"
+msgstr "Tämä tietue katkaistiin tiedostossa"

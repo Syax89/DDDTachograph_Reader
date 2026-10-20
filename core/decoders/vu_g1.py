@@ -24,6 +24,17 @@ def _mark_heuristic(results, section, fields):
     mark_heuristic(results, section, fields)
 
 
+#: Informational note for a record whose own payload was cut in the file. It is the
+#: msgid the catalogs translate; the record stores it as its `note` so every surface
+#: (window, CSV, Excel, PDF, JSON) carries it. Never an error: the file's verdicts are
+#: unchanged.
+TRUNCATED_CHANGES_NOTE = (
+    "The activity changes of this day were cut off in the file")
+TRUNCATED_SPEED_NOTE = (
+    "The speed block of this minute range was cut off in the file")
+TRUNCATED_RECORD_NOTE = "This record was cut off in the file"
+
+
 def _mark_heuristic_sections(results):
     """Name the sections a per-TREP heuristic touched, in the existing shape.
 
@@ -873,7 +884,8 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
     identity = _body_identity(data, message_offset)
     try:
         def _emit(iw_records, changes=(), n_ch=0, invalid_changes=0,
-                  places=(), conditions=()):
+                  places=(), conditions=(), declared_changes=None,
+                  changes_cut=False):
             """Publish what a (possibly cut) message holds, with dedup.
 
             A closure inside the walk, so a partial read publishes its COMPLETE
@@ -906,14 +918,23 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
             # (a card was absent all day, for instance): the day is emitted with an
             # empty change list instead of disappearing from the report.
             activities = results.setdefault("activities", [])
-            _append_once(activities, {
+            day_record = {
                 "date": date_str,
                 "odometer_km": odo_midnight,
-                "changes": changes,
+                "changes": list(changes),
                 "changes_count": n_ch,
                 "invalid_changes_count": invalid_changes,
                 "source": "vu_trep02",
-            }, identity, "day")
+            }
+            if changes_cut:
+                # The header declared more values than the bytes hold: the day is
+                # published (its date and odometer are real) but it must not read
+                # like a rest day. Machine flag + the informational note every
+                # surface renders.
+                day_record["truncated"] = True
+                day_record["declared_changes_count"] = declared_changes
+                day_record["note"] = TRUNCATED_CHANGES_NOTE
+            _append_once(activities, day_record, identity, "day")
 
             existing_places = results.setdefault("places", [])
             for idx, place in enumerate(places):
@@ -971,14 +992,20 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
             pos += 129
 
         if partial and pos + 2 > len(data):
-            _emit(iw_records)
+            # is published with what it has and says its changes are missing.
+            _emit(iw_records, changes_cut=True)
             return True
-        n_ch = struct.unpack(">H", data[pos:pos + 2])[0]
+        declared_n_ch = struct.unpack(">H", data[pos:pos + 2])[0]
+        n_ch = declared_n_ch
         pos += 2
+        changes_cut = False
         if pos + n_ch * 2 + 1 > len(data):
             if not partial:
                 return False
             n_ch = max(0, (len(data) - pos - 1) // 2)
+            # The header declared more values than the bytes hold: the day is
+            # published with what the file carries, and says so.
+            changes_cut = True
         changes = []
         invalid_changes = 0
         for i in range(n_ch):
@@ -996,7 +1023,8 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
         n_pl = data[pos]
         pos += 1
         if partial and pos + 2 > len(data):
-            _emit(iw_records, changes, n_ch, invalid_changes)
+            _emit(iw_records, changes, n_ch, invalid_changes,
+                  declared_changes=declared_n_ch, changes_cut=changes_cut)
             return True
         if pos + n_pl * 28 + 2 > len(data):
             if not partial:
@@ -1036,7 +1064,8 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
         n_sc = struct.unpack(">H", data[pos:pos + 2])[0]
         pos += 2
         if partial and pos + 2 > len(data):
-            _emit(iw_records, changes, n_ch, invalid_changes, places)
+            _emit(iw_records, changes, n_ch, invalid_changes, places,
+                  declared_changes=declared_n_ch, changes_cut=changes_cut)
             return True
         if pos + n_sc * 5 > len(data):
             if not partial:
@@ -1063,7 +1092,8 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
             })
             pos += 5
 
-        _emit(iw_records, changes, n_ch, invalid_changes, places, conditions)
+        _emit(iw_records, changes, n_ch, invalid_changes, places, conditions,
+              declared_changes=declared_n_ch, changes_cut=changes_cut)
         return True
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 02 G1 structured parse failed: %s", exc)

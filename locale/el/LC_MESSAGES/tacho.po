@@ -2334,3 +2334,12 @@ msgstr "Μονάδες αποκωδικοποίησης"
 
 msgid "Path"
 msgstr "Διαδρομή"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Οι αλλαγές δραστηριότητας αυτής της ημέρας κόπηκαν στο αρχείο"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Το μπλοκ ταχύτητας αυτού του διαστήματος λεπτών κόπηκε στο αρχείο"
+
+msgid "This record was cut off in the file"
+msgstr "Αυτή η εγγραφή κόπηκε στο αρχείο"
