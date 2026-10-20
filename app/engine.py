@@ -543,7 +543,10 @@ class TachoParser:
         regions = ((self.results.get("metadata") or {})
                    .get("vu_card_download_sections") or [])
         for info in regions:
-            if not info.get("delegated"):
+            # A region is processed when its byte range is known and closes; the
+            # generation-2 walker marks it "delegated", the generation-1 walker
+            # records the same fields without delegating itself.
+            if not info.get("tlv_complete"):
                 continue
             start, size = int(info.get("offset", 0)), int(info.get("bytes", 0))
             if size <= 0:
@@ -1057,6 +1060,15 @@ class TachoParser:
             # must not invalidate the signed preceding download payload.
             if message["trep"] in (0x11, 0x14):
                 entry.update({"signature_valid": None, "reason": "signature not applicable"})
+                report["treps"].append(entry)
+                continue
+            if message.get("card_region"):
+                # Card data forwarded inside the VU transfer (DDP_049): the card
+                # carries its own EF signatures, so the region is neither a VU
+                # TREP payload nor a missing VU signature. Counting it as one
+                # would flip a healthy VU download to "incomplete".
+                entry.update({"signature_valid": None,
+                              "reason": "card data forwarded in the VU transfer"})
                 report["treps"].append(entry)
                 continue
             signed_messages += 1

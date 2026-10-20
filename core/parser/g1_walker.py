@@ -33,6 +33,7 @@ subsequent ``0x76 TREP`` marker and on the end of file.
 import struct
 
 from core.utils.logger import get_logger
+from core.parser.card_envelope import card_image_extent
 from core.decoders.vu_g1 import (
     parse_g1_vu_overview,
     _parse_trep_02_activities,
@@ -306,10 +307,45 @@ def iter_g1_vu_messages(data):
         trep = data[pos + 1]
         body_start = pos + 2
         if trep == 0x06:
+            # A card image relayed inside the VU transfer (DDP_049): the region is
+            # a complete card STAP stream, so its extent comes from the card's own
+            # length fields — not from a boundary search — and it carries no VU
+            # TREP signature (the card has its own EF signatures).
+            extent, elements = card_image_extent(memoryview(data)[body_start:])
+            if not (elements and (body_start + extent == n
+                                  or _is_marker(data, body_start + extent))):
+                # The STAP walk can run past the card into the following VU
+                # section when the card's last element is followed by bytes that
+                # still look like an element. The next valid TREP marker is the
+                # bound then; the region is accepted only when the bytes up to it
+                # are a complete card.
+                boundary = _next_valid_marker(data, body_start, n, ctx=ctx)
+                if boundary - body_start > 0:
+                    inner, elements = card_image_extent(
+                        memoryview(data)[body_start:boundary])
+                    if elements and inner == boundary - body_start:
+                        extent = inner
+            if elements and (body_start + extent == n
+                             or _is_marker(data, body_start + extent)):
+                end = body_start + extent
+                yield {"pos": pos, "trep": trep, "body_start": body_start,
+                       "body_end": end, "sig_len": 0, "end": end,
+                       "card_region": True, "card_bytes": extent,
+                       "card_elements": elements}
+                pos = end
+                continue
+        card_incomplete = False
+        if trep == 0x06:
             # CardDownload length is determined by the boundary search; share
             # the walk caches so each position is resolved once (see
             # _next_valid_marker).
             body_len = _next_valid_marker(data, body_start, n, ctx=ctx) - body_start
+            # The header promises a card image; when the bytes are not a complete
+            # card stream, that is an INTEGRITY finding (the region does not
+            # close), reported instead of passing as a legacy card body.
+            inner, elements = card_image_extent(
+                memoryview(data)[body_start:body_start + body_len])
+            card_incomplete = not (elements and inner == body_len)
         else:
             body_len = _BODY_LEN_FNS[trep](data, body_start, n)
         if body_len is None:
@@ -332,8 +368,11 @@ def iter_g1_vu_messages(data):
             return
 
         end = body_end + sig_len
-        yield {"pos": pos, "trep": trep, "body_start": body_start,
-               "body_end": body_end, "sig_len": sig_len, "end": end}
+        message = {"pos": pos, "trep": trep, "body_start": body_start,
+                   "body_end": body_end, "sig_len": sig_len, "end": end}
+        if card_incomplete:
+            message["card_region_incomplete"] = True
+        yield message
         pos = end
 
 
@@ -377,12 +416,6 @@ def walk_g1_vu(data, results):
                               "status": "trailing_bytes",
                               "missing_bytes": 0,
                               "trailing_bytes": trailing})
-    if integrity:
-        # Model-only: which section's byte run does not match the normative
-        # length, and by how much. Integrity is not decodability (see below).
-        results.setdefault("metadata", {}).setdefault(
-            "vu_integrity", []).extend(integrity)
-
     def _dispatch_trep02(body, res, message_offset=None):
         # The walk yields exact bodies, so try the deterministic layout first:
         # the heuristic wrapper rejects short bodies (< 50 bytes) that are
@@ -403,8 +436,34 @@ def walk_g1_vu(data, results):
         0x11: _parse_sensor_download,
     }
     dispatch_failed = False
+    card_regions = []
     for msg in messages:
         body = data[msg["body_start"]:msg["body_end"]]
+        if msg.get("card_region_incomplete"):
+            card_regions.append({
+                "offset": msg["body_start"],
+                "bytes": msg["body_end"] - msg["body_start"],
+                "tlvs": 0,
+                "tlv_complete": False,
+                "boundary": "resynchronised (card EF stream does not close)",
+                "delegated": False,
+            })
+            integrity.append({"trep": "0x06", "status": "card_download_incomplete",
+                              "missing_bytes": 0,
+                              "trailing_bytes": msg["body_end"] - msg["body_start"]})
+        if msg.get("card_region"):
+            # The bytes are a card image: recorded here and handed to the plain
+            # card pipeline by the engine. They are not VU TREP payload, so they
+            # take no part in the VU signature accounting.
+            card_regions.append({
+                "offset": msg["body_start"],
+                "bytes": msg["card_bytes"],
+                "tlvs": msg["card_elements"],
+                "tlv_complete": True,
+                "boundary": "STAP/EF framing",
+                "delegated": False,
+            })
+            continue
         handler = dispatch.get(msg["trep"])
         if handler is None:
             continue
@@ -420,6 +479,15 @@ def walk_g1_vu(data, results):
             _log.warning("G1 VU TREP %02X dispatch failed at 0x%X: %s",
                          msg["trep"], msg["pos"], exc)
 
+    if integrity:
+        # Model-only: which section's byte run does not match the normative
+        # length, and by how much (a short signature block, trailing junk, a card
+        # region that does not close). Integrity is not decodability.
+        results.setdefault("metadata", {}).setdefault(
+            "vu_integrity", []).extend(integrity)
+    if card_regions:
+        results.setdefault("metadata", {}).setdefault(
+            "vu_card_download_sections", []).extend(card_regions)
     complete = complete and not dispatch_failed
     # Decodability is a separate question from integrity: every message the walk
     # yielded was decoded by its TREP parser unless the walk stopped on a marker

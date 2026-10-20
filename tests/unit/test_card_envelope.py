@@ -273,3 +273,93 @@ def test_real_wrapped_card_equals_its_unwrapped_twin(tmp_path, index):
         assert len(wrapped.get(key) or []) == len(plain.get(key) or []), key
     assert (_payload_without_envelope(wrapped)
             == _shift_offsets(_payload_without_envelope(plain)))
+
+
+# ── Item 8: a card region anywhere in a VU stream ──────────────────────────
+
+def _synthetic_g1_vu():
+    """A minimal signed generation-1 VU stream (one Overview TREP)."""
+    from tests.unit.test_g1_vu_semantics import _overview_body
+    return b"\x76\x01" + _overview_body() + b"\x00" * 128
+
+
+def _parse_pair(tmp_path, name, data, plain_path):
+    path = os.path.join(str(tmp_path), f"{name}.ddd")
+    with open(path, "wb") as handle:
+        handle.write(data)
+    DecoderRegistry.reset_instance()
+    from app.engine import TachoParser
+    return TachoParser(path).parse(), TachoParser(plain_path).parse()
+
+
+@pytest.mark.parametrize("order", ["vu-then-card", "card-then-vu"])
+def test_mixed_stream_decodes_both_parts_and_keeps_each_verdict(tmp_path, order):
+    vu = _synthetic_g1_vu()
+    card_path = os.path.join(str(tmp_path), "mock_g2_card.ddd")
+    mock.generate_g2_card(card_path)
+    with open(card_path, "rb") as handle:
+        card = b"\x76\x06" + handle.read()
+    card_only, _ = _parse_pair(tmp_path, "card-only", card, card_path)
+    mixed, _ = _parse_pair(tmp_path, "mixed", vu + card if order == "vu-then-card"
+                           else card + vu, card_path)
+
+    sections = mixed["metadata"].get("vu_card_download_sections") or []
+    assert len(sections) == 1
+    assert sections[0]["tlv_complete"] is True
+    verdict = (mixed["metadata"].get("embedded_card_verdicts") or [])[0]
+    # the card's own verdict equals the standalone card's
+    assert verdict["integrity_check"] == card_only["metadata"]["integrity_check"]
+    assert (verdict["ef_signatures"]["total"]
+            == (card_only.get("ef_signature_verification") or {}).get("total"))
+    # the VU verdict is owned only by the VU part: adding the card does not
+    # change it (the card region carries no VU TREP signature, DDP_049)
+    vu_only, _ = _parse_pair(tmp_path, "vu-only", vu, card_path)
+    assert mixed["metadata"]["integrity_check"] == vu_only["metadata"]["integrity_check"]
+    assert not mixed["metadata"].get("heuristic_fields")
+    # both parts contribute their records
+    assert len(mixed.get("gnss_ad_records") or []) == len(
+        card_only.get("gnss_ad_records") or [])
+    assert mixed.get("activities")
+
+
+def test_mixed_stream_cut_inside_the_card_reports_integrity(tmp_path):
+    vu = _synthetic_g1_vu()
+    card_path = os.path.join(str(tmp_path), "mock_g1_card.ddd")
+    mock.generate_g1_card(card_path)
+    with open(card_path, "rb") as handle:
+        card = handle.read()
+    damaged = vu + b"\x76\x06" + card[:-40]
+    mixed, _ = _parse_pair(tmp_path, "cut", damaged, card_path)
+    findings = mixed["metadata"].get("vu_integrity") or []
+    assert any(f["status"] in ("card_download_incomplete", "card_envelope_incomplete")
+               for f in findings), findings
+    # no fabricated card verdict for a region that does not close
+    assert not mixed["metadata"].get("embedded_card_verdicts")
+    assert "Verified" not in mixed["metadata"]["integrity_check"]
+
+
+def test_real_vu_plus_real_card_adds_up(tmp_path):
+    """The controller's real-file concatenation: counts add, verdicts separate."""
+    try:
+        card_path = require_real_file("*_D47C4D98DF.ddd")     # 76 06 + G1 card
+        vu_path = require_real_file("*_3B330594AC.ddd")       # G1 VU download
+    except Exception:
+        pytest.skip("no private corpus available")
+    with open(card_path, "rb") as handle:
+        card = handle.read()
+    with open(vu_path, "rb") as handle:
+        vu = handle.read()
+    if not card.startswith(b"\x76\x06") or not vu.startswith(b"\x76\x01"):
+        pytest.skip("unexpected heads")
+    card_only, _ = _parse_pair(tmp_path, "real-card", card, card_path)
+    vu_only, _ = _parse_pair(tmp_path, "real-vu", vu, vu_path)
+    mixed, _ = _parse_pair(tmp_path, "real-mixed", vu + card, vu_path)
+
+    verdict = (mixed["metadata"].get("embedded_card_verdicts") or [])[0]
+    assert verdict["integrity_check"] == card_only["metadata"]["integrity_check"]
+    assert (verdict["ef_signatures"]["total"]
+            == (card_only.get("ef_signature_verification") or {}).get("total"))
+    assert mixed["metadata"]["integrity_check"] == vu_only["metadata"]["integrity_check"]
+    for key in ("activities", "places", "events"):
+        assert len(mixed.get(key) or []) == (len(vu_only.get(key) or [])
+                                            + len(card_only.get(key) or [])), key

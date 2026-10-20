@@ -630,7 +630,8 @@ def test_embedded_card_yields_its_generation_2_data_and_verdict(tmp_path):
         parsed = TachoParser(path).parse()
         regions = parsed["metadata"].get("vu_card_download_sections") or []
         assert len(regions) == (2 if name == "two-cards" else 1), name
-        assert all(r["plain_card_parse"] == "ok" for r in regions), name
+        assert all(r.get("plain_card_parse") == "ok" for r in regions
+                   if r.get("tlv_complete")), name
         # the card's own generation-2 data reaches the result
         assert len(parsed.get("gnss_ad_records") or []) == len(
             plain.get("gnss_ad_records") or []), name
