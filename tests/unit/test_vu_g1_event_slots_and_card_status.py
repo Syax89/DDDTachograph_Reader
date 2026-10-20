@@ -191,7 +191,13 @@ def test_overview_card_slots_status_reads_both_nibbles(tmp_path, status, driver,
     assert slot_status["codriver_slot"] == codriver
     # The raw byte and the two keys are unchanged — nothing new on screen.
     assert slot_status["raw"] == f"0x{status:02X}"
-    assert sorted(slot_status) == ["codriver_slot", "driver_slot", "raw"]
+    # Complete per-nibble typing added later must stay model-only: every key
+    # beyond the three published ones has to be in HIDDEN_KEYS.
+    from core.utils.report_format import HIDDEN_KEYS
+    published = {"codriver_slot", "driver_slot", "raw"}
+    assert published <= set(slot_status)
+    for key in set(slot_status) - published:
+        assert key in HIDDEN_KEYS, key
 
 
 def test_overview_card_slots_keys_and_values_stay_in_the_published_vocabulary():
@@ -203,7 +209,10 @@ def test_overview_card_slots_keys_and_values_stay_in_the_published_vocabulary():
                    "company_info": {}, "card_numbers": []}
         parse_g1_vu_overview(overview_body(status), results)
         slot_status = results["vu_overview"]["card_slot_status"]
-        assert set(slot_status) == {"driver_slot", "codriver_slot", "raw"}
+        from core.utils.report_format import HIDDEN_KEYS
+        published = {"driver_slot", "codriver_slot", "raw"}
+        assert published <= set(slot_status)
+        assert set(slot_status) - published <= HIDDEN_KEYS
         assert slot_status["driver_slot"] in {"empty", "occupied", "reserved"}
         assert slot_status["codriver_slot"] in {"empty", "occupied", "reserved"}
         assert slot_status["raw"] == f"0x{status:02X}"

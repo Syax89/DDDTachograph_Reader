@@ -9,7 +9,11 @@ from core.decoders.common import (
     decode_activity_val, decode_date, decode_previous_vehicle_info, decode_string,
     describe_manual_input_flag, get_nation)
 from core.decoders.cert import parse_g1_certificate
-from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault, describe_record_purpose
+from core.utils.event_codes import (
+    EVENT_FAULT_VERSION_G1, control_type_bits, describe_calibration_purpose,
+    describe_control_type, describe_event, describe_event_fault_type,
+    describe_fault, describe_record_purpose, event_fault_type_status,
+    specific_condition_label)
 
 _log = get_logger(__name__)
 
@@ -18,6 +22,17 @@ def _mark_heuristic(results, section, fields):
     call-site brevity within this module."""
     from core.decoders.common import mark_heuristic
     mark_heuristic(results, section, fields)
+
+
+def _g1_time(ts, *, with_seconds=True):
+    """ISO-8601 UTC string for a plausible TimeReal, else ``None``.
+
+    ``None`` (not a fabricated date) is what an out-of-calendar value means, so
+    callers can keep the record and the raw integer together.
+    """
+    if not isinstance(ts, int) or not 946684800 <= ts <= 4102444800:
+        return None
+    return datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
 
 
 def _missing(value):
@@ -118,15 +133,20 @@ def _parse_g1_overview_tail(body, off, results):
             rec = body[off:off + 98]
             lock_in = struct.unpack(">I", rec[0:4])[0]
             lock_out = struct.unpack(">I", rec[4:8])[0]
-            if 946684800 <= lock_in <= 4102444800:
-                locks.append({
-                    "lock_in_time": datetime.fromtimestamp(lock_in, tz=timezone.utc).isoformat(),
-                    "lock_out_time": datetime.fromtimestamp(lock_out, tz=timezone.utc).isoformat()
-                    if 946684800 <= lock_out <= 4102444800 else None,
-                    "company_name": decode_string(rec[8:44]),
-                    "company_address": decode_string(rec[44:80]),
-                    "company_card": _parse_full_card_number(rec, 80),
-                })
+            # A company lock is a stored record, not a date: a TimeReal outside
+            # the calendar is corrupt/erased data and the record is kept with
+            # its raw value and an explicit status. Dropping it would silently
+            # delete a control-relevant entry (Annex 1B §2.110).
+            locks.append({
+                "lock_in_time": _g1_time(lock_in),
+                "lock_out_time": _g1_time(lock_out),
+                "lock_in_raw": lock_in,
+                "lock_out_raw": lock_out,
+                "time_status": ("valid" if _g1_time(lock_in) else "invalid"),
+                "company_name": decode_string(rec[8:44]),
+                "company_address": decode_string(rec[44:80]),
+                "company_card": _parse_full_card_number(rec, 80),
+            })
             off += 98
 
         n_ctrl = body[off]
@@ -137,25 +157,28 @@ def _parse_g1_overview_tail(body, off, results):
         for _ in range(n_ctrl):
             rec = body[off:off + 31]
             ctrl_ts = struct.unpack(">I", rec[1:5])[0]
-            if 946684800 <= ctrl_ts <= 4102444800:
-                begin_ts = struct.unpack(">I", rec[23:27])[0]
-                end_ts = struct.unpack(">I", rec[27:31])[0]
-                controls.append({
-                    "control_type": rec[0],
-                    "control_type_label": describe_control_type(rec[0]),
-                    "control_time": datetime.fromtimestamp(ctrl_ts, tz=timezone.utc).isoformat(),
-                    "control_card": _parse_full_card_number(rec, 5),
-                    "download_period_begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat()
-                    if 946684800 <= begin_ts <= 4102444800 else None,
-                    "download_period_end": datetime.fromtimestamp(end_ts, tz=timezone.utc).isoformat()
-                    if 946684800 <= end_ts <= 4102444800 else None,
-                })
+            begin_ts = struct.unpack(">I", rec[23:27])[0]
+            end_ts = struct.unpack(">I", rec[27:31])[0]
+            # Same rule as the locks: a control record is kept even when its
+            # timestamp is not a calendar date (§2.44/§2.133).
+            controls.append({
+                "control_type": rec[0],
+                # Generation 1 ControlType is 'cvpdxxxx'B (§2.44): the roadside
+                # calibration bit of generation 2 does not exist here.
+                "control_type_label": describe_control_type(rec[0], generation="G1"),
+                "control_type_bits": control_type_bits(rec[0], generation="G1"),
+                "control_time": _g1_time(ctrl_ts),
+                "control_time_raw": ctrl_ts,
+                "time_status": ("valid" if _g1_time(ctrl_ts) else "invalid"),
+                "control_card": _parse_full_card_number(rec, 5),
+                "download_period_begin": _g1_time(begin_ts),
+                "download_period_end": _g1_time(end_ts),
+            })
             off += 31
 
-        # A populated section must decode mostly valid records, otherwise this
-        # is garbage following a false-positive container marker.
-        if (n_locks + n_ctrl) > 0 and (len(locks) + len(controls)) < max(1, (n_locks + n_ctrl) // 2):
-            return False
+        # The counts are structural: every declared record is decoded above, so
+        # this check now only guards against a count that does not fit the body
+        # (already done above) — records are never deleted for their values.
 
         if 946684800 <= dl_ts <= 4102444800:
             results.setdefault("vu_overview", {}).setdefault("last_download", {
@@ -189,6 +212,32 @@ def _parse_g1_overview_tail(body, off, results):
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("VU overview tail parse failed: %s", exc)
         return False
+
+#: CardSlotsStatus nibble → card type (Annex 1B §2.28, shared by every
+#: generation): 0000 no card, 0001 driver, 0010 workshop, 0011 control,
+#: 0100 company card, 0101..1111 unassigned.
+G1_CARD_SLOT_TYPES = {0x00: "none", 0x01: "driver", 0x02: "workshop",
+                      0x03: "control", 0x04: "company"}
+
+
+def _g1_card_slots(value):
+    """Both CardSlotsStatus nibbles, typed (high = co-driver, low = driver).
+
+    The published short word keeps its historical vocabulary
+    (``empty``/``occupied``/``reserved``); the assigned card type, its numeric
+    code and its assignment status travel as model-only companions.
+    """
+    out = {}
+    for name, nibble in (("driver_slot", value & 0x0F),
+                         ("codriver_slot", (value >> 4) & 0x0F)):
+        card_type = G1_CARD_SLOT_TYPES.get(nibble)
+        out[name] = _card_slot_state(nibble)
+        out[f"{name}_code"] = nibble
+        out[f"{name}_type"] = card_type or "unassigned"
+        out[f"{name}_status"] = "assigned" if card_type else "unassigned"
+    out["raw"] = f"0x{value:02X}"
+    return out
+
 
 def _card_slot_state(code):
     """One CardSlotsStatus nibble → ``"empty"`` | ``"occupied"`` | ``"reserved"``.
@@ -302,11 +351,8 @@ def parse_g1_vu_overview(val, results):
                 # The two keys and their value vocabulary are unchanged — only
                 # the nibbles are read where the old code tested bits 0/1,
                 # which reported 0x41 (both slots occupied) as co-driver empty.
-                results.setdefault("vu_overview", {})["card_slot_status"] = {
-                    "driver_slot": _card_slot_state(slot_status & 0x0F),
-                    "codriver_slot": _card_slot_state((slot_status >> 4) & 0x0F),
-                    "raw": f"0x{slot_status:02X}",
-                }
+                results.setdefault("vu_overview", {})["card_slot_status"] = (
+                    _g1_card_slots(slot_status))
                 fixed_fields_parsed.add("card_slots")
 
                 if _parse_g1_overview_tail(body, 433, results):
@@ -718,26 +764,41 @@ def _parse_trep_02_g1_structured(data, results):
         if n_ch > 5000 or pos + n_ch * 2 + 1 > len(data):
             return False
         changes = []
+        invalid_changes = 0
         for i in range(n_ch):
             v = struct.unpack(">H", data[pos + i * 2:pos + i * 2 + 2])[0]
             activity = decode_activity_val(v)
             if activity is not None:
                 changes.append(activity)
+            else:
+                # An undecodable ActivityChangeInfo is counted, never published
+                # as an activity: the day still reports how many stored values
+                # it could not read.
+                invalid_changes += 1
         pos += n_ch * 2
 
         n_pl = data[pos]
         pos += 1
         if pos + n_pl * 28 + 2 > len(data):
             return False
-        entry_names = {0x00: "START", 0x01: "END", 0x02: "START", 0x03: "END"}
+        # EntryTypeDailyWorkPeriod (Annex 1B §2.51) assigns 0..5: 4/5 are the
+        # "related time assumed by VU" pair and are just as legal as 0..3. The
+        # short word keeps the historical START/END vocabulary; the meaning and
+        # its assignment status travel with the record.
+        from core.decoders.common import (entry_type_daily_work_period,
+                                          entry_type_daily_work_period_status)
         places = []
         for _ in range(n_pl):
             rec = data[pos:pos + 28]
             ts = struct.unpack(">I", rec[18:22])[0]
-            if 946684800 <= ts <= 4102444800 and rec[22] in entry_names:
+            short, meaning = entry_type_daily_work_period(rec[22], "G1")
+            if 946684800 <= ts <= 4102444800:
                 places.append({
                     "timestamp": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
-                    "entry_type": entry_names[rec[22]],
+                    "entry_type": "START" if short == "BEGIN" else "END",
+                    "entry_type_meaning": meaning,
+                    "entry_type_status": entry_type_daily_work_period_status(
+                        rec[22], "G1"),
                     "type_code": rec[22],
                     "nation": get_nation(rec[23]),
                     "region": rec[24],
@@ -750,21 +811,27 @@ def _parse_trep_02_g1_structured(data, results):
         pos += 2
         if n_sc > 1000 or pos + n_sc * 5 > len(data):
             return False
-        from core.utils.event_codes import specific_condition_label
         conditions = []
         for _ in range(n_sc):
             rec = data[pos:pos + 5]
             ts = struct.unpack(">I", rec[0:4])[0]
-            # Valid SpecificConditionType codes are 0x01-0x04 (Annex 1C §2.154).
-            if 946684800 <= ts <= 4102444800 and rec[4] in (0x01, 0x02, 0x03, 0x04):
+            # Generation 1 assigns '01'/'02' (out of scope begin/end) and '03'
+            # (one Ferry / Train crossing); '04' is RFU here — it must not take
+            # the generation-2 "crossing end" meaning, but the record is kept
+            # with its numeric code and an assignment status.
+            label = specific_condition_label(rec[4], generation="G1")
+            if 946684800 <= ts <= 4102444800:
                 conditions.append({
                     "timestamp": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
-                    "condition": specific_condition_label(rec[4]),
+                    "condition": label,
+                    "condition_status": ("assigned" if rec[4] in (0x01, 0x02, 0x03)
+                                         else "not assigned"),
                     "type_code": rec[4],
                 })
             pos += 5
 
         # Emit (with dedup — the message scan can revisit the same block).
+        date_str = datetime.fromtimestamp(date_ts, tz=timezone.utc).strftime('%d/%m/%Y')
         drivers = results.setdefault("inserted_drivers", [])
         for iw in iw_records:
             card_num = (iw["card"] or {}).get("card_number", "")
@@ -782,20 +849,28 @@ def _parse_trep_02_g1_structured(data, results):
             key = (iw["insertion_time"], str(iw["card"]))
             if key not in seen:
                 seen.add(key)
+                # The insertion cycle belongs to the day whose TREP 02 message
+                # carried it. Deduplication stays keyed on the record payload
+                # (the consumer schema is unchanged); the day association is
+                # carried explicitly so a merged download keeps it.
+                iw["day_date"] = date_str
+                iw["record_day"] = date_str
                 existing_iw.append(iw)
 
-        date_str = datetime.fromtimestamp(date_ts, tz=timezone.utc).strftime('%d/%m/%Y')
-        if changes:
-            activities = results.setdefault("activities", [])
-            if not any(a.get("date") == date_str and a.get("source") == "vu_trep02"
-                       for a in activities if isinstance(a, dict)):
-                activities.append({
-                    "date": date_str,
-                    "odometer_km": odo_midnight,
-                    "changes": changes,
-                    "changes_count": n_ch,
-                    "source": "vu_trep02",
-                })
+        # A downloaded day with no activity change is still a downloaded day
+        # (a card was absent all day, for instance): the day is emitted with an
+        # empty change list instead of disappearing from the report.
+        activities = results.setdefault("activities", [])
+        if not any(a.get("date") == date_str and a.get("source") == "vu_trep02"
+                   for a in activities if isinstance(a, dict)):
+            activities.append({
+                "date": date_str,
+                "odometer_km": odo_midnight,
+                "changes": changes,
+                "changes_count": n_ch,
+                "invalid_changes_count": invalid_changes,
+                "source": "vu_trep02",
+            })
 
         existing_places = results.setdefault("places", [])
         seen = {(p.get("timestamp"), p.get("type_code")) for p in existing_places if isinstance(p, dict)}
@@ -833,7 +908,12 @@ def _parse_full_card_number(data, offset):
     }
 
 def _parse_vu_fault_record(data, offset):
-    """Parse VuFaultRecord — ASN.1 (tachograph.asn:324-333), 82 bytes."""
+    """Parse VuFaultRecord — ASN.1 (tachograph.asn:324-333), 82 bytes.
+
+    The ``faultType`` byte is an EventFaultType read against the *generation 1*
+    assignment (DDP_031: the '03'H transfer). Generation-2-only ranges such as
+    the GNSS/RCM faults stay "Reserved for future use" here.
+    """
     if offset + 82 > len(data):
         return None
     rec = data[offset:offset + 82]
@@ -844,7 +924,10 @@ def _parse_vu_fault_record(data, offset):
     if begin_ts < 946684800 or begin_ts > 4102444800:
         return None
     return {
-        "description": describe_fault(fault_type),
+        "description": describe_event_fault_type(
+            fault_type, False, EVENT_FAULT_VERSION_G1),
+        "event_fault_version": EVENT_FAULT_VERSION_G1,
+        "type_status": event_fault_type_status(fault_type, EVENT_FAULT_VERSION_G1),
         "fault_type": fault_type,
         "fault_purpose": fault_purpose,
         "begin_time": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
@@ -867,7 +950,12 @@ def _parse_vu_event_record(data, offset):
     if begin_ts < 946684800 or begin_ts > 4102444800:
         return None
     return {
-        "description": describe_event(evt_type),
+        # Generation-1 assignment ('0A'H = Vehicle Motion Conflict from the
+        # amended list; generation-2-only codes stay reserved).
+        "description": describe_event_fault_type(
+            evt_type, True, EVENT_FAULT_VERSION_G1),
+        "event_fault_version": EVENT_FAULT_VERSION_G1,
+        "type_status": event_fault_type_status(evt_type, EVENT_FAULT_VERSION_G1),
         "event_type": evt_type,
         "event_purpose": evt_purpose,
         "begin_time": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
@@ -963,9 +1051,14 @@ def _parse_trep_03_structured(data, results):
             end_ts = struct.unpack(">I", rec[6:10])[0]
             if 946684800 <= begin_ts <= 4102444800:
                 overspeed.append({
-                    "description": describe_event(rec[0]),
+                    "description": describe_event_fault_type(
+                        rec[0], True, EVENT_FAULT_VERSION_G1),
+                    "event_fault_version": EVENT_FAULT_VERSION_G1,
+                    "type_status": event_fault_type_status(
+                        rec[0], EVENT_FAULT_VERSION_G1),
                     "event_type": rec[0],
-                    "event_type_label": describe_event(rec[0]),
+                    "event_type_label": describe_event_fault_type(
+                        rec[0], True, EVENT_FAULT_VERSION_G1),
                     "record_purpose": rec[1],
                     "record_purpose_label": describe_record_purpose(rec[1]),
                     "begin": datetime.fromtimestamp(begin_ts, tz=timezone.utc).isoformat(),
@@ -980,23 +1073,35 @@ def _parse_trep_03_structured(data, results):
 
         n_adj = data[pos]
         pos += 1
-        if pos + n_adj * 98 > len(data):
+        # Only the two TimeReal values are needed to keep a record: a short
+        # tail is a truncated record, not a reason to fail the whole section.
+        if pos + n_adj * 8 > len(data):
             return False
         adjustments = []
         for _ in range(n_adj):
             rec = data[pos:pos + 98]
-            old_ts = struct.unpack(">I", rec[0:4])[0]
-            new_ts = struct.unpack(">I", rec[4:8])[0]
-            if 946684800 <= new_ts <= 4102444800:
-                adjustments.append({
-                    "old_time": datetime.fromtimestamp(old_ts, tz=timezone.utc).isoformat()
-                    if 946684800 <= old_ts <= 4102444800 else "N/A",
-                    "new_time": datetime.fromtimestamp(new_ts, tz=timezone.utc).isoformat(),
-                    "workshop_name": decode_string(rec[8:44]),
-                    "workshop_address": decode_string(rec[44:80]),
-                    "workshop_card": _parse_full_card_number(rec, 80),
-                })
             pos += 98
+            old_ts = struct.unpack(">I", rec[0:4])[0] if len(rec) >= 8 else None
+            new_ts = struct.unpack(">I", rec[4:8])[0] if len(rec) >= 8 else None
+            # VuTimeAdjustmentRecord is 98 bytes in generation 1 (§2.120). An
+            # empty variant (all-zero times) or a short body is a stored record
+            # too: it is kept with its raw values, a completeness flag and every
+            # uninterpreted byte instead of being dropped.
+            complete = len(rec) == 98
+            adjustments.append({
+                "old_time": _g1_time(old_ts) if old_ts is not None else None,
+                "new_time": _g1_time(new_ts) if new_ts is not None else None,
+                "old_time_raw": old_ts,
+                "new_time_raw": new_ts,
+                "time_status": ("valid" if old_ts is not None and _g1_time(new_ts)
+                                else "invalid"),
+                "record_bytes": len(rec),
+                "record_complete": complete,
+                "raw_tail_hex": rec[8:].hex() if not complete else "",
+                "workshop_name": decode_string(rec[8:44]) if complete else "",
+                "workshop_address": decode_string(rec[44:80]) if complete else "",
+                "workshop_card": _parse_full_card_number(rec, 80) if complete else None,
+            })
 
         # Emit with dedup — the message scan can hit the same block twice.
         # Keys include end time and record purpose: the VU stores distinct
@@ -1018,7 +1123,9 @@ def _parse_trep_03_structured(data, results):
             if key not in seen:
                 seen.add(key)
                 existing_events.append({
-                    "description": describe_event(evt["event_type"]),
+                    "description": evt["description"],
+                    "event_fault_version": evt["event_fault_version"],
+                    "type_status": evt["type_status"],
                     "type_code": evt["event_type"],
                     "record_purpose": evt["event_purpose"],
                     "record_purpose_label": describe_record_purpose(evt["event_purpose"]),
@@ -1057,9 +1164,10 @@ def _parse_trep_03_structured(data, results):
                 existing_overs.append(o)
 
         existing_adj = results.setdefault("time_adjustments", [])
-        seen = {(a.get("old_time"), a.get("new_time")) for a in existing_adj if isinstance(a, dict)}
+        seen = {(a.get("old_time"), a.get("new_time"), a.get("old_time_raw"))
+                for a in existing_adj if isinstance(a, dict)}
         for a in adjustments:
-            key = (a["old_time"], a["new_time"])
+            key = (a["old_time"], a["new_time"], a["old_time_raw"])
             if key not in seen:
                 seen.add(key)
                 existing_adj.append(a)
@@ -1219,8 +1327,12 @@ def _parse_trep_04_speed(data, results):
         if n_blocks == 0 or 2 + n_blocks * 64 > len(data):
             return
         first_ts = struct.unpack(">I", data[2:6])[0]
-        if not (946684800 <= first_ts <= 4102444800):
-            return  # false-positive message marker
+        # The block count and the exact body length already prove the structure
+        # (`2 + n_blocks*64`). Only a body with slack needs the timestamp as a
+        # false-positive filter: a legal block whose TimeReal is unusable keeps
+        # its 60 samples instead of vanishing (structural gate, not a date gate).
+        if not (946684800 <= first_ts <= 4102444800) and len(data) != 2 + n_blocks * 64:
+            return
 
         speed_blocks = results.setdefault("speed_blocks", [])
         seen = {b.get("timestamp") for b in speed_blocks if isinstance(b, dict)}
@@ -1231,6 +1343,8 @@ def _parse_trep_04_speed(data, results):
         run_chart_speeds = []
         prev_ts = None
 
+        run_blocks = []
+
         def _flush():
             if run_start_ts is None or not run_speeds:
                 return
@@ -1240,6 +1354,12 @@ def _parse_trep_04_speed(data, results):
             seen.add(dt)
             speed_blocks.append({
                 "timestamp": dt,
+                # The published row is an aggregation the *application* derives
+                # (consecutive one-minute blocks merged into a driving run); the
+                # normative 64-byte VuDetailedSpeedBlocks travel underneath it
+                # unchanged, so nothing the standard defines is lost here.
+                "aggregation": "application (consecutive 1-minute blocks merged)",
+                "time_status": "valid",
                 "minutes": run_minutes,
                 "average_speed_kmh": round(sum(run_speeds) / len(run_speeds), 1),
                 "max_speed_kmh": max(run_speeds),
@@ -1247,24 +1367,58 @@ def _parse_trep_04_speed(data, results):
                 # Retain every second, including unavailable values, for the
                 # GUI's day chart without expanding the regular data table.
                 "_chart_speeds_kmh": run_chart_speeds,
+                "blocks": list(run_blocks),
             })
+
+        def _block_record(ts, raw_speeds, speeds):
+            return {
+                "begin": _g1_time(ts),
+                "begin_raw": ts,
+                "time_status": "valid" if _g1_time(ts) else "invalid",
+                "record_bytes": 64,
+                "record_complete": True,
+                "samples": len(speeds),
+                "max_speed_kmh": max(speeds) if speeds else None,
+                "_chart_speeds_kmh": list(raw_speeds),
+            }
 
         for i in range(n_blocks):
             blk = data[2 + i * 64:2 + (i + 1) * 64]
             ts = struct.unpack(">I", blk[0:4])[0]
-            if not (946684800 <= ts <= 4102444800):
-                continue
             raw_speeds = [None if s == 0xFF else s for s in blk[4:64]]
             speeds = [s for s in raw_speeds if s is not None]
+            if not (946684800 <= ts <= 4102444800):
+                # An unusable block timestamp does not delete the samples: the
+                # block is published on its own, with the raw value and a
+                # status, and no fabricated date.
+                _flush()
+                speed_blocks.append({
+                    "timestamp": None,
+                    "aggregation": "normative block (no usable time)",
+                    "time_status": "invalid",
+                    "begin_raw": ts,
+                    "minutes": 1,
+                    "average_speed_kmh": (round(sum(speeds) / len(speeds), 1)
+                                          if speeds else None),
+                    "max_speed_kmh": max(speeds) if speeds else None,
+                    "_chart_speeds_kmh": raw_speeds,
+                    "blocks": [_block_record(ts, raw_speeds, speeds)],
+                })
+                run_start_ts = None
+                prev_ts = None
+                continue
+            block = _block_record(ts, raw_speeds, speeds)
             if prev_ts is None or ts - prev_ts != 60:
                 _flush()
                 run_start_ts = ts
                 run_minutes = 0
                 run_speeds = []
                 run_chart_speeds = []
+                run_blocks = []
             run_minutes += 1
             run_speeds.extend(speeds)
             run_chart_speeds.extend(raw_speeds)
+            run_blocks.append(block)
             prev_ts = ts
         _flush()
     except (struct.error, IndexError, ValueError) as exc:
@@ -1293,10 +1447,16 @@ def _parse_trep_05_technical(data, results):
 
         def _decode_cal_record(chunk):
             """Decode one 167-byte VuCalibrationRecord (Annex 1B §2.118).
-            Returns the entry dict or None when the record is empty/garbage."""
+
+            Every record the count declares is decoded: the regulation makes an
+            *activation* calibration legal with the parameters "known at VU
+            activation", i.e. an empty VIN and ``lTyreCircumference`` 0. The old
+            acceptance gate ("17 alphanumeric VIN chars" and ``0 < l``) therefore
+            deleted a real normative record from the download. Field-level
+            plausibility is reported through ``vin_status``/``field_status``
+            instead of discarding the record.
+            """
             vin = decode_string(chunk[95:112], is_id=True)
-            if len(vin) != 17 or not vin.isalnum():
-                return None
             purpose = chunk[0]
             workshop_name = decode_string(chunk[1:37])
             workshop_address = decode_string(chunk[37:73])
@@ -1321,12 +1481,38 @@ def _parse_trep_05_technical(data, results):
             old_time = decode_date(chunk[155:159])
             new_time = decode_date(chunk[159:163])
             next_cal = decode_date(chunk[163:167])
-            if old_time == "N/A":
-                return None
-            if not (0 < w_const < 65535 and 0 < l_const < 65535):
-                return None
+            # Full TimeReal companions: the shortened ``timestamp``/``old_time``
+            # keys stay calendar days for the existing table, while the exact
+            # hour/minute survives here.
+            old_time_iso = _g1_time(struct.unpack(">I", chunk[155:159])[0])
+            new_time_iso = _g1_time(struct.unpack(">I", chunk[159:163])[0])
+            next_cal_iso = _g1_time(struct.unpack(">I", chunk[163:167])[0])
+            field_status = {}
+            if not vin:
+                field_status["vin"] = "empty (activation parameters)"
+            if l_const == 0:
+                field_status["l_tyre_circumference"] = (
+                    "zero (activation, parameters known at VU activation)")
+            if w_const == 0 or w_const == 0xFFFF:
+                field_status["w_constant"] = f"implausible raw 0x{w_const:04X}"
+            if old_time_iso is None:
+                field_status["old_time"] = "TimeReal outside the calendar"
             return {
-                "_key": f"{vin}|{old_time}|{workshop_name}|{old_odo}|{purpose}",
+                # The record identity no longer depends on a non-empty VIN: an
+                # activation record is keyed by its purpose and raw times too.
+                "_key": (f"{vin}|{old_time_iso}|{workshop_name}|{old_odo}|"
+                         f"{purpose}|{old_time_iso and chunk[155:159].hex()}"),
+                # No ``confidence`` key: this record came from the normative
+                # 167-byte layout. The repo convention is that only synthesized
+                # records carry a low-confidence marker (see
+                # docs/developer/normative-completion.md §3).
+                "decode_path": "normative (167-byte VuCalibrationRecord)",
+                "vin_status": ("empty (activation parameters)" if not vin
+                               else "present"),
+                "field_status": field_status,
+                "old_time_iso": old_time_iso,
+                "new_time_iso": new_time_iso,
+                "next_calibration_iso": next_cal_iso,
                 "timestamp": old_time,
                 "purpose": describe_calibration_purpose(purpose),
                 "purpose_code": purpose,
@@ -1362,9 +1548,11 @@ def _parse_trep_05_technical(data, results):
                 entry = _decode_cal_record(chunk)
                 if entry is not None:
                     decoded.append(entry)
-            # A populated calibration area must decode mostly valid records,
-            # otherwise this is a false-positive message marker.
-            if n_cal == 0 or len(decoded) >= max(1, n_cal // 2):
+            # Every declared record is decoded above; ``structure_fits`` (the
+            # exact 167-byte stride against the body length) is the structural
+            # proof that this is the calibration area, so no record is dropped
+            # for its field values.
+            if True:
                 vu_info = results.setdefault("vu_info", {})
                 vu_info["manufacturer"] = mfr
                 if addr:
@@ -1372,7 +1560,13 @@ def _parse_trep_05_technical(data, results):
                 part_number = decode_string(data[72:88], is_id=True)
                 if part_number:
                     vu_info["part_number"] = part_number
+                # vuSerialNumber / sensorSerialNumber are ExtendedSerialNumber
+                # values (Annex 1B §2.56): the historical upper-case hex stays and
+                # the structured reading is added next to it by the same helper
+                # the generation-2 records use (no duplicated implementation).
+                from core.parser.vu_dispatcher import decode_extended_serial_number
                 vu_info["serial_number"] = data[88:96].hex().upper()
+                vu_info["serial"] = decode_extended_serial_number(data, 88)
                 sw_version = decode_string(data[96:100], is_id=True)
                 if sw_version:
                     vu_info["software_version"] = sw_version
@@ -1386,6 +1580,9 @@ def _parse_trep_05_technical(data, results):
                 if approval:
                     vu_info["approval_number"] = approval
                 vu_info["sensor_serial_number"] = data[116:124].hex().upper()
+                vu_info["sensor_serial"] = decode_extended_serial_number(data, 116)
+                vu_info["sensor_pairing_date_iso"] = _g1_time(
+                    struct.unpack(">I", data[132:136])[0])
                 sensor_approval = decode_string(data[124:132], is_id=True)
                 if sensor_approval:
                     vu_info["sensor_approval_number"] = sensor_approval

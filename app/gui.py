@@ -290,6 +290,7 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence", "record_t
                # CardSlotsStatus complete typing (numeric nibble + assignment
                # status): JSON only, the table keeps its existing columns.
                "driver_slot_code", "codriver_slot_code",
+               "driver_slot_type", "codriver_slot_type",
                "driver_slot_status", "codriver_slot_status",
                # EntryTypeDailyWorkPeriod assignment status (assigned / not
                # assigned for generation 1 / unknown above the shared six).

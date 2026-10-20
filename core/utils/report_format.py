@@ -42,6 +42,7 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
                # the numeric nibble and its assignment status stay in the JSON;
                # the short state word is the published value.
                "driver_slot_code", "codriver_slot_code",
+               "driver_slot_type", "codriver_slot_type",
                "driver_slot_status", "codriver_slot_status",
                # EntryTypeDailyWorkPeriod assignment status (assigned / not
                # assigned for generation 1 / unknown above the shared six).

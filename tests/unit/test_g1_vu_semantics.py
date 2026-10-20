@@ -1,0 +1,378 @@
+"""Generation 1 VU TREP 01-05: source-grounded field semantics.
+
+Each assertion below traces to the readable generation-1 text (Annex 1B /
+Annex 1C Appendix 1), never to the generation-2 wording:
+
+* §2.28 ``CardSlotsStatus`` — one octet ``'ccccdddd'B`` with five assigned card
+  types; the published short word stays, the typed nibble travels model-only.
+* §2.44 ``ControlType`` — ``'cvpdxxxx'B`` in generation 1 (``xxxx`` not used), so
+  bit 0x08 is **not** the generation-2 roadside-calibration check.
+* §2.70 generation-1 EventFaultType — from the consolidated Annex 1C list: '0A'H
+  is *Vehicle Motion Conflict*, and everything generation 2 added ('0B'H time
+  conflict, GNSS/RCM/ITS groups) is RFU.
+* §2.51 ``EntryTypeDailyWorkPeriod`` — 0..5, so place types 4/5 ("assumed by
+  VU") are legal generation-1 entries and must not be dropped.
+* §2.154 ``SpecificConditionType`` — '03'H is a single Ferry/Train crossing and
+  '04'H is RFU in generation 1.
+* §2.118 ``VuCalibrationRecord`` — the *activation* calibration ("parameters
+  known at VU activation") legally carries an empty VIN and ``l = 0``; the old
+  acceptance gate deleted it from the download.
+* §2.56 ``ExtendedSerialNumber`` — the VU and sensor serial numbers are structured
+  (serial/monthYear BCD/type/manufacturerCode), not opaque hex.
+
+Every value below is synthetic.
+"""
+import struct
+
+from core.decoders.vu_g1 import (
+    _parse_trep_02_g1_structured, _parse_trep_03_structured,
+    _parse_trep_04_speed, _parse_trep_05_technical, parse_g1_vu_overview)
+from core.utils.event_codes import EVENT_FAULT_VERSION_G1
+from tests.unit import vu_synthetic as S
+
+TIME = S.BASE_TIME
+SIG = b"\x00" * 128
+
+
+def _results():
+    return {"metadata": {}, "vehicle": {"vin": "N/A", "plate": "N/A",
+                                        "registration_nation": "N/A"},
+            "activities": [], "events": [], "faults": [],
+            "inserted_drivers": [], "card_iw_records": [], "places": [],
+            "specific_conditions": [], "overspeeding_events": [],
+            "overspeeding_control": [], "time_adjustments": [],
+            "calibrations": [], "workshops": [], "calibration_vins": set(),
+            "vu_info": {}, "vu_overview": {}, "company_locks": [],
+            "control_activities": [], "company_info": {}, "speed_blocks": []}
+
+
+# ── TREP 01 ─────────────────────────────────────────────────────────────────
+
+def _overview_body(slots=0x41, n_locks=1, n_controls=1,
+                   lock_in=TIME, control_time=TIME + 60):
+    body = bytearray()
+    body += b"\x00" * 194 + b"\x00" * 194                     # two certificates
+    body += S.VIN.encode("ascii")                              # VIN (17)
+    body += bytes([0x1A]) + S.coded_string(S.PLATE, code_page=1, length=14)
+    body += struct.pack(">III", TIME, TIME - 86_400, TIME)     # current/min/max
+    body += bytes([slots])
+    body += struct.pack(">I", TIME) + S.full_card_number() + S.coded_string(
+        "SYNTH DOWNLOADER", code_page=1, length=36)
+    body += bytes([n_locks])
+    for _ in range(n_locks):
+        body += (struct.pack(">II", lock_in, lock_in + 3_600)
+                 + S.coded_string("SYNTH COMPANY", code_page=1, length=36)
+                 + S.coded_string("SYNTH ROAD 2", code_page=1, length=36)
+                 + S.full_card_number(card_type=0x04))
+    body += bytes([n_controls])
+    for _ in range(n_controls):
+        body += (bytes([0xE8]) + struct.pack(">I", control_time)
+                 + S.full_card_number(card_type=0x03)
+                 + struct.pack(">II", TIME - 86_400, TIME))
+    return bytes(body)
+
+
+def test_g1_card_slots_are_typed_per_nibble():
+    results = _results()
+    parse_g1_vu_overview(_overview_body(slots=0x41), results)
+    slots = results["vu_overview"]["card_slot_status"]
+    assert slots["raw"] == "0x41"
+    assert slots["driver_slot"] == "occupied"
+    assert slots["codriver_slot"] == "occupied"
+    # Complete typing is model-only.
+    assert slots["driver_slot_code"] == 0x01
+    assert slots["driver_slot_type"] == "driver"
+    assert slots["codriver_slot_type"] == "company"
+    assert slots["driver_slot_status"] == "assigned"
+
+
+def test_g1_unassigned_slot_nibble_is_reported_as_unassigned():
+    results = _results()
+    parse_g1_vu_overview(_overview_body(slots=0x0A), results)
+    slots = results["vu_overview"]["card_slot_status"]
+    assert slots["driver_slot"] == "reserved"
+    assert slots["driver_slot_status"] == "unassigned"
+    assert slots["driver_slot_type"] == "unassigned"
+    assert slots["codriver_slot"] == "empty"          # nibble 0000: no card
+
+
+def test_g1_control_type_has_no_roadside_calibration_bit():
+    results = _results()
+    parse_g1_vu_overview(_overview_body(), results)
+    control = results["control_activities"][0]
+    # 0xE8 = card + VU downloaded + printing + bit 0x08, which generation 1
+    # leaves "not used": the label must not claim a roadside calibration check.
+    assert "Roadside calibration" not in control["control_type_label"]
+    assert "Printing" in control["control_type_label"]
+    assert control["control_type_bits"] == ["Card downloaded", "VU downloaded",
+                                           "Printing"]
+
+
+def test_g1_lock_records_are_kept_even_with_an_out_of_range_time():
+    """A VU clock outside 2000..2100 is corrupt data, not a reason to delete the
+    company-lock record: the raw values and a status are preferable."""
+    results = _results()
+    parse_g1_vu_overview(_overview_body(lock_in=0xFF000000), results)
+    locks = results["company_locks"]
+    assert len(locks) == 1
+    assert locks[0]["lock_in_raw"] == 0xFF000000
+    assert locks[0]["lock_in_time"] is None
+    assert locks[0]["time_status"] == "invalid"
+
+
+def test_g1_control_records_are_kept_even_with_an_out_of_range_time():
+    results = _results()
+    parse_g1_vu_overview(_overview_body(control_time=0xFF000000), results)
+    controls = results["control_activities"]
+    assert len(controls) == 1
+    assert controls[0]["control_time"] is None
+    assert controls[0]["control_time_raw"] == 0xFF000000
+    assert controls[0]["time_status"] == "invalid"
+    assert "Roadside calibration" not in controls[0]["control_type_label"]
+
+
+# ── TREP 02 ─────────────────────────────────────────────────────────────────
+
+def _trep02_body(entry_types=(0x04, 0x05), n_changes=2, conditions=(0x03, 0x04)):
+    body = bytearray()
+    body += struct.pack(">I", TIME) + (654_321).to_bytes(3, "big")
+    body += struct.pack(">H", 1)
+    body += (S.coded_string("SYNTH", code_page=1, length=36)
+             + S.coded_string("DRIVER", code_page=1, length=36)
+             + S.full_card_number()
+             + struct.pack(">I", TIME + 60)
+             + struct.pack(">I", TIME + 120) + (1000).to_bytes(3, "big")
+             + bytes([0x01])
+             + struct.pack(">I", TIME + 7200) + (1200).to_bytes(3, "big")
+             + bytes([0x1A]) + S.coded_string(S.PLATE, code_page=1, length=14)
+             + struct.pack(">I", TIME + 60)
+             + bytes([0x00]))
+    body += struct.pack(">H", n_changes)
+    body += struct.pack(">H", 0x10F3) * n_changes
+    body += bytes([len(entry_types)])
+    for code in entry_types:
+        body += (S.full_card_number() + struct.pack(">I", TIME + 300)
+                 + bytes([code, 0x1A, 0x07]) + (2000).to_bytes(3, "big"))
+    body += struct.pack(">H", len(conditions))
+    for code in conditions:
+        body += struct.pack(">I", TIME + 400) + bytes([code])
+    return bytes(body)
+
+
+def test_g1_place_entry_types_4_and_5_are_legal():
+    results = _results()
+    assert _parse_trep_02_g1_structured(_trep02_body(), results) is True
+    codes = [p["type_code"] for p in results["places"]]
+    assert codes == [0x04, 0x05]
+    assert results["places"][0]["entry_type"] == "START"
+    assert results["places"][0]["entry_type_meaning"] == "Begin assumed by VU"
+    assert results["places"][1]["entry_type_meaning"] == "End assumed by VU"
+
+
+def test_g1_specific_condition_03_is_ferry_crossing_and_04_is_kept_unknown():
+    results = _results()
+    _parse_trep_02_g1_structured(_trep02_body(conditions=(0x03, 0x04)), results)
+    by_code = {c["type_code"]: c for c in results["specific_conditions"]}
+    assert by_code[0x03]["condition"] == "Ferry/Train crossing"
+    assert by_code[0x03]["condition_status"] == "assigned"
+    # 0x04 is RFU in generation 1: the record is retained, never labelled with
+    # the generation-2 "Ferry/Train End" meaning.
+    assert by_code[0x04]["condition"] == "0x04"
+    assert by_code[0x04]["condition_status"] == "not assigned"
+
+
+def test_g1_zero_change_day_is_emitted():
+    results = _results()
+    assert _parse_trep_02_g1_structured(_trep02_body(n_changes=0), results) is True
+    assert len(results["activities"]) == 1
+    assert results["activities"][0]["changes"] == []
+    assert results["activities"][0]["changes_count"] == 0
+
+
+def test_g1_iw_records_keep_their_day_association():
+    results = _results()
+    _parse_trep_02_g1_structured(_trep02_body(), results)
+    iw = results["card_iw_records"][0]
+    assert iw["day_date"] == "05/04/2024"          # synthetic BASE_TIME
+    # Generation 1 PreviousVehicleInfo is 19 bytes: no vuGeneration byte exists
+    # (Annex 1B §2.85 vs Annex 1C §2.118).
+    assert "vu_generation" not in iw["previous_vehicle"]
+    assert iw["record_day"] == iw["day_date"]
+
+
+# ── TREP 03 ─────────────────────────────────────────────────────────────────
+
+def _event_record(event_type=0x0A):
+    return (bytes([event_type, 0x00]) + struct.pack(">II", TIME, TIME + 60)
+            + S.full_card_number() + b"\x00" * 18 * 0
+            + S.full_card_number() + S.full_card_number()
+            + S.full_card_number() + bytes([0x01]))
+
+
+def _fault_record(fault_type=0x31):
+    return bytes([fault_type, 0x00]) + struct.pack(">II", TIME, TIME + 60) + \
+        S.full_card_number() + S.full_card_number() + S.full_card_number() + \
+        S.full_card_number()
+
+
+def _trep03_body(event_type=0x0A, fault_type=0x31, n_over=(0,), n_adj=(99,)):
+    body = bytearray()
+    body += bytes([1]) + _fault_record(fault_type)
+    body += bytes([1]) + _event_record(event_type)
+    body += struct.pack(">II", TIME, TIME) + bytes([0x02])       # overspeed ctrl
+    body += bytes([len(n_over)])
+    for size in n_over:
+        rec = (bytes([0x07, 0x00]) + struct.pack(">II", TIME, TIME + 30)
+               + bytes([0x5A, 0x50]) + S.full_card_number() + bytes([0x01]))
+        body += (rec + b"\x00" * size)[:31]
+    body += bytes([len(n_adj)])
+    for size in n_adj:
+        rec = (struct.pack(">II", TIME, TIME + 30)
+               + S.coded_string("SYNTH WORKSHOP", code_page=1, length=36)
+               + S.coded_string("SYNTH STREET 3", code_page=1, length=36)
+               + S.full_card_number(card_type=0x02))
+        body += (rec + b"\x00" * size)[:size]
+    return bytes(body)
+
+
+def test_g1_event_0a_is_vehicle_motion_conflict_not_rfu():
+    results = _results()
+    assert _parse_trep_03_structured(_trep03_body(event_type=0x0A), results) is True
+    event = results["events"][0]
+    assert event["description"] == "Vehicle motion conflict"
+    assert event["event_fault_version"] == EVENT_FAULT_VERSION_G1
+    assert event["type_status"] == "assigned"
+
+
+def test_g1_generation_2_only_code_is_rfu_in_a_generation_1_section():
+    results = _results()
+    _parse_trep_03_structured(_trep03_body(event_type=0x0B), results)
+    event = results["events"][0]
+    # 0x0B is the GNSS/VU time conflict only from generation 2 on.
+    assert event["description"] == "Reserved for future use (0x0B)"
+    assert event["type_status"] == "reserved"
+
+
+def test_g1_generation_2_fault_range_is_reserved():
+    results = _results()
+    _parse_trep_03_structured(_trep03_body(fault_type=0x37), results)
+    fault = results["faults"][0]
+    assert fault["description"] == "Reserved for future use (0x37)"
+
+
+def test_g1_empty_overspeed_and_time_adjustment_variants_are_explicit():
+    results = _results()
+    assert _parse_trep_03_structured(_trep03_body(n_over=(), n_adj=()),
+                                     results) is True
+    assert results["overspeeding_events"] == []
+    assert results["time_adjustments"] == []
+
+
+def test_g1_short_time_adjustment_is_not_dropped_silently():
+    results = _results()
+    _parse_trep_03_structured(_trep03_body(n_adj=(40,)), results)
+    records = results["time_adjustments"]
+    assert len(records) == 1
+    assert records[0]["record_complete"] is False
+    assert records[0]["record_bytes"] == 40
+    assert records[0]["raw_tail_hex"]
+
+
+# ── TREP 04 ─────────────────────────────────────────────────────────────────
+
+def test_g1_speed_blocks_keep_every_sample_including_ff_fill():
+    body = struct.pack(">H", 2)
+    body += struct.pack(">I", TIME) + bytes(range(60))
+    body += struct.pack(">I", TIME + 60) + bytes([0xFF] * 60)
+    results = _results()
+    _parse_trep_04_speed(body, results)
+    runs = results["speed_blocks"]
+    assert len(runs) == 1
+    run = runs[0]
+    # The published row is an *application* aggregation of consecutive
+    # one-minute blocks; the normative blocks travel underneath it.
+    assert run["aggregation"].startswith("application")
+    assert run["minutes"] == 2
+    assert len(run["_chart_speeds_kmh"]) == 120
+    blocks = run["blocks"]
+    assert [b["record_bytes"] for b in blocks] == [64, 64]
+    assert blocks[0]["samples"] == 60
+    assert blocks[0]["_chart_speeds_kmh"] == list(range(60))
+    # 0xFF is the "no information" fill, not a 255 km/h sample.
+    assert blocks[1]["samples"] == 0
+    assert blocks[1]["_chart_speeds_kmh"] == [None] * 60
+
+
+def test_g1_speed_block_with_an_unusable_time_keeps_its_samples():
+    body = struct.pack(">H", 1) + struct.pack(">I", 0xFF000000) + bytes([50] * 60)
+    results = _results()
+    _parse_trep_04_speed(body, results)
+    assert len(results["speed_blocks"]) == 1
+    run = results["speed_blocks"][0]
+    assert run["time_status"] == "invalid"
+    assert run["blocks"][0]["samples"] == 60
+
+
+# ── TREP 05 ─────────────────────────────────────────────────────────────────
+
+def _g1_calibration(purpose=0x04, vin=S.VIN, l_const=0x0C80, old_time=TIME):
+    body = (bytes([purpose])
+            + S.coded_string("SYNTH WORKSHOP", code_page=1, length=36)
+            + S.coded_string("SYNTH STREET 9", code_page=1, length=36)
+            + S.full_card_number(card_type=0x02)
+            + struct.pack(">I", TIME + 86_400)
+            + vin.encode("ascii")
+            + bytes([0x1A]) + S.coded_string(S.PLATE, code_page=1, length=14)
+            + struct.pack(">HHH", 0x1F40, 0x2710, l_const)
+            + S.coded_string("315/70R22.5", code_page=1, length=15)
+            + bytes([0x5A])
+            + (100_000).to_bytes(3, "big") + (100_123).to_bytes(3, "big")
+            + struct.pack(">III", old_time, old_time + 30, old_time + 2_592_000))
+    assert len(body) == 167, len(body)
+    return body
+
+
+def _trep05_body(calibrations):
+    body = (S.coded_string("SYNTH VU MAKER", code_page=1, length=36)
+            + S.coded_string("SYNTH ROAD 1", code_page=1, length=36)
+            + b"PART0001        " + S.extended_serial(0x0000A001)
+            + b"0001" + struct.pack(">I", TIME) + struct.pack(">I", TIME)
+            + b"APPROVAL" + S.extended_serial(0x0000A002)
+            + b"SENSORAP" + struct.pack(">I", TIME + 60))
+    body += bytes([len(calibrations)]) + b"".join(calibrations)
+    return body
+
+
+def test_g1_activation_calibration_with_empty_vin_and_l_zero_is_kept():
+    activation = _g1_calibration(purpose=0x01, vin=" " * 17, l_const=0)
+    results = _results()
+    _parse_trep_05_technical(_trep05_body([activation]), results)
+    cals = results["calibrations"]
+    assert len(cals) == 1, cals
+    assert cals[0]["purpose_code"] == 0x01
+    assert cals[0]["vin"] == ""
+    assert cals[0]["vin_status"] == "empty (activation parameters)"
+    assert cals[0]["l_tyre_circumference"] == 0
+    assert cals[0]["field_status"]["l_tyre_circumference"] == (
+        "zero (activation, parameters known at VU activation)")
+    assert cals[0]["decode_path"].startswith("normative")
+
+
+def test_g1_empty_vu_and_sensor_serials_are_decoded_as_structures():
+    results = _results()
+    _parse_trep_05_technical(_trep05_body([_g1_calibration()]), results)
+    info = results["vu_info"]
+    assert info["serial_number"] == S.extended_serial(0x0000A001).hex().upper()
+    assert info["serial"]["serial_number"] == 0x0000A001
+    assert info["sensor_serial"]["serial_number"] == 0x0000A002
+
+
+def test_g1_calibration_times_keep_hour_and_minute():
+    results = _results()
+    _parse_trep_05_technical(_trep05_body([_g1_calibration()]), results)
+    cal = results["calibrations"][0]
+    assert cal["old_time"].endswith("T") is False
+    # A full TimeReal survives in the companion key: the short ``timestamp``
+    # stays a calendar day for the existing table.
+    assert "T" in cal["old_time_iso"]
+    assert len(cal["timestamp"]) == 10
