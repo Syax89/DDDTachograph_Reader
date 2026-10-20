@@ -313,3 +313,12 @@ and `git diff --check`.
 Expected skip counts with the mocks present: 292 headless (Tk tests need a display and
 run under xvfb) and 2 under xvfb (the git-ignored corpus semantic baseline and the
 missing golden snapshots for the private fixtures). A skipped *mock* test is a defect.
+
+### The tree column fit is O(distinct characters), not O(nodes)
+
+`_fit_tree_column` (in `app/gui.py`) must equal the old per-node algorithm exactly while
+measuring a handful of labels: `tests/unit/test_gui_tree_fit_perf.py` keeps the old
+implementation verbatim as the reference and compares pixel widths on the mocks, five
+scripts, a 5000-day tree and the real files; a 5000-node tree must need ≤ 200 `measure`
+calls. If you change how the tree is populated, update
+`tests/unit/tree_snapshot_mocks.json` (mocks only — never commit a real file's labels).

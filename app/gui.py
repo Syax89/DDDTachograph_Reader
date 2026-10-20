@@ -3775,7 +3775,7 @@ class TachoExplorer(tk.Tk):
     # ── Empty state (no file loaded) ────────────────────────
 
     def _fit_tree_column(self):
-        """Make the tree's column as wide as its widest node.
+        """Make the tree's column as wide as its widest node, in near-constant cost.
 
         The pane is a fixed width, and node names are not: a G2.2 card has
         "Driver Card Application Identification V 2" and the Greek catalog
@@ -3783,33 +3783,102 @@ class TachoExplorer(tk.Tk):
         column at least as wide as the widest label, collapsed nodes included,
         lets the horizontal scrollbar reach the end of any of them (it only
         appears when one overflows) instead of cutting the name off.
+
+        Cost: the old version measured every node (a Tk round trip for the text, one
+        for the image and one ``Font.measure`` each), which dominated the render of a
+        G2 download with a node per day. Now each node is read with **one**
+        ``tree.item`` call, the width of a label is bounded exactly by
+        ``len(text) * w_max`` (``w_max`` = the widest single glyph among the
+        characters that actually occur), and candidates are measured widest-bound
+        first and pruned as soon as the next bound cannot beat the best exact width.
+        The result is the same width to the pixel — the test suite compares it with
+        the old algorithm on the mocks, five scripts, a 5000-day tree and the real
+        files.
         """
         try:
             style = ttk.Style(self)
             font = tkfont.Font(font=style.lookup("Treeview", "font") or "TkDefaultFont")
             indent = int(float(style.lookup("Treeview", "indent") or 20))
-            needed = 0
+            pad = _px(8)
+            image_pad = _px(4)
 
+            # ── 1. one Tcl call per node: (text, image) come back together ──
+            nodes = []
             visited = 0
 
-            def visit(parent, depth):
-                nonlocal needed, visited
+            def collect(parent, depth):
+                nonlocal visited
                 for iid in self.tree.get_children(parent):
                     visited += 1
-                    if visited % 64 == 0:
-                        # A file can have thousands of day nodes: keep the busy
-                        # bar turning while they are measured.
+                    if visited % 256 == 0:
+                        # Thousands of day nodes: keep the busy bar turning while
+                        # they are collected.
                         self._pump_render()
-                    width = indent * (depth + 1) - 1 + font.measure(self.tree.item(iid, "text")) + _px(8)
-                    image = self.tree.item(iid, "image")
+                    # One round trip: `item` with no option returns every value.
+                    # Tk hands it back as a dict on the Tk 8.6/9 builds we ship and
+                    # as a positional tuple on older ones — read both shapes.
+                    values = self.tree.item(iid)
+                    if isinstance(values, dict):
+                        text = values.get("text", "")
+                        image = values.get("image", "")
+                    else:
+                        text = values[0] if values else ""
+                        image = values[1] if len(values) > 1 else ""
                     if isinstance(image, (tuple, list)):   # Tk hands back a 1-tuple
                         image = image[0] if image else ""
-                    if image:
-                        width += int(self.tk.call("image", "width", str(image))) + _px(4)
-                    needed = max(needed, width)
-                    visit(iid, depth + 1)
+                    nodes.append((depth, text, image))
+                    collect(iid, depth + 1)
 
-            visit("", 0)
+            collect("", 0)
+            if not nodes:
+                width = _px(200)
+                self.tree.column("#0", width=width, minwidth=width)
+                return
+
+            # ── 2. one measure per distinct character ──
+            # A label's width is the sum of its characters' widths (this is how Tk
+            # measures a string; kerning only ever makes it narrower, so the sum is
+            # also a safe upper bound), so glyph widths are measured once and the
+            # per-node bound becomes a pure-Python lookup — no Tcl round trip per
+            # node, and it is tight enough to prune even equal-length labels.
+            glyph_width = {}
+            for (_depth, text, _image) in nodes:
+                for char in text:
+                    if char not in glyph_width:
+                        glyph_width[char] = font.measure(char)
+
+            def text_bound(text):
+                return sum(glyph_width[char] for char in text)
+
+            # ── 3. bound per node, widest first, measure exactly, prune ──
+            image_widths = {}
+
+            def upper_bound(depth, text, image):
+                bound = indent * (depth + 1) - 1 + text_bound(text) + pad
+                if image:
+                    if image not in image_widths:
+                        image_widths[image] = int(self.tk.call("image", "width",
+                                                               str(image)))
+                    bound += image_widths[image] + image_pad
+                return bound
+
+            candidates = sorted(
+                ((upper_bound(depth, text, image), depth, text, image)
+                 for (depth, text, image) in nodes), reverse=True)
+            text_widths = {}
+            needed = 0
+            for index, (bound, depth, text, image) in enumerate(candidates):
+                if bound <= needed:
+                    break                      # nothing left can be wider
+                if index and index % 64 == 0:
+                    self._pump_render()
+                if text not in text_widths:
+                    text_widths[text] = font.measure(text)
+                width = indent * (depth + 1) - 1 + text_widths[text] + pad
+                if image:
+                    width += image_widths[image] + image_pad
+                needed = max(needed, width)
+
             width = max(needed, _px(200))
             self.tree.column("#0", width=width, minwidth=width)
         except Exception:
