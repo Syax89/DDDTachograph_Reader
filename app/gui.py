@@ -279,7 +279,14 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence", "record_t
                "normative", "spec_reference", "conformance_reason",
                "low_confidence_fields", "end_semantics",
                "manufacturer_error_code",
-               "event_fault_version", "type_status", "manufacturer_status"}
+               "event_fault_version", "type_status", "manufacturer_status",
+               # VuCardIWRecord tail: previous vehicle, numeric manual-input
+               # flag and completeness bookkeeping stay in the JSON; the table
+               # layout is the owner's and did not change (a visible column
+               # would also need a translated label in all 33 catalogs).
+               "previous_vehicle", "manual_input_flag",
+               "manual_input_flag_meaning", "record_bytes", "record_complete",
+               "missing_bytes", "raw_tail_bytes"}
 # Descriptive columns pushed to table start.
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
 # Technical columns pushed to table end.
@@ -454,6 +461,12 @@ def _kv_rows(d):
     """Convert a dict to (Field, Value) rows, flattening nested dicts one level."""
     rows = []
     for k, v in d.items():
+        # `confidence` is bookkeeping, not a fact of the unit: it would add a
+        # "Confidence" row to the key/value panel (it lives in the JSON). Only
+        # this one key is skipped — HIDDEN_KEYS also holds `name`, which VU
+        # Company Info does show.
+        if k == "confidence":
+            continue
         field = ui_text.label(k)
         if isinstance(v, dict) and v:
             for sk, sv in v.items():

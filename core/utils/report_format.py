@@ -28,7 +28,16 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
                # and how it assigns it (`assigned`/`reserved`/`manufacturer_
                # specific`/`unknown_version`), plus whether the manufacturer code
                # byte is in the JRC registry: technical status, JSON only.
-               "event_fault_version", "type_status", "manufacturer_status"}
+               "event_fault_version", "type_status", "manufacturer_status",
+               # VuCardIWRecord tail (Annex 1B §2.120 / Annex 1C §2.177): the
+               # previous-vehicle block, the numeric manual-input flag and the
+               # completeness bookkeeping are carried by the model and the JSON
+               # export, but the table/export layout is the owner's and stayed
+               # unchanged — showing them is a separate decision (it needs a
+               # translated label in all 33 catalogs).
+               "previous_vehicle", "manual_input_flag",
+               "manual_input_flag_meaning", "record_bytes", "record_complete",
+               "missing_bytes", "raw_tail_bytes"}
 
 # Canonical trust verdicts for a parsed download. Consumers (GUI badge, rename
 # tooling, reports) must classify with these rather than by substring-matching
@@ -742,6 +751,13 @@ def section_tables(data, max_rows=None):
             continue
         rows = []
         for k, v in section.items():
+            # `confidence` is bookkeeping, not a fact of the unit: it would add
+            # a "Confidence | low" row to a key/value sheet (JSON only). No dict
+            # section carries it today except the sensor block, which is why the
+            # skip is this one key and not the whole HIDDEN_KEYS set (that one
+            # holds `name`, which VU Company Info does show).
+            if k == "confidence":
+                continue
             formatted = fmt_value(v)
             if formatted:
                 rows.append([humanize_key(k), formatted])

@@ -11,6 +11,7 @@ Cross-platform (Windows/macOS/Linux) application for parsing, analyzing and visu
 | [Parsing Pipeline](./parsing_pipeline.md) | Deep dive into STAP, BER-TLV, RecordArray formats and coverage tracking |
 | [Testing](./testing.md) | How to run tests, write new tests, generate mock DDD files, fuzz, and how CI builds/releases all three platforms |
 | [Specs References](./specs.md) | How to use the specification documentation and verification statuses |
+| [Normative Completion](./normative-completion.md) | Which VU structures are spec-verified (with the Annex reference and the byte map), which are empirically inferred and how the parser marks the difference |
 | [Glossary](./glossary.md) | Terminology: tachograph concepts, layers, EU regulations |
 
 ## Quick Links

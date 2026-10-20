@@ -5,7 +5,9 @@ import typing
 from datetime import datetime, timezone
 
 from core.utils.logger import get_logger, redact
-from core.decoders.common import decode_activity_val, decode_date, decode_string, get_nation
+from core.decoders.common import (
+    decode_activity_val, decode_date, decode_previous_vehicle_info, decode_string,
+    describe_manual_input_flag, get_nation)
 from core.decoders.cert import parse_g1_certificate
 from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault, describe_record_purpose
 
@@ -188,6 +190,26 @@ def _parse_g1_overview_tail(body, off, results):
         _log.debug("VU overview tail parse failed: %s", exc)
         return False
 
+def _card_slot_state(code):
+    """One CardSlotsStatus nibble → ``"empty"`` | ``"occupied"`` | ``"reserved"``.
+
+    ``CardSlotsStatus`` (Annex 1B Appendix 1 §2.28) is one octet, octet aligned
+    ``'ccccdddd'B``: the high nibble is the card type in the **co-driver** slot,
+    the low nibble the card type in the **driver** slot, with ``0000`` no card,
+    ``0001`` driver, ``0010`` workshop, ``0011`` control, ``0100`` company card
+    and ``0101``..``1111`` unassigned.
+
+    The published result only says whether a slot is in use, so an assigned
+    card type reports ``occupied`` and an unassigned code reports ``reserved``
+    — the type itself is never guessed into a name (naming it on screen would
+    add UI text; see docs/developer/normative-completion.md).
+    """
+    if code == 0x00:
+        return "empty"
+    if code <= 0x04:
+        return "occupied"
+    return "reserved"
+
 def parse_g1_vu_overview(val, results):
     """Parse G1 VU Overview (TREP 01, container 0x7601) — Annex 1B §4.5.3.2.2.
 
@@ -275,9 +297,14 @@ def parse_g1_vu_overview(val, results):
                 fixed_fields_parsed.add("downloadable_period")
 
                 slot_status = body[432]
+                # 'ccccdddd'B: high nibble = co-driver slot card type, low
+                # nibble = driver slot card type (Annex 1B Appendix 1 §2.28).
+                # The two keys and their value vocabulary are unchanged — only
+                # the nibbles are read where the old code tested bits 0/1,
+                # which reported 0x41 (both slots occupied) as co-driver empty.
                 results.setdefault("vu_overview", {})["card_slot_status"] = {
-                    "driver_slot": "occupied" if slot_status & 0x01 else "empty",
-                    "codriver_slot": "occupied" if slot_status & 0x02 else "empty",
+                    "driver_slot": _card_slot_state(slot_status & 0x0F),
+                    "codriver_slot": _card_slot_state((slot_status >> 4) & 0x0F),
                     "raw": f"0x{slot_status:02X}",
                 }
                 fixed_fields_parsed.add("card_slots")
@@ -500,6 +527,8 @@ def _parse_trep_02_activities(data, results):
                 "surname": surname_s, "firstname": firstname_s,
                 "card_number": card_num.strip(), "plate": plate_str,
                 "_key": driver_key,
+                # Regex-scraped from the payload, not read from a spec offset.
+                "confidence": "low",
             })
 
         _log.debug("TREP 02: structured G1 parse — driver=%s, scanning for daily records from offset %d",
@@ -630,7 +659,10 @@ def _parse_trep_02_g1_structured(data, results):
     VuCardIWRecord (129): holderSurname(36) + holderFirstNames(36) +
       fullCardNumber(18) + cardExpiry(4) + insertionTime(4) + odoInsertion(3) +
       cardSlot(1) + withdrawalTime(4) + odoWithdrawal(3) +
-      previousVehicle(15) + previousWithdrawalTime(4) + manualInputFlag(1)
+      previousVehicleInfo(19) + manualInputFlag(1)
+      where previousVehicleInfo = vehicleRegistrationIdentification(15) +
+      cardWithdrawalTime(4) (Annex 1B §2.85) and manualInputFlag is the
+      enumerated ManualInputFlag of §2.66 (0 = noEntry, 1 = manualEntries).
 
     Place record (28): fullCardNumber(18) + entryTime(4) + entryType(1) +
       country(1) + region(1) + odometer(3)
@@ -669,6 +701,14 @@ def _parse_trep_02_g1_structured(data, results):
                 "withdrawal_time": datetime.fromtimestamp(wdr_ts, tz=timezone.utc).isoformat()
                 if 946684800 <= wdr_ts <= 4102444800 else None,
                 "odometer_withdrawal_km": int.from_bytes(rec[106:109], 'big'),
+                # [109:128] PreviousVehicleInfo (§2.85) — previously dropped.
+                "previous_vehicle": decode_previous_vehicle_info(rec, 109),
+                # Numeric flag first: bool(rec[128]) maps every non-zero byte to
+                # True, which is only right for the two defined values.
+                "manual_input_flag": rec[128],
+                "manual_input_flag_meaning": describe_manual_input_flag(rec[128]),
+                "record_complete": True,
+                # Kept for backward compatibility (the day-detail view reads it).
                 "manual_input": bool(rec[128]),
             })
             pos += 129
@@ -853,16 +893,21 @@ def _parse_trep_03_events_faults(data, results):
     count-prefixed structure does not validate.
     """
     if not _parse_trep_03_structured(data, results):
-        before = (len(results.get("events") or []), len(results.get("faults") or []))
+        before = (len(results.get("events") or []), len(results.get("faults") or []),
+                  len(results.get("inserted_drivers") or []))
         _parse_trep_03_events_faults_heuristic(data, results)
-        after = (len(results.get("events") or []), len(results.get("faults") or []))
+        after = (len(results.get("events") or []), len(results.get("faults") or []),
+                 len(results.get("inserted_drivers") or []))
         gained = [name for name, b, a in
-                  zip(("events", "faults"), before, after, strict=False) if a > b]
+                  zip(("events", "faults", "inserted_drivers"), before, after,
+                      strict=False) if a > b]
         if gained:
             _mark_heuristic(results, "vu_events_faults_TREP03", gained)
             # A route switch must never be silent: the non-standard TREP 03
             # layout produced these records, so they are heuristic, not
-            # spec-verified (metadata.heuristic_fields says the same).
+            # spec-verified (metadata.heuristic_fields says the same). The
+            # driver block is tracked too: a regex-recovered card holder is
+            # inferred even when no event/fault was recovered at all.
             _log.warning("TREP 03 (events/faults) layout did not match Annex 1B; "
                          "heuristic scan supplied %s", ", ".join(gained))
 
@@ -981,6 +1026,13 @@ def _parse_trep_03_structured(data, results):
                     "end_time": evt["end_time"],
                     "similar_events": evt["similar_events"],
                     "card_driver_begin": evt["card_driver_begin"],
+                    # VuEventRecord holds FOUR FullCardNumber slots (Annex 1B
+                    # Appendix 1 §2.132 / DDP_031), in this order and with the
+                    # same key names the Gen2 emitter uses:
+                    # driverBegin, coDriverBegin, driverEnd, coDriverEnd.
+                    "card_codriver_begin": evt["card_codriver_begin"],
+                    "card_driver_end": evt["card_driver_end"],
+                    "card_codriver_end": evt["card_codriver_end"],
                 })
 
         if 946684800 <= osc_last <= 4102444800 or 946684800 <= osc_first <= 4102444800:
@@ -1041,7 +1093,12 @@ def _parse_trep_03_events_faults_heuristic(data, results):
             drivers = results.setdefault("inserted_drivers", [])
             dk = f"{surname}|{firstname}|{card_num}"
             if not any(d.get("_key") == dk for d in drivers):
-                drivers.append({"surname": surname, "firstname": firstname, "card_number": card_num, "_key": dk})
+                drivers.append({
+                    "surname": surname, "firstname": firstname,
+                    "card_number": card_num, "_key": dk,
+                    # Regex-scraped by the fallback, not a spec-offset read.
+                    "confidence": "low",
+                })
 
         # Attempt 1: Structured record-boundary detection (82B faults, 83B events)
         # Count-prefixed TREP 03 body: noOfVuFaults(1) at offset 0, so the first
@@ -1427,6 +1484,9 @@ def _parse_trep_05_technical(data, results):
             if not any(c.get("_key") == cal_key for c in cal_records) and 0 < w < 65535 and 0 < l_val < 65535:
                 cal_records.append({
                     "_key": cal_key,
+                    # Reconstructed by VIN regex + fixed-offset guesswork, not
+                    # by the 167-byte VuCalibrationRecord layout above.
+                    "confidence": "low",
                     "timestamp": dt_str,
                     "purpose": describe_calibration_purpose(purpose),
                     "purpose_code": purpose,
@@ -1502,6 +1562,8 @@ def _parse_trep_06_card_download(data, results):
 
         if timestamps or card_nums:
             downloads.append({
+                # Regex/timestamp scan, not the card-EF walk.
+                "confidence": "low",
                 "timestamps": timestamps[:10],
                 "card_numbers": card_nums,
             })
@@ -1515,7 +1577,12 @@ def _parse_trep_06_card_download(data, results):
                 drivers = results.setdefault("inserted_drivers", [])
                 dk = f"{s}|{f}|card_dl"
                 if not any(d.get("_key") == dk for d in drivers):
-                    drivers.append({"surname": s, "firstname": f, "card_number": "", "_key": dk})
+                    drivers.append({
+                        "surname": s, "firstname": f, "card_number": "",
+                        "_key": dk,
+                        # Regex-scraped from a non-standard card image.
+                        "confidence": "low",
+                    })
 
         gained = []
         if len(downloads) > _dl_before:
@@ -1663,14 +1730,19 @@ _SENSOR_ID_SIZE = 168
 
 
 def _parse_sensor_download(body, results):
-    """Parse G1 sensor download payload (TREP 0x11 / 0x7611).
+    """Parse a G1 extended sensor-download payload (TREP 0x11 / 0x7611).
 
-    Annex 1B §4.5.3.2.1 defines the sensor download format. The payload
-    contains a sensor identification block followed by daily timestamp/speed
-    records, then a second copy of the same data.
+    **This layout is not normative.** No Annex 1B or Annex 1C structure
+    describes a "sensor download": the earlier claim that Annex 1B §4.5.3.2.1
+    defines it was wrong — Annex 1B §4.5.3 is "Stored data integrity", and the
+    §4.5.3.2.x numbering that exists belongs to Annex 1C *card* EF layouts
+    (§4.5.3.2.1 is "Application identification", a file of the tachograph
+    application, not this payload). The section is a manufacturer extension
+    that happens to occur on some units.
 
-    Structure (empirically confirmed on real sensor file):
-      0-16   TOC header (17 bytes — layout not fully documented)
+    What is decoded below is therefore an *empirical* reading of that
+    proprietary payload, kept because the values are real data the VU stored:
+      0-16   TOC header (17 bytes — layout not documented)
       17..   FF padding
       N..N+167  Sensor ID block (168 bytes):
         [0:4]    first_date TimeReal
@@ -1687,7 +1759,17 @@ def _parse_sensor_download(body, results):
       N+168..  Daily timestamp records:
         Each day: midnight_ts(4) + first_event_ts(4) + speed_data(variable)
         Days are separated by FF padding runs.
-      Midpoint  Second copy (identical structure, for redundancy).
+    Every field recovered from it is labelled ``confidence: low`` in the
+    record and in the JSON export, so an empirically-read field kind is never
+    presented as a standard-conformant one. Raw bytes are untouched
+    (``raw_tags`` still carries the original payload).
+
+    It is deliberately **not** declared as a heuristic fallback
+    (``metadata.heuristic_fields`` + WARNING): a valid download did not fall
+    back from anything here — TRTP 11..1F are manufacturer-specific, so no
+    normative layout exists that could have failed. The low-confidence marker
+    carries the uncertainty; the "recovered heuristically" banner would be a
+    false alarm on a healthy file.
     """
     if len(body) < _SENSOR_ID_SIZE + 20:
         return
@@ -1725,7 +1807,10 @@ def _decode_sensor_block(body, results, offset=0):
     except Exception:
         approval_number = ""
 
+    # Empirically mapped field kinds of a non-normative payload: see the
+    # docstring of _parse_sensor_download. Every value here is low confidence.
     sensor_info = {
+        "confidence": "low",
         "sensor_approval": approval_number,
         "approval_nation": approval_nation,
         "approval_prefix": f"0x{approval_prefix:02X}",
@@ -1759,7 +1844,11 @@ def _decode_sensor_block(body, results, offset=0):
 
 
 def _extract_sensor_daily_records(body, start, copy_start, copy_end):
-    """Extract daily timestamp + speed records from sensor body.
+    """Extract daily timestamp + speed records from the sensor body.
+
+    *Empirical* per-day reading of the same non-normative manufacturer payload
+    (see :func:`_parse_sensor_download`): no regulation defines these blocks, so
+    each record is labelled ``confidence: low``.
 
     Each daily block:
       [0:4]   midnight_ts   TimeReal (seconds, divisible by 86400)
@@ -1798,6 +1887,7 @@ def _extract_sensor_daily_records(body, start, copy_start, copy_end):
         if date_str not in seen:
             seen.add(date_str)
             records.append({
+                "confidence": "low",
                 "date": date_str,
                 "first_event": datetime.fromtimestamp(ts_event, tz=timezone.utc).isoformat()
                 if 946684800 <= ts_event <= 4102444800 else None,

@@ -1,5 +1,48 @@
 ## [Unreleased]
 
+### Vehicle-unit fields the standard defines are decoded instead of dropped
+
+Checked field by field against Annex 1B and Annex 1C, three structures the
+standard defines were being read and then thrown away or read wrongly:
+
+- **Card insertion/withdrawal (`VuCardIWRecord`, Gen1 129 bytes, Gen2 131
+  bytes):** the previous vehicle of each insertion (registration nation, code
+  page and plate, withdrawal time, plus the VU generation on Gen2) and the
+  numeric `ManualInputFlag` are now decoded at their exact offsets. A Gen2
+  record shorter than 131 bytes keeps the old prefix and its uncovered bytes
+  stay raw; a longer one decodes the 131 standard bytes — previous vehicle and
+  flag included — and keeps the extension raw. Both are reported incomplete and
+  low confidence. These fields are in the JSON only: the tables and exports keep
+  their columns, because showing the previous vehicle needs a translated label
+  in every catalog.
+- **Gen1 events:** all four card slots of a `VuEventRecord` (driver and
+  co-driver, at the beginning and at the end) are kept; only the first was. A
+  Gen1 event table therefore shows three more card columns
+  (`card_codriver_begin`, `card_driver_end`, `card_codriver_end`) — the same
+  headers a Gen2 table already has, so no new label text. In a Gen1 download an
+  empty slot reads with the filler the existing driver-begin column already
+  shows (nation "WLD" / "No information available"; Gen2 shows an em dash); that
+  Gen1 quirk is pre-existing and was not changed here.
+- **Gen1 overview card slots:** the status byte is two nibbles, not two bits.
+  A company card in the co-driver slot (`0x41`) used to read as an empty slot.
+  The value vocabulary gains a third word, `reserved`, for the unassigned card
+  types `0101`..`1111`, which previously read as occupied/empty by accident.
+
+Also: the Gen1 scans that rebuild records from text instead of from a defined
+offset — card holders found by the TREP 02/03/06 scans, calibrations found by
+the VIN scan, and card-download candidates — now label what they produce low
+confidence, and a TREP 03 scan that only recovered a card holder is declared in
+the metadata. The sensor download (TREP `0x11`) is manufacturer-specific — the
+regulation reserves TRTP 11–1F, so there is no layout that could have failed and
+the old citation of Annex 1B §4.5.3.2.1 is removed. What is read from it stays
+labelled low confidence in the JSON, and it is deliberately *not* declared as a
+heuristic fallback (no banner, no warning): a valid download did not fall back
+from anything.
+
+Not done: seal and serial-number subfields, `SensorPaired` (`0x07`), one Gen1
+calibration record the plausibility gates drop, and the card-type names of the
+overview status. See `docs/developer/normative-completion.md`.
+
 ### Long manufacturer names are readable in Excel and keep their letters in the PDF
 
 - Excel: a manufacturer name wider than its column now wraps in the cell and the

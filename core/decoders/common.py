@@ -123,6 +123,98 @@ def decode_string(data, is_id=False):
         _log.debug("String decode failed (len=%d): %s", len(data), exc)
         return ""
 
+def decode_coded_text(data):
+    """Decode a ``codePage``-prefixed string, keeping non-ASCII characters.
+
+    ``codePage`` is the ISO/IEC 8859 part number that applies to the characters
+    (Annex 1B §2.114 VehicleRegistrationNumber, Annex 1C §2.167): the first byte
+    is the code page, the rest is the text. An unknown code page falls back to
+    latin-1, exactly like :func:`decode_string`.
+
+    Unlike ``decode_string(..., is_id=True)`` — which keeps only ASCII
+    alphanumerics — this preserves accented letters, which are legal in a
+    VehicleRegistrationNumber. Trailing ``00``/``FF`` padding is stripped first
+    so a short VRN does not decode into control characters.
+    """
+    if not data:
+        return ""
+    raw = bytes(data).rstrip(b"\x00\xff")
+    if not raw:
+        return ""
+    enc = _CODEPAGE_ENCODINGS.get(raw[0], "latin-1")
+    try:
+        decoded = raw[1:].decode(enc, errors="ignore")
+    except LookupError:                                  # unknown code page name
+        decoded = raw[1:].decode("latin-1", errors="ignore")
+    return "".join(ch for ch in decoded if ch.isprintable()).strip()
+
+
+#: ManualInputFlag (Annex 1B §2.66 / Annex 1C §2.93) enumerates exactly two
+#: values. It is *not* a boolean: a driver who made no manual entries records
+#: ``noEntry`` (0), one who did records ``manualEntries`` (1), and anything else
+#: is RFU/undefined — never to be reported as «manual entries».
+MANUAL_INPUT_FLAG_MEANINGS = {0: "noEntry", 1: "manualEntries"}
+
+#: Meaning reported for a ManualInputFlag value the regulation does not define.
+MANUAL_INPUT_FLAG_UNDEFINED = "undefined (not a ManualInputFlag value)"
+
+
+def describe_manual_input_flag(value):
+    """English meaning of one raw ManualInputFlag byte (0/1 defined, rest RFU)."""
+    try:
+        code = int(value)
+    except (TypeError, ValueError):
+        return MANUAL_INPUT_FLAG_UNDEFINED
+    return MANUAL_INPUT_FLAG_MEANINGS.get(code, MANUAL_INPUT_FLAG_UNDEFINED)
+
+
+#: PreviousVehicleInfo = vehicleRegistrationIdentification(15) +
+#: cardWithdrawalTime(4); generation 2 appends vuGeneration(1).
+#: Annex 1B §2.85 (19 bytes) / Annex 1C §2.118 (20 bytes).
+PREVIOUS_VEHICLE_INFO_G1_SIZE = 19
+PREVIOUS_VEHICLE_INFO_G2_SIZE = 20
+
+
+def decode_previous_vehicle_info(data, offset, with_vu_generation=False):
+    """Decode one PreviousVehicleInfo at *offset* (Annex 1B §2.85 / 1C §2.118).
+
+    Layout, generation independent::
+
+        vehicleRegistrationIdentification (15)
+            vehicleRegistrationNation   NationNumeric (1)
+            vehicleRegistrationNumber   codePage(1) + 13 chars (14)
+        cardWithdrawalTime              TimeReal (4)
+        vuGeneration                    INTEGER (1)  — generation 2 only
+
+    This is the previous vehicle a driver used, stored *inside* one
+    VuCardIWRecord: each record keeps its own copy, so it must never be merged
+    into the file-level current vehicle.
+
+    Returns ``None`` when *data* is too short to hold the whole structure — a
+    partial structure is not decoded by guesswork.
+    """
+    size = (PREVIOUS_VEHICLE_INFO_G2_SIZE if with_vu_generation
+            else PREVIOUS_VEHICLE_INFO_G1_SIZE)
+    if offset < 0 or offset + size > len(data):
+        return None
+    block = data[offset:offset + size]
+    nation_code = block[0]
+    withdrawal_ts = struct.unpack(">I", block[15:19])[0]
+    out = {
+        "registration_nation": get_nation(nation_code),
+        "registration_nation_code": nation_code,
+        "registration_code_page": block[1],
+        "registration_plate": decode_coded_text(block[1:15]),
+        "card_withdrawal_time": (
+            datetime.fromtimestamp(withdrawal_ts, tz=timezone.utc).isoformat()
+            if 946684800 <= withdrawal_ts <= 4102444800 else None),
+        "card_withdrawal_timestamp": withdrawal_ts,
+    }
+    if with_vu_generation:
+        out["vu_generation"] = block[19]
+    return out
+
+
 def decode_date(data, prefer_datef=False):
     """Decode TimeReal (4 bytes) or Datef (4 bytes).
 

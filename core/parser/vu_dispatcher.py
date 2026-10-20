@@ -27,7 +27,8 @@ from datetime import datetime, timezone
 
 from core.utils.logger import get_logger
 from core import decoders
-from core.decoders.common import is_known_nation
+from core.decoders.common import (
+    decode_previous_vehicle_info, describe_manual_input_flag, is_known_nation)
 from core.utils.constants import (
     RECORD_ARRAY_MAX_RECORDS, RECORD_ARRAY_MAX_SIZE, VU_MAX_TOTAL_RECORDS)
 from core.utils.event_codes import (
@@ -62,7 +63,7 @@ RECORD_TYPES = {
     0x0A: ("VehicleIdentificationNumber", "medium"),
     0x0B: ("VehicleRegistrationNumber", "medium"), # G2 (14)
     0x0C: ("VuCalibrationRecord", "low"),          # (222/252)
-    0x0D: ("VuCardIWRecord", "low"),               # (131)
+    0x0D: ("VuCardIWRecord", "low"),               # (131) §2.177 full decode
     0x0E: ("VuCardRecord", "high"),                # (45) cardAndGen+serial+ver+number
     0x0F: ("VUCertificate", "low"),                # (205) raw cert
     0x10: ("VuCompanyLocksRecord", "low"),         # (99)
@@ -105,6 +106,13 @@ NORMATIVE_RECORD_TYPES = frozenset(range(0x01, 0x25))
 def is_normative_record_type(record_type: int) -> bool:
     """True when ``record_type`` is one defined by the Annex 1C enumeration."""
     return record_type in NORMATIVE_RECORD_TYPES
+
+
+#: Byte length of the full Generation 2 VuCardIWRecord (Annex 1C §2.177).
+#: Generation 1 carries the same structure in 129 bytes because its
+#: FullCardNumber is 18 bytes (no generation byte) and its PreviousVehicleInfo is
+#: 19 bytes (no vuGeneration).
+CARD_IW_RECORD_SIZE = 131
 
 # Canonical result-list names for record types shared by full VU streams and
 # tag-keyed RecordArray payloads. Keep consumer-facing key ownership here.
@@ -353,13 +361,29 @@ def decode_calibration(rec):
 
 
 def decode_card_iw(rec):
-    """VuCardIWRecord (131): holderSurname(36) + holderFirstNames(36) +
-    fullCardNumberAndGen(19) + cardExpiry(4) + insertionTime(4) +
-    odoInsertion(3) + cardSlot(1) + withdrawalTime(4) + odoWithdrawal(3) + tail."""
+    """VuCardIWRecord — Annex 1C §2.177, the full Generation 2 layout (131 B)::
+
+        holderSurname(36) holderFirstNames(36)
+        fullCardNumberAndGeneration(19) cardExpiryDate(4)
+        cardInsertionTime(4) vehicleOdometerValueAtInsertion(3) cardSlotNumber(1)
+        cardWithdrawalTime(4) vehicleOdometerValueAtWithdrawal(3)
+        previousVehicleInfo(20) manualInputFlag(1)
+
+    ``previousVehicleInfo`` (§2.118) = vehicleRegistrationIdentification(15) +
+    cardWithdrawalTime(4) + vuGeneration(1) — generation 2 adds the last byte to
+    the 19-byte generation 1 structure (§2.85). It describes the *previous*
+    vehicle of that one insertion cycle, so it stays on the record and never
+    replaces the file-level vehicle.
+
+    A record of any other length is not a canonical VuCardIWRecord: the prefix
+    that is present is still decoded (it is unchanged between the generations),
+    but the record is reported incomplete/low and every byte the layout does not
+    cover is preserved verbatim in ``raw_tail_hex`` instead of being interpreted.
+    """
     if len(rec) < 110:
         return None
-    return {
-        "confidence": "medium",
+    out = {
+        "confidence": "low",
         "holder_surname": decode_name(rec, 0),
         "holder_first_names": decode_name(rec, 36),
         "card": decode_full_card_number_gen(rec, 72),
@@ -369,7 +393,30 @@ def decode_card_iw(rec):
         "card_slot": rec[102],
         "withdrawal_time": _iso(struct.unpack(">I", rec[103:107])[0]),
         "odometer_withdrawal_km": _u24(rec[107:110]),
+        "record_bytes": len(rec),
     }
+    if len(rec) >= CARD_IW_RECORD_SIZE:
+        # [110:130] PreviousVehicleInfo, [130] manualInputFlag: exact offsets.
+        out.update({
+            "previous_vehicle": decode_previous_vehicle_info(
+                rec, 110, with_vu_generation=True),
+            # Keep the raw code: the enumeration defines 0/1 only, so a non-zero
+            # byte is NOT proof that the holder made manual entries.
+            "manual_input_flag": rec[130],
+            "manual_input_flag_meaning": describe_manual_input_flag(rec[130]),
+        })
+    out["record_complete"] = len(rec) == CARD_IW_RECORD_SIZE
+    if len(rec) < CARD_IW_RECORD_SIZE:
+        out["missing_bytes"] = CARD_IW_RECORD_SIZE - len(rec)
+        out["raw_tail_hex"] = rec[110:].hex()
+    elif len(rec) > CARD_IW_RECORD_SIZE:
+        # An extension past the normative record size carries no Annex 1C
+        # meaning here: preserved, never interpreted.
+        out["raw_tail_bytes"] = len(rec) - CARD_IW_RECORD_SIZE
+        out["raw_tail_hex"] = rec[CARD_IW_RECORD_SIZE:].hex()
+    else:
+        out["confidence"] = "high"
+    return out
 
 
 def decode_download_activity(rec):
