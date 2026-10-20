@@ -1948,6 +1948,17 @@ def walk_vu_record_arrays(data, results):
         if sec["trep"] == TREP_DOWNLOAD_INTERFACE:
             _emit_interface_version(sec.get("interface") or b"", results)
         if sec.get("card_tlv"):
+            # An incomplete card region is an INTEGRITY finding (CONTINUE4
+            # vocabulary): the card bytes are there but do not close, so the
+            # download is partial — never silently complete, and never re-scanned.
+            if not sec["card_tlv"].get("tlv_complete"):
+                structure_findings.append({
+                    "trep": f"0x{sec['trep']:02X}",
+                    "status": "card_download_incomplete",
+                    "detail": "card EF stream does not close",
+                    "missing_bytes": 0,
+                    "trailing_bytes": int(sec["card_tlv"].get("bytes") or 0),
+                })
             # Card-download payload: bounded by its own STAP framing, reported,
             # and handed to the existing card EF/TLV decoder over exactly that
             # byte range. A card EF is never read as a RecordArray here.

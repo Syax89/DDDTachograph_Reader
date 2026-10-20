@@ -1902,10 +1902,10 @@ def _derive_card_merge_keys():
         "signature_verification", "certificate_temporal_validity",
         # Verification metadata, not actual card data to merge
         "ef_signature_verification",
-        # Gen 2.2–only fields (card_g22.py decoders — never in a G1 card download)
-        "gnss_ad_records", "load_unload_records", "trailer_registrations",
-        "gnss_places", "load_sensor_data", "border_crossings",
-        "gnss_auth", "load_unload_auth",
+        # (The generation-2.2 card fields below used to be excluded here
+        # because the embedded image was assumed to be a generation-1 card.
+        # A card relayed by a generation-2/2.2 VU carries them, so they are
+        # merged like any other card data.)
         # Dead / never produced by any card EF decoder
         "locations",
     })

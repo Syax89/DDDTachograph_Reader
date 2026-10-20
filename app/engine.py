@@ -205,6 +205,7 @@ class TachoParser:
                 "certificate_chain", self._validate_certificate_chain)
             self._run_phase("g1_vu_signatures", self._verify_g1_vu_signatures)
             ef_phase_ok = self._run_phase("ef_signatures", self._verify_ef_signatures)
+            self._run_phase("embedded_cards", self._decode_embedded_cards)
             # The certificate chain authenticates the card key, not the EF
             # payloads, so EF verification must be folded into the overall
             # verdict before it is published (an EF failure must not keep the
@@ -288,6 +289,32 @@ class TachoParser:
             self._fd = None
             raise
         self.is_vu = (self._safe_read(0, 1) == b'\x76')
+        # A stand-alone TREP 06 envelope is a card image relayed through the VU:
+        # SID 0x76 + TREP 06 followed by the complete card. It is the plain card
+        # plus two bytes, so it takes the plain card route (never the VU stream
+        # walk, which cannot verify the card's EF signatures or read its
+        # generation-2 side). Anything that does not walk as a clean card image
+        # stays on the VU path.
+        self._envelope = None
+        self._envelope_rejected = None
+        if self.is_vu:
+            from core.parser.card_envelope import trep06_envelope
+            head = bytes(self.raw_data[:2])
+            envelope = trep06_envelope(bytes(self.raw_data))
+            if envelope:
+                self._envelope = envelope
+                self.is_vu = False
+            elif head == b"\x76\x06":
+                # A TREP 06 transfer whose card image does not close: the file is
+                # NOT decoded as a card (the bytes are not a clean image), and the
+                # reason is reported instead of passing as a partial VU stream.
+                self._envelope_rejected = {
+                    "trep": "0x06",
+                    "status": "card_envelope_incomplete",
+                    "detail": ("76 06 header but the card EF stream does not close"),
+                    "missing_bytes": 0,
+                    "trailing_bytes": 0,
+                }
 
     def _close_file(self):
         try:
@@ -305,10 +332,61 @@ class TachoParser:
         """Structural pass: deterministic STAP/BER-TLV parse with byte coverage."""
         from core.parser.deterministic import DeterministicParser
         dp = DeterministicParser(parser=self)
-        self.results = dp.parse(self.raw_data, is_vu=self.is_vu)
+        offset = 0
+        data = self.raw_data
+        if self._envelope:
+            # Decode the card exactly as if the file had no transfer header, then
+            # account for the two bytes: every offset is shifted and the coverage
+            # total stays the real file size.
+            offset = int(self._envelope["bytes"])
+            data = bytes(self.raw_data[offset:])
+        self.results = dp.parse(data, is_vu=self.is_vu)
         # dp.parse() returns a fresh results dict — restore file metadata.
         self.results["metadata"]["filename"] = os.path.basename(self.file_path)
         self.results["metadata"]["app_version"] = __version__
+        if self._envelope_rejected:
+            self.results["metadata"].setdefault("vu_integrity", []).append(
+                dict(self._envelope_rejected))
+        if offset:
+            self.results["metadata"]["envelope"] = {
+                "type": "TREP 06 card download relayed by the VU",
+                "bytes": offset,
+            }
+            # Same wording the content-based origin detector uses for a card
+            # image behind a TREP 06 transfer.
+            self.results["metadata"]["origin_note"] = (
+                "Driver card image extracted from a VU Card Download "
+                "(TREP 06, Annex 1B \u00a72.2.6.6) \u2014 valid selective download")
+            self._shift_envelope_offsets(self.results, offset)
+
+    @staticmethod
+    def _shift_envelope_offsets(results, delta):
+        """Shift the offsets produced by an envelope parse by *delta* bytes.
+
+        The card was decoded from ``raw[delta:]``: every reported offset (the
+        per-tag table, the coverage ranges) is relative to the card image, so it is
+        moved back onto the real file. Percentages do not change.
+        """
+        def shift(value):
+            if isinstance(value, dict):
+                return {k: (f"0x{int(v, 16) + delta:08X}"
+                            if k == "offset" and isinstance(v, str)
+                            else shift(v))
+                        for k, v in value.items()}
+            if isinstance(value, list):
+                return [shift(item) for item in value]
+            return value
+
+        # Every offset-bearing structure is shifted: the per-tag table, the
+        # generations tree (which carries its own copy) and the coverage ranges.
+        for key in list(results):
+            if key == "metadata":
+                continue
+            results[key] = shift(results[key]) if key != "coverage" else results[key]
+        coverage = results.get("coverage")
+        if isinstance(coverage, dict):
+            coverage["total_bytes"] = int(coverage.get("total_bytes") or 0) + delta
+            coverage["uncovered_ranges"] = shift(coverage.get("uncovered_ranges") or [])
 
     def _log_unhandled_tags(self):
         """Debug aid: report registered tags that never appeared in the file."""
@@ -451,6 +529,68 @@ class TachoParser:
             present = sorted({m["trep"] for m in (_messages or [])})
             self._build_trep_report(generation, complete_walk=complete,
                                     present_treps=present)
+
+    def _decode_embedded_cards(self):
+        """Run the *plain card* pipeline over every embedded card region.
+
+        A ``76 06`` section inside a VU stream carries a card image. The structural
+        walk alone gives its EFs but not its EF signatures, certificate chain or
+        full generations tree — the card's generation-2 data can then be missing or
+        partial. Each region is therefore parsed through the same pipeline a plain
+        card file takes, its semantic keys are merged into the VU result, and its
+        verdict is reported per region (never folded into the VU chain verdict).
+        """
+        regions = ((self.results.get("metadata") or {})
+                   .get("vu_card_download_sections") or [])
+        for info in regions:
+            if not info.get("delegated"):
+                continue
+            start, size = int(info.get("offset", 0)), int(info.get("bytes", 0))
+            if size <= 0:
+                continue
+            chunk = bytes(self.raw_data[start:start + size])
+            sub = self._parse_card_bytes(chunk)
+            if not sub:
+                info["plain_card_parse"] = "failed"
+                continue
+            from core.decoders.vu_g1 import _merge_card_download
+            _merge_card_download(self.results, sub)
+            ef = sub.get("ef_signature_verification") or {}
+            info["plain_card_parse"] = "ok"
+            info["integrity_check"] = (sub.get("metadata") or {}).get(
+                "integrity_check")
+            info["ef_signatures"] = {
+                "verified": ef.get("verified"), "failed": ef.get("failed"),
+                "total": ef.get("total"), "summary": ef.get("summary")}
+            info["generation"] = (sub.get("metadata") or {}).get("generation")
+            self.results["metadata"].setdefault("embedded_card_verdicts", []).append({
+                "offset": f"0x{start:08X}", "bytes": size,
+                "generation": info["generation"],
+                "integrity_check": info["integrity_check"],
+                "ef_signatures": info["ef_signatures"],
+            })
+            for key, value in (sub.get("generations") or {}).items():
+                self.results.setdefault("generations", {}).setdefault(key, value)
+
+    @staticmethod
+    def _parse_card_bytes(chunk):
+        """Parse a card image held in memory through the plain card pipeline."""
+        import tempfile
+        handle = tempfile.NamedTemporaryFile(suffix=".ddd", delete=False)
+        try:
+            handle.write(chunk)
+            handle.close()
+            from core.registry.registry import DecoderRegistry
+            DecoderRegistry.reset_instance()
+            return TachoParser(handle.name).parse()
+        except Exception as exc:                        # pragma: no cover
+            logger.debug("Embedded card parse failed: %s", exc, exc_info=False)
+            return None
+        finally:
+            try:
+                os.unlink(handle.name)
+            except OSError:
+                pass
 
     def _record_fallback_reason(self, route, cause, **kwargs):
         """Record one structured fallback reason (see core.parser.fallback_reasons)."""
