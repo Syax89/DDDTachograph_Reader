@@ -569,8 +569,14 @@ class TachoParser:
                 "integrity_check": info["integrity_check"],
                 "ef_signatures": info["ef_signatures"],
             })
-            for key, value in (sub.get("generations") or {}).items():
-                self.results.setdefault("generations", {}).setdefault(key, value)
+            failed = int(info["ef_signatures"].get("failed") or 0)
+            if failed:
+                # A damaged embedded card is REPORTED (the tree above is the VU's
+                # own state, so its verdict cannot carry the card's failure).
+                self.results["metadata"].setdefault("vu_integrity", []).append({
+                    "trep": "0x06", "status": "card_ef_signature_invalid",
+                    "detail": f"{failed} EF signature(s) failed in the embedded card",
+                    "missing_bytes": 0, "trailing_bytes": 0})
 
     @staticmethod
     def _parse_card_bytes(chunk):

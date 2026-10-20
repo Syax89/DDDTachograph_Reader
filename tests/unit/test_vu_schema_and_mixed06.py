@@ -589,3 +589,78 @@ def test_short_and_long_border_crossing_records_are_incomplete():
         out = decode_vu_record(0x22, record)
         assert out["record_complete"] is False, size
         assert out["confidence"] == "low", size
+
+
+# ── A card section inside a VU stream is the plain card (CONTINUE7 item 2) ─
+
+def test_embedded_card_yields_its_generation_2_data_and_verdict(tmp_path):
+    """The bounded card region goes through the plain-card pipeline."""
+    from tests.integration import generate_mock_ddd as mock
+
+    card_path = str(tmp_path / "card.ddd")
+    mock.generate_g2_card(card_path)
+    with open(card_path, "rb") as handle:
+        card = handle.read()
+
+    def vu(vins):
+        return (b"\x76\x21" + S.record_array(0x0A, 17, [vins])
+                + S.record_array(0x08, 64, [bytes(64)]))
+
+    # Supported mixed shapes. A file that *opens* with the card (`76 06` + card +
+    # VU section) is not an envelope (the card stream does not close the file) and
+    # stays on the generation-1 VU walker, whose TREP 06 handler is the legacy
+    # extraction: documented as an open gap in .audit/AUTHOR.md rather than
+    # silently claimed.
+    cases = {
+        "vu-then-card": vu(S.VIN.encode("ascii")) + b"\x76\x06" + card,
+        "two-cards": vu(S.VIN.encode("ascii")) + b"\x76\x06" + card
+                     + b"\x76\x06" + card,
+    }
+    plain = _results()
+    from app.engine import TachoParser
+    from core.registry.registry import DecoderRegistry
+    DecoderRegistry.reset_instance()
+    plain = TachoParser(card_path).parse()
+
+    for name, stream in cases.items():
+        path = str(tmp_path / f"{name}.ddd")
+        with open(path, "wb") as handle:
+            handle.write(stream)
+        DecoderRegistry.reset_instance()
+        parsed = TachoParser(path).parse()
+        regions = parsed["metadata"].get("vu_card_download_sections") or []
+        assert len(regions) == (2 if name == "two-cards" else 1), name
+        assert all(r["plain_card_parse"] == "ok" for r in regions), name
+        # the card's own generation-2 data reaches the result
+        assert len(parsed.get("gnss_ad_records") or []) == len(
+            plain.get("gnss_ad_records") or []), name
+        assert len(parsed.get("vehicle_units") or []) == len(
+            plain.get("vehicle_units") or []), name
+        # and its verdict is reported per region, never folded into the VU chain
+        verdicts = parsed["metadata"].get("embedded_card_verdicts") or []
+        assert verdicts and verdicts[0]["ef_signatures"]["total"], name
+        assert verdicts[0]["generation"] == plain["metadata"]["generation"], name
+
+
+def test_damaged_embedded_card_is_reported(tmp_path):
+    from tests.integration import generate_mock_ddd as mock
+    from app.engine import TachoParser
+    from core.registry.registry import DecoderRegistry
+
+    card_path = str(tmp_path / "card-bad.ddd")
+    mock.generate_g2_card(card_path)
+    with open(card_path, "rb") as handle:
+        card = bytearray(handle.read())
+    # flip a byte inside the first EF value: its signature must fail
+    card[5 + 40] ^= 0xFF
+    path = str(tmp_path / "mixed-bad.ddd")
+    with open(path, "wb") as handle:
+        handle.write(b"\x76\x21" + S.record_array(0x0A, 17, [S.VIN.encode("ascii")])
+                     + b"\x76\x06" + bytes(card))
+    DecoderRegistry.reset_instance()
+    parsed = TachoParser(path).parse()
+    findings = parsed["metadata"].get("vu_integrity") or []
+    verdicts = parsed["metadata"].get("embedded_card_verdicts") or []
+    failed = [v for v in verdicts if (v["ef_signatures"] or {}).get("failed")]
+    assert failed or any(f["status"] == "card_ef_signature_invalid"
+                         for f in findings), (verdicts, findings)
