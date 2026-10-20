@@ -550,7 +550,8 @@ def _complete_prefix_body(trep, body):
     return None
 
 
-def parse_vu_download_messages(raw_data, results, base_offset=0):
+def parse_vu_download_messages(raw_data, results, base_offset=0,
+                               only_treps=None):
     """Parse VU download messages (SID 0x76 + TREP) in the raw binary data.
     
     Message types (TREP), Annex 1B §2.2.6:
@@ -578,7 +579,11 @@ def parse_vu_download_messages(raw_data, results, base_offset=0):
         while pos < len(raw_data) - 1:
             if raw_data[pos] == 0x76:
                 trep = raw_data[pos + 1] if pos + 1 < len(raw_data) else 0
-                if trep in (0x01, 0x02, 0x03, 0x04, 0x05, 0x06):
+                # ``only_treps`` scopes a zone scan to the TREP of the failed unit:
+                # a byte pair inside another message's payload is not a boundary of
+                # some third TREP (see core.parser.heuristic_zone).
+                if (trep in (0x01, 0x02, 0x03, 0x04, 0x05, 0x06)
+                        and (only_treps is None or trep in only_treps)):
                     found_messages.append((pos, trep))
             pos += 1
 
@@ -840,7 +845,8 @@ def _parse_trep_02_activities(data, results):
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 02 activities parse failed: %s", exc)
 
-def _parse_trep_02_g1_structured(data, results, message_offset=None):
+def _parse_trep_02_g1_structured(data, results, message_offset=None,
+                                partial=False):
     """Parse a G1 TREP 02 (Activities) message — Annex 1B §2.2.6.2:
 
       dateOfDay(4, TimeReal) + odometerValueMidnight(3) +
@@ -866,8 +872,60 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
     """
     identity = _body_identity(data, message_offset)
     try:
-        if len(data) < 11:
-            return False
+        def _emit(iw_records, changes=(), n_ch=0, invalid_changes=0,
+                  places=(), conditions=()):
+            """Publish what a (possibly cut) message holds, with dedup.
+
+            A closure inside the walk, so a partial read publishes its COMPLETE
+            leading sections through exactly the same code as an intact one.
+            """
+            date_str = datetime.fromtimestamp(date_ts, tz=timezone.utc).strftime('%d/%m/%Y')
+            drivers = results.setdefault("inserted_drivers", [])
+            for iw in iw_records:
+                card_num = (iw["card"] or {}).get("card_number", "")
+                dk = f"{iw['holder_surname']}|{iw['holder_first_names']}|{card_num}"
+                if iw["holder_surname"] and not any(d.get("_key") == dk for d in drivers):
+                    drivers.append({
+                        "surname": iw["holder_surname"],
+                        "firstname": iw["holder_first_names"],
+                        "card_number": card_num,
+                        "_key": dk,
+                    })
+            existing_iw = results.setdefault("card_iw_records", [])
+            for idx, iw in enumerate(iw_records):
+                # The insertion cycle belongs to the day whose TREP 02 message carried
+                # it: the association travels with the record, and re-reading the same
+                # body does not append it twice.
+                iw["day_date"] = date_str
+                iw["record_day"] = date_str
+                key = iw.pop("_key")
+                _append_once(existing_iw, iw, identity, ("iw", idx))
+                iw["_key"] = key
+
+            # A downloaded day with no activity change is still a downloaded day
+            # (a card was absent all day, for instance): the day is emitted with an
+            # empty change list instead of disappearing from the report.
+            activities = results.setdefault("activities", [])
+            _append_once(activities, {
+                "date": date_str,
+                "odometer_km": odo_midnight,
+                "changes": changes,
+                "changes_count": n_ch,
+                "invalid_changes_count": invalid_changes,
+                "source": "vu_trep02",
+            }, identity, "day")
+
+            existing_places = results.setdefault("places", [])
+            for idx, place in enumerate(places):
+                key = place.pop("_key")
+                _append_once(existing_places, place, identity, ("place", idx))
+                place["_key"] = key
+
+            existing_sc = results.setdefault("specific_conditions", [])
+            for idx, condition in enumerate(conditions):
+                key = condition.pop("_key")
+                _append_once(existing_sc, condition, identity, ("condition", idx))
+                condition["_key"] = key
         date_ts = struct.unpack(">I", data[0:4])[0]
         if not (946684800 <= date_ts <= 4102444800):
             return False
@@ -879,7 +937,9 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
         # The structural bound is what the remaining body can hold: the count is
         # a two-byte field (DDP_030) and the global record cap bounds memory.
         if pos + n_iw * 129 + 2 > len(data):
-            return False
+            if not partial:
+                return False
+            n_iw = max(0, (len(data) - pos) // 129)
         iw_records = []
         for _ in range(n_iw):
             rec = data[pos:pos + 129]
@@ -910,10 +970,15 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
             })
             pos += 129
 
+        if partial and pos + 2 > len(data):
+            _emit(iw_records)
+            return True
         n_ch = struct.unpack(">H", data[pos:pos + 2])[0]
         pos += 2
         if pos + n_ch * 2 + 1 > len(data):
-            return False
+            if not partial:
+                return False
+            n_ch = max(0, (len(data) - pos - 1) // 2)
         changes = []
         invalid_changes = 0
         for i in range(n_ch):
@@ -930,8 +995,13 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
 
         n_pl = data[pos]
         pos += 1
+        if partial and pos + 2 > len(data):
+            _emit(iw_records, changes, n_ch, invalid_changes)
+            return True
         if pos + n_pl * 28 + 2 > len(data):
-            return False
+            if not partial:
+                return False
+            n_pl = max(0, (len(data) - pos) // 28)
         # EntryTypeDailyWorkPeriod (Annex 1B §2.51) assigns 0..5: 4/5 are the
         # "related time assumed by VU" pair and are just as legal as 0..3. The
         # short word keeps the historical START/END vocabulary; the meaning and
@@ -965,8 +1035,13 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
 
         n_sc = struct.unpack(">H", data[pos:pos + 2])[0]
         pos += 2
+        if partial and pos + 2 > len(data):
+            _emit(iw_records, changes, n_ch, invalid_changes, places)
+            return True
         if pos + n_sc * 5 > len(data):
-            return False
+            if not partial:
+                return False
+            n_sc = max(0, (len(data) - pos) // 5)
         conditions = []
         for _ in range(n_sc):
             rec = data[pos:pos + 5]
@@ -988,55 +1063,7 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
             })
             pos += 5
 
-        # Emit (with dedup — the message scan can revisit the same block).
-        date_str = datetime.fromtimestamp(date_ts, tz=timezone.utc).strftime('%d/%m/%Y')
-        drivers = results.setdefault("inserted_drivers", [])
-        for iw in iw_records:
-            card_num = (iw["card"] or {}).get("card_number", "")
-            dk = f"{iw['holder_surname']}|{iw['holder_first_names']}|{card_num}"
-            if iw["holder_surname"] and not any(d.get("_key") == dk for d in drivers):
-                drivers.append({
-                    "surname": iw["holder_surname"],
-                    "firstname": iw["holder_first_names"],
-                    "card_number": card_num,
-                    "_key": dk,
-                })
-        existing_iw = results.setdefault("card_iw_records", [])
-        for idx, iw in enumerate(iw_records):
-            # The insertion cycle belongs to the day whose TREP 02 message carried
-            # it: the association travels with the record, and re-reading the same
-            # body does not append it twice.
-            iw["day_date"] = date_str
-            iw["record_day"] = date_str
-            key = iw.pop("_key")
-            _append_once(existing_iw, iw, identity, ("iw", idx))
-            iw["_key"] = key
-
-        # A downloaded day with no activity change is still a downloaded day
-        # (a card was absent all day, for instance): the day is emitted with an
-        # empty change list instead of disappearing from the report.
-        activities = results.setdefault("activities", [])
-        _append_once(activities, {
-            "date": date_str,
-            "odometer_km": odo_midnight,
-            "changes": changes,
-            "changes_count": n_ch,
-            "invalid_changes_count": invalid_changes,
-            "source": "vu_trep02",
-        }, identity, "day")
-
-        existing_places = results.setdefault("places", [])
-        for idx, place in enumerate(places):
-            key = place.pop("_key")
-            _append_once(existing_places, place, identity, ("place", idx))
-            place["_key"] = key
-
-        existing_sc = results.setdefault("specific_conditions", [])
-        for idx, condition in enumerate(conditions):
-            key = condition.pop("_key")
-            _append_once(existing_sc, condition, identity, ("condition", idx))
-            condition["_key"] = key
-
+        _emit(iw_records, changes, n_ch, invalid_changes, places, conditions)
         return True
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("TREP 02 G1 structured parse failed: %s", exc)
@@ -1152,17 +1179,57 @@ def _parse_trep_03_events_faults(data, results, message_offset=None):
             _log.warning("TREP 03 (events/faults) layout did not match Annex 1B; "
                          "heuristic scan supplied %s", ", ".join(gained))
 
-def _parse_trep_03_structured(data, results, message_offset=None):
+def _parse_trep_03_structured(data, results, message_offset=None,
+                                 partial=False):
     """Count-prefixed TREP 03 walk. Returns True when the structure validates."""
     identity = _body_identity(data, message_offset)
     try:
+        def _emit_trep03(faults, events):
+            """Publish the stored fault and event records of this message.
+
+            Closure inside the walk: a cut message publishes the complete
+            records it holds through the same mapping as an intact one.
+            """
+            existing_faults = results.setdefault("faults", [])
+            for idx, fault in enumerate(faults):
+                key = fault.pop("_key")
+                _append_once(existing_faults, fault, identity, ("fault", idx))
+                fault["_key"] = key
+
+            existing_events = results.setdefault("events", [])
+            for idx, evt in enumerate(events):
+                key = evt.pop("_key")
+                _append_once(existing_events, {
+                        "description": evt["description"],
+                        "event_fault_version": evt["event_fault_version"],
+                        "type_status": evt["type_status"],
+                        "type_code": evt["event_type"],
+                        "record_purpose": evt["event_purpose"],
+                        "record_purpose_label": describe_record_purpose(evt["event_purpose"]),
+                        "begin_time": evt["begin_time"],
+                        "begin_time_raw": evt.get("begin_time_raw"),
+                        "time_status": evt.get("time_status"),
+                        "end_time": evt["end_time"],
+                        "similar_events": evt["similar_events"],
+                        "card_driver_begin": evt["card_driver_begin"],
+                        # VuEventRecord holds FOUR FullCardNumber slots (Annex 1B
+                        # Appendix 1 §2.132 / DDP_031), in this order and with the
+                        # same key names the Gen2 emitter uses:
+                        # driverBegin, coDriverBegin, driverEnd, coDriverEnd.
+                        "card_codriver_begin": evt["card_codriver_begin"],
+                        "card_driver_end": evt["card_driver_end"],
+                        "card_codriver_end": evt["card_codriver_end"],
+                    }, identity, ("event", idx))
+                evt["_key"] = key
         if len(data) < 12:
             return False
         pos = 0
         n_faults = data[pos]
         pos += 1
         if pos + n_faults * 82 > len(data):
-            return False
+            if not partial:
+                return False
+            n_faults = max(0, (len(data) - pos) // 82)
         faults = []
         for _ in range(n_faults):
             rec = _parse_vu_fault_record(data, pos)
@@ -1174,7 +1241,9 @@ def _parse_trep_03_structured(data, results, message_offset=None):
         n_events = data[pos]
         pos += 1
         if pos + n_events * 83 > len(data):
-            return False
+            if not partial:
+                return False
+            n_events = max(0, (len(data) - pos) // 83)
         events = []
         for _ in range(n_events):
             rec = _parse_vu_event_record(data, pos)
@@ -1189,7 +1258,12 @@ def _parse_trep_03_structured(data, results, message_offset=None):
         # ``time_status: invalid`` and its raw value while the *interpretation*
         # stays withheld. (The 2000..2100 window is a heuristic-scan gate only.)
         if pos + 9 > len(data):
-            return False
+            if not partial:
+                return False
+            # The stored fault and event records before this mandatory control
+            # block are complete: publish them and let the cut be the zone.
+            _emit_trep03(faults, events)
+            return True
         osc_last = struct.unpack(">I", data[pos:pos + 4])[0]
         osc_first = struct.unpack(">I", data[pos + 4:pos + 8])[0]
         osc_count = data[pos + 8]
@@ -1198,7 +1272,9 @@ def _parse_trep_03_structured(data, results, message_offset=None):
         n_overs = data[pos]
         pos += 1
         if pos + n_overs * 31 > len(data):
-            return False
+            if not partial:
+                return False
+            n_overs = max(0, (len(data) - pos) // 31)
         overspeed = []
         for _ in range(n_overs):
             rec = data[pos:pos + 31]
@@ -1231,8 +1307,12 @@ def _parse_trep_03_structured(data, results, message_offset=None):
         pos += 1
         # Only the two TimeReal values are needed to keep a record: a short
         # tail is a truncated record, not a reason to fail the whole section.
+        if partial and pos + 1 > len(data):
+            return True
         if pos + n_adj * 8 > len(data):
-            return False
+            if not partial:
+                return False
+            n_adj = max(0, (len(data) - pos) // 8)
         adjustments = []
         for _ in range(n_adj):
             rec = data[pos:pos + 98]
@@ -1263,37 +1343,7 @@ def _parse_trep_03_structured(data, results, message_offset=None):
         # Emit with dedup — the message scan can hit the same block twice.
         # Keys include end time and record purpose: the VU stores distinct
         # records sharing the same (type, begin), e.g. one per record purpose.
-        existing_faults = results.setdefault("faults", [])
-        for idx, fault in enumerate(faults):
-            key = fault.pop("_key")
-            _append_once(existing_faults, fault, identity, ("fault", idx))
-            fault["_key"] = key
-
-        existing_events = results.setdefault("events", [])
-        for idx, evt in enumerate(events):
-            key = evt.pop("_key")
-            _append_once(existing_events, {
-                    "description": evt["description"],
-                    "event_fault_version": evt["event_fault_version"],
-                    "type_status": evt["type_status"],
-                    "type_code": evt["event_type"],
-                    "record_purpose": evt["event_purpose"],
-                    "record_purpose_label": describe_record_purpose(evt["event_purpose"]),
-                    "begin_time": evt["begin_time"],
-                    "begin_time_raw": evt.get("begin_time_raw"),
-                    "time_status": evt.get("time_status"),
-                    "end_time": evt["end_time"],
-                    "similar_events": evt["similar_events"],
-                    "card_driver_begin": evt["card_driver_begin"],
-                    # VuEventRecord holds FOUR FullCardNumber slots (Annex 1B
-                    # Appendix 1 §2.132 / DDP_031), in this order and with the
-                    # same key names the Gen2 emitter uses:
-                    # driverBegin, coDriverBegin, driverEnd, coDriverEnd.
-                    "card_codriver_begin": evt["card_codriver_begin"],
-                    "card_driver_end": evt["card_driver_end"],
-                    "card_codriver_end": evt["card_codriver_end"],
-                }, identity, ("event", idx))
-            evt["_key"] = key
+        _emit_trep03(faults, events)
 
         # VuOverSpeedingControlData is a stored record ("default value if no
         # data", DDP_031): it is emitted even when both clocks are unusable, in

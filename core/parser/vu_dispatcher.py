@@ -1786,6 +1786,27 @@ def _stap_extent(data, start):
     return pos, count
 
 
+def _verified_marker(data, start, end, trep_bytes):
+    """Offset of the next marker that passes the full self-check, or None.
+
+    A marker is a ``0x76`` followed by a section type and a first array header
+    whose ``recordSize * noOfRecords`` fits before ``end``. That is the same check
+    the walk itself makes, so a ``76 TREP`` byte pair inside record payload is
+    never taken for a boundary — while a real section after a lying record count
+    is still found.
+    """
+    pos = max(0, start)
+    while pos + 7 <= end:
+        if data[pos] == 0x76 and data[pos + 1] in trep_bytes:
+            # First array header: recordType(1) + recordSize(2) + noOfRecords(2).
+            size = struct.unpack(">H", data[pos + 3:pos + 5])[0]
+            count = struct.unpack(">H", data[pos + 5:pos + 7])[0]
+            if 0 < size and 5 + size * count <= end - pos - 2:
+                return pos
+        pos += 1
+    return None
+
+
 def iter_vu_sections(data, state=None):
     """Yield sections from a VU RecordArray stream as {marker, trep, records: [(pos, rt, rs, nr, end), ...]}.
 
@@ -1892,16 +1913,27 @@ def iter_vu_sections(data, state=None):
             # lying noOfRecords). Records are fixed-size, so every COMPLETE record is
             # still decoded normatively and only the cut remainder is a failed range:
             # floor(available / rs) records, header kept with the normative part.
-            # The clamp must not swallow a following section: bound the run by the
-            # next verified marker, exactly like the resync path does.
-            limit = n
-            probe = pos + 5
-            while probe + 1 < n:
-                if data[probe] == 0x76 and data[probe + 1] in trep_bytes:
-                    limit = probe
-                    break
-                probe += 1
-            fits = (limit - pos - 5) // rs if rs else 0
+            # The declared extent of THIS array is authoritative: a `76 TREP` byte
+            # pair occurring inside its record data is payload, not a marker. So the
+            # complete records that fit before EOF are read first (floor), and only
+            # the bytes after the last complete record are a failed range — a resync
+            # marker is searched from there, and must pass the full check.
+            fits = (n - pos - 5) // rs if rs else 0
+            # A verified marker that sits exactly on this array's record grid is a
+            # real section boundary: the declared count is then a lie (a truncated
+            # record is indistinguishable from a lying count), and the section must
+            # not swallow it. A marker off the grid is payload (C-1).
+            if rs:
+                probe = pos + 5
+                while True:
+                    candidate = _verified_marker(data, probe, n, trep_bytes)
+                    if candidate is None:
+                        break
+                    span = candidate - pos - 5
+                    if span >= 0 and span % rs == 0:
+                        fits = min(fits, span // rs)
+                        break
+                    probe = candidate + 1
             if fits <= 0:
                 if state is not None:
                     state["truncated"] = True
@@ -1914,10 +1946,15 @@ def iter_vu_sections(data, state=None):
                 state["truncated"] = True
             if cur is not None:
                 cur["records"].append((pos, rt, rs, fits, pos + 5 + rs * fits))
+            # Only the bytes AFTER the last complete record are a failed range, and
+            # a resync marker is searched from there — with the full check, so a
+            # real section that follows a lying count is still reached.
+            cut_start = pos + 5 + rs * fits
+            marker = _verified_marker(data, cut_start, n, trep_bytes)
             if state is not None:
-                cut_start = pos + 5 + rs * fits
-                state.setdefault("truncated_ranges", []).append((cut_start, limit))
-            pos += 5 + rs * fits
+                state.setdefault("truncated_ranges", []).append(
+                    (cut_start, marker if marker is not None else n))
+            pos = marker if marker is not None else cut_start
             continue
         if cur is not None:
             cur["records"].append((pos, rt, rs, nr, pos + 5 + rs * nr))
@@ -2260,7 +2297,14 @@ def _cover_units_with_zones(data, results):
         recovered = False
         try:
             from core.decoders.vu_g1 import parse_vu_download_messages
+            from core.parser.heuristic_zone import prune_candidates
             parse_vu_download_messages(data[start:end], results, base_offset=start)
+            # A record the scan re-read (garbled duplicate) or an empty decoded
+            # element (a false marker inside payload bytes) is not published.
+            dropped = prune_candidates(before, results)
+            if dropped:
+                _log.debug("VU zone 0x%X-0x%X: dropped %d candidate record(s): %s",
+                           start, end, len(dropped), ", ".join(dropped))
             recovered = any(len(value) > before.get(key, 0)
                             for key, value in results.items()
                             if isinstance(value, list))

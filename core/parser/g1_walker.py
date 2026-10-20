@@ -384,29 +384,50 @@ _TREP_HANDLERS = {0x01, 0x02, 0x03, 0x04, 0x05}
 def _decode_clamped(trep, body, results, message_offset=None):
     """Decode a count-clamped body with the TREP's own handler (normative path)."""
     from core.decoders.vu_g1 import (
-        _parse_trep_02_g1_structured, _parse_trep_03_events_faults,
+        _parse_trep_02_g1_structured, _parse_trep_03_structured,
         _parse_trep_04_speed, _parse_trep_05_technical, parse_g1_vu_overview)
     if trep == 0x01:
         parse_g1_vu_overview(body, results, message_offset=message_offset)
     elif trep == 0x02:
+        # ``partial``: the body holds the COMPLETE leading sections of a cut
+        # message, so the handler decodes those and tolerates the absent trailing
+        # ones instead of rejecting the whole body.
         if not _parse_trep_02_g1_structured(body, results,
-                                           message_offset=message_offset):
+                                           message_offset=message_offset,
+                                           partial=True):
             raise ValueError("clamped TREP 02 did not validate")
     elif trep == 0x03:
-        _parse_trep_03_events_faults(body, results, message_offset=message_offset)
+        if not _parse_trep_03_structured(body, results,
+                                         message_offset=message_offset,
+                                         partial=True):
+            raise ValueError("clamped TREP 03 did not validate")
     elif trep == 0x04:
         _parse_trep_04_speed(body, results)
     elif trep == 0x05:
         _parse_trep_05_technical(body, results, message_offset=message_offset)
 
 
-def _heuristic_zone(data, start, end, results):
-    """Run the scoped scan on ``data[start:end]``; return (path, reason)."""
+def _heuristic_zone(data, start, end, results, only_treps=None):
+    """Run the scoped scan on ``data[start:end]``; return (path, reason).
+
+    ``only_treps`` restricts the scan to the TREP of the failed unit: a zone that
+    begins inside the payload of another message must not be re-interpreted as a
+    message of a different type.
+    """
     before = {key: len(value) for key, value in _result_records(results).items()}
     recovered = False
     try:
         from core.decoders.vu_g1 import parse_vu_download_messages
-        parse_vu_download_messages(data[start:end], results, base_offset=start)
+        from core.parser.heuristic_zone import prune_candidates
+        parse_vu_download_messages(data[start:end], results, base_offset=start,
+                                   only_treps=only_treps)
+        # The scan may only ADD what the normative pass did not publish and what
+        # passes the field validity: a re-read of a published record and an empty
+        # day (a false marker inside another message's payload) are dropped here.
+        dropped = prune_candidates(before, results)
+        if dropped:
+            _log.debug("VU zone 0x%X-0x%X: dropped %d candidate record(s): %s",
+                       start, end, len(dropped), ", ".join(dropped))
         recovered = any(len(value) > before.get(key, 0)
                         for key, value in _result_records(results).items())
     except Exception as exc:
@@ -631,14 +652,30 @@ def walk_g1_vu(data, results):
             if prefix and prefix[1] > 0:
                 clamped, consumed = prefix
                 try:
+                    before_keys = set(((results.get("metadata") or {})
+                                       .get("heuristic_fields") or {}))
                     _decode_clamped(trep, clamped, results, start)
+                    # The path must name the route that produced THIS unit's
+                    # records: TREP 03/05 fall back to their internal heuristic
+                    # when the clamped body still does not fit the layout, and a
+                    # unit calling itself normative while its records carry
+                    # heuristic provenance (and no position identity) would lie.
+                    after = ((results.get("metadata") or {})
+                             .get("heuristic_fields") or {})
+                    used_internal = any(key not in before_keys and
+                                        f"TREP{trep:02d}" in key for key in after)
                     units.append({"trep": f"0x{trep:02X}", "offset": start,
-                                  "length": 2 + consumed, "path": "normative",
-                                  "reason": "complete records before the truncation point"})
+                                  "length": 2 + consumed,
+                                  "path": "heuristic" if used_internal else "normative",
+                                  "reason": ("complete records before the truncation "
+                                             "point, read by the internal fallback"
+                                             if used_internal else
+                                             "complete records before the truncation "
+                                             "point")})
                     remainder_start = start + 2 + consumed
                     if end > remainder_start:
                         path, reason = _heuristic_zone(data, remainder_start, end,
-                                                       results)
+                                                       results, only_treps={trep})
                         units.append({"trep": f"0x{trep:02X}",
                                       "offset": remainder_start,
                                       "length": end - remainder_start,
@@ -660,9 +697,20 @@ def walk_g1_vu(data, results):
             continue
         recovered = False
         before = {key: len(value) for key, value in _result_records(results).items()}
+        # A zone that does not start on a message boundary may only be scanned
+        # for the TREP its own first bytes declare; without one there is nothing
+        # to look for (the bytes are junk, not a message of some other type).
+        zone_trep = (data[start + 1] if start + 1 < end and data[start] == 0x76
+                     else None)
         try:
             from core.decoders.vu_g1 import parse_vu_download_messages
-            parse_vu_download_messages(data[start:end], results, base_offset=start)
+            from core.parser.heuristic_zone import prune_candidates
+            parse_vu_download_messages(data[start:end], results, base_offset=start,
+                                       only_treps={zone_trep} if zone_trep else set())
+            filled = prune_candidates(before, results)
+            if filled:
+                _log.debug("VU zone 0x%X-0x%X: dropped %d candidate record(s): %s",
+                           start, end, len(filled), ", ".join(sorted(filled)))
             # "Recovered" means it actually added something: a zone the scan could
             # read nothing distinct from is unreadable, not heuristic.
             recovered = any(len(value) > before.get(key, 0)
@@ -681,6 +729,28 @@ def walk_g1_vu(data, results):
         if recovered:
             heuristic_units.append(dict(units[-1]))
     units.sort(key=lambda unit: unit["offset"])
+    if not units and data:
+        # Nothing decoded at all (a file cut inside the first message header): the
+        # bytes still belong to ONE declared zone, so the invariant "units tile the
+        # file" holds for every input and the reader is told what happened.
+        recovered = False
+        before = {key: len(value) for key, value in _result_records(results).items()}
+        zone_trep = data[1] if len(data) > 1 and data[0] == 0x76 else None
+        try:
+            from core.decoders.vu_g1 import parse_vu_download_messages
+            from core.parser.heuristic_zone import prune_candidates
+            parse_vu_download_messages(data, results, base_offset=0,
+                                       only_treps={zone_trep} if zone_trep else set())
+            prune_candidates(before, results)
+            recovered = any(len(value) > before.get(key, 0)
+                            for key, value in _result_records(results).items())
+        except Exception as exc:                        # the last resort
+            _log.warning("VU stream: no message decoded and the scan failed: %s", exc)
+        units.append({"trep": "0x00", "offset": 0, "length": len(data),
+                      "path": "heuristic" if recovered else "unreadable",
+                      "reason": "no message could be decoded in the whole stream"})
+        if recovered:
+            heuristic_units.append(dict(units[-1]))
     if units:
         # Per-unit provenance: what was decoded normatively, what needed the
         # heuristic on its own byte range, and what stayed unreadable. Non

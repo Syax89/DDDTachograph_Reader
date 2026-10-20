@@ -378,3 +378,95 @@ def test_a_generation_2_array_truncated_at_its_tail_keeps_complete_records(tmp_p
     samples = sum(len(run.get("_chart_speeds_kmh") or [])
                   for run in (result.get("speed_blocks") or []))
     assert samples >= 120, samples
+
+
+# ── C-1: a 76 TREP pair inside record data is payload, not a marker ──────
+
+def test_a_marker_pair_inside_record_data_is_not_a_resync_point(tmp_path):
+    from tests.unit import vu_synthetic as S
+    blocks = [struct.pack(">I", S.BASE_TIME + 60 * i) + bytes([0x30] * 60)
+              for i in range(4)]
+    # inject a 0x76 0x24 pair inside block #1's payload (absolute offset 95)
+    blocks[1] = blocks[1][:23] + b"\x76\x24" + blocks[1][25:]
+    data = S.section(0x24, S.record_array(0x12, 64, blocks), S.signature_record())
+    cut = data[:200]
+    result = _parse(tmp_path, "injected.ddd", cut)
+    # three complete blocks fit before the cut: all three are published
+    assert len(result.get("speed_blocks") or []) == 3
+    units = _units(result)
+    _coverage_ok(units, len(cut))
+    # no phantom empty 0x24 section at the false marker
+    phantom = [unit for unit in units
+               if unit["trep"] == "0x24" and unit["length"] <= 2]
+    assert not phantom, units
+
+
+# ── C-2: a cut message publishes its COMPLETE leading records ───────────
+
+def test_trep02_cut_after_the_complete_iw_record_keeps_it(tmp_path):
+    from tests.unit.test_g1_vu_semantics import _trep02_body
+    body = _trep02_body()
+    cut_at = 138                      # the complete IW record ends here
+    stream = b"\x76\x02" + body[:cut_at]
+    result = _parse(tmp_path, "t02cut.ddd", stream)
+    assert len(result.get("card_iw_records") or []) == 1, result.get("card_iw_records")
+    units = _units(result)
+    _coverage_ok(units, len(stream))
+
+
+def test_trep03_cut_after_the_complete_event_keeps_both_records(tmp_path):
+    from tests.unit.test_g1_vu_semantics import _trep03_body
+    body = _trep03_body()
+    cut_at = 169                      # the complete event ends here
+    stream = b"\x76\x03" + body[:cut_at]
+    result = _parse(tmp_path, "t03cut.ddd", stream)
+    assert len(result.get("faults") or []) == 1, result.get("faults")
+    assert len(result.get("events") or []) == 1, result.get("events")
+    _coverage_ok(_units(result), len(stream))
+
+
+@pytest.mark.parametrize("trep", [0x01, 0x02, 0x03, 0x04, 0x05])
+def test_a_cut_at_any_boundary_still_tiles_and_never_invents(tmp_path, trep):
+    from tests.unit.test_g1_vu_semantics import (
+        _overview_body, _trep02_body, _trep03_body, _trep05_body, _g1_calibration)
+    bodies = {0x01: _overview_body(), 0x02: _trep02_body(),
+              0x03: _trep03_body(), 0x04: None, 0x05: _trep05_body([_g1_calibration()])}
+    body = bodies[trep]
+    if body is None:
+        body = struct.pack(">H", 2) + (struct.pack(">I", S_BASE) + bytes(60)) * 2
+    stream = bytes([0x76, trep]) + body
+    intact = _parse(tmp_path, f"intact-{trep}.ddd", stream)
+    for cut in range(1, len(stream), max(1, len(stream) // 8)):
+        data = stream[:cut]
+        result = _parse(tmp_path, f"cut-{trep}-{cut}.ddd", data)
+        _coverage_ok(_units(result), len(data))
+        for key in ("activities", "events", "faults", "places",
+                    "card_iw_records", "specific_conditions", "calibrations",
+                    "speed_blocks"):
+            assert len(result.get(key) or []) <= len(intact.get(key) or []), (
+                trep, cut, key)
+
+S_BASE = 1712345678
+
+
+# ── C-3: a unit's path must name the route that produced its records ─────
+
+def test_a_unit_that_used_the_internal_fallback_is_labelled_heuristic(tmp_path):
+    """TREP 03 cut before its mandatory control block.
+
+    The stored fault/event records are complete, but the TREP 03 handler reaches
+    them through its own fallback, so the unit cannot call itself normative
+    (g1_walker.py:_decode_clamped + vu_g1.py:_parse_trep_03_events_faults).
+    """
+    from tests.unit.test_g1_vu_semantics import _trep03_body
+    body = _trep03_body()
+    stream = b"\x76\x03" + body[:167]
+    result = _parse(tmp_path, "t03internal.ddd", stream)
+    units = _units(result)
+    _coverage_ok(units, len(stream))
+    fields = result["metadata"].get("heuristic_fields") or {}
+    trep03_units = [u for u in units if u["trep"] == "0x03"]
+    assert trep03_units
+    for unit in trep03_units:
+        uses_internal = any("TREP03" in key for key in fields)
+        assert (unit["path"] == "heuristic") == bool(uses_internal), (unit, fields)
