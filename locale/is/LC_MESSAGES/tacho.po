@@ -2300,8 +2300,8 @@ msgstr "Interface version"
 msgid "Entry Type Description"
 msgstr "Tegund færslu Lýsing"
 
-msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
-msgstr "Mynd af ökumannskorti sótt í gegnum ökutækiseininguna: fyrstu tveir bætin eru flutningshausinn (SID + TREP 06) sem forritið sem vistaði skrána hélt eftir, ekki staðlað geymsluform kortaskrár (DDP_050). Sum önnur forrit tilkynna slíka skrá sem skemmd; Sum önnur forrit tilkynna slíka skrá sem skemmd; þetta forrit sýnir niðurstöðu undirskrifta kortsins sérstaklega."
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Mynd af korti sótt í gegnum ökutækiseininguna: fyrstu tveir bætin eru flutningshausinn (SID + TREP 06) sem forritið sem vistaði skrána hélt eftir, ekki staðlað geymsluform kortaskrár (DDP_050). Sum önnur forrit tilkynna slíka skrá sem skemmd; Sum önnur forrit tilkynna slíka skrá sem skemmd; þetta forrit sýnir niðurstöðu undirskrifta kortsins sérstaklega."
 
 msgid "{count} note(s) — click for details"
 msgstr "{count} athugasemd(ir) — smelltu fyrir upplýsingar"

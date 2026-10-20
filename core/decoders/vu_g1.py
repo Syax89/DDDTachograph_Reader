@@ -498,16 +498,27 @@ def parse_vu_download_messages(raw_data, results):
             if body_end <= body_start:
                 continue
             data = raw_data[body_start:body_end]
+            # Identity: the offset of the message marker in the file, exactly the
+            # namespace the deterministic walk uses. A re-read of the bytes the walk
+            # already decoded therefore collides with its record and is dropped, while
+            # a body the scan finds at another offset stays a distinct stored record —
+            # two byte-identical messages are two records.
+            # The walk names a record by the *marker* offset (`msg["pos"]`), so the
+            # scan uses the same value, not the body start.
+            identity = msg_offset
             if trep == 0x01:
-                parse_g1_vu_overview(data, results)
+                parse_g1_vu_overview(data, results, message_offset=identity)
             elif trep == 0x02:
-                _parse_trep_02_activities(data, results)
+                if not _parse_trep_02_g1_structured(data, results,
+                                                   message_offset=identity):
+                    _parse_trep_02_activities(data, results)
             elif trep == 0x03:
-                _parse_trep_03_events_faults(data, results)
+                _parse_trep_03_events_faults(data, results,
+                                             message_offset=identity)
             elif trep == 0x04:
                 _parse_trep_04_speed(data, results)
             elif trep == 0x05:
-                _parse_trep_05_technical(data, results)
+                _parse_trep_05_technical(data, results, message_offset=identity)
     except (struct.error, IndexError, ValueError) as exc:
         # This is the backup route: a swallowed error here must be visible.
         _log.warning("VU download messages parse failed: %s", exc)

@@ -596,3 +596,19 @@ generation are reported per region in `metadata.embedded_card_verdicts`.
   bytes stay raw.
 * Trailing bytes are partial in **both** generations: a lone marker prefix or a
   truncated marker is `trailing_bytes`, only `00`/`FF` fill is padding.
+
+### 15.2 Record identity and the recovery scan
+
+A stored record's identity is `<identity>#<kind><index>`. The deterministic walk uses
+the section-marker offset as `<identity>`; the byte-scan recovery passes the same
+marker offset for the bytes it finds, so
+
+* a re-read of bytes the walk already decoded collides with the walk's record and is
+  dropped (no second copy — the regression this section records),
+* two byte-identical messages at different offsets stay two stored records,
+* one body without a position (a direct parser call) falls back to a content hash.
+
+The transfer-header notice is card-type neutral ("Card image downloaded through the
+vehicle unit …"): the envelope is keyed on the transfer header, so a company or
+workshop card relayed by the VU carries the same `76 06`. A multi-card file with a
+trailing `76 00` trailer remains deliberately out of scope for `trep06_card_regions`.

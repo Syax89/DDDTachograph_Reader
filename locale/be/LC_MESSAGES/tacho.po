@@ -2300,8 +2300,8 @@ msgstr "Версія інтэрфейсу загрузкі"
 msgid "Entry Type Description"
 msgstr "Тып запісу Апісанне"
 
-msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
-msgstr "Водданы вобраза карткі кіроўцы, загружаны праз блёк транспартнага сродку: першыя два байты — гэта загаловак перадачы (SID + TREP 06), які пакінула праграма захавання, а не стандартная форма захоўвання файла карткі (DDP_050). Некаторыя іншыя праграмы паведамляюць пра такі файл як пра пашкоджаны; Некаторыя іншыя праграмы паведамляюць пра такі файл як пра пашкоджаны; гэтая праграма паказвае ўласны вынік подпісаў карткі асобна."
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Водданы вобраза карткі, загружаны праз блёк транспартнага сродку: першыя два байты — гэта загаловак перадачы (SID + TREP 06), які пакінула праграма захавання, а не стандартная форма захоўвання файла карткі (DDP_050). Некаторыя іншыя праграмы паведамляюць пра такі файл як пра пашкоджаны; Некаторыя іншыя праграмы паведамляюць пра такі файл як пра пашкоджаны; гэтая праграма паказвае ўласны вынік подпісаў карткі асобна."
 
 msgid "{count} note(s) — click for details"
 msgstr "{count} заўвага(і) — націсніце для падрабязнасцей"

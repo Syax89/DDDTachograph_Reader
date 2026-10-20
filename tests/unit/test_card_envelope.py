@@ -367,7 +367,7 @@ def test_real_vu_plus_real_card_adds_up(tmp_path):
 
 # ── The transfer-header notice (owner request) ─────────────────────────────
 
-NOTICE_PREFIX = "\u2022 Driver-card image downloaded through the vehicle unit"
+NOTICE_PREFIX = "\u2022 Card image downloaded through the vehicle unit"
 
 
 def _mock_card_file(tmp_path, kind="g1"):
@@ -476,7 +476,7 @@ def test_real_wrapped_card_gets_the_notice_with_its_verified_verdict(tmp_path):
 def test_notice_msgid_is_translated_in_every_catalog_and_distinct():
     import glob
     import re
-    msgid = ("Driver-card image downloaded through the vehicle unit: the two leading "
+    msgid = ("Card image downloaded through the vehicle unit: the two leading "
              "bytes are the transfer header (SID + TREP 06) kept by the tool that "
              "saved it, not the standard storage form of a card file (DDP_050). Some "
              "other programs report such a file as corrupt; this reader reports the "

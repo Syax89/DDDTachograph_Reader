@@ -3269,7 +3269,7 @@ def _resource_path(rel):
 #: the saving tool kept (SID 0x76 + TREP 06), which DDP_050 strips for the storage
 #: form. Other programs reject that form, so the customer is told what it is.
 CARD_ENVELOPE_NOTICE = _(
-    "Driver-card image downloaded through the vehicle unit: the two leading bytes "
+    "Card image downloaded through the vehicle unit: the two leading bytes "
     "are the transfer header (SID + TREP 06) kept by the tool that saved it, not the "
     "standard storage form of a card file (DDP_050). Some other programs report such "
     "a file as corrupt; this reader reports the card's own signature verdict "

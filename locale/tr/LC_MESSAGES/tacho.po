@@ -2300,8 +2300,8 @@ msgstr "İndirme arayüzü sürümü"
 msgid "Entry Type Description"
 msgstr "Giriş türü Açıklama"
 
-msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
-msgstr "Araç ünitesi üzerinden indirilen sürücü kartı görüntüsü: ilk iki bayt, dosyayı kaydeden programın koruduğu aktarım başlığıdır (SID + TREP 06) ve bir kart dosyasının standart saklama biçimi değildir (DDP_050). Bazı diğer programlar böyle bir dosyayı bozuk olarak bildirir; Bazı diğer programlar böyle bir dosyayı bozuk olarak bildirir; bu program kartın imza sonucunu ayrı olarak gösterir."
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Araç ünitesi üzerinden indirilen kart görüntüsü: ilk iki bayt, dosyayı kaydeden programın koruduğu aktarım başlığıdır (SID + TREP 06) ve bir kart dosyasının standart saklama biçimi değildir (DDP_050). Bazı diğer programlar böyle bir dosyayı bozuk olarak bildirir; Bazı diğer programlar böyle bir dosyayı bozuk olarak bildirir; bu program kartın imza sonucunu ayrı olarak gösterir."
 
 msgid "{count} note(s) — click for details"
 msgstr "{count} not — ayrıntılar için tıklayın"

@@ -2300,8 +2300,8 @@ msgstr "Verze rozhraní pro stahování"
 msgid "Entry Type Description"
 msgstr "Typ záznamu Popis"
 
-msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
-msgstr "Obraz karty řidiče stažený přes vozidlovou jednotku: první dva bajty jsou hlavička přenosu (SID + TREP 06), kterou zachoval nástroj, jenž soubor uložil, nikoli standardní forma uložení souboru karty (DDP_050). Některé jiné programy hlásí takový soubor jako poškozený; Některé jiné programy hlásí takový soubor jako poškozený; tento program uvádí vlastní výsledek podpisů karty samostatně."
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Obraz karty stažený přes vozidlovou jednotku: první dva bajty jsou hlavička přenosu (SID + TREP 06), kterou zachoval nástroj, jenž soubor uložil, nikoli standardní forma uložení souboru karty (DDP_050). Některé jiné programy hlásí takový soubor jako poškozený; Některé jiné programy hlásí takový soubor jako poškozený; tento program uvádí vlastní výsledek podpisů karty samostatně."
 
 msgid "{count} note(s) — click for details"
 msgstr "{count} poznámka(y) — klikněte pro podrobnosti"

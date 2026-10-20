@@ -377,7 +377,7 @@ class TachoParser:
             # Same wording the content-based origin detector uses for a card
             # image behind a TREP 06 transfer.
             self.results["metadata"]["origin_note"] = (
-                "Driver card image extracted from a VU Card Download "
+                "Card image extracted from a VU Card Download "
                 "(TREP 06, DDP_049/DDP_050) \u2014 valid selective download")
             self._shift_envelope_offsets(self.results, offset)
 

@@ -87,7 +87,7 @@ def detect_origin(
     # A stand-alone TREP 0x06 (no other VU section) carrying card EFs is a
     # selective "card download" — a card image, not a VU download.
     if 0x06 in treps and not other_treps and has_card_only and not has_vu_only:
-        note = ("Driver card image extracted from a VU Card Download "
+        note = ("Card image extracted from a VU Card Download "
                 "(TREP 06, DDP_049/DDP_050) \u2014 valid selective download")
         return ORIGIN_CARD, note, True
 

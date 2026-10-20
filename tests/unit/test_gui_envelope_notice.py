@@ -29,7 +29,7 @@ from tests.unit.test_empty_state import close, new_explorer  # noqa: E402
 
 WARNING_TEXT = "{count} integrity warning(s) \u2014 click for details"
 NOTE_TEXT = "{count} note(s) \u2014 click for details"
-NOTICE_PREFIX = "\u2022 Driver-card image downloaded through the vehicle unit"
+NOTICE_PREFIX = "\u2022 Card image downloaded through the vehicle unit"
 
 
 @pytest.fixture

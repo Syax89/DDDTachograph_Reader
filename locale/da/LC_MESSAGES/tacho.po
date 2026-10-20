@@ -2300,8 +2300,8 @@ msgstr "Version af downloadgrænseflade"
 msgid "Entry Type Description"
 msgstr "Indtastningstype Beskrivelse"
 
-msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
-msgstr "Billede af førerkort hentet gennem køretøjets enhed: de to første byte er overførselsheaderen (SID + TREP 06), som det program, der gemte filen, har beholdt, og ikke den standardlagringsform for en kortfil (DDP_050). Nogle andre programmer rapporterer en sådan fil som beskadiget; Nogle andre programmer rapporterer en sådan fil som beskadiget; dette program viser kortets eget signaturresultat separat."
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Billede af kort hentet gennem køretøjets enhed: de to første byte er overførselsheaderen (SID + TREP 06), som det program, der gemte filen, har beholdt, og ikke den standardlagringsform for en kortfil (DDP_050). Nogle andre programmer rapporterer en sådan fil som beskadiget; Nogle andre programmer rapporterer en sådan fil som beskadiget; dette program viser kortets eget signaturresultat separat."
 
 msgid "{count} note(s) — click for details"
 msgstr "{count} bemærkning(er) — klik for detaljer"
