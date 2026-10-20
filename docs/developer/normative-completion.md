@@ -524,3 +524,23 @@ A wrapped file must never be more or less trusted than its plain twin: for every
 damage class (a flipped EF byte, a missing signature element, a missing certificate,
 a cut inside the last element) the wrapped and plain routes print the same
 `integrity_check` and the same EF verdicts, and a cut image is never `Verified`.
+
+## 14. Presentation coherence
+
+One row or column per datum, in the density and vocabulary of its neighbours:
+
+* a decoded `ExtendedSerialNumber` is one compact scalar
+  (`<decimal serial> · MM/YY · manufacturer short name`); an invalid BCD monthYear
+  shows the raw two bytes, the year stays two digits and no status text is shown.
+  Where a serial was already displayed as hex the compact form is appended to the
+  same cell, never replacing it;
+* the three calibration TimeReals are one set of timestamp columns carrying date and
+  time of day (no duplicate `…Full` columns; the ISO values stay in the JSON);
+* `Current Date Time` is the first row of the Overview panel in every generation that
+  stores it, and `Download Interface Version` is one row for the files that carry the
+  transfer (the DDP_028a conflict stays in the JSON and here);
+* every new label is translated from each catalog's own vocabulary, and no two
+  columns of one table may translate identically (pinned by a test over the catalogs);
+* a partial download reaches the user through the existing completeness channel
+  (`metadata.vu_integrity` → `trep_report.is_partial`/`complete_walk` → the GUI banner
+  and the export TREP sheet) — no new text and no new UI.
