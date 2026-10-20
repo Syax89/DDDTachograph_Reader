@@ -480,6 +480,7 @@ class TachoParser:
             # cannot validate (truncated/non-standard downloads).
             reason = "G1 deterministic walk did not cover the file"
             cause = "unknown_or_misplaced_section"
+            walk_raised = False
             try:
                 from core.parser.g1_walker import walk_g1_vu
                 _messages, complete = walk_g1_vu(self.raw_data, self.results)
@@ -489,6 +490,7 @@ class TachoParser:
                 _messages = []
                 reason = f"G1 walk raised {type(exc).__name__}: {exc}"
                 cause = "normative_decoder_exception"
+                walk_raised = True
             if not complete:
                 # INTEGRITY vs DECODABILITY. A short signature block or trailing
                 # junk is an integrity finding: every declared record of every
@@ -514,7 +516,11 @@ class TachoParser:
                     # declared body does not fit the bytes is a truncated file.
                     from core.parser.g1_walker import TREP_NAMES
                     head = self.raw_data[:2]
-                    if len(head) < 2 or head[0] != 0x76 or head[1] not in TREP_NAMES:
+                    if walk_raised:
+                        # The walker raised: that is OUR defect, not a damaged
+                        # file. The completeness flags must never relabel it.
+                        cause = "normative_decoder_exception"
+                    elif len(head) < 2 or head[0] != 0x76 or head[1] not in TREP_NAMES:
                         cause = "unknown_or_misplaced_section"
                     else:
                         cause = "file_truncated"

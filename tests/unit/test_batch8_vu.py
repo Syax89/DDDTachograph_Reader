@@ -133,14 +133,24 @@ class TestG1VuRegexUnreachable:
 # ── G1-VU-TRAILER (B-F1) ─────────────────────────────────────────────────────
 
 class TestG1VuTrailer:
-    def test_trailing_byte_keeps_last_message_and_stays_complete(self):
-        """A single trailing byte after the last RSA signature must not discard
-        the last TREP block nor report the download as partial."""
+    def test_fill_after_the_last_signature_keeps_the_message_and_stays_complete(self):
+        """0x00/0xFF fill after the last RSA signature must not discard the last
+        TREP block nor report the download as partial.
+
+        Corrected by the integrity round: a lone ``0x76`` is the first byte of a
+        truncated section marker, not fill, so it makes the walk incomplete (it is
+        reported in ``metadata.vu_integrity`` as one trailing byte).
+        """
         stream = _complete_g1_stream()
-        for trailer in (b"\x00", b"\x76", b"\x00\x00"):
+        for trailer in (b"\x00", b"\xff", b"\x00\x00"):
             messages, complete = walk_g1_vu(stream + trailer, {})
             assert [m["trep"] for m in messages] == [0x04, 0x05], trailer
             assert complete is True, trailer
+        results = {}
+        messages, complete = walk_g1_vu(stream + b"\x76", results)
+        assert [m["trep"] for m in messages] == [0x04, 0x05]
+        assert complete is False
+        assert results["metadata"]["vu_integrity"][0]["trailing_bytes"] == 1
 
     def test_clean_stream_is_complete(self):
         messages, complete = walk_g1_vu(_complete_g1_stream(), {})

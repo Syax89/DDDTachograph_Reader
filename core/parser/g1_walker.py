@@ -395,7 +395,11 @@ def walk_g1_vu(data, results):
     # junk: both are INTEGRITY findings, not a decoding failure, and they must not
     # let the download claim a complete walk.
     pad = data[messages[-1]["end"]:] if messages else b""
-    padding_only = (not pad) or all(b in (0x00, 0xFF) for b in pad) or pad == b"\x76"
+    # Only 0x00/0xFF fill is padding (Appendix 1 §2: unused content is filled with
+    # FF, and erased space is zeroed). A lone 0x76 is the first byte of a truncated
+    # section marker, not fill: it makes the walk incomplete, and the byte is still
+    # reported in metadata.vu_integrity.
+    padding_only = (not pad) or all(b in (0x00, 0xFF) for b in pad)
     complete = bool(messages) and not _marker_in(data, messages[-1]["end"]) and padding_only
     results["_g1_walk_signature_bytes"] = signature_bytes
     if trailing:

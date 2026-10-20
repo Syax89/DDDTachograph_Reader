@@ -433,7 +433,10 @@ short is an **integrity** finding, and it is reported, never "recovered":
 | final RSA/ECDSA block shorter than the normative length | `metadata.vu_integrity`: `{trep, status: signature_truncated, missing_bytes, trailing_bytes}`; `trep_report.complete_walk = False`; WARNING "VU download incomplete" | **no** — the data was decoded |
 | bytes after the last complete message/signature | `vu_integrity … status: trailing_bytes` | **no** |
 | RecordArray/array declares more bytes than exist | `vu_integrity … status: array_truncated` (Gen2 fails closed as partial, as before) | **no** — the sections that were read are decoded |
-| count/size inside the DATA part contradicts the bytes, an unparsable marker remains, or a normative decoder raised | not decodable | yes, declared (`decode_paths.fallback`, `heuristic_fields`, WARNING) |
+| count/size inside the DATA part contradicts the bytes, or an unparsable marker remains | not decodable | yes, declared (`decode_paths.fallback`, `heuristic_fields`, WARNING) |
+| a **normative decoder raised** | our defect, not a damaged file | yes, declared with cause `normative_decoder_exception` → classification `decoder_defect_suspected`; the completeness flags of the failed walk never relabel it |
+| a section's Appendix-7 array list is incomplete (missing, out of order or unexpected arrays) | structure violation | no — the records are already emitted; a `schema_violation` entry in `metadata.vu_integrity` makes the download partial |
+| a lone `0x76` (first byte of a truncated marker) at EOF | integrity: `trailing_bytes` | no — only `0x00`/`0xFF` fill counts as padding, so the download is partial |
 
 Evidence (damaged variants of the local corpus, offsets only): cutting the very
 last byte of a signed generation-1 download used to switch to the byte scan and

@@ -2016,6 +2016,24 @@ def walk_vu_record_arrays(data, results):
                 schema_report["out_of_order"], schema_report["duplicate_arrays"],
                 schema_report["unexpected_arrays"],
                 schema_report["signature_problem"])
+        if (schema_report["missing_arrays"] or schema_report["out_of_order"]
+                or schema_report["unexpected_arrays"]):
+            # The prescribed arrays are absent, out of order or not defined for
+            # this transfer: a structure violation, reported and partial exactly
+            # like a malformed signature array. The records above are already
+            # emitted; only the verdict changes.
+            structure_findings.append({
+                "trep": f"0x{sec['trep']:02X}",
+                "status": "schema_violation",
+                "detail": (f"missing {schema_report['missing_arrays']}, "
+                           f"out of order {schema_report['out_of_order']}, "
+                           f"unexpected {schema_report['unexpected_arrays']}"),
+                "missing_arrays": schema_report["missing_arrays"],
+                "out_of_order": schema_report["out_of_order"],
+                "unexpected_arrays": schema_report["unexpected_arrays"],
+                "missing_bytes": 0,
+                "trailing_bytes": 0,
+            })
         if schema_report["signature_problem"]:
             # A malformed/absent signature array is an INTEGRITY finding (the
             # data above it is decoded): reported, partial, never re-scanned.
