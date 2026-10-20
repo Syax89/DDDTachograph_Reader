@@ -2319,3 +2319,12 @@ msgstr "RCM Serienummer"
 
 msgid "Transfer header"
 msgstr "Overdrachtsheader"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Fabrikantspecifieke of empirische structuur: geen enkele verordening definieert deze velden. De waarden worden zo goed mogelijk met lage betrouwbaarheid gelezen en de ruwe bytes blijven bewaard; dit is informatie, geen defect."
+
+msgid "Co-Driver Activities"
+msgstr "Activiteiten van de tweede bestuurder"
+
+msgid "Manufacturer Extensions"
+msgstr "Fabrikantuitbreidingen"

@@ -2319,3 +2319,12 @@ msgstr "RCM Sorozatszám"
 
 msgid "Transfer header"
 msgstr "Átviteli fejléc"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Gyártóspecifikus vagy empirikus felépítés: ezeket a mezőket egyetlen előírás sem határozza meg. Az értékek a lehetőségek szerint alacsony biztonsággal olvashatók, a nyers bájtok megmaradnak; ez információ, nem hiba."
+
+msgid "Co-Driver Activities"
+msgstr "Második sofőr tevékenységei"
+
+msgid "Manufacturer Extensions"
+msgstr "Gyártói kiterjesztések"

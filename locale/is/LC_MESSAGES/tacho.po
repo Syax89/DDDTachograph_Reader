@@ -2319,3 +2319,12 @@ msgstr "RCM Raðnúmer"
 
 msgid "Transfer header"
 msgstr "Flutningshaus"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Framleiðandasértæk eða reynslubundin uppbygging: engin reglugerð skilgreinir þessi svæði. Gildin eru lesin eftir bestu getu með litlum vissu og hráu bætin varðveitt; þetta er upplýsing, ekki galli."
+
+msgid "Co-Driver Activities"
+msgstr "Virkni annars ökumanns"
+
+msgid "Manufacturer Extensions"
+msgstr "Viðbætur framleiðanda"

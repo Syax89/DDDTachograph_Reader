@@ -2319,3 +2319,12 @@ msgstr "RCM Серыйны нумар"
 
 msgid "Transfer header"
 msgstr "Загаловак перадачы"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Вытворча-спецыфічная або эмпірычная структура: ніводны рэгламент не вызначае гэтыя палі. Значэнні чытаюцца па магчымасці з нізкай упэўненасцю, а сырыя байты захаваныя; гэта інфармацыя, а не дэфект."
+
+msgid "Co-Driver Activities"
+msgstr "Дзейнасць другога кіроўцы"
+
+msgid "Manufacturer Extensions"
+msgstr "Пашырэнні вытворцы"

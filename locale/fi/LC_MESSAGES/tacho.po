@@ -2319,3 +2319,12 @@ msgstr "RCM Sarjanumero"
 
 msgid "Transfer header"
 msgstr "Siirto-otsake"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Valmistajakohtainen tai empiirinen rakenne: mikään säännös ei määrittele näitä kenttiä. Arvot luetaan mahdollisuuksien mukaan matalalla varmuudella ja raakatavut säilytetään; tämä on tietoa, ei virhe."
+
+msgid "Co-Driver Activities"
+msgstr "Toisen kuljettajan toiminnot"
+
+msgid "Manufacturer Extensions"
+msgstr "Valmistajalaajennukset"

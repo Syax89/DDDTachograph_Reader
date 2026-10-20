@@ -244,6 +244,8 @@ EXPORT_SECTIONS = [
     ("ef_signature_verification", "EF Card Data Signatures"),
     ("certificates", "Driver Card Certificates"),
     ("sensor_daily_records", "Sensor Daily Records"),
+    ("co_driver_activities", "Co-Driver Activities"),
+    ("unmapped_record_types", "Manufacturer Extensions"),
 ]
 
 # Dict-style sections exposed as key/value sheets in Excel/CSV/PDF.
@@ -258,6 +260,29 @@ DICT_SECTIONS = [
     ("company_info", "VU Company Info"),
     ("sensor_info", "Sensor Identification"),
 ]
+
+#: One informational sentence for every section whose layout no regulation defines
+#: (manufacturer extensions, sensor payloads, the observed co-driver array). It is a
+#: note, never a warning: the data are shown, the raw bytes are preserved, and the
+#: reading is labelled low confidence.
+EMPIRICAL_NOTE = (
+    "Manufacturer-specific or empirical layout: no regulation defines these fields. "
+    "The values are read on a best-effort basis with low confidence and the raw bytes "
+    "are preserved; this is information, not a defect.")
+
+#: Sections whose layout is not defined by the regulation.
+EMPIRICAL_SECTIONS = frozenset({"co_driver_activities", "unmapped_record_types",
+                                "sensor_daily_records", "sensor_info",
+                                "load_sensor_data", "locations"})
+
+
+def section_description(key):
+    """Description text for a section, with the informational note where it applies."""
+    text = SECTION_DESCRIPTIONS.get(key, "")
+    if key in EMPIRICAL_SECTIONS:
+        return f"{text} {EMPIRICAL_NOTE}".strip()
+    return text
+
 
 SECTION_DESCRIPTIONS = {
     "activities": "Daily activity breakdown (times in UTC). "
@@ -304,7 +329,17 @@ SECTION_DESCRIPTIONS = {
     "calibration_vins": "VINs (Vehicle Identification Numbers) extracted from calibration records.",
     "card_numbers": "Card numbers observed by the VU from inserted driver and company cards.",
     "vu_record_arrays": "Raw VU RecordArray data: structural audit of all VU memory sections.",
-    "sensor_daily_records": "Motion sensor daily speed records with min/max/average speeds.",
+    "co_driver_activities": (
+        "Co-driver ActivityChangeInfo records of the Activities section. The record "
+        "type 0x29 is not part of the Annex 1C array list: it is an observed "
+        "extension (seen on Stoneridge V6006) and read as empirical."),
+    "unmapped_record_types": (
+        "Record arrays whose type has no regulation-defined name (RFU 0x25-0x7F and "
+        "manufacturer-specific 0x80-0xFF). Code, declared size, record count and the "
+        "raw bytes are shown so the extension is visible."),
+    "sensor_daily_records": (
+        "Motion sensor daily speed records with min/max/average speeds. The payload "
+        "layout is manufacturer-specific."),
 }
 
 
@@ -825,7 +860,7 @@ def section_tables(data, max_rows=None):
         items = data.get(key) or []
         if not items:
             continue
-        desc = SECTION_DESCRIPTIONS.get(key, "")
+        desc = section_description(key)
         if key == "activities":
             if not isinstance(items, list):
                 items = [items]
@@ -867,7 +902,7 @@ def section_tables(data, max_rows=None):
                 rows.append([humanize_key(k), formatted])
         if not rows:
             continue
-        desc = SECTION_DESCRIPTIONS.get(key, "")
+        desc = section_description(key)
         yield label, desc, ["Field", "Value"], rows, False
 
 

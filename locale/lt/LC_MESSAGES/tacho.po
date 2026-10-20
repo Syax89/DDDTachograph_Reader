@@ -2319,3 +2319,12 @@ msgstr "RCM Serijos numeris"
 
 msgid "Transfer header"
 msgstr "Perdavimo antraštė"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Gamintojo specifinė arba empirinė struktūra: joks reglamentas neapibrėžia šių laukų. Reikšmės skaitomos kiek įmanoma su mažu patikimumu, o neapdoroti baitai išsaugomi; tai informacija, o ne defektas."
+
+msgid "Co-Driver Activities"
+msgstr "Antrojo vairuotojo veikla"
+
+msgid "Manufacturer Extensions"
+msgstr "Gamintojo plėtiniai"

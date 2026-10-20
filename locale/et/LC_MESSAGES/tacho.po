@@ -2319,3 +2319,12 @@ msgstr "RCM Seerianumber"
 
 msgid "Transfer header"
 msgstr "Ülekandepäis"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Tootjapõhine või empiiriline struktuur: ükski määrus ei määratle neid välju. Väärtusi loetakse võimaluste piires madala kindlusega ja algbaidid on säilitatud; see on teave, mitte defekt."
+
+msgid "Co-Driver Activities"
+msgstr "Teise juhi tegevused"
+
+msgid "Manufacturer Extensions"
+msgstr "Tootjalaiendused"

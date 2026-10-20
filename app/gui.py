@@ -480,7 +480,14 @@ class _SummaryHeader(tuple):
 
 
 def _kv_rows(d):
-    """Convert a dict to (Field, Value) rows, flattening nested dicts one level."""
+    """Convert a dict to (Field, Value) rows, flattening nested dicts one level.
+
+    A *list* of records is accepted too (a key/value view of its first record), so a
+    caller can ask for the field view of a record list without checking its shape
+    first — the section tables remain the place where a list is rendered in full.
+    """
+    if isinstance(d, (list, tuple)):
+        d = d[0] if d and isinstance(d[0], dict) else {}
     rows = []
     # `confidence` and the shared BOOKKEEPING_KEYS stay in the JSON: only that
     # explicit set is skipped — HIDDEN_KEYS also holds `name`, which VU Company
@@ -5467,6 +5474,23 @@ class TachoExplorer(tk.Tk):
             cols, rows = _rows_for(failures, None)
             self._add_section("", _("Decoder Failures"), cols, rows,
                               icon="status-warning")
+
+        # ── Empirical / manufacturer extensions ──
+        # Data outside the regulation is SHOWN like everything else, with the
+        # informational note in the section's meta line (never a warning).
+        for key, label, icon in (
+                ("co_driver_activities", _("Co-Driver Activities"), "events"),
+                ("unmapped_record_types", _("Manufacturer Extensions"),
+                 "status-unknown")):
+            records = data.get(key) or []
+            if not records:
+                continue
+            cols = [c for c in report_format.visible_columns(records)]
+            rows = [[report_format.fmt_value(record.get(col), )
+                     for col in cols] for record in records]
+            self._add_section("", label, cols, rows,
+                              meta=report_format.section_description(key),
+                              icon=icon)
 
         # ── Raw / Unparsed Data (only when bytes could not be decoded) ──
         self._populate_unparsed(data)

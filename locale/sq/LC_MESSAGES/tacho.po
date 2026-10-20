@@ -2319,3 +2319,12 @@ msgstr "RCM Numri serial"
 
 msgid "Transfer header"
 msgstr "Koka e transferimit"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Strukturë e veçantë e prodhuesit ose empirike: asnjë rregullore nuk i përcakton këto fusha. Vlerat lexohen sa më mirë me besueshmëri të ulët dhe bajtët e papërpunuar ruhen; ky është informacion, jo defekt."
+
+msgid "Co-Driver Activities"
+msgstr "Aktivitetet e shoferit të dytë"
+
+msgid "Manufacturer Extensions"
+msgstr "Zgjerimet e prodhuesit"

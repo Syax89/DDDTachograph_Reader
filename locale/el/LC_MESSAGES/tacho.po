@@ -2319,3 +2319,12 @@ msgstr "RCM Σειριακός αριθμός"
 
 msgid "Transfer header"
 msgstr "Κεφαλίδα μεταφοράς"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Δομή ειδική για τον κατασκευαστή ή εμπειρική: κανένας κανονισμός δεν ορίζει αυτά τα πεδία. Οι τιμές διαβάζονται κατά το δυνατόν με χαμηλή βεβαιότητα και τα ακατέργαστα byte διατηρούνται· πρόκειται για πληροφορία, όχι για σφάλμα."
+
+msgid "Co-Driver Activities"
+msgstr "Δραστηριότητες δεύτερου οδηγού"
+
+msgid "Manufacturer Extensions"
+msgstr "Επεκτάσεις κατασκευαστή"

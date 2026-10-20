@@ -2319,3 +2319,12 @@ msgstr "RCM Uimhir shraithe"
 
 msgid "Transfer header"
 msgstr "Ceanntásc aistrithe"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Struchtúr a bhaineann go sonrach le monaróir nó struchtúr eimpíreach: ní shainíonn aon rialachán na réimsí seo. Léitear na luachanna chomh maith agus is féidir le muinín íseal agus coimeádtar na bearta amh; is faisnéis é seo, ní locht."
+
+msgid "Co-Driver Activities"
+msgstr "Gníomhaíochtaí an dara tiománaí"
+
+msgid "Manufacturer Extensions"
+msgstr "Breisithe monaróra"

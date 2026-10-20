@@ -2319,3 +2319,12 @@ msgstr "RCM Număr de serie"
 
 msgid "Transfer header"
 msgstr "Antet de transfer"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Structură specifică producătorului sau empirică: niciun regulament nu definește aceste câmpuri. Valorile sunt citite pe cât posibil cu încredere scăzută, iar octeții bruti sunt păstrați; este o informație, nu un defect."
+
+msgid "Co-Driver Activities"
+msgstr "Activitățile celui de-al doilea conducător"
+
+msgid "Manufacturer Extensions"
+msgstr "Extensii ale producătorului"

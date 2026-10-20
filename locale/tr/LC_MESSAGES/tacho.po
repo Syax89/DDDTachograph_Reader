@@ -2319,3 +2319,12 @@ msgstr "RCM Seri numarası"
 
 msgid "Transfer header"
 msgstr "Aktarım başlığı"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Üreticiye özgü veya deneysel yapı: bu alanları hiçbir yönetmelik tanımlamaz. Değerler olabildiğince düşük güvenle okunur ve ham baytlar korunur; bu bir bilgidir, kusur değildir."
+
+msgid "Co-Driver Activities"
+msgstr "İkinci sürücü etkinlikleri"
+
+msgid "Manufacturer Extensions"
+msgstr "Üretici uzantıları"

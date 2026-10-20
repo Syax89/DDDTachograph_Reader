@@ -612,3 +612,23 @@ The transfer-header notice is card-type neutral ("Card image downloaded through 
 vehicle unit …"): the envelope is keyed on the transfer header, so a company or
 workshop card relayed by the VU carries the same `76 06`. A multi-card file with a
 trailing `76 00` trailer remains deliberately out of scope for `trep06_card_regions`.
+
+### 15.3 Manufacturer extensions are shown, not hidden
+
+Data outside the regulation is displayed like everything else and explained as
+information:
+
+* the observed co-driver array (`0x29`, seen on Stoneridge V6006) is the
+  `Co-Driver Activities` section — it is not part of the Annex 1C array list and its
+  description says so;
+* record arrays with a type that has no regulation-defined name (RFU `25`-`7F`,
+  manufacturer-specific `80`-`FF`) are the `Manufacturer Extensions` section: one row
+  per type with the code, the declared record size, the record count and the raw
+  bytes, so a customer can see that the file carries an extension even when its
+  layout is unknown;
+* every such section carries the same informational note (`EMPIRICAL_NOTE`,
+  `section_description()`): the layout is manufacturer-specific or empirical, no
+  regulation defines the fields, the values are read with low confidence and the raw
+  bytes are preserved — information, not a defect. The note never softens a real
+  warning elsewhere, and a file with these sections is not partial, declares no
+  fallback and sets no heuristic field.

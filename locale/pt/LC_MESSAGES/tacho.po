@@ -2319,3 +2319,12 @@ msgstr "RCM Número de série"
 
 msgid "Transfer header"
 msgstr "Cabeçalho de transferência"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Estrutura específica do fabricante ou empírica: nenhum regulamento define estes campos. Os valores são lidos tanto quanto possível com baixa confiança e os bytes originais são preservados; é informação, não um defeito."
+
+msgid "Co-Driver Activities"
+msgstr "Atividades do segundo condutor"
+
+msgid "Manufacturer Extensions"
+msgstr "Extensões do fabricante"

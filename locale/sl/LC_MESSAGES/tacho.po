@@ -2319,3 +2319,12 @@ msgstr "RCM Serijska številka"
 
 msgid "Transfer header"
 msgstr "Glava prenosa"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Struktura, značilna za proizvajalca, ali empirična: noben predpis ne določa teh polj. Vrednosti se berejo po najboljših močeh z nizko zanesljivostjo, surovi bajti pa se ohranijo; to je informacija, ne napaka."
+
+msgid "Co-Driver Activities"
+msgstr "Dejavnosti drugega voznika"
+
+msgid "Manufacturer Extensions"
+msgstr "Razširitve proizvajalca"

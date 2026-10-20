@@ -2319,3 +2319,12 @@ msgstr "RCM Sērijas numurs"
 
 msgid "Transfer header"
 msgstr "Pārsūtīšanas galvene"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Ražotājam raksturīga vai empīriska struktūra: neviens regulējums nenosaka šos laukus. Vērtības nolasa pēc iespējas ar zemu ticamību, un neapstrādātie baiti tiek saglabāti; tā ir informācija, nevis defekts."
+
+msgid "Co-Driver Activities"
+msgstr "Otrā vadītāja darbības"
+
+msgid "Manufacturer Extensions"
+msgstr "Ražotāja paplašinājumi"

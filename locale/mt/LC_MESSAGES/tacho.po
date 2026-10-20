@@ -2319,3 +2319,12 @@ msgstr "RCM Numru tas-serje"
 
 msgid "Transfer header"
 msgstr "Intestatura tat-trażmissjoni"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Struttura speċifika għall-manifattur jew empirika: ebda regolament ma jiddefinixxi dawn l-oqsma. Il-valuri jinqraw kemm jista' jkun b'kunfidenza baxxa u l-bytes mhux maħduma jinżammu; din hija informazzjoni, mhux difett."
+
+msgid "Co-Driver Activities"
+msgstr "Attivitajiet tat-tieni sewwieq"
+
+msgid "Manufacturer Extensions"
+msgstr "Estensjonijiet tal-manifattur"

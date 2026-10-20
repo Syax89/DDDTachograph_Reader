@@ -1874,7 +1874,11 @@ def iter_vu_sections(data, state=None):
         rt = data[pos]
         rs = struct.unpack(">H", data[pos + 1:pos + 3])[0]
         nr = struct.unpack(">H", data[pos + 3:pos + 5])[0]
-        if rt < 0x01 or rt > 0x60 or rs > RECORD_ARRAY_MAX_SIZE or nr > RECORD_ARRAY_MAX_RECORDS or (rs == 0 and nr > 0 and rt != 0x60):
+        # rf may go up to 0xFF: 0x25-0x7F are RFU and 0x80-0xFF manufacturer
+        # specific (Annex 1C §2.120). Such an array is a bounded opaque block that
+        # must be SHOWN as an extension, not treated as junk; the record size and
+        # count limits below still reject a false-positive header.
+        if rt < 0x01 or rs > RECORD_ARRAY_MAX_SIZE or nr > RECORD_ARRAY_MAX_RECORDS or (rs == 0 and nr > 0 and rt != 0x60):
             # Resync one byte at a time: skipping a whole header width here
             # could jump over the start of a valid RecordArray after junk. It is
             # never silent — every skipped byte is counted so the caller can tell
@@ -1930,7 +1934,7 @@ def walk_vu_record_arrays(data, results):
     state = {}
     total_records = 0
     capped = False
-    unmapped = set()
+    unmapped = {}
     # Published up-front as the live list (and the walk declared incomplete):
     # sections are emitted as they are walked, so a failure mid-walk must leave
     # both the already-emitted records and their section list in place — the
@@ -1977,12 +1981,13 @@ def walk_vu_record_arrays(data, results):
         for (pos, rt, rs, nr, _end) in sec["records"]:
             if capped:
                 break
+            rpos = pos + 5
             if rt not in NORMATIVE_RECORD_TYPES:
                 # A record type with no Annex 1C §2.120 name (RFU/manufacturer
                 # specific) is decoded but must be flagged, not silently
-                # presented as a known record type (D2-005).
-                unmapped.add(rt)
-            rpos = pos + 5
+                # presented as a known record type (D2-005). Its bytes are kept so
+                # the extension can be shown.
+                unmapped.setdefault(rt, (rt, rs, nr, data[rpos:rpos + rs * nr]))
             for _ in range(nr):
                 if total_records >= VU_MAX_TOTAL_RECORDS:
                     capped = True
@@ -2166,6 +2171,22 @@ def walk_vu_record_arrays(data, results):
         results["_vu_walk_record_cap"] = VU_MAX_TOTAL_RECORDS
     if unmapped:
         results["vu_unmapped_record_types"] = sorted(f"0x{rt:02X}" for rt in unmapped)
+        # The same fact, but renderable: one row per record type with its code, the
+        # declared record size, how many the file carries and the bytes themselves,
+        # so a customer sees that the download contains a manufacturer extension even
+        # when no regulation defines its layout.
+        rows = []
+        for (rt, size, count, body) in unmapped.values():
+            rows.append({
+                "record_type": f"0x{rt:02X}",
+                "record_size": size,
+                "record_count": count,
+                "raw_hex": bytes(body).hex(),
+                "confidence": "low",
+                "empirical": True,
+            })
+        results["unmapped_record_types"] = sorted(rows,
+                                                 key=lambda row: row["record_type"])
     return sections
 
 
