@@ -547,11 +547,19 @@ class TestRecordShapeInvariants(unittest.TestCase):
         self.assertEqual(out["low_confidence_fields"],
                          ["manufacturer_error_code", "similar_events"])
 
-    def test_a_too_short_event_in_a_section_is_skipped_not_guessed(self):
+    def test_a_too_short_event_in_a_section_is_kept_without_guessing_its_type(self):
+        """Corrected: a stored record the array counter declares is never dropped
+        (owner policy: withhold the interpretation, not the record). A 5-byte body
+        holds no canonical prefix, so no type/version is claimed — the record is
+        published as an incomplete stored record instead of vanishing."""
         stream = b"\x76\x33" + _record_array(0x15, [b"\x0f" * 5])
         results = {}
         walk_vu_record_arrays(stream, results)
-        self.assertEqual(results.get("events", []), [])
+        records = results.get("events", [])
+        self.assertEqual(len(records), 1)
+        self.assertIsNone(records[0]["event_type_code"])
+        self.assertIs(records[0]["record_complete"], False)
+        self.assertEqual(records[0]["record_bytes"], 5)
 
 
 class TestReportingSurface(unittest.TestCase):

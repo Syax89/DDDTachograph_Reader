@@ -309,6 +309,17 @@ def _iso(ts):
             if 946684800 <= ts <= 4102444800 else None)
 
 
+def _time_fields(ts, *, key="timestamp"):
+    """A stored TimeReal as three fields: value, raw integer and status.
+
+    ``TimeReal`` is a uint32 (Annex 1C §2.51); a value outside the calendar the
+    application can render is *withheld* — never used to deny that the record
+    exists. The raw integer always travels so nothing is lost.
+    """
+    return {key: _iso(ts), f"{key}_raw": ts,
+            "time_status": "valid" if _iso(ts) else "invalid"}
+
+
 def decode_name(data, off, length=36):
     """Name / Address type: codePage(1) + chars(length-1). Returns the text.
 
@@ -920,7 +931,7 @@ def decode_place_daily(rec, with_auth=None, variant_source=None, generation=None
         "record_bytes": len(rec),
         "variant_source": variant_source,
         "card_driver": decode_full_card_number_gen(rec, 0),
-        "timestamp": _iso(struct.unpack(">I", rec[19:23])[0]),
+        **_time_fields(struct.unpack(">I", rec[19:23])[0]),
         "entry_type": short,
         "entry_type_meaning": meaning,
         "entry_type_status": meaning_status,
@@ -952,7 +963,7 @@ def decode_specific_condition(rec, generation="G2"):
     assigned = label != f"0x{code:02X}"
     return {
         "confidence": "high",
-        "timestamp": _iso(struct.unpack(">I", rec[0:4])[0]),
+        **_time_fields(struct.unpack(">I", rec[0:4])[0]),
         "condition": label,
         "type_code": code,
         "condition_status": "assigned" if assigned else "not assigned",
@@ -974,7 +985,7 @@ def decode_gnss_ad(rec, with_auth=None):
     odo_off = 42 + (12 if with_auth else 11)
     return {
         "confidence": "high",
-        "timestamp": _iso(struct.unpack(">I", rec[0:4])[0]),
+        **_time_fields(struct.unpack(">I", rec[0:4])[0]),
         "card_driver": decode_full_card_number_gen(rec, 4),
         "card_codriver": decode_full_card_number_gen(rec, 23),
         "gnss_place": decode_gnss_place(rec, 42, with_auth),
@@ -1130,7 +1141,7 @@ def decode_load_unload(rec):
     op_names = {0x01: "load", 0x02: "unload", 0x03: "simultaneous"}
     return {
         "confidence": "medium",
-        "timestamp": _iso(ts),
+        **_time_fields(ts),
         "operation_type": op_names.get(op, f"0x{op:02X}"),
         "card_driver": decode_full_card_number_gen(rec, 5),
         "card_codriver": decode_full_card_number_gen(rec, 24),
@@ -1295,7 +1306,10 @@ def decode_event_fault_record(rec, is_event, version=EVENT_FAULT_VERSION_UNKNOWN
     assumed, they are only used where the section says version 2.
     """
     if len(rec) < 10:
-        return None  # not even the standard prefix is present
+        # Not even eventType + purpose + the two TimeReals: the canonical prefix
+        # is not inside the record, so no field is claimed (the record itself is
+        # still emitted by the caller with its bytes preserved).
+        return None
     if version not in EVENT_FAULT_VERSIONS:
         version = EVENT_FAULT_VERSION_UNKNOWN
     spec = VU_EVENT_SPEC if is_event else VU_FAULT_SPEC
@@ -1308,7 +1322,10 @@ def decode_event_fault_record(rec, is_event, version=EVENT_FAULT_VERSION_UNKNOWN
         "description": describe_event_fault_type(type_code, is_event, version),
         "record_purpose": rec[1],
         "begin": _iso(begin_ts),
+        "begin_raw": begin_ts,
         "end": _iso(end_ts),
+        "end_raw": end_ts,
+        "time_status": "valid" if _iso(begin_ts) else "invalid",
         "spec_reference": spec,
         # Bookkeeping, never a column: which point-2.70 table was used, and how
         # that table assigns this byte (see ``event_codes.TYPE_*``).
@@ -1321,14 +1338,18 @@ def decode_event_fault_record(rec, is_event, version=EVENT_FAULT_VERSION_UNKNOWN
         out.update(
             normative=False,
             confidence="low",
+            record_bytes=len(rec),
+            record_complete=False,
             conformance_reason=(
                 f"record is {len(rec)} bytes, the standard defines {expected}"),
             # Size does not match the standard, so nothing after the prefix can
-            # be interpreted by offsets: keep the old prefix + raw tail view.
-            raw_tail_hex=rec[10:].hex(),
+            # be interpreted by offsets: keep the prefix + raw tail view.
+            raw_tail_hex=rec[min(len(rec), 10):].hex(),
         )
         return out
 
+    out["record_bytes"] = len(rec)
+    out["record_complete"] = True
     for off, name in _CARD_SLOT_OFFSETS:
         out[name] = decode_full_card_number_gen(rec, off)
     manufacturer_code = rec[87] if is_event else rec[86]
@@ -1498,11 +1519,15 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
             out["raw_hex"] = rec.hex()
         return out
     if record_type == 0x01 and len(rec) >= 2:
-        activity = decoders.decode_activity_val(struct.unpack(">H", rec[0:2])[0])
+        value = struct.unpack(">H", rec[0:2])[0]
+        activity = decoders.decode_activity_val(value)
         if activity is not None:
             out["activity"] = activity
         else:
-            out["raw_hex"] = rec[:2].hex()
+            # Undecodable word (e.g. minute > 1439): kept and counted, not lost.
+            out["activity_status"] = "undecodable ActivityChangeInfo"
+            out["activity_raw"] = value
+            out["raw_hex"] = rec.hex()
         return out
     if record_type == 0x29 and len(rec) >= 2:
         val = struct.unpack(">H", rec[0:2])[0]
@@ -1529,7 +1554,10 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         if decoded:
             out.update(decoded)
         else:
-            out["raw_hex"] = rec.hex()
+            # Stored but shorter than the canonical prefix: the record is kept
+            # (never dropped) with no field claimed and every byte preserved.
+            out.update(confidence="low", record_bytes=len(rec),
+                       record_complete=False, time_status=None, raw_hex=rec.hex())
         return out
     if record_type == 0x24 and len(rec) >= 15:
         # VehicleRegistrationIdentification (15): nation(1) +
@@ -1574,7 +1602,10 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         # (4) + 60 one-byte values, one per second. A shorter body is not a speed
         # block — its leading TimeReal is still read (unambiguous), but the
         # record is reported incomplete/low instead of a high-confidence block.
-        out["begin"] = _iso(struct.unpack(">I", rec[0:4])[0])
+        begin_ts = struct.unpack(">I", rec[0:4])[0]
+        out["begin"] = _iso(begin_ts)
+        out["begin_raw"] = begin_ts
+        out["time_status"] = "valid" if _iso(begin_ts) else "invalid"
         out["record_bytes"] = len(rec)
         out["record_complete"] = len(rec) == DETAILED_SPEED_BLOCK_SIZE
         if not out["record_complete"]:
@@ -1808,6 +1839,7 @@ def walk_vu_record_arrays(data, results):
     results["vu_record_arrays"] = sections
     results["_vu_walk_complete"] = False
     schema_reports = []
+    dropped_any = False
 
     for sec in iter_vu_sections(data, state):
         # The section fixes the EventFaultType assignment (DDP_011), each one
@@ -1848,7 +1880,7 @@ def walk_vu_record_arrays(data, results):
                                      trep=sec["trep"]))
                 rpos += rs
                 total_records += 1
-        _emit_section(current, results)
+        emitted = _emit_section(current, results) or {}
         # Appendix-7 schema check (DDP_029..DDP_033): the prescribed arrays must
         # be present and in order. The report is descriptive — the records above
         # are already decoded, and a defect here is a structural observation, not
@@ -1856,8 +1888,30 @@ def walk_vu_record_arrays(data, results):
         schema_report = validate_section_schema(
             sec["trep"], [(rt, nr) for (_p, rt, _rs, nr, _e) in sec["records"]])
         schema_report["trep"] = f"0x{sec['trep']:02X}"
+        # stored == declared by the array counters; emitted == what reached the
+        # result lists. A difference is a defect of ours (a record the standard
+        # declares was dropped), reported and marked partial.
+        # Only record types with a result list can "reach the results": identity,
+        # certificates, the current date/time, the slot word and the signature are
+        # consumed into the panels/metadata by design and are not counted here.
+        stored = {f"0x{rt:02X}": nr for (rt, nr) in
+                  dict.fromkeys((rt, nr) for (_p, rt, _rs, nr, _e) in sec["records"])
+                  if rt in VU_RECORD_RESULT_KEYS}
+        emitted_counts = {f"0x{rt:02X}": n for rt, n in emitted.items()
+                          if isinstance(rt, int) and f"0x{rt:02X}" in stored}
+        dropped = {rt: stored[rt] - emitted_counts.get(rt, 0)
+                   for rt in stored if stored[rt] != emitted_counts.get(rt, 0)}
+        schema_report["stored_records"] = stored
+        schema_report["emitted_records"] = emitted_counts
+        schema_report["dropped_records"] = dropped
+        if dropped:
+            schema_report["status"] = "incomplete"
+            _log.warning(
+                "VU section 0x%02X emitted %s of its stored records (%s)",
+                sec["trep"], emitted_counts, dropped)
+            dropped_any = True
         schema_reports.append(schema_report)
-        if schema_report["status"] == "incomplete":
+        if schema_report["status"] == "incomplete" and not dropped:
             _log.warning(
                 "VU section 0x%02X does not match Appendix 7: missing %s, "
                 "out of order %s", sec["trep"], schema_report["missing_arrays"],
@@ -1878,6 +1932,10 @@ def walk_vu_record_arrays(data, results):
                                    and not state.get("truncated", False)
                                    and not state.get("trailing_bytes")
                                    and not state.get("resync_bytes"))
+    if dropped_any:
+        # A stored record that did not reach the results is our defect: the
+        # download is partial (never silently complete).
+        results["_vu_walk_complete"] = False
     integrity = []
     if state.get("truncated"):
         integrity.append({"trep": None, "status": "array_truncated",
@@ -2007,8 +2065,20 @@ def _emit_interface_version(interface, results):
 
 
 def _emit_section(section, results):
-    """Map decoded section records into the app's existing result lists."""
+    """Map decoded section records into the app's existing result lists.
+
+    Every record the array counters declare is emitted: the regulation defines
+    count-prefixed *stored* records (DDP_029..DDP_033), so a record with an
+    unusable value is published with the value withheld (``None``/N/A, raw value
+    and a status next to it), never deleted. Returns ``{record_type: emitted}``
+    so the walker can prove stored == emitted per array.
+    """
     recs = section["records"]
+    emitted = {}
+
+    def _emit(rt, key, record):
+        results.setdefault(key, []).append(record)
+        emitted[rt] = emitted.get(rt, 0) + 1
 
     # Overview-only records. ``CurrentDateTime`` (0x03) and ``CardSlotsStatus``
     # (0x02) were decoded per record and then dropped here: the VU's own clock
@@ -2048,35 +2118,19 @@ def _emit_section(section, results):
                 results["vehicle"]["plate"] = plate
 
     # Border crossings (0x22) and load/unload (0x23) — confirmed structures.
-    for rt in (0x22, 0x23):
+    # Every one of these is a stored record: the timestamp is published only when
+    # it is a real date (otherwise None + raw + time_status), but the record
+    # itself is never withheld.
+    for rt in (0x22, 0x23, 0x1C, 0x09, 0x16, 0x12):
         key = VU_RECORD_RESULT_KEYS[rt]
         for r in recs.get(rt, []):
-            if r.get("card_driver") is not None or r.get("timestamp"):
-                results.setdefault(key, []).append(r)
-
-    # Places (0x1C) and specific conditions (0x09) → existing result lists.
-    for r in recs.get(0x1C, []):
-        if r.get("timestamp"):
-            results.setdefault(VU_RECORD_RESULT_KEYS[0x1C], []).append(r)
-    for r in recs.get(0x09, []):
-        if r.get("timestamp"):
-            results.setdefault(VU_RECORD_RESULT_KEYS[0x09], []).append(r)
-    for r in recs.get(0x16, []):
-        if r.get("timestamp"):
-            results.setdefault(VU_RECORD_RESULT_KEYS[0x16], []).append(r)
+            _emit(rt, key, r)
     handled_record_types = {0x22, 0x23, 0x1C, 0x09, 0x16, 0x12}
     for rt, key in VU_RECORD_RESULT_KEYS.items():
         if rt in handled_record_types:
             continue
         for r in recs.get(rt, []):
-            results.setdefault(key, []).append(r)
-
-    # VuDetailedSpeedBlock (0x12) → speed_blocks (same key the G1 TREP 04
-    # walk uses, so the GUI "Detailed Speed Blocks" section covers both
-    # generations). Padding blocks decode with begin=None and are skipped.
-    for r in recs.get(0x12, []):
-        if r.get("begin"):
-            results.setdefault(VU_RECORD_RESULT_KEYS[0x12], []).append(r)
+            _emit(rt, key, r)
 
     # VuEventRecord (0x15) → events, VuFaultRecord (0x18) → faults. Each record
     # carries its own conformance verdict (``normative``) from the decoder, so
@@ -2088,11 +2142,15 @@ def _emit_section(section, results):
     for rt, key in ((0x15, "events"), (0x18, "faults")):
         type_key = "event_type_code" if key == "events" else "fault_type_code"
         for r in recs.get(rt, []):
-            if r.get("type_code") is None:
-                continue  # too short to hold even the standard prefix
+            # A record shorter than the standard prefix is still a stored record:
+            # it is emitted with the type withheld and every byte preserved (see
+            # the shared size rule in decode_event_fault_record).
             record = {
                 "description": r.get("description"),
-                type_key: r["type_code"],
+                type_key: r.get("type_code"),
+                "record_complete": r.get("record_complete"),
+                "record_bytes": r.get("record_bytes"),
+                "time_status": r.get("time_status"),
                 "record_purpose": r.get("record_purpose"),
                 "begin": r.get("begin") or "N/A",
                 "end": r.get("end") or "N/A",
@@ -2119,7 +2177,7 @@ def _emit_section(section, results):
                 record["end_semantics"] = r["end_semantics"]
             if r.get("conformance_reason"):
                 record["conformance_reason"] = r["conformance_reason"]
-            results.setdefault(key, []).append(record)
+            _emit(rt, key, record)
             _count_decode_path(results, f"vu_{key}", record["normative"])
 
     # Daily activities: an Activities section carries date(0x06)+odometer(0x05)+
@@ -2142,12 +2200,22 @@ def _emit_section(section, results):
                 break
         # Daily changes come from BOTH the driver (0x01) and the co-driver
         # (0x29) ActivityChangeInfo arrays, so slot-2 activities are not lost.
-        changes = [r["activity"] for rt in (0x01, 0x29)
-                   for r in recs.get(rt, []) if r.get("activity")]
-        if changes:
-            results.setdefault("activities", []).append(
-                {"date": date_str, "odometer_km": int(km), "changes": changes,
-                 "source": "vu_recordarray"})
+        # An ActivityChangeInfo the layout cannot decode (minute > 1439) is
+        # counted, never silently dropped, and the day is emitted either way.
+        changes, invalid_changes = [], 0
+        for rt in (0x01, 0x29):
+            for r in recs.get(rt, []):
+                if r.get("activity"):
+                    changes.append(r["activity"])
+                elif r.get("activity_status"):
+                    invalid_changes += 1
+        results.setdefault("activities", []).append(
+            {"date": date_str, "odometer_km": int(km), "changes": changes,
+             "changes_count": len(changes) + invalid_changes,
+             "invalid_changes_count": invalid_changes,
+             "source": "vu_recordarray"})
+        emitted["activity_day"] = emitted.get("activity_day", 0) + 1
+    return emitted
 
 
 # ── Additional G2.2 record decoders (moved from g2_decoders) ──────────────

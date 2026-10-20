@@ -417,3 +417,69 @@ def test_standalone_card_wrapper_takes_the_card_generation():
                + struct.pack(">HBH", 0x0523, 2, 4) + b"\x00\x00\x00\x00")
     results = DeterministicParser().parse(b"\x76\x06" + payload, is_vu=False)
     assert results["metadata"]["generation"] != "G1 (Digital)"
+
+
+# ── F3: no stored record is dropped at final emission ──────────────────────
+
+def _section_with(arrays, trep=0x32):
+    return S.section(trep, *arrays, S.signature_record())
+
+
+def test_places_specific_conditions_and_gnss_ad_with_unusable_times_are_kept():
+    bad_time = struct.pack(">I", 0xFFFFFFFF)
+    place_bad = S.card_number() + bad_time + bytes([0x00, 0x1A, 0x07]) + bytes(3) \
+        + struct.pack(">I", TIME) + bytes([0x02]) + b"\x00" * 6 + b"\x01"
+    place_good = S.card_number() + struct.pack(">I", TIME) + bytes([0x00, 0x1A, 0x07]) \
+        + bytes(3) + struct.pack(">I", TIME) + bytes([0x02]) + b"\x00" * 6 + b"\x01"
+    stream = _section_with([
+        S.record_array(0x1C, 41, [place_good, place_bad]),
+        S.record_array(0x09, 5, [struct.pack(">IB", TIME, 1),
+                                 struct.pack(">IB", 0xFFFFFFFF, 1)]),
+    ])
+    results = _results()
+    walk_vu_record_arrays(stream, results)
+    assert len(results["places"]) == 2
+    assert len(results["specific_conditions"]) == 2
+    bad_place = [p for p in results["places"] if p["timestamp"] is None]
+    assert len(bad_place) == 1
+    assert bad_place[0]["timestamp_raw"] == 0xFFFFFFFF
+    assert bad_place[0]["time_status"] == "invalid"
+
+
+def test_short_event_and_fault_records_are_emitted_not_dropped():
+    stream = _section_with([
+        S.record_array(0x15, 8, [bytes(8), bytes(8)], ),
+        S.record_array(0x18, 8, [bytes(8)]),
+    ], trep=0x23)
+    results = _results()
+    walk_vu_record_arrays(stream, results)
+    assert len(results["events"]) == 2
+    assert len(results["faults"]) == 1
+    assert all(rec["record_complete"] is False for rec in results["events"])
+
+
+def test_activity_word_with_an_impossible_minute_is_counted_not_lost():
+    # minute 1500 = 0b10111 ① 10111100 → decode_activity_val returns None
+    stream = _section_with([
+        S.record_array(0x06, 4, [struct.pack(">I", TIME)]),
+        S.record_array(0x05, 3, [(1000).to_bytes(3, "big")]),
+        S.record_array(0x01, 2, [struct.pack(">H", 0x10F3), struct.pack(">H", 0xFFFF)]),
+    ])
+    results = _results()
+    walk_vu_record_arrays(stream, results)
+    day = results["activities"][0]
+    assert len(day["changes"]) == 1
+    assert day["invalid_changes_count"] == 1
+
+
+def test_schema_report_accounts_stored_and_emitted_records():
+    stream = _section_with([
+        S.record_array(0x09, 5, [struct.pack(">IB", TIME, 1),
+                                 struct.pack(">IB", 0xFFFFFFFF, 1)]),
+    ])
+    results = _results()
+    walk_vu_record_arrays(stream, results)
+    report = results["metadata"]["vu_section_schema"][0]
+    assert report["stored_records"] == {"0x09": 2}
+    assert report["emitted_records"] == {"0x09": 2}
+    assert report["dropped_records"] == {}

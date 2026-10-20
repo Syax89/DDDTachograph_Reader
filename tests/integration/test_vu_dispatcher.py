@@ -94,9 +94,14 @@ class TestDetailedSpeedFold(unittest.TestCase):
 
         blocks = results.get("speed_blocks")
         self.assertIsNotNone(blocks, "0x12 records must fold into speed_blocks")
-        self.assertEqual(len(blocks), 1)  # padding block skipped (begin=None)
+        # Corrected: the array counter declares two stored blocks and a stored
+        # record is never dropped — the all-FF block is published with no time
+        # (begin=None, time_status invalid) instead of being skipped.
+        self.assertEqual(len(blocks), 2)
         self.assertEqual(blocks[0]["max_speed_kmh"], 70)
         self.assertEqual(blocks[0]["min_speed_kmh"], 50)
+        self.assertIsNone(blocks[1]["begin"])
+        self.assertEqual(blocks[1]["time_status"], "invalid")
         self.assertEqual(blocks[0]["samples"], 60)
         self.assertTrue(blocks[0]["begin"].startswith("2025-06-30"))
 
