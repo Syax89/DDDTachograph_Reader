@@ -404,12 +404,25 @@ class TachoParser:
                 _messages = []
                 reason = f"G1 walk raised {type(exc).__name__}: {exc}"
             if not complete:
-                # Gen1 keeps its long-standing recovery unchanged: an incomplete
-                # walk always falls through to the byte scan (which dedupes only
-                # byte-identical records), exactly as before. What is new is that
-                # the switch is declared and everything the scan adds is marked
-                # heuristic; the Gen2 never-rescan guard must not leak in here.
-                self._declare_vu_fallback(reason)
+                # INTEGRITY vs DECODABILITY. A short signature block or trailing
+                # junk is an integrity finding: every declared record of every
+                # message was decoded normatively, so the byte scan must not run —
+                # it would only add low-confidence duplicates on top. The walk
+                # reports the download as partial (and metadata.vu_integrity says
+                # why), exactly like the Gen2 path.
+                if self.results.get("_g1_walk_decoded_all"):
+                    logger.warning(
+                        "VU download incomplete: %s",
+                        "signature block shorter than the normative length"
+                        if any(entry.get("status") == "signature_truncated"
+                               for entry in (self.results.get("metadata") or {})
+                               .get("vu_integrity") or [])
+                        else "trailing bytes after the last message")
+                else:
+                    # Gen1 keeps its long-standing recovery for a walk that could
+                    # not decode data. What is new is that the switch is declared
+                    # and everything the scan adds is marked heuristic.
+                    self._declare_vu_fallback(reason)
             present = sorted({m["trep"] for m in (_messages or [])})
             self._build_trep_report(generation, complete_walk=complete,
                                     present_treps=present)

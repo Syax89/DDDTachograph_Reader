@@ -1870,6 +1870,22 @@ def walk_vu_record_arrays(data, results):
                                    and not state.get("truncated", False)
                                    and not state.get("trailing_bytes")
                                    and not state.get("resync_bytes"))
+    integrity = []
+    if state.get("truncated"):
+        integrity.append({"trep": None, "status": "array_truncated",
+                          "missing_bytes": int(state.get("trailing_bytes") or 0),
+                          "trailing_bytes": int(state.get("trailing_bytes") or 0)})
+    if state.get("trailing_bytes"):
+        if not integrity:
+            integrity.append({"trep": None, "status": "trailing_bytes",
+                              "missing_bytes": 0,
+                              "trailing_bytes": int(state["trailing_bytes"])})
+    if integrity:
+        # Integrity, not decodability: the sections that were read are decoded
+        # normatively, the download is reported partial (see
+        # docs/developer/normative-completion.md §11).
+        results.setdefault("metadata", {}).setdefault(
+            "vu_integrity", []).extend(integrity)
     if state.get("resync_bytes"):
         # Junk inside a section's byte run: reported, and fatal to the
         # completeness claim (a valid stream never needs it).

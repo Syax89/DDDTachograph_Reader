@@ -253,3 +253,66 @@ def test_resynchronisation_is_counted_and_fails_completeness():
     walk_vu_record_arrays(stream, results)
     assert results["metadata"]["vu_walk_resync_bytes"] >= 1
     assert results["_vu_walk_complete"] is False
+
+
+# ── Integrity vs decodability (G1 and G2) ──────────────────────────────────
+
+def _g1_trep05():
+    body = (S.coded_string("SYNTH VU MAKER", code_page=1, length=36)
+            + S.coded_string("SYNTH ROAD 1", code_page=1, length=36)
+            + b"PART0001        " + S.extended_serial(0x0000A001)
+            + b"0001" + struct.pack(">I", TIME) + struct.pack(">I", TIME)
+            + b"APPROVAL" + S.extended_serial(0x0000A002)
+            + b"SENSORAP" + struct.pack(">I", TIME + 60) + b"\x00")
+    return b"\x76\x05" + body
+
+
+def test_g1_short_signature_is_integrity_not_a_decode_failure():
+    """A cut RSA block leaves the records decodable: no fallback, no heuristic."""
+    from core.parser.g1_walker import walk_g1_vu
+
+    for cut in (1, 127):
+        stream = _g1_trep05() + b"\x11" * (128 - cut)
+        results = {"metadata": {}}
+        messages, complete = walk_g1_vu(stream, results)
+        assert complete is False
+        assert results["_g1_walk_decoded_all"] is True
+        integrity = results["metadata"]["vu_integrity"]
+        assert integrity == [{"trep": "0x05", "status": "signature_truncated",
+                              "missing_bytes": cut, "trailing_bytes": 128 - cut}]
+
+
+def test_g1_trailing_junk_after_the_last_signature_is_integrity():
+    from core.parser.g1_walker import walk_g1_vu
+
+    stream = _g1_trep05() + b"\x11" * 128 + b"\xde\xad"
+    results = {"metadata": {}}
+    _messages, complete = walk_g1_vu(stream, results)
+    assert complete is False
+    assert results["_g1_walk_decoded_all"] is True
+    assert results["metadata"]["vu_integrity"][0]["status"] == "trailing_bytes"
+
+
+def test_g1_data_cut_mid_array_is_a_decode_failure():
+    """When the DATA part does not fit its declared size, the walk cannot decode
+    it: `decoded_all` is False, which is what allows the declared fallback."""
+    from core.parser.g1_walker import walk_g1_vu
+
+    results = {"metadata": {}}
+    # a TREP 04 body declaring 4 blocks but carrying 2
+    stream = b"\x76\x04" + struct.pack(">H", 4) + (struct.pack(">I", TIME)
+                                                   + bytes(60)) * 2
+    messages, complete = walk_g1_vu(stream, results)
+    assert messages == []
+    assert complete is False
+    assert results["_g1_walk_decoded_all"] is False
+
+
+def test_gen2_short_signature_record_is_integrity_only():
+    stream = _overview_stream()[:-10]
+    results = _results()
+    walk_vu_record_arrays(stream, results)
+    assert results["_vu_walk_complete"] is False
+    assert results["metadata"]["vu_integrity"][0]["status"] == "array_truncated"
+    # the decoded data of every complete array is still there
+    assert results["vehicle"]["vin"] == S.VIN

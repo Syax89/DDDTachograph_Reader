@@ -419,3 +419,25 @@ both `HIDDEN_KEYS` sets (`core/utils/report_format.py`, `app/gui.py`).
 
 No compliance statement is made for the unresolved items above, and none of them
 is presented as a decoded field.
+
+## 11. Fallback policy — integrity is not decodability
+
+The heuristic route exists for one situation only: **the normative walk could
+not decode data** (a declared structure does not fit the bytes, a section is
+unknown/misplaced, a record size contradicts the standard, a normative decoder
+raised). A download whose *records all decoded* but whose trailing bytes are
+short is an **integrity** finding, and it is reported, never "recovered":
+
+| Situation | Where it lands | Heuristic scan |
+|---|---|---|
+| final RSA/ECDSA block shorter than the normative length | `metadata.vu_integrity`: `{trep, status: signature_truncated, missing_bytes, trailing_bytes}`; `trep_report.complete_walk = False`; WARNING "VU download incomplete" | **no** — the data was decoded |
+| bytes after the last complete message/signature | `vu_integrity … status: trailing_bytes` | **no** |
+| RecordArray/array declares more bytes than exist | `vu_integrity … status: array_truncated` (Gen2 fails closed as partial, as before) | **no** — the sections that were read are decoded |
+| count/size inside the DATA part contradicts the bytes, an unparsable marker remains, or a normative decoder raised | not decodable | yes, declared (`decode_paths.fallback`, `heuristic_fields`, WARNING) |
+
+Evidence (damaged variants of the local corpus, offsets only): cutting the very
+last byte of a signed generation-1 download used to switch to the byte scan and
+add low-confidence duplicates (calibrations 7→13, certificates 2→4); it now keeps
+the intact record counts, reports `signature_truncated` with `missing_bytes = 1`
+and stays on the normative path. Gen2 `truncate1` variants behave the same way
+(`array_truncated`, partial, no fallback).

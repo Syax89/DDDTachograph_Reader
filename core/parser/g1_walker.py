@@ -351,15 +351,37 @@ def walk_g1_vu(data, results):
     signature_bytes = sum(m["sig_len"] for m in messages)
     # Complete when the walk consumed every byte, or when the only remainder is
     # padding: a run of 0x00/0xFF fill or a bare marker prefix that no message
-    # can start. A remainder that is neither is a *truncated* signature block
-    # (a cut RSA signature leaves 1..127 arbitrary bytes after the body) and must
-    # not let the download claim a complete walk.
+    # can start. A remainder that is neither is a *short signature block* (a cut
+    # RSA signature leaves 1..127 arbitrary bytes after the body) or trailing
+    # junk: both are INTEGRITY findings, not a decoding failure, and they must not
+    # let the download claim a complete walk.
     pad = data[messages[-1]["end"]:] if messages else b""
     padding_only = (not pad) or all(b in (0x00, 0xFF) for b in pad) or pad == b"\x76"
     complete = bool(messages) and not _marker_in(data, messages[-1]["end"]) and padding_only
     results["_g1_walk_signature_bytes"] = signature_bytes
     if trailing:
         results["_g1_walk_trailing_bytes"] = trailing
+
+    integrity = []
+    if messages and trailing:
+        last = messages[-1]
+        if last["sig_len"] == 0 and trailing < RSA_SIGNATURE_LEN:
+            # The body is complete and decodable; only the signature block is
+            # shorter than the 128 bytes the generation-1 transfer defines.
+            integrity.append({"trep": f"0x{last['trep']:02X}",
+                              "status": "signature_truncated",
+                              "missing_bytes": RSA_SIGNATURE_LEN - trailing,
+                              "trailing_bytes": trailing})
+        else:
+            integrity.append({"trep": f"0x{last['trep']:02X}",
+                              "status": "trailing_bytes",
+                              "missing_bytes": 0,
+                              "trailing_bytes": trailing})
+    if integrity:
+        # Model-only: which section's byte run does not match the normative
+        # length, and by how much. Integrity is not decodability (see below).
+        results.setdefault("metadata", {}).setdefault(
+            "vu_integrity", []).extend(integrity)
 
     def _dispatch_trep02(body, res):
         # The walk yields exact bodies, so try the deterministic layout first:
@@ -393,5 +415,13 @@ def walk_g1_vu(data, results):
                          msg["trep"], msg["pos"], exc)
 
     complete = complete and not dispatch_failed
-    _log.debug("G1 VU walk: %d messages, complete=%s", len(messages), complete)
+    # Decodability is a separate question from integrity: every message the walk
+    # yielded was decoded by its TREP parser unless the walk stopped on a marker
+    # it could not parse (or a parser raised). A short signature block or trailing
+    # junk leaves this True — the records are there, only the integrity report
+    # says the block is incomplete.
+    undecodable_tail = bool(messages) and _marker_in(data, messages[-1]["end"])
+    results["_g1_walk_decoded_all"] = bool(messages) and not undecodable_tail and not dispatch_failed
+    _log.debug("G1 VU walk: %d messages, complete=%s, decoded_all=%s",
+               len(messages), complete, results["_g1_walk_decoded_all"])
     return messages, complete
