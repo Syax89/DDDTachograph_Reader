@@ -187,6 +187,8 @@ def test_g1_zero_change_day_is_emitted():
     assert len(results["activities"]) == 1
     assert results["activities"][0]["changes"] == []
     assert results["activities"][0]["changes_count"] == 0
+    # the day keeps its deterministic provenance even when a scan re-reads it
+    assert results["activities"][0]["source"] == "vu_trep02"
 
 
 def test_g1_iw_records_keep_their_day_association():

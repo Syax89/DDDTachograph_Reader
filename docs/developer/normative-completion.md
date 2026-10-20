@@ -469,3 +469,13 @@ the caller already established, so a truncated file is never relabelled as a
 decoder defect by the section that had to be scanned. All 19 intact local files
 have an empty list; the damaged variants that fall back report `file_truncated`
 (see `.audit/AUTHOR.md` for the per-variant table).
+
+### 11.2 The three record-count differences on damaged variants
+
+All three are normative gains, not regressions; each has a unit test.
+
+| Variant (bytes touched) | baseline → candidate | why |
+|---|---|---|
+| `07-corrupt_header` — two octets of the FIRST section header | `vu_record_arrays` 35 → 36 | the candidate walks the `76 00` download-interface transfer of DDP_028a as a section (`test_interface_version_section_is_recognised_and_consumed`); the baseline treated those bytes as junk, so the count lacked the transfer that exists in the file |
+| `09-corrupt_header` / `09-truncate1` — inside the calibration array | `calibrations` 4 → 5 | the activation calibration ("parameters known at VU activation": empty VIN, `l = 0`) is no longer deleted by the non-normative acceptance gate (`test_g1_activation_calibration_with_empty_vin_and_l_zero_is_kept`) |
+| `11-truncate1` — the final marker byte | `activities` 0 → 1 | a downloaded day with no ActivityChangeInfo is a day: it is emitted with an empty change list and `source: "vu_trep02"` (`test_g1_zero_change_day_is_emitted`). The variant's scan re-reads the same day body, so the gain shows up on the fallback route too |

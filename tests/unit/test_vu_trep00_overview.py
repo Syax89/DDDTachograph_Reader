@@ -54,6 +54,11 @@ def test_interface_version_section_is_recognised_and_consumed():
     sections = list(iter_vu_sections(stream, state))
 
     assert [s["trep"] for s in sections] == [0x00, 0x31]
+    # counted as a section of the download (corpus effect: one G2.2 file goes
+    # from 35 to 36 sections, because the interface transfer is a real TREP)
+    results = _results()
+    walk_vu_record_arrays(stream, results)
+    assert len(results["vu_record_arrays"]) == 2
     assert sections[0]["interface"] == b"\x01\x01"
     assert state["truncated"] is False
 
