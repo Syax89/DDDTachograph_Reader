@@ -393,9 +393,13 @@ both `HIDDEN_KEYS` sets (`core/utils/report_format.py`, `app/gui.py`).
 * `EntryTypeDailyWorkPeriod` codes above 5 in generation 2 — the enumeration is
   a figure in every accessible edition, so the decoder says "unknown" and never
   "unassigned".
-* `digitalMapVersion` — the value assignment lives in the digital-map
-  specification on the Commission's secured site; bytes stay raw and the status
-  says unresolved.
+* `digitalMapVersion` — **resolved as a type**: Reg. (EU) 2021/1228 prints the
+  ASN.1 as `VuDigitalMapVersion ::= IA5String (SIZE(12))`, so the generation-2,
+  version-2 `VuIdentification` ends at 138 bytes and the twelve octets are IA5
+  (ASCII) characters. The decoder reports `valid (IA5String(12))` or
+  `invalid IA5 (kept raw)` and keeps every byte after offset 126. What the
+  characters *mean* (any date/century grammar or an official-map identifier) is
+  not stated by the regulation and is deliberately not invented.
 * The `ITSConsent` BOOLEAN wire rule — ASN.1 notation alone does not establish
   BER/non-zero; the measured low-bit reading is kept next to the raw octet.
 * `manufacturerSpecificEventFaultData` octets — only the `ManufacturerCode` byte

@@ -386,17 +386,24 @@ def decode_vu_identification(rec):
         out["raw_tail_bytes"] = len(rec) - canonical
         out["raw_tail_hex"] = rec[canonical:].hex()
     if len(rec) >= 138:
-        # digitalMapVersion (generation 2, version 2 only). The value assignment
-        # is delegated to the digital map specification published on the
-        # Commission's secured site and no accessible edition defines it, so the
-        # existing *visible* reading is kept unchanged for compatibility while
-        # the raw bytes are carried next to it as an unresolved companion.
-        # Everything after byte 126 is kept: the corpus width is not a
-        # definition, so a longer field is not clipped to 12 bytes.
+        # digitalMapVersion (generation 2, version 2 only). Reg. (EU) 2021/1228
+        # prints the ASN.1 as ``VuDigitalMapVersion ::= IA5String (SIZE(12))``
+        # (amendment ASN.1 figure, 2.60x), so the field is exactly twelve IA5
+        # characters (0x00..0x7F); the record therefore ends at byte 138.
+        #
+        # Only the *type* is normative here: the standard says nothing about the
+        # grammar of the characters, so the value is never parsed into a
+        # century/date or matched against an allow-list, and it is not claimed to
+        # be an official map identifier. The existing visible reading is kept
+        # unchanged and everything after byte 126 is preserved verbatim (a longer
+        # record keeps its extension in raw_tail, not in this field).
         out["digital_map_version"] = _ascii(rec, 126, 12)
         out["digital_map_version_raw"] = rec[126:].hex()
-        out["digital_map_version_status"] = (
-            "unresolved (encoding assigned by the secured digital-map specification)")
+        raw_field = bytes(rec[126:138])
+        if all(octet <= 0x7F for octet in raw_field):
+            out["digital_map_version_status"] = "valid (IA5String(12))"
+        else:
+            out["digital_map_version_status"] = "invalid IA5 (kept raw)"
     return out
 
 

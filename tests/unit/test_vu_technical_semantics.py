@@ -242,7 +242,7 @@ def test_technical_records_reach_the_results():
 
 # ── Unresolved encodings stay raw ───────────────────────────────────────────
 
-def test_digital_map_version_stays_raw_and_unresolved():
+def test_digital_map_version_is_an_ia5_string_of_twelve():
     rec = (S.coded_string("SYNTH VU MAKER", code_page=1, length=36)
            + S.coded_string("SYNTH ROAD 1", code_page=1, length=36)
            + b"PART0001        " + S.extended_serial(0x0000C0DE)
@@ -255,7 +255,7 @@ def test_digital_map_version_stays_raw_and_unresolved():
     # not a 12-byte clip) travel as a hidden companion.
     assert out["digital_map_version_raw"] == bytes(range(12)).hex()
     assert out["digital_map_version"] == ""      # non-printable bytes, unchanged
-    assert out["digital_map_version_status"].startswith("unresolved")
+    assert out["digital_map_version_status"] == "valid (IA5String(12))"
 
 
 def test_digital_map_version_is_not_clipped_to_its_corpus_width():
@@ -267,6 +267,7 @@ def test_digital_map_version_is_not_clipped_to_its_corpus_width():
     assert len(rec) == 142
     out = decode_vu_identification(rec)
     assert out["digital_map_version_raw"] == bytes(range(16)).hex()
+    assert out["digital_map_version_status"] == "valid (IA5String(12))"
     assert out["record_complete"] is False
     assert out["raw_tail_bytes"] == 4
 
@@ -291,3 +292,17 @@ def test_card_route_keeps_a_zero_zero_position():
     assert _decode_gnss_coord(b"\x00\x00\x00", 0, maximum_degrees=90) == 0.0
     assert _decode_gnss_coord(b"\x00\x00\x00", 0, maximum_degrees=180) == 0.0
     assert _decode_gnss_coord(b"\x7f\xff\xff", 0) is None
+
+
+def test_digital_map_version_flags_a_non_ia5_octet():
+    """IA5String(12) is ASCII only: a high octet is reported, bytes kept."""
+    rec = bytearray(S.coded_string("SYNTH VU MAKER", code_page=1, length=36)
+                    + S.coded_string("SYNTH ROAD 1", code_page=1, length=36)
+                    + b"PART0001        " + S.extended_serial(0x0000C0DE)
+                    + b"0001" + struct.pack(">I", TIME) + struct.pack(">I", TIME)
+                    + b"APPROVAL" + bytes(range(10)) + b"MAP-VER-0001")
+    assert len(rec) == 138
+    rec[130] = 0xE9                      # not an IA5 octet
+    out = decode_vu_identification(bytes(rec))
+    assert out["digital_map_version_status"] == "invalid IA5 (kept raw)"
+    assert out["digital_map_version_raw"] == bytes(rec[126:138]).hex()
