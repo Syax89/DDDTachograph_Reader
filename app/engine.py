@@ -360,6 +360,9 @@ class TachoParser:
                 # Only fall back to heuristic if the walker produced NO results
                 if not walker_success or not self.results.get("vu_record_arrays"):
                     fallback_reason = "RecordArray walk produced no sections"
+                    self._record_fallback_reason(
+                        "vu_fallback_scan", "unknown_or_misplaced_section",
+                        detail=fallback_reason)
                     complete = False
             except Exception as exc:
                 # The traceback is diagnostic detail; the fallback itself is
@@ -367,6 +370,9 @@ class TachoParser:
                 logger.debug("VU RecordArray dispatch raised: %s", exc, exc_info=True)
                 complete = False
                 fallback_reason = f"RecordArray walk raised {type(exc).__name__}: {exc}"
+                self._record_fallback_reason(
+                    "vu_fallback_scan", "normative_decoder_exception",
+                    detail=fallback_reason)
             if fallback_reason:
                 self._declare_vu_fallback(
                     fallback_reason,
@@ -395,6 +401,7 @@ class TachoParser:
             # the byte-scan heuristic as fallback for files the walk
             # cannot validate (truncated/non-standard downloads).
             reason = "G1 deterministic walk did not cover the file"
+            cause = "unknown_or_misplaced_section"
             try:
                 from core.parser.g1_walker import walk_g1_vu
                 _messages, complete = walk_g1_vu(self.raw_data, self.results)
@@ -403,6 +410,7 @@ class TachoParser:
                 complete = False
                 _messages = []
                 reason = f"G1 walk raised {type(exc).__name__}: {exc}"
+                cause = "normative_decoder_exception"
             if not complete:
                 # INTEGRITY vs DECODABILITY. A short signature block or trailing
                 # junk is an integrity finding: every declared record of every
@@ -421,11 +429,46 @@ class TachoParser:
                 else:
                     # Gen1 keeps its long-standing recovery for a walk that could
                     # not decode data. What is new is that the switch is declared
-                    # and everything the scan adds is marked heuristic.
+                    # with a structured cause and everything the scan adds is
+                    # marked heuristic.
+                    # The primary cause: a stream that does not even open with a
+                    # known TREP marker is misplaced/unknown; a known marker whose
+                    # declared body does not fit the bytes is a truncated file.
+                    from core.parser.g1_walker import TREP_NAMES
+                    head = self.raw_data[:2]
+                    if len(head) < 2 or head[0] != 0x76 or head[1] not in TREP_NAMES:
+                        cause = "unknown_or_misplaced_section"
+                    else:
+                        cause = "file_truncated"
+                    self._record_fallback_reason(
+                        "vu_fallback_scan", cause,
+                        trep=(f"0x{(_messages or [{}])[-1].get('trep', 0):02X}"
+                              if _messages else None),
+                        offset=((_messages or [{}])[-1].get("end")
+                                if _messages else None),
+                        detail=reason)
                     self._declare_vu_fallback(reason)
             present = sorted({m["trep"] for m in (_messages or [])})
             self._build_trep_report(generation, complete_walk=complete,
                                     present_treps=present)
+
+    def _record_fallback_reason(self, route, cause, **kwargs):
+        """Record one structured fallback reason (see core.parser.fallback_reasons)."""
+        from core.parser.fallback_reasons import record_fallback_reason
+        return record_fallback_reason(self.results, route, cause, **kwargs)
+
+    def _fallback_log_reason(self, sentence):
+        """``<cause> @ <trep>:<offset>`` for the log line, else *sentence*."""
+        from core.parser.fallback_reasons import primary_reason
+        primary = primary_reason(self.results)
+        if not primary:
+            return sentence
+        location = primary.get("trep") or "stream"
+        if primary.get("offset") is not None:
+            location = f"{location}@{primary['offset']}"
+        detail = primary.get("detail") or sentence
+        return (f"{primary['cause']} at {location} "
+                f"({primary['classification']}): {detail}")
 
     def _declare_vu_fallback(self, reason, walker_wrote=False):
         """Declare a VU decode route switch and recover what the scan still can.
@@ -461,7 +504,8 @@ class TachoParser:
         # otherwise be decoded twice, once per route.
         if walker_wrote:
             logger.warning("VU deterministic decode fell back (%s): the affected "
-                           "sections stay partial, no heuristic rescan", reason)
+                           "sections stay partial, no heuristic rescan",
+                           self._fallback_log_reason(reason))
             return
         before = {key: len(value) for key, value in _result_records(self.results).items()}
         decoders.parse_vu_download_messages(self.raw_data, self.results)
@@ -475,7 +519,8 @@ class TachoParser:
         # The sentence and metadata.heuristic_fields must describe the same set.
         marked = sorted((self.results.get("metadata") or {}).get("heuristic_fields") or {})
         logger.warning("VU deterministic decode fell back (%s): heuristic byte "
-                       "scan recovered %s; sections marked heuristic: %s", reason,
+                       "scan recovered %s; sections marked heuristic: %s",
+                       self._fallback_log_reason(reason),
                        ", ".join(gained) or "nothing", ", ".join(marked) or "none")
 
     def _build_trep_report(self, generation, complete_walk=True, present_treps=None):

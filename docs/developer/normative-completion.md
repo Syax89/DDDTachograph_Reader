@@ -441,3 +441,31 @@ add low-confidence duplicates (calibrations 7→13, certificates 2→4); it now 
 the intact record counts, reports `signature_truncated` with `missing_bytes = 1`
 and stays on the normative path. Gen2 `truncate1` variants behave the same way
 (`array_truncated`, partial, no fallback).
+
+### 11.1 `metadata.decode_paths.fallback_reasons`
+
+When a backup route runs, the reason is recorded as a structured fact instead of
+a sentence alone (model-only, hidden from tables and exports):
+
+```
+{"route": "vu_fallback_scan", "trep": "0x05", "offset": 123456,
+ "cause": "file_truncated", "detail": "...", "classification": "file_damaged"}
+```
+
+The cause vocabulary is closed (`core/parser/fallback_reasons.py`):
+
+| cause | classification | meaning |
+|---|---|---|
+| `file_truncated` | `file_damaged` | EOF inside a declared structure |
+| `count_exceeds_eof` | `file_damaged` | a declared count/size points past the data |
+| `size_mismatch` | `file_damaged` | a record size contradicts the regulation |
+| `unknown_or_misplaced_section` | `file_damaged` | unknown marker / marker where its transfer does not define one |
+| `schema_violation` | `file_damaged` | the array order/placement does not match Appendix 7 |
+| `normative_decoder_exception` | `decoder_defect_suspected` | our decoder raised on a structurally complete section |
+| `normative_layout_not_matched` | `decoder_defect_suspected` | intact structure the normative layout did not read |
+
+A section-level route (a heuristic sub-parser, the byte scan) inherits the cause
+the caller already established, so a truncated file is never relabelled as a
+decoder defect by the section that had to be scanned. All 19 intact local files
+have an empty list; the damaged variants that fall back report `file_truncated`
+(see `.audit/AUTHOR.md` for the per-variant table).

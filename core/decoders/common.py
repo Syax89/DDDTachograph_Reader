@@ -18,6 +18,10 @@ def mark_heuristic(results, section, fields):
     """
     if not fields:
         return
+    # Every heuristic site records a structured reason next to the field list, so
+    # a fallback can always be explained (see core.parser.fallback_reasons).
+    from core.parser.fallback_reasons import record_fallback_reason
+    record_fallback_reason(results, route=section, detail=",".join(sorted(fields)))
     meta = results.setdefault("metadata", {})
     bucket = meta.setdefault("heuristic_fields", {})
     existing = set(bucket.get(section, []))

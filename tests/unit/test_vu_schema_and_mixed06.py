@@ -20,6 +20,8 @@ Every value below is synthetic.
 """
 import struct
 
+import pytest
+
 from core.parser import vu_dispatcher
 from core.parser.vu_dispatcher import (
     TREP_ARRAY_SCHEMA, iter_vu_sections, validate_section_schema,
@@ -316,3 +318,37 @@ def test_gen2_short_signature_record_is_integrity_only():
     assert results["metadata"]["vu_integrity"][0]["status"] == "array_truncated"
     # the decoded data of every complete array is still there
     assert results["vehicle"]["vin"] == S.VIN
+
+
+# ── Why a fallback ran (closed cause vocabulary) ───────────────────────────
+
+def test_fallback_causes_are_a_closed_vocabulary():
+    from core.parser import fallback_reasons as fr
+    assert fr.CAUSES == {
+        "file_truncated", "count_exceeds_eof", "size_mismatch",
+        "unknown_or_misplaced_section", "schema_violation",
+        "normative_decoder_exception", "normative_layout_not_matched"}
+    assert fr.classification_for("file_truncated") == "file_damaged"
+    assert fr.classification_for("normative_decoder_exception") == (
+        "decoder_defect_suspected")
+    with pytest.raises(ValueError):
+        fr.fallback_reason("route", "made_up_cause")
+
+
+def test_a_section_route_inherits_the_primary_cause():
+    """A scan that runs because the file is cut is not relabelled a defect."""
+    from core.parser import fallback_reasons as fr
+    results = {"metadata": {}}
+    fr.record_fallback_reason(results, "vu_fallback_scan", "file_truncated",
+                              trep="0x11", offset=1234, detail="declared body")
+    fr.record_fallback_reason(results, "vu_activities_TREP02", detail="activities")
+    reasons = results["metadata"]["decode_paths"]["fallback_reasons"]
+    assert [r["cause"] for r in reasons] == ["file_truncated", "file_truncated"]
+    assert reasons[0]["classification"] == "file_damaged"
+    assert fr.primary_reason(results) is reasons[0]
+
+
+def test_fallback_reasons_are_bookkeeping_not_a_column():
+    from core.utils import report_format
+    assert "fallback_reasons" in report_format.HIDDEN_KEYS
+    assert report_format.visible_columns([{"fallback_reasons": ["x"], "timestamp": "t"}]) == ["timestamp"]
