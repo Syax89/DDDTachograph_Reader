@@ -648,6 +648,16 @@ def walk_g1_vu(data, results):
                     continue
                 except Exception as exc:
                     _log.warning("G1 VU zone 0x%X: partial read failed: %s", start, exc)
+        zone = data[start:end]
+        if all(byte in (0x00, 0xFF) for byte in zone):
+            # The tolerance both walkers already apply: 0x00/0xFF fill after the
+            # last message is PADDING (a VU fills unused space with FF, erased space
+            # is zeroed). Declared as a unit so every byte is accounted for, and not
+            # a finding: the file is not partial.
+            units.append({"trep": "0x00", "offset": start, "length": end - start,
+                          "path": "padding",
+                          "reason": "0x00/0xFF fill after the last message (padding)"})
+            continue
         recovered = False
         before = {key: len(value) for key, value in _result_records(results).items()}
         try:
@@ -675,6 +685,9 @@ def walk_g1_vu(data, results):
         # Per-unit provenance: what was decoded normatively, what needed the
         # heuristic on its own byte range, and what stayed unreadable. Non
         # overlapping, ordered, and their lengths sum to the file size.
+        # One list, exposed where every surface reads it (top level) and under
+        # metadata as the same object — the probes and the report keys use both.
+        results["vu_units"] = units
         metadata = results.setdefault("metadata", {})
         metadata["vu_units"] = units
         metadata["vu_units_cover_file"] = (

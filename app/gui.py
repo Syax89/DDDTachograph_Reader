@@ -4572,8 +4572,19 @@ class TachoExplorer(tk.Tk):
                         "\u2022 Corrupted/implausible section(s) (data discarded): "
                         + ", ".join(t["name"] for t in suspect))
                 if not trep.get("complete_walk", True):
-                    warnings.append(
-                        "\u2022 The structural walk did not reach the end of file")
+                    # Single source: the bullet text (including the schema-violation
+                    # explanation) comes from _integrity_bullets, which the tests
+                    # call too. A walk that consumed every byte but found a section
+                    # whose array list differs from Appendix 7 must say THAT.
+                    shared, _notices = _integrity_bullets(data)
+                    structure = [b for b in shared
+                                 if "schema violation" in b
+                                 or "did not reach the end of file" in b]
+                    if structure:
+                        warnings.extend(b for b in structure if b not in warnings)
+                    else:
+                        warnings.append(
+                            "\u2022 The structural walk did not reach the end of file")
 
             salvaged = meta.get("salvage_recovered")
             if salvaged:

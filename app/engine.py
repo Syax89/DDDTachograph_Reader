@@ -544,8 +544,10 @@ class TachoParser:
                     # re-read bytes the normative walk vouched for. The failure is
                     # still declared (the reason above) and the affected sections
                     # keep their heuristic marking.
+                    # No byte scan ran here: the walk bounded the damage per TREP
+                    # and declared the zones. The route says exactly that.
                     self._record_fallback_reason(
-                        "vu_fallback_scan", cause,
+                        "vu_walk_incomplete", cause,
                         trep=(f"0x{(_messages or [{}])[-1].get('trep', 0):02X}"
                               if _messages else None),
                         detail=reason)

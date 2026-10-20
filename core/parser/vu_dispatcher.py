@@ -2129,13 +2129,11 @@ def walk_vu_record_arrays(data, results):
                                        "missing_bytes": 0, "trailing_bytes": 0})
         # Only once its records reached the results: a failure while emitting a
         # section must not announce a section the user never got.
-        # Per-unit provenance (owner rule: decode TREP by TREP). A section whose
-        # structure the walk could read is normative; one that had to be
-        # resynchronised is heuristic and is reported as such.
-        unit_path = "normative"
-        if any(f["trep"] == f"0x{sec['trep']:02X}"
-               and f["status"] == "schema_violation" for f in ()):
-            unit_path = "heuristic"
+        # Per-unit provenance (owner rule: decode TREP by TREP). A section the walk
+        # read is `normative` — a schema violation is a *finding* about the array
+        # list, recorded in metadata.vu_integrity, not a different decode path: the
+        # records of that section were decoded by the normative decoder. Bytes the
+        # walk does not cover are the zones handled by _cover_units_with_zones.
         unit_length = (max((end for (_p, _rt, _rs, _nr, end) in sec["records"]),
                            default=sec["marker"] + 2) - sec["marker"])
         if sec.get("interface"):
@@ -2147,7 +2145,7 @@ def walk_vu_record_arrays(data, results):
             "trep": f"0x{sec['trep']:02X}",
             "offset": sec["marker"],
             "length": unit_length,
-            "path": unit_path,
+            "path": "normative",
         })
         sections.append({
             "trep": f"0x{current['trep']:02X}",
@@ -2215,7 +2213,7 @@ def walk_vu_record_arrays(data, results):
             "vu_walk_truncated_bytes", int(state.get("trailing_bytes") or 0))
     if capped:
         results["_vu_walk_record_cap"] = VU_MAX_TOTAL_RECORDS
-    _cover_units_with_zones(data, results, schema_reports)
+    _cover_units_with_zones(data, results)
     if unmapped:
         results["vu_unmapped_record_types"] = sorted(f"0x{rt:02X}" for rt in unmapped)
         # The same fact, but renderable: one row per record type with its code, the
@@ -2237,7 +2235,7 @@ def walk_vu_record_arrays(data, results):
     return sections
 
 
-def _cover_units_with_zones(data, results, schema_reports):
+def _cover_units_with_zones(data, results):
     """Every byte belongs to a unit: close the gaps of a G2/G2.2 walk.
 
     The walk yields one unit per RecordArray section; whatever lies between two
@@ -2251,6 +2249,12 @@ def _cover_units_with_zones(data, results, schema_reports):
     covered = [(unit["offset"], unit["offset"] + unit["length"]) for unit in units]
     zones = _uncovered_ranges(covered, len(data))
     for (start, end) in zones:
+        zone = data[start:end]
+        if all(byte in (0x00, 0xFF) for byte in zone):
+            units.append({"trep": "0x00", "offset": start, "length": end - start,
+                          "path": "padding",
+                          "reason": "0x00/0xFF fill after the last section (padding)"})
+            continue
         before = {key: len(value) for key, value in results.items()
                   if isinstance(value, list)}
         recovered = False
@@ -2272,6 +2276,9 @@ def _cover_units_with_zones(data, results, schema_reports):
         if recovered:
             metadata.setdefault("vu_heuristic_units", []).append(dict(units[-1]))
     units.sort(key=lambda unit: unit["offset"])
+    # One list: the top level is what the GUI/CSV/Excel/PDF read; metadata carries
+    # the same object for the report keys.
+    results["vu_units"] = units
     metadata["vu_units"] = units
     metadata["vu_units_cover_file"] = (
         sum(unit["length"] for unit in units) == len(data))

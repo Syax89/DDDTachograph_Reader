@@ -449,7 +449,7 @@ When a backup route runs, the reason is recorded as a structured fact instead of
 a sentence alone (model-only, hidden from tables and exports):
 
 ```
-{"route": "vu_fallback_scan", "trep": "0x05", "offset": 123456,
+{"route": "vu_walk_incomplete", "trep": "0x05", "offset": 123456,
  "cause": "file_truncated", "detail": "...", "classification": "file_damaged"}
 ```
 
@@ -666,3 +666,14 @@ declared `unreadable` or `heuristic` when the scoped scan recovers something). T
 message/array header stays with the normative part, so the units still tile the file
 exactly. Nothing is fabricated: a message whose header is itself cut, or whose layout
 has no fixed record size, stays wholly unreadable, and the file keeps `is_partial`.
+
+### 15.6 One truth across units, flags and screens
+
+0x00/0xFF fill after the last message is *padding* — declared as a `padding` unit so
+every byte is accounted for, and not a finding (any other trailing byte is an
+`unreadable` unit with a `trailing_bytes` finding and a partial file). The unit list is
+published at the top level of the parse result, which is where the GUI, CSV, Excel and
+PDF read it, so the `Decode units` section actually renders. A schema violation stays a
+*normative* section (its records were decoded) and is reported as a finding; the runtime
+banner takes that bullet from the same helper the tests call. A walk that declared the
+zones instead of scanning records the route `vu_walk_incomplete`, which says what ran.
