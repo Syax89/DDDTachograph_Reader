@@ -504,3 +504,41 @@ def test_revisit_of_the_same_body_is_still_emitted_once():
     # a different message carrying the same records keeps them
     assert _parse_trep_03_structured(body, results, message_offset=8192) is True
     assert len(results["events"]) == 2
+
+
+# ── F6/F7: structure, not values, decides what is decodable ────────────────
+
+def test_blank_vin_still_decodes_the_whole_overview():
+    body = _overview_body()
+    body = bytearray(body)
+    body[388:405] = b" " * 17
+    results = _results()
+    parse_g1_vu_overview(bytes(body), results)
+    assert results["vehicle"]["vin"] == "N/A"
+    assert results["vehicle"]["plate"] == S.PLATE
+    assert results["metadata"]["current_datetime"]
+    assert len(results["company_locks"]) == 1
+    assert len(results["control_activities"]) == 1
+    assert results["metadata"].get("heuristic_fields") is None
+
+
+def test_unusable_overview_clock_is_withheld_not_the_overview():
+    body = bytearray(_overview_body())
+    struct.pack_into(">I", body, 420, 0xFF000000)
+    results = _results()
+    parse_g1_vu_overview(bytes(body), results)
+    assert results["metadata"]["current_datetime"] is None
+    assert results["vu_overview"]["current_date_time_raw"] == 0xFF000000
+    assert len(results["company_locks"]) == 1
+
+
+def test_a_day_with_more_than_one_hundred_iw_records_is_decoded():
+    base = _trep02_body()
+    iw_start = 7 + 2
+    iw = base[iw_start:iw_start + 129]
+    rest = base[iw_start + 129:]
+    body = base[:7] + struct.pack(">H", 101) + iw * 101 + rest
+    results = _results()
+    assert _parse_trep_02_g1_structured(body, results) is True
+    assert len(results["card_iw_records"]) == 101
+    assert results["metadata"].get("heuristic_fields") is None

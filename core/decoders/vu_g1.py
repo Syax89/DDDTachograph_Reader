@@ -304,30 +304,17 @@ def parse_g1_vu_overview(val, results, message_offset=None):
         if len(val) < 200:
             return
 
-        # A candidate body alignment is accepted only when the VIN field at
-        # offset 388 is a full 17-char alphanumeric string AND at least one of
-        # the three TimeReal fields at 420-432 decodes to a plausible date.
-        # This rejects false-positive 0x76 0x01 markers inside certificate or
-        # activity data (which is dense with valid timestamps).
         # The TREP 01 body starts at the MemberStateCertificate (offset 0): the
-        # caller already stripped the SID/TREP bytes. The alignment is chosen
-        # from the verified field shape (VIN at 388 must be 17 alphanumeric
-        # chars AND a plausible TimeReal at 420-432), NEVER from a single
-        # unconstrained byte: the certificate's first byte is an RSA signature
-        # byte and is 0x00 by chance ~1/256 — keying the shift on it would move
-        # the VIN/plate/nation/date/slot fields and publish a wrong identity.
-        body = None
-        for cand in (val, val[2:]):
-            if len(cand) >= 433:
-                vin_check = decode_string(cand[388:405], is_id=True)
-                ts_fields = struct.unpack(">III", cand[420:432])
-                if (len(vin_check) == 17 and vin_check.replace(" ", "").isalnum()
-                        and any(946684800 <= t <= 4102444800 for t in ts_fields)):
-                    body = cand
-                    break
-        body_validated = body is not None
-        if body is None:
-            body = val
+        # caller already stripped the SID/TREP bytes and the walker hands over the
+        # exact body, so the 433-byte fixed prefix is the structural proof.
+        #
+        # The old alignment gate demanded a full 17-character alphanumeric VIN and
+        # a plausible TimeReal at 420-432. Both are *values*: a not-yet-activated
+        # VU legitimately carries a blank VIN, and TimeReal is any uint32 — the
+        # gate therefore deleted the whole Overview (identity, clock, locks and
+        # control records) of a valid download. A blank field is published as N/A.
+        body = val
+        body_validated = len(body) >= 433
 
         if body_validated:
             try:
@@ -342,7 +329,9 @@ def parse_g1_vu_overview(val, results, message_offset=None):
 
                 vin_raw = body[388:405]
                 vin = decode_string(vin_raw, is_id=True)
-                if vin and len(vin) >= 8:
+                if vin:
+                    # Any decoded VIN is published; the old length>=8 rule hid a
+                    # short-but-real value. A blank field stays "N/A".
                     results["vehicle"]["vin"] = vin
                     fixed_fields_parsed.add("vin")
 
@@ -353,8 +342,11 @@ def parse_g1_vu_overview(val, results, message_offset=None):
                 fixed_fields_parsed.add("vehicle_registration")
 
                 ts = struct.unpack(">I", body[420:424])[0]
-                if 946684800 <= ts <= 4102444800:
-                    results["metadata"]["current_datetime"] = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+                # The clock is a stored field: published when it is a real date,
+                # otherwise withheld (None) with the raw value and a status.
+                results["metadata"]["current_datetime"] = _g1_time(ts)
+                results.setdefault("vu_overview", {})["current_date_time_raw"] = ts
+                if _g1_time(ts):
                     fixed_fields_parsed.add("current_datetime")
 
                 min_dl = struct.unpack(">I", body[424:428])[0]
@@ -390,12 +382,11 @@ def parse_g1_vu_overview(val, results, message_offset=None):
         # inferred (Annex 1B §4.5.3.2.2 defines the fixed layout; regex is a last
         # resort for non-standard/corrupt downloads only). ``card_numbers`` is not
         # a fixed-offset field, so its emptiness alone is not a recovery trigger.
-        needs_recovery = (
-            not body_validated
-            or _missing(results["vehicle"].get("vin"))
-            or _missing(results["vehicle"].get("plate"))
-            or not (results.get("company_info") or {}).get("name")
-        )
+        # Only a body that could not be decoded at all needs the regex rescue. A
+        # blank VIN/plate/company name is a legal unset value (a VU that was never
+        # downloaded or not yet activated): the field is published as N/A and the
+        # file stays on the normative path.
+        needs_recovery = not body_validated
         if needs_recovery:
             if _missing(results["vehicle"].get("vin")):
                 _log.warning("VU overview: VIN not parsed via fixed-offset, trying regex")
@@ -749,7 +740,9 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
 
         n_iw = struct.unpack(">H", data[pos:pos + 2])[0]
         pos += 2
-        if n_iw > 100 or pos + n_iw * 129 + 2 > len(data):
+        # The structural bound is what the remaining body can hold: the count is
+        # a two-byte field (DDP_030) and the global record cap bounds memory.
+        if pos + n_iw * 129 + 2 > len(data):
             return False
         iw_records = []
         for _ in range(n_iw):
@@ -783,7 +776,7 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
 
         n_ch = struct.unpack(">H", data[pos:pos + 2])[0]
         pos += 2
-        if n_ch > 5000 or pos + n_ch * 2 + 1 > len(data):
+        if pos + n_ch * 2 + 1 > len(data):
             return False
         changes = []
         invalid_changes = 0
@@ -832,7 +825,7 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
 
         n_sc = struct.unpack(">H", data[pos:pos + 2])[0]
         pos += 2
-        if n_sc > 1000 or pos + n_sc * 5 > len(data):
+        if pos + n_sc * 5 > len(data):
             return False
         conditions = []
         for _ in range(n_sc):
