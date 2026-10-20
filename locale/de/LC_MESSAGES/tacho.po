@@ -2326,3 +2326,14 @@ msgstr "Eintragsart Beschreibung"
 
 msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
 msgstr "Abbild einer Fahrerkarte, über die Fahrzeugeinheit heruntergeladen: Die beiden ersten Bytes sind der von dem speichernden Programm beibehaltene Übertragungskopf (SID + TREP 06) und nicht die Standard-Speicherform einer Kartendatei (DDP_050). Manche anderen Programme melden eine solche Datei als beschädigt; die Kartendaten sind vollständig und ihre Signaturen werden normal geprüft."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} Hinweis(e) — für Details klicken"
+
+
+
+msgid "File Note"
+msgstr "Hinweis zur Datei"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Hinweis zu dieser Datei.\n\n{filename}\n\n"

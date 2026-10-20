@@ -2326,3 +2326,14 @@ msgstr "Kande tüüp Kirjeldus"
 
 msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
 msgstr "Läbi sõiduki seadme alla laaditud juhikaardi pilt: kaks esimest baiti on salvestanud programmi alles jäetud ülekandepäis (SID + TREP 06), mitte kaardifaili tavaline salvestusvorm (DDP_050). Mõned teised programmid teatavad sellisest failist kui rikkis failist; kaardi andmed on terved ja nende allkirjad kontrollitakse tavapäraselt."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} märkus(t) — üksikasjade vaatamiseks klõpsake"
+
+
+
+msgid "File Note"
+msgstr "Faili märkus"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Märkus selle faili kohta.\n\n{filename}\n\n"

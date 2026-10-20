@@ -2326,3 +2326,14 @@ msgstr "Bejegyzéstípus Leírás"
 
 msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
 msgstr "A járműegységen keresztül letöltött vezetői kártya képe: az első két bájt a mentő program által megtartott átviteli fejléc (SID + TREP 06), nem a kártyafájl szabványos tárolási formája (DDP_050). Egyes más programok ilyen fájlt sérültként jelentenek; a kártya adatai teljesek, és az aláírásaik ellenőrzése a szokásos módon megtörténik."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} megjegyzés — kattintson a részletekért"
+
+
+
+msgid "File Note"
+msgstr "Fájlmegjegyzés"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Megjegyzés erről a fájlról.\n\n{filename}\n\n"

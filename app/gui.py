@@ -4648,11 +4648,14 @@ class TachoExplorer(tk.Tk):
 
             # A card image relayed through the vehicle unit gets ONE informational
             # bullet: it is the standard card plus the transfer header, not damage.
+            # It is kept apart from the real warnings so a healthy file is never
+            # announced as a warning.
             notice = _envelope_notice(data)
-            if notice:
-                warnings.append(notice)
+            notices = [notice] if notice else []
+            bullets = warnings + notices
 
-            self._integrity_warnings = warnings
+            self._integrity_warnings = bullets
+            self._integrity_notices = notices
             self._integrity_file = os.path.basename(path)
             if warnings:
                 self.integrity_banner.config(
@@ -4663,7 +4666,21 @@ class TachoExplorer(tk.Tk):
                 header = _("The file may be incomplete or corrupted.\n\n{filename}\n\n").format(
                     filename=os.path.basename(path))
                 self._warn_when_idle(_("File Integrity Warning"),
-                                     header + "\n".join(warnings))
+                                     header + "\n".join(bullets))
+            elif notices:
+                # Nothing is wrong with the file: it is a card image relayed
+                # through the vehicle unit, which other tools report as corrupt.
+                # Neutral wording and a neutral icon already used elsewhere (the
+                # File Info document mark) — never the warning triangle.
+                self.integrity_banner.config(
+                    text=_("{count} note(s) \u2014 click for details").format(
+                        count=len(notices)),
+                    foreground=MUTED, takefocus=True, background=SURFACE,
+                    image=_icon("file-info", 16, self.integrity_banner) or "")
+                header = _("Note about this file.\n\n{filename}\n\n").format(
+                    filename=os.path.basename(path))
+                self._warn_when_idle(_("File Note"), header + "\n".join(bullets),
+                                     kind="showinfo")
             else:
                 # Valid file: no green tick, no banner — the absence of a warning
                 # is the "all good" signal. The image is cleared with the text: a
@@ -4722,17 +4739,28 @@ class TachoExplorer(tk.Tk):
         self.integrity_banner.configure(background=SURFACE, foreground=WARNING)
 
     def _show_integrity_details(self):
-        """Show the collected integrity warnings on demand (banner click)."""
-        if not self._integrity_warnings:
+        """Show the collected integrity warnings on demand (banner click).
+
+        A file whose only bullet is the transfer-header note is not announced as a
+        warning: it gets the neutral title, header and icon level.
+        """
+        bullets = getattr(self, "_integrity_warnings", None) or []
+        notices = getattr(self, "_integrity_notices", None) or []
+        if not bullets:
             messagebox.showinfo(
                 _("File Integrity"),
                 _("{filename}\n\nNo integrity issues detected.").format(
                     filename=getattr(self, "_integrity_file", "")))
             return
+        if not [bullet for bullet in bullets if bullet not in notices]:
+            header = _("Note about this file.\n\n{filename}\n\n").format(
+                filename=getattr(self, "_integrity_file", ""))
+            messagebox.showinfo(_("File Note"), header + "\n".join(bullets))
+            return
         header = _("The file may be incomplete or corrupted.\n\n{filename}\n\n").format(
             filename=getattr(self, "_integrity_file", ""))
         messagebox.showwarning(_("File Integrity Warning"),
-                               header + "\n".join(self._integrity_warnings))
+                               header + "\n".join(bullets))
 
     def _update_top_bar(self, data):
         """Refresh filename, generation badge and status badge."""

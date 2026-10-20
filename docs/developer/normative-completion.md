@@ -560,8 +560,12 @@ Neither form is corrupt and this reader decodes both identically (`§13`). Becau
 software rejects the prefixed form, the application says so instead of leaving the
 customer guessing:
 
-* the window adds ONE informational bullet to the established integrity list
-  (banner → "File Integrity Warning" dialog): the file is a card image downloaded
+* the window adds ONE informational bullet to the established integrity list — on a
+  healthy file the banner says `{count} note(s) — click for details` with a neutral
+  icon (the File Info document mark already used elsewhere, never the warning
+  triangle); with a real warning present the banner keeps the warning wording and
+  counts only the warnings, and the dialog lists the warnings first and the note
+  after them: the file is a card image downloaded
   through the vehicle unit, the two leading bytes are the transfer header kept by the
   saving tool and not the standard storage form, some other programs report such a
   file as corrupt, and the card data are complete with its signatures verified

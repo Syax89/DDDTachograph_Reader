@@ -746,8 +746,8 @@ def summary_rows(data):
         rows.append((
             "Transfer header",
             "Card image downloaded through the vehicle unit: the two leading bytes "
-            "are the transfer header (SID 76 + TREP 06) kept by the tool that saved "
-            "the file, not the standard storage form of a card file (DDP_050, which "
+            "are that header (SID 76 + TREP 06), kept by the tool that saved the "
+            "file and not the standard storage form of a card file (DDP_050, which "
             "strips them). Some other programs report such a file as corrupt; the "
             "card data are complete and their signatures are verified normally.",
         ))

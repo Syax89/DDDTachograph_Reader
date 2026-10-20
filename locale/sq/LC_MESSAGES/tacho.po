@@ -2326,3 +2326,14 @@ msgstr "Lloji i regjistrimit Përshkrimi"
 
 msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
 msgstr "Imazhi i kartës së shoferit i shkarkuar përmes njësisë së automjetit: dy bajtët e parë janë koka e transferimit (SID + TREP 06) e mbajtur nga programi që ruajti skedarin, jo forma standarde e ruajtjes së një skedari karte (DDP_050). Disa programe të tjera raportojnë një skedar të tillë si të korruptuar; të dhënat e kartës janë të plota dhe nënshkrimet e tyre verifikohen normalisht."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} shënim/e — klikoni për detaje"
+
+
+
+msgid "File Note"
+msgstr "Shënim rreth skedarit"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Shënim rreth këtij skedari.\n\n{filename}\n\n"

@@ -2326,3 +2326,14 @@ msgstr "Тип запису Опис"
 
 msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
 msgstr "Образ картки водія, завантажений через блок транспортного засобу: перші два байти — це заголовок передавання (SID + TREP 06), збережений програмою, що записала файл, а не стандартна форма зберігання файлу картки (DDP_050). Деякі інші програми повідомляють про такий файл як про пошкоджений; дані картки повні, а їхні підписи перевіряються звичайно."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} примітка(и) — натисніть, щоб переглянути подробиці"
+
+
+
+msgid "File Note"
+msgstr "Примітка до файлу"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Примітка до цього файлу.\n\n{filename}\n\n"
