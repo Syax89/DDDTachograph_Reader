@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Pörun skynjara (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Raðnúmer skynjara"
+msgstr "Skynjari · Raðnúmer"
 
 msgid "Sig Size"
 msgstr "Stærð undirskriftar"
@@ -2281,3 +2281,65 @@ msgstr "HEILLEIKI"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Þekja reiknuð í bætum"
+
+msgid "Current Date Time"
+msgstr "Dagsetning Tími"
+
+msgid "RCM Serial"
+msgstr "RCM Raðnúmer"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Raðnúmer skynjara"
+
+msgid "VU Serial"
+msgstr "VU Raðnúmer"
+
+msgid "Download Interface Version"
+msgstr "Interface version"
+
+msgid "Entry Type Description"
+msgstr "Tegund færslu Lýsing"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Mynd af korti sótt í gegnum ökutækiseininguna: fyrstu tveir bætin eru flutningshausinn (SID + TREP 06) sem forritið sem vistaði skrána hélt eftir, ekki staðlað geymsluform kortaskrár (DDP_050). Sum önnur forrit tilkynna slíka skrá sem skemmd; Sum önnur forrit tilkynna slíka skrá sem skemmd; þetta forrit sýnir niðurstöðu undirskrifta kortsins sérstaklega."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} athugasemd(ir) — smelltu fyrir upplýsingar"
+
+
+
+msgid "File Note"
+msgstr "Athugasemd um skrá"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Athugasemd um þessa skrá.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Raðnúmer"
+
+msgid "Transfer header"
+msgstr "Flutningshaus"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Framleiðandasértæk eða reynslubundin uppbygging: engin reglugerð skilgreinir þessi svæði. Gildin eru lesin eftir bestu getu með litlum vissu og hráu bætin varðveitt; þetta er upplýsing, ekki galli."
+
+msgid "Co-Driver Activities"
+msgstr "Virkni annars ökumanns"
+
+msgid "Manufacturer Extensions"
+msgstr "Viðbætur framleiðanda"
+
+msgid "Decode units"
+msgstr "Afkóðuð einingar"
+
+msgid "Path"
+msgstr "Slóð"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Breytingar á virkni þessa dags voru klipptar í skránni"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Hraðablokkur þessa mínútubils var klipptur í skránni"
+
+msgid "This record was cut off in the file"
+msgstr "Þessi færsla var klippt í skránni"

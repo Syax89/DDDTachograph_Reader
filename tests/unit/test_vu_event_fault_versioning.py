@@ -381,16 +381,21 @@ class TestIsolatedRoutes(unittest.TestCase):
         self.assertNotIn(0x18, vu_dispatcher.VU_TAG_RECORD_TYPES.values())
 
     def test_an_unrelated_tag_route_gains_no_version_bookkeeping(self):
+        """Corrected: VuPowerSupplyInterruptionRecord *does* carry an
+        ``eventType EventFaultType`` (Annex 1C §2.199, exactly like
+        VuOverSpeedingEventRecord §2.198), so the isolated tag route must record
+        that it has no section version — ``unknown`` — instead of dropping the
+        byte's assignment status. The three keys stay model-only (HIDDEN_KEYS)."""
         from core.decoders.vu_g2 import parse_g2_vu_record
         results = {}
-        # 0x0530 → VuPowerSupplyInterruptionRecord (0x1F), a record with no
-        # EventFaultType assignment of its own.
         body = b"\x00" * 87
         parse_g2_vu_record(_record_array(0x1F, [body]), results, 0x0530)
         records = results["power_interruptions"]
         self.assertEqual(len(records), 1)
-        for key in HIDDEN_VERSION_KEYS:
-            self.assertNotIn(key, records[0])
+        self.assertEqual(records[0]["event_fault_version"],
+                         EVENT_FAULT_VERSION_UNKNOWN)
+        # 0x00 is assigned by every version, so the status is not guessed.
+        self.assertEqual(records[0]["type_status"], TYPE_ASSIGNED)
 
 
 class TestManufacturerIdentity(unittest.TestCase):
@@ -542,11 +547,19 @@ class TestRecordShapeInvariants(unittest.TestCase):
         self.assertEqual(out["low_confidence_fields"],
                          ["manufacturer_error_code", "similar_events"])
 
-    def test_a_too_short_event_in_a_section_is_skipped_not_guessed(self):
+    def test_a_too_short_event_in_a_section_is_kept_without_guessing_its_type(self):
+        """Corrected: a stored record the array counter declares is never dropped
+        (owner policy: withhold the interpretation, not the record). A 5-byte body
+        holds no canonical prefix, so no type/version is claimed — the record is
+        published as an incomplete stored record instead of vanishing."""
         stream = b"\x76\x33" + _record_array(0x15, [b"\x0f" * 5])
         results = {}
         walk_vu_record_arrays(stream, results)
-        self.assertEqual(results.get("events", []), [])
+        records = results.get("events", [])
+        self.assertEqual(len(records), 1)
+        self.assertIsNone(records[0]["event_type_code"])
+        self.assertIs(records[0]["record_complete"], False)
+        self.assertEqual(records[0]["record_bytes"], 5)
 
 
 class TestReportingSurface(unittest.TestCase):

@@ -2281,3 +2281,65 @@ msgstr "INTEGRITEIT"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Byte-dekking"
+
+msgid "Current Date Time"
+msgstr "Datum Tijd"
+
+msgid "RCM Serial"
+msgstr "RCM Serienummer"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Sensor-serienummer"
+
+msgid "VU Serial"
+msgstr "VU Serienummer"
+
+msgid "Download Interface Version"
+msgstr "Versie van de downloadinterface"
+
+msgid "Entry Type Description"
+msgstr "Soort invoer Omschrijving"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Kaartafbeelding van een kaart, gedownload via de voertuigunit: de eerste twee bytes zijn de overdrachtsheader (SID + TREP 06) die het opslaande programma heeft bewaard, niet de standaardopslagvorm van een kaartbestand (DDP_050). Sommige andere programma's melden zo'n bestand als beschadigd; Sommige andere programma's melden zo'n bestand als beschadigd; dit programma toont het handtekeningresultaat van de kaart apart."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} opmerking(en) — klik voor details"
+
+
+
+msgid "File Note"
+msgstr "Opmerking over het bestand"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Opmerking over dit bestand.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Serienummer"
+
+msgid "Transfer header"
+msgstr "Overdrachtsheader"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Fabrikantspecifieke of empirische structuur: geen enkele verordening definieert deze velden. De waarden worden zo goed mogelijk met lage betrouwbaarheid gelezen en de ruwe bytes blijven bewaard; dit is informatie, geen defect."
+
+msgid "Co-Driver Activities"
+msgstr "Activiteiten van de tweede bestuurder"
+
+msgid "Manufacturer Extensions"
+msgstr "Fabrikantuitbreidingen"
+
+msgid "Decode units"
+msgstr "Gedecodeerde eenheden"
+
+msgid "Path"
+msgstr "Pad"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "De activiteitswijzigingen van deze dag zijn in het bestand afgekapt"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Het snelheidsblok van dit minutenbereik is in het bestand afgekapt"
+
+msgid "This record was cut off in the file"
+msgstr "Dit record is in het bestand afgekapt"

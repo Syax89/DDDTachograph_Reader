@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Emparejamientos del sensor (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Número de serie del sensor"
+msgstr "Sensor de movimiento · Número de serie"
 
 msgid "Sig Size"
 msgstr "Tamaño de la firma"
@@ -2281,3 +2281,65 @@ msgstr "INTEGRIDAD"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Cobertura en octetos"
+
+msgid "Current Date Time"
+msgstr "Fecha Hora"
+
+msgid "RCM Serial"
+msgstr "RCM Número de serie"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Número de serie del sensor"
+
+msgid "VU Serial"
+msgstr "VU Número de serie"
+
+msgid "Download Interface Version"
+msgstr "Versión de la interfaz de descarga"
+
+msgid "Entry Type Description"
+msgstr "Tipo de entrada Descripción"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Imagen de tarjeta descargada a través de la unidad del vehículo: los dos primeros bytes son la cabecera de transferencia (SID + TREP 06) que conservó el programa que guardó el archivo, no la forma estándar de almacenamiento de un archivo de tarjeta (DDP_050). Algunos otros programas informan de ese archivo como corrupto; Algunos otros programas informan de ese archivo como corrupto; este programa muestra el resultado de las firmas de la tarjeta por separado."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} nota(s) — haga clic para ver los detalles"
+
+
+
+msgid "File Note"
+msgstr "Nota sobre el archivo"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Nota sobre este archivo.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Número de serie"
+
+msgid "Transfer header"
+msgstr "Cabecera de transferencia"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Estructura específica del fabricante o empírica: ningún reglamento define estos campos. Los valores se leen en la medida de lo posible con baja confianza y los bytes originales se conservan; es información, no un defecto."
+
+msgid "Co-Driver Activities"
+msgstr "Actividades del segundo conductor"
+
+msgid "Manufacturer Extensions"
+msgstr "Extensiones del fabricante"
+
+msgid "Decode units"
+msgstr "Unidades decodificadas"
+
+msgid "Path"
+msgstr "Ruta"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Los cambios de actividad de este día se cortaron en el archivo"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "El bloque de velocidad de este intervalo de minutos se cortó en el archivo"
+
+msgid "This record was cut off in the file"
+msgstr "Este registro se cortó en el archivo"

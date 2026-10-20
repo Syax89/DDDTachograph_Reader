@@ -2281,3 +2281,65 @@ msgstr "SLÁINE"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Clúdach na mbeart"
+
+msgid "Current Date Time"
+msgstr "Dáta Am"
+
+msgid "RCM Serial"
+msgstr "RCM Uimhir shraithe"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Sraithuimhir an tsensor"
+
+msgid "VU Serial"
+msgstr "VU Uimhir shraithe"
+
+msgid "Download Interface Version"
+msgstr "Leagan den chomhéadan íoslódála"
+
+msgid "Entry Type Description"
+msgstr "Cineál iontrála Cur síos"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Íomhá cárta a íoslódáladh trí aonad na feithicle: is é an chéad dá bheart an ceanntásc aistrithe (SID + TREP 06) a d'fhág an clár a shábháil an comhad, ní an ghnáthfhoirm stórála de chomhad cárta (DDP_050). Tuairiscíonn roinnt clár eile a leithéid de chomhad mar chomhad truaillithe; Tuairiscíonn roinnt clár eile a leithéid de chomhad mar chomhad truaillithe; taispeánann an clár seo toradh shínithe an chárta ar leith."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} nóta/notaí — cliceáil le haghaidh sonraí"
+
+
+
+msgid "File Note"
+msgstr "Nóta comhaid"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Nóta faoin gcomhad seo.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Uimhir shraithe"
+
+msgid "Transfer header"
+msgstr "Ceanntásc aistrithe"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Struchtúr a bhaineann go sonrach le monaróir nó struchtúr eimpíreach: ní shainíonn aon rialachán na réimsí seo. Léitear na luachanna chomh maith agus is féidir le muinín íseal agus coimeádtar na bearta amh; is faisnéis é seo, ní locht."
+
+msgid "Co-Driver Activities"
+msgstr "Gníomhaíochtaí an dara tiománaí"
+
+msgid "Manufacturer Extensions"
+msgstr "Breisithe monaróra"
+
+msgid "Decode units"
+msgstr "Aonaid díchódaithe"
+
+msgid "Path"
+msgstr "Conair"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Rinneadh athruithe gníomhaíochta an lae seo a ghearradh sa chomhad"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Rinneadh bloc luais an eatraimh nóiméad seo a ghearradh sa chomhad"
+
+msgid "This record was cut off in the file"
+msgstr "Rinneadh an taifead seo a ghearradh sa chomhad"

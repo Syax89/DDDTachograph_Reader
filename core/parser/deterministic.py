@@ -36,11 +36,20 @@ _log = get_logger(__name__)
 # generation.
 _TRTP_GENERATION = {
     0x00: "G2.2",
-    0x01: "G1", 0x02: "G1", 0x03: "G1", 0x04: "G1", 0x05: "G1", 0x06: "G1",
+    0x01: "G1", 0x02: "G1", 0x03: "G1", 0x04: "G1", 0x05: "G1",
+    # 0x06 is a *card* download: the wrapper is generation-1 framing, but the
+    # card inside keeps its own generation, which `_refine_card_generation`
+    # derives from generation-specific EF evidence (F12).
     0x11: "G1", 0x14: "G1",
     0x21: "G2", 0x22: "G2", 0x23: "G2", 0x24: "G2", 0x25: "G2",
     0x31: "G2.2", 0x32: "G2.2", 0x33: "G2.2", 0x35: "G2.2",
 }
+
+
+#: Upper bound on the intervals one tracker keeps. A real download has thousands at
+#: most (one per tag/record); reaching this means the walk is walking a flood, so the
+#: list is frozen, the truncation is recorded and the file is reported partial.
+MAX_COVERAGE_RANGES = 200_000
 
 
 class CoverageTracker:
@@ -52,12 +61,15 @@ class CoverageTracker:
         self.classifications: Dict[str, int] = defaultdict(int)
         self.classification_ranges: List[Tuple[int, int, str]] = []
         self.unknown_ranges: List[Tuple[int, int, bytes]] = []
+        #: Set when :data:`MAX_COVERAGE_RANGES` stopped the tracker from recording
+        #: more intervals; the parse then declares the file partial.
+        self.range_cap_hit = False
 
     def mark_covered(self, start: int, end: int):
         """Record [start, end) as covered, without classifying it."""
         start, end = self._bounded_range(start, end)
         if start < end:
-            self.covered_ranges.append((start, end))
+            self._append_range(self.covered_ranges, (start, end))
 
     def mark_classified(self, start: int, end: int, classification: str):
         """Cover [start, end) and tally it under *classification* (e.g. Tag_0504)."""
@@ -65,7 +77,30 @@ class CoverageTracker:
         self.mark_covered(start, end)
         if start < end:
             self.classifications[classification] += end - start
-            self.classification_ranges.append((start, end, classification))
+            self._append_range(self.classification_ranges,
+                               (start, end, classification))
+
+    def _append_range(self, ranges: list, item: tuple):
+        """Append a range, extending the previous one when it continues it.
+
+        A flood (a file of 0x76 bytes) used to append one interval per byte, so the
+        tracker grew with the input and the later sweeps walked it all: constant
+        per-byte work but O(n) tuples, hundreds of MB for one megabyte. Two
+        adjacent intervals of the same label are one interval, so the run becomes a
+        single tuple. The cap keeps a pathological input (many short, separated
+        runs) from growing without bound either: the tracker then records the
+        truncation and the file is reported partial with a declared reason, never
+        silently.
+        """
+        if ranges and len(item) == len(ranges[-1]):
+            previous = ranges[-1]
+            if previous[1] == item[0] and previous[2:] == item[2:]:
+                ranges[-1] = (previous[0], item[1]) + item[2:]
+                return
+        if len(ranges) >= MAX_COVERAGE_RANGES:
+            self.range_cap_hit = True
+            return
+        ranges.append(item)
 
     def mark_padding(self, start: int, end: int, fill_byte: int):
         """Cover [start, end) as a padding run of *fill_byte*."""
@@ -306,6 +341,20 @@ class DeterministicParser:
                 "data_hex": data.hex() if length <= 128 else f"{data[:128].hex()}..."
             })
 
+        if self.coverage.range_cap_hit:
+            # The tracker stopped recording intervals: say so, and never pretend
+            # the file is whole (a flood of one tag byte reaches this).
+            findings = self.results.setdefault("integrity_findings", [])
+            findings.append({
+                "severity": "error",
+                "code": "COVERAGE_RANGE_CAP",
+                "message": ("The structural walk recorded more intervals than the "
+                            f"tracker keeps ({MAX_COVERAGE_RANGES}); the coverage "
+                            "report is incomplete and the file is partial."),
+            })
+            self.results["is_partial"] = True
+            self.results["partial_reason"] = "coverage range cap reached"
+
         classifications = self.coverage.get_non_overlapping_classifications()
         from core.utils.coverage import coverage_metrics
         metrics = coverage_metrics(
@@ -433,6 +482,30 @@ class DeterministicParser:
             marker_pos = sec["marker"]
             sec_key = f"76{trep:02X}_VU_{sec_name}"
             self.coverage.mark_classified(marker_pos, marker_pos + 2, f"Tag_76{trep:02X}")
+            # TREP 00 (DDP_028a) carries the two DownloadInterfaceVersion octets
+            # and no RecordArray at all: its body is covered by the transfer
+            # definition, not by a record walk.
+            body = sec.get("interface") or b""
+            if body:
+                self.coverage.mark_classified(
+                    marker_pos + 2, marker_pos + 2 + len(body),
+                    f"Tag_76{trep:02X} > DownloadInterfaceVersion")
+            card = sec.get("card_tlv") or {}
+            if card:
+                # A card-download region is an EF image: covered as one bounded
+                # region whose extent came from the card's own STAP framing.
+                start = card["offset"]
+                self.coverage.mark_classified(
+                    start, start + card["bytes"], f"Tag_76{trep:02X} > CardDownload")
+                self.results["raw_tags"].setdefault(sec_key, []).append({
+                    "offset": f"0x{start:08X}", "tag_id": "0x7606",
+                    "tag_name": "CardDownload_EFImage",
+                    "data_type": "CardEF", "length": card["bytes"], "depth": 1,
+                    "is_spec_verified": bool(card.get("tlv_complete")),
+                    "annex_ref": "DDP_049 / DDP_050 (card download)",
+                    "generation": self.generation,
+                    "data_hex": data[start:start + card["bytes"]].hex(),
+                })
             self.results.setdefault("raw_tags", {}).setdefault(sec_key, []).append({
                 "offset": f"0x{marker_pos:08X}", "tag_id": f"0x76{trep:02X}",
                 "tag_name": f"VU_{sec_name}", "data_type": "SID/TREP",

@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Çiftimet e sensorit (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Numri serial i sensorit"
+msgstr "Sensori · Numri serial"
 
 msgid "Sig Size"
 msgstr "Madhësia e nënshkrimit"
@@ -2281,3 +2281,65 @@ msgstr "INTEGRITETI"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Mbulim sipas bajteve"
+
+msgid "Current Date Time"
+msgstr "Data Ora"
+
+msgid "RCM Serial"
+msgstr "RCM Numri serial"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Numri serial i sensorit"
+
+msgid "VU Serial"
+msgstr "VU Numri serial"
+
+msgid "Download Interface Version"
+msgstr "Versioni i ndërfaqes së shkarkimit"
+
+msgid "Entry Type Description"
+msgstr "Lloji i regjistrimit Përshkrimi"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Imazhi i kartës i shkarkuar përmes njësisë së automjetit: dy bajtët e parë janë koka e transferimit (SID + TREP 06) e mbajtur nga programi që ruajti skedarin, jo forma standarde e ruajtjes së një skedari karte (DDP_050). Disa programe të tjera raportojnë një skedar të tillë si të korruptuar; Disa programe të tjera raportojnë një skedar të tillë si të korruptuar; ky program shfaq veçmas rezultatin e nënshkrimeve të kartës."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} shënim/e — klikoni për detaje"
+
+
+
+msgid "File Note"
+msgstr "Shënim rreth skedarit"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Shënim rreth këtij skedari.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Numri serial"
+
+msgid "Transfer header"
+msgstr "Koka e transferimit"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Strukturë e veçantë e prodhuesit ose empirike: asnjë rregullore nuk i përcakton këto fusha. Vlerat lexohen sa më mirë me besueshmëri të ulët dhe bajtët e papërpunuar ruhen; ky është informacion, jo defekt."
+
+msgid "Co-Driver Activities"
+msgstr "Aktivitetet e shoferit të dytë"
+
+msgid "Manufacturer Extensions"
+msgstr "Zgjerimet e prodhuesit"
+
+msgid "Decode units"
+msgstr "Njësi të dekoduara"
+
+msgid "Path"
+msgstr "Rruga"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Ndryshimet e aktivitetit të kësaj dite u prenë në skedar"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Blloku i shpejtësisë i këtij intervali minutash u pre në skedar"
+
+msgid "This record was cut off in the file"
+msgstr "Ky rekord u pre në skedar"

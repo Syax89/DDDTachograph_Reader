@@ -6,7 +6,8 @@ prefixes plus count-prefixed record sections — there is no TLV length field).
 When the download was requested with signatures, each body is followed by its
 128-byte RSA signature.
 
-Body layouts (Annex 1B §2.2.6.1-2.2.6.6):
+Body layouts (Annex 1B §2.2.6.1-2.2.6.5; the card download is the request in
+§2.2.2.9, stored per DDP_049/DDP_050):
 
   TREP 01 Overview:      certificates(194+194) + VIN(17) + registration(15)
                          + 3×TimeReal(12) + slots(1) [=433]
@@ -33,7 +34,9 @@ subsequent ``0x76 TREP`` marker and on the end of file.
 import struct
 
 from core.utils.logger import get_logger
+from core.parser.card_envelope import card_image_extent
 from core.decoders.vu_g1 import (
+    _mark_heuristic_sections,
     parse_g1_vu_overview,
     _parse_trep_02_activities,
     _parse_trep_02_g1_structured,
@@ -306,10 +309,45 @@ def iter_g1_vu_messages(data):
         trep = data[pos + 1]
         body_start = pos + 2
         if trep == 0x06:
+            # A card image relayed inside the VU transfer (DDP_049): the region is
+            # a complete card STAP stream, so its extent comes from the card's own
+            # length fields — not from a boundary search — and it carries no VU
+            # TREP signature (the card has its own EF signatures).
+            extent, elements = card_image_extent(memoryview(data)[body_start:])
+            if not (elements and (body_start + extent == n
+                                  or _is_marker(data, body_start + extent))):
+                # The STAP walk can run past the card into the following VU
+                # section when the card's last element is followed by bytes that
+                # still look like an element. The next valid TREP marker is the
+                # bound then; the region is accepted only when the bytes up to it
+                # are a complete card.
+                boundary = _next_valid_marker(data, body_start, n, ctx=ctx)
+                if boundary - body_start > 0:
+                    inner, elements = card_image_extent(
+                        memoryview(data)[body_start:boundary])
+                    if elements and inner == boundary - body_start:
+                        extent = inner
+            if elements and (body_start + extent == n
+                             or _is_marker(data, body_start + extent)):
+                end = body_start + extent
+                yield {"pos": pos, "trep": trep, "body_start": body_start,
+                       "body_end": end, "sig_len": 0, "end": end,
+                       "card_region": True, "card_bytes": extent,
+                       "card_elements": elements}
+                pos = end
+                continue
+        card_incomplete = False
+        if trep == 0x06:
             # CardDownload length is determined by the boundary search; share
             # the walk caches so each position is resolved once (see
             # _next_valid_marker).
             body_len = _next_valid_marker(data, body_start, n, ctx=ctx) - body_start
+            # The header promises a card image; when the bytes are not a complete
+            # card stream, that is an INTEGRITY finding (the region does not
+            # close), reported instead of passing as a legacy card body.
+            inner, elements = card_image_extent(
+                memoryview(data)[body_start:body_start + body_len])
+            card_incomplete = not (elements and inner == body_len)
         else:
             body_len = _BODY_LEN_FNS[trep](data, body_start, n)
         if body_len is None:
@@ -332,9 +370,92 @@ def iter_g1_vu_messages(data):
             return
 
         end = body_end + sig_len
-        yield {"pos": pos, "trep": trep, "body_start": body_start,
-               "body_end": body_end, "sig_len": sig_len, "end": end}
+        message = {"pos": pos, "trep": trep, "body_start": body_start,
+                   "body_end": body_end, "sig_len": sig_len, "end": end}
+        if card_incomplete:
+            message["card_region_incomplete"] = True
+        yield message
         pos = end
+
+
+_TREP_HANDLERS = {0x01, 0x02, 0x03, 0x04, 0x05}
+
+
+def _decode_clamped(trep, body, results, message_offset=None):
+    """Decode a count-clamped body with the TREP's own handler (normative path)."""
+    from core.decoders.vu_g1 import (
+        _parse_trep_02_g1_structured, _parse_trep_03_structured,
+        _parse_trep_04_speed, _parse_trep_05_technical, parse_g1_vu_overview)
+    if trep == 0x01:
+        parse_g1_vu_overview(body, results, message_offset=message_offset)
+    elif trep == 0x02:
+        # ``partial``: the body holds the COMPLETE leading sections of a cut
+        # message, so the handler decodes those and tolerates the absent trailing
+        # ones instead of rejecting the whole body.
+        if not _parse_trep_02_g1_structured(body, results,
+                                           message_offset=message_offset,
+                                           partial=True):
+            raise ValueError("clamped TREP 02 did not validate")
+    elif trep == 0x03:
+        if not _parse_trep_03_structured(body, results,
+                                         message_offset=message_offset,
+                                         partial=True):
+            raise ValueError("clamped TREP 03 did not validate")
+    elif trep == 0x04:
+        _parse_trep_04_speed(body, results)
+    elif trep == 0x05:
+        _parse_trep_05_technical(body, results, message_offset=message_offset)
+
+
+def _heuristic_zone(data, start, end, results, only_treps=None):
+    """Run the scoped scan on ``data[start:end]``; return (path, reason).
+
+    ``only_treps`` restricts the scan to the TREP of the failed unit: a zone that
+    begins inside the payload of another message must not be re-interpreted as a
+    message of a different type.
+    """
+    before = {key: len(value) for key, value in _result_records(results).items()}
+    recovered = False
+    try:
+        from core.decoders.vu_g1 import parse_vu_download_messages
+        from core.parser.heuristic_zone import prune_candidates
+        parse_vu_download_messages(data[start:end], results, base_offset=start,
+                                   only_treps=only_treps)
+        # The scan may only ADD what the normative pass did not publish and what
+        # passes the field validity: a re-read of a published record and an empty
+        # day (a false marker inside another message's payload) are dropped here.
+        dropped = prune_candidates(before, results)
+        if dropped:
+            _log.debug("VU zone 0x%X-0x%X: dropped %d candidate record(s): %s",
+                       start, end, len(dropped), ", ".join(dropped))
+        recovered = any(len(value) > before.get(key, 0)
+                        for key, value in _result_records(results).items())
+    except Exception as exc:
+        _log.warning("VU zone 0x%X-0x%X: heuristic failed: %s", start, end, exc)
+    path = "heuristic" if recovered else "unreadable"
+    return path, ("cut remainder (incomplete final record); "
+                  + ("recovered by the byte scan" if recovered
+                     else "nothing recoverable"))
+
+
+def _uncovered_ranges(covered, size):
+    """Byte ranges of ``[0, size)`` that no unit covers, merged and ordered."""
+    ranges = sorted((max(0, start), min(size, end)) for start, end in covered)
+    gaps = []
+    cursor = 0
+    for start, end in ranges:
+        if start > cursor:
+            gaps.append((cursor, start))
+        cursor = max(cursor, end)
+    if cursor < size:
+        gaps.append((cursor, size))
+    return [(start, end) for start, end in gaps if end > start]
+
+
+def _result_records(results):
+    """Mapping of result keys to the lists they hold (records published so far)."""
+    return {key: value for key, value in (results or {}).items()
+            if isinstance(value, list)}
 
 
 def walk_g1_vu(data, results):
@@ -347,20 +468,53 @@ def walk_g1_vu(data, results):
     """
     data = bytes(data)
     messages = list(iter_g1_vu_messages(data))
-    # Complete when the last message ends exactly at EOF, or when only a
-    # marker-less trailing pad/trailer remains after it (a stray byte must not
-    # report a well-formed download as partial).
-    complete = bool(messages) and (
-        messages[-1]["end"] == len(data) or not _marker_in(data, messages[-1]["end"])
-    )
+    trailing = len(data) - messages[-1]["end"] if messages else 0
+    signature_bytes = sum(m["sig_len"] for m in messages)
+    # Complete when the walk consumed every byte, or when the only remainder is
+    # padding: a run of 0x00/0xFF fill or a bare marker prefix that no message
+    # can start. A remainder that is neither is a *short signature block* (a cut
+    # RSA signature leaves 1..127 arbitrary bytes after the body) or trailing
+    # junk: both are INTEGRITY findings, not a decoding failure, and they must not
+    # let the download claim a complete walk.
+    pad = data[messages[-1]["end"]:] if messages else b""
+    # Only 0x00/0xFF fill is padding (Appendix 1 §2: unused content is filled with
+    # FF, and erased space is zeroed). A lone 0x76 is the first byte of a truncated
+    # section marker, not fill: it makes the walk incomplete, and the byte is still
+    # reported in metadata.vu_integrity.
+    padding_only = (not pad) or all(b in (0x00, 0xFF) for b in pad)
+    complete = bool(messages) and not _marker_in(data, messages[-1]["end"]) and padding_only
+    results["_g1_walk_signature_bytes"] = signature_bytes
+    if trailing:
+        results["_g1_walk_trailing_bytes"] = trailing
 
-    def _dispatch_trep02(body, res):
+    integrity = []
+    if messages and trailing and not padding_only:
+        # 0x00/0xFF fill after the last signature is padding (a VU fills unused
+        # space with FF, and erased space is zeroed); only a remainder with other
+        # bytes is a finding.
+        last = messages[-1]
+        if last["sig_len"] == 0 and trailing < RSA_SIGNATURE_LEN:
+            # The body is complete and decodable; only the signature block is
+            # shorter than the 128 bytes the generation-1 transfer defines.
+            integrity.append({"trep": f"0x{last['trep']:02X}",
+                              "status": "signature_truncated",
+                              "missing_bytes": RSA_SIGNATURE_LEN - trailing,
+                              "trailing_bytes": trailing})
+        else:
+            integrity.append({"trep": f"0x{last['trep']:02X}",
+                              "status": "trailing_bytes",
+                              "missing_bytes": 0,
+                              "trailing_bytes": trailing})
+    def _dispatch_trep02(body, res, message_offset=None):
         # The walk yields exact bodies, so try the deterministic layout first:
         # the heuristic wrapper rejects short bodies (< 50 bytes) that are
         # legitimate card-not-inserted days (18-byte TREP 02 messages).
-        if not _parse_trep_02_g1_structured(body, res):
+        if not _parse_trep_02_g1_structured(body, res,
+                                            message_offset=message_offset):
             _parse_trep_02_activities(body, res)
 
+    # Each handler receives the message offset: a stored record's identity is its
+    # position in the download, never a subset of its decoded fields.
     dispatch = {
         0x01: parse_g1_vu_overview,
         0x02: _dispatch_trep02,
@@ -371,20 +525,265 @@ def walk_g1_vu(data, results):
         0x11: _parse_sensor_download,
     }
     dispatch_failed = False
+    card_regions = []
+    heuristic_units = []
+    units = []
     for msg in messages:
         body = data[msg["body_start"]:msg["body_end"]]
+        units.append({"trep": f"0x{msg['trep']:02X}", "offset": msg["pos"],
+                      "length": msg["end"] - msg["pos"], "path": "normative"})
+        if msg.get("card_region_incomplete"):
+            card_regions.append({
+                "offset": msg["body_start"],
+                "bytes": msg["body_end"] - msg["body_start"],
+                # The EF chain could not be walked, so no element count is known:
+                # null, never a fabricated zero.
+                "tlvs": None,
+                "tlv_complete": False,
+                "boundary": "resynchronised (card EF stream does not close)",
+                "delegated": False,
+            })
+            integrity.append({"trep": "0x06", "status": "card_download_incomplete",
+                              "missing_bytes": 0,
+                              "trailing_bytes": msg["body_end"] - msg["body_start"]})
+        if msg.get("card_region"):
+            # The bytes are a card image: recorded here and handed to the plain
+            # card pipeline by the engine. They are not VU TREP payload, so they
+            # take no part in the VU signature accounting.
+            card_regions.append({
+                "offset": msg["body_start"],
+                "bytes": msg["card_bytes"],
+                "tlvs": msg["card_elements"],
+                "tlv_complete": True,
+                "boundary": "STAP/EF framing",
+                "delegated": False,
+            })
+            continue
         handler = dispatch.get(msg["trep"])
         if handler is None:
             continue
         try:
-            handler(body, results)
+            if msg["trep"] in (0x01, 0x02, 0x03, 0x05):
+                outcome = handler(body, results, message_offset=msg["pos"])
+            else:
+                outcome = handler(body, results)
+            if outcome is False:
+                # A structured parser that *reports* a structural failure is a
+                # failed unit just like one that raises: the heuristic gets its
+                # byte range, and the record count cannot silently shrink.
+                raise ValueError("structural validation failed")
         except Exception as exc:  # a decoder bug must not break the walk
             dispatch_failed = True
             # WARNING, not DEBUG: this is a swallowed decode error whose only
             # other trace is the fallback the caller now declares.
             _log.warning("G1 VU TREP %02X dispatch failed at 0x%X: %s",
                          msg["trep"], msg["pos"], exc)
+            # Normative partial read first: records are fixed-size sequences, so
+            # every COMPLETE record before the truncation point is decoded by the
+            # same handler (count-clamped) and published with normative provenance;
+            # only the cut remainder becomes the failed range.
+            prefix = None
+            try:
+                from core.decoders.vu_g1 import _complete_prefix_body
+                prefix = _complete_prefix_body(msg["trep"], body)
+            except Exception:                       # the clamp must never break the walk
+                prefix = None
+            if prefix and prefix[1] > 0:
+                clamped, consumed = prefix
+                try:
+                    if msg["trep"] in (0x01, 0x02, 0x03, 0x05):
+                        handler(clamped, results, message_offset=msg["pos"])
+                    else:
+                        handler(clamped, results)
+                    units[-1]["length"] = 2 + consumed
+                    units[-1]["reason"] = (
+                        "complete records before the truncation point")
+                    tail_start = msg["body_start"] + consumed
+                    tail_end = msg["end"]
+                    if tail_end > tail_start:
+                        tail_path, tail_reason = _heuristic_zone(
+                            data, tail_start, tail_end, results)
+                        units.append({"trep": f"0x{msg['trep']:02X}",
+                                      "offset": tail_start,
+                                      "length": tail_end - tail_start,
+                                      "path": tail_path, "reason": tail_reason})
+                        if tail_path == "heuristic":
+                            heuristic_units.append(dict(units[-1]))
+                    continue
+                except Exception as clamp_exc:
+                    _log.warning("G1 VU TREP %02X partial read failed at 0x%X: %s",
+                                 msg["trep"], msg["pos"], clamp_exc)
+            # Per-TREP rule: the heuristic sees exactly this unit's bytes (marker
+            # included, so it can recognise the TREP itself) and nothing else. Its
+            # records keep file-global identities (base_offset), so they cannot
+            # collide with — or duplicate — anything the walk published.
+            recovered = False
+            try:
+                from core.decoders.vu_g1 import parse_vu_download_messages
+                parse_vu_download_messages(
+                    data[msg["pos"]:msg["end"]], results,
+                    base_offset=msg["pos"])
+                recovered = True
+            except Exception as scan_exc:      # the scan is the last resort
+                _log.warning("G1 VU TREP %02X heuristic failed at 0x%X: %s",
+                             msg["trep"], msg["pos"], scan_exc)
+            path = "heuristic" if recovered else "unreadable"
+            units[-1]["path"] = path
+            heuristic_units.append(dict(units[-1]))
 
+    # Every byte must belong to a unit. Whatever the walk did not cover — a
+    # truncated last message, trailing junk, the remainder after a failed resync —
+    # becomes ONE zone: the scoped heuristic runs on exactly those bytes and its
+    # records are tagged as before; if it recovers nothing the zone is unreadable.
+    covered = [(msg["pos"], msg["end"]) for msg in messages]
+    covered.extend((region["offset"], region["offset"] + region["bytes"])
+                   for region in card_regions)
+    for (start, end) in _uncovered_ranges(covered, len(data)):
+        # A zone that opens with a TREP marker may be a message the walk could not
+        # bound (cut at the tail). Its complete records are still fixed-size, so they
+        # are read normatively first and only the cut remainder becomes the zone.
+        if end - start > 2 and data[start] == 0x76 and data[start + 1] in _TREP_HANDLERS:
+            trep = data[start + 1]
+            try:
+                from core.decoders.vu_g1 import _complete_prefix_body
+                prefix = _complete_prefix_body(trep, data[start + 2:end])
+            except Exception:                          # the clamp must not break the walk
+                prefix = None
+            if prefix and prefix[1] > 0:
+                clamped, consumed = prefix
+                try:
+                    before_keys = set(((results.get("metadata") or {})
+                                       .get("heuristic_fields") or {}))
+                    _decode_clamped(trep, clamped, results, start)
+                    # The path must name the route that produced THIS unit's
+                    # records: TREP 03/05 fall back to their internal heuristic
+                    # when the clamped body still does not fit the layout, and a
+                    # unit calling itself normative while its records carry
+                    # heuristic provenance (and no position identity) would lie.
+                    after = ((results.get("metadata") or {})
+                             .get("heuristic_fields") or {})
+                    used_internal = any(key not in before_keys and
+                                        f"TREP{trep:02d}" in key for key in after)
+                    units.append({"trep": f"0x{trep:02X}", "offset": start,
+                                  "length": 2 + consumed,
+                                  "path": "heuristic" if used_internal else "normative",
+                                  "reason": ("complete records before the truncation "
+                                             "point, read by the internal fallback"
+                                             if used_internal else
+                                             "complete records before the truncation "
+                                             "point")})
+                    remainder_start = start + 2 + consumed
+                    if end > remainder_start:
+                        path, reason = _heuristic_zone(data, remainder_start, end,
+                                                       results, only_treps={trep})
+                        units.append({"trep": f"0x{trep:02X}",
+                                      "offset": remainder_start,
+                                      "length": end - remainder_start,
+                                      "path": path, "reason": reason})
+                        if path == "heuristic":
+                            heuristic_units.append(dict(units[-1]))
+                    continue
+                except Exception as exc:
+                    _log.warning("G1 VU zone 0x%X: partial read failed: %s", start, exc)
+        zone = data[start:end]
+        if all(byte in (0x00, 0xFF) for byte in zone):
+            # The tolerance both walkers already apply: 0x00/0xFF fill after the
+            # last message is PADDING (a VU fills unused space with FF, erased space
+            # is zeroed). Declared as a unit so every byte is accounted for, and not
+            # a finding: the file is not partial.
+            units.append({"trep": "0x00", "offset": start, "length": end - start,
+                          "path": "padding",
+                          "reason": "0x00/0xFF fill after the last message (padding)"})
+            continue
+        recovered = False
+        before = {key: len(value) for key, value in _result_records(results).items()}
+        # A zone that does not start on a message boundary may only be scanned
+        # for the TREP its own first bytes declare; without one there is nothing
+        # to look for (the bytes are junk, not a message of some other type).
+        zone_trep = (data[start + 1] if start + 1 < end and data[start] == 0x76
+                     else None)
+        try:
+            from core.decoders.vu_g1 import parse_vu_download_messages
+            from core.parser.heuristic_zone import prune_candidates
+            parse_vu_download_messages(data[start:end], results, base_offset=start,
+                                       only_treps={zone_trep} if zone_trep else set())
+            filled = prune_candidates(before, results)
+            if filled:
+                _log.debug("VU zone 0x%X-0x%X: dropped %d candidate record(s): %s",
+                           start, end, len(filled), ", ".join(sorted(filled)))
+            # "Recovered" means it actually added something: a zone the scan could
+            # read nothing distinct from is unreadable, not heuristic.
+            recovered = any(len(value) > before.get(key, 0)
+                            for key, value in _result_records(results).items())
+        except Exception as exc:                        # the last resort
+            _log.warning("VU unclaimed zone 0x%X-0x%X: heuristic failed: %s",
+                         start, end, exc)
+        units.append({
+            "trep": "0x00",
+            "offset": start,
+            "length": end - start,
+            "path": "heuristic" if recovered else "unreadable",
+            "reason": ("bytes no normative unit accounted for "
+                       "(truncated message, junk or resync remainder)"),
+        })
+        if recovered:
+            heuristic_units.append(dict(units[-1]))
+    units.sort(key=lambda unit: unit["offset"])
+    if not units and data:
+        # Nothing decoded at all (a file cut inside the first message header): the
+        # bytes still belong to ONE declared zone, so the invariant "units tile the
+        # file" holds for every input and the reader is told what happened.
+        recovered = False
+        before = {key: len(value) for key, value in _result_records(results).items()}
+        zone_trep = data[1] if len(data) > 1 and data[0] == 0x76 else None
+        try:
+            from core.decoders.vu_g1 import parse_vu_download_messages
+            from core.parser.heuristic_zone import prune_candidates
+            parse_vu_download_messages(data, results, base_offset=0,
+                                       only_treps={zone_trep} if zone_trep else set())
+            prune_candidates(before, results)
+            recovered = any(len(value) > before.get(key, 0)
+                            for key, value in _result_records(results).items())
+        except Exception as exc:                        # the last resort
+            _log.warning("VU stream: no message decoded and the scan failed: %s", exc)
+        units.append({"trep": "0x00", "offset": 0, "length": len(data),
+                      "path": "heuristic" if recovered else "unreadable",
+                      "reason": "no message could be decoded in the whole stream"})
+        if recovered:
+            heuristic_units.append(dict(units[-1]))
+    if units:
+        # Per-unit provenance: what was decoded normatively, what needed the
+        # heuristic on its own byte range, and what stayed unreadable. Non
+        # overlapping, ordered, and their lengths sum to the file size.
+        # One list, exposed where every surface reads it (top level) and under
+        # metadata as the same object — the probes and the report keys use both.
+        results["vu_units"] = units
+        metadata = results.setdefault("metadata", {})
+        metadata["vu_units"] = units
+        metadata["vu_units_cover_file"] = (
+            sum(unit["length"] for unit in units) == len(data))
+    if heuristic_units:
+        results.setdefault("metadata", {})["vu_heuristic_units"] = heuristic_units
+        # A unit decoded by the backup route is marked exactly like before: the
+        # section names the heuristic touched.
+        _mark_heuristic_sections(results)
+    if integrity:
+        # Model-only: which section's byte run does not match the normative
+        # length, and by how much (a short signature block, trailing junk, a card
+        # region that does not close). Integrity is not decodability.
+        results.setdefault("metadata", {}).setdefault(
+            "vu_integrity", []).extend(integrity)
+    if card_regions:
+        results.setdefault("metadata", {}).setdefault(
+            "vu_card_download_sections", []).extend(card_regions)
     complete = complete and not dispatch_failed
-    _log.debug("G1 VU walk: %d messages, complete=%s", len(messages), complete)
+    # Decodability is a separate question from integrity: every message the walk
+    # yielded was decoded by its TREP parser unless the walk stopped on a marker
+    # it could not parse (or a parser raised). A short signature block or trailing
+    # junk leaves this True — the records are there, only the integrity report
+    # says the block is incomplete.
+    undecodable_tail = bool(messages) and _marker_in(data, messages[-1]["end"])
+    results["_g1_walk_decoded_all"] = bool(messages) and not undecodable_tail and not dispatch_failed
+    _log.debug("G1 VU walk: %d messages, complete=%s, decoded_all=%s",
+               len(messages), complete, results["_g1_walk_decoded_all"])
     return messages, complete

@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Sparowania czujnika (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Numer seryjny czujnika"
+msgstr "Czujnik · Numer seryjny"
 
 msgid "Sig Size"
 msgstr "Rozmiar podpisu"
@@ -2281,3 +2281,65 @@ msgstr "INTEGRALNOŚĆ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Pokrycie bajtowe"
+
+msgid "Current Date Time"
+msgstr "Data Czas"
+
+msgid "RCM Serial"
+msgstr "RCM Numer seryjny"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Numer seryjny czujnika"
+
+msgid "VU Serial"
+msgstr "VU Numer seryjny"
+
+msgid "Download Interface Version"
+msgstr "Wersja interfejsu pobierania"
+
+msgid "Entry Type Description"
+msgstr "Typ wpisu Opis"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Obraz karty pobrany przez jednostkę pojazdu: dwa pierwsze bajty to nagłówek transmisji (SID + TREP 06) zachowany przez program, który zapisał plik, a nie standardowa forma przechowywania pliku karty (DDP_050). Niektóre inne programy zgłaszają taki plik jako uszkodzony; Niektóre inne programy zgłaszają taki plik jako uszkodzony; ten program pokazuje wynik podpisów karty osobno."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} uwaga/uwagi — kliknij, aby zobaczyć szczegóły"
+
+
+
+msgid "File Note"
+msgstr "Uwaga o pliku"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Uwaga dotycząca tego pliku.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Numer seryjny"
+
+msgid "Transfer header"
+msgstr "Nagłówek transmisji"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Struktura specyficzna dla producenta lub empiryczna: żaden przepis nie definiuje tych pól. Wartości są odczytywane w miarę możliwości z niską pewnością, a surowe bajty są zachowane; to informacja, nie usterka."
+
+msgid "Co-Driver Activities"
+msgstr "Czynności drugiego kierowcy"
+
+msgid "Manufacturer Extensions"
+msgstr "Rozszerzenia producenta"
+
+msgid "Decode units"
+msgstr "Zdekodowane jednostki"
+
+msgid "Path"
+msgstr "Ścieżka"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Zmiany aktywności tego dnia zostały ucięte w pliku"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Blok prędkości tego przedziału minut został ucięty w pliku"
+
+msgid "This record was cut off in the file"
+msgstr "Ten zapis został ucięty w pliku"

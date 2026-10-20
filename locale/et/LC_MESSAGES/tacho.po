@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Andurite sidumised (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Anduri seerianumber"
+msgstr "Andur · Seerianumber"
 
 msgid "Sig Size"
 msgstr "Allkirja suurus"
@@ -2281,3 +2281,65 @@ msgstr "TERVIIKLIKKUS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Baidipõhine kaetus"
+
+msgid "Current Date Time"
+msgstr "Kuupäev Aeg"
+
+msgid "RCM Serial"
+msgstr "RCM Seerianumber"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Anduri seerianumber"
+
+msgid "VU Serial"
+msgstr "VU Seerianumber"
+
+msgid "Download Interface Version"
+msgstr "Allalaadimisliidese versioon"
+
+msgid "Entry Type Description"
+msgstr "Kande tüüp Kirjeldus"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Läbi sõiduki seadme alla laaditud kaardi pilt: kaks esimest baiti on salvestanud programmi alles jäetud ülekandepäis (SID + TREP 06), mitte kaardifaili tavaline salvestusvorm (DDP_050). Mõned teised programmid teatavad sellisest failist kui rikkis failist; Mõned teised programmid teatavad sellisest failist kui rikkis failist; see programm näitab kaardi allkirjade tulemust eraldi."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} märkus(t) — üksikasjade vaatamiseks klõpsake"
+
+
+
+msgid "File Note"
+msgstr "Faili märkus"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Märkus selle faili kohta.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Seerianumber"
+
+msgid "Transfer header"
+msgstr "Ülekandepäis"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Tootjapõhine või empiiriline struktuur: ükski määrus ei määratle neid välju. Väärtusi loetakse võimaluste piires madala kindlusega ja algbaidid on säilitatud; see on teave, mitte defekt."
+
+msgid "Co-Driver Activities"
+msgstr "Teise juhi tegevused"
+
+msgid "Manufacturer Extensions"
+msgstr "Tootjalaiendused"
+
+msgid "Decode units"
+msgstr "Dekodeeritud üksused"
+
+msgid "Path"
+msgstr "Tee"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Selle päeva tegevuse muudatused lõigati failis ära"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Selle minutivahemiku kiirusplokk lõigati failis ära"
+
+msgid "This record was cut off in the file"
+msgstr "See kirje lõigati failis ära"

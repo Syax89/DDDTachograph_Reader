@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Сполучення датчика (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Серійний номер датчика"
+msgstr "Датчик · Серійний номер"
 
 msgid "Sig Size"
 msgstr "Розмір підпису"
@@ -2281,3 +2281,65 @@ msgstr "ЦІЛІСНІСТЬ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Покриття за байтами"
+
+msgid "Current Date Time"
+msgstr "Дата Час"
+
+msgid "RCM Serial"
+msgstr "RCM Серійний номер"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Серійний номер датчика"
+
+msgid "VU Serial"
+msgstr "VU Серійний номер"
+
+msgid "Download Interface Version"
+msgstr "Версія інтерфейсу завантаження"
+
+msgid "Entry Type Description"
+msgstr "Тип запису Опис"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Образ картки, завантажений через блок транспортного засобу: перші два байти — це заголовок передавання (SID + TREP 06), збережений програмою, що записала файл, а не стандартна форма зберігання файлу картки (DDP_050). Деякі інші програми повідомляють про такий файл як про пошкоджений; Деякі інші програми повідомляють про такий файл як про пошкоджений; ця програма показує результат перевірки підписів картки окремо."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} примітка(и) — натисніть, щоб переглянути подробиці"
+
+
+
+msgid "File Note"
+msgstr "Примітка до файлу"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Примітка до цього файлу.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Серійний номер"
+
+msgid "Transfer header"
+msgstr "Заголовок передавання"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Структура, що залежить від виробника, або емпірична: жоден регламент не визначає ці поля. Значення читаються за можливістю з низькою достовірністю, вихідні байти зберігаються; це інформація, а не дефект."
+
+msgid "Co-Driver Activities"
+msgstr "Дії другого водія"
+
+msgid "Manufacturer Extensions"
+msgstr "Розширення виробника"
+
+msgid "Decode units"
+msgstr "Декодовані одиниці"
+
+msgid "Path"
+msgstr "Шлях"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Зміни діяльності за цей день обрізані у файлі"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Блок швидкості цього інтервалу хвилин обрізаний у файлі"
+
+msgid "This record was cut off in the file"
+msgstr "Цей запис обрізаний у файлі"

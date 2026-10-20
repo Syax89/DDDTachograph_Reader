@@ -79,22 +79,29 @@ class TestBorderCrossingDecode(unittest.TestCase):
 
 class TestDetailedSpeedFold(unittest.TestCase):
     def test_speed_blocks_folded_from_recordarray(self):
-        # Synthetic 0x7634 (Detailed speed) section: one 0x12 RecordArray with
+        # Synthetic 0x7624 (Detailed speed) section: one 0x12 RecordArray with
         # two 64-byte VuDetailedSpeedBlock records (timestamp + 60 speeds) and
         # one all-0xFF padding block that must be skipped.
         ts = 1751277600  # 2025-06-30 10:00 UTC
         block1 = struct.pack(">I", ts) + bytes([50] * 30 + [70] * 30)
         block2 = b"\xff" * 64
-        stream = b"\x76\x34" + bytes([0x12]) + struct.pack(">HH", 64, 2) + block1 + block2
+        # DDP_011 / DDP_032: the detailed-speed TREP is '24'H in every Gen2
+        # generation; '34'H has no transfer definition and is not an alias.
+        stream = b"\x76\x24" + bytes([0x12]) + struct.pack(">HH", 64, 2) + block1 + block2
 
         results = {}
         walk_vu_record_arrays(stream, results)
 
         blocks = results.get("speed_blocks")
         self.assertIsNotNone(blocks, "0x12 records must fold into speed_blocks")
-        self.assertEqual(len(blocks), 1)  # padding block skipped (begin=None)
+        # Corrected: the array counter declares two stored blocks and a stored
+        # record is never dropped — the all-FF block is published with no time
+        # (begin=None, time_status invalid) instead of being skipped.
+        self.assertEqual(len(blocks), 2)
         self.assertEqual(blocks[0]["max_speed_kmh"], 70)
         self.assertEqual(blocks[0]["min_speed_kmh"], 50)
+        self.assertIsNone(blocks[1]["begin"])
+        self.assertEqual(blocks[1]["time_status"], "invalid")
         self.assertEqual(blocks[0]["samples"], 60)
         self.assertTrue(blocks[0]["begin"].startswith("2025-06-30"))
 
@@ -118,7 +125,7 @@ class TestTagAdapterCanonicalization(unittest.TestCase):
                 stream_results = {}
 
                 parse_g2_vu_record(record_array, adapter_results, tag)
-                walk_vu_record_arrays(b"\x76\x34" + record_array, stream_results)
+                walk_vu_record_arrays(b"\x76\x24" + record_array, stream_results)
 
                 self.assertIn(key, adapter_results)
                 self.assertEqual(adapter_results[key], stream_results[key])

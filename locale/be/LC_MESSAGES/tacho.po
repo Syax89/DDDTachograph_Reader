@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Спалучэнні датчыка (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Серыйны нумар датчыка"
+msgstr "Датчык · Серыйны нумар"
 
 msgid "Sig Size"
 msgstr "Памер подпісу"
@@ -2281,3 +2281,65 @@ msgstr "ЦЭЛАСНАСЦЬ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Пакрыццё ў байтах"
+
+msgid "Current Date Time"
+msgstr "Дата Час"
+
+msgid "RCM Serial"
+msgstr "RCM Серыйны нумар"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Серыйны нумар датчыка"
+
+msgid "VU Serial"
+msgstr "VU Серыйны нумар"
+
+msgid "Download Interface Version"
+msgstr "Версія інтэрфейсу загрузкі"
+
+msgid "Entry Type Description"
+msgstr "Тып запісу Апісанне"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Водданы вобраза карткі, загружаны праз блёк транспартнага сродку: першыя два байты — гэта загаловак перадачы (SID + TREP 06), які пакінула праграма захавання, а не стандартная форма захоўвання файла карткі (DDP_050). Некаторыя іншыя праграмы паведамляюць пра такі файл як пра пашкоджаны; Некаторыя іншыя праграмы паведамляюць пра такі файл як пра пашкоджаны; гэтая праграма паказвае ўласны вынік подпісаў карткі асобна."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} заўвага(і) — націсніце для падрабязнасцей"
+
+
+
+msgid "File Note"
+msgstr "Заўвага да файла"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Заўвага пра гэты файл.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Серыйны нумар"
+
+msgid "Transfer header"
+msgstr "Загаловак перадачы"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Вытворча-спецыфічная або эмпірычная структура: ніводны рэгламент не вызначае гэтыя палі. Значэнні чытаюцца па магчымасці з нізкай упэўненасцю, а сырыя байты захаваныя; гэта інфармацыя, а не дэфект."
+
+msgid "Co-Driver Activities"
+msgstr "Дзейнасць другога кіроўцы"
+
+msgid "Manufacturer Extensions"
+msgstr "Пашырэнні вытворцы"
+
+msgid "Decode units"
+msgstr "Адзінкі дэкадавання"
+
+msgid "Path"
+msgstr "Шлях"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Змены дзейнасці за гэты дзень абрэзаны ў файле"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Блок скорасці гэтага інтэрвалу хвілін абрэзаны ў файле"
+
+msgid "This record was cut off in the file"
+msgstr "Гэты запіс абрэзаны ў файле"

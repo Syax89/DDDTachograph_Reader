@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Érzékelő párosításai (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Érzékelő sorozatszáma"
+msgstr "Érzékelő · Sorozatszám"
 
 msgid "Sig Size"
 msgstr "Aláírás mérete"
@@ -2281,3 +2281,65 @@ msgstr "INTEGRITÁS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Bájtlefedettség"
+
+msgid "Current Date Time"
+msgstr "Dátum Idő"
+
+msgid "RCM Serial"
+msgstr "RCM Sorozatszám"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Érzékelő sorozatszáma"
+
+msgid "VU Serial"
+msgstr "VU Sorozatszám"
+
+msgid "Download Interface Version"
+msgstr "Letöltési felület verziója"
+
+msgid "Entry Type Description"
+msgstr "Bejegyzéstípus Leírás"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "A járműegységen keresztül letöltött kártya képe: az első két bájt a mentő program által megtartott átviteli fejléc (SID + TREP 06), nem a kártyafájl szabványos tárolási formája (DDP_050). Egyes más programok ilyen fájlt sérültként jelentenek; Egyes más programok ilyen fájlt sérültként jelentenek; ez a program a kártya aláírásainak eredményét külön mutatja."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} megjegyzés — kattintson a részletekért"
+
+
+
+msgid "File Note"
+msgstr "Fájlmegjegyzés"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Megjegyzés erről a fájlról.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Sorozatszám"
+
+msgid "Transfer header"
+msgstr "Átviteli fejléc"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Gyártóspecifikus vagy empirikus felépítés: ezeket a mezőket egyetlen előírás sem határozza meg. Az értékek a lehetőségek szerint alacsony biztonsággal olvashatók, a nyers bájtok megmaradnak; ez információ, nem hiba."
+
+msgid "Co-Driver Activities"
+msgstr "Második sofőr tevékenységei"
+
+msgid "Manufacturer Extensions"
+msgstr "Gyártói kiterjesztések"
+
+msgid "Decode units"
+msgstr "Dekódolt egységek"
+
+msgid "Path"
+msgstr "Útvonal"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "A nap aktivitásváltozásai le lettek vágva a fájlban"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "A percintervallum sebességblokkja le lett vágva a fájlban"
+
+msgid "This record was cut off in the file"
+msgstr "Ez a rekord le lett vágva a fájlban"

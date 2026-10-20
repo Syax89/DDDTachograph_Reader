@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Sensorsammenkoblinger (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Sensorens serienummer"
+msgstr "Sensor · Serienummer"
 
 msgid "Sig Size"
 msgstr "Signaturstørrelse"
@@ -2281,3 +2281,65 @@ msgstr "INTEGRITET"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Bytebasert dekning"
+
+msgid "Current Date Time"
+msgstr "Dato Tid"
+
+msgid "RCM Serial"
+msgstr "RCM Serienummer"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Sensorens serienummer"
+
+msgid "VU Serial"
+msgstr "VU Serienummer"
+
+msgid "Download Interface Version"
+msgstr "Interface version"
+
+msgid "Entry Type Description"
+msgstr "Oppføringstype Beskrivelse"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Bilde av kort lastet ned gjennom kjøretøyenheten: de to første bytene er overføringsoverskriften (SID + TREP 06) som programmet som lagret filen beholdt, ikke standardlagringsformen for en kortfil (DDP_050). Noen andre programmer rapporterer en slik fil som skadet; Noen andre programmer rapporterer en slik fil som skadet; dette programmet viser kortets eget signaturresultat separat."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} merknad(er) — klikk for detaljer"
+
+
+
+msgid "File Note"
+msgstr "Merknad til filen"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Merknad om denne filen.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Serienummer"
+
+msgid "Transfer header"
+msgstr "Overføringsoverskrift"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Produsentspesifikk eller empirisk struktur: ingen forskrift definerer disse feltene. Verdiene leses så godt som mulig med lav sikkerhet, og råbyttene beholdes; dette er informasjon, ikke en feil."
+
+msgid "Co-Driver Activities"
+msgstr "Andreførers aktiviteter"
+
+msgid "Manufacturer Extensions"
+msgstr "Produsentutvidelser"
+
+msgid "Decode units"
+msgstr "Dekodede enheter"
+
+msgid "Path"
+msgstr "Sti"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Endringene i aktivitet for denne dagen ble kuttet i filen"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Hastighetsblokken for dette minuttintervallet ble kuttet i filen"
+
+msgid "This record was cut off in the file"
+msgstr "Denne posten ble kuttet i filen"

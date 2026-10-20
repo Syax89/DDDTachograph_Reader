@@ -194,7 +194,14 @@ def test_dense_stream_below_cap_is_complete():
     """Negative sibling: a small, valid stream stays complete (the cap is not a
     blanket 'partial' verdict)."""
     results = {}
-    walk_vu_record_arrays(b"\x76\x31" + _array(0x01, 4, 3), results)
+    # A complete section ends with its SignatureRecordArray (DDP_029) and carries
+    # the arrays its transfer prescribes; the detailed-speed transfer needs exactly
+    # one speed-block array plus the signature, so a small valid stream stays
+    # complete and the record cap is not a blanket "partial" verdict.
+    signature = bytes([0x08]) + struct.pack(">HH", 64, 1) + b"\x00" * 64
+    block = struct.pack(">I", 1700000000) + bytes(60)
+    speed_array = bytes([0x12]) + struct.pack(">HH", 64, 1) + block
+    walk_vu_record_arrays(b"\x76\x24" + speed_array + signature, results)
     assert results["_vu_walk_complete"] is True
 
 
@@ -244,3 +251,16 @@ def test_g1_file_with_inner_g2_marker_stays_g1():
 
     data = b"\x76\x01" + b"\x00" * 5 + b"\x76\x32" + b"\x00" * 40
     assert DeterministicParser()._detect_generation(data) == "G1"
+
+
+def test_a_tail_truncated_array_publishes_its_complete_records():
+    """Records are fixed-size: a tail-truncated array yields floor(avail/rs) records.
+
+    Only the cut remainder fails; the header stays with the normative part.
+    """
+    data = b"\x76\x31" + _array(0x01, 4, 3)[:-2]      # 2 whole records + 2 bytes
+    results = {}
+    sections = walk_vu_record_arrays(data, results)
+    assert [s["trep"] for s in sections] == ["0x31"]
+    assert sections[0]["record_counts"] == {"0x01": 2}
+    assert results["_vu_walk_complete"] is False

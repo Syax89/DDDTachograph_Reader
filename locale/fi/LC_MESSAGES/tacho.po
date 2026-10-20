@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Anturiparitukset (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Anturin sarjanumero"
+msgstr "Anturi · Sarjanumero"
 
 msgid "Sig Size"
 msgstr "Allekirjoituksen koko"
@@ -2281,3 +2281,65 @@ msgstr "EHEYS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Tavukohtainen kattavuus"
+
+msgid "Current Date Time"
+msgstr "Päivämäärä Aika"
+
+msgid "RCM Serial"
+msgstr "RCM Sarjanumero"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Anturin sarjanumero"
+
+msgid "VU Serial"
+msgstr "VU Sarjanumero"
+
+msgid "Download Interface Version"
+msgstr "Latausrajapinnan versio"
+
+msgid "Entry Type Description"
+msgstr "Merkintätyyppi Kuvaus"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Ajoneuvoyksikön kautta ladattu kortin kuva: kaksi ensimmäistä tavua ovat tallentaneen ohjelman säilyttämä siirto-otsake (SID + TREP 06), eivät korttitiedoston vakiomuotoinen tallennusmuoto (DDP_050). Jotkin muut ohjelmat ilmoittavat tällaisen tiedoston vioittuneeksi; Jotkin muut ohjelmat ilmoittavat tällaisen tiedoston vioittuneeksi; tämä ohjelma näyttää kortin allekirjoitusten tuloksen erikseen."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} huomautus(ta) — napsauta lisätietoja"
+
+
+
+msgid "File Note"
+msgstr "Tiedoston huomautus"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Huomautus tästä tiedostosta.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Sarjanumero"
+
+msgid "Transfer header"
+msgstr "Siirto-otsake"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Valmistajakohtainen tai empiirinen rakenne: mikään säännös ei määrittele näitä kenttiä. Arvot luetaan mahdollisuuksien mukaan matalalla varmuudella ja raakatavut säilytetään; tämä on tietoa, ei virhe."
+
+msgid "Co-Driver Activities"
+msgstr "Toisen kuljettajan toiminnot"
+
+msgid "Manufacturer Extensions"
+msgstr "Valmistajalaajennukset"
+
+msgid "Decode units"
+msgstr "Dekoodatut yksiköt"
+
+msgid "Path"
+msgstr "Polku"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Tämän päivän toimintamuutokset katkaistiin tiedostossa"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Tämän minuuttivälin nopeuslohko katkaistiin tiedostossa"
+
+msgid "This record was cut off in the file"
+msgstr "Tämä tietue katkaistiin tiedostossa"

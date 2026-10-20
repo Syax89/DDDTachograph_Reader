@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Spárovania snímača (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Sériové číslo snímača"
+msgstr "Snímač · Sériové číslo"
 
 msgid "Sig Size"
 msgstr "Veľkosť podpisu"
@@ -2281,3 +2281,65 @@ msgstr "INTEGRITA"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Pokrytie podľa bajtov"
+
+msgid "Current Date Time"
+msgstr "Dátum Čas"
+
+msgid "RCM Serial"
+msgstr "RCM Sériové číslo"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Sériové číslo snímača"
+
+msgid "VU Serial"
+msgstr "VU Sériové číslo"
+
+msgid "Download Interface Version"
+msgstr "Verzia rozhrania na sťahovanie"
+
+msgid "Entry Type Description"
+msgstr "Typ záznamu Popis"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Obraz karty stiahnutý cez jednotku vozidla: prvé dva bajty sú hlavička prenosu (SID + TREP 06), ktorú zachoval nástroj, ktorý súbor uložil, nie štandardná forma uloženia súboru karty (DDP_050). Niektoré iné programy hlásia takýto súbor ako poškodený; Niektoré iné programy hlásia takýto súbor ako poškodený; tento program uvádza výsledok podpisov karty osobitne."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} poznámka/y — kliknutím zobrazíte podrobnosti"
+
+
+
+msgid "File Note"
+msgstr "Poznámka k súboru"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Poznámka k tomuto súboru.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Sériové číslo"
+
+msgid "Transfer header"
+msgstr "Hlavička prenosu"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Štruktúra špecifická pre výrobcu alebo empirická: žiadny predpis tieto polia nedefinuje. Hodnoty sa čítajú podľa možností s nízkou spoľahlivosťou a surové bajty sú zachované; je to informácia, nie závada."
+
+msgid "Co-Driver Activities"
+msgstr "Aktivity druhého vodiča"
+
+msgid "Manufacturer Extensions"
+msgstr "Rozšírenia výrobcu"
+
+msgid "Decode units"
+msgstr "Dekódované jednotky"
+
+msgid "Path"
+msgstr "Cesta"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Zmeny aktivity tohto dňa boli v súbore skrátené"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Blok rýchlosti tohto minútového intervalu bol v súbore skrátený"
+
+msgid "This record was cut off in the file"
+msgstr "Tento záznam bol v súbore skrátený"

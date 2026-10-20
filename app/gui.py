@@ -85,6 +85,7 @@ from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 
 from core.utils.version import __version__  # noqa: E402
+from core.utils import report_format  # noqa: E402
 from core.utils.report_format import (  # noqa: E402
     NATION_COLS, VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
     fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
@@ -279,8 +280,34 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence", "record_t
                "normative", "spec_reference", "conformance_reason",
                "low_confidence_fields", "end_semantics",
                "manufacturer_error_code",
-               "event_fault_version", "type_status", "manufacturer_status"}
+               "event_fault_version", "type_status", "manufacturer_status",
+               # VuCardIWRecord tail: previous vehicle, numeric manual-input
+               # flag and completeness bookkeeping stay in the JSON; the table
+               # layout is the owner's and did not change (a visible column
+               # would also need a translated label in all 33 catalogs).
+               "previous_vehicle", "manual_input_flag",
+               "manual_input_flag_meaning", "record_bytes", "record_complete",
+               "missing_bytes", "raw_tail_bytes",
+               # CardSlotsStatus complete typing (numeric nibble + assignment
+               # status): JSON only, the table keeps its existing columns.
+               "driver_slot_code", "codriver_slot_code",
+               "driver_slot_type", "codriver_slot_type",
+               "driver_slot_status", "codriver_slot_status",
+               # EntryTypeDailyWorkPeriod assignment status (assigned / not
+               # assigned for generation 1 / unknown above the shared six).
+               "entry_type_status", "calibration_variant_source",
+               "digital_map_version_raw",
+               # Technical-data detail: ExtendedSerialNumber / seal subfields,
+               # the CardStructureVersion halves, the calibration variant and
+               # the unresolved-encoding statuses stay in the JSON export only.
+               "card_serial", "card_structure_version_parts",
+               "equipment_type_status",
+               "month_year_status", "seal_identifier", "calibration_variant",
+               "digital_map_version_status", "consent_status", "consent_raw"}
 # Descriptive columns pushed to table start.
+# Bookkeeping of the all-TREP decoding pass (status/provenance/diagnostics):
+# the shared set, so the window hides exactly what the exports hide.
+HIDDEN_KEYS |= set(report_format.BOOKKEEPING_KEYS)
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
 # Technical columns pushed to table end.
 TRAILING_KEYS: list[str] = []
@@ -335,8 +362,10 @@ def _fmt_dict(d):
     if known is not None:
         return known
     # Compact generic fallback. The key is handed to fmt_val so a nested label
-    # ("calibration_purpose_label") follows the same rules as a flat cell.
-    items = ", ".join(f"{k}={fmt_val(val, key=k)}" for k, val in d.items())
+    # ("calibration_purpose_label") follows the same rules as a flat cell, and
+    # bookkeeping children are dropped exactly like at the top level.
+    items = ", ".join(f"{k}={fmt_val(val, key=k)}" for k, val in d.items()
+                      if k not in report_format.MODEL_ONLY_DICT_KEYS)
     return items if len(items) <= 120 else items[:120] + "\u2026"
 
 
@@ -451,12 +480,26 @@ class _SummaryHeader(tuple):
 
 
 def _kv_rows(d):
-    """Convert a dict to (Field, Value) rows, flattening nested dicts one level."""
+    """Convert a dict to (Field, Value) rows, flattening nested dicts one level.
+
+    A *list* of records is accepted too (a key/value view of its first record), so a
+    caller can ask for the field view of a record list without checking its shape
+    first — the section tables remain the place where a list is rendered in full.
+    """
+    if isinstance(d, (list, tuple)):
+        d = d[0] if d and isinstance(d[0], dict) else {}
     rows = []
-    for k, v in d.items():
+    # `confidence` and the shared BOOKKEEPING_KEYS stay in the JSON: only that
+    # explicit set is skipped — HIDDEN_KEYS also holds `name`, which VU Company
+    # Info does show.
+    for k, v in report_format.dict_section_rows(d, lambda value: value):
         field = ui_text.label(k)
         if isinstance(v, dict) and v:
             for sk, sv in v.items():
+                # A nested status/raw companion is bookkeeping too: drop the
+                # children the shared set hides so the panel keeps its rows.
+                if sk in report_format.MODEL_ONLY_DICT_KEYS:
+                    continue
                 subfield = f"{field} \u203a {ui_text.label(sk)}"
                 rows.append([subfield, fmt_val(sv, key=sk)])
         else:
@@ -3228,6 +3271,70 @@ def _resource_path(rel):
     return os.path.join(base, rel)
 
 
+#: Informational bullet for a card image relayed through the vehicle unit. It is a
+#: NOTE, never a damage claim: the file is the standard card plus the transfer header
+#: the saving tool kept (SID 0x76 + TREP 06), which DDP_050 strips for the storage
+#: form. Other programs reject that form, so the customer is told what it is.
+CARD_ENVELOPE_NOTICE = _(
+    "Card image downloaded through the vehicle unit: the two leading bytes "
+    "are the transfer header (SID + TREP 06) kept by the tool that saved it, not the "
+    "standard storage form of a card file (DDP_050). Some other programs report such "
+    "a file as corrupt; this reader reports the card's own signature verdict "
+    "separately.")
+
+
+def _envelope_notice(data):
+    """The informational bullet for a stand-alone TREP 06 envelope, or None."""
+    meta = (data or {}).get("metadata") or {}
+    envelope = meta.get("envelope")
+    if not isinstance(envelope, dict):
+        return None
+    if meta.get("is_vu") is not False:
+        return None
+    return "\u2022 " + CARD_ENVELOPE_NOTICE
+
+
+def _integrity_bullets(data):
+    """``(bullets, notices)`` for *data* without a GUI instance.
+
+    *bullets* is what ``_check_integrity`` shows (real warnings plus the
+    informational envelope notice); *notices* is the subset that is a fact about
+    the file's form rather than a problem, so a caller can keep the banner honest.
+    """
+    meta = (data or {}).get("metadata") or {}
+    efv = (data or {}).get("ef_signature_verification") or {}
+    integrity = str(meta.get("integrity_check") or "")
+    warnings = []
+    failed = int(efv.get("failed") or 0)
+    skipped = int(efv.get("skipped") or 0)
+    if failed:
+        warnings.append(f"\u2022 EF data signatures: {failed} failed verification")
+    if skipped:
+        warnings.append(
+            f"\u2022 Card data signatures: {skipped} EF signature(s) not checked")
+    if (meta.get("is_vu") is not True and not failed and not skipped
+            and "Verified" not in integrity and integrity):
+        warnings.append(f"\u2022 Card integrity: {integrity}")
+    # Structure findings: the walk may have consumed every byte, so the reason is
+    # the section's array list — name it instead of blaming the walk.
+    findings = meta.get("vu_integrity") or []
+    schema_findings = [f for f in findings if f.get("status") == "schema_violation"]
+    if schema_findings:
+        details = "; ".join(
+            f"{f.get('trep', '?')}: {f.get('detail', '')}".strip()
+            for f in schema_findings)
+        warnings.append("\u2022 Section structure (schema violation): " + details)
+    truncated = [f for f in findings
+                 if f.get("status") in ("trailing_bytes", "array_truncated",
+                                        "card_download_incomplete")]
+    trep = meta.get("trep_report") or {}
+    if truncated or (not trep.get("complete_walk", True) and not schema_findings):
+        warnings.append("\u2022 The structural walk did not reach the end of file")
+    notice = _envelope_notice(data)
+    notices = [notice] if notice else []
+    return warnings + notices, notices
+
+
 class TachoExplorer(tk.Tk):
     #: Idle defaults for the busy/render state read by ``_parse_done``,
     #: ``_start_parse`` and ``_pump_render``. They exist on the class as well as
@@ -4444,145 +4551,179 @@ class TachoExplorer(tk.Tk):
             self._finish_parse()
 
     def _check_integrity(self, data, path):
-        """Warn the user when a file shows signs of corruption or data loss."""
-        meta = data.get("metadata", {})
-        warnings = []
+            """Warn the user when a file shows signs of corruption or data loss."""
+            meta = data.get("metadata", {})
+            warnings = []
 
-        trep = meta.get("trep_report") or {}
-        if trep and trep.get("is_partial"):
-            warnings.append(
-                f"\u2022 Download completeness: "
-                f"{trep.get('mandatory_ok', 0)}/{trep.get('mandatory_total', 0)} "
-                f"mandatory section(s) read ({trep.get('completeness_pct', 0)}%)")
-            missing = trep.get("mandatory_missing") or []
-            if missing:
+            trep = meta.get("trep_report") or {}
+            if trep and trep.get("is_partial"):
                 warnings.append(
-                    "\u2022 Missing mandatory section(s): "
-                    + ", ".join(t["name"] for t in missing))
-            suspect = trep.get("decoded_suspect") or []
-            if suspect:
+                    f"\u2022 Download completeness: "
+                    f"{trep.get('mandatory_ok', 0)}/{trep.get('mandatory_total', 0)} "
+                    f"mandatory section(s) read ({trep.get('completeness_pct', 0)}%)")
+                missing = trep.get("mandatory_missing") or []
+                if missing:
+                    warnings.append(
+                        "\u2022 Missing mandatory section(s): "
+                        + ", ".join(t["name"] for t in missing))
+                suspect = trep.get("decoded_suspect") or []
+                if suspect:
+                    warnings.append(
+                        "\u2022 Corrupted/implausible section(s) (data discarded): "
+                        + ", ".join(t["name"] for t in suspect))
+                if not trep.get("complete_walk", True):
+                    # Single source: the bullet text (including the schema-violation
+                    # explanation) comes from _integrity_bullets, which the tests
+                    # call too. A walk that consumed every byte but found a section
+                    # whose array list differs from Appendix 7 must say THAT.
+                    shared, _notices = _integrity_bullets(data)
+                    structure = [b for b in shared
+                                 if "schema violation" in b
+                                 or "did not reach the end of file" in b]
+                    if structure:
+                        warnings.extend(b for b in structure if b not in warnings)
+                    else:
+                        warnings.append(
+                            "\u2022 The structural walk did not reach the end of file")
+
+            salvaged = meta.get("salvage_recovered")
+            if salvaged:
                 warnings.append(
-                    "\u2022 Corrupted/implausible section(s) (data discarded): "
-                    + ", ".join(t["name"] for t in suspect))
-            if not trep.get("complete_walk", True):
+                    "\u2022 Data recovered from damaged regions (low confidence): "
+                    + ", ".join(salvaged))
+
+            for pw in meta.get("parse_warnings") or []:
+                if isinstance(pw, dict):
+                    warnings.append(
+                        f"\u2022 Parsing phase '{pw.get('phase', '?')}' failed: "
+                        f"{pw.get('message', 'unknown error')} "
+                        f"(partial data shown)")
+
+            heuristic = meta.get("heuristic_fields") or {}
+            if heuristic:
+                sections = ", ".join(sorted(heuristic.keys()))
                 warnings.append(
-                    "\u2022 The structural walk did not reach the end of file")
+                    f"\u2022 Some values were recovered heuristically (low "
+                    f"confidence), not by deterministic spec parsing: {sections}")
 
-        salvaged = meta.get("salvage_recovered")
-        if salvaged:
-            warnings.append(
-                "\u2022 Data recovered from damaged regions (low confidence): "
-                + ", ".join(salvaged))
+            cov_report = data.get("coverage") or {}
 
-        for pw in meta.get("parse_warnings") or []:
-            if isinstance(pw, dict):
+            # Cryptographic validation: how much of the decoded data is signature-
+            # verified vs. not (more meaningful than raw byte coverage).
+            sv = data.get("signature_verification") or {}
+            treps = sv.get("treps") or []
+            if treps:
+                # Reuse the verifier's own accounting (app/engine.py for G1,
+                # core/crypto/vu_signature.py for G2). TREP 0x11/0x14 sensor
+                # sections carry signature_valid=None ("signature not applicable")
+                # and must not be recounted over len(treps): doing so produced a
+                # spurious warning on a fully verified G1 VU download.
+                if not sv.get("all_treps_valid"):
+                    warnings.append(
+                        f"\u2022 VU sections validated: "
+                        f"{sv.get('summary') or 'not all sections were validated'}")
+            elif sv.get("available") is False:
                 warnings.append(
-                    f"\u2022 Parsing phase '{pw.get('phase', '?')}' failed: "
-                    f"{pw.get('message', 'unknown error')} "
-                    f"(partial data shown)")
+                    "\u2022 VU sections validated: 0 \u2014 signatures could not be "
+                    "verified (VU public key unavailable)")
 
-        heuristic = meta.get("heuristic_fields") or {}
-        if heuristic:
-            sections = ", ".join(sorted(heuristic.keys()))
-            warnings.append(
-                f"\u2022 Some values were recovered heuristically (low "
-                f"confidence), not by deterministic spec parsing: {sections}")
+            efv = data.get("ef_signature_verification") or {}
+            ef_results = efv.get("ef_results") or []
+            if ef_results:
+                ef_ok = sum(1 for e in ef_results if e.get("status") == "verified")
+                ef_total = len(ef_results)
+                if ef_ok < ef_total:
+                    warnings.append(
+                        f"\u2022 Card data validated: {ef_ok}/{ef_total} EF "
+                        f"signature(s) verified; {ef_total - ef_ok} NOT validated")
 
-        cov_report = data.get("coverage") or {}
-
-        # Cryptographic validation: how much of the decoded data is signature-
-        # verified vs. not (more meaningful than raw byte coverage).
-        sv = data.get("signature_verification") or {}
-        treps = sv.get("treps") or []
-        if treps:
-            # Reuse the verifier's own accounting (app/engine.py for G1,
-            # core/crypto/vu_signature.py for G2). TREP 0x11/0x14 sensor
-            # sections carry signature_valid=None ("signature not applicable")
-            # and must not be recounted over len(treps): doing so produced a
-            # spurious warning on a fully verified G1 VU download.
-            if not sv.get("all_treps_valid"):
+            unknown = cov_report.get("classifications", {}).get("Unknown", 0)
+            if unknown > 0:
                 warnings.append(
-                    f"\u2022 VU sections validated: "
-                    f"{sv.get('summary') or 'not all sections were validated'}")
-        elif sv.get("available") is False:
-            warnings.append(
-                "\u2022 VU sections validated: 0 \u2014 signatures could not be "
-                "verified (VU public key unavailable)")
+                    f"\u2022 {unknown:,} bytes classified as Unknown (unparseable)")
 
-        efv = data.get("ef_signature_verification") or {}
-        ef_results = efv.get("ef_results") or []
-        if ef_results:
-            ef_ok = sum(1 for e in ef_results if e.get("status") == "verified")
-            ef_total = len(ef_results)
-            if ef_ok < ef_total:
+            uncovered = cov_report.get("uncovered_ranges") or []
+            if uncovered:
                 warnings.append(
-                    f"\u2022 Card data validated: {ef_ok}/{ef_total} EF "
-                    f"signature(s) verified; {ef_total - ef_ok} NOT validated")
+                    f"\u2022 {len(uncovered)} uncovered byte range(s) in the file")
 
-        unknown = cov_report.get("classifications", {}).get("Unknown", 0)
-        if unknown > 0:
-            warnings.append(
-                f"\u2022 {unknown:,} bytes classified as Unknown (unparseable)")
+            decoder_failures = meta.get("decoder_failure_count", 0)
+            if decoder_failures > 0:
+                warnings.append(
+                    f"\u2022 {decoder_failures} decoder(s) failed during parsing")
 
-        uncovered = cov_report.get("uncovered_ranges") or []
-        if uncovered:
-            warnings.append(
-                f"\u2022 {len(uncovered)} uncovered byte range(s) in the file")
+            integrity = meta.get("integrity_check", "")
+            if "Error" in integrity:
+                warnings.append(f"\u2022 Integrity check: {integrity}")
+            elif "Incomplete" in integrity:
+                warnings.append(f"\u2022 Certificate chain: {integrity}")
 
-        decoder_failures = meta.get("decoder_failure_count", 0)
-        if decoder_failures > 0:
-            warnings.append(
-                f"\u2022 {decoder_failures} decoder(s) failed during parsing")
+            efv = data.get("ef_signature_verification") or {}
+            ef_failed = efv.get("failed", 0)
+            if ef_failed:
+                warnings.append(f"\u2022 EF data signatures: {ef_failed} failed verification")
+            ef_skipped = efv.get("skipped", 0)
+            if ef_skipped:
+                warnings.append(
+                    f"\u2022 Card data signatures: {ef_skipped} EF signature(s) not checked")
+            if (meta.get("is_vu") is not True and integrity_verdict(data) != VERDICT_VERIFIED
+                    and not ef_failed and not ef_skipped):
+                warnings.append(f"\u2022 Card integrity: {self._integrity_label(data)}")
 
-        integrity = meta.get("integrity_check", "")
-        if "Error" in integrity:
-            warnings.append(f"\u2022 Integrity check: {integrity}")
-        elif "Incomplete" in integrity:
-            warnings.append(f"\u2022 Certificate chain: {integrity}")
+            sv = data.get("signature_verification") or {}
+            if sv.get("available") and not sv.get("msca_to_vu"):
+                warnings.append("\u2022 VU signature: MSCA\u2192VU chain NOT verified")
+            if sv.get("available") and not sv.get("root_anchored"):
+                warnings.append("\u2022 VU signature: root ERCA key absent (not anchored)")
+            trep_failed = sum(1 for t in (sv.get("treps") or []) if t.get("signature_valid") is False)
+            if trep_failed:
+                warnings.append(f"\u2022 VU signatures: {trep_failed} TREP section(s) failed")
 
-        efv = data.get("ef_signature_verification") or {}
-        ef_failed = efv.get("failed", 0)
-        if ef_failed:
-            warnings.append(f"\u2022 EF data signatures: {ef_failed} failed verification")
-        ef_skipped = efv.get("skipped", 0)
-        if ef_skipped:
-            warnings.append(
-                f"\u2022 Card data signatures: {ef_skipped} EF signature(s) not checked")
-        if (meta.get("is_vu") is not True and integrity_verdict(data) != VERDICT_VERIFIED
-                and not ef_failed and not ef_skipped):
-            warnings.append(f"\u2022 Card integrity: {self._integrity_label(data)}")
+            # A card image relayed through the vehicle unit gets ONE informational
+            # bullet: it is the standard card plus the transfer header, not damage.
+            # It is kept apart from the real warnings so a healthy file is never
+            # announced as a warning.
+            notice = _envelope_notice(data)
+            notices = [notice] if notice else []
+            bullets = warnings + notices
 
-        sv = data.get("signature_verification") or {}
-        if sv.get("available") and not sv.get("msca_to_vu"):
-            warnings.append("\u2022 VU signature: MSCA\u2192VU chain NOT verified")
-        if sv.get("available") and not sv.get("root_anchored"):
-            warnings.append("\u2022 VU signature: root ERCA key absent (not anchored)")
-        trep_failed = sum(1 for t in (sv.get("treps") or []) if t.get("signature_valid") is False)
-        if trep_failed:
-            warnings.append(f"\u2022 VU signatures: {trep_failed} TREP section(s) failed")
-
-        self._integrity_warnings = warnings
-        self._integrity_file = os.path.basename(path)
-        if warnings:
-            self.integrity_banner.config(
-                text=_("{count} integrity warning(s) \u2014 click for details").format(
-                    count=len(warnings)),
-                foreground=WARNING, takefocus=True, background=SURFACE,
-                image=_icon("status-warning", 16, self.integrity_banner) or "")
-            header = _("The file may be incomplete or corrupted.\n\n{filename}\n\n").format(
-                filename=os.path.basename(path))
-            self._warn_when_idle(_("File Integrity Warning"),
-                                 header + "\n".join(warnings))
-        else:
-            # Valid file: no green tick, no banner — the absence of a warning
-            # is the "all good" signal. The image is cleared with the text: a
-            # label keeps the image it was configured with, and a lone warning
-            # triangle over an empty label is a warning about nothing. An empty
-            # banner also leaves the tab chain, and loses the focus tint a
-            # previous file's warnings may have left on it.
-            self._release_banner_focus()
-            self.integrity_banner.config(text="", image="", takefocus=False,
-                                         background=SURFACE)
+            self._integrity_warnings = bullets
+            self._integrity_notices = notices
+            self._integrity_file = os.path.basename(path)
+            if warnings:
+                self.integrity_banner.config(
+                    text=_("{count} integrity warning(s) \u2014 click for details").format(
+                        count=len(warnings)),
+                    foreground=WARNING, takefocus=True, background=SURFACE,
+                    image=_icon("status-warning", 16, self.integrity_banner) or "")
+                header = _("The file may be incomplete or corrupted.\n\n{filename}\n\n").format(
+                    filename=os.path.basename(path))
+                self._warn_when_idle(_("File Integrity Warning"),
+                                     header + "\n".join(bullets))
+            elif notices:
+                # Nothing is wrong with the file: it is a card image relayed
+                # through the vehicle unit, which other tools report as corrupt.
+                # Neutral wording and a neutral icon already used elsewhere (the
+                # File Info document mark) — never the warning triangle.
+                self.integrity_banner.config(
+                    text=_("{count} note(s) \u2014 click for details").format(
+                        count=len(notices)),
+                    foreground=MUTED, takefocus=True, background=SURFACE,
+                    image=_icon("file-info", 16, self.integrity_banner) or "")
+                header = _("Note about this file.\n\n{filename}\n\n").format(
+                    filename=os.path.basename(path))
+                self._warn_when_idle(_("File Note"), header + "\n".join(bullets),
+                                     kind="showinfo")
+            else:
+                # Valid file: no green tick, no banner — the absence of a warning
+                # is the "all good" signal. The image is cleared with the text: a
+                # label keeps the image it was configured with, and a lone warning
+                # triangle over an empty label is a warning about nothing. An empty
+                # banner also leaves the tab chain, and loses the focus tint a
+                # previous file's warnings may have left on it.
+                self._release_banner_focus()
+                self.integrity_banner.config(text="", image="", takefocus=False,
+                                             background=SURFACE)
 
     def _warn_when_idle(self, title, message, kind="showwarning"):
         """Show a warning box, but never while a file is still being opened.
@@ -4631,17 +4772,28 @@ class TachoExplorer(tk.Tk):
         self.integrity_banner.configure(background=SURFACE, foreground=WARNING)
 
     def _show_integrity_details(self):
-        """Show the collected integrity warnings on demand (banner click)."""
-        if not self._integrity_warnings:
+        """Show the collected integrity warnings on demand (banner click).
+
+        A file whose only bullet is the transfer-header note is not announced as a
+        warning: it gets the neutral title, header and icon level.
+        """
+        bullets = getattr(self, "_integrity_warnings", None) or []
+        notices = getattr(self, "_integrity_notices", None) or []
+        if not bullets:
             messagebox.showinfo(
                 _("File Integrity"),
                 _("{filename}\n\nNo integrity issues detected.").format(
                     filename=getattr(self, "_integrity_file", "")))
             return
+        if not [bullet for bullet in bullets if bullet not in notices]:
+            header = _("Note about this file.\n\n{filename}\n\n").format(
+                filename=getattr(self, "_integrity_file", ""))
+            messagebox.showinfo(_("File Note"), header + "\n".join(bullets))
+            return
         header = _("The file may be incomplete or corrupted.\n\n{filename}\n\n").format(
             filename=getattr(self, "_integrity_file", ""))
         messagebox.showwarning(_("File Integrity Warning"),
-                               header + "\n".join(self._integrity_warnings))
+                               header + "\n".join(bullets))
 
     def _update_top_bar(self, data):
         """Refresh filename, generation badge and status badge."""
@@ -5333,6 +5485,24 @@ class TachoExplorer(tk.Tk):
             cols, rows = _rows_for(failures, None)
             self._add_section("", _("Decoder Failures"), cols, rows,
                               icon="status-warning")
+
+        # ── Empirical / manufacturer extensions ──
+        # Data outside the regulation is SHOWN like everything else, with the
+        # informational note in the section's meta line (never a warning).
+        for key, label, icon in (
+                ("vu_units", _("Decode units"), "generation"),
+                ("co_driver_activities", _("Co-Driver Activities"), "events"),
+                ("unmapped_record_types", _("Manufacturer Extensions"),
+                 "status-unknown")):
+            records = data.get(key) or []
+            if not records:
+                continue
+            cols = [c for c in report_format.visible_columns(records)]
+            rows = [[report_format.fmt_value(record.get(col), )
+                     for col in cols] for record in records]
+            self._add_section("", label, cols, rows,
+                              meta=report_format.section_description(key),
+                              icon=icon)
 
         # ── Raw / Unparsed Data (only when bytes could not be decoded) ──
         self._populate_unparsed(data)

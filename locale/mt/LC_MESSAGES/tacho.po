@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Ibbjar tas-sensor (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Numru tas-serje tas-sensor"
+msgstr "Sensur · Numru tas-serje"
 
 msgid "Sig Size"
 msgstr "Daqs tal-firma"
@@ -2281,3 +2281,65 @@ msgstr "INTEGRITÀ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Kopertura skont il-bytes"
+
+msgid "Current Date Time"
+msgstr "Data Ħin"
+
+msgid "RCM Serial"
+msgstr "RCM Numru tas-serje"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Numru tas-serje tas-sensor"
+
+msgid "VU Serial"
+msgstr "VU Numru tas-serje"
+
+msgid "Download Interface Version"
+msgstr "Verżjoni tal-interface tat-tniżżil"
+
+msgid "Entry Type Description"
+msgstr "Tip tad-dħul Deskrizzjoni"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Immaġni ta' karta imniżżla permezz tal-unità tal-vettura: l-ewwel żewġ bytes huma l-intestatura tat-trażmissjoni (SID + TREP 06) li żammet il-programm li salva l-fajl, mhux il-forma standard tal-ħażna ta' fajl tal-karta (DDP_050). Xi programmi oħra jirrappurtaw fajl bħal dan bħala korrott; Xi programmi oħra jirrappurtaw fajl bħal dan bħala korrott; dan il-programm juri r-riżultat tal-firem tal-karta separatament."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} nota/noti — ikklikkja għad-dettalji"
+
+
+
+msgid "File Note"
+msgstr "Nota dwar il-fajl"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Nota dwar dan il-fajl.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Numru tas-serje"
+
+msgid "Transfer header"
+msgstr "Intestatura tat-trażmissjoni"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Struttura speċifika għall-manifattur jew empirika: ebda regolament ma jiddefinixxi dawn l-oqsma. Il-valuri jinqraw kemm jista' jkun b'kunfidenza baxxa u l-bytes mhux maħduma jinżammu; din hija informazzjoni, mhux difett."
+
+msgid "Co-Driver Activities"
+msgstr "Attivitajiet tat-tieni sewwieq"
+
+msgid "Manufacturer Extensions"
+msgstr "Estensjonijiet tal-manifattur"
+
+msgid "Decode units"
+msgstr "Unitajiet dekodifikati"
+
+msgid "Path"
+msgstr "Mogħdija"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Il-bidliet fl-attività ta’ dan il-jum inqatgħu fil-fajl"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Il-blokka tal-veloċità ta’ dan l-intervall tal-minuti nqatgħet fil-fajl"
+
+msgid "This record was cut off in the file"
+msgstr "Dan ir-rekord inqata’ fil-fajl"

@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Sensör eşleştirmeleri (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Sensör seri numarası"
+msgstr "Sensör · Seri numarası"
 
 msgid "Sig Size"
 msgstr "İmza boyutu"
@@ -2281,3 +2281,65 @@ msgstr "BÜTÜNLÜK"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Bayt bazında kapsam"
+
+msgid "Current Date Time"
+msgstr "Tarih Zaman"
+
+msgid "RCM Serial"
+msgstr "RCM Seri numarası"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Sensör seri numarası"
+
+msgid "VU Serial"
+msgstr "VU Seri numarası"
+
+msgid "Download Interface Version"
+msgstr "İndirme arayüzü sürümü"
+
+msgid "Entry Type Description"
+msgstr "Giriş türü Açıklama"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Araç ünitesi üzerinden indirilen kart görüntüsü: ilk iki bayt, dosyayı kaydeden programın koruduğu aktarım başlığıdır (SID + TREP 06) ve bir kart dosyasının standart saklama biçimi değildir (DDP_050). Bazı diğer programlar böyle bir dosyayı bozuk olarak bildirir; Bazı diğer programlar böyle bir dosyayı bozuk olarak bildirir; bu program kartın imza sonucunu ayrı olarak gösterir."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} not — ayrıntılar için tıklayın"
+
+
+
+msgid "File Note"
+msgstr "Dosya notu"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Bu dosya hakkında not.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Seri numarası"
+
+msgid "Transfer header"
+msgstr "Aktarım başlığı"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Üreticiye özgü veya deneysel yapı: bu alanları hiçbir yönetmelik tanımlamaz. Değerler olabildiğince düşük güvenle okunur ve ham baytlar korunur; bu bir bilgidir, kusur değildir."
+
+msgid "Co-Driver Activities"
+msgstr "İkinci sürücü etkinlikleri"
+
+msgid "Manufacturer Extensions"
+msgstr "Üretici uzantıları"
+
+msgid "Decode units"
+msgstr "Çözülen birimler"
+
+msgid "Path"
+msgstr "Yol"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Bu günün etkinlik değişiklikleri dosyada kesildi"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Bu dakika aralığının hız bloğu dosyada kesildi"
+
+msgid "This record was cut off in the file"
+msgstr "Bu kayıt dosyada kesildi"

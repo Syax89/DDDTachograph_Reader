@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Sensoru savienojumi (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Sensora sērijas numurs"
+msgstr "Sensors · Sērijas numurs"
 
 msgid "Sig Size"
 msgstr "Paraksta izmērs"
@@ -2281,3 +2281,65 @@ msgstr "INTEGRITĀTE"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Baitu pārklājums"
+
+msgid "Current Date Time"
+msgstr "Datums Laiks"
+
+msgid "RCM Serial"
+msgstr "RCM Sērijas numurs"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Sensora sērijas numurs"
+
+msgid "VU Serial"
+msgstr "VU Sērijas numurs"
+
+msgid "Download Interface Version"
+msgstr "Lejupielādes saskarnes versija"
+
+msgid "Entry Type Description"
+msgstr "Ieraksta veids Apraksts"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Transportlīdzekļa bloka ietvaros lejupielādēts kartes attēls: pirmie divi baiti ir pārsūtīšanas galvene (SID + TREP 06), ko saglabājusi failu saglabājusī programma, nevis kartes faila standarta glabāšanas forma (DDP_050). Dažas citas programmas šādu failu ziņo kā bojātu; Dažas citas programmas šādu failu ziņo kā bojātu; šī programma kartes parakstu rezultātu rāda atsevišķi."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} piezīme(s) — noklikšķiniet, lai skatītu detaļas"
+
+
+
+msgid "File Note"
+msgstr "Faila piezīme"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Piezīme par šo failu.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Sērijas numurs"
+
+msgid "Transfer header"
+msgstr "Pārsūtīšanas galvene"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Ražotājam raksturīga vai empīriska struktūra: neviens regulējums nenosaka šos laukus. Vērtības nolasa pēc iespējas ar zemu ticamību, un neapstrādātie baiti tiek saglabāti; tā ir informācija, nevis defekts."
+
+msgid "Co-Driver Activities"
+msgstr "Otrā vadītāja darbības"
+
+msgid "Manufacturer Extensions"
+msgstr "Ražotāja paplašinājumi"
+
+msgid "Decode units"
+msgstr "Atšifrētās vienības"
+
+msgid "Path"
+msgstr "Ceļš"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Šīs dienas aktivitātes izmaiņas failā tika nogrieztas"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Šī minūšu intervāla ātruma bloks failā tika nogriezts"
+
+msgid "This record was cut off in the file"
+msgstr "Šis ieraksts failā tika nogriezts"

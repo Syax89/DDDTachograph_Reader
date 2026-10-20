@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Αντιστοιχίσεις αισθητήρα (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Σειριακός αριθμός αισθητήρα"
+msgstr "Αισθητήρας · Σειριακός αριθμός"
 
 msgid "Sig Size"
 msgstr "Μέγεθος υπογραφής"
@@ -2281,3 +2281,65 @@ msgstr "ΑΚΕΡΑΙΟΤΗΤΑ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Κάλυψη σε byte"
+
+msgid "Current Date Time"
+msgstr "Ημερομηνία Ώρα"
+
+msgid "RCM Serial"
+msgstr "RCM Σειριακός αριθμός"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Σειριακός αριθμός αισθητήρα"
+
+msgid "VU Serial"
+msgstr "VU Σειριακός αριθμός"
+
+msgid "Download Interface Version"
+msgstr "Έκδοση διεπαφής λήψης"
+
+msgid "Entry Type Description"
+msgstr "Τύπος καταχώρισης Περιγραφή"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Εικόνα κάρτας που λήφθηκε μέσω της μονάδας του οχήματος: τα δύο πρώτα byte είναι η κεφαλίδα μεταφοράς (SID + TREP 06) που διατήρησε το πρόγραμμα αποθήκευσης και όχι η τυπική μορφή αποθήκευσης αρχείου κάρτας (DDP_050). Ορισμένα άλλα προγράμματα αναφέρουν ένα τέτοιο αρχείο ως κατεστραμμένο· αυτό το πρόγραμμα εμφανίζει το αποτέλεσμα των υπογραφών της κάρτας ξεχωριστά."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} σημείωση(εις) — κάντε κλικ για λεπτομέρειες"
+
+
+
+msgid "File Note"
+msgstr "Σημείωση αρχείου"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Σημείωση για αυτό το αρχείο.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Σειριακός αριθμός"
+
+msgid "Transfer header"
+msgstr "Κεφαλίδα μεταφοράς"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Δομή ειδική για τον κατασκευαστή ή εμπειρική: κανένας κανονισμός δεν ορίζει αυτά τα πεδία. Οι τιμές διαβάζονται κατά το δυνατόν με χαμηλή βεβαιότητα και τα ακατέργαστα byte διατηρούνται· πρόκειται για πληροφορία, όχι για σφάλμα."
+
+msgid "Co-Driver Activities"
+msgstr "Δραστηριότητες δεύτερου οδηγού"
+
+msgid "Manufacturer Extensions"
+msgstr "Επεκτάσεις κατασκευαστή"
+
+msgid "Decode units"
+msgstr "Μονάδες αποκωδικοποίησης"
+
+msgid "Path"
+msgstr "Διαδρομή"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Οι αλλαγές δραστηριότητας αυτής της ημέρας κόπηκαν στο αρχείο"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Το μπλοκ ταχύτητας αυτού του διαστήματος λεπτών κόπηκε στο αρχείο"
+
+msgid "This record was cut off in the file"
+msgstr "Αυτή η εγγραφή κόπηκε στο αρχείο"

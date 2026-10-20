@@ -44,15 +44,23 @@ def test_vu_only_keys_are_excluded():
         assert key not in _CARD_MERGE_DICT_KEYS
 
 
-def test_g22_only_keys_are_excluded():
+def test_generation_2_card_keys_are_merged():
+    """Corrected: these are *card* data, not VU data.
+
+    The exclusion assumed an embedded card image is always a generation-1 card.
+    A card relayed by a generation-2/2.2 VU (and a `76 06` envelope of such a
+    card) carries these EFs, and the owner's rule is that the embedded card must
+    yield its generation-2 side too — otherwise its GNSS accumulated driving and
+    vehicle-unit history are silently lost.
+    """
     g22 = (
         "gnss_ad_records", "load_unload_records", "trailer_registrations",
         "gnss_places", "load_sensor_data", "border_crossings",
         "gnss_auth", "load_unload_auth",
     )
     for key in g22:
-        assert key not in _CARD_MERGE_LIST_KEYS
-        assert key not in _CARD_MERGE_DICT_KEYS
+        assert (key in _CARD_MERGE_LIST_KEYS
+                or key in _CARD_MERGE_DICT_KEYS), key
 
 
 def test_card_dict_keys_include_beyond_driver_vehicle():

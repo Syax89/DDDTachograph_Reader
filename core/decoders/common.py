@@ -18,6 +18,10 @@ def mark_heuristic(results, section, fields):
     """
     if not fields:
         return
+    # Every heuristic site records a structured reason next to the field list, so
+    # a fallback can always be explained (see core.parser.fallback_reasons).
+    from core.parser.fallback_reasons import record_fallback_reason
+    record_fallback_reason(results, route=section, detail=",".join(sorted(fields)))
     meta = results.setdefault("metadata", {})
     bucket = meta.setdefault("heuristic_fields", {})
     existing = set(bucket.get(section, []))
@@ -122,6 +126,301 @@ def decode_string(data, is_id=False):
     except (UnicodeDecodeError, IndexError, LookupError) as exc:
         _log.debug("String decode failed (len=%d): %s", len(data), exc)
         return ""
+
+def decode_coded_text(data):
+    """Decode a ``codePage``-prefixed string, keeping non-ASCII characters.
+
+    ``codePage`` is the ISO/IEC 8859 part number that applies to the characters
+    (Annex 1B §2.114 VehicleRegistrationNumber, Annex 1C §2.167): the first byte
+    is the code page, the rest is the text. An unknown code page falls back to
+    latin-1, exactly like :func:`decode_string`.
+
+    Unlike ``decode_string(..., is_id=True)`` — which keeps only ASCII
+    alphanumerics — this preserves accented letters, which are legal in a
+    VehicleRegistrationNumber. Trailing ``00``/``FF`` padding is stripped first
+    so a short VRN does not decode into control characters.
+    """
+    if not data:
+        return ""
+    raw = bytes(data).rstrip(b"\x00\xff")
+    if not raw:
+        return ""
+    enc = _CODEPAGE_ENCODINGS.get(raw[0], "latin-1")
+    try:
+        decoded = raw[1:].decode(enc, errors="ignore")
+    except LookupError:                                  # unknown code page name
+        decoded = raw[1:].decode("latin-1", errors="ignore")
+    return "".join(ch for ch in decoded if ch.isprintable()).strip()
+
+
+#: ``EntryTypeDailyWorkPeriod`` (Annex 1B §2.51) — the assignment generation 2
+#: keeps ("Value assignment: according to ISO/IEC8824-1" in Annex 1C §2.66,
+#: whose enumeration is a figure in the accessible editions, so the shared
+#: generation-1 text is the citable one). Six values are assigned:
+#:
+#:   (0) Begin, related time = card insertion time or time of entry
+#:   (1) End,   related time = card withdrawal time or time of entry
+#:   (2) Begin, related time manually entered (start time)
+#:   (3) End,   related time manually entered (end of work period)
+#:   (4) Begin, related time assumed by VU
+#:   (5) End,   related time assumed by VU
+ENTRY_TYPE_DAILY_WORK_PERIOD: dict[int, tuple[str, str]] = {
+    0x00: ("BEGIN", "Begin (card insertion time)"),
+    0x01: ("END", "End (card withdrawal time)"),
+    0x02: ("BEGIN", "Begin manually entered"),
+    0x03: ("END", "End manually entered"),
+    0x04: ("BEGIN", "Begin assumed by VU"),
+    0x05: ("END", "End assumed by VU"),
+}
+
+#: Generation 1 assigns exactly the six values above (Annex 1B §2.51 enumerates
+#: 0..5 in text: card time, manually entered, "assumed by VU").
+ENTRY_TYPE_G1_MAX = 0x05
+
+#: Generation 2 adds the two GNSS-based values (Reg. (EU) 2016/799 Appendix 1
+#: §2.66, "Generation 2" block: *Begin/End, related time based on GNSS data*
+#: (6)/(7)). Reg. (EU) 2021/1228 replaces that block's text with "Value
+#: assignment: according to ISO/IEC8824-1" and prints an ASN.1 figure that lists
+#: 0..3 only, so the 2016 wording is the readable assignment for 6/7 — they are
+#: *not* newly authorised by the 2021 act, and nothing above 7 is assigned by any
+#: readable text.
+ENTRY_TYPE_DAILY_WORK_PERIOD_G2: dict[int, tuple[str, str]] = {
+    **ENTRY_TYPE_DAILY_WORK_PERIOD,
+    0x06: ("BEGIN", "Begin, related time based on GNSS data"),
+    0x07: ("END", "End, related time based on GNSS data"),
+}
+
+ENTRY_TYPE_STATUS_ASSIGNED = "assigned"
+ENTRY_TYPE_STATUS_UNKNOWN = "unknown (not assigned by the readable generation-2 text)"
+#: Status quoted for the two GNSS-based generation-2 values (see above).
+ENTRY_TYPE_STATUS_ASSIGNED_GNSS = (
+    "assigned (Reg. 2016/799 sec. 2.66; 2021/1228 ASN.1 figure lists 0..3 only)")
+
+
+#: CPR_072 "not available or not requested" for the odometer widths used by the VU
+#: records: 0xFFFFFF for OdometerShort (Annex 1C App.1 §2.113, 3 bytes, operating
+#: range 0..9 999 999 km), 0xFFFFFFFF for the 4-byte fields of the same records.
+ODOMETER_NOT_AVAILABLE = frozenset({0xFFFFFF, 0xFFFFFFFF})
+ODOMETER_MAX_VALID_KM = 9_999_999
+
+
+def odometer_km(value):
+    """A stored odometer as a distance in km, or ``None`` when it is not available.
+
+    One function for every VU and card decoder so the sentinel cannot be applied in
+    one generation and forgotten in another; the raw value stays on the record.
+    """
+    if value is None:
+        return None
+    if value in ODOMETER_NOT_AVAILABLE:
+        return None
+    if value > ODOMETER_MAX_VALID_KM:
+        # Outside the field's operating range: not a distance the reader can show.
+        return None
+    return value
+
+
+def entry_type_daily_work_period(code, generation="G2"):
+    """``(short, meaning)`` for one EntryTypeDailyWorkPeriod byte.
+
+    Generation 1 assigns 0..5; generation 2 assigns 0..7 (the last two are the
+    GNSS-based begin/end). A code the readable text does not assign keeps its
+    numeric value as the short form — nothing is invented, and no code is
+    dropped: :func:`entry_type_daily_work_period_status` says how it is assigned.
+    """
+    try:
+        value = int(code)
+    except (TypeError, ValueError):
+        return ("Unknown", "unknown")
+    if generation == "G1":
+        if value in ENTRY_TYPE_DAILY_WORK_PERIOD:
+            return ENTRY_TYPE_DAILY_WORK_PERIOD[value]
+        return (f"0x{value:02X}", f"not assigned (0x{value:02X})")
+    if value in ENTRY_TYPE_DAILY_WORK_PERIOD_G2:
+        return ENTRY_TYPE_DAILY_WORK_PERIOD_G2[value]
+    return (f"0x{value:02X}", f"unknown (0x{value:02X})")
+
+
+def entry_type_daily_work_period_status(code, generation="G2"):
+    """How the readable text assigns a code: assigned / not assigned / unknown."""
+    try:
+        value = int(code)
+    except (TypeError, ValueError):
+        return ENTRY_TYPE_STATUS_UNKNOWN
+    if generation == "G1":
+        return (ENTRY_TYPE_STATUS_ASSIGNED
+                if value in ENTRY_TYPE_DAILY_WORK_PERIOD else "not assigned")
+    if value in ENTRY_TYPE_DAILY_WORK_PERIOD:
+        return ENTRY_TYPE_STATUS_ASSIGNED
+    if value in ENTRY_TYPE_DAILY_WORK_PERIOD_G2:
+        return ENTRY_TYPE_STATUS_ASSIGNED_GNSS
+    return ENTRY_TYPE_STATUS_UNKNOWN
+
+
+# ── ExtendedSerialNumber display helpers (Annex 1B §2.56) ──────────────────
+# A decoded serial is one compact scalar for the panels and tables; the
+# structured dict stays in the JSON. A leaf module so both the generation-1
+# decoders and the RecordArray dispatcher share one implementation.
+def decode_extended_serial_number(data, off):
+    """Decode one ExtendedSerialNumber (Annex 1B §2.56 / Annex 1C §2.56)."""
+    from core.utils.manufacturer_codes import (
+        MANUFACTURER_STATUS_NOT_REGISTERED, MANUFACTURER_STATUS_REGISTERED,
+        manufacturer_name)
+    if not isinstance(off, int) or off < 0 or off + 8 > len(data):
+        return None
+    raw = bytes(data[off:off + 8])
+    month = _bcd_octet(raw[4])
+    year_suffix = _bcd_octet(raw[5])
+    out = {
+        "serial_number": int.from_bytes(raw[0:4], "big"),
+        "month_year_bcd": raw[4:6].hex(),
+        "month": month,
+        "year_suffix": year_suffix,
+        "equipment_type": raw[6],
+        "equipment_type_status": ("reserved (0xFF)" if raw[6] == 0xFF
+                                 else "manufacturer specific"),
+        "manufacturer_code": raw[7],
+        "manufacturer": manufacturer_name(raw[7]),
+        "manufacturer_status": (MANUFACTURER_STATUS_REGISTERED
+                                if manufacturer_name(raw[7]) is not None
+                                else MANUFACTURER_STATUS_NOT_REGISTERED),
+    }
+    if month is None or year_suffix is None:
+        out["month_year_status"] = "invalid BCD / month"
+    elif not 1 <= month <= 12:
+        out["month_year_status"] = "invalid month"
+    else:
+        out["month_year_status"] = "valid"
+    return out
+
+
+def _bcd_octet(value):
+    """One BCD octet as a decimal int, or None when a nibble exceeds 9."""
+    high, low = value >> 4, value & 0x0F
+    if high > 9 or low > 9:
+        return None
+    return high * 10 + low
+
+
+def with_serial_text(hex_text, data, off):
+    """``<hex> · <compact decoded serial>`` — hex kept, decoded form appended."""
+    text = serial_text(decode_extended_serial_number(data, off))
+    return f"{hex_text} \u00b7 {text}" if text else hex_text
+
+
+def manufacturer_short_name(code):
+    """Short registry name for a compact cell."""
+    from core.utils.manufacturer_codes import manufacturer_name
+    """A compact form of the registry name, for a table cell.
+
+    The registry publishes full legal names ('Stoneridge Electronics AB'); a
+    Field/Value panel of compact scalars cannot carry those. The short form keeps
+    the first two words (and any acronym) and drops the legal suffix, which is what
+    neighbouring rows do with long strings. Registry identity, not a guess: the
+    bytes come from the official code table.
+    """
+    name = manufacturer_name(code)
+    if not name:
+        return None
+    words = str(name).replace(",", " ").split()
+    keep = []
+    for word in words[:2]:
+        keep.append(word)
+    short = " ".join(keep)
+    return short.rstrip(".").strip() or None
+
+
+def serial_text(info):
+    """One compact cell for an ExtendedSerialNumber (§2.56).
+
+    ``<decimal serial> · <MM/YY> · <manufacturer short name>`` — the same density as
+    the neighbouring rows. The monthYear is a BCD pair: when it is not a valid
+    BCD month the two raw bytes are printed instead of a fabricated date, and the
+    year stays the two digits the field carries (the century is not part of it).
+    """
+    if not isinstance(info, dict):
+        return None
+    serial = info.get("serial_number")
+    if serial is None:
+        return None
+    month, year = info.get("month"), info.get("year_suffix")
+    if month is None or year is None:
+        stamp = str(info.get("month_year_bcd") or "").upper()
+    else:
+        stamp = f"{month:02d}/{year:02d}"
+    parts = [str(serial)]
+    if stamp:
+        parts.append(stamp)
+    maker = manufacturer_short_name(info.get("manufacturer_code"))
+    if maker:
+        parts.append(maker)
+    return " \u00b7 ".join(parts)
+
+#: ManualInputFlag (Annex 1B §2.66 / Annex 1C §2.93) enumerates exactly two
+#: values. It is *not* a boolean: a driver who made no manual entries records
+#: ``noEntry`` (0), one who did records ``manualEntries`` (1), and anything else
+#: is RFU/undefined — never to be reported as «manual entries».
+MANUAL_INPUT_FLAG_MEANINGS = {0: "noEntry", 1: "manualEntries"}
+
+#: Meaning reported for a ManualInputFlag value the regulation does not define.
+MANUAL_INPUT_FLAG_UNDEFINED = "undefined (not a ManualInputFlag value)"
+
+
+def describe_manual_input_flag(value):
+    """English meaning of one raw ManualInputFlag byte (0/1 defined, rest RFU)."""
+    try:
+        code = int(value)
+    except (TypeError, ValueError):
+        return MANUAL_INPUT_FLAG_UNDEFINED
+    return MANUAL_INPUT_FLAG_MEANINGS.get(code, MANUAL_INPUT_FLAG_UNDEFINED)
+
+
+#: PreviousVehicleInfo = vehicleRegistrationIdentification(15) +
+#: cardWithdrawalTime(4); generation 2 appends vuGeneration(1).
+#: Annex 1B §2.85 (19 bytes) / Annex 1C §2.118 (20 bytes).
+PREVIOUS_VEHICLE_INFO_G1_SIZE = 19
+PREVIOUS_VEHICLE_INFO_G2_SIZE = 20
+
+
+def decode_previous_vehicle_info(data, offset, with_vu_generation=False):
+    """Decode one PreviousVehicleInfo at *offset* (Annex 1B §2.85 / 1C §2.118).
+
+    Layout, generation independent::
+
+        vehicleRegistrationIdentification (15)
+            vehicleRegistrationNation   NationNumeric (1)
+            vehicleRegistrationNumber   codePage(1) + 13 chars (14)
+        cardWithdrawalTime              TimeReal (4)
+        vuGeneration                    INTEGER (1)  — generation 2 only
+
+    This is the previous vehicle a driver used, stored *inside* one
+    VuCardIWRecord: each record keeps its own copy, so it must never be merged
+    into the file-level current vehicle.
+
+    Returns ``None`` when *data* is too short to hold the whole structure — a
+    partial structure is not decoded by guesswork.
+    """
+    size = (PREVIOUS_VEHICLE_INFO_G2_SIZE if with_vu_generation
+            else PREVIOUS_VEHICLE_INFO_G1_SIZE)
+    if offset < 0 or offset + size > len(data):
+        return None
+    block = data[offset:offset + size]
+    nation_code = block[0]
+    withdrawal_ts = struct.unpack(">I", block[15:19])[0]
+    out = {
+        "registration_nation": get_nation(nation_code),
+        "registration_nation_code": nation_code,
+        "registration_code_page": block[1],
+        "registration_plate": decode_coded_text(block[1:15]),
+        "card_withdrawal_time": (
+            datetime.fromtimestamp(withdrawal_ts, tz=timezone.utc).isoformat()
+            if 946684800 <= withdrawal_ts <= 4102444800 else None),
+        "card_withdrawal_timestamp": withdrawal_ts,
+    }
+    if with_vu_generation:
+        out["vu_generation"] = block[19]
+    return out
+
 
 def decode_date(data, prefer_datef=False):
     """Decode TimeReal (4 bytes) or Datef (4 bytes).

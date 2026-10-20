@@ -65,7 +65,13 @@ def test_invalid_activity_values_are_not_added_to_structured_vu_activities():
     results = {}
 
     assert _parse_trep_02_g1_structured(data, results)
-    assert results.get("activities", []) == []
+    # The stored day is still reported (a downloaded day with no usable change
+    # is a fact), but no activity value is invented: the single undecodable
+    # ActivityChangeInfo is counted instead.
+    activities = results.get("activities", [])
+    assert len(activities) == 1
+    assert activities[0]["changes"] == []
+    assert activities[0]["invalid_changes_count"] == 1
 
 
 def test_record_array_activity_rejects_invalid_minutes():

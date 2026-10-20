@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Свързвания на сензора (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Сериен номер на сензора"
+msgstr "Сензор · Сериен номер"
 
 msgid "Sig Size"
 msgstr "Размер на подписа"
@@ -2281,3 +2281,65 @@ msgstr "ЦЯЛОСТНОСТ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Покритие по байтове"
+
+msgid "Current Date Time"
+msgstr "Дата Време"
+
+msgid "RCM Serial"
+msgstr "RCM Сериен номер"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Сериен номер на сензора"
+
+msgid "VU Serial"
+msgstr "VU Сериен номер"
+
+msgid "Download Interface Version"
+msgstr "Версия на интерфейса за изтегляне"
+
+msgid "Entry Type Description"
+msgstr "Вид запис Описание"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Изображение на карта, изтеглено през бордовия блок: първите два байта са заглавката на предаването (SID + TREP 06), запазена от програмата, която е записала файла, а не стандартната форма за съхранение на файл на карта (DDP_050). Някои други програми съобщават такъв файл като повреден; Някои други програми съобщават такъв файл като повреден; тази програма показва собствения резултат за подписите на картата отделно."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} бележка(и) — щракнете за подробности"
+
+
+
+msgid "File Note"
+msgstr "Бележка за файла"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Бележка за този файл.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Сериен номер"
+
+msgid "Transfer header"
+msgstr "Заглавка на предаването"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Специфична за производителя или емпирична структура: нито един регламент не определя тези полета. Стойностите се четат по възможност с ниска увереност, а суровите байтове са запазени; това е информация, а не дефект."
+
+msgid "Co-Driver Activities"
+msgstr "Дейности на втория водач"
+
+msgid "Manufacturer Extensions"
+msgstr "Разширения на производителя"
+
+msgid "Decode units"
+msgstr "Единици за декодиране"
+
+msgid "Path"
+msgstr "Път"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Промените в дейността за този ден са отрязани във файла"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Блокът за скорост на този интервал от минути е отрязан във файла"
+
+msgid "This record was cut off in the file"
+msgstr "Този запис е отрязан във файла"

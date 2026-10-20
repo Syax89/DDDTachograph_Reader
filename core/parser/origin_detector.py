@@ -2,7 +2,7 @@
 
 The first byte alone (0x76 = VU) is not enough to classify a file. A driver
 card image can be wrapped in a single VU ``Card Download`` message (TREP 0x06,
-Annex 1B §2.2.6.6 / Annex 1C Appendix 7): such a file starts with 0x76 but its
+DDP_049 / DDP_050): such a file starts with 0x76 but its
 payload is a plain card-EF image, not a VU download.
 
 This module confirms the origin from the decoded content:
@@ -38,7 +38,10 @@ CARD_ONLY_TAGS = {
 VU_ONLY_TAGS = {
     0x7601, 0x7602, 0x7603, 0x7604, 0x7605,          # G1 VU containers
     0x7621, 0x7622, 0x7623, 0x7624, 0x7625,          # G2 VU containers
-    0x7631, 0x7632, 0x7633, 0x7634, 0x7635,          # G2.2 VU containers
+    # G2.2 VU containers. 0x7634 is *not* a transfer: DDP_011/DDP_032 prescribe
+    # TREP '24'H for detailed speed in every generation. It is kept here only as
+    # an observed compatibility tag for origin detection, never as a TREP alias.
+    0x7631, 0x7632, 0x7633, 0x7634, 0x7635,
 }
 
 
@@ -84,8 +87,8 @@ def detect_origin(
     # A stand-alone TREP 0x06 (no other VU section) carrying card EFs is a
     # selective "card download" — a card image, not a VU download.
     if 0x06 in treps and not other_treps and has_card_only and not has_vu_only:
-        note = ("Driver card image extracted from a VU Card Download "
-                "(TREP 06, Annex 1B \u00a72.2.6.6) \u2014 valid selective download")
+        note = ("Card image extracted from a VU Card Download "
+                "(TREP 06, DDP_049/DDP_050) \u2014 valid selective download")
         return ORIGIN_CARD, note, True
 
     return ORIGIN_VU, "", False

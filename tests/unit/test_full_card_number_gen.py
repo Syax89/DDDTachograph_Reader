@@ -130,7 +130,7 @@ def test_walk_record_arrays_dispatches_card_record():
     # Minimal synthetic ROUTE test (not a complete signed normative download):
     # the public stream walker (used by app.engine.TachoParser) dispatches
     # recordType 0x0E to the same decoder and surfaces the number.
-    # Annex 1C Appendix 7 §2.2.6.6 places VuCardRecordArray in the Technical
+    # Annex 1C Appendix 7 (DDP_033) places VuCardRecordArray in the Technical
     # Data structure, served by TREP 05/25/35; 0x76 0x35 is the Generation 2
     # version 2 TechnicalData section marker (TRTP 35). The Gen2 v2 section
     # markers per Appendix 7 are TRTP 00/31/32/33/35 — 0x34 is not one of them.

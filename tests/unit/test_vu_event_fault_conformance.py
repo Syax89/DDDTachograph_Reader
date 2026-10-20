@@ -717,29 +717,41 @@ class TestNoSilentBackup(unittest.TestCase):
                      + struct.pack(">II", BEGIN + 3600, BEGIN + 3660) + b"\x00" * 84)
         return walked + stopped + scan_only
 
-    def test_g1_incomplete_walk_still_scans_and_declares_it(self):
-        # Gen1 behaviour is deliberately unchanged: an incomplete walk always
-        # falls through to the byte scan (its own dedupe + mark_heuristic handle
-        # the overlap), and the switch is declared. The G2 guard from C9 must not
-        # leak into this branch.
+    def test_g1_incomplete_walk_scans_only_the_failed_units_and_declares_it(self):
+        """Corrected by the per-TREP rule (owner decision).
+
+        The scan is no longer a whole-file re-read: each failed TREP is handed its own
+        byte range, the switch is still declared, and the affected sections are still
+        marked heuristic. A repaired unit therefore no longer makes the engine re-scan
+        bytes the normative walk vouched for — which is what removed the
+        double-publication class.
+        """
         scan_calls = self._scan_spy()
         with self.assertLogs("app.engine", level="WARNING") as captured:
             results = TachoParser(self._write(self._g1_stream())).parse()
 
         self.assertTrue(results.get("faults"), "the walk itself wrote nothing")
-        self.assertEqual(len(scan_calls), 1,
-                         "an incomplete G1 walk must still fall through to the scan")
         self.assertTrue(results["metadata"]["decode_paths"]["fallback"])
-        self.assertTrue(any("heuristic byte scan recovered" in line
-                            for line in captured.output), captured.output)
-        heuristic = results["metadata"]["heuristic_fields"]
-        # The scan's own sub-parsers mark their sections, and the engine marks
-        # what the scan added: the backup route is visible even when the scan's
-        # gain is not one its sub-parsers flags.
-        self.assertIn("vu_events_faults_TREP03", heuristic)
-        self.assertIn("vu_fallback_scan", heuristic)
-        # Whatever the scan added is present and never claims conformance.
-        self.assertGreater(len(results["faults"]), 1)
+        # the whole-file scan is not used when the walk can bound the damage
+        self.assertEqual(len(scan_calls), 0,
+                         "the per-TREP walk must not fall back to a whole-file scan")
+        self.assertTrue(results["metadata"].get("vu_units"),
+                        "per-unit provenance is published")
+        # This stream's units all decode normatively, so no section is flagged
+        # heuristic even though the download is partial: the switch is visible in
+        # decode_paths, the damage in vu_units/vu_integrity.
+        units = results["metadata"]["vu_units"]
+        self.assertTrue(units)
+        # every byte is covered: the normative units plus one declared zone for the
+        # bytes they do not account for
+        self.assertTrue(results["metadata"]["vu_units_cover_file"])
+        zones = [unit for unit in units if unit["path"] != "normative"]
+        self.assertLessEqual(len(zones), 1, units)
+        if zones:
+            self.assertIn(zones[0]["path"], ("heuristic", "unreadable"))
+            self.assertTrue(zones[0].get("reason"))
+        self.assertTrue(any("fell back" in line for line in captured.output))
+        self.assertGreaterEqual(len(results["faults"]), 1)
         recovered = [f for f in results["faults"] if not f.get("normative")]
         self.assertTrue(recovered)
 
@@ -762,14 +774,19 @@ class TestNoSilentBackup(unittest.TestCase):
         finally:
             vu_dispatcher.walk_vu_record_arrays = original
 
+        # Corrected by the per-TREP rule: the recovery is bounded to the failed
+        # units, so the declaration names the cause and every unit the heuristic
+        # touched is listed in heuristic_fields (the two always agree).
         sections = sorted(results["metadata"]["heuristic_fields"])
         self.assertTrue(sections, "nothing was marked heuristic")
-        warning = next(line for line in captured.output
-                       if "heuristic byte scan recovered" in line)
-        for section in sections:
-            self.assertIn(section, warning,
-                          f"{section} is in heuristic_fields but not in the warning")
-        self.assertNotIn("recovered nothing", warning)
+        warning = next(line for line in captured.output if "fell back" in line)
+        for unit in results["metadata"].get("vu_heuristic_units") or []:
+            self.assertIn(f"vu_trep{unit['trep'][2:].upper()}", sections)
+        # the warning names a cause from the closed vocabulary (and the
+        # classification with it), whichever applies to this stream
+        self.assertTrue(any(cause in warning for cause in (
+            "file_truncated", "count_exceeds_eof", "unknown_or_misplaced_section",
+            "normative_layout_not_matched", "normative_decoder_exception")), warning)
 
     def test_record_less_section_then_failure_still_scans(self):
         # A section that emits no records leaves the result mappings untouched, so

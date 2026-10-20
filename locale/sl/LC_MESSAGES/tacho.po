@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Seznanitve senzorja (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Serijska številka senzorja"
+msgstr "Senzor · Serijska številka"
 
 msgid "Sig Size"
 msgstr "Velikost podpisa"
@@ -2281,3 +2281,65 @@ msgstr "CELOVITOST"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Pokritost po bajtih"
+
+msgid "Current Date Time"
+msgstr "Datum Čas"
+
+msgid "RCM Serial"
+msgstr "RCM Serijska številka"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Serijska številka senzorja"
+
+msgid "VU Serial"
+msgstr "VU Serijska številka"
+
+msgid "Download Interface Version"
+msgstr "Različica vmesnika za prenos"
+
+msgid "Entry Type Description"
+msgstr "Vrsta vnosa Opis"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Slika kartice, prenesena prek enote vozila: prva dva bajta sta glava prenosa (SID + TREP 06), ki jo je ohranil program, ki je datoteko shranil, in ne standardna oblika shranjevanja datoteke kartice (DDP_050). Nekateri drugi programi takšno datoteko prijavijo kot poškodovano; Nekateri drugi programi takšno datoteko prijavijo kot poškodovano; ta program prikaže izid podpisov kartice ločeno."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} opomba/e — kliknite za podrobnosti"
+
+
+
+msgid "File Note"
+msgstr "Opomba o datoteki"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Opomba o tej datoteki.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Serijska številka"
+
+msgid "Transfer header"
+msgstr "Glava prenosa"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Struktura, značilna za proizvajalca, ali empirična: noben predpis ne določa teh polj. Vrednosti se berejo po najboljših močeh z nizko zanesljivostjo, surovi bajti pa se ohranijo; to je informacija, ne napaka."
+
+msgid "Co-Driver Activities"
+msgstr "Dejavnosti drugega voznika"
+
+msgid "Manufacturer Extensions"
+msgstr "Razširitve proizvajalca"
+
+msgid "Decode units"
+msgstr "Dekodirane enote"
+
+msgid "Path"
+msgstr "Pot"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Spremembe dejavnosti tega dne so bile v datoteki odrezane"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Blok hitrosti tega minutnega intervala je bil v datoteki odrezan"
+
+msgid "This record was cut off in the file"
+msgstr "Ta zapis je bil v datoteki odrezan"

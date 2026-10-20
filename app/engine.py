@@ -205,6 +205,7 @@ class TachoParser:
                 "certificate_chain", self._validate_certificate_chain)
             self._run_phase("g1_vu_signatures", self._verify_g1_vu_signatures)
             ef_phase_ok = self._run_phase("ef_signatures", self._verify_ef_signatures)
+            self._run_phase("embedded_cards", self._decode_embedded_cards)
             # The certificate chain authenticates the card key, not the EF
             # payloads, so EF verification must be folded into the overall
             # verdict before it is published (an EF failure must not keep the
@@ -288,6 +289,46 @@ class TachoParser:
             self._fd = None
             raise
         self.is_vu = (self._safe_read(0, 1) == b'\x76')
+        # A stand-alone TREP 06 envelope is a card image relayed through the VU:
+        # SID 0x76 + TREP 06 followed by the complete card. It is the plain card
+        # plus two bytes, so it takes the plain card route (never the VU stream
+        # walk, which cannot verify the card's EF signatures or read its
+        # generation-2 side). Anything that does not walk as a clean card image
+        # stays on the VU path.
+        self._envelope = None
+        self._envelope_rejected = None
+        if self.is_vu:
+            from core.parser.card_envelope import trep06_envelope
+            head = bytes(self.raw_data[:2])
+            envelope = trep06_envelope(bytes(self.raw_data))
+            if envelope is None and head == b"\x76\x06":
+                # Several relayed cards back to back: the first one gives the file
+                # its identity and verdict, the others keep their own per-region
+                # verdict instead of degrading the first.
+                from core.parser.card_envelope import trep06_card_regions
+                regions = trep06_card_regions(bytes(self.raw_data))
+                if regions:
+                    extra = [{"offset": start, "bytes": length, "tlvs": None,
+                              "tlv_complete": True,
+                              "boundary": "STAP/EF framing", "delegated": False}
+                             for start, length in regions[1:]]
+                    envelope = {"bytes": regions[0][0], "card_bytes": regions[0][1],
+                                "elements": None, "extra_regions": extra,
+                                "multi": True}
+            if envelope:
+                self._envelope = envelope
+                self.is_vu = False
+            elif head == b"\x76\x06":
+                # A TREP 06 transfer whose card image does not close: the file is
+                # NOT decoded as a card (the bytes are not a clean image), and the
+                # reason is reported instead of passing as a partial VU stream.
+                self._envelope_rejected = {
+                    "trep": "0x06",
+                    "status": "card_envelope_incomplete",
+                    "detail": ("76 06 header but the card EF stream does not close"),
+                    "missing_bytes": 0,
+                    "trailing_bytes": 0,
+                }
 
     def _close_file(self):
         try:
@@ -305,10 +346,69 @@ class TachoParser:
         """Structural pass: deterministic STAP/BER-TLV parse with byte coverage."""
         from core.parser.deterministic import DeterministicParser
         dp = DeterministicParser(parser=self)
-        self.results = dp.parse(self.raw_data, is_vu=self.is_vu)
+        offset = 0
+        data = self.raw_data
+        if self._envelope:
+            # Decode the card exactly as if the file had no transfer header, then
+            # account for the two bytes: every offset is shifted and the coverage
+            # total stays the real file size.
+            offset = int(self._envelope["bytes"])
+            limit = self._envelope.get("card_bytes")
+            data = bytes(self.raw_data[offset:offset + limit]) if limit else (
+                bytes(self.raw_data[offset:]))
+        self.results = dp.parse(data, is_vu=self.is_vu)
         # dp.parse() returns a fresh results dict — restore file metadata.
         self.results["metadata"]["filename"] = os.path.basename(self.file_path)
         self.results["metadata"]["app_version"] = __version__
+        if self._envelope_rejected:
+            self.results["metadata"].setdefault("vu_integrity", []).append(
+                dict(self._envelope_rejected))
+        if offset:
+            self.results["metadata"]["envelope"] = {
+                "type": "TREP 06 card download relayed by the VU",
+                "bytes": offset,
+            }
+            if self._envelope.get("extra_regions"):
+                self.results["metadata"]["envelope"]["further_regions"] = len(
+                    self._envelope["extra_regions"])
+                self.results["metadata"].setdefault(
+                    "vu_card_download_sections", []).extend(
+                        self._envelope["extra_regions"])
+            # Same wording the content-based origin detector uses for a card
+            # image behind a TREP 06 transfer.
+            self.results["metadata"]["origin_note"] = (
+                "Card image extracted from a VU Card Download "
+                "(TREP 06, DDP_049/DDP_050) \u2014 valid selective download")
+            self._shift_envelope_offsets(self.results, offset)
+
+    @staticmethod
+    def _shift_envelope_offsets(results, delta):
+        """Shift the offsets produced by an envelope parse by *delta* bytes.
+
+        The card was decoded from ``raw[delta:]``: every reported offset (the
+        per-tag table, the coverage ranges) is relative to the card image, so it is
+        moved back onto the real file. Percentages do not change.
+        """
+        def shift(value):
+            if isinstance(value, dict):
+                return {k: (f"0x{int(v, 16) + delta:08X}"
+                            if k == "offset" and isinstance(v, str)
+                            else shift(v))
+                        for k, v in value.items()}
+            if isinstance(value, list):
+                return [shift(item) for item in value]
+            return value
+
+        # Every offset-bearing structure is shifted: the per-tag table, the
+        # generations tree (which carries its own copy) and the coverage ranges.
+        for key in list(results):
+            if key == "metadata":
+                continue
+            results[key] = shift(results[key]) if key != "coverage" else results[key]
+        coverage = results.get("coverage")
+        if isinstance(coverage, dict):
+            coverage["total_bytes"] = int(coverage.get("total_bytes") or 0) + delta
+            coverage["uncovered_ranges"] = shift(coverage.get("uncovered_ranges") or [])
 
     def _log_unhandled_tags(self):
         """Debug aid: report registered tags that never appeared in the file."""
@@ -360,6 +460,9 @@ class TachoParser:
                 # Only fall back to heuristic if the walker produced NO results
                 if not walker_success or not self.results.get("vu_record_arrays"):
                     fallback_reason = "RecordArray walk produced no sections"
+                    self._record_fallback_reason(
+                        "vu_fallback_scan", "unknown_or_misplaced_section",
+                        detail=fallback_reason)
                     complete = False
             except Exception as exc:
                 # The traceback is diagnostic detail; the fallback itself is
@@ -367,6 +470,9 @@ class TachoParser:
                 logger.debug("VU RecordArray dispatch raised: %s", exc, exc_info=True)
                 complete = False
                 fallback_reason = f"RecordArray walk raised {type(exc).__name__}: {exc}"
+                self._record_fallback_reason(
+                    "vu_fallback_scan", "normative_decoder_exception",
+                    detail=fallback_reason)
             if fallback_reason:
                 self._declare_vu_fallback(
                     fallback_reason,
@@ -395,24 +501,175 @@ class TachoParser:
             # the byte-scan heuristic as fallback for files the walk
             # cannot validate (truncated/non-standard downloads).
             reason = "G1 deterministic walk did not cover the file"
+            cause = "unknown_or_misplaced_section"
+            walk_raised = False
             try:
                 from core.parser.g1_walker import walk_g1_vu
                 _messages, complete = walk_g1_vu(self.raw_data, self.results)
+                # Integrity findings (a truncated marker, a card region that does
+                # not close, a short signature block) make the download partial in
+                # this generation exactly as they do in the RecordArray walker; the
+                # heuristic scan is still not run for them.
+                if (self.results.get("metadata") or {}).get("vu_integrity"):
+                    complete = False
             except Exception as exc:
                 logger.debug("G1 VU walk raised: %s", exc, exc_info=True)
                 complete = False
                 _messages = []
                 reason = f"G1 walk raised {type(exc).__name__}: {exc}"
+                cause = "normative_decoder_exception"
+                walk_raised = True
             if not complete:
-                # Gen1 keeps its long-standing recovery unchanged: an incomplete
-                # walk always falls through to the byte scan (which dedupes only
-                # byte-identical records), exactly as before. What is new is that
-                # the switch is declared and everything the scan adds is marked
-                # heuristic; the Gen2 never-rescan guard must not leak in here.
-                self._declare_vu_fallback(reason)
+                # INTEGRITY vs DECODABILITY. A short signature block or trailing
+                # junk is an integrity finding: every declared record of every
+                # message was decoded normatively, so the byte scan must not run —
+                # it would only add low-confidence duplicates on top. The walk
+                # reports the download as partial (and metadata.vu_integrity says
+                # why), exactly like the Gen2 path.
+                # The primary cause: a stream that does not even open with a known
+                # TREP marker is misplaced/unknown; a known marker whose declared
+                # body does not fit the bytes is a truncated file; a walker that
+                # raised is our defect.
+                from core.parser.g1_walker import TREP_NAMES
+                head = self.raw_data[:2]
+                if walk_raised:
+                    cause = "normative_decoder_exception"
+                elif len(head) < 2 or head[0] != 0x76 or head[1] not in TREP_NAMES:
+                    cause = "unknown_or_misplaced_section"
+                else:
+                    cause = "file_truncated"
+                if (self.results.get("metadata") or {}).get("vu_units"):
+                    # Per-TREP rule: the walk already ran the heuristic on each
+                    # failed unit's own byte range, so the whole-file scan would
+                    # re-read bytes the normative walk vouched for. The failure is
+                    # still declared (the reason above) and the affected sections
+                    # keep their heuristic marking.
+                    # No byte scan ran here: the walk bounded the damage per TREP
+                    # and declared the zones. The route says exactly that.
+                    self._record_fallback_reason(
+                        "vu_walk_incomplete", cause,
+                        trep=(f"0x{(_messages or [{}])[-1].get('trep', 0):02X}"
+                              if _messages else None),
+                        detail=reason)
+                    self._declare_vu_fallback(reason, walker_wrote=True)
+                elif self.results.get("_g1_walk_decoded_all"):
+                    logger.warning(
+                        "VU download incomplete: %s",
+                        "signature block shorter than the normative length"
+                        if any(entry.get("status") == "signature_truncated"
+                               for entry in (self.results.get("metadata") or {})
+                               .get("vu_integrity") or [])
+                        else "trailing bytes after the last message")
+                else:
+                    # Gen1 keeps its long-standing recovery for a walk that could
+                    # not decode data. What is new is that the switch is declared
+                    # with a structured cause and everything the scan adds is
+                    # marked heuristic.
+                    # The primary cause: a stream that does not even open with a
+                    # known TREP marker is misplaced/unknown; a known marker whose
+                    # declared body does not fit the bytes is a truncated file.
+                    # The cause was determined above; the walker's exception, when
+                    # there was one, already kept its honest classification.
+                    self._record_fallback_reason(
+                        "vu_fallback_scan", cause,
+                        trep=(f"0x{(_messages or [{}])[-1].get('trep', 0):02X}"
+                              if _messages else None),
+                        offset=((_messages or [{}])[-1].get("end")
+                                if _messages else None),
+                        detail=reason)
+                    self._declare_vu_fallback(reason)
             present = sorted({m["trep"] for m in (_messages or [])})
             self._build_trep_report(generation, complete_walk=complete,
                                     present_treps=present)
+
+    def _decode_embedded_cards(self):
+        """Run the *plain card* pipeline over every embedded card region.
+
+        A ``76 06`` section inside a VU stream carries a card image. The structural
+        walk alone gives its EFs but not its EF signatures, certificate chain or
+        full generations tree — the card's generation-2 data can then be missing or
+        partial. Each region is therefore parsed through the same pipeline a plain
+        card file takes, its semantic keys are merged into the VU result, and its
+        verdict is reported per region (never folded into the VU chain verdict).
+        """
+        regions = ((self.results.get("metadata") or {})
+                   .get("vu_card_download_sections") or [])
+        for info in regions:
+            # A region is processed when its byte range is known and closes; the
+            # generation-2 walker marks it "delegated", the generation-1 walker
+            # records the same fields without delegating itself.
+            if not info.get("tlv_complete"):
+                continue
+            start, size = int(info.get("offset", 0)), int(info.get("bytes", 0))
+            if size <= 0:
+                continue
+            chunk = bytes(self.raw_data[start:start + size])
+            sub = self._parse_card_bytes(chunk)
+            if not sub:
+                info["plain_card_parse"] = "failed"
+                continue
+            from core.decoders.vu_g1 import _merge_card_download
+            _merge_card_download(self.results, sub)
+            ef = sub.get("ef_signature_verification") or {}
+            info["plain_card_parse"] = "ok"
+            info["integrity_check"] = (sub.get("metadata") or {}).get(
+                "integrity_check")
+            info["ef_signatures"] = {
+                "verified": ef.get("verified"), "failed": ef.get("failed"),
+                "total": ef.get("total"), "summary": ef.get("summary")}
+            info["generation"] = (sub.get("metadata") or {}).get("generation")
+            self.results["metadata"].setdefault("embedded_card_verdicts", []).append({
+                "offset": f"0x{start:08X}", "bytes": size,
+                "generation": info["generation"],
+                "integrity_check": info["integrity_check"],
+                "ef_signatures": info["ef_signatures"],
+            })
+            failed = int(info["ef_signatures"].get("failed") or 0)
+            if failed:
+                # A damaged embedded card is REPORTED (the tree above is the VU's
+                # own state, so its verdict cannot carry the card's failure).
+                self.results["metadata"].setdefault("vu_integrity", []).append({
+                    "trep": "0x06", "status": "card_ef_signature_invalid",
+                    "detail": f"{failed} EF signature(s) failed in the embedded card",
+                    "missing_bytes": 0, "trailing_bytes": 0})
+
+    @staticmethod
+    def _parse_card_bytes(chunk):
+        """Parse a card image held in memory through the plain card pipeline."""
+        import tempfile
+        handle = tempfile.NamedTemporaryFile(suffix=".ddd", delete=False)
+        try:
+            handle.write(chunk)
+            handle.close()
+            from core.registry.registry import DecoderRegistry
+            DecoderRegistry.reset_instance()
+            return TachoParser(handle.name).parse()
+        except Exception as exc:                        # pragma: no cover
+            logger.debug("Embedded card parse failed: %s", exc, exc_info=False)
+            return None
+        finally:
+            try:
+                os.unlink(handle.name)
+            except OSError:
+                pass
+
+    def _record_fallback_reason(self, route, cause, **kwargs):
+        """Record one structured fallback reason (see core.parser.fallback_reasons)."""
+        from core.parser.fallback_reasons import record_fallback_reason
+        return record_fallback_reason(self.results, route, cause, **kwargs)
+
+    def _fallback_log_reason(self, sentence):
+        """``<cause> @ <trep>:<offset>`` for the log line, else *sentence*."""
+        from core.parser.fallback_reasons import primary_reason
+        primary = primary_reason(self.results)
+        if not primary:
+            return sentence
+        location = primary.get("trep") or "stream"
+        if primary.get("offset") is not None:
+            location = f"{location}@{primary['offset']}"
+        detail = primary.get("detail") or sentence
+        return (f"{primary['cause']} at {location} "
+                f"({primary['classification']}): {detail}")
 
     def _declare_vu_fallback(self, reason, walker_wrote=False):
         """Declare a VU decode route switch and recover what the scan still can.
@@ -448,7 +705,8 @@ class TachoParser:
         # otherwise be decoded twice, once per route.
         if walker_wrote:
             logger.warning("VU deterministic decode fell back (%s): the affected "
-                           "sections stay partial, no heuristic rescan", reason)
+                           "sections stay partial, no heuristic rescan",
+                           self._fallback_log_reason(reason))
             return
         before = {key: len(value) for key, value in _result_records(self.results).items()}
         decoders.parse_vu_download_messages(self.raw_data, self.results)
@@ -462,7 +720,8 @@ class TachoParser:
         # The sentence and metadata.heuristic_fields must describe the same set.
         marked = sorted((self.results.get("metadata") or {}).get("heuristic_fields") or {})
         logger.warning("VU deterministic decode fell back (%s): heuristic byte "
-                       "scan recovered %s; sections marked heuristic: %s", reason,
+                       "scan recovered %s; sections marked heuristic: %s",
+                       self._fallback_log_reason(reason),
                        ", ".join(gained) or "nothing", ", ".join(marked) or "none")
 
     def _build_trep_report(self, generation, complete_walk=True, present_treps=None):
@@ -474,7 +733,7 @@ class TachoParser:
 
         First confirms the file origin from its content: a driver-card image
         wrapped in a stand-alone TREP 06 Card Download is a valid selective
-        download (Annex 1B §2.2.6.6), not a VU stream, so it is reclassified as
+        download (DDP_049/DDP_050), not a VU stream, so it is reclassified as
         a card and no VU completeness report is produced for it.
         """
         from core.parser.trep_inventory import build_trep_report, format_trep_summary
@@ -853,6 +1112,15 @@ class TachoParser:
             # must not invalidate the signed preceding download payload.
             if message["trep"] in (0x11, 0x14):
                 entry.update({"signature_valid": None, "reason": "signature not applicable"})
+                report["treps"].append(entry)
+                continue
+            if message.get("card_region"):
+                # Card data forwarded inside the VU transfer (DDP_049): the card
+                # carries its own EF signatures, so the region is neither a VU
+                # TREP payload nor a missing VU signature. Counting it as one
+                # would flip a healthy VU download to "incomplete".
+                entry.update({"signature_valid": None,
+                              "reason": "card data forwarded in the VU transfer"})
                 report["treps"].append(entry)
                 continue
             signed_messages += 1

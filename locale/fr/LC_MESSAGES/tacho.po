@@ -2281,3 +2281,65 @@ msgstr "INTÉGRITÉ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Couverture en octets"
+
+msgid "Current Date Time"
+msgstr "Date Heure"
+
+msgid "RCM Serial"
+msgstr "RCM Numéro de série"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS N° de série du capteur"
+
+msgid "VU Serial"
+msgstr "VU Numéro de série"
+
+msgid "Download Interface Version"
+msgstr "Version de l'interface de téléchargement"
+
+msgid "Entry Type Description"
+msgstr "Type d'entrée Descriptif"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Image de carte téléchargée via l'unité véhicule : les deux premiers octets sont l'en-tête de transfert (SID + TREP 06) conservé par le programme qui a enregistré le fichier, et non la forme de stockage standard d'un fichier de carte (DDP_050). Certains autres programmes signalent un tel fichier comme corrompu ; Certains autres programmes signalent un tel fichier comme corrompu ; ce programme présente le résultat des signatures de la carte séparément."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} note(s) — cliquez pour les détails"
+
+
+
+msgid "File Note"
+msgstr "Note sur le fichier"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Note à propos de ce fichier.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Numéro de série"
+
+msgid "Transfer header"
+msgstr "En-tête de transfert"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Structure propre au constructeur ou empirique : aucun règlement ne définit ces champs. Les valeurs sont lues au mieux avec une faible confiance et les octets bruts sont conservés ; il s'agit d'une information, non d'un défaut."
+
+msgid "Co-Driver Activities"
+msgstr "Activités du second conducteur"
+
+msgid "Manufacturer Extensions"
+msgstr "Extensions du constructeur"
+
+msgid "Decode units"
+msgstr "Unités décodées"
+
+msgid "Path"
+msgstr "Chemin"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Les changements d'activité de ce jour ont été tronqués dans le fichier"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Le bloc de vitesse de cette plage de minutes a été tronqué dans le fichier"
+
+msgid "This record was cut off in the file"
+msgstr "Cet enregistrement a été tronqué dans le fichier"

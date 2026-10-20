@@ -113,17 +113,71 @@ FAULT_TYPES: dict[int, str] = {
 # table is that table minus the three codes the 2021/1228 amendment introduced,
 # because the 2018/502 text still calls them RFU: after '0E'H the v1 list
 # continues with "RFU", likewise after '1B'H and after '39'H.
+EVENT_FAULT_VERSION_G1 = "generation1"
 EVENT_FAULT_VERSION_1 = "generation2version1"
 EVENT_FAULT_VERSION_2 = "generation2version2"
 EVENT_FAULT_VERSION_UNKNOWN = "unknown"
-EVENT_FAULT_VERSIONS = (EVENT_FAULT_VERSION_1, EVENT_FAULT_VERSION_2,
-                        EVENT_FAULT_VERSION_UNKNOWN)
+EVENT_FAULT_VERSIONS = (EVENT_FAULT_VERSION_G1, EVENT_FAULT_VERSION_1,
+                        EVENT_FAULT_VERSION_2, EVENT_FAULT_VERSION_UNKNOWN)
 
 #: Codes the version-2 amendment defines and version 1 still calls RFU:
 #: '0F'H GNSS anomaly, '1C'H motion/activity inconsistency, '3A'H internal
 #: sensor fault. Reading any of them as its version-2 meaning in a version-1
 #: (or unknown-version) section would fabricate an event.
 GEN2_V2_ONLY_TYPES: frozenset[int] = frozenset({0x0F, 0x1C, 0x3A})
+
+#: "Generation 1" assignment of the same point 2.70, read from the consolidated
+#: Annex 1C text (Reg. (EU) 2016/799, Appendix 1, point 2.70, the "Generation 1"
+#: list — the 2002 Annex 1B page is the same list *before* the amending act that
+#: added '0A'H):
+#:
+#:   '00'H..'0A'H general events, '0B'H RFU
+#:   '10'H..'18'H VU related security breach attempt events, '19'H RFU
+#:   '20'H..'25'H sensor related security breach attempt events, '26'H RFU
+#:   '30'H..'35'H recording equipment faults, '36'H RFU
+#:   '40'H card fault with no further details, '41'H/'42'H RFU
+#:
+#: Two differences from generation 2 matter: '0A'H is *Vehicle Motion Conflict*
+#: in the amended generation-1 list (not RFU as the 2002 text still printed), and
+#: everything generation 2 added after the shared codes ('0B'H time conflict,
+#: GNSS/RCM/ITS groups, '36'H..'3A'H) is RFU here.
+EVENT_TYPES_G1: dict[int, str] = {
+    0x00: "No further details",
+    0x01: "Insertion of a non-valid card",
+    0x02: "Card conflict",
+    0x03: "Time overlap",
+    0x04: "Driving without an appropriate card",
+    0x05: "Card insertion while driving",
+    0x06: "Last card session not correctly closed",
+    0x07: "Over speeding",
+    0x08: "Power supply interruption",
+    0x09: "Motion data error",
+    0x0A: "Vehicle motion conflict",
+    0x10: "Security breach attempt, no further details",
+    0x11: "Motion sensor authentication failure",
+    0x12: "Tachograph card authentication failure",
+    0x13: "Unauthorised change of motion sensor",
+    0x14: "Card data input integrity error",
+    0x15: "Stored user data integrity error",
+    0x16: "Internal data transfer error",
+    0x17: "Unauthorised case opening",
+    0x18: "Hardware sabotage",
+    0x20: "Sensor security breach attempt, no further details",
+    0x21: "Sensor authentication failure",
+    0x22: "Sensor stored data integrity error",
+    0x23: "Sensor internal data transfer error",
+    0x24: "Sensor unauthorised case opening",
+    0x25: "Sensor hardware sabotage",
+}
+FAULT_TYPES_G1: dict[int, str] = {
+    0x30: "Recording equipment fault, no further details",
+    0x31: "VU internal fault",
+    0x32: "Printer fault",
+    0x33: "Display fault",
+    0x34: "Downloading fault",
+    0x35: "Sensor fault",
+    0x40: "Card fault, no further details",
+}
 
 #: "Generation 2, version 1" tables (Reg. 2018/502): identical to version 2 for
 #: every shared code, with '0F'H/'1C'H/'3A'H left RFU.
@@ -150,6 +204,8 @@ def _version_tables(version):
     """
     if version == EVENT_FAULT_VERSION_2:
         return EVENT_TYPES, FAULT_TYPES
+    if version == EVENT_FAULT_VERSION_G1:
+        return EVENT_TYPES_G1, FAULT_TYPES_G1
     return EVENT_TYPES_V1, FAULT_TYPES_V1
 
 
@@ -173,6 +229,9 @@ def event_fault_type_status(code, version=EVENT_FAULT_VERSION_UNKNOWN) -> str:
         return TYPE_MANUFACTURER_SPECIFIC
     if code in assigned_types(version):
         return TYPE_ASSIGNED
+    if version == EVENT_FAULT_VERSION_G1:
+        # Generation 1 assigns nothing above its own table below '80'H.
+        return TYPE_RESERVED
     if (version not in (EVENT_FAULT_VERSION_1, EVENT_FAULT_VERSION_2)
             and code in GEN2_V2_ONLY_TYPES):
         # A version-2-only code in a section whose version we could not resolve:
@@ -190,6 +249,15 @@ def describe_event_fault_type(code, is_event, version=EVENT_FAULT_VERSION_UNKNOW
     says), an unresolved version says "Unknown", and neither claims the
     "GNSS anomaly" / "inconsistency" / "internal sensor fault" meaning.
     """
+    if version == EVENT_FAULT_VERSION_G1:
+        table = EVENT_TYPES_G1 if is_event else FAULT_TYPES_G1
+        if code in table:
+            return table[code]
+        if code >= 0x80:
+            return (f"Manufacturer specific event (0x{code:02X})" if is_event
+                    else f"Manufacturer specific fault (0x{code:02X})")
+        return (f"Reserved for future use (0x{code:02X})" if is_event
+                else f"Reserved for future use (0x{code:02X})")
     if code not in GEN2_V2_ONLY_TYPES or version == EVENT_FAULT_VERSION_2:
         return describe_event(code) if is_event else describe_fault(code)
     if version == EVENT_FAULT_VERSION_1:
@@ -359,10 +427,25 @@ def describe_record_purpose(code) -> str:
     return f"Unknown (0x{code:02X})"
 
 
-def describe_calibration_purpose(code) -> str:
-    """Return a human-readable label for a CalibrationPurpose byte."""
+#: CalibrationPurpose values generation 1 assigns: 00..04. Generation 2 adds
+#: '05'H (entry of the VRN by the company) and '06'H (time adjustment without
+#: calibration) — Reg. (EU) 2016/799 Appendix 1 point 2.71 lists them under
+#: "In addition to generation 1 ... Generation 2".
+CALIBRATION_PURPOSE_G1_MAX = 0x04
+
+
+def describe_calibration_purpose(code, generation="G2") -> str:
+    """Human-readable CalibrationPurpose label, generation-aware.
+
+    A generation-1 record cannot mean "entry of VRN by company" or "time
+    adjustment without calibration": those two values exist only from generation 2
+    on, so they are reported as reserved for a generation-1 record instead of
+    borrowing the later meaning.
+    """
     if code is None:
         return "Unknown"
+    if generation == "G1" and isinstance(code, int) and 0x05 <= code <= 0x7F:
+        return f"Reserved for future use (0x{code:02X})"
     if code in CALIBRATION_PURPOSE:
         return CALIBRATION_PURPOSE[code]
     if code >= 0x80:
@@ -370,13 +453,38 @@ def describe_calibration_purpose(code) -> str:
     return f"Reserved for future use (0x{code:02X})"
 
 
-def describe_control_type(code) -> str:
-    """Decode a ControlType bit mask ('cvds'B, Annex 1B §2.53) into a
-    comma-separated list of the activities carried out during the control."""
+#: Generation-1 ControlType (Annex 1B §2.44 / Annex 1C §2.53 "Generation 1"):
+#: 'cvpdxxxx'B — the low nibble is *not used*, so bit 0x08 is not the
+#: generation-2 roadside-calibration check.
+CONTROL_TYPE_BITS_G1: tuple[tuple[int, str], ...] = (
+    (0x80, "Card downloaded"),
+    (0x40, "VU downloaded"),
+    (0x20, "Printing"),
+    (0x10, "Display"),
+)
+
+
+def control_type_bits(code, generation="G2"):
+    """The flagged activities of a ControlType byte, per *generation*."""
+    if not isinstance(code, int):
+        return []
+    table = CONTROL_TYPE_BITS_G1 if generation == "G1" else CONTROL_TYPE_BITS
+    return [label for bit, label in table if code & bit]
+
+
+def describe_control_type(code, generation="G2") -> str:
+    """Decode a ControlType bit mask into a comma-separated activity list.
+
+    Generation 1: 'cvpdxxxx'B (Annex 1B §2.44) — 0x08 is part of the unused
+    nibble. Generation 2: 'cvpdexxx'B (Annex 1C §2.53) — 0x08 is the roadside
+    calibration check. Reading a generation-1 byte with the generation-2 table
+    would claim a calibration check that the record cannot express.
+    """
     if code is None:
         return "Unknown"
-    parts = [label for bit, label in CONTROL_TYPE_BITS if code & bit]
-    leftover = code & ~sum(bit for bit, _ in CONTROL_TYPE_BITS)
+    table = CONTROL_TYPE_BITS_G1 if generation == "G1" else CONTROL_TYPE_BITS
+    parts = [label for bit, label in table if code & bit]
+    leftover = code & ~sum(bit for bit, _ in table)
     if leftover:
         parts.append(f"0x{leftover:02X}")
     return ", ".join(parts) if parts else "None recorded"

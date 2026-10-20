@@ -83,6 +83,21 @@ _PDF_SUBTITLE_LABELS = frozenset({"File", "Generation", "Source", "Parsed at"})
 _PDF_DAY_DATE_FORMATS = ("%d/%m/%Y", "%Y-%m-%d")
 
 
+_ILLEGAL_XML = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+
+def _cell_safe(value):
+    """Strip characters the XLSX writer (XML 1.0) rejects.
+
+    A decoded field can carry control bytes (a malformed string in the file);
+    openpyxl raises on them and would abort the whole export. They are unprintable
+    anyway, so they are dropped rather than replaced.
+    """
+    if isinstance(value, str):
+        return _ILLEGAL_XML.sub("", value)
+    return value
+
+
 def _pdf_number(value):
     """An integer with thin-space grouping, as the report tables print them."""
     return f"{value:,}".replace(",", " ")
@@ -709,7 +724,9 @@ class ExportManager:
                 for col in range(1, len(headers) + 1):
                     raw = row[col - 1] if col <= len(row) else None
                     value, number_format = _excel_typed_value(kinds[col - 1], raw)
-                    cell = ws.cell(row=excel_row, column=col, value=value)
+                    # A malformed string in the file can carry control bytes, which
+                    # XML 1.0 forbids: drop them instead of aborting the export.
+                    cell = ws.cell(row=excel_row, column=col, value=_cell_safe(value))
                     if number_format:
                         cell.number_format = number_format
                     typed = isinstance(value, (int, float, date, datetime, timedelta))

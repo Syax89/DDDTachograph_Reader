@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Sensorparringer (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Sensor-serienummer"
+msgstr "Bevægelsessensor · Serienummer"
 
 msgid "Sig Size"
 msgstr "Signaturstørrelse"
@@ -2281,3 +2281,65 @@ msgstr "INTEGRITET"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Byteafstemt dækning"
+
+msgid "Current Date Time"
+msgstr "Dato Tid"
+
+msgid "RCM Serial"
+msgstr "RCM Serienummer"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Sensor-serienummer"
+
+msgid "VU Serial"
+msgstr "VU Serienummer"
+
+msgid "Download Interface Version"
+msgstr "Version af downloadgrænseflade"
+
+msgid "Entry Type Description"
+msgstr "Indtastningstype Beskrivelse"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Billede af kort hentet gennem køretøjets enhed: de to første byte er overførselsheaderen (SID + TREP 06), som det program, der gemte filen, har beholdt, og ikke den standardlagringsform for en kortfil (DDP_050). Nogle andre programmer rapporterer en sådan fil som beskadiget; Nogle andre programmer rapporterer en sådan fil som beskadiget; dette program viser kortets eget signaturresultat separat."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} bemærkning(er) — klik for detaljer"
+
+
+
+msgid "File Note"
+msgstr "Bemærkning til filen"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Bemærkning om denne fil.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Serienummer"
+
+msgid "Transfer header"
+msgstr "Overførselsheader"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Producentspecifik eller empirisk struktur: ingen forskrift definerer disse felter. Værdierne læses så godt som muligt med lav sikkerhed, og de rå byte er bevaret; dette er information, ikke en fejl."
+
+msgid "Co-Driver Activities"
+msgstr "Andenførers aktiviteter"
+
+msgid "Manufacturer Extensions"
+msgstr "Producentudvidelser"
+
+msgid "Decode units"
+msgstr "Afkodningsenheder"
+
+msgid "Path"
+msgstr "Sti"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Ændringerne i aktivitet for denne dag blev afskåret i filen"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Hastighedsblokken for dette minutinterval blev afskåret i filen"
+
+msgid "This record was cut off in the file"
+msgstr "Denne post blev afskåret i filen"

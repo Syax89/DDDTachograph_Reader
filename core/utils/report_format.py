@@ -28,7 +28,112 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
                # and how it assigns it (`assigned`/`reserved`/`manufacturer_
                # specific`/`unknown_version`), plus whether the manufacturer code
                # byte is in the JRC registry: technical status, JSON only.
-               "event_fault_version", "type_status", "manufacturer_status"}
+               "event_fault_version", "type_status", "manufacturer_status",
+               # VuCardIWRecord tail (Annex 1B §2.120 / Annex 1C §2.177): the
+               # previous-vehicle block, the numeric manual-input flag and the
+               # completeness bookkeeping are carried by the model and the JSON
+               # export, but the table/export layout is the owner's and stayed
+               # unchanged — showing them is a separate decision (it needs a
+               # translated label in all 33 catalogs).
+               "previous_vehicle", "manual_input_flag",
+               "manual_input_flag_meaning", "record_bytes", "record_complete",
+               "missing_bytes", "raw_tail_bytes",
+               # CardSlotsStatus ('ccccdddd'B, Annex 1B §2.28) complete typing:
+               # the numeric nibble and its assignment status stay in the JSON;
+               # the short state word is the published value.
+               "driver_slot_code", "codriver_slot_code",
+               "driver_slot_type", "codriver_slot_type",
+               "driver_slot_status", "codriver_slot_status",
+               # EntryTypeDailyWorkPeriod assignment status (assigned / not
+               # assigned for generation 1 / unknown above the shared six).
+               "entry_type_status", "calibration_variant_source",
+               "digital_map_version_raw",
+               # Technical-data detail: ExtendedSerialNumber / seal subfields,
+               # the CardStructureVersion halves, the calibration variant and
+               # the unresolved-encoding statuses stay in the JSON export only.
+               "card_serial", "card_structure_version_parts",
+               "equipment_type_status",
+               "month_year_status", "seal_identifier", "calibration_variant",
+               "digital_map_version_status", "consent_status", "consent_raw"}
+
+#: Bookkeeping added by the all-TREP decoding pass: status/provenance/diagnostic
+#: keys that are not data of the regulation. Regulation data the parent dropped
+#: is *shown* instead (see docs/developer/normative-completion.md §10); only the
+#: machine facts below stay in the JSON. One named set so the GUI and the exports
+#: cannot drift apart; pinned by tests/unit/test_model_only_keys_hidden.py.
+BOOKKEEPING_KEYS = frozenset({
+    # raw integers duplicating a shown value
+    "lock_in_raw", "lock_out_raw", "control_time_raw", "begin_time_raw",
+    "end_time_raw", "old_time_raw", "new_time_raw", "consent_raw",
+    "last_control_time_raw", "first_overspeed_since_raw", "timestamp_raw",
+    "begin_raw", "current_date_time_raw", "activity_raw",
+    "calibration_variant_expected", "calibration_variant_mismatch",
+    # Structured serial companions: the panels show one compact scalar
+    # ('<serial> · MM/YY · manufacturer'), the dict stays in the JSON.
+    "vu_serial_decoded", "sensor_serial_decoded", "sensor_gnss_serial_decoded",
+    # One column per serial datum: the compact decoded form is the column, the raw
+    # hex of the same bytes stays in the JSON (two columns for one datum, with
+    # labels that no catalog can tell apart, is exactly what the coherence rule
+    # forbids).
+    "sensor_serial_hex", "sensor_gnss_serial_hex", "rcm_serial_hex",
+    # A record whose own payload was cut: the machine flag and the declared count
+    # stay in the JSON, the informational `note` is what every surface shows.
+    "truncated", "declared_changes_count", "declared_minutes",
+    "old_time_iso", "new_time_iso", "next_calibration_iso", "sensor_pairing_time",
+    "rcm_serial_decoded",
+    "digital_map_version_raw", "control_type_bits",
+    "card_structure_version_parts",
+    # status / provenance / diagnostics
+    "time_status", "type_status", "event_fault_version", "position_status",
+    "variant_source", "decode_path", "field_status", "vin_status",
+    "aggregation", "record_bytes", "record_complete", "missing_bytes",
+    "raw_tail_bytes", "source_conflict", "consent_status",
+    "digital_map_version_status", "invalid_changes_count", "day_date",
+    "record_day", "entry_type_status", "calibration_variant_source",
+    "calibration_variant", "equipment_type_status", "month_year_status",
+    "blocks", "boundary", "tlvs", "tlv_complete", "fallback_reasons",
+    "vu_integrity", "vu_section_schema", "card_slots_status",
+    # Record-level decoded serials duplicate the panel rows (VU Information
+    # shows `vu_serial` / `sensor_serial`); the record copy is JSON-only.
+    "serial", "sensor_serial_extended", "condition_status",
+    "manufacturer_status", "seal_identifier",
+    # CardSlotsStatus numeric/typing companions: the published state word
+    # (empty/occupied/reserved, exactly as before) is the regulation datum.
+    "driver_slot_code", "codriver_slot_code", "driver_slot_type",
+    "codriver_slot_type", "driver_slot_status", "codriver_slot_status",
+    "driver_slot_card_type", "codriver_slot_card_type",
+})
+HIDDEN_KEYS |= BOOKKEEPING_KEYS
+
+#: Keys a *dict* section never renders: the bookkeeping above. ``HIDDEN_KEYS``
+#: also holds ``name``, which VU Company Info does show, so the dict renderers
+#: skip this narrower set instead of the whole one.
+MODEL_ONLY_DICT_KEYS = BOOKKEEPING_KEYS
+
+#: Keys a dict section *does* render even though they are in ``HIDDEN_KEYS``.
+DICT_SECTION_VISIBLE_HIDDEN_KEYS = frozenset({"name"})
+
+
+def dict_section_key_is_visible(key):
+    """True when a dict-section *key* may become a Field/Value row."""
+    if key == "confidence" or key in MODEL_ONLY_DICT_KEYS:
+        return False
+    if key in HIDDEN_KEYS and key not in DICT_SECTION_VISIBLE_HIDDEN_KEYS:
+        return False
+    return True
+
+
+def dict_section_rows(section, formatter):
+    """``(key, formatted)`` pairs a dict section may render, in insertion order.
+
+    Shared by the Excel/CSV/PDF dict sheets and the GUI key/value panel so the
+    two can never disagree about which bookkeeping keys stay off screen.
+    """
+    for key, value in section.items():
+        if not dict_section_key_is_visible(key):
+            continue
+        yield key, formatter(value)
+
 
 # Canonical trust verdicts for a parsed download. Consumers (GUI badge, rename
 # tooling, reports) must classify with these rather than by substring-matching
@@ -93,6 +198,9 @@ _CODE_LABEL_KEYS = {"trep", "tag_id", "data_type"}
 # Acronyms kept upper-case when humanising keys.
 _ACRONYMS = {"vin", "gnss", "vu", "its", "id", "km", "kmh", "iw", "ic", "icc",
              "rsa", "ecdsa", "msca", "erca", "trep", "ad", "g1", "g2",
+             # RCM = Remote Communication Module (Annex 1C §2.120): the column
+             # label is "RCM Serial", which is the msgid the catalogs carry.
+             "rcm",
              # Certificate references: CAR = Certificate Authority Reference,
              # CHR = Certificate Holder Reference; ALGO = algorithm identifier.
              "car", "chr", "algo"}
@@ -139,6 +247,9 @@ EXPORT_SECTIONS = [
     ("ef_signature_verification", "EF Card Data Signatures"),
     ("certificates", "Driver Card Certificates"),
     ("sensor_daily_records", "Sensor Daily Records"),
+    ("vu_units", "Decode units"),
+    ("co_driver_activities", "Co-Driver Activities"),
+    ("unmapped_record_types", "Manufacturer Extensions"),
 ]
 
 # Dict-style sections exposed as key/value sheets in Excel/CSV/PDF.
@@ -153,6 +264,30 @@ DICT_SECTIONS = [
     ("company_info", "VU Company Info"),
     ("sensor_info", "Sensor Identification"),
 ]
+
+#: One informational sentence for every section whose layout no regulation defines
+#: (manufacturer extensions, sensor payloads, the observed co-driver array). It is a
+#: note, never a warning: the data are shown, the raw bytes are preserved, and the
+#: reading is labelled low confidence.
+EMPIRICAL_NOTE = (
+    "Manufacturer-specific or empirical layout: no regulation defines these fields. "
+    "The values are read on a best-effort basis with low confidence and the raw bytes "
+    "are preserved; this is information, not a defect.")
+
+#: Sections whose layout is not defined by the regulation.
+EMPIRICAL_SECTIONS = frozenset({"vu_units", "co_driver_activities",
+                                "unmapped_record_types",
+                                "sensor_daily_records", "sensor_info",
+                                "load_sensor_data", "locations"})
+
+
+def section_description(key):
+    """Description text for a section, with the informational note where it applies."""
+    text = SECTION_DESCRIPTIONS.get(key, "")
+    if key in EMPIRICAL_SECTIONS:
+        return f"{text} {EMPIRICAL_NOTE}".strip()
+    return text
+
 
 SECTION_DESCRIPTIONS = {
     "activities": "Daily activity breakdown (times in UTC). "
@@ -199,7 +334,22 @@ SECTION_DESCRIPTIONS = {
     "calibration_vins": "VINs (Vehicle Identification Numbers) extracted from calibration records.",
     "card_numbers": "Card numbers observed by the VU from inserted driver and company cards.",
     "vu_record_arrays": "Raw VU RecordArray data: structural audit of all VU memory sections.",
-    "sensor_daily_records": "Motion sensor daily speed records with min/max/average speeds.",
+    "vu_units": (
+        "One row per decoded unit (TREP or RecordArray section): where it starts, how "
+        "long it is and whether it was read by the normative decoder, recovered by the "
+        "byte scan inside its own range, or could not be read. The units are ordered, "
+        "never overlap and cover every byte of the file. This is information."),
+    "co_driver_activities": (
+        "Co-driver ActivityChangeInfo records of the Activities section. The record "
+        "type 0x29 is not part of the Annex 1C array list: it is an observed "
+        "extension (seen on Stoneridge V6006) and read as empirical."),
+    "unmapped_record_types": (
+        "Record arrays whose type has no regulation-defined name (RFU 0x25-0x7F and "
+        "manufacturer-specific 0x80-0xFF). Code, declared size, record count and the "
+        "raw bytes are shown so the extension is visible."),
+    "sensor_daily_records": (
+        "Motion sensor daily speed records with min/max/average speeds. The payload "
+        "layout is manufacturer-specific."),
 }
 
 
@@ -640,6 +790,20 @@ def summary_rows(data):
             f"{coverage['structurally_identified_pct']}% "
             "(not a semantic decoding rate)",
         ))
+    envelope = meta.get("envelope")
+    if isinstance(envelope, dict) and envelope.get("type"):
+        # A card image relayed through the vehicle unit: the two leading bytes are
+        # the transfer header (SID + TREP 06) the saving tool kept, not the storage
+        # form DDP_050 describes. The data are the standard card's; this row says so
+        # in the report exactly as the window does, and it is not a defect line.
+        rows.append((
+            "Transfer header",
+            "Card image downloaded through the vehicle unit: the two leading bytes "
+            "are that header (SID 76 + TREP 06), kept by the tool that saved the "
+            "file and not the standard storage form of a card file (DDP_050, which "
+            "strips them). Some other programs report such a file as corrupt; the "
+            "card's own signature verdict is reported separately.",
+        ))
     if meta.get("app_version"):
         rows.append(("Reader version", meta["app_version"]))
     if sv.get("summary"):
@@ -700,13 +864,56 @@ def _hoist_constant_record_type(headers, rows):
     return headers, [row[:idx] + row[idx + 1:] for row in rows], note
 
 
+def _add_note_column(key, items, headers, rows):
+    """Give a record whose payload was cut its own informational column.
+
+    Every export table ends up here, derived monthly report included: when any
+    record of the section carries a `note` — the informational text of a cut day or
+    speed block — the table gains a visible ``Note`` column, empty for the complete
+    records. Nothing is added when no record has a note, so an intact file's tables
+    are byte-for-byte what they were.
+    """
+    if "Note" in headers or not isinstance(items, list):
+        return headers, rows
+    flagged = [item for item in items
+               if isinstance(item, dict) and item.get("note")]
+    if not flagged:
+        return headers, rows
+    # Match on the rendered identity the table shows: the day date for activities,
+    # the minute range otherwise. A table without either still gets the column when
+    # it holds exactly one row (the whole section is that one cut record).
+    identity_keys = ("date",) if key == "activities" else ("begin_time_raw", "record_day")
+    wanted = {}
+    for item in flagged:
+        for name in identity_keys:
+            value = item.get(name)
+            if value not in (None, ""):
+                wanted.setdefault(fmt_value(value), fmt_value(item.get("note")))
+    column = [headers.index(h) for h in headers
+              if h in ("Date", "Time Range", "Day")]
+    new_rows, ran_out = [], False
+    for row in rows:
+        note = ""
+        for col in column:
+            if col < len(row) and fmt_value(row[col]) in wanted:
+                note = wanted[fmt_value(row[col])]
+                break
+        if not note and not column and len(rows) == 1 and len(flagged) == 1:
+            note = fmt_value(flagged[0].get("note"))
+        ran_out = ran_out or bool(note)
+        new_rows.append(list(row) + [note])
+    if not ran_out:
+        return headers, rows
+    return headers + ["Note"], new_rows
+
+
 def section_tables(data, max_rows=None):
     """Yield (label, description, headers, rows, truncated) for every populated export section."""
     for key, label in EXPORT_SECTIONS:
         items = data.get(key) or []
         if not items:
             continue
-        desc = SECTION_DESCRIPTIONS.get(key, "")
+        desc = section_description(key)
         if key == "activities":
             if not isinstance(items, list):
                 items = [items]
@@ -730,6 +937,7 @@ def section_tables(data, max_rows=None):
         headers, rows, type_note = _hoist_constant_record_type(headers, rows)
         if type_note:
             desc = f"{desc} {type_note}.".strip()
+        headers, rows = _add_note_column(key, items, headers, rows)
         truncated = False
         if max_rows is not None and len(rows) > max_rows:
             rows = rows[:max_rows]
@@ -741,13 +949,14 @@ def section_tables(data, max_rows=None):
         if not isinstance(section, dict) or not section:
             continue
         rows = []
-        for k, v in section.items():
-            formatted = fmt_value(v)
+        # `confidence` and BOOKKEEPING_KEYS are not facts of the unit; the skip is
+        # that explicit set, never the whole HIDDEN_KEYS set (`name` is shown).
+        for k, formatted in dict_section_rows(section, fmt_value):
             if formatted:
                 rows.append([humanize_key(k), formatted])
         if not rows:
             continue
-        desc = SECTION_DESCRIPTIONS.get(key, "")
+        desc = section_description(key)
         yield label, desc, ["Field", "Value"], rows, False
 
 

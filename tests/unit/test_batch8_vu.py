@@ -98,13 +98,15 @@ class TestG1VuRegexUnreachable:
             "card_numbers": ["I000000168598002"],
         }
 
-    def test_validating_body_with_empty_plate_recovers_via_regex(self):
-        """A body that validates but has an empty plate offset must trigger the
-        documented empty-field recovery (and be flagged heuristic)."""
+    def test_validating_body_with_empty_plate_stays_on_the_normative_path(self):
+        """Corrected (F6): a blank plate is a legal unset value, not a decode
+        failure. DDP_029 fixes the field *lengths*; it never says the value must
+        be non-empty, so an empty plate is published as N/A and no regex rescue
+        runs on a fully decoded body."""
         results = self._results()
         parse_g1_vu_overview(self._overview(b"\x00" * 14), results)
-        assert results["vehicle"]["plate"] == "AB123CD"
-        assert results["metadata"]["heuristic_fields"]["vu_overview_TREP01"] == ["plate"]
+        assert results["vehicle"]["plate"] == "N/A"
+        assert results["metadata"].get("heuristic_fields") is None
 
     def test_fully_populated_validating_body_is_not_heuristic(self):
         """Control: when every fixed-offset field is present the regex must not
@@ -115,27 +117,40 @@ class TestG1VuRegexUnreachable:
         assert results["vehicle"]["vin"] == "VALIDVIN000000001"
         assert results["metadata"].get("heuristic_fields") is None
 
-    def test_company_name_recovered_when_fixed_parse_left_it_empty(self):
+    def test_empty_company_name_does_not_trigger_a_scan(self):
+        """Corrected (F6): a VU that was never downloaded carries a blank
+        company name. The Overview is still decoded normatively, so an empty
+        value must not switch the whole file to the heuristic route."""
         results = self._results()
         results["company_info"] = {}
         body = bytearray(self._overview(b"XY12345" + b"\x00" * 7))
         body[200:232] = b"TRANSPORTI S.R.L.               "  # >=5 chars + 2 spaces
         parse_g1_vu_overview(bytes(body), results)
-        assert results["company_info"]["name"].startswith("TRANSPORTI")
-        assert "company_name" in results["metadata"]["heuristic_fields"]["vu_overview_TREP01"]
+        assert results["vehicle"]["plate"] == "XY12345"
+        assert results["metadata"].get("heuristic_fields") is None
 
 
 # ── G1-VU-TRAILER (B-F1) ─────────────────────────────────────────────────────
 
 class TestG1VuTrailer:
-    def test_trailing_byte_keeps_last_message_and_stays_complete(self):
-        """A single trailing byte after the last RSA signature must not discard
-        the last TREP block nor report the download as partial."""
+    def test_fill_after_the_last_signature_keeps_the_message_and_stays_complete(self):
+        """0x00/0xFF fill after the last RSA signature must not discard the last
+        TREP block nor report the download as partial.
+
+        Corrected by the integrity round: a lone ``0x76`` is the first byte of a
+        truncated section marker, not fill, so it makes the walk incomplete (it is
+        reported in ``metadata.vu_integrity`` as one trailing byte).
+        """
         stream = _complete_g1_stream()
-        for trailer in (b"\x00", b"\x76", b"\x00\x00"):
+        for trailer in (b"\x00", b"\xff", b"\x00\x00"):
             messages, complete = walk_g1_vu(stream + trailer, {})
             assert [m["trep"] for m in messages] == [0x04, 0x05], trailer
             assert complete is True, trailer
+        results = {}
+        messages, complete = walk_g1_vu(stream + b"\x76", results)
+        assert [m["trep"] for m in messages] == [0x04, 0x05]
+        assert complete is False
+        assert results["metadata"]["vu_integrity"][0]["trailing_bytes"] == 1
 
     def test_clean_stream_is_complete(self):
         messages, complete = walk_g1_vu(_complete_g1_stream(), {})

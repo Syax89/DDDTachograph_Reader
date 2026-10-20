@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Jutiklių susiejimai (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Jutiklio serijos numeris"
+msgstr "Jutiklis · Serijos numeris"
 
 msgid "Sig Size"
 msgstr "Parašo dydis"
@@ -2281,3 +2281,65 @@ msgstr "VIENTISUMAS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Baitų apskaitos aprėptis"
+
+msgid "Current Date Time"
+msgstr "Data Laikas"
+
+msgid "RCM Serial"
+msgstr "RCM Serijos numeris"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Jutiklio serijos numeris"
+
+msgid "VU Serial"
+msgstr "VU Serijos numeris"
+
+msgid "Download Interface Version"
+msgstr "Atsisiuntimo sąsajos versija"
+
+msgid "Entry Type Description"
+msgstr "Įrašo tipas Aprašymas"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Kortelės atvaizdas, atsisiųstas per transporto priemonės įrenginį: pirmieji du baitai yra perdavimo antraštė (SID + TREP 06), kurią paliko failą išsaugojusi programa, o ne standartinė kortelės failo saugojimo forma (DDP_050). Kai kurios kitos programos tokį failą praneša kaip sugadintą; Kai kurios kitos programos tokį failą praneša kaip sugadintą; ši programa kortelės parašų rezultatą rodo atskirai."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} pastaba(os) — spustelėkite išsamiai informacijai"
+
+
+
+msgid "File Note"
+msgstr "Failo pastaba"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Pastaba apie šį failą.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Serijos numeris"
+
+msgid "Transfer header"
+msgstr "Perdavimo antraštė"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Gamintojo specifinė arba empirinė struktūra: joks reglamentas neapibrėžia šių laukų. Reikšmės skaitomos kiek įmanoma su mažu patikimumu, o neapdoroti baitai išsaugomi; tai informacija, o ne defektas."
+
+msgid "Co-Driver Activities"
+msgstr "Antrojo vairuotojo veikla"
+
+msgid "Manufacturer Extensions"
+msgstr "Gamintojo plėtiniai"
+
+msgid "Decode units"
+msgstr "Dekoduoti vienetai"
+
+msgid "Path"
+msgstr "Kelias"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Šios dienos veiklos pakeitimai buvo nukirpti faile"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Šio minučių intervalo greičio blokas buvo nukirptas faile"
+
+msgid "This record was cut off in the file"
+msgstr "Šis įrašas buvo nukirptas faile"

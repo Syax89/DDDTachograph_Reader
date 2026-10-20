@@ -2281,3 +2281,65 @@ msgstr "INTEGRITÄT"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Byte-Abdeckung"
+
+msgid "Current Date Time"
+msgstr "Datum Zeit"
+
+msgid "RCM Serial"
+msgstr "RCM Seriennummer"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Sensor-Seriennummer"
+
+msgid "VU Serial"
+msgstr "VU Seriennummer"
+
+msgid "Download Interface Version"
+msgstr "Version der Download-Schnittstelle"
+
+msgid "Entry Type Description"
+msgstr "Eintragsart Beschreibung"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Abbild einer Karte, über die Fahrzeugeinheit heruntergeladen: Die beiden ersten Bytes sind der von dem speichernden Programm beibehaltene Übertragungskopf (SID + TREP 06) und nicht die Standard-Speicherform einer Kartendatei (DDP_050). Manche anderen Programme melden eine solche Datei als beschädigt; Manche anderen Programme melden eine solche Datei als beschädigt; dieses Programm zeigt das Signaturergebnis der Karte getrennt an."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} Hinweis(e) — für Details klicken"
+
+
+
+msgid "File Note"
+msgstr "Hinweis zur Datei"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Hinweis zu dieser Datei.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Seriennummer"
+
+msgid "Transfer header"
+msgstr "Übertragungskopf"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Herstellerspezifischer oder empirischer Aufbau: keine Vorschrift definiert diese Felder. Die Werte werden nach bestem Wissen mit geringer Sicherheit gelesen, die Rohbytes bleiben erhalten; dies ist eine Information, kein Fehler."
+
+msgid "Co-Driver Activities"
+msgstr "Aktivitäten des zweiten Fahrers"
+
+msgid "Manufacturer Extensions"
+msgstr "Herstellerspezifische Erweiterungen"
+
+msgid "Decode units"
+msgstr "Dekodierte Einheiten"
+
+msgid "Path"
+msgstr "Pfad"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Die Aktivitätsänderungen dieses Tages wurden in der Datei abgeschnitten"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Der Geschwindigkeitsblock dieses Minutenbereichs wurde in der Datei abgeschnitten"
+
+msgid "This record was cut off in the file"
+msgstr "Dieser Datensatz wurde in der Datei abgeschnitten"

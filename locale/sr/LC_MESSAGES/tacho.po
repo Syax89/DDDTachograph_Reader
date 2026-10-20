@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Упаривање сензора (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Серијски број сензора"
+msgstr "Сензор · Серијски број"
 
 msgid "Sig Size"
 msgstr "Величина потписа"
@@ -2281,3 +2281,65 @@ msgstr "ИНТЕГРИТЕТ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Покривеност бајтима"
+
+msgid "Current Date Time"
+msgstr "Датум Време"
+
+msgid "RCM Serial"
+msgstr "RCM Серијски број"
+
+msgid "Sensor GNSS Serial"
+msgstr "GNSS Серијски број сензора"
+
+msgid "VU Serial"
+msgstr "VU Серијски број"
+
+msgid "Download Interface Version"
+msgstr "Верзија интерфејса за преузимање"
+
+msgid "Entry Type Description"
+msgstr "Тип уноса Опис"
+
+msgid "Card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Слика картице преузета преко уређаја возила: прва два бајта су заглавље преноса (SID + TREP 06) које је задржао програм који је сачувао датотеку, а не стандардна форма чувања датотеке картице (DDP_050). Неки други програми пријављују такву датотеку као оштећену; Неки други програми пријављују такву датотеку као оштећену; овај програм приказује резултат потписа картице одвојено."
+
+msgid "{count} note(s) — click for details"
+msgstr "{count} напомена(е) — кликните за детаље"
+
+
+
+msgid "File Note"
+msgstr "Напомена о датотеци"
+
+msgid "Note about this file.\n\n{filename}\n\n"
+msgstr "Напомена о овој датотеци.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Серијски број"
+
+msgid "Transfer header"
+msgstr "Заглавље преноса"
+
+msgid "Manufacturer-specific or empirical layout: no regulation defines these fields. The values are read on a best-effort basis with low confidence and the raw bytes are preserved; this is information, not a defect."
+msgstr "Структура специфична за произвођача или емпиријска: ниједан пропис не дефинише ова поља. Вредности се читају према могућностима са ниском поузданошћу, а сирови бајтови су сачувани; ово је информација, а не дефект."
+
+msgid "Co-Driver Activities"
+msgstr "Активности другог возача"
+
+msgid "Manufacturer Extensions"
+msgstr "Проширења произвођача"
+
+msgid "Decode units"
+msgstr "Декодиране јединице"
+
+msgid "Path"
+msgstr "Путања"
+
+msgid "The activity changes of this day were cut off in the file"
+msgstr "Промене активности овог дана су одсечене у датотеци"
+
+msgid "The speed block of this minute range was cut off in the file"
+msgstr "Блок брзине овог интервала минута је одсечен у датотеци"
+
+msgid "This record was cut off in the file"
+msgstr "Овај запис је одсечен у датотеци"
