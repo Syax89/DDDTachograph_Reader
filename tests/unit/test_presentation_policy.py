@@ -211,7 +211,6 @@ def test_records_the_parent_dropped_are_rows_now():
 
 @pytest.mark.parametrize("label,model", sorted(NEW_LABELS.items()))
 def test_every_new_label_is_translated_in_all_catalogs(label, model):
-    import re
     catalogs = _catalogs()
     assert len(catalogs) == 33, catalogs[:3]
     for path in catalogs:
