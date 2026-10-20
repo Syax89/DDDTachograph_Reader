@@ -136,6 +136,10 @@ except ImportError:
 #: the work it interrupts. See ``TachoExplorer._pump_render``.
 _RENDER_PUMP_INTERVAL = 1 / 60
 
+#: Upper bound of the adaptive gap between pumps (see ``_pump_render``): the
+#: busy bar must still tick at least ~4 times a second however slow a pump is.
+_RENDER_PUMP_MAX_GAP = 0.25
+
 
 class _RenderAbandoned(Exception):
     """The window went away while a render was pumping its event loop.
@@ -4308,8 +4312,11 @@ class TachoExplorer(tk.Tk):
         stay True until it ends (Open, drop-to-open and the language restart are
         all refused on it) and ``_finish_parse`` has to run in ``_parse_done``'s
         ``finally``, so the work cannot be split into ``after`` slices — the
-        loop is pumped from *inside* the render instead, at most once per
-        :data:`_RENDER_PUMP_INTERVAL`. That is what keeps the indeterminate
+        loop is pumped from *inside* the render instead. The gap after a pump is
+        ``max(_RENDER_PUMP_INTERVAL, 4 * its own duration)`` measured from its
+        end and capped at :data:`_RENDER_PUMP_MAX_GAP`, so pumps cost at most
+        ~20% of the render even where one ``update()`` is slow (macOS redraws
+        the whole tree) instead of turning it pump-bound. That is what keeps the indeterminate
         progress bar animating (it is driven by a Tk timer) instead of freezing
         for the whole render and reading as a hang.
 
@@ -4342,6 +4349,10 @@ class TachoExplorer(tk.Tk):
             # ``_destroyed`` is what tells that apart — the render has to stop.
             gone = self._destroyed
             _log.debug("render pump skipped: %s", traceback.format_exc())
+        end = time.monotonic()
+        self._pump_due = end + min(
+            _RENDER_PUMP_MAX_GAP, max(_RENDER_PUMP_INTERVAL, 4 * (end - now))
+        )
         if gone:
             raise _RenderAbandoned
 
