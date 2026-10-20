@@ -11,7 +11,6 @@ Synthetic cards come from ``tests/integration/generate_mock_ddd.py``; the real
 files are addressed by hash glob and skipped when ``DDD/`` is absent.
 """
 import os
-import tempfile
 
 import pytest
 
