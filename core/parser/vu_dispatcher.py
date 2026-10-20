@@ -946,7 +946,7 @@ def decode_place_daily(rec, with_auth=None, variant_source=None, generation=None
         "card_driver": decode_full_card_number_gen(rec, 0),
         **_time_fields(struct.unpack(">I", rec[19:23])[0]),
         "entry_type": short,
-        "entry_type_meaning": meaning,
+        "entry_type_description": meaning,
         "entry_type_status": meaning_status,
         "type_code": entry_type,
         "nation": decoders.get_nation(rec[24]),

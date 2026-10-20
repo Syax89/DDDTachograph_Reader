@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Дата"
 
 msgid "Sensor Pairing Time"
-msgstr "Дата на свързване на сензора"
+msgstr "Време на свързване на сензора"
 
 msgid "Current Date Time"
-msgstr "Дата"
+msgstr "Дата Време"
 
 msgid "Entry Type Meaning"
 msgstr "Вид запис"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Дата на следваща калибровка"
 
 msgid "RCM Serial"
-msgstr "Сериен номер"
+msgstr "RCM Сериен номер"
 
 msgid "Sensor GNSS Serial"
-msgstr "Сериен номер на сензора"
+msgstr "GNSS Сериен номер на сензора"
 
 msgid "VU Serial"
-msgstr "Сериен номер"
+msgstr "VU Сериен номер"
 
 msgid "Download Interface Version"
-msgstr "Версия на софтуера"
+msgstr "Версия на интерфейса за изтегляне"
+
+msgid "Entry Type Description"
+msgstr "Вид запис Описание"

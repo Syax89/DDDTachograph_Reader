@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Dátum"
 
 msgid "Sensor Pairing Time"
-msgstr "Érzékelő párosításának dátuma"
+msgstr "Érzékelő párosításának dátuma Idő"
 
 msgid "Current Date Time"
-msgstr "Dátum"
+msgstr "Dátum Idő"
 
 msgid "Entry Type Meaning"
 msgstr "Bejegyzéstípus"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Következő kalibrálás dátuma"
 
 msgid "RCM Serial"
-msgstr "Sorozatszám"
+msgstr "RCM Sorozatszám"
 
 msgid "Sensor GNSS Serial"
-msgstr "Érzékelő sorozatszáma"
+msgstr "GNSS Érzékelő sorozatszáma"
 
 msgid "VU Serial"
-msgstr "Sorozatszám"
+msgstr "VU Sorozatszám"
 
 msgid "Download Interface Version"
-msgstr "Szoftververzió"
+msgstr "Letöltési felület verziója"
+
+msgid "Entry Type Description"
+msgstr "Bejegyzéstípus Leírás"

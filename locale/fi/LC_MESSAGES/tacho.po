@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Päivämäärä"
 
 msgid "Sensor Pairing Time"
-msgstr "Anturin parituspäivä"
+msgstr "Anturin parituspäivä Aika"
 
 msgid "Current Date Time"
-msgstr "Päivämäärä"
+msgstr "Päivämäärä Aika"
 
 msgid "Entry Type Meaning"
 msgstr "Merkintätyyppi"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Seuraava kalibrointipäivä"
 
 msgid "RCM Serial"
-msgstr "Sarjanumero"
+msgstr "RCM Sarjanumero"
 
 msgid "Sensor GNSS Serial"
-msgstr "Anturin sarjanumero"
+msgstr "GNSS Anturin sarjanumero"
 
 msgid "VU Serial"
-msgstr "Sarjanumero"
+msgstr "VU Sarjanumero"
 
 msgid "Download Interface Version"
-msgstr "Ohjelmistoversio"
+msgstr "Latausrajapinnan versio"
+
+msgid "Entry Type Description"
+msgstr "Merkintätyyppi Kuvaus"

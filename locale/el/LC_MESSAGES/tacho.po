@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Ημερομηνία"
 
 msgid "Sensor Pairing Time"
-msgstr "Ημερομηνία αντιστοίχισης αισθητήρα"
+msgstr "Ώρα αντιστοίχισης αισθητήρα"
 
 msgid "Current Date Time"
-msgstr "Ημερομηνία"
+msgstr "Ημερομηνία Ώρα"
 
 msgid "Entry Type Meaning"
 msgstr "Τύπος καταχώρισης"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Ημερομηνία επόμενης βαθμονόμησης"
 
 msgid "RCM Serial"
-msgstr "Σειριακός αριθμός"
+msgstr "RCM Σειριακός αριθμός"
 
 msgid "Sensor GNSS Serial"
-msgstr "Σειριακός αριθμός αισθητήρα"
+msgstr "GNSS Σειριακός αριθμός αισθητήρα"
 
 msgid "VU Serial"
-msgstr "Σειριακός αριθμός"
+msgstr "VU Σειριακός αριθμός"
 
 msgid "Download Interface Version"
-msgstr "Έκδοση λογισμικού"
+msgstr "Έκδοση διεπαφής λήψης"
+
+msgid "Entry Type Description"
+msgstr "Τύπος καταχώρισης Περιγραφή"

@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Datums"
 
 msgid "Sensor Pairing Time"
-msgstr "Sensora savienošanas datums"
+msgstr "Sensora savienošanas datums Laiks"
 
 msgid "Current Date Time"
-msgstr "Datums"
+msgstr "Datums Laiks"
 
 msgid "Entry Type Meaning"
 msgstr "Ieraksta veids"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Nākamais kalibrēšanas datums"
 
 msgid "RCM Serial"
-msgstr "Sērijas numurs"
+msgstr "RCM Sērijas numurs"
 
 msgid "Sensor GNSS Serial"
-msgstr "Sensora sērijas numurs"
+msgstr "GNSS Sensora sērijas numurs"
 
 msgid "VU Serial"
-msgstr "Sērijas numurs"
+msgstr "VU Sērijas numurs"
 
 msgid "Download Interface Version"
-msgstr "Programmatūras versija"
+msgstr "Lejupielādes saskarnes versija"
+
+msgid "Entry Type Description"
+msgstr "Ieraksta veids Apraksts"

@@ -514,7 +514,7 @@ def _decode_place_records(val, off, stride):
                 "timestamp": dt,
                 "entry_type": "START" if short == "BEGIN" else (
                     "END" if short == "END" else short),
-                "entry_type_meaning": meaning,
+                "entry_type_description": meaning,
                 "entry_type_status": entry_type_daily_work_period_status(
                     entry_type, "G2"),
                 "type_code": entry_type,

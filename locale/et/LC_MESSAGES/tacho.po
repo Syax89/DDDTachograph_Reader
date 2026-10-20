@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Kuupäev"
 
 msgid "Sensor Pairing Time"
-msgstr "Anduri sidumiskuupäev"
+msgstr "Anduri sidumiskuupäev Aeg"
 
 msgid "Current Date Time"
-msgstr "Kuupäev"
+msgstr "Kuupäev Aeg"
 
 msgid "Entry Type Meaning"
 msgstr "Kande tüüp"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Järgmine kalibreerimiskuupäev"
 
 msgid "RCM Serial"
-msgstr "Seerianumber"
+msgstr "RCM Seerianumber"
 
 msgid "Sensor GNSS Serial"
-msgstr "Anduri seerianumber"
+msgstr "GNSS Anduri seerianumber"
 
 msgid "VU Serial"
-msgstr "Seerianumber"
+msgstr "VU Seerianumber"
 
 msgid "Download Interface Version"
-msgstr "Tarkvara versioon"
+msgstr "Allalaadimisliidese versioon"
+
+msgid "Entry Type Description"
+msgstr "Kande tüüp Kirjeldus"

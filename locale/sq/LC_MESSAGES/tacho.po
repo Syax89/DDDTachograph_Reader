@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Data"
 
 msgid "Sensor Pairing Time"
-msgstr "Data e çiftimit të sensorit"
+msgstr "Ora e çiftimit të sensorit"
 
 msgid "Current Date Time"
-msgstr "Data"
+msgstr "Data Ora"
 
 msgid "Entry Type Meaning"
 msgstr "Lloji i regjistrimit"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Data e kalibrimit të radhës"
 
 msgid "RCM Serial"
-msgstr "Numri serial"
+msgstr "RCM Numri serial"
 
 msgid "Sensor GNSS Serial"
-msgstr "Numri serial i sensorit"
+msgstr "GNSS Numri serial i sensorit"
 
 msgid "VU Serial"
-msgstr "Numri serial"
+msgstr "VU Numri serial"
 
 msgid "Download Interface Version"
-msgstr "Versioni i softuerit"
+msgstr "Versioni i ndërfaqes së shkarkimit"
+
+msgid "Entry Type Description"
+msgstr "Lloji i regjistrimit Përshkrimi"

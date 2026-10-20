@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Dato"
 
 msgid "Sensor Pairing Time"
-msgstr "Dato for sensorparring"
+msgstr "Tid for sensorparring"
 
 msgid "Current Date Time"
-msgstr "Dato"
+msgstr "Dato Tid"
 
 msgid "Entry Type Meaning"
 msgstr "Indtastningstype"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Dato for næste kalibrering"
 
 msgid "RCM Serial"
-msgstr "Serienummer"
+msgstr "RCM Serienummer"
 
 msgid "Sensor GNSS Serial"
-msgstr "Sensor-serienummer"
+msgstr "GNSS Sensor-serienummer"
 
 msgid "VU Serial"
-msgstr "Serienummer"
+msgstr "VU Serienummer"
 
 msgid "Download Interface Version"
-msgstr "Softwareversion"
+msgstr "Version af downloadgrænseflade"
+
+msgid "Entry Type Description"
+msgstr "Indtastningstype Beskrivelse"

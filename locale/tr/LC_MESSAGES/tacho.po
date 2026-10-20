@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Tarih"
 
 msgid "Sensor Pairing Time"
-msgstr "Sensör eşleştirme tarihi"
+msgstr "Sensör eşleştirme tarihi Zaman"
 
 msgid "Current Date Time"
-msgstr "Tarih"
+msgstr "Tarih Zaman"
 
 msgid "Entry Type Meaning"
 msgstr "Giriş türü"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Sonraki kalibrasyon tarihi"
 
 msgid "RCM Serial"
-msgstr "Seri numarası"
+msgstr "RCM Seri numarası"
 
 msgid "Sensor GNSS Serial"
-msgstr "Sensör seri numarası"
+msgstr "GNSS Sensör seri numarası"
 
 msgid "VU Serial"
-msgstr "Seri numarası"
+msgstr "VU Seri numarası"
 
 msgid "Download Interface Version"
-msgstr "Yazılım sürümü"
+msgstr "İndirme arayüzü sürümü"
+
+msgid "Entry Type Description"
+msgstr "Giriş türü Açıklama"

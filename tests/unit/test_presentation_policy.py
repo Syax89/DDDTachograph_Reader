@@ -164,10 +164,10 @@ def test_calibration_columns_show_full_times_and_all_three_serials():
     assert {"old_time", "new_time", "next_calibration_date"} <= set(cols)
 
 
-def test_places_show_the_entry_type_meaning():
+def test_places_show_the_entry_type_description():
     record = {"timestamp": "2024-04-05T20:34:38+00:00", "entry_type": "START",
-              "entry_type_meaning": "Begin assumed by VU", "type_code": 4}
-    assert "entry_type_meaning" in report_format.visible_columns([record])
+              "entry_type_description": "Begin assumed by VU", "type_code": 4}
+    assert "entry_type_description" in report_format.visible_columns([record])
 
 
 def test_records_the_parent_dropped_are_rows_now():
@@ -237,18 +237,20 @@ def test_serial_rows_are_one_compact_scalar_each():
 
 
 def test_vu_information_has_one_row_per_serial():
-    info = {"vu_serial": "168000001 \u00b7 11/24 \u00b7 Stoneridge Electronics",
+    info = {"serial_number": "0A037A01112481A2 \u00b7 168000001 \u00b7 11/24 \u00b7 Stoneridge",
             "vu_serial_decoded": {"serial_number": 168000001},
-            "sensor_serial": "168000002 \u00b7 03/23 \u00b7 Stoneridge Electronics",
+            "sensor_serial_number": "00000002032381A2 \u00b7 168000002 \u00b7 03/23 \u00b7 Stoneridge",
             "sensor_serial_extended": {"serial_number": 168000002},
             "sensor_pairing_date": "2024-04-05T20:34:38+00:00"}
     _headers, rows = gui._kv_rows(info)
     labels = [row[0] for row in rows]
-    assert labels == [gui.ui_text.label("vu_serial"),
-                      gui.ui_text.label("sensor_serial"),
+    # one row per datum, no 'Serial › ...' sub-rows and no second full-time row
+    assert labels == [gui.ui_text.label("serial_number"),
+                      gui.ui_text.label("sensor_serial_number"),
                       gui.ui_text.label("sensor_pairing_date")]
-    # compact: no 'VU Serial › ...' sub-rows, no duplicate pairing-time row
     assert not any("\u203a" in label for label in labels)
+    # hex kept, compact reading appended in the same cell
+    assert all(" \u00b7 " in dict(rows)[label] for label in labels[:2])
 
 
 def test_calibration_timestamps_are_one_set_of_columns_with_time_of_day():
@@ -291,3 +293,57 @@ def test_download_interface_version_is_a_panel_row():
     _headers, rows = gui._kv_rows(results["vu_overview"])
     row = dict(rows)[gui.ui_text.label("download_interface_version")]
     assert row == "0101 \u00b7 Generation 2, version 2"
+
+
+# ── Item 5: no two labels of one table may translate identically ───────────
+
+TABLE_LABELS = {
+    "vu_overview": ["current_date_time", "downloadable_period", "card_slot_status",
+                    "last_download", "download_interface_version"],
+    "vu_info": ["serial_number", "sensor_serial_number", "sensor_pairing_date",
+                "manufacturer",
+                "manufacturer_address", "part_number", "software_version"],
+    "calibrations": ["calibration_purpose_label", "workshop_name", "old_time",
+                     "new_time", "next_calibration_date", "sensor_serial",
+                     "sensor_gnss_serial", "rcm_serial"],
+    "places": ["timestamp", "entry_type", "entry_type_description", "nation",
+               "region", "odometer_km"],
+}
+
+
+def _catalog(lang):
+    import re
+    text = open(f"locale/{lang}/LC_MESSAGES/tacho.po", encoding="utf-8").read()
+    return dict(re.findall(r'^msgid "(.*)"\nmsgstr "(.*)"$', text, re.M))
+
+
+@pytest.mark.parametrize("lang", ["de", "it", "fr", "es", "ro", "pl", "nl", "sv"])
+def test_no_two_labels_of_one_table_translate_identically(lang):
+    catalog = _catalog(lang)
+
+    def label(key):
+        english = gui.ui_text.humanize(key)
+        return catalog.get(english, english)
+
+    for table, keys in TABLE_LABELS.items():
+        labels = [label(key) for key in keys]
+        duplicates = {value for value in labels if labels.count(value) > 1}
+        assert not duplicates, (lang, table, sorted(duplicates))
+
+
+def test_every_new_label_is_translated_and_distinct_in_every_catalog():
+    import glob
+    new = ["Current Date Time", "Entry Type Description", "RCM Serial",
+           "Sensor GNSS Serial", "Download Interface Version"]
+    neighbours = ["Serial Number", "Sensor Serial", "Sensor Pairing Date",
+                  "Entry Type", "Date", "Time"]
+    for path in sorted(glob.glob("locale/*/LC_MESSAGES/tacho.po")):
+        catalog = _catalog(path.split("/")[1])
+        for msgid in new:
+            value = catalog.get(msgid)
+            assert value, f"{path}: {msgid}"
+            # never a copy of the English string, never a copy of a different
+            # concept's translation in the same catalog
+            assert value != msgid, f"{path}: {msgid} untranslated"
+            for other in neighbours:
+                assert value != catalog.get(other), (path, msgid, other)

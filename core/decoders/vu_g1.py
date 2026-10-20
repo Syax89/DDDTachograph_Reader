@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from core.utils.logger import get_logger, redact
 from core.decoders.common import (
     decode_activity_val, decode_date, decode_previous_vehicle_info, decode_string,
-    describe_manual_input_flag, get_nation, serial_text)
+    describe_manual_input_flag, get_nation, with_serial_text)
 from core.decoders.cert import parse_g1_certificate
 from core.utils.event_codes import (
     EVENT_FAULT_VERSION_G1, control_type_bits, describe_calibration_purpose,
@@ -845,7 +845,7 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
                     "_key": _record_key(identity, ("place", len(places))),
                     "timestamp": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
                     "entry_type": "START" if short == "BEGIN" else "END",
-                    "entry_type_meaning": meaning,
+                    "entry_type_description": meaning,
                     "entry_type_status": entry_type_daily_work_period_status(
                         rec[22], "G1"),
                     "type_code": rec[22],
@@ -1621,13 +1621,14 @@ def _parse_trep_05_technical(data, results, message_offset=None):
                 # the structured reading is added next to it by the same helper
                 # the generation-2 records use (no duplicated implementation).
                 from core.parser.vu_dispatcher import decode_extended_serial_number
-                vu_info["serial_number"] = data[88:96].hex().upper()
-                # Shown in the VU Information panel as its own rows; the record
-                # copy in `vu_identifications` keeps the JSON-only `serial` key.
-                vu_info["vu_serial"] = serial_text(
-                    decode_extended_serial_number(data, 88))
-                vu_info["vu_serial_decoded"] = decode_extended_serial_number(
-                    data, 88)
+                # One row per serial: the existing hex row is upgraded in place
+                # with the compact decoded reading (item 1: same density as the
+                # neighbouring rows, hex never replaced, no duplicate row with a
+                # colliding label). The structured dict stays in the JSON.
+                serial_info = decode_extended_serial_number(data, 88)
+                vu_info["serial_number"] = with_serial_text(
+                    data[88:96].hex().upper(), data, 88)
+                vu_info["vu_serial_decoded"] = serial_info
                 sw_version = decode_string(data[96:100], is_id=True)
                 if sw_version:
                     vu_info["software_version"] = sw_version
@@ -1640,9 +1641,8 @@ def _parse_trep_05_technical(data, results, message_offset=None):
                 approval = decode_string(data[108:116], is_id=True)
                 if approval:
                     vu_info["approval_number"] = approval
-                vu_info["sensor_serial_number"] = data[116:124].hex().upper()
-                vu_info["sensor_serial"] = serial_text(
-                    decode_extended_serial_number(data, 116))
+                vu_info["sensor_serial_number"] = with_serial_text(
+                    data[116:124].hex().upper(), data, 116)
                 vu_info["sensor_serial_extended"] = decode_extended_serial_number(
                     data, 116)
                 # The pairing TimeReal carries a time of day: the existing row is
@@ -1654,9 +1654,6 @@ def _parse_trep_05_technical(data, results, message_offset=None):
                 sensor_approval = decode_string(data[124:132], is_id=True)
                 if sensor_approval:
                     vu_info["sensor_approval_number"] = sensor_approval
-                sensor_pairing = decode_date(data[132:136])
-                if sensor_pairing != "N/A":
-                    vu_info["sensor_pairing_date"] = sensor_pairing
 
                 for entry in decoded:
                     if not any(c.get("_key") == entry["_key"] for c in cal_records):

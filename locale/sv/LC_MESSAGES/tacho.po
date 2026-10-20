@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Datum"
 
 msgid "Sensor Pairing Time"
-msgstr "Sensorns parkopplingsdatum"
+msgstr "Sensorns parkopplingsdatum Tid"
 
 msgid "Current Date Time"
-msgstr "Datum"
+msgstr "Datum Tid"
 
 msgid "Entry Type Meaning"
 msgstr "Posttyp"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Nästa kalibreringsdatum"
 
 msgid "RCM Serial"
-msgstr "Serienummer"
+msgstr "RCM Serienummer"
 
 msgid "Sensor GNSS Serial"
-msgstr "Sensor-serienummer"
+msgstr "GNSS Sensor-serienummer"
 
 msgid "VU Serial"
-msgstr "Serienummer"
+msgstr "VU Serienummer"
 
 msgid "Download Interface Version"
-msgstr "Programvaruversion"
+msgstr "Version av nedladdningsgränssnittet"
+
+msgid "Entry Type Description"
+msgstr "Posttyp Beskrivning"

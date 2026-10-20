@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Dato"
 
 msgid "Sensor Pairing Time"
-msgstr "Sensorens sammenkoblingsdato"
+msgstr "Sensorens sammenkoblingsdato Tid"
 
 msgid "Current Date Time"
-msgstr "Dato"
+msgstr "Dato Tid"
 
 msgid "Entry Type Meaning"
 msgstr "Oppføringstype"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Neste kalibreringsdato"
 
 msgid "RCM Serial"
-msgstr "Serienummer"
+msgstr "RCM Serienummer"
 
 msgid "Sensor GNSS Serial"
-msgstr "Sensorens serienummer"
+msgstr "GNSS Sensorens serienummer"
 
 msgid "VU Serial"
-msgstr "Serienummer"
+msgstr "VU Serienummer"
 
 msgid "Download Interface Version"
-msgstr "Programvareversjon"
+msgstr "Interface version"
+
+msgid "Entry Type Description"
+msgstr "Oppføringstype Beskrivelse"

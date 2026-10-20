@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Data"
 
 msgid "Sensor Pairing Time"
-msgstr "Data tal-ibbjar tas-sensor"
+msgstr "Ħin tal-ibbjar tas-sensor"
 
 msgid "Current Date Time"
-msgstr "Data"
+msgstr "Data Ħin"
 
 msgid "Entry Type Meaning"
 msgstr "Tip tad-dħul"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Id-data tal-kalibrazzjoni li jmiss"
 
 msgid "RCM Serial"
-msgstr "Numru tas-serje"
+msgstr "RCM Numru tas-serje"
 
 msgid "Sensor GNSS Serial"
-msgstr "Numru tas-serje tas-sensor"
+msgstr "GNSS Numru tas-serje tas-sensor"
 
 msgid "VU Serial"
-msgstr "Numru tas-serje"
+msgstr "VU Numru tas-serje"
 
 msgid "Download Interface Version"
-msgstr "Verżjoni tas-software"
+msgstr "Verżjoni tal-interface tat-tniżżil"
+
+msgid "Entry Type Description"
+msgstr "Tip tad-dħul Deskrizzjoni"

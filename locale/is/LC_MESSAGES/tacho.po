@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Dagsetning"
 
 msgid "Sensor Pairing Time"
-msgstr "Pörunardagur skynjara"
+msgstr "Pörunardagur skynjara Tími"
 
 msgid "Current Date Time"
-msgstr "Dagsetning"
+msgstr "Dagsetning Tími"
 
 msgid "Entry Type Meaning"
 msgstr "Tegund færslu"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Næsta kvörðunardagur"
 
 msgid "RCM Serial"
-msgstr "Raðnúmer"
+msgstr "RCM Raðnúmer"
 
 msgid "Sensor GNSS Serial"
-msgstr "Raðnúmer skynjara"
+msgstr "GNSS Raðnúmer skynjara"
 
 msgid "VU Serial"
-msgstr "Raðnúmer"
+msgstr "VU Raðnúmer"
 
 msgid "Download Interface Version"
-msgstr "Hugbúnaðarútgáfa"
+msgstr "Interface version"
+
+msgid "Entry Type Description"
+msgstr "Tegund færslu Lýsing"

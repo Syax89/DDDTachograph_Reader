@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Dáta"
 
 msgid "Sensor Pairing Time"
-msgstr "Dáta péireála an tsensor"
+msgstr "Am péireála an tsensor"
 
 msgid "Current Date Time"
-msgstr "Dáta"
+msgstr "Dáta Am"
 
 msgid "Entry Type Meaning"
 msgstr "Cineál iontrála"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "An chéad dáta calabraithe eile"
 
 msgid "RCM Serial"
-msgstr "Uimhir shraithe"
+msgstr "RCM Uimhir shraithe"
 
 msgid "Sensor GNSS Serial"
-msgstr "Sraithuimhir an tsensor"
+msgstr "GNSS Sraithuimhir an tsensor"
 
 msgid "VU Serial"
-msgstr "Uimhir shraithe"
+msgstr "VU Uimhir shraithe"
 
 msgid "Download Interface Version"
-msgstr "Leagan na mbogearraí"
+msgstr "Leagan den chomhéadan íoslódála"
+
+msgid "Entry Type Description"
+msgstr "Cineál iontrála Cur síos"

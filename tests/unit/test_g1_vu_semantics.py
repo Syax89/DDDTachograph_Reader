@@ -165,8 +165,8 @@ def test_g1_place_entry_types_4_and_5_are_legal():
     codes = [p["type_code"] for p in results["places"]]
     assert codes == [0x04, 0x05]
     assert results["places"][0]["entry_type"] == "START"
-    assert results["places"][0]["entry_type_meaning"] == "Begin assumed by VU"
-    assert results["places"][1]["entry_type_meaning"] == "End assumed by VU"
+    assert results["places"][0]["entry_type_description"] == "Begin assumed by VU"
+    assert results["places"][1]["entry_type_description"] == "End assumed by VU"
 
 
 def test_g1_specific_condition_03_is_ferry_crossing_and_04_is_kept_unknown():
@@ -364,11 +364,11 @@ def test_g1_empty_vu_and_sensor_serials_are_decoded_as_structures():
     results = _results()
     _parse_trep_05_technical(_trep05_body([_g1_calibration()]), results)
     info = results["vu_info"]
-    assert info["serial_number"] == S.extended_serial(0x0000A001).hex().upper()
-    # compact scalar rows (item 1), structured dicts kept for the JSON
-    assert info["vu_serial"].startswith("40961 \u00b7 ")
+    # one row per serial: the hex row carries the compact decoded reading too
+    assert info["serial_number"].startswith(S.extended_serial(0x0000A001).hex().upper())
+    assert "40961 \u00b7 " in info["serial_number"]
     assert info["vu_serial_decoded"]["serial_number"] == 0x0000A001
-    assert info["sensor_serial"].startswith("40962 \u00b7 ")
+    assert "40962 \u00b7 " in info["sensor_serial_number"]
     assert info["sensor_serial_extended"]["serial_number"] == 0x0000A002
 
 

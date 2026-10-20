@@ -2292,10 +2292,10 @@ msgid "Year"
 msgstr "Datum"
 
 msgid "Sensor Pairing Time"
-msgstr "Datum spárování čidla"
+msgstr "Čas spárování čidla"
 
 msgid "Current Date Time"
-msgstr "Datum"
+msgstr "Datum Čas"
 
 msgid "Entry Type Meaning"
 msgstr "Typ záznamu"
@@ -2310,13 +2310,16 @@ msgid "Next Calibration Full"
 msgstr "Datum příští kalibrace"
 
 msgid "RCM Serial"
-msgstr "Sériové číslo"
+msgstr "RCM Sériové číslo"
 
 msgid "Sensor GNSS Serial"
-msgstr "Sériové číslo čidla"
+msgstr "GNSS Sériové číslo čidla"
 
 msgid "VU Serial"
-msgstr "Sériové číslo"
+msgstr "VU Sériové číslo"
 
 msgid "Download Interface Version"
-msgstr "Verze softwaru"
+msgstr "Verze rozhraní pro stahování"
+
+msgid "Entry Type Description"
+msgstr "Typ záznamu Popis"

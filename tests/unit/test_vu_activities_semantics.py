@@ -54,11 +54,11 @@ def test_place_entry_types_use_the_shared_six_value_assignment():
         assert out["type_code"] == code
 
 
-def test_place_entry_type_meaning_covers_the_vu_assumed_variants():
+def test_place_entry_type_description_covers_the_vu_assumed_variants():
     out = decode_place_daily(_place_record(entry_type=0x04))
-    assert out["entry_type_meaning"] == "Begin assumed by VU"
+    assert out["entry_type_description"] == "Begin assumed by VU"
     out = decode_place_daily(_place_record(entry_type=0x03))
-    assert out["entry_type_meaning"] == "End manually entered"
+    assert out["entry_type_description"] == "End manually entered"
 
 
 def test_unassigned_place_entry_type_is_kept_as_a_code():
@@ -67,7 +67,7 @@ def test_unassigned_place_entry_type_is_kept_as_a_code():
     assert out["entry_type"] == "0x09"
     # The generation-2 enumeration is a figure in every accessible edition, so a
     # code above the shared six is "unknown", never declared "unassigned".
-    assert out["entry_type_meaning"] == "unknown (0x09)"
+    assert out["entry_type_description"] == "unknown (0x09)"
     assert out["entry_type_status"].startswith("unknown")
 
 
@@ -216,7 +216,7 @@ def test_gnss_based_entry_types_are_published_in_a_g2_section():
         place = results["places"][0]
         assert place["type_code"] == code
         assert place["entry_type"] == short
-        assert place["entry_type_meaning"].startswith(short.capitalize() +
+        assert place["entry_type_description"].startswith(short.capitalize() +
                                                      ", related time based on GNSS")
         assert place["entry_type_status"].startswith("assigned (Reg. 2016/799")
 
@@ -226,7 +226,7 @@ def test_entry_type_above_seven_stays_unknown_and_is_not_dropped():
     walk_vu_record_arrays(_place_section(0x32, 0x08), results)
     place = results["places"][0]
     assert place["type_code"] == 0x08
-    assert place["entry_type_meaning"] == "unknown (0x08)"
+    assert place["entry_type_description"] == "unknown (0x08)"
     assert place["entry_type_status"].startswith("unknown")
 
 
