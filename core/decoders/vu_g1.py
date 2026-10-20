@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from core.utils.logger import get_logger, redact
 from core.decoders.common import (
     decode_activity_val, decode_date, decode_previous_vehicle_info, decode_string,
-    describe_manual_input_flag, get_nation, serial_text)
+    describe_manual_input_flag, get_nation, odometer_km, serial_text)
 from core.decoders.cert import parse_g1_certificate
 from core.utils.event_codes import (
     EVENT_FAULT_VERSION_G1, control_type_bits, describe_calibration_purpose,
@@ -822,7 +822,7 @@ def _parse_trep_02_activities(data, results):
                     activity_list.append({
                         "timestamp": rec_dt.isoformat(),
                         "date": rec_dt.strftime("%d/%m/%Y"),
-                        "odometer_midnight": odo,
+                        "odometer_midnight": odometer_km(odo),
                         "card_inserted": bool(card_inserted),
                         "changes_count": no_changes,
                         "changes": changes,
@@ -974,11 +974,15 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
                 "card_expiry": decode_date(rec[90:94]),
                 "insertion_time": datetime.fromtimestamp(ins_ts, tz=timezone.utc).isoformat()
                 if 946684800 <= ins_ts <= 4102444800 else None,
-                "odometer_insertion_km": int.from_bytes(rec[98:101], 'big'),
+                "odometer_insertion_km": odometer_km(
+                    int.from_bytes(rec[98:101], 'big')),
+                "odometer_insertion_raw": int.from_bytes(rec[98:101], 'big'),
                 "card_slot": rec[101],
                 "withdrawal_time": datetime.fromtimestamp(wdr_ts, tz=timezone.utc).isoformat()
                 if 946684800 <= wdr_ts <= 4102444800 else None,
-                "odometer_withdrawal_km": int.from_bytes(rec[106:109], 'big'),
+                "odometer_withdrawal_km": odometer_km(
+                    int.from_bytes(rec[106:109], 'big')),
+                "odometer_withdrawal_raw": int.from_bytes(rec[106:109], 'big'),
                 # [109:128] PreviousVehicleInfo (§2.85) — previously dropped.
                 "previous_vehicle": decode_previous_vehicle_info(rec, 109),
                 # Numeric flag first: bool(rec[128]) maps every non-zero byte to
@@ -1056,7 +1060,8 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
                 "type_code": rec[22],
                 "nation": get_nation(rec[23]),
                 "region": rec[24],
-                "odometer_km": int.from_bytes(rec[25:28], 'big'),
+                "odometer_km": odometer_km(int.from_bytes(rec[25:28], 'big')),
+                "odometer_raw": int.from_bytes(rec[25:28], 'big'),
                 "card_driver": _parse_full_card_number(rec, 0),
             })
             pos += 28

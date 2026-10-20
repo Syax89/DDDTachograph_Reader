@@ -46,6 +46,12 @@ _TRTP_GENERATION = {
 }
 
 
+#: Upper bound on the intervals one tracker keeps. A real download has thousands at
+#: most (one per tag/record); reaching this means the walk is walking a flood, so the
+#: list is frozen, the truncation is recorded and the file is reported partial.
+MAX_COVERAGE_RANGES = 200_000
+
+
 class CoverageTracker:
     """Tracks which byte ranges have been covered during parsing."""
 
@@ -55,12 +61,15 @@ class CoverageTracker:
         self.classifications: Dict[str, int] = defaultdict(int)
         self.classification_ranges: List[Tuple[int, int, str]] = []
         self.unknown_ranges: List[Tuple[int, int, bytes]] = []
+        #: Set when :data:`MAX_COVERAGE_RANGES` stopped the tracker from recording
+        #: more intervals; the parse then declares the file partial.
+        self.range_cap_hit = False
 
     def mark_covered(self, start: int, end: int):
         """Record [start, end) as covered, without classifying it."""
         start, end = self._bounded_range(start, end)
         if start < end:
-            self.covered_ranges.append((start, end))
+            self._append_range(self.covered_ranges, (start, end))
 
     def mark_classified(self, start: int, end: int, classification: str):
         """Cover [start, end) and tally it under *classification* (e.g. Tag_0504)."""
@@ -68,7 +77,30 @@ class CoverageTracker:
         self.mark_covered(start, end)
         if start < end:
             self.classifications[classification] += end - start
-            self.classification_ranges.append((start, end, classification))
+            self._append_range(self.classification_ranges,
+                               (start, end, classification))
+
+    def _append_range(self, ranges: list, item: tuple):
+        """Append a range, extending the previous one when it continues it.
+
+        A flood (a file of 0x76 bytes) used to append one interval per byte, so the
+        tracker grew with the input and the later sweeps walked it all: constant
+        per-byte work but O(n) tuples, hundreds of MB for one megabyte. Two
+        adjacent intervals of the same label are one interval, so the run becomes a
+        single tuple. The cap keeps a pathological input (many short, separated
+        runs) from growing without bound either: the tracker then records the
+        truncation and the file is reported partial with a declared reason, never
+        silently.
+        """
+        if ranges and len(item) == len(ranges[-1]):
+            previous = ranges[-1]
+            if previous[1] == item[0] and previous[2:] == item[2:]:
+                ranges[-1] = (previous[0], item[1]) + item[2:]
+                return
+        if len(ranges) >= MAX_COVERAGE_RANGES:
+            self.range_cap_hit = True
+            return
+        ranges.append(item)
 
     def mark_padding(self, start: int, end: int, fill_byte: int):
         """Cover [start, end) as a padding run of *fill_byte*."""
@@ -308,6 +340,20 @@ class DeterministicParser:
                 "data_type": "RAW", "length": length, "depth": 0,
                 "data_hex": data.hex() if length <= 128 else f"{data[:128].hex()}..."
             })
+
+        if self.coverage.range_cap_hit:
+            # The tracker stopped recording intervals: say so, and never pretend
+            # the file is whole (a flood of one tag byte reaches this).
+            findings = self.results.setdefault("integrity_findings", [])
+            findings.append({
+                "severity": "error",
+                "code": "COVERAGE_RANGE_CAP",
+                "message": ("The structural walk recorded more intervals than the "
+                            f"tracker keeps ({MAX_COVERAGE_RANGES}); the coverage "
+                            "report is incomplete and the file is partial."),
+            })
+            self.results["is_partial"] = True
+            self.results["partial_reason"] = "coverage range cap reached"
 
         classifications = self.coverage.get_non_overlapping_classifications()
         from core.utils.coverage import coverage_metrics

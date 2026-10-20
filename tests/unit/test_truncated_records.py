@@ -11,6 +11,7 @@ The note is information, never an error: it changes no verdict of the file.
 import glob
 import json
 import os
+import struct
 
 import pytest
 
@@ -231,3 +232,59 @@ def test_the_notes_are_translated_in_every_catalog():
                                 open(path, encoding="utf-8").read(), re.M))
         for msgid in (NOTE, SPEED_NOTE):
             assert msgid in msgids, (path, msgid)
+
+
+# ── Synthetic twins: the same behaviour without the private corpus ───────
+# CI has no DDD/ (the files are personal data), so the rule guarded above is
+# exercised here on a *generated* mock: the generation-1 VU stream is cut inside its
+# last activity day, which is the same mechanism the private file exercises.
+
+def _g1_activities_stream(declared: int, present: bytes, tail=b"", odometer=120_000):
+    """A generation-1 VU stream whose one activity day declares more changes than
+    its bytes hold — the same shape the private file has after a cut."""
+    body = (struct.pack(">I", TIME) + odometer.to_bytes(3, "big")
+            + b"\x00\x00"                    # no card insertion/withdrawal record
+            + struct.pack(">H", declared)     # the header's declared count
+            + present)                        # ... but fewer changes actually stored
+    return b"\x76\x02" + body + tail
+
+
+def test_synthetic_cut_day_is_flagged_and_says_so_on_every_surface(tmp_path):
+    result = _parse_bytes(tmp_path, "synth_cut.ddd",
+                          _g1_activities_stream(declared=2, present=b"\x11\x80\x11\x80"))
+    day = (result.get("activities") or [])[0]
+    assert day["truncated"] is True
+    # the header declared 2 changes, the bytes hold one full pair: the day says so
+    assert day["declared_changes_count"] == 2
+    assert day["changes_count"] == 1
+    assert day["note"] == NOTE
+    assert len(day["changes"]) == 1        # the change it did hold is kept
+    # information only: the flag is not an error
+    assert day.get("note") == NOTE
+
+
+def test_synthetic_cut_day_note_reaches_the_rendered_outputs(tmp_path):
+    result = _parse_bytes(tmp_path, "synth_note.ddd",
+                          _g1_activities_stream(declared=2, present=b"\x11\x80\x11\x80"))
+    tables = {label: (headers, rows) for label, _d, headers, rows, _t
+              in rf.section_tables(result)}
+    headers, rows = tables[next(name for name in tables if "Activit" in name)]
+    note_col = [i for i, h in enumerate(headers) if h.lower() == "note"]
+    assert note_col, headers
+    assert any(row[note_col[0]] == NOTE for row in rows if row)
+
+    _headers, kv = gui._kv_rows((result.get("activities") or [])[0])
+    assert dict(kv)[gui.ui_text.label("note")] == NOTE
+
+    from app.export import ExportManager
+    csv_path = tmp_path / "synth.csv"
+    ExportManager.export_to_csv(result, str(csv_path))
+    assert NOTE in csv_path.read_text(encoding="utf-8-sig")
+
+
+def test_synthetic_complete_day_carries_no_note(tmp_path):
+    result = _parse_bytes(tmp_path, "synth_ok.ddd",
+                          _g1_activities_stream(declared=1, present=b"\x11\x80", tail=b"\x00"))
+    day = (result.get("activities") or [])[0]
+    assert not day.get("truncated")
+    assert "note" not in day

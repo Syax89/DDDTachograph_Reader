@@ -197,6 +197,29 @@ ENTRY_TYPE_STATUS_ASSIGNED_GNSS = (
     "assigned (Reg. 2016/799 sec. 2.66; 2021/1228 ASN.1 figure lists 0..3 only)")
 
 
+#: CPR_072 "not available or not requested" for the odometer widths used by the VU
+#: records: 0xFFFFFF for OdometerShort (Annex 1C App.1 §2.113, 3 bytes, operating
+#: range 0..9 999 999 km), 0xFFFFFFFF for the 4-byte fields of the same records.
+ODOMETER_NOT_AVAILABLE = frozenset({0xFFFFFF, 0xFFFFFFFF})
+ODOMETER_MAX_VALID_KM = 9_999_999
+
+
+def odometer_km(value):
+    """A stored odometer as a distance in km, or ``None`` when it is not available.
+
+    One function for every VU and card decoder so the sentinel cannot be applied in
+    one generation and forgotten in another; the raw value stays on the record.
+    """
+    if value is None:
+        return None
+    if value in ODOMETER_NOT_AVAILABLE:
+        return None
+    if value > ODOMETER_MAX_VALID_KM:
+        # Outside the field's operating range: not a distance the reader can show.
+        return None
+    return value
+
+
 def entry_type_daily_work_period(code, generation="G2"):
     """``(short, meaning)`` for one EntryTypeDailyWorkPeriod byte.
 

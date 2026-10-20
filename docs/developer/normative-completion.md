@@ -686,3 +686,23 @@ that every surface renders (a `Note` column appears in that section's table only
 when such a record exists). Complete records never carry it, and no verdict of the
 file changes because of it: it is information, never an error. Card files are out of
 scope — their cut elementary files are declared by the card envelope.
+
+### 15.6 Not-available sentinels are not values
+
+CPR_072 gives every field a "not available or not requested" value (the FF range of its
+width). OdometerShort (Annex 1C App.1 §2.113) is 3 bytes with an operating range of
+0..9 999 999 km, so 0xFFFFFF is *not* 16 777 215 km. One helper
+(`core.decoders.common.odometer_km`) is now used by every VU decoder that reads an
+odometer, in G1, G2 and G2.2; it returns `None` for the sentinel and for anything
+outside the operating range, keeps the raw value on the record
+(`odometer_*_raw`), and the "not available" rendering is the same one the card
+decoders already produced. The same rule applies to the 4-byte forms of the field.
+
+### 15.7 A flood costs linear time and memory
+
+The structural walk used to record one interval per byte, so a file of a single
+repeated byte grew the tracker without bound (~600 MB per MB) . Adjacent intervals of
+the same label are now one interval, and `MAX_COVERAGE_RANGES` freezes the list for
+pathological inputs: the parse then records a `COVERAGE_RANGE_CAP` finding and marks
+the file partial, never silently short of coverage. Measured on floods of 0x76, 0x00
+and random bytes at 1, 4 and 16 MB: 16 MB now parses in ≤5 s with a flat ~65 MB RSS.

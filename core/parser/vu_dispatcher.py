@@ -31,7 +31,7 @@ from core.decoders.vu_g1 import (  # noqa: E402  (leaf: no parser import)
     TRUNCATED_CHANGES_NOTE, TRUNCATED_RECORD_NOTE)
 from core.decoders.common import (
     decode_extended_serial_number, decode_previous_vehicle_info,
-    describe_manual_input_flag, is_known_nation, serial_text,
+    describe_manual_input_flag, is_known_nation, odometer_km, serial_text,
     with_serial_text)
 from core.utils.constants import (
     RECORD_ARRAY_MAX_RECORDS, RECORD_ARRAY_MAX_SIZE, VU_MAX_TOTAL_RECORDS)
@@ -639,8 +639,10 @@ def decode_calibration(rec, generation=None):
         "l_tyre_circumference": struct.unpack(">H", rec[131:133])[0],
         "tyre_size": _ascii(rec, 133, 15),
         "authorised_speed_kmh": rec[148],
-        "old_odometer_km": _u24(rec[149:152]),
-        "new_odometer_km": _u24(rec[152:155]),
+        "old_odometer_km": odometer_km(_u24(rec[149:152])),
+        "old_odometer_raw": _u24(rec[149:152]),
+        "new_odometer_km": odometer_km(_u24(rec[152:155])),
+        "new_odometer_raw": _u24(rec[152:155]),
         # The three calibration TimeReals carry a time of day: one column each,
         # rendered in the same timestamp format as the neighbouring tables (the
         # formatter shortens an ISO value to 'YYYY-MM-DD HH:MM'), N/A when the
@@ -691,10 +693,12 @@ def decode_card_iw(rec):
         "card": decode_full_card_number_gen(rec, 72),
         "card_expiry": _iso(struct.unpack(">I", rec[91:95])[0]),
         "insertion_time": _iso(struct.unpack(">I", rec[95:99])[0]),
-        "odometer_insertion_km": _u24(rec[99:102]),
+        "odometer_insertion_km": odometer_km(_u24(rec[99:102])),
+        "odometer_insertion_raw": _u24(rec[99:102]),
         "card_slot": rec[102],
         "withdrawal_time": _iso(struct.unpack(">I", rec[103:107])[0]),
-        "odometer_withdrawal_km": _u24(rec[107:110]),
+        "odometer_withdrawal_km": odometer_km(_u24(rec[107:110])),
+        "odometer_withdrawal_raw": _u24(rec[107:110]),
         "record_bytes": len(rec),
     }
     if len(rec) >= CARD_IW_RECORD_SIZE:
@@ -959,7 +963,8 @@ def decode_place_daily(rec, with_auth=None, variant_source=None, generation=None
         "type_code": entry_type,
         "nation": decoders.get_nation(rec[24]),
         "region": rec[25],
-        "odometer_km": _u24(rec[26:29]),
+        "odometer_km": odometer_km(_u24(rec[26:29])),
+        "odometer_raw": _u24(rec[26:29]),
         "gnss_place": decode_gnss_place(rec, 29, with_auth),
     }
 
@@ -1010,7 +1015,8 @@ def decode_gnss_ad(rec, with_auth=None):
         "card_driver": decode_full_card_number_gen(rec, 4),
         "card_codriver": decode_full_card_number_gen(rec, 23),
         "gnss_place": decode_gnss_place(rec, 42, with_auth),
-        "odometer_km": _u24(rec[odo_off:odo_off + 3]) if odo_off + 3 <= len(rec) else None,
+        "odometer_km": (odometer_km(_u24(rec[odo_off:odo_off + 3]))
+                        if odo_off + 3 <= len(rec) else None),
     }
 
 
@@ -1148,7 +1154,7 @@ def decode_border_crossing(rec):
         "country_left": decoders.get_nation(rec[38]),
         "country_entered": decoders.get_nation(rec[39]),
         "gnss_place": decode_gnss_place_auth(rec, 40),
-        "odometer_km": _u24(rec[52:55]),
+        "odometer_km": odometer_km(_u24(rec[52:55])),
     }
 
 
@@ -1167,7 +1173,7 @@ def decode_load_unload(rec):
         "card_driver": decode_full_card_number_gen(rec, 5),
         "card_codriver": decode_full_card_number_gen(rec, 24),
         "gnss_place": decode_gnss_place_auth(rec, 43),
-        "odometer_km": _u24(rec[55:58]),
+        "odometer_km": odometer_km(_u24(rec[55:58])),
     }
 
 
@@ -1572,7 +1578,7 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         out["time"] = _iso(struct.unpack(">I", rec[0:4])[0])
         return out
     if record_type == 0x05 and len(rec) >= 3:
-        out["odometer_km"] = _u24(rec[0:3])
+        out["odometer_km"] = odometer_km(_u24(rec[0:3]))
         return out
     if record_type in (0x15, 0x18):
         decoded = decode_event_fault_record(rec, is_event=(record_type == 0x15),
