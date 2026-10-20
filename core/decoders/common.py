@@ -149,6 +149,43 @@ def decode_coded_text(data):
     return "".join(ch for ch in decoded if ch.isprintable()).strip()
 
 
+#: ``EntryTypeDailyWorkPeriod`` (Annex 1B §2.51) — the assignment generation 2
+#: keeps ("Value assignment: according to ISO/IEC8824-1" in Annex 1C §2.66,
+#: whose enumeration is a figure in the accessible editions, so the shared
+#: generation-1 text is the citable one). Six values are assigned:
+#:
+#:   (0) Begin, related time = card insertion time or time of entry
+#:   (1) End,   related time = card withdrawal time or time of entry
+#:   (2) Begin, related time manually entered (start time)
+#:   (3) End,   related time manually entered (end of work period)
+#:   (4) Begin, related time assumed by VU
+#:   (5) End,   related time assumed by VU
+ENTRY_TYPE_DAILY_WORK_PERIOD: dict[int, tuple[str, str]] = {
+    0x00: ("BEGIN", "Begin (card insertion time)"),
+    0x01: ("END", "End (card withdrawal time)"),
+    0x02: ("BEGIN", "Begin manually entered"),
+    0x03: ("END", "End manually entered"),
+    0x04: ("BEGIN", "Begin assumed by VU"),
+    0x05: ("END", "End assumed by VU"),
+}
+
+
+def entry_type_daily_work_period(code):
+    """``(short, meaning)`` for one EntryTypeDailyWorkPeriod byte.
+
+    An unassigned code keeps its numeric value as the short form and is labelled
+    as unassigned — the byte is never dropped and never given an invented
+    meaning.
+    """
+    try:
+        value = int(code)
+    except (TypeError, ValueError):
+        return ("Unknown", "not assigned")
+    if value in ENTRY_TYPE_DAILY_WORK_PERIOD:
+        return ENTRY_TYPE_DAILY_WORK_PERIOD[value]
+    return (f"0x{value:02X}", f"not assigned (0x{value:02X})")
+
+
 #: ManualInputFlag (Annex 1B §2.66 / Annex 1C §2.93) enumerates exactly two
 #: values. It is *not* a boolean: a driver who made no manual entries records
 #: ``noEntry`` (0), one who did records ``manualEntries`` (1), and anything else

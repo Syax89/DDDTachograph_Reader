@@ -93,16 +93,36 @@ class TestVuGhostContainer:
 # ── VU-GNSS-ERASURE (XB-F5) ──────────────────────────────────────────────────
 
 class TestVuGnssErasure:
+    """GeoCoordinates: the *sentinels* are 0x7FFFFF per coordinate and all-FF for
+    an empty field (Annex 1C §2.76 / Annex 1B §2.76); 0°/0° is a real position.
+
+    These assertions used to compare the whole result dict to ``{"fix": False}``
+    and treated the all-zero pair as "no fix". Both were corrected against the
+    primary text: the decoder now keeps the numeric raw values and a
+    ``position_status`` (``unknown``/``out_of_range``/``valid``) alongside the
+    verdict, so an exact-dict comparison is no longer the right assertion form,
+    and (0°,0°) must NOT be suppressed — it is a legal coordinate in the Gulf of
+    Guinea, unlike the all-FF / 0x7FFFFF sentinels.
+    """
+
     def test_half_erased_coordinates_are_not_a_fix(self):
-        assert decode_geo_coordinates(b"\x00\x00\x00\xff\xff\xff", 0) == {"fix": False}
-        assert decode_geo_coordinates(b"\xff\xff\xff\x00\x00\x00", 0) == {"fix": False}
+        for raw in (b"\x00\x00\x00\xff\xff\xff", b"\xff\xff\xff\x00\x00\x00"):
+            out = decode_geo_coordinates(raw, 0)
+            assert out["fix"] is False, raw
+            assert out["position_status"] == "unknown", raw
 
     def test_all_zero_record_is_not_null_island(self):
-        assert decode_geo_coordinates(b"\x00\x00\x00\x00\x00\x00", 0) == {"fix": False}
+        """Corrected: 0°/0° + 0°/0° is the only real position the old heuristic
+        threw away. It is a valid GeoCoordinates value, not a sentinel."""
+        out = decode_geo_coordinates(b"\x00\x00\x00\x00\x00\x00", 0)
+        assert out["fix"] is True
+        assert out["position_status"] == "valid"
+        assert (out["latitude_deg"], out["longitude_deg"]) == (0.0, 0.0)
 
     def test_unknown_sentinel_per_coordinate_is_not_a_fix(self):
-        assert decode_geo_coordinates(b"\x7f\xff\xff\x00\x00\x00", 0) == {"fix": False}
-        assert decode_geo_coordinates(b"\xff\xff\xff\xff\xff\xff", 0) == {"fix": False}
+        for raw in (b"\x7f\xff\xff\x00\x00\x00", b"\xff\xff\xff\xff\xff\xff"):
+            out = decode_geo_coordinates(raw, 0)
+            assert out["fix"] is False, raw
 
     def test_real_coordinate_still_decodes(self):
         # DDMM.M x10: latitude 45 deg 30.4' -> 45304, longitude 11 deg 30.4' -> 11304.

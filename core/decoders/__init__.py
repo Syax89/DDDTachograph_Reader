@@ -18,7 +18,9 @@ prefixed with ``_``) must be imported from their own module directly.
 from core.decoders.common import (
     get_nation,
     decode_string,
+    decode_coded_text,
     decode_date,
+    entry_type_daily_work_period,
     decode_datef,
     decode_activity_val,
     get_cyclic_data,

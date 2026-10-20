@@ -37,7 +37,12 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
                # translated label in all 33 catalogs).
                "previous_vehicle", "manual_input_flag",
                "manual_input_flag_meaning", "record_bytes", "record_complete",
-               "missing_bytes", "raw_tail_bytes"}
+               "missing_bytes", "raw_tail_bytes",
+               # CardSlotsStatus ('ccccdddd'B, Annex 1B §2.28) complete typing:
+               # the numeric nibble and its assignment status stay in the JSON;
+               # the short state word is the published value.
+               "driver_slot_code", "codriver_slot_code",
+               "driver_slot_status", "codriver_slot_status"}
 
 # Canonical trust verdicts for a parsed download. Consumers (GUI badge, rename
 # tooling, reports) must classify with these rather than by substring-matching

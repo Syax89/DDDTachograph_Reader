@@ -181,9 +181,32 @@ TREP_SECTIONS = {
     0x01: "Overview", 0x21: "Overview", 0x31: "Overview",
     0x02: "Activities", 0x22: "Activities", 0x32: "Activities",
     0x03: "EventsFaults", 0x23: "EventsFaults", 0x33: "EventsFaults",
-    0x04: "DetailedSpeed", 0x24: "DetailedSpeed", 0x34: "DetailedSpeed",
+    0x04: "DetailedSpeed", 0x24: "DetailedSpeed",
     0x05: "TechnicalData", 0x25: "TechnicalData", 0x35: "TechnicalData",
 }
+
+# ── TREP 00: DownloadInterfaceVersion (generation 2, version 2 only) ────────
+#
+# Annex 1C point 2.60a, inserted by Reg. (EU) 2021/1228 (30)(n)(j):
+#
+#   DownloadInterfaceVersion  Value assignment: 'aabb'H
+#     'aa'H  '00'H not used, '01'H Generation 2 vehicle unit
+#     'bb'H  '00'H not used, '01'H version 2 of the Generation 2 vehicle unit
+#
+# DDP_028a (same act, Appendix 7) describes the very same transfer as
+# "Generation and version of the VU: 02,02 Hex for Generation 2, version 2".
+# The two texts disagree about the coding of the two transfer bytes; the only
+# observed value in a local G2.2 download is `01 01`, i.e. the point-2.60a
+# assignment. No erratum was established, so the bytes are published raw with
+# both readings recorded and the conflict stated, never re-coded to one of them.
+TREP_DOWNLOAD_INTERFACE = 0x00
+INTERFACE_VERSION_SIZE = 2
+INTERFACE_GENERATION_CODES = {0x00: "not used",
+                              0x01: "Generation 2 vehicle unit"}
+INTERFACE_VERSION_CODES = {0x00: "not used",
+                           0x01: "version 2 of the Generation 2 vehicle unit"}
+#: DDP_028a's comment column for the same transfer (see the block comment).
+INTERFACE_DDP_028A_COMMENT = "02,02 Hex for Generation 2, version 2"
 
 
 def _u24(b):
@@ -537,21 +560,32 @@ def decode_geo_coordinates(data, off):
     lon_raw = data[off + 3:off + 6]
     _empty = b"\xff\xff\xff"
     _unknown = b"\x7f\xff\xff"
-    _zero = b"\x00\x00\x00"
-    # No fix if either axis is the empty marker, the per-coordinate "unknown"
-    # sentinel, or if the whole record is cleared to zero.
+    # No fix if either axis carries the empty (all-FF) marker or the
+    # per-coordinate "unknown position" sentinel 0x7FFFFF (§2.76).
     if lat_raw in (_empty, _unknown) or lon_raw in (_empty, _unknown):
-        return {"fix": False}
-    if lat_raw == _zero and lon_raw == _zero:
-        return {"fix": False}
+        return {"fix": False, "position_status": "unknown"}
     lat = _s24(lat_raw)
     lon = _s24(lon_raw)
+    latitude = _coord_to_deg(lat)
+    longitude = _coord_to_deg(lon)
+    # A position of exactly 0°/0° is a REAL coordinate (Gulf of Guinea), not the
+    # unknown sentinel: it must not be suppressed. Range-checking replaces the
+    # old all-zero heuristic — latitude beyond ±90° or longitude beyond ±180°
+    # is not a legal GeoCoordinates value and is never published as a position.
+    if abs(latitude) > 90.0 or abs(longitude) > 180.0:
+        return {
+            "fix": False,
+            "position_status": "out_of_range",
+            "latitude_raw": lat,
+            "longitude_raw": lon,
+        }
     return {
         "fix": True,
+        "position_status": "valid",
         "latitude_raw": lat,
         "longitude_raw": lon,
-        "latitude_deg": _coord_to_deg(lat),
-        "longitude_deg": _coord_to_deg(lon),
+        "latitude_deg": latitude,
+        "longitude_deg": longitude,
     }
 
 
@@ -586,21 +620,33 @@ def decode_gnss_place(data, off, with_auth):
     return out
 
 
-def decode_place_daily(rec):
+def decode_place_daily(rec, with_auth=None, variant_source=None):
     """VuPlaceDailyWorkPeriodRecord — G2 (40 bytes) / G2.2 (41 bytes):
     fullCardNumberAndGen(19) + entryTime(4) + entryType(1) + country(1) +
-    region(1) + odometer(3) + GNSSPlace(11 G2 / 12 G2.2)."""
+    region(1) + odometer(3) + GNSSPlace(11 G2 / 12 G2.2).
+
+    *with_auth* selects the GNSS-place variant. Generation 2, version 2 added
+    ``authenticationStatus`` to the place record (``PlaceAuthRecord``,
+    Annex 1C §2.116a), so the variant belongs to the **section version** — the
+    caller passes it. Without a section context the record length is the only
+    available hint; that fallback is labelled through ``variant_source`` so the
+    field is never presented as section-derived.
+    """
     if len(rec) < 40:
         return None
-    with_auth = len(rec) >= 41
+    if with_auth is None:
+        with_auth = len(rec) >= 41
+        variant_source = "record length (no section context)"
     entry_type = rec[23]
-    # EntryTypeDailyWorkPeriod (Annex 1C §2.66): 0/2 = Begin, 1/3 = End.
-    entry_names = {0x00: "BEGIN", 0x01: "END", 0x02: "BEGIN", 0x03: "END"}
+    short, meaning = decoders.entry_type_daily_work_period(entry_type)
     return {
-        "confidence": "high",
+        "confidence": "high" if with_auth == (len(rec) >= 41) else "medium",
+        "record_bytes": len(rec),
+        "variant_source": variant_source,
         "card_driver": decode_full_card_number_gen(rec, 0),
         "timestamp": _iso(struct.unpack(">I", rec[19:23])[0]),
-        "entry_type": entry_names.get(entry_type, f"0x{entry_type:02X}"),
+        "entry_type": short,
+        "entry_type_meaning": meaning,
         "type_code": entry_type,
         "nation": decoders.get_nation(rec[24]),
         "region": rec[25],
@@ -609,30 +655,44 @@ def decode_place_daily(rec):
     }
 
 
-def decode_specific_condition(rec):
+def decode_specific_condition(rec, generation="G2"):
     """VuSpecificConditionRecord (5 bytes): entryTime(4) + specificConditionType(1).
 
-    Type codes per Annex 1C §2.154: 0x01/0x02 = Out of scope Begin/End,
-    0x03/0x04 = Ferry-Train crossing Begin/End, 0x00 = RFU.
+    Type codes per Annex 1B §2.154 / Annex 1C §2.154:
+      0x01/0x02 = out of scope Begin/End,
+      0x03      = ferry/train crossing (generation 2 splits it into
+                  Begin 0x03 / End 0x04),
+      0x04      = generation 1 RFU, generation 2 crossing End.
+    The label therefore depends on the *section's* generation; an unassigned
+    code keeps its numeric value and is labelled unassigned instead of being
+    given the other generation's meaning.
     """
     if len(rec) < 5:
         return None
     from core.utils.event_codes import specific_condition_label
     code = rec[4]
+    label = specific_condition_label(code, generation=generation)
+    assigned = label != f"0x{code:02X}"
     return {
         "confidence": "high",
         "timestamp": _iso(struct.unpack(">I", rec[0:4])[0]),
-        "condition": specific_condition_label(code),
+        "condition": label,
         "type_code": code,
+        "condition_status": "assigned" if assigned else "not assigned",
     }
 
 
-def decode_gnss_ad(rec):
+def decode_gnss_ad(rec, with_auth=None):
     """VuGNSSADRecord — GNSS accumulated driving, G2 (56) / G2.2 (57):
-    timeStamp(4) + cardDriver(19) + cardCodriver(19) + GNSSPlace(11/12) + odometer(3)."""
+    timeStamp(4) + cardDriver(19) + cardCodriver(19) + GNSSPlace(11/12) + odometer(3).
+
+    ``with_auth`` comes from the section version (see :func:`decode_place_daily`);
+    without one, the record length is used and the field is marked as such.
+    """
     if len(rec) < 56:
         return None
-    with_auth = len(rec) >= 57
+    if with_auth is None:
+        with_auth = len(rec) >= 57
     # ts(4) + cardDriver(19) + cardCodriver(19) + GNSSPlace(11/12) + odometer(3)
     odo_off = 42 + (12 if with_auth else 11)
     return {
@@ -658,16 +718,23 @@ def decode_overspeeding_control(rec):
     }
 
 
-def decode_overspeeding_event(rec):
+def decode_overspeeding_event(rec, version=EVENT_FAULT_VERSION_UNKNOWN):
     """VuOverSpeedingEventRecord (32 bytes): eventType(1) + recordPurpose(1) +
     beginTime(4) + endTime(4) + maxSpeed(1) + avgSpeed(1) +
-    cardNumberAndGenDriverSlotBegin(19) + similarEventsNumber(1)."""
+    cardNumberAndGenDriverSlotBegin(19) + similarEventsNumber(1).
+
+    The ``eventType`` byte is an EventFaultType, so it is read against the
+    containing section's point-2.70 assignment (*version*) exactly like the
+    event/fault arrays — '0F'H/'1C'H/'3A'H exist only in version 2.
+    """
     if len(rec) < 32:
         return None
     return {
         "confidence": "high",
         "event_type": rec[0],
-        "event_type_label": describe_event(rec[0]),
+        "event_type_label": describe_event_fault_type(rec[0], True, version),
+        "event_fault_version": version,
+        "type_status": event_fault_type_status(rec[0], version),
         "record_purpose": rec[1],
         "record_purpose_label": describe_record_purpose(rec[1]),
         "begin": _iso(struct.unpack(">I", rec[2:6])[0]),
@@ -679,15 +746,21 @@ def decode_overspeeding_event(rec):
     }
 
 
-def decode_power_interruption(rec):
+def decode_power_interruption(rec, version=EVENT_FAULT_VERSION_UNKNOWN):
     """VuPowerSupplyInterruptionRecord (87 bytes): eventType(1) + recordPurpose(1)
-    + beginTime(4) + endTime(4) + 4×FullCardNumberAndGen(19) + similarEventsNumber(1)."""
+    + beginTime(4) + endTime(4) + 4×FullCardNumberAndGen(19) + similarEventsNumber(1).
+
+    ``eventType`` is an EventFaultType: the section's point-2.70 version decides
+    which codes it assigns (see :func:`decode_overspeeding_event`).
+    """
     if len(rec) < 86:
         return None
     out = {
         "confidence": "medium",
         "event_type": rec[0],
-        "event_type_label": describe_event(rec[0]),
+        "event_type_label": describe_event_fault_type(rec[0], True, version),
+        "event_fault_version": version,
+        "type_status": event_fault_type_status(rec[0], version),
         "record_purpose": rec[1],
         "record_purpose_label": describe_record_purpose(rec[1]),
         "begin": _iso(struct.unpack(">I", rec[2:6])[0]),
@@ -713,22 +786,37 @@ def decode_its_consent(rec):
     }
 
 
+#: VuTimeAdjustmentRecord is exactly 99 bytes (Annex 1C §2.212): oldTimeValue(4)
+#: + newTimeValue(4) + workshopName(36) + workshopAddress(36) +
+#: workshopCardNumberAndGeneration(19).
+TIME_ADJUSTMENT_RECORD_SIZE = 99
+
+
 def decode_time_adjustment(rec):
     """VuTimeAdjustmentRecord (99): oldTimeValue(4) + newTimeValue(4) +
-    workshopName(36) + workshopAddress(36) + workshopCardNumberAndGen(19)."""
+    workshopName(36) + workshopAddress(36) + workshopCardNumberAndGen(19).
+
+    The record size is normative: a shorter body is *not* a decoded adjustment.
+    Its two leading TimeReal values are still read (they are unambiguous), but
+    the record is reported ``low``/``record_complete: False`` with every
+    remaining byte preserved, instead of being labelled a complete record.
+    """
     if len(rec) < 8:
         return None
     out = {
-        "confidence": "medium",
+        "confidence": "low",
+        "record_bytes": len(rec),
+        "record_complete": len(rec) == TIME_ADJUSTMENT_RECORD_SIZE,
         "old_time": _iso(struct.unpack(">I", rec[0:4])[0]),
         "new_time": _iso(struct.unpack(">I", rec[4:8])[0]),
     }
-    if len(rec) >= 99:
+    if out["record_complete"]:
         out["confidence"] = "high"
         out["workshop_name"] = decode_name(rec, 8)
         out["workshop_address"] = decode_name(rec, 44)
         out["workshop_card"] = decode_full_card_number_gen(rec, 80)
     else:
+        out["missing_bytes"] = TIME_ADJUSTMENT_RECORD_SIZE - len(rec)
         out["raw_tail_hex"] = rec[8:].hex()
     return out
 
@@ -786,6 +874,8 @@ def decode_load_unload(rec):
 # ``decode_event_fault_record`` reports through ``normative``.
 VU_EVENT_RECORD_SIZE = 91
 VU_FAULT_RECORD_SIZE = 90
+#: VuDetailedSpeedBlock (§2.188): TimeReal + 60 per-second values, exactly 64.
+DETAILED_SPEED_BLOCK_SIZE = 64
 VU_EVENT_SPEC = "Annex 1C App.1 2.198"
 VU_FAULT_SPEC = "Annex 1C App.1 2.201"
 # EventFaultType '0B'H (§2.70 generation 2): for a time conflict the two
@@ -996,12 +1086,37 @@ def decode_event_fault_record(rec, is_event, version=EVENT_FAULT_VERSION_UNKNOWN
     return out
 
 
+#: TREP → hardware generation of the section. The transfer number fixes the
+#: generation (DDP_011 / DDP_029..DDP_035); the file-level generation only says
+#: which unit produced the download, which is why nothing here reads it.
+TREP_GENERATIONS = {
+    0x01: "G1", 0x02: "G1", 0x03: "G1", 0x04: "G1", 0x05: "G1", 0x06: "G1",
+    0x21: "G2", 0x22: "G2", 0x23: "G2", 0x24: "G2", 0x25: "G2",
+    0x31: "G2.2", 0x32: "G2.2", 0x33: "G2.2", 0x35: "G2.2", 0x00: "G2.2",
+}
+
+
+def section_generation(trep):
+    """Hardware generation implied by a TREP byte, or ``None`` when unknown."""
+    return TREP_GENERATIONS.get(trep)
+
+
+def section_uses_auth_place(trep):
+    """True when *trep* is a generation-2-version-2 section.
+
+    ``GNSSPlaceAuthRecord`` / ``PlaceAuthRecord`` and the extra
+    ``authenticationStatus`` byte were introduced by Reg. (EU) 2021/1228 for
+    generation 2, version 2 only, so the *section* chooses the place variant
+    (DDP_032/DDP_033/DDP_035). ``None`` means "no section context".
+    """
+    if trep is None:
+        return None
+    return TREP_GENERATIONS.get(trep) == "G2.2"
+
+
 _RECORD_DECODERS = {
     0x22: decode_border_crossing,
     0x23: decode_load_unload,
-    0x1C: decode_place_daily,
-    0x09: decode_specific_condition,
-    0x16: decode_gnss_ad,
     0x1A: decode_overspeeding_control,
     0x1B: decode_overspeeding_event,
     0x1E: decode_time_adjustment,
@@ -1018,12 +1133,17 @@ _RECORD_DECODERS = {
     0x21: decode_sensor_gnss_coupled,
 }
 
-def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN):
+def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
+                   trep=None):
     """Decode a single record by recordType. Returns a dict (always includes
     record_type, size, confidence).
 
     *version* is the point-2.70 schema version of the containing section, used
-    only by the event/fault records; see :func:`decode_event_fault_record`.
+    by the event/fault records; see :func:`decode_event_fault_record`. *trep* is
+    the section's transfer number, which fixes the field variants that changed
+    between generation 2 version 1 and version 2 (see
+    :func:`section_uses_auth_place`); ``None`` means the record is isolated and
+    the decoder must say so instead of assuming a variant.
     """
     name, confidence = RECORD_TYPES.get(record_type, (f"Unknown_0x{record_type:02X}", "low"))
     out = {"record_type": f"0x{record_type:02X}", "name": name,
@@ -1033,6 +1153,48 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN):
         # name; flag the record so a non-standard type is never presented as a
         # defined record type (D2-005 / VU-UNMAPPED-RECORDS).
         out["normative"] = False
+
+    # Records whose layout or labels changed between generation 2 version 1 and
+    # version 2 need the section context: it is passed positionally below.
+    if record_type == 0x1C:
+        decoded = decode_place_daily(
+            rec, with_auth=section_uses_auth_place(trep),
+            variant_source=(f"section (TREP 0x{trep:02X})" if trep is not None
+                            else None))
+        if decoded:
+            out.update(decoded)
+        else:
+            out["raw_hex"] = rec[:48].hex()
+        return out
+    if record_type == 0x16:
+        decoded = decode_gnss_ad(rec, with_auth=section_uses_auth_place(trep))
+        if decoded:
+            out.update(decoded)
+            out["variant_source"] = (f"section (TREP 0x{trep:02X})"
+                                     if trep is not None
+                                     else "record length (no section context)")
+        else:
+            out["raw_hex"] = rec[:48].hex()
+        return out
+    if record_type == 0x09:
+        generation = section_generation(trep)
+        decoded = decode_specific_condition(
+            rec, generation=generation or "G2")
+        if decoded:
+            out.update(decoded)
+        else:
+            out["raw_hex"] = rec[:48].hex()
+        return out
+
+    if record_type in (0x1B, 0x1F):
+        decoder = (decode_overspeeding_event if record_type == 0x1B
+                   else decode_power_interruption)
+        decoded = decoder(rec, version=version)
+        if decoded:
+            out.update(decoded)
+        else:
+            out["raw_hex"] = rec[:48].hex()
+        return out
 
     if record_type in _RECORD_DECODERS:
         decoded = _RECORD_DECODERS[record_type](rec)
@@ -1076,8 +1238,13 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN):
             out["raw_hex"] = rec[:48].hex()
         return out
     if record_type == 0x24 and len(rec) >= 15:
+        # VehicleRegistrationIdentification (15): nation(1) +
+        # VehicleRegistrationNumber = codePage(1) + 13 characters (§2.167).
+        # Decoded through the declared code page: a VRN may carry accented
+        # letters, so filtering it down to ASCII would corrupt a valid plate.
         out["nation"] = decoders.get_nation(rec[0])
-        out["plate"] = decoders.decode_string(rec[1:15])
+        out["code_page"] = rec[1]
+        out["plate"] = decoders.decode_coded_text(rec[1:15])
         return out
     if record_type == 0x0A and len(rec) >= 17:
         out["confidence"] = "high"
@@ -1090,13 +1257,18 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN):
         # fabricate a registration country (0x01 -> "A") the record does not
         # contain. The registration *nation* is only defined for 0x24
         # (VehicleRegistrationIdentification, below).
+        #
+        # The 13 characters are decoded through the declared code page (a VRN is
+        # text, not an identifier: ISO/IEC 8859 accented letters are legal).
         out["confidence"] = "high"
         out["code_page"] = rec[0]
-        out["plate"] = decoders.decode_string(rec[1:14], is_id=True)
+        out["plate"] = decoders.decode_coded_text(rec[0:14])
         return out
     if record_type == 0x02 and len(rec) >= 1:
         out["confidence"] = "high"
         out["card_slots_status"] = rec[0]
+        # 'ccccdddd'B: the raw octet alone is not the slot state (§2.28).
+        out["slots"] = decode_card_slots_status(rec[0])
         return out
     if record_type == 0x13 and len(rec) >= 8:
         out["confidence"] = "high"
@@ -1104,12 +1276,22 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN):
         out["max_downloadable_time"] = _iso(struct.unpack(">I", rec[4:8])[0])
         return out
     if record_type == 0x12 and len(rec) >= 5:
-        # VuDetailedSpeedBlock: speedBlockBeginDate(4) + 60×speed(1/sec).
+        # VuDetailedSpeedBlock (§2.188) is exactly 64 bytes: speedBlockBeginDate
+        # (4) + 60 one-byte values, one per second. A shorter body is not a speed
+        # block — its leading TimeReal is still read (unambiguous), but the
+        # record is reported incomplete/low instead of a high-confidence block.
+        out["begin"] = _iso(struct.unpack(">I", rec[0:4])[0])
+        out["record_bytes"] = len(rec)
+        out["record_complete"] = len(rec) == DETAILED_SPEED_BLOCK_SIZE
+        if not out["record_complete"]:
+            out["confidence"] = "low"
+            out["missing_bytes"] = DETAILED_SPEED_BLOCK_SIZE - len(rec)
+            out["raw_tail_hex"] = rec.hex()
+            return out
+        out["confidence"] = "high"
         # Summarised (not expanded) to avoid a 60×N value dump.
         raw_speeds = [None if s == 0xFF else s for s in rec[4:64]]
         samples = [s for s in raw_speeds if s is not None]
-        out["confidence"] = "high"
-        out["begin"] = _iso(struct.unpack(">I", rec[0:4])[0])
         # Internal chart data: excluded from GUI tables and exports.
         out["_chart_speeds_kmh"] = raw_speeds
         if samples:
@@ -1135,7 +1317,8 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN):
     return out
 
 
-def decode_vu_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN):
+def decode_vu_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
+                     trep=None):
     """Decode one isolated VU RecordArray record in the canonical app shape.
 
     This deliberately accepts a single record, not a complete TREP stream, so
@@ -1146,7 +1329,7 @@ def decode_vu_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN):
     meaning for '0F'H/'1C'H/'3A'H. Callers that *do* know the section (the stream
     walker) pass ``version=`` explicitly.
     """
-    return _decode_record(record_type, rec, version)
+    return _decode_record(record_type, rec, version, trep=trep)
 
 
 def iter_vu_sections(data, state=None):
@@ -1165,14 +1348,43 @@ def iter_vu_sections(data, state=None):
     pos = 0
     cur = None
     # Valid TREP bytes following a 0x76 section marker (G1/G2/G2.2 + card download).
-    trep_bytes = set(TREP_SECTIONS) | {0x06, 0x26, 0x36}
-    while pos + 5 <= n:
+    # `06` is the only card-download TREP in every generation (DDP_029..DDP_035);
+    # `26`/`36` have no transfer definition in any of them, so they are not
+    # accepted as aliases here — an undefined transfer has no layout to decode.
+    trep_bytes = set(TREP_SECTIONS) | {0x06, TREP_DOWNLOAD_INTERFACE}
+    # `pos + 2` (not `pos + 5`): a two-byte DownloadInterfaceVersion section at
+    # EOF is only 4 bytes long, so a 5-byte window would step over it.
+    while pos + 2 <= n:
         if data[pos] == 0x76 and data[pos + 1] in trep_bytes:
             if cur:
                 yield cur
-            cur = {"marker": pos, "trep": data[pos + 1], "records": []}
+                cur = None
+            trep = data[pos + 1]
+            if trep == TREP_DOWNLOAD_INTERFACE:
+                # DDP_028a: SID + TREP 00 + DownloadInterfaceVersion, which point
+                # 2.60a defines as exactly two octets ('aabb'H). There are no
+                # RecordArrays and no signature record in this transfer.
+                end = pos + 2 + INTERFACE_VERSION_SIZE
+                if end > n:
+                    if state is not None:
+                        state["truncated"] = True
+                    pos += 1
+                    continue
+                yield {"marker": pos, "trep": trep, "records": [],
+                       "interface": data[pos + 2:end]}
+                pos = end
+                continue
+            cur = {"marker": pos, "trep": trep, "records": []}
             pos += 2
             continue
+        if pos + 5 > n:
+            # Fewer than five bytes left: no RecordArray header can fit. The run
+            # is counted as trailing bytes (the caller decides whether such a
+            # remainder is legal padding or a truncated record) instead of being
+            # silently stepped over.
+            if state is not None:
+                state["trailing_bytes"] = n - pos
+            break
         rt = data[pos]
         rs = struct.unpack(">H", data[pos + 1:pos + 3])[0]
         nr = struct.unpack(">H", data[pos + 3:pos + 5])[0]
@@ -1235,6 +1447,8 @@ def walk_vu_record_arrays(data, results):
         # section, and the file-wide ``metadata.generation`` says nothing about
         # either of them.
         section_version = event_fault_version_for_trep(sec["trep"])
+        if sec["trep"] == TREP_DOWNLOAD_INTERFACE:
+            _emit_interface_version(sec.get("interface") or b"", results)
         current = {"trep": sec["trep"], "name": TREP_SECTIONS.get(sec["trep"], f"TREP_0x{sec['trep']:02X}"),
                    "records": {}}
         for (pos, rt, rs, nr, _end) in sec["records"]:
@@ -1252,7 +1466,8 @@ def walk_vu_record_arrays(data, results):
                     break
                 rec = data[rpos:rpos + rs]
                 current["records"].setdefault(rt, []).append(
-                    decode_vu_record(rt, rec, version=section_version))
+                    decode_vu_record(rt, rec, version=section_version,
+                                     trep=sec["trep"]))
                 rpos += rs
                 total_records += 1
         _emit_section(current, results)
@@ -1267,6 +1482,11 @@ def walk_vu_record_arrays(data, results):
             break
 
     results["_vu_walk_complete"] = not capped and not state.get("truncated", False)
+    if state.get("trailing_bytes"):
+        # Bytes that fit no header and start no section: carried in metadata so
+        # a remainder is never silently absorbed by the walk.
+        results.setdefault("metadata", {})["vu_walk_trailing_bytes"] = int(
+            state["trailing_bytes"])
     if capped:
         results["_vu_walk_record_cap"] = VU_MAX_TOTAL_RECORDS
     if unmapped:
@@ -1288,9 +1508,82 @@ def _count_decode_path(results, key, normative):
     bucket["normative" if normative else "non_normative"] += 1
 
 
+#: CardSlotsStatus nibble ('ccccdddd'B) → slot state. Annex 1B §2.28 defines
+#: the nibble vocabulary once for every generation: 0000 no card, 0001 driver,
+#: 0010 workshop, 0011 control, 0100 company card, 0101..1111 unassigned.
+CARD_SLOT_TYPES = {0x00: "empty", 0x01: "driver", 0x02: "workshop",
+                   0x03: "control", 0x04: "company"}
+
+
+def decode_card_slots_status(value):
+    """Decode one CardSlotsStatus octet into its two typed nibbles.
+
+    The high nibble is the co-driver slot, the low nibble the driver slot. Both
+    the short state word (``driver``/``company``/``empty``/``reserved``), the
+    numeric code and an explicit assignment status are returned so a caller can
+    publish the raw octet without pretending the state word is the only reading.
+    """
+    out = {}
+    for name, nibble in (("driver_slot", value & 0x0F),
+                         ("codriver_slot", (value >> 4) & 0x0F)):
+        label = CARD_SLOT_TYPES.get(nibble)
+        out[name] = label or "reserved"
+        out[f"{name}_code"] = nibble
+        out[f"{name}_status"] = "assigned" if label else "unassigned"
+    out["raw"] = f"0x{value:02X}"
+    return out
+
+
+def _emit_interface_version(interface, results):
+    """Publish TREP 00 DownloadInterfaceVersion (Annex 1C §2.60a) as raw bytes.
+
+    The two octets are interpreted with the point-2.60a value assignment and the
+    DDP_028a comment is carried alongside, because the two primary texts of the
+    same amending act disagree ("02,02 Hex" vs ``'aa'``/``'bb'`` = 01). Neither
+    reading is promoted: ``status`` says the value is raw.
+    """
+    if len(interface) < INTERFACE_VERSION_SIZE:
+        results.setdefault("metadata", {})["download_interface_version"] = {
+            "raw": bytes(interface).hex(),
+            "status": "truncated (DDP_028a defines two transfer bytes)",
+        }
+        return
+    first, second = interface[0], interface[1]
+    results.setdefault("metadata", {})["download_interface_version"] = {
+        "raw": bytes(interface[:2]).hex(),
+        "generation_code": first,
+        "generation_status": INTERFACE_GENERATION_CODES.get(
+            first, f"not assigned (0x{first:02X})"),
+        "version_code": second,
+        "version_status": INTERFACE_VERSION_CODES.get(
+            second, f"not assigned (0x{second:02X})"),
+        "status": "raw (DDP_028a comment vs Annex 1C \u00a72.60a)",
+        "source_conflict": True,
+        "ddp_028a_comment": INTERFACE_DDP_028A_COMMENT,
+    }
+
+
 def _emit_section(section, results):
     """Map decoded section records into the app's existing result lists."""
     recs = section["records"]
+
+    # Overview-only records. ``CurrentDateTime`` (0x03) and ``CardSlotsStatus``
+    # (0x02) were decoded per record and then dropped here: the VU's own clock
+    # and the state of its two card slots are normative Overview fields
+    # (DDP_029/DDP_031), so they are published. The keys are the ones the G1
+    # TREP 01 path already uses, so nothing on screen changes.
+    for r in recs.get(0x03, []):
+        current = r.get("time")
+        if current and results.setdefault("metadata", {}).get(
+                "current_datetime") in (None, "N/A"):
+            results["metadata"]["current_datetime"] = current
+            break
+    for r in recs.get(0x02, []):
+        raw = r.get("card_slots_status")
+        if isinstance(raw, int):
+            results.setdefault("vu_overview", {}).setdefault(
+                "card_slot_status", decode_card_slots_status(raw))
+            break
 
     # Vehicle identification: write the first found VIN, plate, nation
     # into results["vehicle"]. G2 uses 0x0B (VehicleRegistrationNumber),

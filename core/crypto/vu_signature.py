@@ -25,7 +25,8 @@ from cryptography.exceptions import InvalidSignature
 import datetime
 
 from core.utils.logger import get_logger
-from core.parser.vu_dispatcher import iter_vu_sections, TREP_SECTIONS
+from core.parser.vu_dispatcher import (
+    TREP_DOWNLOAD_INTERFACE, TREP_SECTIONS, iter_vu_sections)
 from core.utils.constants import (
     CVC_EFFECTIVE_DATE_TAG,
     CVC_EXPIRATION_DATE_TAG,
@@ -306,6 +307,11 @@ def _unsigned_gaps(data, sections):
     for sec in sections:
         start = sec["marker"]
         end = start + 2
+        if sec.get("interface"):
+            # The TREP 00 transfer body is defined by DDP_028a even though no
+            # signature covers it: it is a recognised transfer, not payload
+            # riding along outside every section.
+            end = start + 2 + len(sec["interface"])
         for (*_, rec_end) in sec["records"]:
             if rec_end > end:
                 end = rec_end
@@ -408,6 +414,16 @@ def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
         # present unsigned payload data as authenticated.
         all_valid = True
         for sec in sections:
+            if sec["trep"] == TREP_DOWNLOAD_INTERFACE:
+                # DDP_028a defines the download-interface transfer as the SID +
+                # TREP 00 + the two DownloadInterfaceVersion octets: it has no
+                # RecordArrays and therefore no SignatureRecordArray, and no
+                # section key is covered by a per-TREP signature. Skipping it is
+                # explicit here (and reported) rather than silently asserting a
+                # signature that the transfer does not define.
+                report.setdefault("interface_versions", []).append(
+                    (sec.get("interface") or b"").hex())
+                continue
             recs = sec["records"]
             sig_recs = [r for r in recs if r[1] == _SIGNATURE_RECORD]
             if not sig_recs:

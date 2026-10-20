@@ -381,16 +381,21 @@ class TestIsolatedRoutes(unittest.TestCase):
         self.assertNotIn(0x18, vu_dispatcher.VU_TAG_RECORD_TYPES.values())
 
     def test_an_unrelated_tag_route_gains_no_version_bookkeeping(self):
+        """Corrected: VuPowerSupplyInterruptionRecord *does* carry an
+        ``eventType EventFaultType`` (Annex 1C §2.199, exactly like
+        VuOverSpeedingEventRecord §2.198), so the isolated tag route must record
+        that it has no section version — ``unknown`` — instead of dropping the
+        byte's assignment status. The three keys stay model-only (HIDDEN_KEYS)."""
         from core.decoders.vu_g2 import parse_g2_vu_record
         results = {}
-        # 0x0530 → VuPowerSupplyInterruptionRecord (0x1F), a record with no
-        # EventFaultType assignment of its own.
         body = b"\x00" * 87
         parse_g2_vu_record(_record_array(0x1F, [body]), results, 0x0530)
         records = results["power_interruptions"]
         self.assertEqual(len(records), 1)
-        for key in HIDDEN_VERSION_KEYS:
-            self.assertNotIn(key, records[0])
+        self.assertEqual(records[0]["event_fault_version"],
+                         EVENT_FAULT_VERSION_UNKNOWN)
+        # 0x00 is assigned by every version, so the status is not guessed.
+        self.assertEqual(records[0]["type_status"], TYPE_ASSIGNED)
 
 
 class TestManufacturerIdentity(unittest.TestCase):

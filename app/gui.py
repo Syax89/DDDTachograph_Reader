@@ -286,7 +286,11 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence", "record_t
                # would also need a translated label in all 33 catalogs).
                "previous_vehicle", "manual_input_flag",
                "manual_input_flag_meaning", "record_bytes", "record_complete",
-               "missing_bytes", "raw_tail_bytes"}
+               "missing_bytes", "raw_tail_bytes",
+               # CardSlotsStatus complete typing (numeric nibble + assignment
+               # status): JSON only, the table keeps its existing columns.
+               "driver_slot_code", "codriver_slot_code",
+               "driver_slot_status", "codriver_slot_status"}
 # Descriptive columns pushed to table start.
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
 # Technical columns pushed to table end.
