@@ -1659,7 +1659,11 @@ def _stap_extent(data, start):
         tag, dtype, length = struct.unpack(">HBH", data[pos:pos + 5])
         if tag in (0x0000, 0xFFFF, 0x5555) or dtype > 0x0F:
             break
-        if length > RECORD_ARRAY_MAX_SIZE or pos + 5 + length > n:
+        # The element length is its OWN two-byte field (Annex 1B DDP_044:
+        # "length is a two byte value", `FFFF` reserved), so a real elementary
+        # file — 12-14 KB in practice — fits. `RECORD_ARRAY_MAX_SIZE` is a
+        # RecordArray sanity cap and must never bound card data.
+        if length == 0xFFFF or pos + 5 + length > n:
             break
         pos += 5 + length
         count += 1
@@ -1702,11 +1706,15 @@ def iter_vu_sections(data, state=None):
                 # section marker, and the fallback is recorded as such.
                 end, count = _stap_extent(data, pos + 2)
                 tlv_complete = count > 0 and (
-                    end == n or (data[end] == 0x76 and end + 1 < n))
+                    end == n or (data[end] == 0x76 and end + 1 < n
+                                 and data[end + 1] in trep_bytes))
                 if not tlv_complete:
+                    # No parseable EF chain: fall back to the next section
+                    # marker (labelled in the report) so a following transfer is
+                    # still found.
                     end = pos + 2
-                    while end + 1 < n and not (data[end] == 0x76
-                                               and data[end + 1] in trep_bytes):
+                    while end < n and not (end + 1 < n and data[end] == 0x76
+                                           and data[end + 1] in trep_bytes):
                         end += 1
                 yield {"marker": pos, "trep": trep, "records": [],
                        "card_tlv": {"offset": pos + 2, "bytes": end - (pos + 2),

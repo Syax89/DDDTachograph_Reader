@@ -36,7 +36,10 @@ _log = get_logger(__name__)
 # generation.
 _TRTP_GENERATION = {
     0x00: "G2.2",
-    0x01: "G1", 0x02: "G1", 0x03: "G1", 0x04: "G1", 0x05: "G1", 0x06: "G1",
+    0x01: "G1", 0x02: "G1", 0x03: "G1", 0x04: "G1", 0x05: "G1",
+    # 0x06 is a *card* download: the wrapper is generation-1 framing, but the
+    # card inside keeps its own generation, which `_refine_card_generation`
+    # derives from generation-specific EF evidence (F12).
     0x11: "G1", 0x14: "G1",
     0x21: "G2", 0x22: "G2", 0x23: "G2", 0x24: "G2", 0x25: "G2",
     0x31: "G2.2", 0x32: "G2.2", 0x33: "G2.2", 0x35: "G2.2",

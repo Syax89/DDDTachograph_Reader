@@ -352,3 +352,68 @@ def test_fallback_reasons_are_bookkeeping_not_a_column():
     from core.utils import report_format
     assert "fallback_reasons" in report_format.HIDDEN_KEYS
     assert report_format.visible_columns([{"fallback_reasons": ["x"], "timestamp": "t"}]) == ["timestamp"]
+
+
+# ── F1: a card EF image is bounded by its own 2-byte STAP length ────────────
+
+def _stap_element(tag, length, fill=0x41):
+    return struct.pack(">HBH", tag, 0, length) + bytes([fill]) * length
+
+
+def test_card_ef_element_larger_than_the_recordarray_cap_stays_whole():
+    """A card EF is 12-14 KB in practice: the RecordArray cap must not cut it.
+
+    Annex 1B DDP_044: the STAP length is a two-byte value (``FFFF`` reserved), so
+    a legitimate elementary file may be up to 65534 bytes. The old bound reused
+    ``RECORD_ARRAY_MAX_SIZE`` (4096, a RecordArray sanity cap).
+    """
+    for length in (4096, 4097, 12000, 65534):
+        stream = b"\x76\x06" + _stap_element(0x0502, length) + _stap_element(0x0504, 3)
+        section = list(iter_vu_sections(stream, {}))[0]
+        card = section["card_tlv"]
+        assert card["tlvs"] == 2, length
+        assert card["tlv_complete"] is True, length
+        assert card["bytes"] == len(stream) - 2, length
+        assert card["boundary"] == "STAP/EF framing", length
+
+
+def test_truncated_last_card_element_is_reported_not_swallowed():
+    stream = b"\x76\x06" + _stap_element(0x0502, 64)[:-10]
+    section = list(iter_vu_sections(stream, {}))[0]
+    card = section["card_tlv"]
+    assert card["tlv_complete"] is False
+    assert card["bytes"] == len(stream) - 2
+
+
+def test_a_76xx_pair_inside_a_card_element_does_not_split_it():
+    """Card EF bytes may contain ``76 01``: the TLV length decides the end."""
+    payload = bytes([0x76, 0x01, 0x02]) + b"\x00" * 61
+    stream = b"\x76\x06" + struct.pack(">HBH", 0x0502, 0, len(payload)) + payload
+    sections = list(iter_vu_sections(stream, {}))
+    assert len(sections) == 1
+    assert sections[0]["trep"] == 0x06
+    assert sections[0]["card_tlv"]["bytes"] == len(payload) + 5
+
+
+def test_card_region_ends_exactly_at_the_next_trep_section():
+    card = _stap_element(0x0502, 5000)
+    speed = S.record_array(0x12, 64, [struct.pack(">I", TIME) + bytes(60)])
+    stream = b"\x76\x06" + card + S.section(0x24, speed, S.signature_record())
+    sections = list(iter_vu_sections(stream, {}))
+    assert [s["trep"] for s in sections] == [0x06, 0x24]
+    assert sections[0]["card_tlv"]["bytes"] == len(card)
+    results = _results()
+    walk_vu_record_arrays(stream, results)
+    assert results["speed_blocks"]
+    assert results["metadata"]["vu_card_download_sections"][0]["tlv_complete"] is True
+
+
+def test_standalone_card_wrapper_takes_the_card_generation():
+    """F12: a 76 06 wrapper around a G2 card is not a generation-1 download."""
+    from core.parser.deterministic import DeterministicParser
+    # Gen2-only EF (Vehicle Units Used) inside the wrapper: the card's own
+    # generation evidence, exactly what a bare card image uses.
+    payload = (struct.pack(">HBH", 0x0501, 2, 4) + b"\x00\x00\x00\x00"
+               + struct.pack(">HBH", 0x0523, 2, 4) + b"\x00\x00\x00\x00")
+    results = DeterministicParser().parse(b"\x76\x06" + payload, is_vu=False)
+    assert results["metadata"]["generation"] != "G1 (Digital)"
