@@ -85,6 +85,7 @@ from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 
 from core.utils.version import __version__  # noqa: E402
+from core.utils import load_trace  # noqa: E402
 from core.utils import report_format  # noqa: E402
 from core.utils.report_format import (  # noqa: E402
     NATION_COLS, VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
@@ -3366,6 +3367,7 @@ class TachoExplorer(tk.Tk):
         self._restart_requested = False
         self._restart_file = None
         self.title(f"Tacho Explorer v{__version__}")
+        load_trace.header(self, __version__)
         self.geometry(f"{_px(1280)}x{_px(760)}")
         self.minsize(_px(900), _px(560))
 
@@ -3799,9 +3801,17 @@ class TachoExplorer(tk.Tk):
         the old algorithm on the mocks, five scripts, a 5000-day tree and the real
         files.
         """
+        measures = [0]   # font.measure calls, reported by the load trace
         try:
             style = ttk.Style(self)
             font = tkfont.Font(font=style.lookup("Treeview", "font") or "TkDefaultFont")
+            if load_trace.ENABLED:
+                real_measure = font.measure
+
+                def _counted(*args, **kwargs):
+                    measures[0] += 1
+                    return real_measure(*args, **kwargs)
+                font.measure = _counted
             indent = int(float(style.lookup("Treeview", "indent") or 20))
             pad = _px(8)
             image_pad = _px(4)
@@ -3889,6 +3899,7 @@ class TachoExplorer(tk.Tk):
             # Cosmetic: a tree that could not be measured keeps its column
             # width and must never turn a file that parsed into a render error.
             _log.debug("tree column not fitted: %s", traceback.format_exc())
+        load_trace.event("fit_tree_column.measure_calls", measure_calls=measures[0])
 
     def _place_sash(self, pw, event):
         """Give the tree its natural width once the panes have a real size."""
@@ -4252,6 +4263,7 @@ class TachoExplorer(tk.Tk):
             # second open can now arrive *while* the tree is being rebuilt.
             return
         self._parsing = True
+        load_trace.opened(path)
         self.btn_open.config(state=tk.DISABLED)
         self.btn_export.config(state=tk.DISABLED)
         self.status.config(text=_("Parsing {filename}\u2026").format(
@@ -4266,7 +4278,8 @@ class TachoExplorer(tk.Tk):
     def _parse_worker(self, path):
         """Worker-thread body: parse and post (path, results, error) to the queue."""
         try:
-            data = TachoParser(path).parse()
+            with load_trace.span("worker_parse"):
+                data = TachoParser(path).parse()
             self._parse_queue.put((path, data, None))
         except Exception as e:
             _log.error("Parse failed: %s\n%s", e, traceback.format_exc())
@@ -4285,6 +4298,7 @@ class TachoExplorer(tk.Tk):
         if error is not None:
             self._parse_error(error)
         else:
+            load_trace.event("parse_result_delivered")
             self._parse_done(data, path)
 
     def _finish_parse(self):
@@ -4332,6 +4346,7 @@ class TachoExplorer(tk.Tk):
         restore — and is signalled with :class:`_RenderAbandoned` so the render
         stops instead of walking a destroyed widget tree.
         """
+        load_trace.pump_call()
         now = time.monotonic()
         if not force and now < self._pump_due:
             return
@@ -4350,6 +4365,7 @@ class TachoExplorer(tk.Tk):
             gone = self._destroyed
             _log.debug("render pump skipped: %s", traceback.format_exc())
         end = time.monotonic()
+        load_trace.pump_update(end - now)
         self._pump_due = end + min(
             _RENDER_PUMP_MAX_GAP, max(_RENDER_PUMP_INTERVAL, 4 * (end - now))
         )
@@ -4572,6 +4588,7 @@ class TachoExplorer(tk.Tk):
         # Rendering's table sizing update() pumps the loop: stay busy until done.
         self._parsing = True
         self._rendering = True
+        load_trace.event("parse_done.start", generation=(data.get("metadata") or {}).get("generation"))
         try:
             self.current_data = data
             self.current_file = path
@@ -4583,9 +4600,13 @@ class TachoExplorer(tk.Tk):
             # One pump before the heavy part: the status line and the busy bar
             # reach the screen before the tree rebuild starts, not after it.
             self._pump_render(force=True)
-            self._populate_tree(data)
-            self._fit_tree_column()
-            self._update_top_bar(data)
+            with load_trace.span("populate_tree"):
+                self._populate_tree(data)
+            load_trace.event("populate_tree.nodes", nodes=self._trace_node_count())
+            with load_trace.span("fit_tree_column"):
+                self._fit_tree_column()
+            with load_trace.span("update_top_bar"):
+                self._update_top_bar(data)
             self.btn_export.config(state=tk.NORMAL)
             target = getattr(self, "_auto_select_iid", None)
             if target and not self.tree.exists(target):
@@ -4617,7 +4638,8 @@ class TachoExplorer(tk.Tk):
                 text=_("Loaded: {filename}  |  {generation}").format(
                     filename=os.path.basename(path),
                     generation=meta.get("generation", "?")))
-            self._check_integrity(data, path)
+            with load_trace.span("check_integrity"):
+                self._check_integrity(data, path)
         except _RenderAbandoned:
             _log.debug("window closed during the render: nothing left to draw")
         except Exception:
@@ -4629,6 +4651,29 @@ class TachoExplorer(tk.Tk):
         finally:
             self._rendering = False
             self._finish_parse()
+            load_trace.event("parse_done.end")
+            if load_trace.ENABLED:
+                self.after_idle(lambda: self.after_idle(self._trace_idle))
+
+    def _trace_node_count(self):
+        """Number of tree nodes (0 unless the load trace is on: it walks the tree)."""
+        if not load_trace.ENABLED:
+            return 0
+        pending, count = list(self.tree.get_children("")), 0
+        while pending:
+            count += 1
+            pending.extend(self.tree.get_children(pending.pop()))
+        return count
+
+    def _trace_idle(self):
+        """Final trace line once nothing parses or renders and the deferred callbacks ran."""
+        if self._destroyed:
+            return
+        if self._parsing or self._rendering:
+            self.after_idle(lambda: self.after_idle(self._trace_idle))
+            return
+        load_trace.pump_report()
+        load_trace.event("idle")
 
     def _check_integrity(self, data, path):
             """Warn the user when a file shows signs of corruption or data loss."""
@@ -5533,7 +5578,8 @@ class TachoExplorer(tk.Tk):
         """Rebuild the section tree from the generations dict produced by
         :func:`build_generations_tree`.  File info, driver/vehicle summary,
         security and activities (day hierarchy) are handled separately."""
-        self.tree.delete(*self.tree.get_children())
+        with load_trace.span("tree_delete_previous", nodes=self._trace_node_count()):
+            self.tree.delete(*self.tree.get_children())
         self._payloads.clear()
         self._auto_select_iid = None
         self._opened_data = data
@@ -5648,7 +5694,8 @@ class TachoExplorer(tk.Tk):
                 if item_name == "_RawTags":
                     continue
                 if item_name in ("DriverActivityData", "Daily Activities") and isinstance(item_data, list):
-                    self._populate_daily_activities(gnode, data, item_data)
+                    with load_trace.span("populate_daily_activities", days=len(item_data)):
+                        self._populate_daily_activities(gnode, data, item_data)
                     continue
                 if item_name in ("DetailedSpeed", "Detailed Speed (0x052C)"):
                     self._populate_detailed_speed(gnode, data, item_data)
@@ -6791,6 +6838,17 @@ class TachoExplorer(tk.Tk):
         return True
 
     def _on_tree_select(self, _event):
+        """Tree selection → show the node's payload (timed when the load trace is on)."""
+        if not load_trace.ENABLED or self._rendering:
+            return self._on_tree_select_impl(_event)
+        sel = self.tree.selection()
+        payload = self._payloads.get(sel[0]) if sel else None
+        kind = ("group" if not payload else payload[0].strip("_") if payload[0].startswith("__")
+                else "summary" if len(payload) >= 5 and payload[4] else "section")
+        with load_trace.span("tree_select", kind=kind):
+            return self._on_tree_select_impl(_event)
+
+    def _on_tree_select_impl(self, _event):
         """Tree selection → show the node's stored payload in the table."""
         if self._rendering:
             # A <<TreeviewSelect>> can arrive *during* a render: it pumps the

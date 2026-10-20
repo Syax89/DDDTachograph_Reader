@@ -310,7 +310,7 @@ check, the corpus semantic-coverage audit, the **mock** semantic-coverage audit 
 CI form (`--ddd-dir tests/mock_data --baseline scripts/mock_semantic_baseline.json`),
 and `git diff --check`.
 
-Expected skip counts with the mocks present: 292 headless (Tk tests need a display and
+Expected skip counts with the mocks present: 315 headless (Tk tests need a display and
 run under xvfb) and 2 under xvfb (the git-ignored corpus semantic baseline and the
 missing golden snapshots for the private fixtures). A skipped *mock* test is a defect.
 
@@ -322,3 +322,7 @@ implementation verbatim as the reference and compares pixel widths on the mocks,
 scripts, a 5000-day tree and the real files; a 5000-node tree must need ≤ 200 `measure`
 calls. If you change how the tree is populated, update
 `tests/unit/tree_snapshot_mocks.json` (mocks only — never commit a real file's labels).
+
+### Load trace for a slow open (`DDD_TRACE_LOAD=1`)
+
+Opt-in, off by default (no file, one boolean check): `DDD_TRACE_LOAD=1` appends per-stage timings to `~/ddd-reader-load-trace.txt` (extension, size, generation and counts only — never contents, names or the file's directory). On macOS run `DDD_TRACE_LOAD=1 /Applications/<app>/Contents/MacOS/<binary>` from Terminal (or `open --env DDD_TRACE_LOAD=1 /Applications/<app>.app`), open two files in a row and send back `~/ddd-reader-load-trace.txt`; the lines say `open number=N`, the tree delete of the previous file and the render-pump totals. Code: `core/utils/load_trace.py`, test: `tests/unit/test_load_trace.py`.

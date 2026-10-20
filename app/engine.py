@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from core.crypto.signature import SignatureValidator
 from core.registry.registry import DecoderRegistry
 from core.registry.models import TachoResult, build_generations_tree
+from core.utils import load_trace
 from core.utils.version import __version__
 from core import decoders
 from core.decoders.common import mark_heuristic
@@ -245,7 +246,8 @@ class TachoParser:
         callers can fail closed on integrity-relevant phases.
         """
         try:
-            fn()
+            with load_trace.span("phase." + phase_name):
+                fn()
             return True
         except KeyboardInterrupt:
             raise
