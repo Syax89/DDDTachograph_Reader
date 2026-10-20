@@ -1542,8 +1542,10 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         decoded = _RECORD_DECODERS[record_type](rec)
         if decoded:
             out.update(decoded)
+            _apply_size_rule(record_type, rec, out)
         else:
-            out["raw_hex"] = rec.hex()
+            out.update(record_bytes=len(rec), record_complete=False,
+                       confidence="low", raw_hex=rec.hex())
         return out
     if record_type == 0x01 and len(rec) >= 2:
         value = struct.unpack(">H", rec[0:2])[0]
@@ -1685,6 +1687,47 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
     return out
 
 
+#: Canonical record size per RecordType for the generation-2 sections (Annex 1C
+#: Appendix 1). A record of exactly this size is a standard record; any other size
+#: is published as an incomplete/low record whose canonical prefix is decoded only
+#: as far as the bytes allow, with the rest preserved (the shared size rule).
+#: Where the size depends on the section version the shorter variant is listed and
+#: the version-aware decoders accept their own canonical size as well.
+CANONICAL_RECORD_SIZES = {
+    0x02: 1, 0x03: 4, 0x05: 3, 0x06: 4, 0x07: 20, 0x09: 5, 0x0A: 17,
+    0x0B: 14, 0x0D: CARD_IW_RECORD_SIZE, 0x0E: 45, 0x10: 99, 0x11: 32,
+    0x12: 64, 0x13: 8, 0x14: 59, 0x15: VU_EVENT_RECORD_SIZE, 0x16: 56,
+    0x17: 20, 0x18: VU_FAULT_RECORD_SIZE, 0x19: 126, 0x1A: 9, 0x1B: 32,
+    0x1C: 40, 0x1D: 8, 0x1E: 99, 0x1F: 87, 0x20: 28, 0x21: 28, 0x22: 55,
+    0x23: 58, 0x24: 15,
+}
+
+
+def _apply_size_rule(record_type, rec, out):
+    """Mark a record whose size is not the canonical one for its type.
+
+    ``record_complete``/``confidence`` are set here for every fixed-size type, so
+    a decoder that merely checked a minimum length can no longer report a
+    non-canonical body with high confidence. The canonical prefix stays decoded
+    (the decoder read only offsets inside the record) and every byte past it is
+    preserved in ``raw_tail_hex``.
+    """
+    canonical = CANONICAL_RECORD_SIZES.get(record_type)
+    if canonical is None or "record_complete" in out:
+        return out
+    complete = len(rec) == canonical
+    out["record_complete"] = complete
+    out["record_bytes"] = len(rec)
+    if not complete:
+        out["confidence"] = "low"
+        if len(rec) > canonical:
+            out["raw_tail_bytes"] = len(rec) - canonical
+            out["raw_tail_hex"] = rec[canonical:].hex()
+        else:
+            out["missing_bytes"] = canonical - len(rec)
+    return out
+
+
 def decode_vu_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
                      trep=None):
     """Decode one isolated VU RecordArray record in the canonical app shape.
@@ -1697,7 +1740,8 @@ def decode_vu_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
     meaning for '0F'H/'1C'H/'3A'H. Callers that *do* know the section (the stream
     walker) pass ``version=`` explicitly.
     """
-    return _decode_record(record_type, rec, version, trep=trep)
+    return _apply_size_rule(record_type, rec,
+                            _decode_record(record_type, rec, version, trep=trep))
 
 
 def _stap_extent(data, start):

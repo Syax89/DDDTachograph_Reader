@@ -548,3 +548,44 @@ def test_structure_findings_stay_out_of_the_heuristic_route():
     assert results["metadata"].get("heuristic_fields") is None
     assert results["metadata"]["decode_paths"] if "decode_paths" in results["metadata"] else True
     assert len(results["events"]) == 2
+
+
+# ── F9: one shared size rule for every fixed-size record ───────────────────
+
+def test_canonical_record_sizes_are_labelled_complete():
+    from core.parser.vu_dispatcher import CANONICAL_RECORD_SIZES, decode_vu_record
+    assert CANONICAL_RECORD_SIZES[0x1B] == 32      # VuOverSpeedingEventRecord
+    assert CANONICAL_RECORD_SIZES[0x1C] == 40      # place, generation 2
+    assert CANONICAL_RECORD_SIZES[0x22] == 55      # border crossing
+    assert CANONICAL_RECORD_SIZES[0x16] == 56      # GNSS accumulated driving, v1
+    record = bytes([0x07, 0x00]) + struct.pack(">II", TIME, TIME + 30) \
+        + bytes([0x5A, 0x50]) + S.card_number() + bytes([0x01])
+    out = decode_vu_record(0x1B, record)
+    assert out["record_complete"] is True
+    assert out["confidence"] == "high"
+
+
+def test_oversized_overspeed_record_is_low_confidence_with_a_raw_tail():
+    from core.parser.vu_dispatcher import decode_vu_record
+    record = bytes([0x07, 0x00]) + struct.pack(">II", TIME, TIME + 30) \
+        + bytes([0x5A, 0x50]) + S.card_number() + bytes([0x01]) + b"\xaa" * 8
+    out = decode_vu_record(0x1B, record)
+    assert out["record_complete"] is False
+    assert out["confidence"] == "low"
+    assert out["record_bytes"] == 40
+    assert out["raw_tail_hex"] == "aa" * 8
+    # the canonical prefix is still decoded
+    assert out["max_speed_kmh"] == 0x5A
+
+
+def test_short_and_long_border_crossing_records_are_incomplete():
+    from core.parser.vu_dispatcher import decode_vu_record
+    canonical = (S.card_number() + S.EMPTY_CARD + bytes([0x0F, 0x11])
+                 + struct.pack(">I", TIME) + bytes([0x02]) + b"\x00" * 6 + b"\x01"
+                 + (1234).to_bytes(3, "big"))
+    assert len(canonical) == 55
+    for delta, size in ((-1, 54), (25, 80)):
+        record = (canonical + b"\x00" * 25)[:size]
+        out = decode_vu_record(0x22, record)
+        assert out["record_complete"] is False, size
+        assert out["confidence"] == "low", size
