@@ -194,7 +194,10 @@ def test_dense_stream_below_cap_is_complete():
     """Negative sibling: a small, valid stream stays complete (the cap is not a
     blanket 'partial' verdict)."""
     results = {}
-    walk_vu_record_arrays(b"\x76\x31" + _array(0x01, 4, 3), results)
+    # A complete section ends with its SignatureRecordArray (DDP_029): without one
+    # the walk is partial, which is a separate finding from the record cap.
+    signature = bytes([0x08]) + struct.pack(">HH", 64, 1) + b"\x00" * 64
+    walk_vu_record_arrays(b"\x76\x31" + _array(0x01, 4, 3) + signature, results)
     assert results["_vu_walk_complete"] is True
 
 

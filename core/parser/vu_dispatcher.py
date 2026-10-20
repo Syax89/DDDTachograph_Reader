@@ -141,29 +141,36 @@ TREP_ARRAY_SCHEMA = {
 }
 
 
-def validate_section_schema(trep, observed):
+#: A SignatureRecordArray holds exactly one record (DDP_029..DDP_033: "Signature
+#: RecordArray ECC signature of all preceding data"), and its record size is the
+#: signature length the curve allows: 64 bytes for P-256, 96 for P-384 and 128 for
+#: P-512 (Appendix 1 ``Signature``; the exact per-curve mapping lives in Appendix
+#: 11, which is not read here). The range is checked, never a single constant.
+SIGNATURE_RECORD_SIZE_RANGE = (64, 132)
+
+
+def validate_section_schema(trep, observed, signature_size=None):
     """Check one section against the Appendix-7 array order of *trep*.
 
-    *observed* is a sequence of ``(record_type, no_of_records)`` in file order.
-    The result is descriptive: ``status`` is ``complete`` only when every
-    prescribed array is present, in order; ``incomplete`` lists the arrays the
-    source requires but the section does not carry; ``out_of_order`` and
-    ``unexpected_arrays`` are reported separately. Nothing here suppresses a
-    record — the section has already been decoded by the time this runs.
+    *observed* is a sequence of ``(record_type, no_of_records)`` in file order and
+    *signature_size* the declared recordSize of the signature array. The result is
+    descriptive: ``status`` is ``complete`` only when every prescribed array is
+    present, exactly once, in order, closed by a well-formed signature array —
+    duplicates, unexpected arrays, an out-of-order slot and a malformed signature
+    all make it ``incomplete``. Nothing here suppresses a record: the section has
+    already been decoded by the time this runs, and a finding is an INTEGRITY
+    observation, never a reason to re-scan the bytes.
     """
     schema = TREP_ARRAY_SCHEMA.get(trep)
     if schema is None:
         return {"status": "not applicable (no RecordArray list in Appendix 7)",
                 "missing_arrays": [], "out_of_order": [], "unexpected_arrays": [],
-                "zero_record_arrays": []}
+                "duplicate_arrays": [], "zero_record_arrays": [],
+                "signature_problem": None}
     types = [rt for rt, _nr in observed]
     position = 0
     missing, out_of_order = [], []
-    seen = set()
     for slot in schema:
-        for rt in slot:
-            if rt in types:
-                seen.add(rt)
         match = next((rt for rt in slot if rt in types), None)
         if match is None:
             missing.append(f"0x{slot[0]:02X}")
@@ -175,11 +182,31 @@ def validate_section_schema(trep, observed):
             position = idx
     allowed = {rt for slot in schema for rt in slot}
     unexpected = [f"0x{rt:02X}" for rt in types if rt not in allowed]
+    # An array type appears at most once per section: two 0x15 arrays are not the
+    # "events" the standard prescribes.
+    duplicates = sorted({f"0x{rt:02X}" for rt in types if types.count(rt) > 1})
+    signature_problem = None
+    if 0x08 in types:
+        sig_counts = [nr for rt, nr in observed if rt == 0x08]
+        if len(sig_counts) > 1:
+            signature_problem = f"duplicate signature arrays ({len(sig_counts)})"
+        elif sig_counts[0] != 1:
+            signature_problem = f"noOfRecords={sig_counts[0]}"
+        elif signature_size is not None and not (
+                SIGNATURE_RECORD_SIZE_RANGE[0] <= signature_size
+                <= SIGNATURE_RECORD_SIZE_RANGE[1]):
+            signature_problem = f"recordSize={signature_size}"
+    elif 0x08 in allowed:
+        signature_problem = "signature array missing"
+    complete = not (missing or out_of_order or unexpected or duplicates
+                    or signature_problem)
     return {
-        "status": "complete" if not missing and not out_of_order else "incomplete",
+        "status": "complete" if complete else "incomplete",
         "missing_arrays": missing,
         "out_of_order": out_of_order,
         "unexpected_arrays": unexpected,
+        "duplicate_arrays": duplicates,
+        "signature_problem": signature_problem,
         "zero_record_arrays": [f"0x{rt:02X}" for rt, nr in observed if nr == 0],
     }
 
@@ -1840,6 +1867,7 @@ def walk_vu_record_arrays(data, results):
     results["_vu_walk_complete"] = False
     schema_reports = []
     dropped_any = False
+    structure_findings = []
 
     for sec in iter_vu_sections(data, state):
         # The section fixes the EventFaultType assignment (DDP_011), each one
@@ -1885,8 +1913,11 @@ def walk_vu_record_arrays(data, results):
         # be present and in order. The report is descriptive — the records above
         # are already decoded, and a defect here is a structural observation, not
         # a recovery route, so it never sets ``metadata.heuristic_fields``.
+        sig_size = next((rs for (_p, rt, rs, _nr, _e) in sec["records"]
+                         if rt == 0x08), None)
         schema_report = validate_section_schema(
-            sec["trep"], [(rt, nr) for (_p, rt, _rs, nr, _e) in sec["records"]])
+            sec["trep"], [(rt, nr) for (_p, rt, _rs, nr, _e) in sec["records"]],
+            signature_size=sig_size)
         schema_report["trep"] = f"0x{sec['trep']:02X}"
         # stored == declared by the array counters; emitted == what reached the
         # result lists. A difference is a defect of ours (a record the standard
@@ -1914,8 +1945,26 @@ def walk_vu_record_arrays(data, results):
         if schema_report["status"] == "incomplete" and not dropped:
             _log.warning(
                 "VU section 0x%02X does not match Appendix 7: missing %s, "
-                "out of order %s", sec["trep"], schema_report["missing_arrays"],
-                schema_report["out_of_order"])
+                "out of order %s, duplicate %s, unexpected %s, signature %s",
+                sec["trep"], schema_report["missing_arrays"],
+                schema_report["out_of_order"], schema_report["duplicate_arrays"],
+                schema_report["unexpected_arrays"],
+                schema_report["signature_problem"])
+        if schema_report["signature_problem"]:
+            # A malformed/absent signature array is an INTEGRITY finding (the
+            # data above it is decoded): reported, partial, never re-scanned.
+            structure_findings.append({
+                "trep": f"0x{sec['trep']:02X}",
+                "status": ("signature_missing"
+                           if schema_report["signature_problem"] ==
+                           "signature array missing" else "signature_malformed"),
+                "detail": schema_report["signature_problem"],
+                "missing_bytes": 0, "trailing_bytes": 0})
+        for rt_name in schema_report["duplicate_arrays"]:
+            structure_findings.append({"trep": f"0x{sec['trep']:02X}",
+                                       "status": "duplicate_array",
+                                       "detail": rt_name,
+                                       "missing_bytes": 0, "trailing_bytes": 0})
         # Only once its records reached the results: a failure while emitting a
         # section must not announce a section the user never got.
         sections.append({
@@ -1932,6 +1981,10 @@ def walk_vu_record_arrays(data, results):
                                    and not state.get("truncated", False)
                                    and not state.get("trailing_bytes")
                                    and not state.get("resync_bytes"))
+    if structure_findings:
+        results.setdefault("metadata", {}).setdefault(
+            "vu_integrity", []).extend(structure_findings)
+        results["_vu_walk_complete"] = False
     if dropped_any:
         # A stored record that did not reach the results is our defect: the
         # download is partial (never silently complete).
@@ -2211,7 +2264,6 @@ def _emit_section(section, results):
                     invalid_changes += 1
         results.setdefault("activities", []).append(
             {"date": date_str, "odometer_km": int(km), "changes": changes,
-             "changes_count": len(changes) + invalid_changes,
              "invalid_changes_count": invalid_changes,
              "source": "vu_recordarray"})
         emitted["activity_day"] = emitted.get("activity_day", 0) + 1

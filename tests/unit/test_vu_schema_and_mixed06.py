@@ -315,7 +315,10 @@ def test_gen2_short_signature_record_is_integrity_only():
     results = _results()
     walk_vu_record_arrays(stream, results)
     assert results["_vu_walk_complete"] is False
-    assert results["metadata"]["vu_integrity"][0]["status"] == "array_truncated"
+    statuses = [entry["status"] for entry in results["metadata"]["vu_integrity"]]
+    # the cut signature record is truncated AND therefore not a valid signature
+    # array: both are integrity facts, neither triggers a rescan
+    assert sorted(statuses) == ["array_truncated", "signature_missing"], statuses
     # the decoded data of every complete array is still there
     assert results["vehicle"]["vin"] == S.VIN
 
@@ -483,3 +486,65 @@ def test_schema_report_accounts_stored_and_emitted_records():
     assert report["stored_records"] == {"0x09": 2}
     assert report["emitted_records"] == {"0x09": 2}
     assert report["dropped_records"] == {}
+
+
+# ── F8: structure findings (integrity), never heuristic triggers ───────────
+
+def _two_sections(*arrays):
+    return S.section(0x33, *arrays)
+
+
+def test_duplicate_arrays_are_reported_and_not_complete():
+    report = validate_section_schema(0x23, [(0x18, 1), (0x15, 1), (0x15, 1),
+                                            (0x1A, 1), (0x1B, 0), (0x1E, 0),
+                                            (0x08, 1)])
+    assert report["duplicate_arrays"] == ["0x15"]
+    assert report["status"] == "incomplete"
+
+
+def test_extra_array_in_a_known_section_is_a_schema_violation():
+    report = validate_section_schema(0x23, [(0x18, 1), (0x22, 1), (0x15, 1)])
+    assert report["unexpected_arrays"] == ["0x22"]
+    assert report["status"] == "incomplete"
+
+
+def test_signature_array_must_hold_exactly_one_record():
+    for nr in (0, 2):
+        report = validate_section_schema(0x33, [(0x18, 0), (0x15, 0), (0x1A, 1),
+                                                (0x1B, 0), (0x1E, 0), (0x08, nr)])
+        assert report["signature_problem"] == f"noOfRecords={nr}", nr
+        assert report["status"] == "incomplete"
+
+
+def test_signature_record_size_outside_the_allowed_range_is_reported():
+    for size in (3, 200):
+        report = validate_section_schema(0x33, [(0x18, 0), (0x15, 0), (0x1A, 1),
+                                                (0x1B, 0), (0x1E, 0),
+                                                (0x08, 1)] , signature_size=size)
+        assert report["signature_problem"] == f"recordSize={size}", size
+        assert report["status"] == "incomplete"
+
+
+def test_missing_final_signature_makes_the_walk_incomplete():
+    stream = S.section(0x24, S.record_array(0x12, 64,
+                                            [struct.pack(">I", TIME) + bytes(60)]))
+    results = _results()
+    walk_vu_record_arrays(stream, results)
+    assert results["_vu_walk_complete"] is False
+    assert any(entry["status"] == "signature_missing"
+               for entry in results["metadata"]["vu_integrity"])
+
+
+def test_structure_findings_stay_out_of_the_heuristic_route():
+    """A duplicate array is an integrity finding: no scan, no heuristic fields."""
+    stream = S.section(0x23,
+                       S.record_array(0x15, 91, [b"\x04" + b"\x00" * 90]),
+                       S.record_array(0x15, 91, [b"\x05" + b"\x00" * 90]),
+                       S.signature_record())
+    results = _results()
+    walk_vu_record_arrays(stream, results)
+    report = results["metadata"]["vu_section_schema"][0]
+    assert report["duplicate_arrays"] == ["0x15"]
+    assert results["metadata"].get("heuristic_fields") is None
+    assert results["metadata"]["decode_paths"] if "decode_paths" in results["metadata"] else True
+    assert len(results["events"]) == 2
