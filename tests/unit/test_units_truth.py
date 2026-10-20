@@ -8,12 +8,10 @@ import struct
 
 import pytest
 
-from app import gui
 from app.engine import TachoParser
 from core.registry.registry import DecoderRegistry
 from core.utils import report_format as rf
 from tests.unit import vu_synthetic as S
-from tests.unit.real_data import require_real_file
 from tests.unit.test_per_trep_units import _three_message_stream
 
 TIME = S.BASE_TIME

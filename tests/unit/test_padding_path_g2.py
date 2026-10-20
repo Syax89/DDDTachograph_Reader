@@ -4,8 +4,6 @@ The same tolerance the G1 walk applies (0x00/0xFF fill is padding, declared as a
 so every byte is accounted for, and NOT a finding). Other trailing bytes stay a
 finding: the unit is unreadable and the file is partial.
 """
-import struct
-
 import pytest
 
 from core.parser.vu_dispatcher import walk_vu_record_arrays
