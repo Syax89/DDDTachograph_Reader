@@ -633,7 +633,7 @@ def decode_calibration(rec, generation=None):
             else "generation 2 (222)" if len(rec) >= CALIBRATION_G2_SIZE
             else "base only (167-221)"),
         "calibration_variant_expected": (
-            f"generation 2, version 2 (252)" if expected == CALIBRATION_G22_SIZE
+            "generation 2, version 2 (252)" if expected == CALIBRATION_G22_SIZE
             else "generation 2 (222)" if expected == CALIBRATION_G2_SIZE
             else "base only (167-221)"),
         "calibration_variant_mismatch": not matches,
@@ -1549,7 +1549,7 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         decoded = _RECORD_DECODERS[record_type](rec)
         if decoded:
             out.update(decoded)
-            _apply_size_rule(record_type, rec, out)
+            _apply_size_rule(record_type, rec, out, trep)
         else:
             out.update(record_bytes=len(rec), record_complete=False,
                        confidence="low", raw_hex=rec.hex())
@@ -1710,7 +1710,24 @@ CANONICAL_RECORD_SIZES = {
 }
 
 
-def _apply_size_rule(record_type, rec, out):
+#: Record types whose canonical size depends on the section version (generation 2
+#: version 2 added ``authenticationStatus`` to the GNSS place/GNSS-AD records and
+#: ``digitalMapVersion`` to VuIdentification). Keyed by record type → (v1, v2).
+VERSION_DEPENDENT_RECORD_SIZES = {0x16: (56, 57), 0x1C: (40, 41), 0x19: (126, 138)}
+
+
+def _canonical_size(record_type, trep=None):
+    """Canonical record size for *record_type* in the section *trep* (or a set)."""
+    sizes = VERSION_DEPENDENT_RECORD_SIZES.get(record_type)
+    if sizes is None:
+        return {CANONICAL_RECORD_SIZES.get(record_type)} - {None}
+    auth = section_uses_auth_place(trep)
+    if auth is None:
+        return set(sizes)           # no section context: either variant is legal
+    return {sizes[1] if auth else sizes[0]}
+
+
+def _apply_size_rule(record_type, rec, out, trep=None):
     """Mark a record whose size is not the canonical one for its type.
 
     ``record_complete``/``confidence`` are set here for every fixed-size type, so
@@ -1719,10 +1736,11 @@ def _apply_size_rule(record_type, rec, out):
     (the decoder read only offsets inside the record) and every byte past it is
     preserved in ``raw_tail_hex``.
     """
-    canonical = CANONICAL_RECORD_SIZES.get(record_type)
-    if canonical is None or "record_complete" in out:
+    accepted = _canonical_size(record_type, trep)
+    if not accepted or "record_complete" in out:
         return out
-    complete = len(rec) == canonical
+    canonical = min(accepted)
+    complete = len(rec) in accepted
     out["record_complete"] = complete
     out["record_bytes"] = len(rec)
     if not complete:
@@ -1748,7 +1766,8 @@ def decode_vu_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
     walker) pass ``version=`` explicitly.
     """
     return _apply_size_rule(record_type, rec,
-                            _decode_record(record_type, rec, version, trep=trep))
+                            _decode_record(record_type, rec, version, trep=trep),
+                            trep)
 
 
 def _stap_extent(data, start):

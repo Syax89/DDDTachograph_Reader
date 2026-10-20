@@ -584,7 +584,7 @@ def test_short_and_long_border_crossing_records_are_incomplete():
                  + struct.pack(">I", TIME) + bytes([0x02]) + b"\x00" * 6 + b"\x01"
                  + (1234).to_bytes(3, "big"))
     assert len(canonical) == 55
-    for delta, size in ((-1, 54), (25, 80)):
+    for size in (54, 80):
         record = (canonical + b"\x00" * 25)[:size]
         out = decode_vu_record(0x22, record)
         assert out["record_complete"] is False, size
