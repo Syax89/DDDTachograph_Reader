@@ -169,21 +169,50 @@ ENTRY_TYPE_DAILY_WORK_PERIOD: dict[int, tuple[str, str]] = {
     0x05: ("END", "End assumed by VU"),
 }
 
+#: Generation 1 assigns exactly the six values above (Annex 1B §2.51 enumerates
+#: 0..5 in text: card time, manually entered, "assumed by VU").
+ENTRY_TYPE_G1_MAX = 0x05
 
-def entry_type_daily_work_period(code):
+#: Generation 2 re-states the point as "Value assignment: according to
+#: ISO/IEC8824-1" (Annex 1C §2.66) with the enumeration printed as a *figure* in
+#: every accessible edition (the EUR-Lex/PDF text layer omits it), so the
+#: generation-2 upper bound is not readable from the copied sources. Codes above
+#: the shared six are therefore reported ``unknown`` — not "unassigned", which
+#: would assert an assignment the accessible text does not show.
+ENTRY_TYPE_STATUS_ASSIGNED = "assigned"
+ENTRY_TYPE_STATUS_UNKNOWN = "unknown (generation 2 enumeration not readable in the accessible edition)"
+
+
+def entry_type_daily_work_period(code, generation="G2"):
     """``(short, meaning)`` for one EntryTypeDailyWorkPeriod byte.
 
-    An unassigned code keeps its numeric value as the short form and is labelled
-    as unassigned — the byte is never dropped and never given an invented
-    meaning.
+    The shared six values are generation-independent. Nothing is invented above
+    them: a code the accessible text does not assign keeps its numeric value as
+    the short form, and :func:`entry_type_daily_work_period_status` says whether
+    the value is assigned or merely unknown to the readable edition.
     """
     try:
         value = int(code)
     except (TypeError, ValueError):
-        return ("Unknown", "not assigned")
+        return ("Unknown", "unknown")
     if value in ENTRY_TYPE_DAILY_WORK_PERIOD:
         return ENTRY_TYPE_DAILY_WORK_PERIOD[value]
-    return (f"0x{value:02X}", f"not assigned (0x{value:02X})")
+    if generation == "G1":
+        return (f"0x{value:02X}", f"not assigned (0x{value:02X})")
+    return (f"0x{value:02X}", f"unknown (0x{value:02X})")
+
+
+def entry_type_daily_work_period_status(code, generation="G2"):
+    """``assigned`` / ``not assigned`` (G1) / ``unknown`` (G2 beyond the six)."""
+    try:
+        value = int(code)
+    except (TypeError, ValueError):
+        return ENTRY_TYPE_STATUS_UNKNOWN
+    if value in ENTRY_TYPE_DAILY_WORK_PERIOD:
+        return ENTRY_TYPE_STATUS_ASSIGNED
+    if generation == "G1":
+        return "not assigned"
+    return ENTRY_TYPE_STATUS_UNKNOWN
 
 
 #: ManualInputFlag (Annex 1B §2.66 / Annex 1C §2.93) enumerates exactly two

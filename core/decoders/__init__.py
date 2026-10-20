@@ -21,6 +21,7 @@ from core.decoders.common import (
     decode_coded_text,
     decode_date,
     entry_type_daily_work_period,
+    entry_type_daily_work_period_status,
     decode_datef,
     decode_activity_val,
     get_cyclic_data,

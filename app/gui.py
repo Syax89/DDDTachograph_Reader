@@ -290,7 +290,18 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence", "record_t
                # CardSlotsStatus complete typing (numeric nibble + assignment
                # status): JSON only, the table keeps its existing columns.
                "driver_slot_code", "codriver_slot_code",
-               "driver_slot_status", "codriver_slot_status"}
+               "driver_slot_status", "codriver_slot_status",
+               # EntryTypeDailyWorkPeriod assignment status (assigned / not
+               # assigned for generation 1 / unknown above the shared six).
+               "entry_type_status", "calibration_variant_source",
+               "digital_map_version_raw",
+               # Technical-data detail: ExtendedSerialNumber / seal subfields,
+               # the CardStructureVersion halves, the calibration variant and
+               # the unresolved-encoding statuses stay in the JSON export only.
+               "serial", "sensor_serial_extended", "card_serial",
+               "card_structure_version_parts", "equipment_type_status",
+               "month_year_status", "seal_identifier", "calibration_variant",
+               "digital_map_version_status", "consent_status", "consent_raw"}
 # Descriptive columns pushed to table start.
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
 # Technical columns pushed to table end.

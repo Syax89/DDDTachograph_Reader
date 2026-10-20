@@ -65,16 +65,25 @@ def test_unassigned_place_entry_type_is_kept_as_a_code():
     out = decode_place_daily(_place_record(entry_type=0x09))
     assert out["type_code"] == 0x09
     assert out["entry_type"] == "0x09"
-    assert out["entry_type_meaning"] == "not assigned (0x09)"
+    # The generation-2 enumeration is a figure in every accessible edition, so a
+    # code above the shared six is "unknown", never declared "unassigned".
+    assert out["entry_type_meaning"] == "unknown (0x09)"
+    assert out["entry_type_status"].startswith("unknown")
 
 
 def test_g1_entry_type_assignment_also_has_the_vu_assumed_values():
-    """Annex 1B §2.51 is the reference text; 4/5 exist in generation 1 too."""
-    from core.decoders.common import entry_type_daily_work_period
+    """Annex 1B §2.51 is the readable text; 4/5 exist in generation 1 too."""
+    from core.decoders.common import (entry_type_daily_work_period,
+                                      entry_type_daily_work_period_status)
     assert entry_type_daily_work_period(0x04) == ("BEGIN", "Begin assumed by VU")
     assert entry_type_daily_work_period(0x05) == ("END", "End assumed by VU")
     assert entry_type_daily_work_period(0x00) == (
         "BEGIN", "Begin (card insertion time)")
+    # Generation 1 assigns 0..5 and nothing else: above that it is not assigned.
+    assert entry_type_daily_work_period_status(0x06, "G1") == "not assigned"
+    assert "not assigned" in entry_type_daily_work_period(0x06, "G1")[1]
+    # Generation 2 keeps the same six but its upper bound is not readable here.
+    assert entry_type_daily_work_period_status(0x06, "G2").startswith("unknown")
 
 
 # ── GNSS coordinates ────────────────────────────────────────────────────────

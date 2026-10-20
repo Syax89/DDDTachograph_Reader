@@ -50,6 +50,12 @@ def card_number(card_type=0x01, nation=0x1A, number=b"T" + b"0" * 15,
     return bytes([card_type, nation]) + number + bytes([generation])
 
 
+def full_card_number(card_type=0x02, nation=0x1A, number=b"T" + b"0" * 15):
+    """FullCardNumber (18 bytes, Annex 1B §2.57) — no generation byte."""
+    assert len(number) == 16
+    return bytes([card_type, nation]) + number
+
+
 EMPTY_CARD = b"\xff" * 19
 
 #: CardSlotsStatus byte 'ccccdddd'B (Annex 1B §2.28 / Annex 1C §2.152):

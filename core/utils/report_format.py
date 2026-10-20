@@ -42,7 +42,18 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
                # the numeric nibble and its assignment status stay in the JSON;
                # the short state word is the published value.
                "driver_slot_code", "codriver_slot_code",
-               "driver_slot_status", "codriver_slot_status"}
+               "driver_slot_status", "codriver_slot_status",
+               # EntryTypeDailyWorkPeriod assignment status (assigned / not
+               # assigned for generation 1 / unknown above the shared six).
+               "entry_type_status", "calibration_variant_source",
+               "digital_map_version_raw",
+               # Technical-data detail: ExtendedSerialNumber / seal subfields,
+               # the CardStructureVersion halves, the calibration variant and
+               # the unresolved-encoding statuses stay in the JSON export only.
+               "serial", "sensor_serial_extended", "card_serial",
+               "card_structure_version_parts", "equipment_type_status",
+               "month_year_status", "seal_identifier", "calibration_variant",
+               "digital_map_version_status", "consent_status", "consent_raw"}
 
 # Canonical trust verdicts for a parsed download. Consumers (GUI badge, rename
 # tooling, reports) must classify with these rather than by substring-matching

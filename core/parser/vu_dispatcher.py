@@ -33,7 +33,7 @@ from core.utils.constants import (
     RECORD_ARRAY_MAX_RECORDS, RECORD_ARRAY_MAX_SIZE, VU_MAX_TOTAL_RECORDS)
 from core.utils.event_codes import (
     EVENT_FAULT_VERSION_1, EVENT_FAULT_VERSION_2, EVENT_FAULT_VERSION_UNKNOWN,
-    EVENT_FAULT_VERSIONS, describe_event, describe_event_fault_type,
+    EVENT_FAULT_VERSIONS, describe_event_fault_type,
     describe_fault, describe_calibration_purpose, describe_control_type,
     describe_record_purpose, event_fault_type_status, TYPE_ASSIGNED)
 from core.utils.manufacturer_codes import (
@@ -279,7 +279,10 @@ def decode_vu_identification(rec):
         "manufacturer_name": decode_name(rec, 0),
         "manufacturer_address": decode_name(rec, 36),
         "part_number": _ascii(rec, 72, 16),
+        # vuSerialNumber is an ExtendedSerialNumber (§2.56): the hex form is
+        # kept and the four normative subfields are decoded next to it.
         "serial_number": rec[88:96].hex(),
+        "serial": decode_extended_serial_number(rec, 88),
     }
     if len(rec) >= 108:
         out.update({
@@ -292,8 +295,26 @@ def decode_vu_identification(rec):
     if len(rec) >= 126:
         out["vu_generation"] = rec[124]
         out["vu_ability"] = rec[125]
+    # Canonical generation-2 sizes are 126 and (generation 2 version 2) 138
+    # bytes. A longer record keeps its extension verbatim and is not "complete".
+    canonical = 138 if len(rec) >= 138 else 126
+    out["record_bytes"] = len(rec)
+    out["record_complete"] = len(rec) == canonical
+    if len(rec) > canonical:
+        out["raw_tail_bytes"] = len(rec) - canonical
+        out["raw_tail_hex"] = rec[canonical:].hex()
     if len(rec) >= 138:
+        # digitalMapVersion (generation 2, version 2 only). The value assignment
+        # is delegated to the digital map specification published on the
+        # Commission's secured site and no accessible edition defines it, so the
+        # existing *visible* reading is kept unchanged for compatibility while
+        # the raw bytes are carried next to it as an unresolved companion.
+        # Everything after byte 126 is kept: the corpus width is not a
+        # definition, so a longer field is not clipped to 12 bytes.
         out["digital_map_version"] = _ascii(rec, 126, 12)
+        out["digital_map_version_raw"] = rec[126:].hex()
+        out["digital_map_version_status"] = (
+            "unresolved (encoding assigned by the secured digital-map specification)")
     return out
 
 
@@ -301,16 +322,98 @@ def _ascii(data, off, length):
     return "".join(chr(b) if 0x20 <= b < 0x7F else "" for b in data[off:off + length]).strip()
 
 
+#: ExtendedSerialNumber (Annex 1B §2.56 / Annex 1C §2.56) is 8 bytes:
+#: serialNumber INTEGER (0..2^32-1), monthYear BCDString(SIZE(2)), type
+#: OCTET STRING(SIZE(1)) — "manufacturer specific, with FFh reserved value" — and
+#: manufacturerCode.
+EXTENDED_SERIAL_NUMBER_SIZE = 8
+
+#: SealRecord (SealDataVu) = equipmentType(1) + ExtendedSealIdentifier(10), where
+#: ExtendedSealIdentifier ::= SEQUENCE { manufacturerCode IA5String(SIZE(2)),
+#: sealIdentifier IA5String(SIZE(8)) } (Reg. (EU) 2021/1228).
+SEAL_RECORD_SIZE = 11
+EXTENDED_SEAL_IDENTIFIER_SIZE = 10
+EXTENDED_SEAL_MANUFACTURER_LEN = 2
+
+
+def _bcd_byte(value):
+    """One BCD octet → its decimal value, or ``None`` when a nibble exceeds 9."""
+    high, low = value >> 4, value & 0x0F
+    if high > 9 or low > 9:
+        return None
+    return high * 10 + low
+
+
+def decode_extended_serial_number(data, off):
+    """Decode one ExtendedSerialNumber (Annex 1B §2.56 / Annex 1C §2.56).
+
+    Returns the four normative subfields plus the raw 8 bytes, so callers can
+    keep their old hex representation next to the decoded values. The ``type``
+    byte is manufacturer specific ("FFh reserved"), which is reported as a
+    status instead of an invented equipment label.
+    """
+    if not isinstance(off, int) or off < 0 or off + EXTENDED_SERIAL_NUMBER_SIZE > len(data):
+        return None
+    raw = bytes(data[off:off + EXTENDED_SERIAL_NUMBER_SIZE])
+    month = _bcd_byte(raw[4])
+    year_suffix = _bcd_byte(raw[5])
+    out = {
+        "raw_hex": raw.hex(),
+        "serial_number": int.from_bytes(raw[0:4], "big"),
+        "month_year_bcd": raw[4:6].hex(),
+        "month": month,
+        # "Value assignment: BCD coding of Month (two digits) and Year (two last
+        # digits)" (§2.56): the century is NOT part of the field, so only the
+        # two-digit suffix is reported — never a reconstructed 4-digit year.
+        "year_suffix": year_suffix,
+        "equipment_type": raw[6],
+        "equipment_type_status": ("reserved (0xFF)" if raw[6] == 0xFF
+                                 else "manufacturer specific"),
+        "manufacturer_code": raw[7],
+        "manufacturer": manufacturer_name(code := raw[7]),
+        "manufacturer_status": (MANUFACTURER_STATUS_REGISTERED
+                                if manufacturer_name(code) is not None
+                                else MANUFACTURER_STATUS_NOT_REGISTERED),
+    }
+    if month is None or year_suffix is None:
+        out["month_year_status"] = "invalid BCD / month"
+    elif not 1 <= month <= 12:
+        out["month_year_status"] = "invalid month"
+    else:
+        out["month_year_status"] = "valid"
+    return out
+
+
+def decode_extended_seal_identifier(data):
+    """Decode an ExtendedSealIdentifier (10 bytes, Reg. (EU) 2021/1228)."""
+    raw = bytes(data[:EXTENDED_SEAL_IDENTIFIER_SIZE])
+    if len(raw) < EXTENDED_SEAL_IDENTIFIER_SIZE:
+        return {"raw_hex": raw.hex(), "record_complete": False}
+    manufacturer = _ascii(raw, 0, EXTENDED_SEAL_MANUFACTURER_LEN)
+    seal = _ascii(raw, EXTENDED_SEAL_MANUFACTURER_LEN,
+                  EXTENDED_SEAL_IDENTIFIER_SIZE - EXTENDED_SEAL_MANUFACTURER_LEN)
+    return {
+        "raw_hex": raw.hex(),
+        "manufacturer_code": manufacturer,
+        "seal_identifier": seal,
+        "record_complete": True,
+    }
+
+
 def _decode_seal_data(data):
-    """SealDataVu: five 11-byte SealRecord entries."""
+    """SealDataVu: five SealRecord entries, equipmentType(1) + seal(10)."""
     records = []
-    for off in range(0, min(len(data), 55), 11):
-        rec = data[off:off + 11]
-        if len(rec) < 11:
+    for off in range(0, min(len(data), 5 * SEAL_RECORD_SIZE), SEAL_RECORD_SIZE):
+        rec = data[off:off + SEAL_RECORD_SIZE]
+        if len(rec) < SEAL_RECORD_SIZE:
             break
+        seal = decode_extended_seal_identifier(rec[1:])
         records.append({
             "equipment_type": rec[0],
-            "extended_seal_identifier": rec[1:11].hex(),
+            "extended_seal_identifier": rec[1:].hex(),
+            "manufacturer_code": seal.get("manufacturer_code"),
+            "seal_identifier": seal.get("seal_identifier"),
+            "raw_hex": bytes(rec).hex(),
         })
     return records
 
@@ -319,25 +422,50 @@ def _load_type_label(code):
     return {0x00: "undefined", 0x01: "goods", 0x02: "passengers"}.get(code, "RFU")
 
 
+#: VuCalibrationRecord sizes: 167 bytes is the generation-1-length base that
+#: generation 2 extends with ``sealDataVu`` (55 → 222) and generation 2 version 2
+#: extends again with three ExtendedSerialNumber values (24), SealDataVu (55),
+#: byDefaultLoadType(1), calibrationCountry(1) and its TimeReal (4) → 252.
+CALIBRATION_BASE_SIZE = 167
+CALIBRATION_G2_SIZE = 222
+CALIBRATION_G22_SIZE = 252
+
+
 def _decode_calibration_extension(rec):
-    """Decode the generation-specific tail after nextCalibrationDate."""
-    if len(rec) >= 252:
+    """Decode the generation-specific tail after nextCalibrationDate.
+
+    The variant follows the declared record size, which the regulation fixes
+    (222 for generation 2, 252 for generation 2 version 2); the serial numbers
+    are ExtendedSerialNumber values (§2.56) and the seal block is SealDataVu.
+    Both the old hex rendering and the decoded fields are returned.
+    """
+    if len(rec) >= CALIBRATION_G22_SIZE:
         return {
             "sensor_serial_number": rec[167:175].hex(),
+            "sensor_serial": decode_extended_serial_number(rec, 167),
             "sensor_gnss_serial_number": rec[175:183].hex(),
+            "sensor_gnss_serial": decode_extended_serial_number(rec, 175),
             "rcm_serial_number": rec[183:191].hex(),
+            "rcm_serial": decode_extended_serial_number(rec, 183),
             "seal_data_vu": _decode_seal_data(rec[191:246]),
             "by_default_load_type": rec[246],
             "by_default_load_type_label": _load_type_label(rec[246]),
             "calibration_country": decoders.get_nation(rec[247]),
             "calibration_country_timestamp": _iso(struct.unpack(">I", rec[248:252])[0]),
         }
-    if len(rec) >= 222:
+    if len(rec) >= CALIBRATION_G2_SIZE:
         return {"seal_data_vu": _decode_seal_data(rec[167:222])}
     return {}
 
 
-def decode_calibration(rec):
+#: Normative VuCalibrationRecord size per section generation: generation 2 ends
+#: after SealDataVu (222), generation 2 version 2 adds the three
+#: ExtendedSerialNumber values and the load-type/country tail (252).
+CALIBRATION_SIZE_BY_GENERATION = {"G2": CALIBRATION_G2_SIZE,
+                                  "G2.2": CALIBRATION_G22_SIZE}
+
+
+def decode_calibration(rec, generation=None):
     """VuCalibrationRecord — offsets confirmed against real data (recordSize 222 G2 /
     252 G2.2). Base layout (Annex 1C §2.174):
       calibrationPurpose(1) workshopName(36) workshopAddress(36)
@@ -349,10 +477,33 @@ def decode_calibration(rec):
       oldTimeValue(4) newTimeValue(4) nextCalibrationDate(4) → 167
       then sealDataVu (G2) / sensorSerialNumber (G2.2) tail.
     """
-    if len(rec) < 167:
+    if len(rec) < CALIBRATION_BASE_SIZE:
         return None
+    # The record size is normative and generation-bound: 222 for generation 2
+    # and 252 for generation 2 version 2. The section's generation is the
+    # authority when the caller has one — a 252-byte body inside a generation 2
+    # (222) section is *not* a decoded v2 record, and vice versa. Only without a
+    # section context does the record length select the variant, and then the
+    # old hex rendering is kept with the variant named.
+    expected = CALIBRATION_SIZE_BY_GENERATION.get(generation)
+    if expected is None:
+        expected = (CALIBRATION_G22_SIZE if len(rec) >= CALIBRATION_G22_SIZE
+                    else CALIBRATION_G2_SIZE if len(rec) >= CALIBRATION_G2_SIZE
+                    else CALIBRATION_BASE_SIZE)
+        variant_source = "record length (no section context)"
+    else:
+        variant_source = f"section (generation {generation})"
+    matches = len(rec) == expected
     out = {
-        "confidence": "high",
+        "confidence": "high" if matches else "low",
+        "record_bytes": len(rec),
+        "record_complete": matches,
+        "calibration_variant_source": variant_source,
+        "calibration_variant": (
+            f"generation {generation} ({expected})" if matches and generation
+            else ("generation 2, version 2 (252)" if expected == CALIBRATION_G22_SIZE
+                  else "generation 2 (222)" if expected == CALIBRATION_G2_SIZE
+                  else "base only (167-221)")),
         "calibration_purpose": rec[0],
         "calibration_purpose_label": describe_calibration_purpose(rec[0]),
         "workshop_name": decode_name(rec, 1),
@@ -366,7 +517,12 @@ def decode_calibration(rec):
         "vin": _ascii(rec, 95, 17),
         "vehicle_registration": {
             "nation": decoders.get_nation(rec[112]),
-            "plate": _ascii(rec, 114, 13),
+            # VehicleRegistrationNumber = codePage(1) + 13 characters (§2.167);
+            # the code page is kept so the plate is not silently transliterated.
+            "code_page": rec[113],
+            # VehicleRegistrationNumber = codePage + 13 characters: decode the
+            # text through the declared code page, not just report the byte.
+            "plate": decoders.decode_coded_text(rec[113:127]),
         },
         "w_vehicle_constant": struct.unpack(">H", rec[127:129])[0],
         "k_constant": struct.unpack(">H", rec[129:131])[0],
@@ -380,6 +536,16 @@ def decode_calibration(rec):
         "next_calibration_date": _iso(struct.unpack(">I", rec[163:167])[0]),
     }
     out.update(_decode_calibration_extension(rec))
+    # Every byte the normative structure does not cover is preserved verbatim:
+    # nothing past 167/222/252 bytes is interpreted.
+    if len(rec) > CALIBRATION_G22_SIZE:
+        interpreted = CALIBRATION_G22_SIZE
+    elif len(rec) >= CALIBRATION_G2_SIZE:
+        interpreted = CALIBRATION_G2_SIZE
+    else:
+        interpreted = CALIBRATION_BASE_SIZE
+    out["raw_tail_bytes"] = len(rec) - interpreted
+    out["raw_tail_hex"] = rec[interpreted:].hex()
     return out
 
 
@@ -471,6 +637,7 @@ def decode_sensor_paired(rec):
     return {
         "confidence": "medium" if full else "low",
         "sensor_serial": rec[0:8].hex(),
+        "sensor_serial_extended": decode_extended_serial_number(rec, 0),
         "sensor_approval": _ascii(rec, 8, approval_end - 8),
         "pairing_date": _iso(struct.unpack(">I", rec[date_off:date_off + 4])[0]),
     }
@@ -490,6 +657,7 @@ def decode_sensor_gnss_coupled(rec):
     return {
         "confidence": "medium" if full else "low",
         "sensor_serial": rec[0:8].hex(),
+        "sensor_serial_extended": decode_extended_serial_number(rec, 0),
         "sensor_approval": _ascii(rec, 8, approval_end - 8),
         "coupling_date": _iso(struct.unpack(">I", rec[date_off:date_off + 4])[0]),
     }
@@ -501,13 +669,28 @@ def decode_vu_card_record(rec):
     Confirmed against real G2/G2.2 VU downloads."""
     if len(rec) < 19:
         return None
-    out = {"confidence": "medium", "card": decode_full_card_number_gen(rec, 0)}
+    out = {"confidence": "medium", "card": decode_full_card_number_gen(rec, 0),
+           "record_bytes": len(rec)}
     if len(rec) >= 45:
-        out["confidence"] = "high"
+        # 45 bytes is the normative VuCardRecord size: an extension is kept
+        # verbatim and does not make the record a complete canonical one.
+        out["confidence"] = "high" if len(rec) == 45 else "medium"
+        out["record_complete"] = len(rec) == 45
         out["card_extended_serial"] = rec[19:27].hex()
+        out["card_serial"] = decode_extended_serial_number(rec, 19)
         out["card_structure_version"] = rec[27:29].hex()
+        # CardStructureVersion 'aabb'H (Annex 1B §2.29): 'aa' indexes structural
+        # changes, 'bb' changes in the use of the data elements of that
+        # structure. Both bytes are kept as numbers next to the hex form.
+        out["card_structure_version_parts"] = {
+            "structure_index": rec[27], "data_elements_index": rec[28]}
         out["card_number"] = _ascii(rec, 29, 16)
+        if len(rec) > 45:
+            out["raw_tail_bytes"] = len(rec) - 45
+            out["raw_tail_hex"] = rec[45:].hex()
     else:
+        out["record_complete"] = False
+        out["missing_bytes"] = 45 - len(rec)
         out["raw_tail_hex"] = rec[19:].hex()
     return out
 
@@ -620,7 +803,7 @@ def decode_gnss_place(data, off, with_auth):
     return out
 
 
-def decode_place_daily(rec, with_auth=None, variant_source=None):
+def decode_place_daily(rec, with_auth=None, variant_source=None, generation=None):
     """VuPlaceDailyWorkPeriodRecord — G2 (40 bytes) / G2.2 (41 bytes):
     fullCardNumberAndGen(19) + entryTime(4) + entryType(1) + country(1) +
     region(1) + odometer(3) + GNSSPlace(11 G2 / 12 G2.2).
@@ -638,7 +821,13 @@ def decode_place_daily(rec, with_auth=None, variant_source=None):
         with_auth = len(rec) >= 41
         variant_source = "record length (no section context)"
     entry_type = rec[23]
-    short, meaning = decoders.entry_type_daily_work_period(entry_type)
+    # The entry-type assignment is generation-local: generation 1 assigns 0..5,
+    # generation 2 keepts those six and its own upper bound is not readable in
+    # the accessible edition (see core.decoders.common).
+    generation = generation or "G2"
+    short, meaning = decoders.entry_type_daily_work_period(entry_type, generation)
+    meaning_status = decoders.entry_type_daily_work_period_status(
+        entry_type, generation)
     return {
         "confidence": "high" if with_auth == (len(rec) >= 41) else "medium",
         "record_bytes": len(rec),
@@ -647,6 +836,7 @@ def decode_place_daily(rec, with_auth=None, variant_source=None):
         "timestamp": _iso(struct.unpack(">I", rec[19:23])[0]),
         "entry_type": short,
         "entry_type_meaning": meaning,
+        "entry_type_status": meaning_status,
         "type_code": entry_type,
         "nation": decoders.get_nation(rec[24]),
         "region": rec[25],
@@ -782,7 +972,14 @@ def decode_its_consent(rec):
     return {
         "confidence": "high",
         "card": decode_full_card_number_gen(rec, 0),
+        # VuITSConsentRecord carries a BOOLEAN. ASN.1 notation alone does not
+        # establish the wire rule (Appendix 1 §1.1 separates syntax from
+        # encoding and points at aligned PER when a transfer encodes ASN.1), so
+        # the low-bit reading is kept as measured and the raw octet travels with
+        # it — the value is never presented as a decided boolean.
         "consent": bool(rec[19] & 0x01),
+        "consent_raw": rec[19],
+        "consent_status": "raw (BOOLEAN wire encoding not established by ASN.1 alone)",
     }
 
 
@@ -1160,7 +1357,8 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         decoded = decode_place_daily(
             rec, with_auth=section_uses_auth_place(trep),
             variant_source=(f"section (TREP 0x{trep:02X})" if trep is not None
-                            else None))
+                            else None),
+            generation=section_generation(trep))
         if decoded:
             out.update(decoded)
         else:
@@ -1182,6 +1380,15 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
             rec, generation=generation or "G2")
         if decoded:
             out.update(decoded)
+        else:
+            out["raw_hex"] = rec[:48].hex()
+        return out
+
+    if record_type == 0x0C:
+        decoded = decode_calibration(rec, generation=section_generation(trep))
+        if decoded:
+            out.update(decoded)
+            out["confidence"] = decoded["confidence"]
         else:
             out["raw_hex"] = rec[:48].hex()
         return out
