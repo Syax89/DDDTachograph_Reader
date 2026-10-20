@@ -194,7 +194,11 @@ def test_calibration_variant_follows_the_section_generation():
     assert out["calibration_variant_source"] == "section (generation G2)"
     out = decode_calibration(_calibration(252), generation="G2.2")
     assert out["record_complete"] is True
-    assert out["calibration_variant"].startswith("generation G2.2")
+    # the label now describes the record's own size; the section expectation and
+    # the mismatch flag carry the context
+    assert out["calibration_variant"] == "generation 2, version 2 (252)"
+    assert out["calibration_variant_expected"] == "generation 2, version 2 (252)"
+    assert out["calibration_variant_mismatch"] is False
 
 
 def test_calibration_plate_is_decoded_through_its_code_page():
@@ -306,3 +310,42 @@ def test_digital_map_version_flags_a_non_ia5_octet():
     out = decode_vu_identification(bytes(rec))
     assert out["digital_map_version_status"] == "invalid IA5 (kept raw)"
     assert out["digital_map_version_raw"] == bytes(rec[126:138]).hex()
+
+
+# ── F10: generation-aware calibration purpose and honest variant label ─────
+
+def test_generation_1_calibration_purpose_05_and_06_are_not_generation_2_meanings():
+    from core.utils.event_codes import describe_calibration_purpose
+    assert describe_calibration_purpose(0x05, generation="G2") == (
+        "Entry of VRN by company")
+    # generation 1 defines 00..04 only (Reg. 2016/799 Appendix 1 point 2.71)
+    assert describe_calibration_purpose(0x05, generation="G1") == (
+        "Reserved for future use (0x05)")
+    assert describe_calibration_purpose(0x06, generation="G1") == (
+        "Reserved for future use (0x06)")
+    assert describe_calibration_purpose(0x04, generation="G1") == (
+        "Periodic inspection")
+
+
+def test_g1_calibration_records_use_the_generation_1_purpose_labels():
+    from core.decoders.vu_g1 import _parse_trep_05_technical
+    from tests.unit.test_g1_vu_semantics import _g1_calibration, _results, _trep05_body
+    results = _results()
+    _parse_trep_05_technical(_trep05_body([_g1_calibration(purpose=0x05)]), results)
+    assert results["calibrations"][0]["purpose"] == "Reserved for future use (0x05)"
+
+
+def test_variant_label_describes_the_record_actually_decoded():
+    """A 252-byte record inside a generation-2 (222) section keeps the section
+    expectation separately and is labelled by its own size."""
+    out = decode_calibration(_calibration(252), generation="G2")
+    assert out["calibration_variant"] == "generation 2, version 2 (252)"
+    assert out["calibration_variant_expected"] == "generation 2 (222)"
+    assert out["calibration_variant_mismatch"] is True
+    assert out["record_complete"] is False
+
+
+def test_matching_variant_is_not_flagged_as_a_mismatch():
+    out = decode_calibration(_calibration(252), generation="G2.2")
+    assert out["calibration_variant_mismatch"] is False
+    assert out["calibration_variant_expected"] == "generation 2, version 2 (252)"

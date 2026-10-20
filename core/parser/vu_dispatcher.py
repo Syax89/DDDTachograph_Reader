@@ -625,11 +625,18 @@ def decode_calibration(rec, generation=None):
         "record_bytes": len(rec),
         "record_complete": matches,
         "calibration_variant_source": variant_source,
+        # The label describes the record that was actually decoded (its own
+        # size); the section's expectation is reported separately so a mismatch is
+        # visible instead of a 252-byte record being called "generation 2 (222)".
         "calibration_variant": (
-            f"generation {generation} ({expected})" if matches and generation
-            else ("generation 2, version 2 (252)" if expected == CALIBRATION_G22_SIZE
-                  else "generation 2 (222)" if expected == CALIBRATION_G2_SIZE
-                  else "base only (167-221)")),
+            "generation 2, version 2 (252)" if len(rec) >= CALIBRATION_G22_SIZE
+            else "generation 2 (222)" if len(rec) >= CALIBRATION_G2_SIZE
+            else "base only (167-221)"),
+        "calibration_variant_expected": (
+            f"generation 2, version 2 (252)" if expected == CALIBRATION_G22_SIZE
+            else "generation 2 (222)" if expected == CALIBRATION_G2_SIZE
+            else "base only (167-221)"),
+        "calibration_variant_mismatch": not matches,
         "calibration_purpose": rec[0],
         "calibration_purpose_label": describe_calibration_purpose(rec[0]),
         "workshop_name": decode_name(rec, 1),

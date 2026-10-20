@@ -67,6 +67,7 @@ BOOKKEEPING_KEYS = frozenset({
     "end_time_raw", "old_time_raw", "new_time_raw", "consent_raw",
     "last_control_time_raw", "first_overspeed_since_raw", "timestamp_raw",
     "begin_raw", "current_date_time_raw", "activity_raw",
+    "calibration_variant_expected", "calibration_variant_mismatch",
     "digital_map_version_raw", "control_type_bits",
     "card_structure_version_parts",
     # status / provenance / diagnostics

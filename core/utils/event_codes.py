@@ -427,10 +427,25 @@ def describe_record_purpose(code) -> str:
     return f"Unknown (0x{code:02X})"
 
 
-def describe_calibration_purpose(code) -> str:
-    """Return a human-readable label for a CalibrationPurpose byte."""
+#: CalibrationPurpose values generation 1 assigns: 00..04. Generation 2 adds
+#: '05'H (entry of the VRN by the company) and '06'H (time adjustment without
+#: calibration) — Reg. (EU) 2016/799 Appendix 1 point 2.71 lists them under
+#: "In addition to generation 1 ... Generation 2".
+CALIBRATION_PURPOSE_G1_MAX = 0x04
+
+
+def describe_calibration_purpose(code, generation="G2") -> str:
+    """Human-readable CalibrationPurpose label, generation-aware.
+
+    A generation-1 record cannot mean "entry of VRN by company" or "time
+    adjustment without calibration": those two values exist only from generation 2
+    on, so they are reported as reserved for a generation-1 record instead of
+    borrowing the later meaning.
+    """
     if code is None:
         return "Unknown"
+    if generation == "G1" and isinstance(code, int) and 0x05 <= code <= 0x7F:
+        return f"Reserved for future use (0x{code:02X})"
     if code in CALIBRATION_PURPOSE:
         return CALIBRATION_PURPOSE[code]
     if code >= 0x80:

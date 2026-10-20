@@ -1557,7 +1557,7 @@ def _parse_trep_05_technical(data, results, message_offset=None):
                 "new_time_full": new_time_iso,
                 "next_calibration_full": next_cal_iso,
                 "timestamp": old_time,
-                "purpose": describe_calibration_purpose(purpose),
+                "purpose": describe_calibration_purpose(purpose, generation="G1"),
                 "purpose_code": purpose,
                 "vin": vin,
                 "registration_nation": nation,
@@ -1732,7 +1732,7 @@ def _parse_trep_05_technical(data, results, message_offset=None):
                     # by the 167-byte VuCalibrationRecord layout above.
                     "confidence": "low",
                     "timestamp": dt_str,
-                    "purpose": describe_calibration_purpose(purpose),
+                    "purpose": describe_calibration_purpose(purpose, generation="G1"),
                     "purpose_code": purpose,
                     "vin": vin,
                     "registration_nation": get_nation(nation),
