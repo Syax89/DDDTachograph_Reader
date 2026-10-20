@@ -464,6 +464,92 @@ def parse_g1_vu_overview(val, results, message_offset=None):
     except (ValueError, TypeError, IndexError) as exc:
         _log.debug("VU overview heuristic parse failed: %s", exc)
 
+def _complete_prefix_body(trep, body):
+    """A count-clamped body holding only the COMPLETE records of *body*.
+
+    Records inside a G1 message are fixed-size sequences, so a message cut by the end
+    of the file can still be read normatively up to its truncation point. This returns
+    ``(clamped_body, complete_bytes)`` — the same header with the counts reduced to
+    what fits, and how many bytes of *body* those complete records occupy — or ``None``
+    when nothing can be read (unknown layout, the header itself cut, or not one full
+    record). The handler then runs on the clamped body, so the published records use
+    the same field maps as an intact message and the incomplete record is never
+    fabricated.
+    """
+    try:
+        if trep == 0x04:
+            if len(body) < 2 + 64:
+                return None
+            count = struct.unpack(">H", body[0:2])[0]
+            fit = (len(body) - 2) // 64
+            k = min(count, fit)
+            if k <= 0:
+                return None
+            return (struct.pack(">H", k) + body[2:2 + 64 * k], 2 + 64 * k)
+
+        if trep == 0x02:
+            # date(4) + odometer(3), then four count-prefixed sections.
+            pos = 7
+            out = bytearray(body[:7])
+            for stride, width in ((129, 2), (2, 2), (28, 1), (5, 2)):
+                if pos + width > len(body):
+                    return None if pos == 7 else (bytes(out), pos)
+                need = int.from_bytes(body[pos:pos + width], "big")
+                fit = (len(body) - pos - width) // stride
+                k = min(need, max(0, fit))
+                out += k.to_bytes(width, "big")
+                out += body[pos + width:pos + width + k * stride]
+                pos += width + k * stride
+                if k < need:
+                    return (bytes(out), pos)
+            return (bytes(out), pos) if pos == len(body) else (bytes(out), pos)
+
+        if trep == 0x03:
+            pos = 0
+            out = bytearray()
+            for stride in (82, 83):
+                if pos + 1 > len(body):
+                    return None if pos == 0 else (bytes(out), pos)
+                need = body[pos]
+                fit = (len(body) - pos - 1) // stride
+                k = min(need, max(0, fit))
+                out += bytes([k])
+                out += body[pos + 1:pos + 1 + k * stride]
+                pos += 1 + k * stride
+                if k < need:
+                    return (bytes(out), pos)
+            # VuOverSpeedingControlData (9) + two count-prefixed tails
+            for stride in (31, 98):
+                if pos + 9 + 1 > len(body):
+                    return (bytes(out), pos) if pos else None
+                out += body[pos:pos + 9 + 1]
+                pos += 10
+                need = out[-1]
+                fit = (len(body) - pos) // stride
+                k = min(need, max(0, fit))
+                out[-1] = k
+                out += body[pos:pos + k * stride]
+                pos += k * stride
+                if k < need:
+                    return (bytes(out), pos)
+            return (bytes(out), pos) if pos == len(body) else (bytes(out), pos)
+
+        if trep == 0x05:
+            header = 136                      # VuIdentification(116) + SensorPaired(20)
+            if len(body) < header + 1:
+                return None
+            need = body[header]
+            fit = (len(body) - header - 1) // 167
+            k = min(need, max(0, fit))
+            if k <= 0:
+                return None
+            return (bytes(body[:header]) + bytes([k]) + body[header + 1:header + 1 + 167 * k],
+                    header + 1 + 167 * k)
+    except (IndexError, struct.error):
+        return None
+    return None
+
+
 def parse_vu_download_messages(raw_data, results, base_offset=0):
     """Parse VU download messages (SID 0x76 + TREP) in the raw binary data.
     
