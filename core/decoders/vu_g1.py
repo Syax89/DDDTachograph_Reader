@@ -44,6 +44,39 @@ def _record_key(identity, index):
     return f"{identity}#{index}"
 
 
+def _content_fingerprint(record):
+    """Value fingerprint of a record, ignoring bookkeeping (``_``-prefixed) keys."""
+    import json
+    payload = {k: v for k, v in record.items() if not str(k).startswith("_")}
+    return json.dumps(payload, sort_keys=True, default=str)
+
+
+def _append_once(target, record, identity, index):
+    """Append *record* unless it is a re-read of a record already published.
+
+    Two rules, in order:
+    * the same message body (identity) and record position -> already published;
+    * a *different* body that decodes to the same values -> the same stored
+      record re-read by the fallback scan, not a second one.
+    Within one body the position decides, so two byte-identical stored records are
+    both kept. Returns True when the record was appended.
+    """
+    key = _record_key(identity, index)
+    fingerprint = _content_fingerprint(record)
+    for existing in target:
+        if not isinstance(existing, dict):
+            continue
+        if existing.get("_key") == key:
+            return False
+        if (existing.get("_fp") == fingerprint
+                and str(existing.get("_key", "")).rsplit("#", 1)[0] != identity):
+            return False
+    record["_key"] = key
+    record["_fp"] = fingerprint
+    target.append(record)
+    return True
+
+
 def _g1_time(ts, *, with_seconds=True):
     """ISO-8601 UTC string for a plausible TimeReal, else ``None``.
 
@@ -213,18 +246,13 @@ def _parse_g1_overview_tail(body, off, results, identity=None):
             results.setdefault("company_info", {}).setdefault("name", dl_company)
 
         existing_locks = results.setdefault("company_locks", [])
-        seen = {lk.get("_key") for lk in existing_locks if isinstance(lk, dict)}
         for lk in locks:
-            if lk["_key"] not in seen:
-                seen.add(lk["_key"])
-                existing_locks.append(lk)
+            _append_once(existing_locks, lk, identity, ("lock", locks.index(lk)))
 
         existing_ctrl = results.setdefault("control_activities", [])
-        seen = {c.get("_key") for c in existing_ctrl if isinstance(c, dict)}
         for c in controls:
-            if c["_key"] not in seen:
-                seen.add(c["_key"])
-                existing_ctrl.append(c)
+            _append_once(existing_ctrl, c, identity,
+                         ("control", controls.index(c)))
 
         _log.debug("VU overview tail: %d locks, %d controls", len(locks), len(controls))
         return True
@@ -861,51 +889,40 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
                     "_key": dk,
                 })
         existing_iw = results.setdefault("card_iw_records", [])
-        seen = {r.get("_key") for r in existing_iw if isinstance(r, dict)}
-        for iw in iw_records:
-            key = iw["_key"]
-            if key not in seen:
-                seen.add(key)
-                # The insertion cycle belongs to the day whose TREP 02 message
-                # carried it. Deduplication stays keyed on the record payload
-                # (the consumer schema is unchanged); the day association is
-                # carried explicitly so a merged download keeps it.
-                iw["day_date"] = date_str
-                iw["record_day"] = date_str
-                existing_iw.append(iw)
+        for idx, iw in enumerate(iw_records):
+            # The insertion cycle belongs to the day whose TREP 02 message carried
+            # it: the association travels with the record, and re-reading the same
+            # body does not append it twice.
+            iw["day_date"] = date_str
+            iw["record_day"] = date_str
+            key = iw.pop("_key")
+            _append_once(existing_iw, iw, identity, ("iw", idx))
+            iw["_key"] = key
 
         # A downloaded day with no activity change is still a downloaded day
         # (a card was absent all day, for instance): the day is emitted with an
         # empty change list instead of disappearing from the report.
         activities = results.setdefault("activities", [])
-        day_key = _record_key(identity, "day")
-        if not any(a.get("_key") == day_key for a in activities
-                   if isinstance(a, dict)):
-            activities.append({
-                "_key": day_key,
-                "date": date_str,
-                "odometer_km": odo_midnight,
-                "changes": changes,
-                "changes_count": n_ch,
-                "invalid_changes_count": invalid_changes,
-                "source": "vu_trep02",
-            })
+        _append_once(activities, {
+            "date": date_str,
+            "odometer_km": odo_midnight,
+            "changes": changes,
+            "changes_count": n_ch,
+            "invalid_changes_count": invalid_changes,
+            "source": "vu_trep02",
+        }, identity, "day")
 
         existing_places = results.setdefault("places", [])
-        seen = {p.get("_key") for p in existing_places if isinstance(p, dict)}
-        for p in places:
-            key = p["_key"]
-            if key not in seen:
-                seen.add(key)
-                existing_places.append(p)
+        for idx, place in enumerate(places):
+            key = place.pop("_key")
+            _append_once(existing_places, place, identity, ("place", idx))
+            place["_key"] = key
 
         existing_sc = results.setdefault("specific_conditions", [])
-        seen = {c.get("_key") for c in existing_sc if isinstance(c, dict)}
-        for c in conditions:
-            key = c["_key"]
-            if key not in seen:
-                seen.add(key)
-                existing_sc.append(c)
+        for idx, condition in enumerate(conditions):
+            key = condition.pop("_key")
+            _append_once(existing_sc, condition, identity, ("condition", idx))
+            condition["_key"] = key
 
         return True
     except (struct.error, IndexError, ValueError) as exc:
@@ -1134,21 +1151,15 @@ def _parse_trep_03_structured(data, results, message_offset=None):
         # Keys include end time and record purpose: the VU stores distinct
         # records sharing the same (type, begin), e.g. one per record purpose.
         existing_faults = results.setdefault("faults", [])
-        seen = {f.get("_key") for f in existing_faults if isinstance(f, dict)}
-        for f in faults:
-            key = f["_key"]
-            if key not in seen:
-                seen.add(key)
-                existing_faults.append(f)
+        for idx, fault in enumerate(faults):
+            key = fault.pop("_key")
+            _append_once(existing_faults, fault, identity, ("fault", idx))
+            fault["_key"] = key
 
         existing_events = results.setdefault("events", [])
-        seen = {e.get("_key") for e in existing_events if isinstance(e, dict)}
-        for evt in events:
-            key = evt["_key"]
-            if key not in seen:
-                seen.add(key)
-                existing_events.append({
-                    "_key": key,
+        for idx, evt in enumerate(events):
+            key = evt.pop("_key")
+            _append_once(existing_events, {
                     "description": evt["description"],
                     "event_fault_version": evt["event_fault_version"],
                     "type_status": evt["type_status"],
@@ -1168,7 +1179,8 @@ def _parse_trep_03_structured(data, results, message_offset=None):
                     "card_codriver_begin": evt["card_codriver_begin"],
                     "card_driver_end": evt["card_driver_end"],
                     "card_codriver_end": evt["card_codriver_end"],
-                })
+                }, identity, ("event", idx))
+            evt["_key"] = key
 
         # VuOverSpeedingControlData is a stored record ("default value if no
         # data", DDP_031): it is emitted even when both clocks are unusable, in
@@ -1185,25 +1197,21 @@ def _parse_trep_03_structured(data, results, message_offset=None):
             "number_of_overspeed": osc_count,
         }
         ctrl_list = results.setdefault("overspeeding_control", [])
-        if not any(c.get("_key") == ctrl["_key"] for c in ctrl_list
-                   if isinstance(c, dict)):
-            ctrl_list.append(ctrl)
+        key = ctrl.pop("_key")
+        _append_once(ctrl_list, ctrl, identity, "overspeed_control")
+        ctrl["_key"] = key
 
         existing_overs = results.setdefault("overspeeding_events", [])
-        seen = {o.get("_key") for o in existing_overs if isinstance(o, dict)}
-        for o in overspeed:
-            key = o["_key"]
-            if key not in seen:
-                seen.add(key)
-                existing_overs.append(o)
+        for idx, over in enumerate(overspeed):
+            key = over.pop("_key")
+            _append_once(existing_overs, over, identity, ("overspeed", idx))
+            over["_key"] = key
 
         existing_adj = results.setdefault("time_adjustments", [])
-        seen = {a.get("_key") for a in existing_adj if isinstance(a, dict)}
-        for a in adjustments:
-            key = a["_key"]
-            if key not in seen:
-                seen.add(key)
-                existing_adj.append(a)
+        for idx, adjustment in enumerate(adjustments):
+            key = adjustment.pop("_key")
+            _append_once(existing_adj, adjustment, identity, ("adjustment", idx))
+            adjustment["_key"] = key
 
         _log.debug("TREP 03 structured: %d faults, %d events, %d overspeeding, %d time adj",
                    len(faults), len(events), len(overspeed), len(adjustments))

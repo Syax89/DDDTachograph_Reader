@@ -2305,7 +2305,9 @@ def _emit_section(section, results):
 
     # Daily activities: an Activities section carries date(0x06)+odometer(0x05)+
     # activityChangeInfo(0x01). Rebuild a daily record matching results['activities'].
-    if section["name"] == "Activities":
+    if section["name"] == "Activities" and recs.get(0x06):
+        # A day is identified by its DateOfDayDownloaded; a section without one
+        # (a corrupt/partial Activities header) yields no invented "N/A" day.
         date_str = "N/A"
         for r in recs.get(0x06, []):
             t = r.get("time")
