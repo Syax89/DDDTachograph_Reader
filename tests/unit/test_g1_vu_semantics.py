@@ -364,11 +364,12 @@ def test_g1_empty_vu_and_sensor_serials_are_decoded_as_structures():
     results = _results()
     _parse_trep_05_technical(_trep05_body([_g1_calibration()]), results)
     info = results["vu_info"]
-    # one row per serial: the hex row carries the compact decoded reading too
-    assert info["serial_number"].startswith(S.extended_serial(0x0000A001).hex().upper())
-    assert "40961 \u00b7 " in info["serial_number"]
+    # the hex rows keep their baseline value; the compact decoded form is its own
+    # column and the structured dict is JSON-only
+    assert info["serial_number"] == S.extended_serial(0x0000A001).hex().upper()
+    assert info["vu_serial"].startswith("40961 \u00b7 ")
     assert info["vu_serial_decoded"]["serial_number"] == 0x0000A001
-    assert "40962 \u00b7 " in info["sensor_serial_number"]
+    assert info["sensor_serial"].startswith("40962 \u00b7 ")
     assert info["sensor_serial_extended"]["serial_number"] == 0x0000A002
 
 

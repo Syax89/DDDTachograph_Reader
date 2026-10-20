@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Érzékelő párosításai (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Érzékelő sorozatszáma"
+msgstr "Érzékelő · Sorozatszám"
 
 msgid "Sig Size"
 msgstr "Aláírás mérete"

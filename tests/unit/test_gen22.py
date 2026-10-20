@@ -343,7 +343,10 @@ class TestGen22Decoders:
 
         decoded = decode_sensor_gnss_coupled(record)
 
-        assert decoded["sensor_serial"] == "0102030405060708"
+        # The hex is kept and the compact decoded reading is appended to the same
+        # cell (item 1): the column that existed is never replaced.
+        assert decoded["sensor_serial"].startswith("0102030405060708 \u00b7 ")
+        assert decoded["sensor_serial_extended"]["serial_number"] == 0x01020304
         assert decoded["sensor_approval"] == "e1-0002"
         assert decoded["coupling_date"] is not None
 
@@ -354,7 +357,10 @@ class TestGen22Decoders:
 
         decoded = decode_sensor_paired(record)
 
-        assert decoded["sensor_serial"] == "0102030405060708"
+        # The hex is kept and the compact decoded reading is appended to the same
+        # cell (item 1): the column that existed is never replaced.
+        assert decoded["sensor_serial"].startswith("0102030405060708 \u00b7 ")
+        assert decoded["sensor_serial_extended"]["serial_number"] == 0x01020304
         assert decoded["sensor_approval"] == "e1-0002"
         assert decoded["pairing_date"] is not None
 

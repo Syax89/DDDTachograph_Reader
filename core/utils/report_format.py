@@ -71,7 +71,7 @@ BOOKKEEPING_KEYS = frozenset({
     # Structured serial companions: the panels show one compact scalar
     # ('<serial> · MM/YY · manufacturer'), the dict stays in the JSON.
     "vu_serial_decoded", "sensor_serial_decoded", "sensor_gnss_serial_decoded",
-    "old_time_iso", "new_time_iso", "next_calibration_iso",
+    "old_time_iso", "new_time_iso", "next_calibration_iso", "sensor_pairing_time",
     "rcm_serial_decoded",
     "digital_map_version_raw", "control_type_bits",
     "card_structure_version_parts",

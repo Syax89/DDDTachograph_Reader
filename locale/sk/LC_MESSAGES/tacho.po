@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Spárovania snímača (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Sériové číslo snímača"
+msgstr "Snímač · Sériové číslo"
 
 msgid "Sig Size"
 msgstr "Veľkosť podpisu"

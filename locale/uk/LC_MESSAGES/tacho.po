@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Сполучення датчика (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Серійний номер датчика"
+msgstr "Датчик · Серійний номер"
 
 msgid "Sig Size"
 msgstr "Розмір підпису"

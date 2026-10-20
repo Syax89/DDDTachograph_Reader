@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Pörun skynjara (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Raðnúmer skynjara"
+msgstr "Skynjari · Raðnúmer"
 
 msgid "Sig Size"
 msgstr "Stærð undirskriftar"

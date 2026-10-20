@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Αντιστοιχίσεις αισθητήρα (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Σειριακός αριθμός αισθητήρα"
+msgstr "Αισθητήρας · Σειριακός αριθμός"
 
 msgid "Sig Size"
 msgstr "Μέγεθος υπογραφής"

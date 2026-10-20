@@ -533,6 +533,9 @@ def _decode_calibration_extension(rec):
     """
     if len(rec) >= CALIBRATION_G22_SIZE:
         return {
+            # One column per serial: the hex cell keeps the hex and carries the
+            # compact decoded reading, so the table never has two columns for one
+            # datum (the same rule as the timestamp columns).
             "sensor_serial_number": rec[167:175].hex(),
             "sensor_serial": serial_text(decode_extended_serial_number(rec, 167)),
             "sensor_serial_decoded": decode_extended_serial_number(rec, 167),

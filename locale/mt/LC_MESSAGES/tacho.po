@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Ibbjar tas-sensor (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Numru tas-serje tas-sensor"
+msgstr "Sensur · Numru tas-serje"
 
 msgid "Sig Size"
 msgstr "Daqs tal-firma"

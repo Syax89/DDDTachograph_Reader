@@ -115,31 +115,29 @@ def test_gen2_overview_panel_shows_slots_and_the_vu_clock():
     assert "Card Slot Status \u203a Driver Slot Code" not in labels
 
 
-def test_vu_information_shows_the_decoded_serials_and_pairing_time():
+def test_vu_information_shows_one_compact_row_per_serial():
     info = {
         "manufacturer": "Synthetic Maker",
         "serial_number": "0A0B0C0D0711AA55",
-        "vu_serial": {"serial_number": 168_000_001, "month": 11, "year": 24,
-                      "manufacturer": "Synthetic Maker",
-                      "month_year_status": "valid"},
-        "sensor_serial": {"serial_number": 168_000_002, "month": 3, "year": 23,
-                          "manufacturer": "Synthetic Maker"},
+        "vu_serial": "168000001 \u00b7 11/24 \u00b7 Stoneridge",
+        "vu_serial_decoded": {"serial_number": 168000001},
+        "sensor_serial": "168000002 \u00b7 03/23 \u00b7 Stoneridge",
+        "sensor_serial_extended": {"serial_number": 168000002},
         "sensor_pairing_time": "2024-04-05T20:34:38+00:00",
     }
     _headers, rows = gui._kv_rows(info)
     labels = [row[0] for row in rows]
-    assert "VU Serial \u203a Serial Number" in labels
-    assert "VU Serial \u203a Month" in labels
-    assert "VU Serial \u203a Manufacturer" in labels
-    assert "Sensor Serial \u203a Serial Number" in labels
-    assert "Sensor Pairing Time" in labels
-    # the bookkeeping child of the serial dict is not a row
-    assert "VU Serial \u203a Month Year Status" not in labels
+    # compact scalar rows, no 'VU Serial › ...' sub-rows, pairing time JSON-only
+    assert labels == [gui.ui_text.label("manufacturer"),
+                      gui.ui_text.label("serial_number"),
+                      gui.ui_text.label("vu_serial"),
+                      gui.ui_text.label("sensor_serial")]
+    assert not any("\u203a" in label for label in labels)
+    assert dict(rows)[gui.ui_text.label("vu_serial")].startswith("168000001 \u00b7 11/24")
     sections = {label: rows for label, _d, _h, rows, _t
                 in report_format.section_tables({"vu_info": info})}
     export_labels = [row[0] for row in sections["VU Information"]]
     assert "VU Serial" in export_labels and "Sensor Serial" in export_labels
-    # a nested dict is rendered readable, never as a raw {...} cell
     assert "{" not in "".join(str(row[1]) for row in sections["VU Information"])
 
 
@@ -156,8 +154,7 @@ def test_calibration_columns_show_full_times_and_all_three_serials():
         "vin_status": "present",
     }
     cols = report_format.visible_columns([record])
-    for key in ("old_time_full", "new_time_full", "next_calibration_full",
-                "sensor_serial", "sensor_gnss_serial", "rcm_serial"):
+    for key in ("old_time_full", "new_time_full", "next_calibration_full"):
         assert key in cols, key
     assert "vin_status" not in cols
     # the pre-existing date columns are still there, unchanged
@@ -304,8 +301,9 @@ TABLE_LABELS = {
                 "manufacturer",
                 "manufacturer_address", "part_number", "software_version"],
     "calibrations": ["calibration_purpose_label", "workshop_name", "old_time",
-                     "new_time", "next_calibration_date", "sensor_serial",
-                     "sensor_gnss_serial", "rcm_serial"],
+                     "new_time", "next_calibration_date",
+                     "sensor_serial_number", "sensor_gnss_serial_number",
+                     "rcm_serial_number"],
     "places": ["timestamp", "entry_type", "entry_type_description", "nation",
                "region", "odometer_km"],
 }

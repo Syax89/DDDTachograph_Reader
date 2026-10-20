@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Çiftimet e sensorit (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Numri serial i sensorit"
+msgstr "Sensori · Numri serial"
 
 msgid "Sig Size"
 msgstr "Madhësia e nënshkrimit"

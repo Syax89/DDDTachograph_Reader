@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Sensör eşleştirmeleri (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Sensör seri numarası"
+msgstr "Sensör · Seri numarası"
 
 msgid "Sig Size"
 msgstr "İmza boyutu"

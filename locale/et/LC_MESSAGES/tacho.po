@@ -1666,7 +1666,7 @@ msgid "Sensor Pairings (G2.2)"
 msgstr "Andurite sidumised (G2.2)"
 
 msgid "Sensor Serial"
-msgstr "Anduri seerianumber"
+msgstr "Andur · Seerianumber"
 
 msgid "Sig Size"
 msgstr "Allkirja suurus"
