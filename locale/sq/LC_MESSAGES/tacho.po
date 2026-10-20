@@ -2281,3 +2281,39 @@ msgstr "INTEGRITETI"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Mbulim sipas bajteve"
+
+msgid "Serial"
+msgstr "Numri serial"
+
+msgid "Month"
+msgstr "Data"
+
+msgid "Year"
+msgstr "Data"
+
+msgid "Sensor Pairing Time"
+msgstr "Data e çiftimit të sensorit"
+
+msgid "Current Date Time"
+msgstr "Data"
+
+msgid "Entry Type Meaning"
+msgstr "Lloji i regjistrimit"
+
+msgid "Old Time Full"
+msgstr "Ora e vjetër"
+
+msgid "New Time Full"
+msgstr "Ora e re"
+
+msgid "Next Calibration Full"
+msgstr "Data e kalibrimit të radhës"
+
+msgid "RCM Serial"
+msgstr "Numri serial"
+
+msgid "Sensor GNSS Serial"
+msgstr "Numri serial i sensorit"
+
+msgid "VU Serial"
+msgstr "Numri serial"

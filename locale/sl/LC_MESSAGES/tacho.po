@@ -2281,3 +2281,39 @@ msgstr "CELOVITOST"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Pokritost po bajtih"
+
+msgid "Serial"
+msgstr "Serijska številka"
+
+msgid "Month"
+msgstr "Datum"
+
+msgid "Year"
+msgstr "Datum"
+
+msgid "Sensor Pairing Time"
+msgstr "Datum seznanitve senzorja"
+
+msgid "Current Date Time"
+msgstr "Datum"
+
+msgid "Entry Type Meaning"
+msgstr "Vrsta vnosa"
+
+msgid "Old Time Full"
+msgstr "Stari čas"
+
+msgid "New Time Full"
+msgstr "Novi čas"
+
+msgid "Next Calibration Full"
+msgstr "Datum naslednje kalibracije"
+
+msgid "RCM Serial"
+msgstr "Serijska številka"
+
+msgid "Sensor GNSS Serial"
+msgstr "Serijska številka senzorja"
+
+msgid "VU Serial"
+msgstr "Serijska številka"

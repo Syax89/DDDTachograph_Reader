@@ -1525,9 +1525,9 @@ def _parse_trep_05_technical(data, results):
                 "vin_status": ("empty (activation parameters)" if not vin
                                else "present"),
                 "field_status": field_status,
-                "old_time_iso": old_time_iso,
-                "new_time_iso": new_time_iso,
-                "next_calibration_iso": next_cal_iso,
+                "old_time_full": old_time_iso,
+                "new_time_full": new_time_iso,
+                "next_calibration_full": next_cal_iso,
                 "timestamp": old_time,
                 "purpose": describe_calibration_purpose(purpose),
                 "purpose_code": purpose,
@@ -1581,7 +1581,9 @@ def _parse_trep_05_technical(data, results):
                 # the generation-2 records use (no duplicated implementation).
                 from core.parser.vu_dispatcher import decode_extended_serial_number
                 vu_info["serial_number"] = data[88:96].hex().upper()
-                vu_info["serial"] = decode_extended_serial_number(data, 88)
+                # Shown in the VU Information panel as its own rows; the record
+                # copy in `vu_identifications` keeps the JSON-only `serial` key.
+                vu_info["vu_serial"] = decode_extended_serial_number(data, 88)
                 sw_version = decode_string(data[96:100], is_id=True)
                 if sw_version:
                     vu_info["software_version"] = sw_version
@@ -1596,7 +1598,9 @@ def _parse_trep_05_technical(data, results):
                     vu_info["approval_number"] = approval
                 vu_info["sensor_serial_number"] = data[116:124].hex().upper()
                 vu_info["sensor_serial"] = decode_extended_serial_number(data, 116)
-                vu_info["sensor_pairing_date_iso"] = _g1_time(
+                # The pairing TimeReal has an hour/minute, not only a date: the
+                # full value is shown next to the existing date row.
+                vu_info["sensor_pairing_time"] = _g1_time(
                     struct.unpack(">I", data[132:136])[0])
                 sensor_approval = decode_string(data[124:132], is_id=True)
                 if sensor_approval:

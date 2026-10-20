@@ -2281,3 +2281,39 @@ msgstr "TERVIIKLIKKUS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Baidipõhine kaetus"
+
+msgid "Serial"
+msgstr "Seerianumber"
+
+msgid "Month"
+msgstr "Kuupäev"
+
+msgid "Year"
+msgstr "Kuupäev"
+
+msgid "Sensor Pairing Time"
+msgstr "Anduri sidumiskuupäev"
+
+msgid "Current Date Time"
+msgstr "Kuupäev"
+
+msgid "Entry Type Meaning"
+msgstr "Kande tüüp"
+
+msgid "Old Time Full"
+msgstr "Vana aeg"
+
+msgid "New Time Full"
+msgstr "Uus aeg"
+
+msgid "Next Calibration Full"
+msgstr "Järgmine kalibreerimiskuupäev"
+
+msgid "RCM Serial"
+msgstr "Seerianumber"
+
+msgid "Sensor GNSS Serial"
+msgstr "Anduri seerianumber"
+
+msgid "VU Serial"
+msgstr "Seerianumber"

@@ -85,6 +85,7 @@ from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 
 from core.utils.version import __version__  # noqa: E402
+from core.utils import report_format  # noqa: E402
 from core.utils.report_format import (  # noqa: E402
     NATION_COLS, VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
     fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
@@ -299,11 +300,14 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence", "record_t
                # Technical-data detail: ExtendedSerialNumber / seal subfields,
                # the CardStructureVersion halves, the calibration variant and
                # the unresolved-encoding statuses stay in the JSON export only.
-               "serial", "sensor_serial_extended", "card_serial",
-               "card_structure_version_parts", "equipment_type_status",
+               "card_serial", "card_structure_version_parts",
+               "equipment_type_status",
                "month_year_status", "seal_identifier", "calibration_variant",
                "digital_map_version_status", "consent_status", "consent_raw"}
 # Descriptive columns pushed to table start.
+# Bookkeeping of the all-TREP decoding pass (status/provenance/diagnostics):
+# the shared set, so the window hides exactly what the exports hide.
+HIDDEN_KEYS |= set(report_format.BOOKKEEPING_KEYS)
 LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
 # Technical columns pushed to table end.
 TRAILING_KEYS: list[str] = []
@@ -358,8 +362,10 @@ def _fmt_dict(d):
     if known is not None:
         return known
     # Compact generic fallback. The key is handed to fmt_val so a nested label
-    # ("calibration_purpose_label") follows the same rules as a flat cell.
-    items = ", ".join(f"{k}={fmt_val(val, key=k)}" for k, val in d.items())
+    # ("calibration_purpose_label") follows the same rules as a flat cell, and
+    # bookkeeping children are dropped exactly like at the top level.
+    items = ", ".join(f"{k}={fmt_val(val, key=k)}" for k, val in d.items()
+                      if k not in report_format.MODEL_ONLY_DICT_KEYS)
     return items if len(items) <= 120 else items[:120] + "\u2026"
 
 
@@ -476,16 +482,17 @@ class _SummaryHeader(tuple):
 def _kv_rows(d):
     """Convert a dict to (Field, Value) rows, flattening nested dicts one level."""
     rows = []
-    for k, v in d.items():
-        # `confidence` is bookkeeping, not a fact of the unit: it would add a
-        # "Confidence" row to the key/value panel (it lives in the JSON). Only
-        # this one key is skipped — HIDDEN_KEYS also holds `name`, which VU
-        # Company Info does show.
-        if k == "confidence":
-            continue
+    # `confidence` and the shared BOOKKEEPING_KEYS stay in the JSON: only that
+    # explicit set is skipped — HIDDEN_KEYS also holds `name`, which VU Company
+    # Info does show.
+    for k, v in report_format.dict_section_rows(d, lambda value: value):
         field = ui_text.label(k)
         if isinstance(v, dict) and v:
             for sk, sv in v.items():
+                # A nested status/raw companion is bookkeeping too: drop the
+                # children the shared set hides so the panel keeps its rows.
+                if sk in report_format.MODEL_ONLY_DICT_KEYS:
+                    continue
                 subfield = f"{field} \u203a {ui_text.label(sk)}"
                 rows.append([subfield, fmt_val(sv, key=sk)])
         else:

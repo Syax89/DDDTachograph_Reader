@@ -2281,3 +2281,39 @@ msgstr "INTEGRITÀ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Kopertura skont il-bytes"
+
+msgid "Serial"
+msgstr "Numru tas-serje"
+
+msgid "Month"
+msgstr "Data"
+
+msgid "Year"
+msgstr "Data"
+
+msgid "Sensor Pairing Time"
+msgstr "Data tal-ibbjar tas-sensor"
+
+msgid "Current Date Time"
+msgstr "Data"
+
+msgid "Entry Type Meaning"
+msgstr "Tip tad-dħul"
+
+msgid "Old Time Full"
+msgstr "Ħin qadim"
+
+msgid "New Time Full"
+msgstr "Ħin ġdid"
+
+msgid "Next Calibration Full"
+msgstr "Id-data tal-kalibrazzjoni li jmiss"
+
+msgid "RCM Serial"
+msgstr "Numru tas-serje"
+
+msgid "Sensor GNSS Serial"
+msgstr "Numru tas-serje tas-sensor"
+
+msgid "VU Serial"
+msgstr "Numru tas-serje"

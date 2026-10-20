@@ -51,10 +51,73 @@ HIDDEN_KEYS = {"source", "raw_tail_hex", "raw_hex", "payload_hex", "header_hex",
                # Technical-data detail: ExtendedSerialNumber / seal subfields,
                # the CardStructureVersion halves, the calibration variant and
                # the unresolved-encoding statuses stay in the JSON export only.
-               "serial", "sensor_serial_extended", "card_serial",
-               "card_structure_version_parts", "equipment_type_status",
+               "card_serial", "card_structure_version_parts",
+               "equipment_type_status",
                "month_year_status", "seal_identifier", "calibration_variant",
                "digital_map_version_status", "consent_status", "consent_raw"}
+
+#: Bookkeeping added by the all-TREP decoding pass: status/provenance/diagnostic
+#: keys that are not data of the regulation. Regulation data the parent dropped
+#: is *shown* instead (see docs/developer/normative-completion.md §10); only the
+#: machine facts below stay in the JSON. One named set so the GUI and the exports
+#: cannot drift apart; pinned by tests/unit/test_model_only_keys_hidden.py.
+BOOKKEEPING_KEYS = frozenset({
+    # raw integers duplicating a shown value
+    "lock_in_raw", "lock_out_raw", "control_time_raw", "begin_time_raw",
+    "end_time_raw", "old_time_raw", "new_time_raw", "consent_raw",
+    "digital_map_version_raw", "control_type_bits",
+    "card_structure_version_parts",
+    # status / provenance / diagnostics
+    "time_status", "type_status", "event_fault_version", "position_status",
+    "variant_source", "decode_path", "field_status", "vin_status",
+    "aggregation", "record_bytes", "record_complete", "missing_bytes",
+    "raw_tail_bytes", "source_conflict", "consent_status",
+    "digital_map_version_status", "invalid_changes_count", "day_date",
+    "record_day", "entry_type_status", "calibration_variant_source",
+    "calibration_variant", "equipment_type_status", "month_year_status",
+    "blocks", "boundary", "tlvs", "tlv_complete", "fallback_reasons",
+    "vu_integrity", "vu_section_schema", "card_slots_status",
+    # Record-level decoded serials duplicate the panel rows (VU Information
+    # shows `vu_serial` / `sensor_serial`); the record copy is JSON-only.
+    "serial", "sensor_serial_extended", "condition_status",
+    "manufacturer_status", "seal_identifier",
+    # CardSlotsStatus numeric/typing companions: the published state word
+    # (empty/occupied/reserved, exactly as before) is the regulation datum.
+    "driver_slot_code", "codriver_slot_code", "driver_slot_type",
+    "codriver_slot_type", "driver_slot_status", "codriver_slot_status",
+    "driver_slot_card_type", "codriver_slot_card_type",
+})
+HIDDEN_KEYS |= BOOKKEEPING_KEYS
+
+#: Keys a *dict* section never renders: the bookkeeping above. ``HIDDEN_KEYS``
+#: also holds ``name``, which VU Company Info does show, so the dict renderers
+#: skip this narrower set instead of the whole one.
+MODEL_ONLY_DICT_KEYS = BOOKKEEPING_KEYS
+
+#: Keys a dict section *does* render even though they are in ``HIDDEN_KEYS``.
+DICT_SECTION_VISIBLE_HIDDEN_KEYS = frozenset({"name"})
+
+
+def dict_section_key_is_visible(key):
+    """True when a dict-section *key* may become a Field/Value row."""
+    if key == "confidence" or key in MODEL_ONLY_DICT_KEYS:
+        return False
+    if key in HIDDEN_KEYS and key not in DICT_SECTION_VISIBLE_HIDDEN_KEYS:
+        return False
+    return True
+
+
+def dict_section_rows(section, formatter):
+    """``(key, formatted)`` pairs a dict section may render, in insertion order.
+
+    Shared by the Excel/CSV/PDF dict sheets and the GUI key/value panel so the
+    two can never disagree about which bookkeeping keys stay off screen.
+    """
+    for key, value in section.items():
+        if not dict_section_key_is_visible(key):
+            continue
+        yield key, formatter(value)
+
 
 # Canonical trust verdicts for a parsed download. Consumers (GUI badge, rename
 # tooling, reports) must classify with these rather than by substring-matching
@@ -767,15 +830,9 @@ def section_tables(data, max_rows=None):
         if not isinstance(section, dict) or not section:
             continue
         rows = []
-        for k, v in section.items():
-            # `confidence` is bookkeeping, not a fact of the unit: it would add
-            # a "Confidence | low" row to a key/value sheet (JSON only). No dict
-            # section carries it today except the sensor block, which is why the
-            # skip is this one key and not the whole HIDDEN_KEYS set (that one
-            # holds `name`, which VU Company Info does show).
-            if k == "confidence":
-                continue
-            formatted = fmt_value(v)
+        # `confidence` and BOOKKEEPING_KEYS are not facts of the unit; the skip is
+        # that explicit set, never the whole HIDDEN_KEYS set (`name` is shown).
+        for k, formatted in dict_section_rows(section, fmt_value):
             if formatted:
                 rows.append([humanize_key(k), formatted])
         if not rows:

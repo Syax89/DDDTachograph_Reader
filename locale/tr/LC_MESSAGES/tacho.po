@@ -2281,3 +2281,39 @@ msgstr "BÜTÜNLÜK"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Bayt bazında kapsam"
+
+msgid "Serial"
+msgstr "Seri numarası"
+
+msgid "Month"
+msgstr "Tarih"
+
+msgid "Year"
+msgstr "Tarih"
+
+msgid "Sensor Pairing Time"
+msgstr "Sensör eşleştirme tarihi"
+
+msgid "Current Date Time"
+msgstr "Tarih"
+
+msgid "Entry Type Meaning"
+msgstr "Giriş türü"
+
+msgid "Old Time Full"
+msgstr "Eski zaman"
+
+msgid "New Time Full"
+msgstr "Yeni zaman"
+
+msgid "Next Calibration Full"
+msgstr "Sonraki kalibrasyon tarihi"
+
+msgid "RCM Serial"
+msgstr "Seri numarası"
+
+msgid "Sensor GNSS Serial"
+msgstr "Sensör seri numarası"
+
+msgid "VU Serial"
+msgstr "Seri numarası"

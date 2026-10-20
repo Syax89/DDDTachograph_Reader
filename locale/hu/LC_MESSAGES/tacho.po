@@ -2281,3 +2281,39 @@ msgstr "INTEGRITÁS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Bájtlefedettség"
+
+msgid "Serial"
+msgstr "Sorozatszám"
+
+msgid "Month"
+msgstr "Dátum"
+
+msgid "Year"
+msgstr "Dátum"
+
+msgid "Sensor Pairing Time"
+msgstr "Érzékelő párosításának dátuma"
+
+msgid "Current Date Time"
+msgstr "Dátum"
+
+msgid "Entry Type Meaning"
+msgstr "Bejegyzéstípus"
+
+msgid "Old Time Full"
+msgstr "Régi idő"
+
+msgid "New Time Full"
+msgstr "Új idő"
+
+msgid "Next Calibration Full"
+msgstr "Következő kalibrálás dátuma"
+
+msgid "RCM Serial"
+msgstr "Sorozatszám"
+
+msgid "Sensor GNSS Serial"
+msgstr "Érzékelő sorozatszáma"
+
+msgid "VU Serial"
+msgstr "Sorozatszám"

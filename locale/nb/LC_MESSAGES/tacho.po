@@ -2281,3 +2281,39 @@ msgstr "INTEGRITET"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Bytebasert dekning"
+
+msgid "Serial"
+msgstr "Serienummer"
+
+msgid "Month"
+msgstr "Dato"
+
+msgid "Year"
+msgstr "Dato"
+
+msgid "Sensor Pairing Time"
+msgstr "Sensorens sammenkoblingsdato"
+
+msgid "Current Date Time"
+msgstr "Dato"
+
+msgid "Entry Type Meaning"
+msgstr "Oppføringstype"
+
+msgid "Old Time Full"
+msgstr "Gammel tid"
+
+msgid "New Time Full"
+msgstr "Ny tid"
+
+msgid "Next Calibration Full"
+msgstr "Neste kalibreringsdato"
+
+msgid "RCM Serial"
+msgstr "Serienummer"
+
+msgid "Sensor GNSS Serial"
+msgstr "Sensorens serienummer"
+
+msgid "VU Serial"
+msgstr "Serienummer"

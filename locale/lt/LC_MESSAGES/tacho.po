@@ -2281,3 +2281,39 @@ msgstr "VIENTISUMAS"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Baitų apskaitos aprėptis"
+
+msgid "Serial"
+msgstr "Serijos numeris"
+
+msgid "Month"
+msgstr "Data"
+
+msgid "Year"
+msgstr "Data"
+
+msgid "Sensor Pairing Time"
+msgstr "Jutiklio susiejimo data"
+
+msgid "Current Date Time"
+msgstr "Data"
+
+msgid "Entry Type Meaning"
+msgstr "Įrašo tipas"
+
+msgid "Old Time Full"
+msgstr "Senas laikas"
+
+msgid "New Time Full"
+msgstr "Naujas laikas"
+
+msgid "Next Calibration Full"
+msgstr "Kita kalibravimo data"
+
+msgid "RCM Serial"
+msgstr "Serijos numeris"
+
+msgid "Sensor GNSS Serial"
+msgstr "Jutiklio serijos numeris"
+
+msgid "VU Serial"
+msgstr "Serijos numeris"

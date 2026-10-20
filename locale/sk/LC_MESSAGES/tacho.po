@@ -2281,3 +2281,39 @@ msgstr "INTEGRITA"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Pokrytie podľa bajtov"
+
+msgid "Serial"
+msgstr "Sériové číslo"
+
+msgid "Month"
+msgstr "Dátum"
+
+msgid "Year"
+msgstr "Dátum"
+
+msgid "Sensor Pairing Time"
+msgstr "Dátum spárovania snímača"
+
+msgid "Current Date Time"
+msgstr "Dátum"
+
+msgid "Entry Type Meaning"
+msgstr "Typ záznamu"
+
+msgid "Old Time Full"
+msgstr "Starý čas"
+
+msgid "New Time Full"
+msgstr "Nový čas"
+
+msgid "Next Calibration Full"
+msgstr "Dátum ďalšej kalibrácie"
+
+msgid "RCM Serial"
+msgstr "Sériové číslo"
+
+msgid "Sensor GNSS Serial"
+msgstr "Sériové číslo snímača"
+
+msgid "VU Serial"
+msgstr "Sériové číslo"

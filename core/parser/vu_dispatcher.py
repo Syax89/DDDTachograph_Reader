@@ -1933,10 +1933,15 @@ def decode_card_slots_status(value):
     out = {}
     for name, nibble in (("driver_slot", value & 0x0F),
                          ("codriver_slot", (value >> 4) & 0x0F)):
-        label = CARD_SLOT_TYPES.get(nibble)
-        out[name] = label or "reserved"
+        card_type = CARD_SLOT_TYPES.get(nibble)
+        # Same vocabulary the generation-1 panel publishes (§2.28): a slot is
+        # empty / occupied / unassigned-code. The card type itself travels as a
+        # model-only companion so both generations read identically on screen.
+        out[name] = "empty" if nibble == 0x00 else ("occupied" if nibble <= 0x04
+                                                   else "reserved")
+        out[f"{name}_card_type"] = card_type or "unassigned"
         out[f"{name}_code"] = nibble
-        out[f"{name}_status"] = "assigned" if label else "unassigned"
+        out[f"{name}_status"] = "assigned" if card_type else "unassigned"
     out["raw"] = f"0x{value:02X}"
     return out
 
@@ -1984,6 +1989,10 @@ def _emit_section(section, results):
         if current and results.setdefault("metadata", {}).get(
                 "current_datetime") in (None, "N/A"):
             results["metadata"]["current_datetime"] = current
+            # The VU's own clock is an Overview datum (DDP_029/DDP_031): shown in
+            # the same panel the generation-1 path uses.
+            results.setdefault("vu_overview", {}).setdefault(
+                "current_date_time", current)
             break
     for r in recs.get(0x02, []):
         raw = r.get("card_slots_status")

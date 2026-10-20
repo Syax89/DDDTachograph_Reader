@@ -98,8 +98,11 @@ def test_overview_publishes_typed_card_slots_per_nibble():
     slots = results["vu_overview"]["card_slot_status"]
     assert slots["raw"] == "0x41"
     # 'ccccdddd'B: low nibble is the driver slot, high nibble the co-driver one.
-    assert slots["driver_slot"] == "driver"
-    assert slots["codriver_slot"] == "company"
+    # Same vocabulary the generation-1 panel publishes (§2.28).
+    assert slots["driver_slot"] == "occupied"
+    assert slots["codriver_slot"] == "occupied"
+    assert slots["driver_slot_card_type"] == "driver"
+    assert slots["codriver_slot_card_type"] == "company"
     # Complete typing is model-only: the nibble code and its label travel in the
     # JSON, not in a new visible column.
     assert slots["driver_slot_code"] == 0x01

@@ -2281,3 +2281,39 @@ msgstr "ЦЭЛАСНАСЦЬ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Пакрыццё ў байтах"
+
+msgid "Serial"
+msgstr "Серыйны нумар"
+
+msgid "Month"
+msgstr "Дата"
+
+msgid "Year"
+msgstr "Дата"
+
+msgid "Sensor Pairing Time"
+msgstr "Дата спалучэння датчыка"
+
+msgid "Current Date Time"
+msgstr "Дата"
+
+msgid "Entry Type Meaning"
+msgstr "Тып запісу"
+
+msgid "Old Time Full"
+msgstr "Стары час"
+
+msgid "New Time Full"
+msgstr "Новы час"
+
+msgid "Next Calibration Full"
+msgstr "Дата наступнай каліброўкі"
+
+msgid "RCM Serial"
+msgstr "Серыйны нумар"
+
+msgid "Sensor GNSS Serial"
+msgstr "Серыйны нумар датчыка"
+
+msgid "VU Serial"
+msgstr "Серыйны нумар"

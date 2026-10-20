@@ -2281,3 +2281,39 @@ msgstr "SLÁINE"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Clúdach na mbeart"
+
+msgid "Serial"
+msgstr "Uimhir shraithe"
+
+msgid "Month"
+msgstr "Dáta"
+
+msgid "Year"
+msgstr "Dáta"
+
+msgid "Sensor Pairing Time"
+msgstr "Dáta péireála an tsensor"
+
+msgid "Current Date Time"
+msgstr "Dáta"
+
+msgid "Entry Type Meaning"
+msgstr "Cineál iontrála"
+
+msgid "Old Time Full"
+msgstr "Am roimhe"
+
+msgid "New Time Full"
+msgstr "Am nua"
+
+msgid "Next Calibration Full"
+msgstr "An chéad dáta calabraithe eile"
+
+msgid "RCM Serial"
+msgstr "Uimhir shraithe"
+
+msgid "Sensor GNSS Serial"
+msgstr "Sraithuimhir an tsensor"
+
+msgid "VU Serial"
+msgstr "Uimhir shraithe"

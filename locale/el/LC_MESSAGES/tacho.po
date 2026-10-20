@@ -2281,3 +2281,39 @@ msgstr "ΑΚΕΡΑΙΟΤΗΤΑ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Κάλυψη σε byte"
+
+msgid "Serial"
+msgstr "Σειριακός αριθμός"
+
+msgid "Month"
+msgstr "Ημερομηνία"
+
+msgid "Year"
+msgstr "Ημερομηνία"
+
+msgid "Sensor Pairing Time"
+msgstr "Ημερομηνία αντιστοίχισης αισθητήρα"
+
+msgid "Current Date Time"
+msgstr "Ημερομηνία"
+
+msgid "Entry Type Meaning"
+msgstr "Τύπος καταχώρισης"
+
+msgid "Old Time Full"
+msgstr "Παλιά ώρα"
+
+msgid "New Time Full"
+msgstr "Νέα ώρα"
+
+msgid "Next Calibration Full"
+msgstr "Ημερομηνία επόμενης βαθμονόμησης"
+
+msgid "RCM Serial"
+msgstr "Σειριακός αριθμός"
+
+msgid "Sensor GNSS Serial"
+msgstr "Σειριακός αριθμός αισθητήρα"
+
+msgid "VU Serial"
+msgstr "Σειριακός αριθμός"

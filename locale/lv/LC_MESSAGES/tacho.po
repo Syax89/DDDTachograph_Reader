@@ -2281,3 +2281,39 @@ msgstr "INTEGRITĀTE"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Baitu pārklājums"
+
+msgid "Serial"
+msgstr "Sērijas numurs"
+
+msgid "Month"
+msgstr "Datums"
+
+msgid "Year"
+msgstr "Datums"
+
+msgid "Sensor Pairing Time"
+msgstr "Sensora savienošanas datums"
+
+msgid "Current Date Time"
+msgstr "Datums"
+
+msgid "Entry Type Meaning"
+msgstr "Ieraksta veids"
+
+msgid "Old Time Full"
+msgstr "Vecais laiks"
+
+msgid "New Time Full"
+msgstr "Jauns laiks"
+
+msgid "Next Calibration Full"
+msgstr "Nākamais kalibrēšanas datums"
+
+msgid "RCM Serial"
+msgstr "Sērijas numurs"
+
+msgid "Sensor GNSS Serial"
+msgstr "Sensora sērijas numurs"
+
+msgid "VU Serial"
+msgstr "Sērijas numurs"

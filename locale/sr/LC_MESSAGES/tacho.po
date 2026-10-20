@@ -2281,3 +2281,39 @@ msgstr "ИНТЕГРИТЕТ"
 
 msgid "  Byte-accounted coverage"
 msgstr "  Покривеност бајтима"
+
+msgid "Serial"
+msgstr "Серијски број"
+
+msgid "Month"
+msgstr "Датум"
+
+msgid "Year"
+msgstr "Датум"
+
+msgid "Sensor Pairing Time"
+msgstr "Датум упаривања сензора"
+
+msgid "Current Date Time"
+msgstr "Датум"
+
+msgid "Entry Type Meaning"
+msgstr "Тип уноса"
+
+msgid "Old Time Full"
+msgstr "Старо време"
+
+msgid "New Time Full"
+msgstr "Ново време"
+
+msgid "Next Calibration Full"
+msgstr "Датум следеће калибрације"
+
+msgid "RCM Serial"
+msgstr "Серијски број"
+
+msgid "Sensor GNSS Serial"
+msgstr "Серијски број сензора"
+
+msgid "VU Serial"
+msgstr "Серијски број"
