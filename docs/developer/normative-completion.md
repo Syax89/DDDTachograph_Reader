@@ -479,3 +479,23 @@ All three are normative gains, not regressions; each has a unit test.
 | `07-corrupt_header` — two octets of the FIRST section header | `vu_record_arrays` 35 → 36 | the candidate walks the `76 00` download-interface transfer of DDP_028a as a section (`test_interface_version_section_is_recognised_and_consumed`); the baseline treated those bytes as junk, so the count lacked the transfer that exists in the file |
 | `09-corrupt_header` / `09-truncate1` — inside the calibration array | `calibrations` 4 → 5 | the activation calibration ("parameters known at VU activation": empty VIN, `l = 0`) is no longer deleted by the non-normative acceptance gate (`test_g1_activation_calibration_with_empty_vin_and_l_zero_is_kept`) |
 | `11-truncate1` — the final marker byte | `activities` 0 → 1 | a downloaded day with no ActivityChangeInfo is a day: it is emitted with an empty change list and `source: "vu_trep02"` (`test_g1_zero_change_day_is_emitted`). The variant's scan re-reads the same day body, so the gain shows up on the fallback route too |
+
+## 12. Stored records, integrity and the value gates
+
+The owner's rule after the blind reviews: *normative decoding for every TREP; a
+stored record that the counters declare is never dropped on the normative path — an
+unusable value is withheld (`None`/N/A) next to the raw value and an explicit
+status, never the record; plausibility windows are heuristic-scan gates only.*
+
+What that changed:
+
+| Area | Rule now |
+|---|---|
+| Emission (`_emit_section`) | every stored record reaches the results; `metadata.vu_section_schema` carries `stored_records`/`emitted_records`/`dropped_records` per array and a difference makes the walk partial |
+| Times | `TimeReal` is a uint32: the ISO value is published only inside the calendar the app renders, otherwise `None` + `*_raw` + `time_status` |
+| Record sizes | one shared rule (`CANONICAL_RECORD_SIZES`, version-aware for 56/57, 40/41, 126/138): exact size → normal confidence, any other size → incomplete/low with the canonical prefix and every extra byte in `raw_tail_hex` |
+| De-duplication (G1) | identity = message identity + record position; a *different* body decoding to the same values is the same record re-read. Field tuples are never the identity |
+| Generation 1 overview/activities | blank VIN/plate/company is a legal unset value; the 433-byte body and the byte counts are the structural proof, not field values |
+| Card download inside a stream | bounded by the card's own two-byte STAP length (≤ 0xFFFE). A `76 06` wrapper keeps G1 framing but the card inside keeps its own generation |
+| Section structure | duplicates, unexpected arrays, an out-of-order slot, a missing/duplicated signature array and a signature size outside 64..132 are INTEGRITY findings (`metadata.vu_integrity`, partial) — never a reason to re-scan |
+| Calibration | `CalibrationPurpose` is generation-aware (G1 stops at 04); the variant label names the size actually decoded, with `calibration_variant_expected`/`_mismatch` beside it |
