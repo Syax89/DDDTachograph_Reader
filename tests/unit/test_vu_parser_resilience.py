@@ -251,3 +251,16 @@ def test_g1_file_with_inner_g2_marker_stays_g1():
 
     data = b"\x76\x01" + b"\x00" * 5 + b"\x76\x32" + b"\x00" * 40
     assert DeterministicParser()._detect_generation(data) == "G1"
+
+
+def test_a_tail_truncated_array_publishes_its_complete_records():
+    """Records are fixed-size: a tail-truncated array yields floor(avail/rs) records.
+
+    Only the cut remainder fails; the header stays with the normative part.
+    """
+    data = b"\x76\x31" + _array(0x01, 4, 3)[:-2]      # 2 whole records + 2 bytes
+    results = {}
+    sections = walk_vu_record_arrays(data, results)
+    assert [s["trep"] for s in sections] == ["0x31"]
+    assert sections[0]["record_counts"] == {"0x01": 2}
+    assert results["_vu_walk_complete"] is False

@@ -1888,16 +1888,36 @@ def iter_vu_sections(data, state=None):
             pos += 1
             continue
         if pos + 5 + rs * nr > n:
-            # Header declares more bytes than exist before EOF: EOF truncation
-            # or a lying noOfRecords. Flag it and skip to the next section
-            # marker (the remaining bytes are a partial payload, not new
-            # headers) instead of aborting the walk, so a genuine section that
-            # follows is still recovered.
+            # Header declares more bytes than exist before EOF (tail truncation or a
+            # lying noOfRecords). Records are fixed-size, so every COMPLETE record is
+            # still decoded normatively and only the cut remainder is a failed range:
+            # floor(available / rs) records, header kept with the normative part.
+            # The clamp must not swallow a following section: bound the run by the
+            # next verified marker, exactly like the resync path does.
+            limit = n
+            probe = pos + 5
+            while probe + 1 < n:
+                if data[probe] == 0x76 and data[probe + 1] in trep_bytes:
+                    limit = probe
+                    break
+                probe += 1
+            fits = (limit - pos - 5) // rs if rs else 0
+            if fits <= 0:
+                if state is not None:
+                    state["truncated"] = True
+                pos += 1
+                while pos + 5 <= n and not (data[pos] == 0x76
+                                           and data[pos + 1] in trep_bytes):
+                    pos += 1
+                continue
             if state is not None:
                 state["truncated"] = True
-            pos += 1
-            while pos + 5 <= n and not (data[pos] == 0x76 and data[pos + 1] in trep_bytes):
-                pos += 1
+            if cur is not None:
+                cur["records"].append((pos, rt, rs, fits, pos + 5 + rs * fits))
+            if state is not None:
+                cut_start = pos + 5 + rs * fits
+                state.setdefault("truncated_ranges", []).append((cut_start, limit))
+            pos += 5 + rs * fits
             continue
         if cur is not None:
             cur["records"].append((pos, rt, rs, nr, pos + 5 + rs * nr))

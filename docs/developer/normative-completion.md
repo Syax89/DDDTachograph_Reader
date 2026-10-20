@@ -655,3 +655,14 @@ offered exactly those bytes (and their file offset); if it adds records the zone
 `sum(unit.length) == file size` is published as `metadata.vu_units_cover_file` and
 asserted for the intact corpus, the mocks and the damaged variants. The units are shown
 as the `Decode units` section in the window and in every export.
+
+### 15.6 A message cut at its tail is read normatively up to the cut
+
+Records inside a message are fixed-size sequences, so the complete records before a
+truncation point are decoded by the *same* handler with the counts clamped to what fits
+(`_complete_prefix_body` for the G1 TREPs 01–05, `floor(available / rs)` for the G2/G2.2
+RecordArrays), and only the cut remainder becomes a failed range (one incomplete record,
+declared `unreadable` or `heuristic` when the scoped scan recovers something). The
+message/array header stays with the normative part, so the units still tile the file
+exactly. Nothing is fabricated: a message whose header is itself cut, or whose layout
+has no fixed record size, stays wholly unreadable, and the file keeps `is_partial`.

@@ -378,6 +378,45 @@ def iter_g1_vu_messages(data):
         pos = end
 
 
+_TREP_HANDLERS = {0x01, 0x02, 0x03, 0x04, 0x05}
+
+
+def _decode_clamped(trep, body, results, message_offset=None):
+    """Decode a count-clamped body with the TREP's own handler (normative path)."""
+    from core.decoders.vu_g1 import (
+        _parse_trep_02_g1_structured, _parse_trep_03_events_faults,
+        _parse_trep_04_speed, _parse_trep_05_technical, parse_g1_vu_overview)
+    if trep == 0x01:
+        parse_g1_vu_overview(body, results, message_offset=message_offset)
+    elif trep == 0x02:
+        if not _parse_trep_02_g1_structured(body, results,
+                                           message_offset=message_offset):
+            raise ValueError("clamped TREP 02 did not validate")
+    elif trep == 0x03:
+        _parse_trep_03_events_faults(body, results, message_offset=message_offset)
+    elif trep == 0x04:
+        _parse_trep_04_speed(body, results)
+    elif trep == 0x05:
+        _parse_trep_05_technical(body, results, message_offset=message_offset)
+
+
+def _heuristic_zone(data, start, end, results):
+    """Run the scoped scan on ``data[start:end]``; return (path, reason)."""
+    before = {key: len(value) for key, value in _result_records(results).items()}
+    recovered = False
+    try:
+        from core.decoders.vu_g1 import parse_vu_download_messages
+        parse_vu_download_messages(data[start:end], results, base_offset=start)
+        recovered = any(len(value) > before.get(key, 0)
+                        for key, value in _result_records(results).items())
+    except Exception as exc:
+        _log.warning("VU zone 0x%X-0x%X: heuristic failed: %s", start, end, exc)
+    path = "heuristic" if recovered else "unreadable"
+    return path, ("cut remainder (incomplete final record); "
+                  + ("recovered by the byte scan" if recovered
+                     else "nothing recoverable"))
+
+
 def _uncovered_ranges(covered, size):
     """Byte ranges of ``[0, size)`` that no unit covers, merged and ordered."""
     ranges = sorted((max(0, start), min(size, end)) for start, end in covered)
@@ -518,6 +557,41 @@ def walk_g1_vu(data, results):
             # other trace is the fallback the caller now declares.
             _log.warning("G1 VU TREP %02X dispatch failed at 0x%X: %s",
                          msg["trep"], msg["pos"], exc)
+            # Normative partial read first: records are fixed-size sequences, so
+            # every COMPLETE record before the truncation point is decoded by the
+            # same handler (count-clamped) and published with normative provenance;
+            # only the cut remainder becomes the failed range.
+            prefix = None
+            try:
+                from core.decoders.vu_g1 import _complete_prefix_body
+                prefix = _complete_prefix_body(msg["trep"], body)
+            except Exception:                       # the clamp must never break the walk
+                prefix = None
+            if prefix and prefix[1] > 0:
+                clamped, consumed = prefix
+                try:
+                    if msg["trep"] in (0x01, 0x02, 0x03, 0x05):
+                        handler(clamped, results, message_offset=msg["pos"])
+                    else:
+                        handler(clamped, results)
+                    units[-1]["length"] = 2 + consumed
+                    units[-1]["reason"] = (
+                        "complete records before the truncation point")
+                    tail_start = msg["body_start"] + consumed
+                    tail_end = msg["end"]
+                    if tail_end > tail_start:
+                        tail_path, tail_reason = _heuristic_zone(
+                            data, tail_start, tail_end, results)
+                        units.append({"trep": f"0x{msg['trep']:02X}",
+                                      "offset": tail_start,
+                                      "length": tail_end - tail_start,
+                                      "path": tail_path, "reason": tail_reason})
+                        if tail_path == "heuristic":
+                            heuristic_units.append(dict(units[-1]))
+                    continue
+                except Exception as clamp_exc:
+                    _log.warning("G1 VU TREP %02X partial read failed at 0x%X: %s",
+                                 msg["trep"], msg["pos"], clamp_exc)
             # Per-TREP rule: the heuristic sees exactly this unit's bytes (marker
             # included, so it can recognise the TREP itself) and nothing else. Its
             # records keep file-global identities (base_offset), so they cannot
@@ -544,6 +618,36 @@ def walk_g1_vu(data, results):
     covered.extend((region["offset"], region["offset"] + region["bytes"])
                    for region in card_regions)
     for (start, end) in _uncovered_ranges(covered, len(data)):
+        # A zone that opens with a TREP marker may be a message the walk could not
+        # bound (cut at the tail). Its complete records are still fixed-size, so they
+        # are read normatively first and only the cut remainder becomes the zone.
+        if end - start > 2 and data[start] == 0x76 and data[start + 1] in _TREP_HANDLERS:
+            trep = data[start + 1]
+            try:
+                from core.decoders.vu_g1 import _complete_prefix_body
+                prefix = _complete_prefix_body(trep, data[start + 2:end])
+            except Exception:                          # the clamp must not break the walk
+                prefix = None
+            if prefix and prefix[1] > 0:
+                clamped, consumed = prefix
+                try:
+                    _decode_clamped(trep, clamped, results, start)
+                    units.append({"trep": f"0x{trep:02X}", "offset": start,
+                                  "length": 2 + consumed, "path": "normative",
+                                  "reason": "complete records before the truncation point"})
+                    remainder_start = start + 2 + consumed
+                    if end > remainder_start:
+                        path, reason = _heuristic_zone(data, remainder_start, end,
+                                                       results)
+                        units.append({"trep": f"0x{trep:02X}",
+                                      "offset": remainder_start,
+                                      "length": end - remainder_start,
+                                      "path": path, "reason": reason})
+                        if path == "heuristic":
+                            heuristic_units.append(dict(units[-1]))
+                    continue
+                except Exception as exc:
+                    _log.warning("G1 VU zone 0x%X: partial read failed: %s", start, exc)
         recovered = False
         before = {key: len(value) for key, value in _result_records(results).items()}
         try:

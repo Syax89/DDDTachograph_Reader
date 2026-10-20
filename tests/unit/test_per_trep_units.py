@@ -13,6 +13,7 @@ import pytest
 from app.engine import TachoParser
 from core.decoders import vu_g1
 from core.registry.registry import DecoderRegistry
+from tests.unit import vu_synthetic as S
 from tests.unit.real_data import real_ddd_files, require_real_file
 from tests.unit.test_g1_vu_semantics import (
     _g1_calibration, _overview_body, _trep03_body, _trep05_body)
@@ -273,3 +274,107 @@ def test_the_decode_units_section_is_rendered_and_translated():
                                 open(path, encoding="utf-8").read(), re.M))
         for label in ("Decode units", "Path"):
             assert label in msgids, (path, label)
+
+
+# ── Normative partial read of a message truncated at its tail ────────────
+
+def _cut_intact_top_level(result, key):
+    return result.get(key) or []
+
+
+def test_a_message_cut_at_its_tail_keeps_its_complete_records(tmp_path):
+    """The last TREP of the real G1 file, cut by 129 bytes.
+
+    Every record before the cut is complete and its size is fixed by Annex 1B, so it is
+    decoded by the same handler with normative provenance; only the cut remainder (the
+    incomplete final record) is a failed range.
+    """
+    path = require_real_file("*_3975E02669.ddd")
+    with open(path, "rb") as handle:
+        raw = handle.read()
+    intact = _parse(tmp_path, "intact_speed.ddd", raw)
+    cut = _parse(tmp_path, "cut_speed.ddd", raw[:-129])
+
+    units = _units(cut)
+    _coverage_ok(units, len(raw) - 129)
+    # the last message is split: a normative part and a small failed remainder
+    last_normative = [unit for unit in units
+                      if unit["trep"] == "0x04" and unit["path"] == "normative"]
+    tail = [unit for unit in units if unit["path"] != "normative"]
+    assert last_normative, units[-3:]
+    assert len(tail) == 1, tail
+    assert tail[0]["length"] < 200, tail[0]
+    assert "truncation" in (last_normative[-1].get("reason") or "")
+    # the records before the cut are the intact file's, record by record
+    intact_blocks = intact.get("speed_blocks") or []
+    cut_blocks = cut.get("speed_blocks") or []
+    assert cut_blocks, "the complete blocks before the cut must be published"
+    assert len(cut_blocks) <= len(intact_blocks)
+    by_begin = {run.get("timestamp"): run for run in intact_blocks}
+    compared = 0
+    for mine in cut_blocks:
+        reference = by_begin.get(mine.get("timestamp"))
+        if reference is None:
+            continue
+        assert mine.get("max_speed_kmh") == reference.get("max_speed_kmh")
+        assert (mine.get("_chart_speeds_kmh") or [])[:10] == (
+            reference.get("_chart_speeds_kmh") or [])[:10]
+        compared += 1
+    assert compared, "no block of the cut file matched the intact one"
+    # the file is still partial, with the reason unchanged in meaning
+    assert (cut["metadata"].get("trep_report") or {}).get("is_partial") is True
+
+
+def test_a_generation_1_message_cut_on_a_record_boundary(tmp_path):
+    overview, _events, _technical = _three_message_stream()
+    # cut the final signature off exactly: the body is complete -> still normative
+    data = overview[:-128]
+    result = _parse(tmp_path, "boundary.ddd", data)
+    units = _units(result)
+    _coverage_ok(units, len(data))
+    assert units[0]["path"] == "normative"
+
+
+def test_a_generation_1_message_cut_inside_a_record(tmp_path):
+    """A TREP 04 cut mid-record publishes only the complete blocks."""
+    blocks = [struct.pack(">I", S.BASE_TIME + 60 * i) + bytes([10 + i] * 60)
+              for i in range(3)]
+    body = struct.pack(">H", 3) + b"".join(blocks)
+    stream = b"\x76\x04" + body[:-30] + SIGNATURE
+    result = _parse(tmp_path, "midrecord.ddd", stream)
+    units = _units(result)
+    _coverage_ok(units, len(stream))
+    normative = [unit for unit in units if unit["path"] == "normative"]
+    assert normative and normative[0]["trep"] == "0x04"
+    # two complete blocks fit in body[:-30]
+    samples = sum(len(run.get("_chart_speeds_kmh") or [])
+                  for run in (result.get("speed_blocks") or []))
+    assert samples >= 120, samples
+    assert any(unit["path"] != "normative" for unit in units)
+
+
+def test_a_generation_1_message_cut_inside_its_header_stays_unreadable(tmp_path):
+    stream = b"\x76\x04" + b"\x00\x03" + SIGNATURE[:10]
+    result = _parse(tmp_path, "header.ddd", stream)
+    units = _units(result)
+    _coverage_ok(units, len(stream))
+    assert all(unit["path"] != "normative" or unit["trep"] != "0x04"
+               for unit in units), units
+    assert not (result.get("speed_blocks") or [])
+
+
+def test_a_generation_2_array_truncated_at_its_tail_keeps_complete_records(tmp_path):
+    from tests.unit import vu_synthetic as S
+    records = [struct.pack(">I", S.BASE_TIME + 60 * i) + bytes([20 + i] * 60)
+               for i in range(3)]
+    array = (bytes([0x12]) + struct.pack(">HH", 64, 3) + b"".join(records))
+    stream = S.section(0x24, array,
+                       S.signature_record())[:-30]
+    result = _parse(tmp_path, "g2tail.ddd", stream)
+    units = _units(result)
+    _coverage_ok(units, len(stream))
+    assert result["metadata"]["vu_units_cover_file"] is True
+    # the complete blocks of the cut array are published
+    samples = sum(len(run.get("_chart_speeds_kmh") or [])
+                  for run in (result.get("speed_blocks") or []))
+    assert samples >= 120, samples
