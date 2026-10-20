@@ -103,6 +103,87 @@ RECORD_TYPES = {
 NORMATIVE_RECORD_TYPES = frozenset(range(0x01, 0x25))
 
 
+#: RecordArray order per generation-2 transfer, read from Appendix 7 of
+#: Reg. (EU) 2021/1228 (the amending act prints the tables as *text*):
+#:
+#:   DDP_029  Overview        TREP 21 / 31
+#:   DDP_030  Activities      TREP 22 / 32
+#:   DDP_031  Events&Faults   TREP 23 / 33
+#:   DDP_032  Detailed speed  TREP 24
+#:   DDP_033  Technical data  TREP 25 / 35
+#:
+#: Each slot lists the record types the source allows there. The only
+#: multi-valued slot is the vehicle registration of the Overview: DDP_029 names
+#: ``VehicleRegistrationNumberRecordArray`` for TREP 31 while the Appendix 1
+#: data dictionary (and every observed download) uses
+#: ``VehicleRegistrationIdentification`` (0x24, 15 bytes). The conflict is
+#: carried here instead of being resolved by preference.
+#:
+#: A header with ``noOfRecords = 0`` is *normative* for an empty array ("If the
+#: section is empty, an array header with noOfRecords = 0 is sent"), so a
+#: zero-record array is reported, never treated as a defect.
+TREP_ARRAY_SCHEMA = {
+    0x21: ((0x04,), (0x0F,), (0x0A,), (0x0B, 0x24), (0x03,), (0x13,), (0x02,),
+           (0x14,), (0x10,), (0x11,), (0x08,)),
+    0x31: ((0x04,), (0x0F,), (0x0A,), (0x0B, 0x24), (0x03,), (0x13,), (0x02,),
+           (0x14,), (0x10,), (0x11,), (0x08,)),
+    0x22: ((0x06,), (0x05,), (0x0D,), (0x01,), (0x1C,), (0x16,), (0x09,),
+           (0x08,)),
+    0x32: ((0x06,), (0x05,), (0x0D,), (0x01,), (0x1C,), (0x16,), (0x09,),
+           (0x22,), (0x23,), (0x08,)),
+    0x23: ((0x18,), (0x15,), (0x1A,), (0x1B,), (0x1E,), (0x08,)),
+    0x33: ((0x18,), (0x15,), (0x1A,), (0x1B,), (0x1E,), (0x08,)),
+    0x24: ((0x12,), (0x08,)),
+    0x25: ((0x19,), (0x20,), (0x21,), (0x0C,), (0x0E,), (0x17,), (0x1F,),
+           (0x08,)),
+    0x35: ((0x19,), (0x20,), (0x21,), (0x0C,), (0x0E,), (0x17,), (0x1F,),
+           (0x08,)),
+}
+
+
+def validate_section_schema(trep, observed):
+    """Check one section against the Appendix-7 array order of *trep*.
+
+    *observed* is a sequence of ``(record_type, no_of_records)`` in file order.
+    The result is descriptive: ``status`` is ``complete`` only when every
+    prescribed array is present, in order; ``incomplete`` lists the arrays the
+    source requires but the section does not carry; ``out_of_order`` and
+    ``unexpected_arrays`` are reported separately. Nothing here suppresses a
+    record — the section has already been decoded by the time this runs.
+    """
+    schema = TREP_ARRAY_SCHEMA.get(trep)
+    if schema is None:
+        return {"status": "not applicable (no RecordArray list in Appendix 7)",
+                "missing_arrays": [], "out_of_order": [], "unexpected_arrays": [],
+                "zero_record_arrays": []}
+    types = [rt for rt, _nr in observed]
+    position = 0
+    missing, out_of_order = [], []
+    seen = set()
+    for slot in schema:
+        for rt in slot:
+            if rt in types:
+                seen.add(rt)
+        match = next((rt for rt in slot if rt in types), None)
+        if match is None:
+            missing.append(f"0x{slot[0]:02X}")
+            continue
+        idx = types.index(match)
+        if idx < position:
+            out_of_order.append(f"0x{match:02X}")
+        else:
+            position = idx
+    allowed = {rt for slot in schema for rt in slot}
+    unexpected = [f"0x{rt:02X}" for rt in types if rt not in allowed]
+    return {
+        "status": "complete" if not missing and not out_of_order else "incomplete",
+        "missing_arrays": missing,
+        "out_of_order": out_of_order,
+        "unexpected_arrays": unexpected,
+        "zero_record_arrays": [f"0x{rt:02X}" for rt, nr in observed if nr == 0],
+    }
+
+
 def is_normative_record_type(record_type: int) -> bool:
     """True when ``record_type`` is one defined by the Annex 1C enumeration."""
     return record_type in NORMATIVE_RECORD_TYPES
@@ -200,6 +281,7 @@ TREP_SECTIONS = {
 # assignment. No erratum was established, so the bytes are published raw with
 # both readings recorded and the conflict stated, never re-coded to one of them.
 TREP_DOWNLOAD_INTERFACE = 0x00
+TREP_CARD_DOWNLOAD = 0x06
 INTERFACE_VERSION_SIZE = 2
 INTERFACE_GENERATION_CODES = {0x00: "not used",
                               0x01: "Generation 2 vehicle unit"}
@@ -1539,6 +1621,30 @@ def decode_vu_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
     return _decode_record(record_type, rec, version, trep=trep)
 
 
+def _stap_extent(data, start):
+    """Walk one embedded card EF stream (STAP framing) and return its end.
+
+    A card download inside a VU stream is a card EF image, not a RecordArray
+    list: its elements are ``tag(2 BE) + dtype(1) + length(2 BE) + value`` (the
+    same STAP framing :mod:`core.parser.deterministic` recognises). The extent is
+    therefore *derived from the framing*, one element at a time — not guessed by
+    scanning for a marker. Returns ``(end, element_count)``; ``end == start``
+    when the first bytes are not a STAP element.
+    """
+    pos = start
+    count = 0
+    n = len(data)
+    while pos + 5 <= n:
+        tag, dtype, length = struct.unpack(">HBH", data[pos:pos + 5])
+        if tag in (0x0000, 0xFFFF, 0x5555) or dtype > 0x0F:
+            break
+        if length > RECORD_ARRAY_MAX_SIZE or pos + 5 + length > n:
+            break
+        pos += 5 + length
+        count += 1
+    return pos, count
+
+
 def iter_vu_sections(data, state=None):
     """Yield sections from a VU RecordArray stream as {marker, trep, records: [(pos, rt, rs, nr, end), ...]}.
 
@@ -1567,6 +1673,27 @@ def iter_vu_sections(data, state=None):
                 yield cur
                 cur = None
             trep = data[pos + 1]
+            if trep == TREP_CARD_DOWNLOAD:
+                # TREP 06 is a card EF image (all generations: DDP_029..035 keep
+                # 06 for card download). Its length has no header, so it is
+                # bounded by walking the card's own STAP framing. Only when that
+                # walk yields nothing does the section fall back to the next
+                # section marker, and the fallback is recorded as such.
+                end, count = _stap_extent(data, pos + 2)
+                tlv_complete = count > 0 and (
+                    end == n or (data[end] == 0x76 and end + 1 < n))
+                if not tlv_complete:
+                    end = pos + 2
+                    while end + 1 < n and not (data[end] == 0x76
+                                               and data[end + 1] in trep_bytes):
+                        end += 1
+                yield {"marker": pos, "trep": trep, "records": [],
+                       "card_tlv": {"offset": pos + 2, "bytes": end - (pos + 2),
+                                    "tlvs": count, "tlv_complete": tlv_complete,
+                                    "boundary": ("STAP/EF framing" if tlv_complete
+                                                 else "resynchronised to next section marker")}}
+                pos = end
+                continue
             if trep == TREP_DOWNLOAD_INTERFACE:
                 # DDP_028a: SID + TREP 00 + DownloadInterfaceVersion, which point
                 # 2.60a defines as exactly two octets ('aabb'H). There are no
@@ -1647,6 +1774,7 @@ def walk_vu_record_arrays(data, results):
     # out" and must not re-scan the same bytes on top of them.
     results["vu_record_arrays"] = sections
     results["_vu_walk_complete"] = False
+    schema_reports = []
 
     for sec in iter_vu_sections(data, state):
         # The section fixes the EventFaultType assignment (DDP_011), each one
@@ -1656,6 +1784,16 @@ def walk_vu_record_arrays(data, results):
         section_version = event_fault_version_for_trep(sec["trep"])
         if sec["trep"] == TREP_DOWNLOAD_INTERFACE:
             _emit_interface_version(sec.get("interface") or b"", results)
+        if sec.get("card_tlv"):
+            # Card-download payload: bounded by its own STAP framing, reported,
+            # and handed to the existing card EF/TLV decoder over exactly that
+            # byte range. A card EF is never read as a RecordArray here.
+            info = dict(sec["card_tlv"])
+            start = info["offset"]
+            chunk = data[start:start + info["bytes"]]
+            info["delegated"] = _delegate_card_download(chunk, results)
+            results.setdefault("metadata", {}).setdefault(
+                "vu_card_download_sections", []).append(info)
         current = {"trep": sec["trep"], "name": TREP_SECTIONS.get(sec["trep"], f"TREP_0x{sec['trep']:02X}"),
                    "records": {}}
         for (pos, rt, rs, nr, _end) in sec["records"]:
@@ -1678,6 +1816,19 @@ def walk_vu_record_arrays(data, results):
                 rpos += rs
                 total_records += 1
         _emit_section(current, results)
+        # Appendix-7 schema check (DDP_029..DDP_033): the prescribed arrays must
+        # be present and in order. The report is descriptive — the records above
+        # are already decoded, and a defect here is a structural observation, not
+        # a recovery route, so it never sets ``metadata.heuristic_fields``.
+        schema_report = validate_section_schema(
+            sec["trep"], [(rt, nr) for (_p, rt, _rs, nr, _e) in sec["records"]])
+        schema_report["trep"] = f"0x{sec['trep']:02X}"
+        schema_reports.append(schema_report)
+        if schema_report["status"] == "incomplete":
+            _log.warning(
+                "VU section 0x%02X does not match Appendix 7: missing %s, "
+                "out of order %s", sec["trep"], schema_report["missing_arrays"],
+                schema_report["out_of_order"])
         # Only once its records reached the results: a failure while emitting a
         # section must not announce a section the user never got.
         sections.append({
@@ -1688,17 +1839,40 @@ def walk_vu_record_arrays(data, results):
         if capped:
             break
 
-    results["_vu_walk_complete"] = not capped and not state.get("truncated", False)
+    if schema_reports:
+        results.setdefault("metadata", {})["vu_section_schema"] = schema_reports
+    results["_vu_walk_complete"] = (not capped
+                                   and not state.get("truncated", False)
+                                   and not state.get("trailing_bytes"))
     if state.get("trailing_bytes"):
-        # Bytes that fit no header and start no section: carried in metadata so
-        # a remainder is never silently absorbed by the walk.
-        results.setdefault("metadata", {})["vu_walk_trailing_bytes"] = int(
+        # Bytes after the last complete RecordArray: carried in metadata so a
+        # remainder is never silently absorbed by the walk, and fatal to the
+        # completeness claim — a cut signature record looks exactly like this.
+        results.setdefault("metadata", {})["vu_walk_truncated_bytes"] = int(
             state["trailing_bytes"])
     if capped:
         results["_vu_walk_record_cap"] = VU_MAX_TOTAL_RECORDS
     if unmapped:
         results["vu_unmapped_record_types"] = sorted(f"0x{rt:02X}" for rt in unmapped)
     return sections
+
+
+def _delegate_card_download(chunk, results):
+    """Run the card EF/TLV decoder over one bounded card-download region.
+
+    Reuses the generation-1 embedded-image helper (itself a call into
+    :class:`core.parser.deterministic.DeterministicParser` with ``is_vu=False``)
+    so a mixed VU/card stream decodes card EFs through their registered
+    decoders instead of scanning bytes. Returns True when the delegation ran.
+    """
+    if not chunk:
+        return False
+    try:
+        from core.decoders.vu_g1 import _decode_embedded_card_image
+    except ImportError:                                  # pragma: no cover
+        return False
+    _decode_embedded_card_image(bytes(chunk), results)
+    return True
 
 
 def _count_decode_path(results, key, normative):

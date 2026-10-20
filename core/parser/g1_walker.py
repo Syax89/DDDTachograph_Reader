@@ -347,12 +347,19 @@ def walk_g1_vu(data, results):
     """
     data = bytes(data)
     messages = list(iter_g1_vu_messages(data))
-    # Complete when the last message ends exactly at EOF, or when only a
-    # marker-less trailing pad/trailer remains after it (a stray byte must not
-    # report a well-formed download as partial).
-    complete = bool(messages) and (
-        messages[-1]["end"] == len(data) or not _marker_in(data, messages[-1]["end"])
-    )
+    trailing = len(data) - messages[-1]["end"] if messages else 0
+    signature_bytes = sum(m["sig_len"] for m in messages)
+    # Complete when the walk consumed every byte, or when the only remainder is
+    # padding: a run of 0x00/0xFF fill or a bare marker prefix that no message
+    # can start. A remainder that is neither is a *truncated* signature block
+    # (a cut RSA signature leaves 1..127 arbitrary bytes after the body) and must
+    # not let the download claim a complete walk.
+    pad = data[messages[-1]["end"]:] if messages else b""
+    padding_only = (not pad) or all(b in (0x00, 0xFF) for b in pad) or pad == b"\x76"
+    complete = bool(messages) and not _marker_in(data, messages[-1]["end"]) and padding_only
+    results["_g1_walk_signature_bytes"] = signature_bytes
+    if trailing:
+        results["_g1_walk_trailing_bytes"] = trailing
 
     def _dispatch_trep02(body, res):
         # The walk yields exact bodies, so try the deterministic layout first:
