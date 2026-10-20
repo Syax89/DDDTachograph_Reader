@@ -12,7 +12,7 @@ from core.decoders.cert import parse_g1_certificate
 from core.utils.event_codes import (
     EVENT_FAULT_VERSION_G1, control_type_bits, describe_calibration_purpose,
     describe_control_type, describe_event, describe_event_fault_type,
-    describe_fault, describe_record_purpose, event_fault_type_status,
+    describe_record_purpose, event_fault_type_status,
     specific_condition_label)
 
 _log = get_logger(__name__)
