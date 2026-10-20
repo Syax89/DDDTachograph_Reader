@@ -20,6 +20,7 @@ Every value below is synthetic.
 """
 import struct
 
+from core.parser import vu_dispatcher
 from core.parser.vu_dispatcher import (
     TREP_ARRAY_SCHEMA, iter_vu_sections, validate_section_schema,
     walk_vu_record_arrays)
@@ -214,3 +215,27 @@ def _g1_technical_body():
             + b"APPROVAL" + S.extended_serial(0x0000A002)
             + b"SENSORAP" + struct.pack(">I", TIME + 60))
     return body + b"\x00"
+
+
+# ── Raw preservation and certificate bodies ────────────────────────────────
+
+def test_unknown_record_keeps_every_byte_not_a_48_byte_prefix():
+    record = bytes(range(0x40, 0x40 + 80))         # 80-byte unknown body
+    out = vu_dispatcher.decode_vu_record(0x5A, record)
+    assert out["raw_hex"] == record.hex()
+    assert len(out["raw_hex"]) == 160
+
+
+def test_certificate_record_uses_the_existing_cvc_parser():
+    """Structure comes from the CVC layer; trust stays a separate verdict."""
+    from core.crypto.vu_signature import parse_cvc
+    cert = bytes.fromhex(
+        "7f2181a5020101020101020104020104" + "00" * 4)   # header-only fixture
+    out = vu_dispatcher.decode_vu_record(0x0F, cert)
+    if parse_cvc(cert) is None:
+        # A body the CVC layer cannot recognise stays raw and says so.
+        assert out["raw_hex"] == cert.hex()
+        assert out["parse_status"].startswith("unrecognised")
+    else:
+        assert out["confidence"] == "high"
+        assert "public_point" not in out

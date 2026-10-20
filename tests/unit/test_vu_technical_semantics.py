@@ -38,7 +38,6 @@ def test_extended_serial_number_decodes_every_subfield():
     raw = S.extended_serial(0x0102A3B4, year_suffix=24, month=11,
                             equipment_type=0x81, manufacturer=0xA2)
     out = decode_extended_serial_number(raw, 0)
-    assert out["raw_hex"] == raw.hex()
     assert out["serial_number"] == 0x0102A3B4
     assert out["month"] == 11
     # §2.56 assigns only the two *last* digits of the year: no century is
@@ -114,7 +113,8 @@ def test_seal_record_keeps_equipment_type_and_full_raw():
     assert out[0]["equipment_type"] == 0x03
     assert out[0]["manufacturer_code"] == "9X"
     assert out[0]["seal_identifier"] == "SEAL0001"
-    assert out[0]["raw_hex"] == seal.hex()
+    # The ten identifier bytes stay available as their hex form.
+    assert out[0]["extended_seal_identifier"] == seal[1:].hex()
 
 
 # ── VuCalibrationRecord variants ────────────────────────────────────────────

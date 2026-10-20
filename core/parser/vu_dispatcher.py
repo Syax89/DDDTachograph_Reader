@@ -440,7 +440,6 @@ def decode_extended_serial_number(data, off):
     month = _bcd_byte(raw[4])
     year_suffix = _bcd_byte(raw[5])
     out = {
-        "raw_hex": raw.hex(),
         "serial_number": int.from_bytes(raw[0:4], "big"),
         "month_year_bcd": raw[4:6].hex(),
         "month": month,
@@ -475,7 +474,6 @@ def decode_extended_seal_identifier(data):
     seal = _ascii(raw, EXTENDED_SEAL_MANUFACTURER_LEN,
                   EXTENDED_SEAL_IDENTIFIER_SIZE - EXTENDED_SEAL_MANUFACTURER_LEN)
     return {
-        "raw_hex": raw.hex(),
         "manufacturer_code": manufacturer,
         "seal_identifier": seal,
         "record_complete": True,
@@ -492,10 +490,11 @@ def _decode_seal_data(data):
         seal = decode_extended_seal_identifier(rec[1:])
         records.append({
             "equipment_type": rec[0],
+            # The ten identifier bytes stay available as hex (the pre-existing
+            # key) next to the two IA5String fields they carry.
             "extended_seal_identifier": rec[1:].hex(),
             "manufacturer_code": seal.get("manufacturer_code"),
             "seal_identifier": seal.get("seal_identifier"),
-            "raw_hex": bytes(rec).hex(),
         })
     return records
 
@@ -620,12 +619,11 @@ def decode_calibration(rec, generation=None):
     out.update(_decode_calibration_extension(rec))
     # Every byte the normative structure does not cover is preserved verbatim:
     # nothing past 167/222/252 bytes is interpreted.
-    if len(rec) > CALIBRATION_G22_SIZE:
-        interpreted = CALIBRATION_G22_SIZE
-    elif len(rec) >= CALIBRATION_G2_SIZE:
+    interpreted = CALIBRATION_BASE_SIZE
+    if len(rec) >= CALIBRATION_G2_SIZE:
         interpreted = CALIBRATION_G2_SIZE
-    else:
-        interpreted = CALIBRATION_BASE_SIZE
+    if len(rec) >= CALIBRATION_G22_SIZE:
+        interpreted = CALIBRATION_G22_SIZE
     out["raw_tail_bytes"] = len(rec) - interpreted
     out["raw_tail_hex"] = rec[interpreted:].hex()
     return out
@@ -1444,7 +1442,7 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         if decoded:
             out.update(decoded)
         else:
-            out["raw_hex"] = rec[:48].hex()
+            out["raw_hex"] = rec.hex()
         return out
     if record_type == 0x16:
         decoded = decode_gnss_ad(rec, with_auth=section_uses_auth_place(trep))
@@ -1454,7 +1452,7 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
                                      if trep is not None
                                      else "record length (no section context)")
         else:
-            out["raw_hex"] = rec[:48].hex()
+            out["raw_hex"] = rec.hex()
         return out
     if record_type == 0x09:
         generation = section_generation(trep)
@@ -1463,7 +1461,7 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         if decoded:
             out.update(decoded)
         else:
-            out["raw_hex"] = rec[:48].hex()
+            out["raw_hex"] = rec.hex()
         return out
 
     if record_type == 0x0C:
@@ -1472,7 +1470,7 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
             out.update(decoded)
             out["confidence"] = decoded["confidence"]
         else:
-            out["raw_hex"] = rec[:48].hex()
+            out["raw_hex"] = rec.hex()
         return out
 
     if record_type in (0x1B, 0x1F):
@@ -1482,7 +1480,7 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         if decoded:
             out.update(decoded)
         else:
-            out["raw_hex"] = rec[:48].hex()
+            out["raw_hex"] = rec.hex()
         return out
 
     if record_type in _RECORD_DECODERS:
@@ -1490,7 +1488,7 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         if decoded:
             out.update(decoded)
         else:
-            out["raw_hex"] = rec[:48].hex()
+            out["raw_hex"] = rec.hex()
         return out
     if record_type == 0x01 and len(rec) >= 2:
         activity = decoders.decode_activity_val(struct.unpack(">H", rec[0:2])[0])
@@ -1524,7 +1522,7 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         if decoded:
             out.update(decoded)
         else:
-            out["raw_hex"] = rec[:48].hex()
+            out["raw_hex"] = rec.hex()
         return out
     if record_type == 0x24 and len(rec) >= 15:
         # VehicleRegistrationIdentification (15): nation(1) +
@@ -1595,14 +1593,30 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         out["type"] = "ECC signature"
         return out
     if record_type in (0x04, 0x0F):
-        # Certificate — kept raw here; structured parsing belongs to the
-        # certificate/signature layer (signature_validator).
+        # Certificate body. The *structure* is decoded with the existing CVC
+        # parser (core.crypto.vu_signature), whose fields are the Appendix-11
+        # ones; trust (signature validity, ERCA anchoring, temporal validity) is
+        # a separate verdict produced by the crypto layer and is NOT claimed
+        # here. The raw bytes stay available.
         out["confidence"] = "medium"
-        out["type"] = "certificate (raw)"
+        out["type"] = "certificate"
+        try:
+            from core.crypto.vu_signature import parse_cvc
+            parsed = parse_cvc(rec)
+        except Exception:                                # parser must not break the walk
+            parsed = None
+        if parsed:
+            out.update({k: v for k, v in parsed.items() if k != "public_point"})
+            out["confidence"] = "high"
+        else:
+            out["raw_hex"] = rec.hex()
+            out["parse_status"] = "unrecognised CVC body (kept raw)"
         return out
 
     # Unconfirmed: surface raw bytes (truncated) instead of inventing values.
-    out["raw_hex"] = rec[:48].hex() + ("..." if len(rec) > 48 else "")
+    # Unknown record: every byte is preserved verbatim (never a prefix). The
+    # key is hidden from tables/exports, so this costs nothing on screen.
+    out["raw_hex"] = rec.hex()
     return out
 
 

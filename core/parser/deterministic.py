@@ -433,6 +433,30 @@ class DeterministicParser:
             marker_pos = sec["marker"]
             sec_key = f"76{trep:02X}_VU_{sec_name}"
             self.coverage.mark_classified(marker_pos, marker_pos + 2, f"Tag_76{trep:02X}")
+            # TREP 00 (DDP_028a) carries the two DownloadInterfaceVersion octets
+            # and no RecordArray at all: its body is covered by the transfer
+            # definition, not by a record walk.
+            body = sec.get("interface") or b""
+            if body:
+                self.coverage.mark_classified(
+                    marker_pos + 2, marker_pos + 2 + len(body),
+                    f"Tag_76{trep:02X} > DownloadInterfaceVersion")
+            card = sec.get("card_tlv") or {}
+            if card:
+                # A card-download region is an EF image: covered as one bounded
+                # region whose extent came from the card's own STAP framing.
+                start = card["offset"]
+                self.coverage.mark_classified(
+                    start, start + card["bytes"], f"Tag_76{trep:02X} > CardDownload")
+                self.results["raw_tags"].setdefault(sec_key, []).append({
+                    "offset": f"0x{start:08X}", "tag_id": "0x7606",
+                    "tag_name": "CardDownload_EFImage",
+                    "data_type": "CardEF", "length": card["bytes"], "depth": 1,
+                    "is_spec_verified": bool(card.get("tlv_complete")),
+                    "annex_ref": "Annex 1B 2.2.6.6 / Appendix 7",
+                    "generation": self.generation,
+                    "data_hex": data[start:start + card["bytes"]].hex(),
+                })
             self.results.setdefault("raw_tags", {}).setdefault(sec_key, []).append({
                 "offset": f"0x{marker_pos:08X}", "tag_id": f"0x76{trep:02X}",
                 "tag_name": f"VU_{sec_name}", "data_type": "SID/TREP",
