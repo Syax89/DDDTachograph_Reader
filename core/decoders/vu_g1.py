@@ -24,6 +24,18 @@ def _mark_heuristic(results, section, fields):
     mark_heuristic(results, section, fields)
 
 
+def _mark_heuristic_sections(results):
+    """Name the sections a per-TREP heuristic touched, in the existing shape.
+
+    The report already carries ``metadata.heuristic_fields`` (section -> field list);
+    a unit decoded by the backup route adds itself there, so the window keeps telling
+    the user which sections are low confidence exactly as the whole-file scan did.
+    """
+    from core.decoders.common import mark_heuristic
+    for unit in (results.get("metadata") or {}).get("vu_heuristic_units") or []:
+        mark_heuristic(results, f"vu_trep{unit['trep'][2:].upper()}", ["records"])
+
+
 def _body_identity(data, message_offset=None):
     """Identity of the message body a record came from.
 
@@ -452,7 +464,7 @@ def parse_g1_vu_overview(val, results, message_offset=None):
     except (ValueError, TypeError, IndexError) as exc:
         _log.debug("VU overview heuristic parse failed: %s", exc)
 
-def parse_vu_download_messages(raw_data, results):
+def parse_vu_download_messages(raw_data, results, base_offset=0):
     """Parse VU download messages (SID 0x76 + TREP) in the raw binary data.
     
     Message types (TREP), Annex 1B §2.2.6:
@@ -462,6 +474,11 @@ def parse_vu_download_messages(raw_data, results):
       0x04 = Detailed speed data
       0x05 = Technical data (calibrations)
       0x06 = Card download
+
+    ``base_offset`` is the position of ``raw_data[0]`` in the file. It is the
+    identity namespace of every record the scan finds, so the scan may be handed one
+    failed byte range (the per-TREP rule) while its records keep file-global identities
+    and still collide with anything the deterministic walk already published.
 
     Runs only when the deterministic walk could not validate the whole stream.
     Each message is handed its own bounded slice of the buffer at most once;
@@ -505,7 +522,7 @@ def parse_vu_download_messages(raw_data, results):
             # two byte-identical messages are two records.
             # The walk names a record by the *marker* offset (`msg["pos"]`), so the
             # scan uses the same value, not the body start.
-            identity = msg_offset
+            identity = base_offset + msg_offset
             if trep == 0x01:
                 parse_g1_vu_overview(data, results, message_offset=identity)
             elif trep == 0x02:

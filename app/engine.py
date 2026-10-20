@@ -526,7 +526,31 @@ class TachoParser:
                 # it would only add low-confidence duplicates on top. The walk
                 # reports the download as partial (and metadata.vu_integrity says
                 # why), exactly like the Gen2 path.
-                if self.results.get("_g1_walk_decoded_all"):
+                # The primary cause: a stream that does not even open with a known
+                # TREP marker is misplaced/unknown; a known marker whose declared
+                # body does not fit the bytes is a truncated file; a walker that
+                # raised is our defect.
+                from core.parser.g1_walker import TREP_NAMES
+                head = self.raw_data[:2]
+                if walk_raised:
+                    cause = "normative_decoder_exception"
+                elif len(head) < 2 or head[0] != 0x76 or head[1] not in TREP_NAMES:
+                    cause = "unknown_or_misplaced_section"
+                else:
+                    cause = "file_truncated"
+                if (self.results.get("metadata") or {}).get("vu_units"):
+                    # Per-TREP rule: the walk already ran the heuristic on each
+                    # failed unit's own byte range, so the whole-file scan would
+                    # re-read bytes the normative walk vouched for. The failure is
+                    # still declared (the reason above) and the affected sections
+                    # keep their heuristic marking.
+                    self._record_fallback_reason(
+                        "vu_fallback_scan", cause,
+                        trep=(f"0x{(_messages or [{}])[-1].get('trep', 0):02X}"
+                              if _messages else None),
+                        detail=reason)
+                    self._declare_vu_fallback(reason, walker_wrote=True)
+                elif self.results.get("_g1_walk_decoded_all"):
                     logger.warning(
                         "VU download incomplete: %s",
                         "signature block shorter than the normative length"
@@ -542,16 +566,8 @@ class TachoParser:
                     # The primary cause: a stream that does not even open with a
                     # known TREP marker is misplaced/unknown; a known marker whose
                     # declared body does not fit the bytes is a truncated file.
-                    from core.parser.g1_walker import TREP_NAMES
-                    head = self.raw_data[:2]
-                    if walk_raised:
-                        # The walker raised: that is OUR defect, not a damaged
-                        # file. The completeness flags must never relabel it.
-                        cause = "normative_decoder_exception"
-                    elif len(head) < 2 or head[0] != 0x76 or head[1] not in TREP_NAMES:
-                        cause = "unknown_or_misplaced_section"
-                    else:
-                        cause = "file_truncated"
+                    # The cause was determined above; the walker's exception, when
+                    # there was one, already kept its honest classification.
                     self._record_fallback_reason(
                         "vu_fallback_scan", cause,
                         trep=(f"0x{(_messages or [{}])[-1].get('trep', 0):02X}"

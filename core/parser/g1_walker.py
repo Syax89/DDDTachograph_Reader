@@ -36,6 +36,7 @@ import struct
 from core.utils.logger import get_logger
 from core.parser.card_envelope import card_image_extent
 from core.decoders.vu_g1 import (
+    _mark_heuristic_sections,
     parse_g1_vu_overview,
     _parse_trep_02_activities,
     _parse_trep_02_g1_structured,
@@ -445,8 +446,12 @@ def walk_g1_vu(data, results):
     }
     dispatch_failed = False
     card_regions = []
+    heuristic_units = []
+    units = []
     for msg in messages:
         body = data[msg["body_start"]:msg["body_end"]]
+        units.append({"trep": f"0x{msg['trep']:02X}", "offset": msg["pos"],
+                      "length": msg["end"] - msg["pos"], "path": "normative"})
         if msg.get("card_region_incomplete"):
             card_regions.append({
                 "offset": msg["body_start"],
@@ -479,16 +484,47 @@ def walk_g1_vu(data, results):
             continue
         try:
             if msg["trep"] in (0x01, 0x02, 0x03, 0x05):
-                handler(body, results, message_offset=msg["pos"])
+                outcome = handler(body, results, message_offset=msg["pos"])
             else:
-                handler(body, results)
+                outcome = handler(body, results)
+            if outcome is False:
+                # A structured parser that *reports* a structural failure is a
+                # failed unit just like one that raises: the heuristic gets its
+                # byte range, and the record count cannot silently shrink.
+                raise ValueError("structural validation failed")
         except Exception as exc:  # a decoder bug must not break the walk
             dispatch_failed = True
             # WARNING, not DEBUG: this is a swallowed decode error whose only
             # other trace is the fallback the caller now declares.
             _log.warning("G1 VU TREP %02X dispatch failed at 0x%X: %s",
                          msg["trep"], msg["pos"], exc)
+            # Per-TREP rule: the heuristic sees exactly this unit's bytes (marker
+            # included, so it can recognise the TREP itself) and nothing else. Its
+            # records keep file-global identities (base_offset), so they cannot
+            # collide with — or duplicate — anything the walk published.
+            recovered = False
+            try:
+                from core.decoders.vu_g1 import parse_vu_download_messages
+                parse_vu_download_messages(
+                    data[msg["pos"]:msg["end"]], results,
+                    base_offset=msg["pos"])
+                recovered = True
+            except Exception as scan_exc:      # the scan is the last resort
+                _log.warning("G1 VU TREP %02X heuristic failed at 0x%X: %s",
+                             msg["trep"], msg["pos"], scan_exc)
+            path = "heuristic" if recovered else "unreadable"
+            units[-1]["path"] = path
+            heuristic_units.append(dict(units[-1]))
 
+    if units:
+        # Per-unit provenance: what was decoded normatively, what needed the
+        # heuristic on its own byte range, and what stayed unreadable.
+        results.setdefault("metadata", {})["vu_units"] = units
+    if heuristic_units:
+        results["metadata"]["vu_heuristic_units"] = heuristic_units
+        # A unit decoded by the backup route is marked exactly like before: the
+        # section names the heuristic touched.
+        _mark_heuristic_sections(results)
     if integrity:
         # Model-only: which section's byte run does not match the normative
         # length, and by how much (a short signature block, trailing junk, a card

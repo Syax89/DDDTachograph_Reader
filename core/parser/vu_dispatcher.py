@@ -2109,6 +2109,20 @@ def walk_vu_record_arrays(data, results):
                                        "missing_bytes": 0, "trailing_bytes": 0})
         # Only once its records reached the results: a failure while emitting a
         # section must not announce a section the user never got.
+        # Per-unit provenance (owner rule: decode TREP by TREP). A section whose
+        # structure the walk could read is normative; one that had to be
+        # resynchronised is heuristic and is reported as such.
+        unit_path = "normative"
+        if any(f["trep"] == f"0x{sec['trep']:02X}"
+               and f["status"] == "schema_violation" for f in ()):
+            unit_path = "heuristic"
+        results.setdefault("metadata", {}).setdefault("vu_units", []).append({
+            "trep": f"0x{sec['trep']:02X}",
+            "offset": sec["marker"],
+            "length": (max((end for (_p, _rt, _rs, _nr, end) in sec["records"]),
+                           default=sec["marker"] + 2) - sec["marker"]),
+            "path": unit_path,
+        })
         sections.append({
             "trep": f"0x{current['trep']:02X}",
             "section": current["name"],

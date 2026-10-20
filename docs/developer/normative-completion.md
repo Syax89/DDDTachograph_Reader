@@ -632,3 +632,15 @@ information:
   bytes are preserved — information, not a defect. The note never softens a real
   warning elsewhere, and a file with these sections is not partial, declares no
   fallback and sets no heuristic field.
+
+### 15.4 Decode TREP by TREP
+
+Every TREP is decoded by the normative decoder first. When a unit fails (its handler
+raises or reports a structural failure) the heuristic runs **on that unit's byte range
+only** and the next TREP resumes normatively from the verified marker; the scan is
+handed the slice plus its file offset, so it can neither read outside the unit nor
+publish a record under a foreign identity. Per-unit provenance is published in
+`metadata.vu_units` (`{trep, offset, length, path}`), failed units additionally in
+`metadata.vu_heuristic_units` and in `metadata.heuristic_fields` (`vu_trepNN`). An
+intact file has only `normative` units and never touches the heuristic; a file with a
+heuristic or unreadable unit is partial; manufacturer extensions are not failures.
