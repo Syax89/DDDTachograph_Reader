@@ -2317,3 +2317,6 @@ msgstr "Σειριακός αριθμός αισθητήρα"
 
 msgid "VU Serial"
 msgstr "Σειριακός αριθμός"
+
+msgid "Download Interface Version"
+msgstr "Έκδοση λογισμικού"

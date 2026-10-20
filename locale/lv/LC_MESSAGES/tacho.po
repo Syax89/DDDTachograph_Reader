@@ -2317,3 +2317,6 @@ msgstr "Sensora sērijas numurs"
 
 msgid "VU Serial"
 msgstr "Sērijas numurs"
+
+msgid "Download Interface Version"
+msgstr "Programmatūras versija"

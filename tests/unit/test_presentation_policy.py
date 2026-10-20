@@ -218,3 +218,76 @@ def test_every_new_label_is_translated_in_all_catalogs(label, model):
         assert f'msgid "{label}"' in text, f"{path}: {label}"
         # the model msgid the term was translated from is in the same catalog
         assert f'msgid "{model}"' in text, f"{path}: {model}"
+
+
+# ── Coherence: one compact row per serial, one column per timestamp ────────
+
+def test_serial_rows_are_one_compact_scalar_each():
+    from core.decoders.common import decode_extended_serial_number, serial_text
+    raw = bytes.fromhex("0a037a01" "1124" "81a2")     # serial, 11/24, type, maker
+    assert serial_text(decode_extended_serial_number(raw, 0)) == (
+        "168000001 \u00b7 11/24 \u00b7 Stoneridge Electronics")
+    # an invalid BCD monthYear shows the raw two bytes instead of a fake date
+    bad = bytes.fromhex("00000001" "1a24" "81a2")
+    assert serial_text(decode_extended_serial_number(bad, 0)) == (
+        "1 \u00b7 1A24 \u00b7 Stoneridge Electronics")
+    # no status text, no century
+    assert "registered" not in serial_text(decode_extended_serial_number(raw, 0))
+    assert "20" not in serial_text(decode_extended_serial_number(raw, 0)).split(" \u00b7 ")[1]
+
+
+def test_vu_information_has_one_row_per_serial():
+    info = {"vu_serial": "168000001 \u00b7 11/24 \u00b7 Stoneridge Electronics",
+            "vu_serial_decoded": {"serial_number": 168000001},
+            "sensor_serial": "168000002 \u00b7 03/23 \u00b7 Stoneridge Electronics",
+            "sensor_serial_extended": {"serial_number": 168000002},
+            "sensor_pairing_date": "2024-04-05T20:34:38+00:00"}
+    _headers, rows = gui._kv_rows(info)
+    labels = [row[0] for row in rows]
+    assert labels == [gui.ui_text.label("vu_serial"),
+                      gui.ui_text.label("sensor_serial"),
+                      gui.ui_text.label("sensor_pairing_date")]
+    # compact: no 'VU Serial › ...' sub-rows, no duplicate pairing-time row
+    assert not any("\u203a" in label for label in labels)
+
+
+def test_calibration_timestamps_are_one_set_of_columns_with_time_of_day():
+    from core.parser.vu_dispatcher import decode_calibration
+    from tests.unit.test_vu_technical_semantics import _calibration
+    record = decode_calibration(_calibration(252), generation="G2.2")
+    cols = report_format.visible_columns([record])
+    for key in ("old_time", "new_time", "next_calibration_date"):
+        assert key in cols, key
+        assert "T" in record[key], key            # date AND time of day
+        assert not str(key).endswith("_full")
+    assert not [c for c in cols if c.endswith("_full")]
+    # the ISO companions are JSON-only
+    for key in ("old_time_iso", "new_time_iso", "next_calibration_iso"):
+        assert key not in cols
+    # the export shows the same shortened timestamp format as its neighbours
+    from core.utils.report_format import fmt_value
+    assert fmt_value(record["old_time"]).startswith("2024-04-05 ")
+    assert "T" not in fmt_value(record["old_time"])
+
+
+def test_g1_overview_shows_the_vu_clock_as_its_first_row():
+    from tests.unit.test_g1_vu_semantics import _overview_body, _results
+    from core.decoders.vu_g1 import parse_g1_vu_overview
+    results = _results()
+    parse_g1_vu_overview(_overview_body(), results)
+    _headers, rows = gui._kv_rows(results["vu_overview"])
+    assert rows[0][0] == gui.ui_text.label("current_date_time")
+    assert rows[0][1].startswith("2024-04-05 19:34")
+
+
+def test_download_interface_version_is_a_panel_row():
+    from core.parser.vu_dispatcher import walk_vu_record_arrays
+    from tests.unit.test_vu_trep00_overview import _overview_stream
+    from tests.unit import vu_synthetic as S
+    results = {"metadata": {}, "vehicle": {"vin": "N/A", "plate": "N/A",
+                                          "registration_nation": "N/A"}}
+    walk_vu_record_arrays(S.interface_version(0x01, 0x01) + _overview_stream(),
+                          results)
+    _headers, rows = gui._kv_rows(results["vu_overview"])
+    row = dict(rows)[gui.ui_text.label("download_interface_version")]
+    assert row == "0101 \u00b7 Generation 2, version 2"

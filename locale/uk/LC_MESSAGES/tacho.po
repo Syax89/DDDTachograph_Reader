@@ -2317,3 +2317,6 @@ msgstr "Серійний номер датчика"
 
 msgid "VU Serial"
 msgstr "Серійний номер"
+
+msgid "Download Interface Version"
+msgstr "Версія ПЗ"

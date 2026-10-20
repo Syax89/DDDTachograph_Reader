@@ -92,7 +92,10 @@ def test_sensor_paired_serial_keeps_hex_and_gains_the_fields():
     rec = serial + b"APPROVAL        " + struct.pack(">I", TIME)
     assert len(rec) == 28
     out = decode_sensor_paired(rec)
-    assert out["sensor_serial"] == serial.hex()
+    # The hex column now also carries the compact decoded form (item 1: same
+    # density as the neighbouring rows, hex never replaced).
+    assert out["sensor_serial"].startswith(serial.hex() + " \u00b7 ")
+    assert "48879" in out["sensor_serial"]              # 0x0000BEEF in decimal
     assert out["sensor_serial_extended"]["serial_number"] == 0x0000BEEF
 
 
@@ -177,9 +180,10 @@ def test_generation_2_v2_calibration_adds_serials_load_type_and_country():
     out = decode_calibration(_calibration(252))
     assert out["calibration_variant"] == "generation 2, version 2 (252)"
     assert out["sensor_serial_number"] == S.extended_serial(0x0000A001).hex()
-    assert out["sensor_serial"]["serial_number"] == 0x0000A001
-    assert out["sensor_gnss_serial"]["serial_number"] == 0x0000A002
-    assert out["rcm_serial"]["serial_number"] == 0x0000A003
+    assert out["sensor_serial"].startswith("40961 \u00b7 ")
+    assert out["sensor_serial_decoded"]["serial_number"] == 0x0000A001
+    assert out["sensor_gnss_serial_decoded"]["serial_number"] == 0x0000A002
+    assert out["rcm_serial_decoded"]["serial_number"] == 0x0000A003
     assert out["by_default_load_type"] == 0x02
     assert out["by_default_load_type_label"] == "passengers"
     assert out["calibration_country"] == "I"
@@ -241,7 +245,7 @@ def test_technical_records_reach_the_results():
     stream = S.section(0x35, cal, S.signature_record())
     results = _results()
     walk_vu_record_arrays(stream, results)
-    assert results["calibrations"][0]["sensor_serial"]["serial_number"] == 0x0000A001
+    assert results["calibrations"][0]["sensor_serial_decoded"]["serial_number"] == 0x0000A001
 
 
 # ── Unresolved encodings stay raw ───────────────────────────────────────────

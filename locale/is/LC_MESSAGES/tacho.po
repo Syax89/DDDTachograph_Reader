@@ -2317,3 +2317,6 @@ msgstr "Raðnúmer skynjara"
 
 msgid "VU Serial"
 msgstr "Raðnúmer"
+
+msgid "Download Interface Version"
+msgstr "Hugbúnaðarútgáfa"

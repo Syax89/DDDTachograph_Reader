@@ -151,3 +151,24 @@ def test_overview_model_only_slot_keys_are_hidden():
                 "driver_slot_status", "codriver_slot_status"):
         assert key in report_format.HIDDEN_KEYS
         assert key in gui.HIDDEN_KEYS
+
+
+def test_interface_version_is_one_row_in_the_overview_panel():
+    """Item 4: one readable row, not only metadata."""
+    results = _results()
+    walk_vu_record_arrays(S.interface_version(0x01, 0x01) + _overview_stream(),
+                          results)
+    panel = results["vu_overview"]
+    assert panel["download_interface_version"] == "0101 \u00b7 Generation 2, version 2"
+    # the source conflict stays in the JSON, never on screen
+    assert "02,02" not in panel["download_interface_version"]
+    assert results["metadata"]["download_interface_version"]["source_conflict"] is True
+
+
+def test_unknown_interface_codes_fall_back_to_their_labels():
+    results = _results()
+    walk_vu_record_arrays(S.interface_version(0x02, 0x03) + _overview_stream(),
+                          results)
+    row = results["vu_overview"]["download_interface_version"]
+    assert row.startswith("0203 \u00b7 ")
+    assert "not used" in row or "0x02" in row

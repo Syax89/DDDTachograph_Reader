@@ -234,6 +234,105 @@ def entry_type_daily_work_period_status(code, generation="G2"):
     return ENTRY_TYPE_STATUS_UNKNOWN
 
 
+# ── ExtendedSerialNumber display helpers (Annex 1B §2.56) ──────────────────
+# A decoded serial is one compact scalar for the panels and tables; the
+# structured dict stays in the JSON. A leaf module so both the generation-1
+# decoders and the RecordArray dispatcher share one implementation.
+def decode_extended_serial_number(data, off):
+    """Decode one ExtendedSerialNumber (Annex 1B §2.56 / Annex 1C §2.56)."""
+    from core.utils.manufacturer_codes import (
+        MANUFACTURER_STATUS_NOT_REGISTERED, MANUFACTURER_STATUS_REGISTERED,
+        manufacturer_name)
+    if not isinstance(off, int) or off < 0 or off + 8 > len(data):
+        return None
+    raw = bytes(data[off:off + 8])
+    month = _bcd_octet(raw[4])
+    year_suffix = _bcd_octet(raw[5])
+    out = {
+        "serial_number": int.from_bytes(raw[0:4], "big"),
+        "month_year_bcd": raw[4:6].hex(),
+        "month": month,
+        "year_suffix": year_suffix,
+        "equipment_type": raw[6],
+        "equipment_type_status": ("reserved (0xFF)" if raw[6] == 0xFF
+                                 else "manufacturer specific"),
+        "manufacturer_code": raw[7],
+        "manufacturer": manufacturer_name(raw[7]),
+        "manufacturer_status": (MANUFACTURER_STATUS_REGISTERED
+                                if manufacturer_name(raw[7]) is not None
+                                else MANUFACTURER_STATUS_NOT_REGISTERED),
+    }
+    if month is None or year_suffix is None:
+        out["month_year_status"] = "invalid BCD / month"
+    elif not 1 <= month <= 12:
+        out["month_year_status"] = "invalid month"
+    else:
+        out["month_year_status"] = "valid"
+    return out
+
+
+def _bcd_octet(value):
+    """One BCD octet as a decimal int, or None when a nibble exceeds 9."""
+    high, low = value >> 4, value & 0x0F
+    if high > 9 or low > 9:
+        return None
+    return high * 10 + low
+
+
+def with_serial_text(hex_text, data, off):
+    """``<hex> · <compact decoded serial>`` — hex kept, decoded form appended."""
+    text = serial_text(decode_extended_serial_number(data, off))
+    return f"{hex_text} \u00b7 {text}" if text else hex_text
+
+
+def manufacturer_short_name(code):
+    """Short registry name for a compact cell."""
+    from core.utils.manufacturer_codes import manufacturer_name
+    """A compact form of the registry name, for a table cell.
+
+    The registry publishes full legal names ('Stoneridge Electronics AB'); a
+    Field/Value panel of compact scalars cannot carry those. The short form keeps
+    the first two words (and any acronym) and drops the legal suffix, which is what
+    neighbouring rows do with long strings. Registry identity, not a guess: the
+    bytes come from the official code table.
+    """
+    name = manufacturer_name(code)
+    if not name:
+        return None
+    words = str(name).replace(",", " ").split()
+    keep = []
+    for word in words[:2]:
+        keep.append(word)
+    short = " ".join(keep)
+    return short.rstrip(".").strip() or None
+
+
+def serial_text(info):
+    """One compact cell for an ExtendedSerialNumber (§2.56).
+
+    ``<decimal serial> · <MM/YY> · <manufacturer short name>`` — the same density as
+    the neighbouring rows. The monthYear is a BCD pair: when it is not a valid
+    BCD month the two raw bytes are printed instead of a fabricated date, and the
+    year stays the two digits the field carries (the century is not part of it).
+    """
+    if not isinstance(info, dict):
+        return None
+    serial = info.get("serial_number")
+    if serial is None:
+        return None
+    month, year = info.get("month"), info.get("year_suffix")
+    if month is None or year is None:
+        stamp = str(info.get("month_year_bcd") or "").upper()
+    else:
+        stamp = f"{month:02d}/{year:02d}"
+    parts = [str(serial)]
+    if stamp:
+        parts.append(stamp)
+    maker = manufacturer_short_name(info.get("manufacturer_code"))
+    if maker:
+        parts.append(maker)
+    return " \u00b7 ".join(parts)
+
 #: ManualInputFlag (Annex 1B §2.66 / Annex 1C §2.93) enumerates exactly two
 #: values. It is *not* a boolean: a driver who made no manual entries records
 #: ``noEntry`` (0), one who did records ``manualEntries`` (1), and anything else

@@ -28,7 +28,9 @@ from datetime import datetime, timezone
 from core.utils.logger import get_logger
 from core import decoders
 from core.decoders.common import (
-    decode_previous_vehicle_info, describe_manual_input_flag, is_known_nation)
+    decode_extended_serial_number, decode_previous_vehicle_info,
+    describe_manual_input_flag, is_known_nation, serial_text,
+    with_serial_text)
 from core.utils.constants import (
     RECORD_ARRAY_MAX_RECORDS, RECORD_ARRAY_MAX_SIZE, VU_MAX_TOTAL_RECORDS)
 from core.utils.event_codes import (
@@ -471,43 +473,7 @@ def _bcd_byte(value):
     return high * 10 + low
 
 
-def decode_extended_serial_number(data, off):
-    """Decode one ExtendedSerialNumber (Annex 1B §2.56 / Annex 1C §2.56).
 
-    Returns the four normative subfields plus the raw 8 bytes, so callers can
-    keep their old hex representation next to the decoded values. The ``type``
-    byte is manufacturer specific ("FFh reserved"), which is reported as a
-    status instead of an invented equipment label.
-    """
-    if not isinstance(off, int) or off < 0 or off + EXTENDED_SERIAL_NUMBER_SIZE > len(data):
-        return None
-    raw = bytes(data[off:off + EXTENDED_SERIAL_NUMBER_SIZE])
-    month = _bcd_byte(raw[4])
-    year_suffix = _bcd_byte(raw[5])
-    out = {
-        "serial_number": int.from_bytes(raw[0:4], "big"),
-        "month_year_bcd": raw[4:6].hex(),
-        "month": month,
-        # "Value assignment: BCD coding of Month (two digits) and Year (two last
-        # digits)" (§2.56): the century is NOT part of the field, so only the
-        # two-digit suffix is reported — never a reconstructed 4-digit year.
-        "year_suffix": year_suffix,
-        "equipment_type": raw[6],
-        "equipment_type_status": ("reserved (0xFF)" if raw[6] == 0xFF
-                                 else "manufacturer specific"),
-        "manufacturer_code": raw[7],
-        "manufacturer": manufacturer_name(code := raw[7]),
-        "manufacturer_status": (MANUFACTURER_STATUS_REGISTERED
-                                if manufacturer_name(code) is not None
-                                else MANUFACTURER_STATUS_NOT_REGISTERED),
-    }
-    if month is None or year_suffix is None:
-        out["month_year_status"] = "invalid BCD / month"
-    elif not 1 <= month <= 12:
-        out["month_year_status"] = "invalid month"
-    else:
-        out["month_year_status"] = "valid"
-    return out
 
 
 def decode_extended_seal_identifier(data):
@@ -568,11 +534,14 @@ def _decode_calibration_extension(rec):
     if len(rec) >= CALIBRATION_G22_SIZE:
         return {
             "sensor_serial_number": rec[167:175].hex(),
-            "sensor_serial": decode_extended_serial_number(rec, 167),
+            "sensor_serial": serial_text(decode_extended_serial_number(rec, 167)),
+            "sensor_serial_decoded": decode_extended_serial_number(rec, 167),
             "sensor_gnss_serial_number": rec[175:183].hex(),
-            "sensor_gnss_serial": decode_extended_serial_number(rec, 175),
+            "sensor_gnss_serial": serial_text(decode_extended_serial_number(rec, 175)),
+            "sensor_gnss_serial_decoded": decode_extended_serial_number(rec, 175),
             "rcm_serial_number": rec[183:191].hex(),
-            "rcm_serial": decode_extended_serial_number(rec, 183),
+            "rcm_serial": serial_text(decode_extended_serial_number(rec, 183)),
+            "rcm_serial_decoded": decode_extended_serial_number(rec, 183),
             "seal_data_vu": _decode_seal_data(rec[191:246]),
             "by_default_load_type": rec[246],
             "by_default_load_type_label": _load_type_label(rec[246]),
@@ -664,6 +633,10 @@ def decode_calibration(rec, generation=None):
         "authorised_speed_kmh": rec[148],
         "old_odometer_km": _u24(rec[149:152]),
         "new_odometer_km": _u24(rec[152:155]),
+        # The three calibration TimeReals carry a time of day: one column each,
+        # rendered in the same timestamp format as the neighbouring tables (the
+        # formatter shortens an ISO value to 'YYYY-MM-DD HH:MM'), N/A when the
+        # value is unusable. No duplicate '... Full' columns.
         "old_time": _iso(struct.unpack(">I", rec[155:159])[0]),
         "new_time": _iso(struct.unpack(">I", rec[159:163])[0]),
         "next_calibration_date": _iso(struct.unpack(">I", rec[163:167])[0]),
@@ -768,7 +741,10 @@ def decode_sensor_paired(rec):
     date_off = 24 if full else len(rec) - 4
     return {
         "confidence": "medium" if full else "low",
-        "sensor_serial": rec[0:8].hex(),
+        # The hex stays (it is the column that existed); the decoded compact form
+        # is appended to the same cell so the two are not two columns of the same
+        # thing.
+        "sensor_serial": with_serial_text(rec[0:8].hex(), rec, 0),
         "sensor_serial_extended": decode_extended_serial_number(rec, 0),
         "sensor_approval": _ascii(rec, 8, approval_end - 8),
         "pairing_date": _iso(struct.unpack(">I", rec[date_off:date_off + 4])[0]),
@@ -788,7 +764,10 @@ def decode_sensor_gnss_coupled(rec):
     date_off = 24 if full else len(rec) - 4
     return {
         "confidence": "medium" if full else "low",
-        "sensor_serial": rec[0:8].hex(),
+        # The hex stays (it is the column that existed); the decoded compact form
+        # is appended to the same cell so the two are not two columns of the same
+        # thing.
+        "sensor_serial": with_serial_text(rec[0:8].hex(), rec, 0),
         "sensor_serial_extended": decode_extended_serial_number(rec, 0),
         "sensor_approval": _ascii(rec, 8, approval_end - 8),
         "coupling_date": _iso(struct.unpack(">I", rec[date_off:date_off + 4])[0]),
@@ -808,7 +787,7 @@ def decode_vu_card_record(rec):
         # verbatim and does not make the record a complete canonical one.
         out["confidence"] = "high" if len(rec) == 45 else "medium"
         out["record_complete"] = len(rec) == 45
-        out["card_extended_serial"] = rec[19:27].hex()
+        out["card_extended_serial"] = with_serial_text(rec[19:27].hex(), rec, 19)
         out["card_serial"] = decode_extended_serial_number(rec, 19)
         out["card_structure_version"] = rec[27:29].hex()
         # CardStructureVersion 'aabb'H (Annex 1B §2.29): 'aa' indexes structural
@@ -1471,6 +1450,9 @@ _RECORD_DECODERS = {
     0x20: decode_sensor_paired,
     0x21: decode_sensor_gnss_coupled,
 }
+
+_with_serial_text = with_serial_text
+
 
 def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
                    trep=None):
@@ -2184,6 +2166,16 @@ def _emit_interface_version(interface, results):
         }
         return
     first, second = interface[0], interface[1]
+    # One readable row in the VU Overview panel: the two octets as hex plus the
+    # Annex 1C point-2.60a reading. The DDP_028a '02,02' comment stays in the JSON
+    # (and the docs) — it is a source conflict, not a fact of the file.
+    if first == 0x01 and second == 0x01:
+        readable = "Generation 2, version 2"
+    else:
+        readable = (f"{INTERFACE_GENERATION_CODES.get(first, f'0x{first:02X}')}, "
+                    f"{INTERFACE_VERSION_CODES.get(second, f'0x{second:02X}')}")
+    results.setdefault("vu_overview", {})["download_interface_version"] = (
+        f"{bytes(interface[:2]).hex()} \u00b7 {readable}")
     results.setdefault("metadata", {})["download_interface_version"] = {
         "raw": bytes(interface[:2]).hex(),
         "generation_code": first,

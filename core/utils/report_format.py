@@ -68,6 +68,11 @@ BOOKKEEPING_KEYS = frozenset({
     "last_control_time_raw", "first_overspeed_since_raw", "timestamp_raw",
     "begin_raw", "current_date_time_raw", "activity_raw",
     "calibration_variant_expected", "calibration_variant_mismatch",
+    # Structured serial companions: the panels show one compact scalar
+    # ('<serial> · MM/YY · manufacturer'), the dict stays in the JSON.
+    "vu_serial_decoded", "sensor_serial_decoded", "sensor_gnss_serial_decoded",
+    "old_time_iso", "new_time_iso", "next_calibration_iso",
+    "rcm_serial_decoded",
     "digital_map_version_raw", "control_type_bits",
     "card_structure_version_parts",
     # status / provenance / diagnostics

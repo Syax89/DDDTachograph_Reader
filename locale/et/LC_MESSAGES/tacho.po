@@ -2317,3 +2317,6 @@ msgstr "Anduri seerianumber"
 
 msgid "VU Serial"
 msgstr "Seerianumber"
+
+msgid "Download Interface Version"
+msgstr "Tarkvara versioon"

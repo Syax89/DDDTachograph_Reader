@@ -2317,3 +2317,6 @@ msgstr "Sériové číslo čidla"
 
 msgid "VU Serial"
 msgstr "Sériové číslo"
+
+msgid "Download Interface Version"
+msgstr "Verze softwaru"

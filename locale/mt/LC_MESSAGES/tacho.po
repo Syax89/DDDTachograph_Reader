@@ -2317,3 +2317,6 @@ msgstr "Numru tas-serje tas-sensor"
 
 msgid "VU Serial"
 msgstr "Numru tas-serje"
+
+msgid "Download Interface Version"
+msgstr "Verżjoni tas-software"

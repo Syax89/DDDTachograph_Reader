@@ -365,19 +365,23 @@ def test_g1_empty_vu_and_sensor_serials_are_decoded_as_structures():
     _parse_trep_05_technical(_trep05_body([_g1_calibration()]), results)
     info = results["vu_info"]
     assert info["serial_number"] == S.extended_serial(0x0000A001).hex().upper()
-    assert info["vu_serial"]["serial_number"] == 0x0000A001
-    assert info["sensor_serial"]["serial_number"] == 0x0000A002
+    # compact scalar rows (item 1), structured dicts kept for the JSON
+    assert info["vu_serial"].startswith("40961 \u00b7 ")
+    assert info["vu_serial_decoded"]["serial_number"] == 0x0000A001
+    assert info["sensor_serial"].startswith("40962 \u00b7 ")
+    assert info["sensor_serial_extended"]["serial_number"] == 0x0000A002
 
 
 def test_g1_calibration_times_keep_hour_and_minute():
     results = _results()
     _parse_trep_05_technical(_trep05_body([_g1_calibration()]), results)
     cal = results["calibrations"][0]
-    assert cal["old_time"].endswith("T") is False
-    # A full TimeReal survives in the companion key: the short ``timestamp``
-    # stays a calendar day for the existing table.
-    assert "T" in cal["old_time_full"]
-    assert len(cal["timestamp"]) == 10
+    # One timestamp column per value, carrying date AND time of day (the table
+    # renders it in the same format as every other timestamp column).
+    assert "T" in cal["old_time"]
+    assert "T" in cal["new_time"]
+    assert "T" in cal["next_calibration_date"]
+    assert cal["old_time_iso"] == cal["old_time"]
 
 
 def test_g1_stored_fault_with_an_unusable_time_is_retained():

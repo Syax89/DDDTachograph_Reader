@@ -2317,3 +2317,6 @@ msgstr "Сериен номер на сензора"
 
 msgid "VU Serial"
 msgstr "Сериен номер"
+
+msgid "Download Interface Version"
+msgstr "Версия на софтуера"

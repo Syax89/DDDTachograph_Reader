@@ -2317,3 +2317,6 @@ msgstr "Sraithuimhir an tsensor"
 
 msgid "VU Serial"
 msgstr "Uimhir shraithe"
+
+msgid "Download Interface Version"
+msgstr "Leagan na mbogearraí"

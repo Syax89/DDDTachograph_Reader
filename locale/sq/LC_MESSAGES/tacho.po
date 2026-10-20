@@ -2317,3 +2317,6 @@ msgstr "Numri serial i sensorit"
 
 msgid "VU Serial"
 msgstr "Numri serial"
+
+msgid "Download Interface Version"
+msgstr "Versioni i softuerit"

@@ -2317,3 +2317,6 @@ msgstr "Серыйны нумар датчыка"
 
 msgid "VU Serial"
 msgstr "Серыйны нумар"
+
+msgid "Download Interface Version"
+msgstr "Версія ПЗ"

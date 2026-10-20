@@ -2317,3 +2317,6 @@ msgstr "Érzékelő sorozatszáma"
 
 msgid "VU Serial"
 msgstr "Sorozatszám"
+
+msgid "Download Interface Version"
+msgstr "Szoftververzió"

@@ -2317,3 +2317,6 @@ msgstr "Anturin sarjanumero"
 
 msgid "VU Serial"
 msgstr "Sarjanumero"
+
+msgid "Download Interface Version"
+msgstr "Ohjelmistoversio"

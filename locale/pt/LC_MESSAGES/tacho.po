@@ -2317,3 +2317,6 @@ msgstr "Número de série do sensor"
 
 msgid "VU Serial"
 msgstr "Número de série"
+
+msgid "Download Interface Version"
+msgstr "Versão do software"

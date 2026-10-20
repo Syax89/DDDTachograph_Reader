@@ -2317,3 +2317,6 @@ msgstr "Jutiklio serijos numeris"
 
 msgid "VU Serial"
 msgstr "Serijos numeris"
+
+msgid "Download Interface Version"
+msgstr "Programinės įrangos versija"

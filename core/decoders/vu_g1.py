@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from core.utils.logger import get_logger, redact
 from core.decoders.common import (
     decode_activity_val, decode_date, decode_previous_vehicle_info, decode_string,
-    describe_manual_input_flag, get_nation)
+    describe_manual_input_flag, get_nation, serial_text)
 from core.decoders.cert import parse_g1_certificate
 from core.utils.event_codes import (
     EVENT_FAULT_VERSION_G1, control_type_bits, describe_calibration_purpose,
@@ -372,8 +372,13 @@ def parse_g1_vu_overview(val, results, message_offset=None):
                 ts = struct.unpack(">I", body[420:424])[0]
                 # The clock is a stored field: published when it is a real date,
                 # otherwise withheld (None) with the raw value and a status.
-                results["metadata"]["current_datetime"] = _g1_time(ts)
-                results.setdefault("vu_overview", {})["current_date_time_raw"] = ts
+                current = _g1_time(ts)
+                results["metadata"]["current_datetime"] = current
+                # Same row, same label and format as the Gen2/Gen2.2 panel, and
+                # first: the Overview's own clock heads the panel.
+                panel = results.setdefault("vu_overview", {})
+                panel["current_date_time"] = current
+                panel["current_date_time_raw"] = ts
                 if _g1_time(ts):
                     fixed_fields_parsed.add("current_datetime")
 
@@ -1527,15 +1532,15 @@ def _parse_trep_05_technical(data, results, message_offset=None):
             new_odo = int.from_bytes(chunk[152:155], 'big')
             if new_odo == 0xFFFFFF:
                 new_odo = None
-            old_time = decode_date(chunk[155:159])
-            new_time = decode_date(chunk[159:163])
-            next_cal = decode_date(chunk[163:167])
-            # Full TimeReal companions: the shortened ``timestamp``/``old_time``
-            # keys stay calendar days for the existing table, while the exact
-            # hour/minute survives here.
-            old_time_iso = _g1_time(struct.unpack(">I", chunk[155:159])[0])
-            new_time_iso = _g1_time(struct.unpack(">I", chunk[159:163])[0])
-            next_cal_iso = _g1_time(struct.unpack(">I", chunk[163:167])[0])
+            # One set of timestamp columns: the three calibration TimeReals carry a
+            # time of day, so they are published as the full value (rendered in the
+            # same format as every other timestamp column) with N/A when unusable.
+            old_time = _g1_time(struct.unpack(">I", chunk[155:159])[0])
+            new_time = _g1_time(struct.unpack(">I", chunk[159:163])[0])
+            next_cal = _g1_time(struct.unpack(">I", chunk[163:167])[0])
+            old_time_iso = old_time
+            new_time_iso = new_time
+            next_cal_iso = next_cal
             field_status = {}
             if not vin:
                 field_status["vin"] = "empty (activation parameters)"
@@ -1561,9 +1566,9 @@ def _parse_trep_05_technical(data, results, message_offset=None):
                 "vin_status": ("empty (activation parameters)" if not vin
                                else "present"),
                 "field_status": field_status,
-                "old_time_full": old_time_iso,
-                "new_time_full": new_time_iso,
-                "next_calibration_full": next_cal_iso,
+                "old_time_iso": old_time_iso,
+                "new_time_iso": new_time_iso,
+                "next_calibration_iso": next_cal_iso,
                 "timestamp": old_time,
                 "purpose": describe_calibration_purpose(purpose, generation="G1"),
                 "purpose_code": purpose,
@@ -1619,7 +1624,10 @@ def _parse_trep_05_technical(data, results, message_offset=None):
                 vu_info["serial_number"] = data[88:96].hex().upper()
                 # Shown in the VU Information panel as its own rows; the record
                 # copy in `vu_identifications` keeps the JSON-only `serial` key.
-                vu_info["vu_serial"] = decode_extended_serial_number(data, 88)
+                vu_info["vu_serial"] = serial_text(
+                    decode_extended_serial_number(data, 88))
+                vu_info["vu_serial_decoded"] = decode_extended_serial_number(
+                    data, 88)
                 sw_version = decode_string(data[96:100], is_id=True)
                 if sw_version:
                     vu_info["software_version"] = sw_version
@@ -1633,10 +1641,15 @@ def _parse_trep_05_technical(data, results, message_offset=None):
                 if approval:
                     vu_info["approval_number"] = approval
                 vu_info["sensor_serial_number"] = data[116:124].hex().upper()
-                vu_info["sensor_serial"] = decode_extended_serial_number(data, 116)
-                # The pairing TimeReal has an hour/minute, not only a date: the
-                # full value is shown next to the existing date row.
-                vu_info["sensor_pairing_time"] = _g1_time(
+                vu_info["sensor_serial"] = serial_text(
+                    decode_extended_serial_number(data, 116))
+                vu_info["sensor_serial_extended"] = decode_extended_serial_number(
+                    data, 116)
+                # The pairing TimeReal carries a time of day: the existing row is
+                # upgraded in place (same principle as the calibration
+                # timestamps), so there is one row per datum, not a date row plus
+                # a duplicate full-time row.
+                vu_info["sensor_pairing_date"] = _g1_time(
                     struct.unpack(">I", data[132:136])[0])
                 sensor_approval = decode_string(data[124:132], is_id=True)
                 if sensor_approval:

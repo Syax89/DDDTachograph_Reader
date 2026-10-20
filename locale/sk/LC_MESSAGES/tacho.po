@@ -2317,3 +2317,6 @@ msgstr "Sériové číslo snímača"
 
 msgid "VU Serial"
 msgstr "Sériové číslo"
+
+msgid "Download Interface Version"
+msgstr "Verzia softvéru"
