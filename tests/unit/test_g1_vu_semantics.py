@@ -363,7 +363,7 @@ def test_g1_empty_vu_and_sensor_serials_are_decoded_as_structures():
     _parse_trep_05_technical(_trep05_body([_g1_calibration()]), results)
     info = results["vu_info"]
     assert info["serial_number"] == S.extended_serial(0x0000A001).hex().upper()
-    assert info["serial"]["serial_number"] == 0x0000A001
+    assert info["vu_serial"]["serial_number"] == 0x0000A001
     assert info["sensor_serial"]["serial_number"] == 0x0000A002
 
 
@@ -374,7 +374,7 @@ def test_g1_calibration_times_keep_hour_and_minute():
     assert cal["old_time"].endswith("T") is False
     # A full TimeReal survives in the companion key: the short ``timestamp``
     # stays a calendar day for the existing table.
-    assert "T" in cal["old_time_iso"]
+    assert "T" in cal["old_time_full"]
     assert len(cal["timestamp"]) == 10
 
 
