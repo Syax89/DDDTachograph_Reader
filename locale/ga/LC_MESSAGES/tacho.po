@@ -2282,32 +2282,8 @@ msgstr "SLÁINE"
 msgid "  Byte-accounted coverage"
 msgstr "  Clúdach na mbeart"
 
-msgid "Serial"
-msgstr "Uimhir shraithe"
-
-msgid "Month"
-msgstr "Dáta"
-
-msgid "Year"
-msgstr "Dáta"
-
-msgid "Sensor Pairing Time"
-msgstr "Am péireála an tsensor"
-
 msgid "Current Date Time"
 msgstr "Dáta Am"
-
-msgid "Entry Type Meaning"
-msgstr "Cineál iontrála"
-
-msgid "Old Time Full"
-msgstr "Am roimhe"
-
-msgid "New Time Full"
-msgstr "Am nua"
-
-msgid "Next Calibration Full"
-msgstr "An chéad dáta calabraithe eile"
 
 msgid "RCM Serial"
 msgstr "RCM Uimhir shraithe"
@@ -2337,3 +2313,6 @@ msgstr "Nóta comhaid"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Nóta faoin gcomhad seo.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Uimhir shraithe"

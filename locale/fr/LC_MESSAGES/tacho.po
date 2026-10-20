@@ -2282,32 +2282,8 @@ msgstr "INTÉGRITÉ"
 msgid "  Byte-accounted coverage"
 msgstr "  Couverture en octets"
 
-msgid "Serial"
-msgstr "Numéro de série"
-
-msgid "Month"
-msgstr "Date"
-
-msgid "Year"
-msgstr "Date"
-
-msgid "Sensor Pairing Time"
-msgstr "Heure d'appairage du capteur"
-
 msgid "Current Date Time"
 msgstr "Date Heure"
-
-msgid "Entry Type Meaning"
-msgstr "Type d'entrée"
-
-msgid "Old Time Full"
-msgstr "Ancienne heure"
-
-msgid "New Time Full"
-msgstr "Nouvelle heure"
-
-msgid "Next Calibration Full"
-msgstr "Date du prochain calibrage"
 
 msgid "RCM Serial"
 msgstr "RCM Numéro de série"
@@ -2337,3 +2313,6 @@ msgstr "Note sur le fichier"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Note à propos de ce fichier.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Numéro de série"

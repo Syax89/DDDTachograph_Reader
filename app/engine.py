@@ -301,6 +301,20 @@ class TachoParser:
             from core.parser.card_envelope import trep06_envelope
             head = bytes(self.raw_data[:2])
             envelope = trep06_envelope(bytes(self.raw_data))
+            if envelope is None and head == b"\x76\x06":
+                # Several relayed cards back to back: the first one gives the file
+                # its identity and verdict, the others keep their own per-region
+                # verdict instead of degrading the first.
+                from core.parser.card_envelope import trep06_card_regions
+                regions = trep06_card_regions(bytes(self.raw_data))
+                if regions:
+                    extra = [{"offset": start, "bytes": length, "tlvs": 0,
+                              "tlv_complete": True,
+                              "boundary": "STAP/EF framing", "delegated": False}
+                             for start, length in regions[1:]]
+                    envelope = {"bytes": regions[0][0], "card_bytes": regions[0][1],
+                                "elements": 0, "extra_regions": extra,
+                                "multi": True}
             if envelope:
                 self._envelope = envelope
                 self.is_vu = False
@@ -339,7 +353,9 @@ class TachoParser:
             # account for the two bytes: every offset is shifted and the coverage
             # total stays the real file size.
             offset = int(self._envelope["bytes"])
-            data = bytes(self.raw_data[offset:])
+            limit = self._envelope.get("card_bytes")
+            data = bytes(self.raw_data[offset:offset + limit]) if limit else (
+                bytes(self.raw_data[offset:]))
         self.results = dp.parse(data, is_vu=self.is_vu)
         # dp.parse() returns a fresh results dict — restore file metadata.
         self.results["metadata"]["filename"] = os.path.basename(self.file_path)
@@ -352,11 +368,17 @@ class TachoParser:
                 "type": "TREP 06 card download relayed by the VU",
                 "bytes": offset,
             }
+            if self._envelope.get("extra_regions"):
+                self.results["metadata"]["envelope"]["further_regions"] = len(
+                    self._envelope["extra_regions"])
+                self.results["metadata"].setdefault(
+                    "vu_card_download_sections", []).extend(
+                        self._envelope["extra_regions"])
             # Same wording the content-based origin detector uses for a card
             # image behind a TREP 06 transfer.
             self.results["metadata"]["origin_note"] = (
                 "Driver card image extracted from a VU Card Download "
-                "(TREP 06, Annex 1B \u00a72.2.6.6) \u2014 valid selective download")
+                "(TREP 06, DDP_049/DDP_050) \u2014 valid selective download")
             self._shift_envelope_offsets(self.results, offset)
 
     @staticmethod
@@ -687,7 +709,7 @@ class TachoParser:
 
         First confirms the file origin from its content: a driver-card image
         wrapped in a stand-alone TREP 06 Card Download is a valid selective
-        download (Annex 1B §2.2.6.6), not a VU stream, so it is reclassified as
+        download (DDP_049/DDP_050), not a VU stream, so it is reclassified as
         a card and no VU completeness report is produced for it.
         """
         from core.parser.trep_inventory import build_trep_report, format_trep_summary

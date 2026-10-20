@@ -2282,32 +2282,8 @@ msgstr "INTEGRITATE"
 msgid "  Byte-accounted coverage"
 msgstr "  Acoperire în octeți"
 
-msgid "Serial"
-msgstr "Număr de serie"
-
-msgid "Month"
-msgstr "Dată"
-
-msgid "Year"
-msgstr "Dată"
-
-msgid "Sensor Pairing Time"
-msgstr "Data împerecherii senzorului Oră"
-
 msgid "Current Date Time"
 msgstr "Dată Oră"
-
-msgid "Entry Type Meaning"
-msgstr "Tip înregistrare"
-
-msgid "Old Time Full"
-msgstr "Oră veche"
-
-msgid "New Time Full"
-msgstr "Oră nouă"
-
-msgid "Next Calibration Full"
-msgstr "Data următoarei calibrări"
 
 msgid "RCM Serial"
 msgstr "RCM Număr de serie"
@@ -2337,3 +2313,6 @@ msgstr "Notă despre fișier"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Notă despre acest fișier.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Număr de serie"

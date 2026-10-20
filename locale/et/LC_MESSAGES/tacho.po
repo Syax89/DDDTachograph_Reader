@@ -2282,32 +2282,8 @@ msgstr "TERVIIKLIKKUS"
 msgid "  Byte-accounted coverage"
 msgstr "  Baidipõhine kaetus"
 
-msgid "Serial"
-msgstr "Seerianumber"
-
-msgid "Month"
-msgstr "Kuupäev"
-
-msgid "Year"
-msgstr "Kuupäev"
-
-msgid "Sensor Pairing Time"
-msgstr "Anduri sidumiskuupäev Aeg"
-
 msgid "Current Date Time"
 msgstr "Kuupäev Aeg"
-
-msgid "Entry Type Meaning"
-msgstr "Kande tüüp"
-
-msgid "Old Time Full"
-msgstr "Vana aeg"
-
-msgid "New Time Full"
-msgstr "Uus aeg"
-
-msgid "Next Calibration Full"
-msgstr "Järgmine kalibreerimiskuupäev"
 
 msgid "RCM Serial"
 msgstr "RCM Seerianumber"
@@ -2337,3 +2313,6 @@ msgstr "Faili märkus"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Märkus selle faili kohta.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Seerianumber"

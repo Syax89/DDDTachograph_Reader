@@ -26,18 +26,16 @@ from tests.unit import vu_synthetic as S
 TIME = S.BASE_TIME
 
 #: Labels this pass introduced, each modelled on an existing catalog msgid.
+#: Labels this branch introduced *and still renders*. The labels of the first
+#: presentation pass that no surface ever rendered (Month, Year, Serial,
+#: Old/New/Next ... Full, Sensor Pairing Time, Entry Type Meaning) were removed from
+#: every catalog in the label audit: a dead msgid is not a translation.
 NEW_LABELS = {
-    "Serial": "Serial Number",
     "VU Serial": "Serial Number",
-    "Month": "Date",
-    "Year": "Date",
-    "Sensor Pairing Time": "Sensor Pairing Date",
     "Current Date Time": "Date",
-    "Entry Type Meaning": "Entry Type",
-    "Old Time Full": "Old Time",
-    "New Time Full": "New Time",
-    "Next Calibration Full": "Next Calibration Date",
+    "Entry Type Description": "Entry Type",
     "RCM Serial": "Serial Number",
+    "RCM Serial Number": "Serial Number",
     "Sensor GNSS Serial": "Sensor Serial",
 }
 

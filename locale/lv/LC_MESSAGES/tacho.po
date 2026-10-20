@@ -2282,32 +2282,8 @@ msgstr "INTEGRITĀTE"
 msgid "  Byte-accounted coverage"
 msgstr "  Baitu pārklājums"
 
-msgid "Serial"
-msgstr "Sērijas numurs"
-
-msgid "Month"
-msgstr "Datums"
-
-msgid "Year"
-msgstr "Datums"
-
-msgid "Sensor Pairing Time"
-msgstr "Sensora savienošanas datums Laiks"
-
 msgid "Current Date Time"
 msgstr "Datums Laiks"
-
-msgid "Entry Type Meaning"
-msgstr "Ieraksta veids"
-
-msgid "Old Time Full"
-msgstr "Vecais laiks"
-
-msgid "New Time Full"
-msgstr "Jauns laiks"
-
-msgid "Next Calibration Full"
-msgstr "Nākamais kalibrēšanas datums"
 
 msgid "RCM Serial"
 msgstr "RCM Sērijas numurs"
@@ -2337,3 +2313,6 @@ msgstr "Faila piezīme"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Piezīme par šo failu.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Sērijas numurs"

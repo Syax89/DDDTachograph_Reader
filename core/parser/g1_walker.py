@@ -6,7 +6,8 @@ prefixes plus count-prefixed record sections — there is no TLV length field).
 When the download was requested with signatures, each body is followed by its
 128-byte RSA signature.
 
-Body layouts (Annex 1B §2.2.6.1-2.2.6.6):
+Body layouts (Annex 1B §2.2.6.1-2.2.6.5; the card download is the request in
+§2.2.2.9, stored per DDP_049/DDP_050):
 
   TREP 01 Overview:      certificates(194+194) + VIN(17) + registration(15)
                          + 3×TimeReal(12) + slots(1) [=433]

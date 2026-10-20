@@ -2282,32 +2282,8 @@ msgstr "INTEGRITÀ"
 msgid "  Byte-accounted coverage"
 msgstr "  Kopertura skont il-bytes"
 
-msgid "Serial"
-msgstr "Numru tas-serje"
-
-msgid "Month"
-msgstr "Data"
-
-msgid "Year"
-msgstr "Data"
-
-msgid "Sensor Pairing Time"
-msgstr "Ħin tal-ibbjar tas-sensor"
-
 msgid "Current Date Time"
 msgstr "Data Ħin"
-
-msgid "Entry Type Meaning"
-msgstr "Tip tad-dħul"
-
-msgid "Old Time Full"
-msgstr "Ħin qadim"
-
-msgid "New Time Full"
-msgstr "Ħin ġdid"
-
-msgid "Next Calibration Full"
-msgstr "Id-data tal-kalibrazzjoni li jmiss"
 
 msgid "RCM Serial"
 msgstr "RCM Numru tas-serje"
@@ -2337,3 +2313,6 @@ msgstr "Nota dwar il-fajl"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Nota dwar dan il-fajl.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Numru tas-serje"

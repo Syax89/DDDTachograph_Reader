@@ -2282,32 +2282,8 @@ msgstr "INTEGRITET"
 msgid "  Byte-accounted coverage"
 msgstr "  Pokrivenost bajtova"
 
-msgid "Serial"
-msgstr "Serijski broj"
-
-msgid "Month"
-msgstr "Datum"
-
-msgid "Year"
-msgstr "Datum"
-
-msgid "Sensor Pairing Time"
-msgstr "Vrijeme uparivanja senzora"
-
 msgid "Current Date Time"
 msgstr "Datum Vrijeme"
-
-msgid "Entry Type Meaning"
-msgstr "Tip unosa"
-
-msgid "Old Time Full"
-msgstr "Staro vrijeme"
-
-msgid "New Time Full"
-msgstr "Novo vrijeme"
-
-msgid "Next Calibration Full"
-msgstr "Datum sljedeće kalibracije"
 
 msgid "RCM Serial"
 msgstr "RCM Serijski broj"
@@ -2337,3 +2313,6 @@ msgstr "Napomena o datoteci"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Napomena o ovoj datoteci.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Serijski broj"

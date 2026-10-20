@@ -456,7 +456,7 @@ class DeterministicParser:
                     "tag_name": "CardDownload_EFImage",
                     "data_type": "CardEF", "length": card["bytes"], "depth": 1,
                     "is_spec_verified": bool(card.get("tlv_complete")),
-                    "annex_ref": "Annex 1B 2.2.6.6 / Appendix 7",
+                    "annex_ref": "DDP_049 / DDP_050 (card download)",
                     "generation": self.generation,
                     "data_hex": data[start:start + card["bytes"]].hex(),
                 })

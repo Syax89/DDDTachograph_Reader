@@ -2282,32 +2282,8 @@ msgstr "INTEGRITÁS"
 msgid "  Byte-accounted coverage"
 msgstr "  Bájtlefedettség"
 
-msgid "Serial"
-msgstr "Sorozatszám"
-
-msgid "Month"
-msgstr "Dátum"
-
-msgid "Year"
-msgstr "Dátum"
-
-msgid "Sensor Pairing Time"
-msgstr "Érzékelő párosításának dátuma Idő"
-
 msgid "Current Date Time"
 msgstr "Dátum Idő"
-
-msgid "Entry Type Meaning"
-msgstr "Bejegyzéstípus"
-
-msgid "Old Time Full"
-msgstr "Régi idő"
-
-msgid "New Time Full"
-msgstr "Új idő"
-
-msgid "Next Calibration Full"
-msgstr "Következő kalibrálás dátuma"
 
 msgid "RCM Serial"
 msgstr "RCM Sorozatszám"
@@ -2337,3 +2313,6 @@ msgstr "Fájlmegjegyzés"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Megjegyzés erről a fájlról.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Sorozatszám"

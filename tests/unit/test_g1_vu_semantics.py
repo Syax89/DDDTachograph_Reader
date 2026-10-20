@@ -506,15 +506,15 @@ def test_revisit_of_the_same_body_is_still_emitted_once():
     assert _parse_trep_03_structured(body, results, message_offset=4096) is True
     assert len(results["events"]) == 1
     assert len(results["faults"]) == 1
-    # A different *body* that decodes to the same values is the same stored
-    # record re-read (the fallback scan re-reads a byte range the walk already
-    # decoded), so it is still emitted once ...
+    # A different message body is a different stored record, even when it decodes
+    # to the same values (the walk hands each body once; only the byte-scan
+    # recovery, which keys on the scanned offset, de-duplicates a re-read).
     assert _parse_trep_03_structured(body, results, message_offset=8192) is True
-    assert len(results["events"]) == 1
-    # ... while a body with different values adds its own record.
+    assert len(results["events"]) == 2
+    # ... and a body with different values adds its own record too.
     other = _trep03_body(event_type=0x02, fault_type=0x31, n_over=(), n_adj=())
-    assert _parse_trep_03_structured(other, results, message_offset=8192) is True
-    assert [e["type_code"] for e in results["events"]] == [0x0A, 0x02]
+    assert _parse_trep_03_structured(other, results, message_offset=12288) is True
+    assert [e["type_code"] for e in results["events"]] == [0x0A, 0x0A, 0x02]
 
 
 # ── F6/F7: structure, not values, decides what is decodable ────────────────

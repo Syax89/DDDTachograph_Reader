@@ -341,12 +341,15 @@ def _iso(ts):
 def _time_fields(ts, *, key="timestamp"):
     """A stored TimeReal as three fields: value, raw integer and status.
 
-    ``TimeReal`` is a uint32 (Annex 1C §2.51); a value outside the calendar the
-    application can render is *withheld* — never used to deny that the record
-    exists. The raw integer always travels so nothing is lost.
+    ``TimeReal`` is a uint32 (Annex 1C §2.51); a value the reader cannot render as a
+    timestamp — zero (the "not set" value a VU writes before its clock is valid) and
+    anything outside the calendar alike — is *withheld*, never used to deny that the
+    record exists. The raw integer always travels so nothing is lost, and the status
+    matches the generation-1 decoders for the same value.
     """
-    return {key: _iso(ts), f"{key}_raw": ts,
-            "time_status": "valid" if _iso(ts) else "invalid"}
+    readable = ts not in (None, 0) and bool(_iso(ts))
+    return {key: _iso(ts) if readable else None, f"{key}_raw": ts,
+            "time_status": "valid" if readable else "invalid"}
 
 
 def decode_name(data, off, length=36):

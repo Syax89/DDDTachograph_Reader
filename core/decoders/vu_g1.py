@@ -52,27 +52,22 @@ def _content_fingerprint(record):
 
 
 def _append_once(target, record, identity, index):
-    """Append *record* unless it is a re-read of a record already published.
+    """Append *record* unless the same stored record is already published.
 
-    Two rules, in order:
-    * the same message body (identity) and record position -> already published;
-    * a *different* body that decodes to the same values -> the same stored
-      record re-read by the fallback scan, not a second one.
-    Within one body the position decides, so two byte-identical stored records are
-    both kept. Returns True when the record was appended.
+    Identity is **position**: the deterministic walk hands each message body once,
+    so ``identity#index`` names one stored record. Two separate messages carrying
+    byte-identical records are two records, not one.
+
+    The byte-scan recovery path, which really can read the same bytes twice, passes
+    an identity that is the scanned *offset* for those bytes — re-reading them
+    yields the same key and is de-duplicated, while a different offset stays a
+    different record.
     """
     key = _record_key(identity, index)
-    fingerprint = _content_fingerprint(record)
     for existing in target:
-        if not isinstance(existing, dict):
-            continue
-        if existing.get("_key") == key:
-            return False
-        if (existing.get("_fp") == fingerprint
-                and str(existing.get("_key", "")).rsplit("#", 1)[0] != identity):
+        if isinstance(existing, dict) and existing.get("_key") == key:
             return False
     record["_key"] = key
-    record["_fp"] = fingerprint
     target.append(record)
     return True
 
@@ -840,20 +835,24 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
             rec = data[pos:pos + 28]
             ts = struct.unpack(">I", rec[18:22])[0]
             short, meaning = entry_type_daily_work_period(rec[22], "G1")
-            if 946684800 <= ts <= 4102444800:
-                places.append({
-                    "_key": _record_key(identity, ("place", len(places))),
-                    "timestamp": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
-                    "entry_type": "START" if short == "BEGIN" else "END",
-                    "entry_type_description": meaning,
-                    "entry_type_status": entry_type_daily_work_period_status(
-                        rec[22], "G1"),
-                    "type_code": rec[22],
-                    "nation": get_nation(rec[23]),
-                    "region": rec[24],
-                    "odometer_km": int.from_bytes(rec[25:28], 'big'),
-                    "card_driver": _parse_full_card_number(rec, 0),
-                })
+            # Every declared record is emitted: the TimeReal is a stored field, so
+            # an unusable one is withheld (the table's N/A) with its raw value and
+            # a status — never a reason to drop the record.
+            places.append({
+                "_key": _record_key(identity, ("place", len(places))),
+                "timestamp": _g1_time(ts),
+                "timestamp_raw": ts,
+                "time_status": "valid" if _g1_time(ts) else "invalid",
+                "entry_type": "START" if short == "BEGIN" else "END",
+                "entry_type_description": meaning,
+                "entry_type_status": entry_type_daily_work_period_status(
+                    rec[22], "G1"),
+                "type_code": rec[22],
+                "nation": get_nation(rec[23]),
+                "region": rec[24],
+                "odometer_km": int.from_bytes(rec[25:28], 'big'),
+                "card_driver": _parse_full_card_number(rec, 0),
+            })
             pos += 28
 
         n_sc = struct.unpack(">H", data[pos:pos + 2])[0]
@@ -869,15 +868,16 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None):
             # the generation-2 "crossing end" meaning, but the record is kept
             # with its numeric code and an assignment status.
             label = specific_condition_label(rec[4], generation="G1")
-            if 946684800 <= ts <= 4102444800:
-                conditions.append({
-                    "_key": _record_key(identity, ("condition", len(conditions))),
-                    "timestamp": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
-                    "condition": label,
-                    "condition_status": ("assigned" if rec[4] in (0x01, 0x02, 0x03)
-                                         else "not assigned"),
-                    "type_code": rec[4],
-                })
+            conditions.append({
+                "_key": _record_key(identity, ("condition", len(conditions))),
+                "timestamp": _g1_time(ts),
+                "timestamp_raw": ts,
+                "time_status": "valid" if _g1_time(ts) else "invalid",
+                "condition": label,
+                "condition_status": ("assigned" if rec[4] in (0x01, 0x02, 0x03)
+                                     else "not assigned"),
+                "type_code": rec[4],
+            })
             pos += 5
 
         # Emit (with dedup — the message scan can revisit the same block).
@@ -1535,9 +1535,12 @@ def _parse_trep_05_technical(data, results, message_offset=None):
             # One set of timestamp columns: the three calibration TimeReals carry a
             # time of day, so they are published as the full value (rendered in the
             # same format as every other timestamp column) with N/A when unusable.
-            old_time = _g1_time(struct.unpack(">I", chunk[155:159])[0])
-            new_time = _g1_time(struct.unpack(">I", chunk[159:163])[0])
-            next_cal = _g1_time(struct.unpack(">I", chunk[163:167])[0])
+            # A withheld TimeReal keeps the table's own missing-value convention
+            # ("N/A"), exactly as this table rendered it before the columns were
+            # upgraded to date+time; a usable value carries the full timestamp.
+            old_time = _g1_time(struct.unpack(">I", chunk[155:159])[0]) or "N/A"
+            new_time = _g1_time(struct.unpack(">I", chunk[159:163])[0]) or "N/A"
+            next_cal = _g1_time(struct.unpack(">I", chunk[163:167])[0]) or "N/A"
             old_time_iso = old_time
             new_time_iso = new_time
             next_cal_iso = next_cal
@@ -1782,7 +1785,7 @@ def _parse_trep_05_technical(data, results, message_offset=None):
 
 def _parse_trep_06_card_download(data, results):
     """Parse TREP 06 (Card Download) — a full driver-card image embedded in the
-    VU download (Annex 1B §2.2.6.6).
+    VU download (DDP_049/DDP_050).
 
     Primary path is deterministic: the body is a STAP stream of the card's
     Elementary Files (0x0501 App Id, 0x0502 Events, 0x0503 Faults, 0x0504

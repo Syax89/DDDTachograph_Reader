@@ -2282,32 +2282,8 @@ msgstr "INTEGRITA"
 msgid "  Byte-accounted coverage"
 msgstr "  Pokrytí po bajtech"
 
-msgid "Serial"
-msgstr "Sériové číslo"
-
-msgid "Month"
-msgstr "Datum"
-
-msgid "Year"
-msgstr "Datum"
-
-msgid "Sensor Pairing Time"
-msgstr "Čas spárování čidla"
-
 msgid "Current Date Time"
 msgstr "Datum Čas"
-
-msgid "Entry Type Meaning"
-msgstr "Typ záznamu"
-
-msgid "Old Time Full"
-msgstr "Starý čas"
-
-msgid "New Time Full"
-msgstr "Nový čas"
-
-msgid "Next Calibration Full"
-msgstr "Datum příští kalibrace"
 
 msgid "RCM Serial"
 msgstr "RCM Sériové číslo"
@@ -2337,3 +2313,6 @@ msgstr "Poznámka k souboru"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Poznámka k tomuto souboru.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Sériové číslo"

@@ -190,6 +190,9 @@ _CODE_LABEL_KEYS = {"trep", "tag_id", "data_type"}
 # Acronyms kept upper-case when humanising keys.
 _ACRONYMS = {"vin", "gnss", "vu", "its", "id", "km", "kmh", "iw", "ic", "icc",
              "rsa", "ecdsa", "msca", "erca", "trep", "ad", "g1", "g2",
+             # RCM = Remote Communication Module (Annex 1C §2.120): the column
+             # label is "RCM Serial", which is the msgid the catalogs carry.
+             "rcm",
              # Certificate references: CAR = Certificate Authority Reference,
              # CHR = Certificate Holder Reference; ALGO = algorithm identifier.
              "car", "chr", "algo"}

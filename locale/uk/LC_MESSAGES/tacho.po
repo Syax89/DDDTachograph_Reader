@@ -2282,32 +2282,8 @@ msgstr "ЦІЛІСНІСТЬ"
 msgid "  Byte-accounted coverage"
 msgstr "  Покриття за байтами"
 
-msgid "Serial"
-msgstr "Серійний номер"
-
-msgid "Month"
-msgstr "Дата"
-
-msgid "Year"
-msgstr "Дата"
-
-msgid "Sensor Pairing Time"
-msgstr "Час сполучення датчика"
-
 msgid "Current Date Time"
 msgstr "Дата Час"
-
-msgid "Entry Type Meaning"
-msgstr "Тип запису"
-
-msgid "Old Time Full"
-msgstr "Старий час"
-
-msgid "New Time Full"
-msgstr "Новий час"
-
-msgid "Next Calibration Full"
-msgstr "Дата наступного калібрування"
 
 msgid "RCM Serial"
 msgstr "RCM Серійний номер"
@@ -2337,3 +2313,6 @@ msgstr "Примітка до файлу"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Примітка до цього файлу.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Серійний номер"

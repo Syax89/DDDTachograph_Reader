@@ -2282,32 +2282,8 @@ msgstr "BÜTÜNLÜK"
 msgid "  Byte-accounted coverage"
 msgstr "  Bayt bazında kapsam"
 
-msgid "Serial"
-msgstr "Seri numarası"
-
-msgid "Month"
-msgstr "Tarih"
-
-msgid "Year"
-msgstr "Tarih"
-
-msgid "Sensor Pairing Time"
-msgstr "Sensör eşleştirme tarihi Zaman"
-
 msgid "Current Date Time"
 msgstr "Tarih Zaman"
-
-msgid "Entry Type Meaning"
-msgstr "Giriş türü"
-
-msgid "Old Time Full"
-msgstr "Eski zaman"
-
-msgid "New Time Full"
-msgstr "Yeni zaman"
-
-msgid "Next Calibration Full"
-msgstr "Sonraki kalibrasyon tarihi"
 
 msgid "RCM Serial"
 msgstr "RCM Seri numarası"
@@ -2337,3 +2313,6 @@ msgstr "Dosya notu"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Bu dosya hakkında not.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Seri numarası"

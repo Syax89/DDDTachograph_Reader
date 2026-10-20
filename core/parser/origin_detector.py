@@ -2,7 +2,7 @@
 
 The first byte alone (0x76 = VU) is not enough to classify a file. A driver
 card image can be wrapped in a single VU ``Card Download`` message (TREP 0x06,
-Annex 1B §2.2.6.6 / Annex 1C Appendix 7): such a file starts with 0x76 but its
+DDP_049 / DDP_050): such a file starts with 0x76 but its
 payload is a plain card-EF image, not a VU download.
 
 This module confirms the origin from the decoded content:
@@ -88,7 +88,7 @@ def detect_origin(
     # selective "card download" — a card image, not a VU download.
     if 0x06 in treps and not other_treps and has_card_only and not has_vu_only:
         note = ("Driver card image extracted from a VU Card Download "
-                "(TREP 06, Annex 1B \u00a72.2.6.6) \u2014 valid selective download")
+                "(TREP 06, DDP_049/DDP_050) \u2014 valid selective download")
         return ORIGIN_CARD, note, True
 
     return ORIGIN_VU, "", False

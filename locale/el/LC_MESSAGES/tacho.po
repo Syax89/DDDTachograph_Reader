@@ -2282,32 +2282,8 @@ msgstr "ΑΚΕΡΑΙΟΤΗΤΑ"
 msgid "  Byte-accounted coverage"
 msgstr "  Κάλυψη σε byte"
 
-msgid "Serial"
-msgstr "Σειριακός αριθμός"
-
-msgid "Month"
-msgstr "Ημερομηνία"
-
-msgid "Year"
-msgstr "Ημερομηνία"
-
-msgid "Sensor Pairing Time"
-msgstr "Ώρα αντιστοίχισης αισθητήρα"
-
 msgid "Current Date Time"
 msgstr "Ημερομηνία Ώρα"
-
-msgid "Entry Type Meaning"
-msgstr "Τύπος καταχώρισης"
-
-msgid "Old Time Full"
-msgstr "Παλιά ώρα"
-
-msgid "New Time Full"
-msgstr "Νέα ώρα"
-
-msgid "Next Calibration Full"
-msgstr "Ημερομηνία επόμενης βαθμονόμησης"
 
 msgid "RCM Serial"
 msgstr "RCM Σειριακός αριθμός"
@@ -2337,3 +2313,6 @@ msgstr "Σημείωση αρχείου"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Σημείωση για αυτό το αρχείο.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Σειριακός αριθμός"

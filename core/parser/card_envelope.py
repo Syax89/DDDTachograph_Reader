@@ -1,7 +1,7 @@
 """Stand-alone TREP 06 envelope: SID 0x76 + TREP 06 followed by a card image.
 
 A selective download relayed **through the vehicle unit** keeps the transfer header
-that a card stored by other tooling does not (Annex 1B §2.2.6.6 / DDP_050 strips
+that a card stored by other tooling does not (DDP_050 strips
 ``76 06`` when the card image is written to a file). Such a file is the plain card
 plus two bytes, so it must be decoded by the plain card pipeline — not as a VU
 stream, and never reported as a corrupt card.
@@ -63,6 +63,11 @@ def card_image_extent(payload):
         tag, dtype, length = struct.unpack(">HBH", payload[pos:pos + STAP_HEADER_SIZE])
         if tag in (0x0000, STAP_RESERVED_LENGTH, 0x5555):
             break
+        if tag >> 8 == SID:
+            # A card file identifier is never 0x76xx: that pair opens a VU TREP
+            # section (a second `76 06` card region, or the next transfer), so the
+            # card stream ends here.
+            break
         if dtype > 0x0F:
             break
         if length == STAP_RESERVED_LENGTH:
@@ -103,3 +108,31 @@ def trep06_envelope(raw_data):
     _log.debug("TREP 06 card envelope: %d element(s), %d card bytes",
                count, end)
     return {"bytes": 2, "card_bytes": end, "elements": count}
+
+
+def trep06_card_regions(raw_data):
+    """Every complete ``76 06`` + card region, when they cover the whole file.
+
+    A file may hold more than one relayed card (a tool that saves several card
+    downloads back to back). Each region is bounded by its own STAP framing, so
+    every one of them is recognised and none can swallow its neighbour. Returns a
+    list of ``(offset_of_card_bytes, card_bytes)`` or ``[]``; the file counts only
+    when the regions cover it completely (nothing else in it).
+    """
+    try:
+        data = bytes(raw_data)
+    except (TypeError, ValueError):
+        return []
+    regions = []
+    pos = 0
+    while pos + 2 <= len(data):
+        if data[pos] != SID or data[pos + 1] != TREP_CARD_DOWNLOAD:
+            return []
+        start = pos + 2
+        end, elements = card_image_extent(data[start:])
+        tag = struct.unpack(">H", data[start:start + 2])[0] if elements else None
+        if not elements or tag not in CARD_FILE_TAGS:
+            return []
+        regions.append((start, end))
+        pos = start + end
+    return regions if len(regions) > 1 else []

@@ -587,7 +587,7 @@ parser core that is deterministic-first, resilient to malformed data, and can
   (Annex 1B/1C App.7); a completeness report (present/missing/suspect/partial)
   surfaced in the CLI summary and a new **TACHOGRAPH DOWNLOAD** GUI panel
 - **Content-based origin detection**: distinguishes a genuine VU download from a
-  driver-card image wrapped in a stand-alone TREP 06 (Annex 1B §2.2.6.6), so
+  driver-card image wrapped in a stand-alone TREP 06 (DDP_049/DDP_050), so
   valid card dumps are no longer mis-flagged as corrupt
 - **Plausibility gating**: pure validators (speed, timestamp, odometer,
   printable text, sensor block, event record) drop nonsense values (e.g. a

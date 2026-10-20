@@ -327,9 +327,7 @@ first, and it is not made here.
 * **The workshop-card type of the Gen1 calibration** — the record's workshop
   `FullCardNumber` type byte is decoded but not interpreted into a card-type
   name.
-* **The `Annex 1B §2.2.6.6` citation for TREP 06** — the TREP 06 body is an
-  embedded card image rather than a structure the Annex lays out field by field,
-  so that reference should be re-checked before it is relied on again.
+* **The TREP 06 citation was wrong and is corrected**: Annex 1B §2.2.6 stops at §2.2.6.5, so the card layout is not there. The card download is the request in §2.2.2.9, the downloading protocol is §3 with the stored file format in §3.4.2, and the retrieval/storage rules are DDP_049/DDP_050 — the references in the code and docs now say that.
 * A full field-by-field conformance verdict for every VU record type — the
   per-record `normative` verdict remains limited to Gen2 events and faults.
 * A decoding of the sensor payload at a documented layout (none exists).

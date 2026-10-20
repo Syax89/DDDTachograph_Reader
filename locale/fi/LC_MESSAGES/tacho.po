@@ -2282,32 +2282,8 @@ msgstr "EHEYS"
 msgid "  Byte-accounted coverage"
 msgstr "  Tavukohtainen kattavuus"
 
-msgid "Serial"
-msgstr "Sarjanumero"
-
-msgid "Month"
-msgstr "Päivämäärä"
-
-msgid "Year"
-msgstr "Päivämäärä"
-
-msgid "Sensor Pairing Time"
-msgstr "Anturin parituspäivä Aika"
-
 msgid "Current Date Time"
 msgstr "Päivämäärä Aika"
-
-msgid "Entry Type Meaning"
-msgstr "Merkintätyyppi"
-
-msgid "Old Time Full"
-msgstr "Vanha aika"
-
-msgid "New Time Full"
-msgstr "Uusi aika"
-
-msgid "Next Calibration Full"
-msgstr "Seuraava kalibrointipäivä"
 
 msgid "RCM Serial"
 msgstr "RCM Sarjanumero"
@@ -2337,3 +2313,6 @@ msgstr "Tiedoston huomautus"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Huomautus tästä tiedostosta.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Sarjanumero"

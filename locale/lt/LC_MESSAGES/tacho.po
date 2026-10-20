@@ -2282,32 +2282,8 @@ msgstr "VIENTISUMAS"
 msgid "  Byte-accounted coverage"
 msgstr "  Baitų apskaitos aprėptis"
 
-msgid "Serial"
-msgstr "Serijos numeris"
-
-msgid "Month"
-msgstr "Data"
-
-msgid "Year"
-msgstr "Data"
-
-msgid "Sensor Pairing Time"
-msgstr "Jutiklio susiejimo data Laikas"
-
 msgid "Current Date Time"
 msgstr "Data Laikas"
-
-msgid "Entry Type Meaning"
-msgstr "Įrašo tipas"
-
-msgid "Old Time Full"
-msgstr "Senas laikas"
-
-msgid "New Time Full"
-msgstr "Naujas laikas"
-
-msgid "Next Calibration Full"
-msgstr "Kita kalibravimo data"
 
 msgid "RCM Serial"
 msgstr "RCM Serijos numeris"
@@ -2337,3 +2313,6 @@ msgstr "Failo pastaba"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Pastaba apie šį failą.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Serijos numeris"

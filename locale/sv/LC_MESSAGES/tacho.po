@@ -2282,32 +2282,8 @@ msgstr "INTEGRITET"
 msgid "  Byte-accounted coverage"
 msgstr "  Byte-redovisad täckning"
 
-msgid "Serial"
-msgstr "Serienummer"
-
-msgid "Month"
-msgstr "Datum"
-
-msgid "Year"
-msgstr "Datum"
-
-msgid "Sensor Pairing Time"
-msgstr "Sensorns parkopplingsdatum Tid"
-
 msgid "Current Date Time"
 msgstr "Datum Tid"
-
-msgid "Entry Type Meaning"
-msgstr "Posttyp"
-
-msgid "Old Time Full"
-msgstr "Gammal tid"
-
-msgid "New Time Full"
-msgstr "Ny tid"
-
-msgid "Next Calibration Full"
-msgstr "Nästa kalibreringsdatum"
 
 msgid "RCM Serial"
 msgstr "RCM Serienummer"
@@ -2337,3 +2313,6 @@ msgstr "Not om filen"
 
 msgid "Note about this file.\n\n{filename}\n\n"
 msgstr "Not om den här filen.\n\n{filename}\n\n"
+
+msgid "RCM Serial Number"
+msgstr "RCM Serienummer"
