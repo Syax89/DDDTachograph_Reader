@@ -487,7 +487,12 @@ def _decode_place_records(val, off, stride):
     # EntryTypeDailyWorkPeriod (Annex 1B/1C §2.66): 0/2 = begin, 1/3 = end
     # (2/3 = GNSS-related variants). Confirmed on real card data: type 0 at
     # start of day (~03:00), type 1 at end of day.
-    entry_names = {0x00: "START", 0x01: "END", 0x02: "START", 0x03: "END"}
+    # EntryTypeDailyWorkPeriod is the *shared* assignment (Annex 1C §2.66): a
+    # card place may carry 0..7, including the VU-assumed (4/5) and GNSS-based
+    # (6/7) variants. The card route used to accept 0..3 only, which silently
+    # dropped every GNSS-based start/end of a work period.
+    from core.decoders.common import (entry_type_daily_work_period,
+                                      entry_type_daily_work_period_status)
     records = []
     try:
         for i in range(off, len(val) - stride + 1, stride):
@@ -496,8 +501,6 @@ def _decode_place_records(val, off, stride):
             if ts < MIN_TS or ts > MAX_TS:
                 continue
             entry_type = chunk[4]
-            if entry_type not in entry_names:
-                continue
             nation_code = chunk[5]
             # NationNumeric is a single byte, so a `> 0xFF` range test could
             # never fire. Reject unassigned values (0x36..0xFC) instead; the
@@ -506,9 +509,14 @@ def _decode_place_records(val, off, stride):
                 continue
 
             dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+            short, meaning = entry_type_daily_work_period(entry_type, "G2")
             record = {
                 "timestamp": dt,
-                "entry_type": entry_names[entry_type],
+                "entry_type": "START" if short == "BEGIN" else (
+                    "END" if short == "END" else short),
+                "entry_type_meaning": meaning,
+                "entry_type_status": entry_type_daily_work_period_status(
+                    entry_type, "G2"),
                 "type_code": entry_type,
                 "nation": get_nation(nation_code),
                 "region": chunk[6],

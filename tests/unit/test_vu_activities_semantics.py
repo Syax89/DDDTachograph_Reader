@@ -82,8 +82,11 @@ def test_g1_entry_type_assignment_also_has_the_vu_assumed_values():
     # Generation 1 assigns 0..5 and nothing else: above that it is not assigned.
     assert entry_type_daily_work_period_status(0x06, "G1") == "not assigned"
     assert "not assigned" in entry_type_daily_work_period(0x06, "G1")[1]
-    # Generation 2 keeps the same six but its upper bound is not readable here.
-    assert entry_type_daily_work_period_status(0x06, "G2").startswith("unknown")
+    # Generation 2 continues with the two GNSS-based values (Reg. 2016/799
+    # §2.66): they are assigned, not unknown.
+    assert entry_type_daily_work_period_status(0x06, "G2").startswith("assigned")
+    # 8 is not assigned by any readable generation-2 text.
+    assert entry_type_daily_work_period_status(0x08, "G2").startswith("unknown")
 
 
 # ── GNSS coordinates ────────────────────────────────────────────────────────
@@ -189,3 +192,52 @@ def test_specific_condition_labels_follow_the_section_generation():
         "0x04")
     assert decode_specific_condition(rfu, generation="G1")["condition_status"] == (
         "not assigned")
+
+
+# ── GNSS-based entry types 6/7 (Reg. 2016/799 §2.66) ───────────────────────
+
+def _place_section(trep, entry_type):
+    record = _place_record(entry_type=entry_type,
+                           auth=None if trep == 0x22 else 0x01)
+    return S.section(
+        trep,
+        S.record_array(0x06, 4, [struct.pack(">I", TIME)]),
+        S.record_array(0x05, 3, [(654_321).to_bytes(3, "big")]),
+        S.record_array(0x01, 2, [struct.pack(">H", 0x10F3)]),
+        S.record_array(0x1C, len(record), [record]),
+        S.signature_record())
+
+
+def test_gnss_based_entry_types_are_published_in_a_g2_section():
+    for trep, code, short in ((0x22, 0x06, "BEGIN"), (0x22, 0x07, "END"),
+                              (0x32, 0x06, "BEGIN"), (0x32, 0x07, "END")):
+        results = _results()
+        walk_vu_record_arrays(_place_section(trep, code), results)
+        place = results["places"][0]
+        assert place["type_code"] == code
+        assert place["entry_type"] == short
+        assert place["entry_type_meaning"].startswith(short.capitalize() +
+                                                     ", related time based on GNSS")
+        assert place["entry_type_status"].startswith("assigned (Reg. 2016/799")
+
+
+def test_entry_type_above_seven_stays_unknown_and_is_not_dropped():
+    results = _results()
+    walk_vu_record_arrays(_place_section(0x32, 0x08), results)
+    place = results["places"][0]
+    assert place["type_code"] == 0x08
+    assert place["entry_type_meaning"] == "unknown (0x08)"
+    assert place["entry_type_status"].startswith("unknown")
+
+
+def test_g1_six_is_not_assigned():
+    results = _results()
+    walk_vu_record_arrays(_place_section(0x22, 0x06), results)
+    # control: the same code is assigned for generation 2 ...
+    assert results["places"][0]["entry_type_status"].startswith("assigned")
+    from core.decoders.common import (entry_type_daily_work_period,
+                                      entry_type_daily_work_period_status)
+    # ... and not for generation 1, whose assignment stops at 5.
+    assert entry_type_daily_work_period(0x06, "G1") == (
+        "0x06", "not assigned (0x06)")
+    assert entry_type_daily_work_period_status(0x06, "G1") == "not assigned"

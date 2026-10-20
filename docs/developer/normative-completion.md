@@ -390,9 +390,16 @@ both `HIDDEN_KEYS` sets (`core/utils/report_format.py`, `app/gui.py`).
 
 ### 9.3 Explicitly unresolved (no source, nothing invented)
 
-* `EntryTypeDailyWorkPeriod` codes above 5 in generation 2 — the enumeration is
-  a figure in every accessible edition, so the decoder says "unknown" and never
-  "unassigned".
+* `EntryTypeDailyWorkPeriod` — **resolved**: generation 1 assigns 0..5 (Annex 1B
+  §2.51) and generation 2 adds the two GNSS-based values 6/7 ("Begin/End, related
+  time based on GNSS data", Reg. (EU) 2016/799 Appendix 1 §2.66). Reg. (EU)
+  2021/1228 replaced that block's prose with "according to ISO/IEC8824-1" and its
+  ASN.1 figure lists 0..3 only, so 6/7 keep the 2016 meaning (status
+  `assigned (Reg. 2016/799 sec. 2.66; 2021/1228 ASN.1 figure lists 0..3 only)`) —
+  they are **not** newly authorised by the 2021 act. Codes above 7 stay
+  `unknown`; generation 1 reports 6+ as `not assigned`. Both the VU place route
+  and the card place route use the shared helper, so a place with 6/7 is
+  published as a begin/end instead of being dropped.
 * `digitalMapVersion` — **resolved as a type**: Reg. (EU) 2021/1228 prints the
   ASN.1 as `VuDigitalMapVersion ::= IA5String (SIZE(12))`, so the generation-2,
   version-2 `VuIdentification` ends at 138 bytes and the twelve octets are IA5

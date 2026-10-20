@@ -173,45 +173,60 @@ ENTRY_TYPE_DAILY_WORK_PERIOD: dict[int, tuple[str, str]] = {
 #: 0..5 in text: card time, manually entered, "assumed by VU").
 ENTRY_TYPE_G1_MAX = 0x05
 
-#: Generation 2 re-states the point as "Value assignment: according to
-#: ISO/IEC8824-1" (Annex 1C §2.66) with the enumeration printed as a *figure* in
-#: every accessible edition (the EUR-Lex/PDF text layer omits it), so the
-#: generation-2 upper bound is not readable from the copied sources. Codes above
-#: the shared six are therefore reported ``unknown`` — not "unassigned", which
-#: would assert an assignment the accessible text does not show.
+#: Generation 2 adds the two GNSS-based values (Reg. (EU) 2016/799 Appendix 1
+#: §2.66, "Generation 2" block: *Begin/End, related time based on GNSS data*
+#: (6)/(7)). Reg. (EU) 2021/1228 replaces that block's text with "Value
+#: assignment: according to ISO/IEC8824-1" and prints an ASN.1 figure that lists
+#: 0..3 only, so the 2016 wording is the readable assignment for 6/7 — they are
+#: *not* newly authorised by the 2021 act, and nothing above 7 is assigned by any
+#: readable text.
+ENTRY_TYPE_DAILY_WORK_PERIOD_G2: dict[int, tuple[str, str]] = {
+    **ENTRY_TYPE_DAILY_WORK_PERIOD,
+    0x06: ("BEGIN", "Begin, related time based on GNSS data"),
+    0x07: ("END", "End, related time based on GNSS data"),
+}
+
 ENTRY_TYPE_STATUS_ASSIGNED = "assigned"
-ENTRY_TYPE_STATUS_UNKNOWN = "unknown (generation 2 enumeration not readable in the accessible edition)"
+ENTRY_TYPE_STATUS_UNKNOWN = "unknown (not assigned by the readable generation-2 text)"
+#: Status quoted for the two GNSS-based generation-2 values (see above).
+ENTRY_TYPE_STATUS_ASSIGNED_GNSS = (
+    "assigned (Reg. 2016/799 sec. 2.66; 2021/1228 ASN.1 figure lists 0..3 only)")
 
 
 def entry_type_daily_work_period(code, generation="G2"):
     """``(short, meaning)`` for one EntryTypeDailyWorkPeriod byte.
 
-    The shared six values are generation-independent. Nothing is invented above
-    them: a code the accessible text does not assign keeps its numeric value as
-    the short form, and :func:`entry_type_daily_work_period_status` says whether
-    the value is assigned or merely unknown to the readable edition.
+    Generation 1 assigns 0..5; generation 2 assigns 0..7 (the last two are the
+    GNSS-based begin/end). A code the readable text does not assign keeps its
+    numeric value as the short form — nothing is invented, and no code is
+    dropped: :func:`entry_type_daily_work_period_status` says how it is assigned.
     """
     try:
         value = int(code)
     except (TypeError, ValueError):
         return ("Unknown", "unknown")
-    if value in ENTRY_TYPE_DAILY_WORK_PERIOD:
-        return ENTRY_TYPE_DAILY_WORK_PERIOD[value]
     if generation == "G1":
+        if value in ENTRY_TYPE_DAILY_WORK_PERIOD:
+            return ENTRY_TYPE_DAILY_WORK_PERIOD[value]
         return (f"0x{value:02X}", f"not assigned (0x{value:02X})")
+    if value in ENTRY_TYPE_DAILY_WORK_PERIOD_G2:
+        return ENTRY_TYPE_DAILY_WORK_PERIOD_G2[value]
     return (f"0x{value:02X}", f"unknown (0x{value:02X})")
 
 
 def entry_type_daily_work_period_status(code, generation="G2"):
-    """``assigned`` / ``not assigned`` (G1) / ``unknown`` (G2 beyond the six)."""
+    """How the readable text assigns a code: assigned / not assigned / unknown."""
     try:
         value = int(code)
     except (TypeError, ValueError):
         return ENTRY_TYPE_STATUS_UNKNOWN
+    if generation == "G1":
+        return (ENTRY_TYPE_STATUS_ASSIGNED
+                if value in ENTRY_TYPE_DAILY_WORK_PERIOD else "not assigned")
     if value in ENTRY_TYPE_DAILY_WORK_PERIOD:
         return ENTRY_TYPE_STATUS_ASSIGNED
-    if generation == "G1":
-        return "not assigned"
+    if value in ENTRY_TYPE_DAILY_WORK_PERIOD_G2:
+        return ENTRY_TYPE_STATUS_ASSIGNED_GNSS
     return ENTRY_TYPE_STATUS_UNKNOWN
 
 

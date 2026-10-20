@@ -20,6 +20,7 @@ from core.decoders.common import (
     decode_string,
     decode_coded_text,
     decode_date,
+    ENTRY_TYPE_DAILY_WORK_PERIOD_G2,
     entry_type_daily_work_period,
     entry_type_daily_work_period_status,
     decode_datef,
