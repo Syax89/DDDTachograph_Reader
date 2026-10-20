@@ -407,7 +407,10 @@ def walk_g1_vu(data, results):
         results["_g1_walk_trailing_bytes"] = trailing
 
     integrity = []
-    if messages and trailing:
+    if messages and trailing and not padding_only:
+        # 0x00/0xFF fill after the last signature is padding (a VU fills unused
+        # space with FF, and erased space is zeroed); only a remainder with other
+        # bytes is a finding.
         last = messages[-1]
         if last["sig_len"] == 0 and trailing < RSA_SIGNATURE_LEN:
             # The body is complete and decodable; only the signature block is
@@ -448,7 +451,9 @@ def walk_g1_vu(data, results):
             card_regions.append({
                 "offset": msg["body_start"],
                 "bytes": msg["body_end"] - msg["body_start"],
-                "tlvs": 0,
+                # The EF chain could not be walked, so no element count is known:
+                # null, never a fabricated zero.
+                "tlvs": None,
                 "tlv_complete": False,
                 "boundary": "resynchronised (card EF stream does not close)",
                 "delegated": False,

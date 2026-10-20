@@ -3269,11 +3269,11 @@ def _resource_path(rel):
 #: the saving tool kept (SID 0x76 + TREP 06), which DDP_050 strips for the storage
 #: form. Other programs reject that form, so the customer is told what it is.
 CARD_ENVELOPE_NOTICE = _(
-"Driver-card image downloaded through the vehicle unit: the two leading bytes "
-"are the transfer header (SID + TREP 06) kept by the tool that saved it, not the "
-"standard storage form of a card file (DDP_050). Some other programs report such "
-"a file as corrupt; the card data are complete and its signatures are verified "
-"normally.")
+    "Driver-card image downloaded through the vehicle unit: the two leading bytes "
+    "are the transfer header (SID + TREP 06) kept by the tool that saved it, not the "
+    "standard storage form of a card file (DDP_050). Some other programs report such "
+    "a file as corrupt; this reader reports the card's own signature verdict "
+    "separately.")
 
 
 def _envelope_notice(data):
@@ -3308,6 +3308,21 @@ def _integrity_bullets(data):
     if (meta.get("is_vu") is not True and not failed and not skipped
             and "Verified" not in integrity and integrity):
         warnings.append(f"\u2022 Card integrity: {integrity}")
+    # Structure findings: the walk may have consumed every byte, so the reason is
+    # the section's array list — name it instead of blaming the walk.
+    findings = meta.get("vu_integrity") or []
+    schema_findings = [f for f in findings if f.get("status") == "schema_violation"]
+    if schema_findings:
+        details = "; ".join(
+            f"{f.get('trep', '?')}: {f.get('detail', '')}".strip()
+            for f in schema_findings)
+        warnings.append("\u2022 Section structure (schema violation): " + details)
+    truncated = [f for f in findings
+                 if f.get("status") in ("trailing_bytes", "array_truncated",
+                                        "card_download_incomplete")]
+    trep = meta.get("trep_report") or {}
+    if truncated or (not trep.get("complete_walk", True) and not schema_findings):
+        warnings.append("\u2022 The structural walk did not reach the end of file")
     notice = _envelope_notice(data)
     notices = [notice] if notice else []
     return warnings + notices, notices

@@ -179,7 +179,7 @@ def test_generation_2_calibration_has_only_the_seal_block():
 def test_generation_2_v2_calibration_adds_serials_load_type_and_country():
     out = decode_calibration(_calibration(252))
     assert out["calibration_variant"] == "generation 2, version 2 (252)"
-    assert out["sensor_serial_number"] == S.extended_serial(0x0000A001).hex()
+    assert out["sensor_serial_hex"] == S.extended_serial(0x0000A001).hex()
     assert out["sensor_serial"].startswith("40961 \u00b7 ")
     assert out["sensor_serial_decoded"]["serial_number"] == 0x0000A001
     assert out["sensor_gnss_serial_decoded"]["serial_number"] == 0x0000A002

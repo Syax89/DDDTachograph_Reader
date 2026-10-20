@@ -2300,8 +2300,8 @@ msgstr "Έκδοση διεπαφής λήψης"
 msgid "Entry Type Description"
 msgstr "Τύπος καταχώρισης Περιγραφή"
 
-msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
-msgstr "Εικόνα κάρτας οδηγού που λήφθηκε μέσω της μονάδας του οχήματος: τα δύο πρώτα byte είναι η κεφαλίδα μεταφοράς (SID + TREP 06) που διατήρησε το πρόγραμμα αποθήκευσης και όχι η τυπική μορφή αποθήκευσης αρχείου κάρτας (DDP_050). Ορισμένα άλλα προγράμματα αναφέρουν ένα τέτοιο αρχείο ως κατεστραμμένο· τα δεδομένα της κάρτας είναι πλήρη και οι υπογραφές τους επαληθεύονται κανονικά."
+msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Εικόνα κάρτας οδηγού που λήφθηκε μέσω της μονάδας του οχήματος: τα δύο πρώτα byte είναι η κεφαλίδα μεταφοράς (SID + TREP 06) που διατήρησε το πρόγραμμα αποθήκευσης και όχι η τυπική μορφή αποθήκευσης αρχείου κάρτας (DDP_050). Ορισμένα άλλα προγράμματα αναφέρουν ένα τέτοιο αρχείο ως κατεστραμμένο· αυτό το πρόγραμμα εμφανίζει το αποτέλεσμα των υπογραφών της κάρτας ξεχωριστά."
 
 msgid "{count} note(s) — click for details"
 msgstr "{count} σημείωση(εις) — κάντε κλικ για λεπτομέρειες"
@@ -2316,3 +2316,6 @@ msgstr "Σημείωση για αυτό το αρχείο.\n\n{filename}\n\n"
 
 msgid "RCM Serial Number"
 msgstr "RCM Σειριακός αριθμός"
+
+msgid "Transfer header"
+msgstr "Κεφαλίδα μεταφοράς"

@@ -196,7 +196,6 @@ def test_every_label_this_branch_added_has_a_catalog_msgid():
         rf.humanize_key("download_interface_version"),
         rf.humanize_key("current_date_time"),
         rf.humanize_key("rcm_serial"),
-        rf.humanize_key("rcm_serial_number"),
         rf.humanize_key("sensor_gnss_serial"),
         rf.humanize_key("sensor_serial"),
         rf.humanize_key("entry_type_description"),

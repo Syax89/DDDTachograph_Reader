@@ -2300,8 +2300,8 @@ msgstr "Version de l'interface de téléchargement"
 msgid "Entry Type Description"
 msgstr "Type d'entrée Descriptif"
 
-msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
-msgstr "Image de carte de conducteur téléchargée via l'unité véhicule : les deux premiers octets sont l'en-tête de transfert (SID + TREP 06) conservé par le programme qui a enregistré le fichier, et non la forme de stockage standard d'un fichier de carte (DDP_050). Certains autres programmes signalent un tel fichier comme corrompu ; les données de la carte sont complètes et leurs signatures sont vérifiées normalement."
+msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Image de carte de conducteur téléchargée via l'unité véhicule : les deux premiers octets sont l'en-tête de transfert (SID + TREP 06) conservé par le programme qui a enregistré le fichier, et non la forme de stockage standard d'un fichier de carte (DDP_050). Certains autres programmes signalent un tel fichier comme corrompu ; Certains autres programmes signalent un tel fichier comme corrompu ; ce programme présente le résultat des signatures de la carte séparément."
 
 msgid "{count} note(s) — click for details"
 msgstr "{count} note(s) — cliquez pour les détails"
@@ -2316,3 +2316,6 @@ msgstr "Note à propos de ce fichier.\n\n{filename}\n\n"
 
 msgid "RCM Serial Number"
 msgstr "RCM Numéro de série"
+
+msgid "Transfer header"
+msgstr "En-tête de transfert"

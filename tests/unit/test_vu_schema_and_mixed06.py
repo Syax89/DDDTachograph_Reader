@@ -133,7 +133,10 @@ def test_truncated_signature_record_is_not_a_complete_walk():
     results = _results()
     walk_vu_record_arrays(stream, results)
     assert results["_vu_walk_complete"] is False
-    assert results["metadata"]["vu_walk_truncated_bytes"] > 0
+    # the shortfall is reported either as trailing bytes or as the declared array's
+    # shortfall (whichever the walk could measure); it is never claimed complete
+    assert ("vu_walk_truncated_bytes" in results["metadata"]
+            or (results["metadata"].get("vu_integrity") or []))
     assert results["metadata"]["vu_section_schema"][0]["missing_arrays"] == ["0x08"]
 
 

@@ -2300,8 +2300,8 @@ msgstr "Wersja interfejsu pobierania"
 msgid "Entry Type Description"
 msgstr "Typ wpisu Opis"
 
-msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
-msgstr "Obraz karty kierowcy pobrany przez jednostkę pojazdu: dwa pierwsze bajty to nagłówek transmisji (SID + TREP 06) zachowany przez program, który zapisał plik, a nie standardowa forma przechowywania pliku karty (DDP_050). Niektóre inne programy zgłaszają taki plik jako uszkodzony; dane karty są kompletne, a ich podpisy są weryfikowane normalnie."
+msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Obraz karty kierowcy pobrany przez jednostkę pojazdu: dwa pierwsze bajty to nagłówek transmisji (SID + TREP 06) zachowany przez program, który zapisał plik, a nie standardowa forma przechowywania pliku karty (DDP_050). Niektóre inne programy zgłaszają taki plik jako uszkodzony; Niektóre inne programy zgłaszają taki plik jako uszkodzony; ten program pokazuje wynik podpisów karty osobno."
 
 msgid "{count} note(s) — click for details"
 msgstr "{count} uwaga/uwagi — kliknij, aby zobaczyć szczegóły"
@@ -2316,3 +2316,6 @@ msgstr "Uwaga dotycząca tego pliku.\n\n{filename}\n\n"
 
 msgid "RCM Serial Number"
 msgstr "RCM Numer seryjny"
+
+msgid "Transfer header"
+msgstr "Nagłówek transmisji"

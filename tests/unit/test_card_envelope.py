@@ -479,8 +479,8 @@ def test_notice_msgid_is_translated_in_every_catalog_and_distinct():
     msgid = ("Driver-card image downloaded through the vehicle unit: the two leading "
              "bytes are the transfer header (SID + TREP 06) kept by the tool that "
              "saved it, not the standard storage form of a card file (DDP_050). Some "
-             "other programs report such a file as corrupt; the card data are "
-             "complete and its signatures are verified normally.")
+             "other programs report such a file as corrupt; this reader reports the "
+             "card's own signature verdict separately.")
     catalogs = sorted(glob.glob("locale/*/LC_MESSAGES/tacho.po"))
     assert len(catalogs) == 33
     values = {}

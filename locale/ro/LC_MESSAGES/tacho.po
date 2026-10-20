@@ -2300,8 +2300,8 @@ msgstr "Versiunea interfeței de descărcare"
 msgid "Entry Type Description"
 msgstr "Tip înregistrare Descriere"
 
-msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
-msgstr "Imagine a cardului de conducător descărcată prin unitatea vehiculului: primii doi octeți sunt antetul de transfer (SID + TREP 06) păstrat de programul care a salvat fișierul, nu forma standard de stocare a unui fișier de card (DDP_050). Unele alte programe raportează un astfel de fișier ca fiind corupt; datele cardului sunt complete, iar semnăturile lor sunt verificate în mod normal."
+msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Imagine a cardului de conducător descărcată prin unitatea vehiculului: primii doi octeți sunt antetul de transfer (SID + TREP 06) păstrat de programul care a salvat fișierul, nu forma standard de stocare a unui fișier de card (DDP_050). Unele alte programe raportează un astfel de fișier ca fiind corupt; Unele alte programe raportează un astfel de fișier ca fiind corupt; acest program afișează separat rezultatul semnăturilor cardului."
 
 msgid "{count} note(s) — click for details"
 msgstr "{count} notă/note — faceți clic pentru detalii"
@@ -2316,3 +2316,6 @@ msgstr "Notă despre acest fișier.\n\n{filename}\n\n"
 
 msgid "RCM Serial Number"
 msgstr "RCM Număr de serie"
+
+msgid "Transfer header"
+msgstr "Antet de transfer"

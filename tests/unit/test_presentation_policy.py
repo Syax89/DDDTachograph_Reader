@@ -125,11 +125,12 @@ def test_vu_information_shows_one_compact_row_per_serial():
     }
     _headers, rows = gui._kv_rows(info)
     labels = [row[0] for row in rows]
-    # compact scalar rows, no 'VU Serial › ...' sub-rows, pairing time JSON-only
+    # the owner's round-8 shape: the decoded compact rows sit NEXT TO the existing
+    # hex rows (distinct labels), no 'VU Serial › ...' sub-rows
     assert labels == [gui.ui_text.label("manufacturer"),
                       gui.ui_text.label("serial_number"),
                       gui.ui_text.label("vu_serial"),
-                      gui.ui_text.label("sensor_serial")]
+                      gui.ui_text.label("sensor_serial")], labels
     assert not any("\u203a" in label for label in labels)
     assert dict(rows)[gui.ui_text.label("vu_serial")].startswith("168000001 \u00b7 11/24")
     sections = {label: rows for label, _d, _h, rows, _t

@@ -71,6 +71,11 @@ BOOKKEEPING_KEYS = frozenset({
     # Structured serial companions: the panels show one compact scalar
     # ('<serial> · MM/YY · manufacturer'), the dict stays in the JSON.
     "vu_serial_decoded", "sensor_serial_decoded", "sensor_gnss_serial_decoded",
+    # One column per serial datum: the compact decoded form is the column, the raw
+    # hex of the same bytes stays in the JSON (two columns for one datum, with
+    # labels that no catalog can tell apart, is exactly what the coherence rule
+    # forbids).
+    "sensor_serial_hex", "sensor_gnss_serial_hex", "rcm_serial_hex",
     "old_time_iso", "new_time_iso", "next_calibration_iso", "sensor_pairing_time",
     "rcm_serial_decoded",
     "digital_map_version_raw", "control_type_bits",
@@ -752,7 +757,7 @@ def summary_rows(data):
             "are that header (SID 76 + TREP 06), kept by the tool that saved the "
             "file and not the standard storage form of a card file (DDP_050, which "
             "strips them). Some other programs report such a file as corrupt; the "
-            "card data are complete and their signatures are verified normally.",
+            "card's own signature verdict is reported separately.",
         ))
     if meta.get("app_version"):
         rows.append(("Reader version", meta["app_version"]))

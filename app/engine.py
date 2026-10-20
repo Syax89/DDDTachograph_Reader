@@ -308,12 +308,12 @@ class TachoParser:
                 from core.parser.card_envelope import trep06_card_regions
                 regions = trep06_card_regions(bytes(self.raw_data))
                 if regions:
-                    extra = [{"offset": start, "bytes": length, "tlvs": 0,
+                    extra = [{"offset": start, "bytes": length, "tlvs": None,
                               "tlv_complete": True,
                               "boundary": "STAP/EF framing", "delegated": False}
                              for start, length in regions[1:]]
                     envelope = {"bytes": regions[0][0], "card_bytes": regions[0][1],
-                                "elements": 0, "extra_regions": extra,
+                                "elements": None, "extra_regions": extra,
                                 "multi": True}
             if envelope:
                 self._envelope = envelope
@@ -506,6 +506,12 @@ class TachoParser:
             try:
                 from core.parser.g1_walker import walk_g1_vu
                 _messages, complete = walk_g1_vu(self.raw_data, self.results)
+                # Integrity findings (a truncated marker, a card region that does
+                # not close, a short signature block) make the download partial in
+                # this generation exactly as they do in the RecordArray walker; the
+                # heuristic scan is still not run for them.
+                if (self.results.get("metadata") or {}).get("vu_integrity"):
+                    complete = False
             except Exception as exc:
                 logger.debug("G1 VU walk raised: %s", exc, exc_info=True)
                 complete = False

@@ -169,6 +169,44 @@ def test_real_wrapped_card_banner_is_the_note_wording(explorer, tmp_path):
 
 # ── The clarification must appear once per surface (item 2) ────────────────
 
+def test_the_notice_never_asserts_the_card_verdict():
+    """The notice states the FORM fact only.
+
+    A wrapped card whose EF signature was tampered carries the real warning and the
+    notice; asserting "the data are complete and the signatures verify" there would
+    be false, so the text points to the verdict instead of claiming it.
+    """
+    text = gui.CARD_ENVELOPE_NOTICE.lower()
+    for claim in ("complete", "verified", "valid", "intact", "all signatures"):
+        assert claim not in text, claim
+    assert "verdict" in text or "reported separately" in text
+    assert "dp_050".replace("dp_050", "ddp_050") in text
+    assert "corrupt" in text
+
+
+def test_tampered_wrapped_card_notice_and_warning_coexist(tmp_path):
+    """Notice + real warning, and the notice makes no positive claim."""
+    raw = _mock_card(tmp_path)
+    damaged = bytearray(raw)
+    damaged[5 + 8] ^= 0xFF
+    path = os.path.join(str(tmp_path), "wrapped_bad2.ddd")
+    with open(path, "wb") as handle:
+        handle.write(b"\x76\x06" + bytes(damaged))
+    DecoderRegistry.reset_instance()
+    result = TachoParser(path).parse()
+    bullets, notices = gui._integrity_bullets(result)
+    assert notices and notices[0] in bullets
+    assert any("EF data signatures" in bullet for bullet in bullets)
+    assert "verified normally" not in notices[0].lower()
+    assert "complete" not in notices[0].lower()
+    # the report row makes no claim either
+    from core.utils import report_format as rf
+    rows = dict(rf.summary_rows(result))
+    value = rows.get("Transfer header") or ""
+    assert "verified normally" not in value.lower()
+    assert "complete" not in value.lower()
+
+
 def test_notice_is_shown_once_per_surface(tmp_path):
     from tests.unit.real_data import real_ddd_files
     files = [p for p in real_ddd_files() if os.path.basename(p).endswith(

@@ -579,3 +579,20 @@ The notice is driven by the same model marker the envelope path already writes
 (`metadata.envelope`); a card embedded inside a VU stream is *not* the standalone
 storage-form question, so it does not get the notice — there the card's own verdict and
 generation are reported per region in `metadata.embedded_card_verdicts`.
+
+### 15.1 Verdict wording and empirical extensions
+
+* The transfer-header notice never asserts the card's verdict: it states the *form*
+  fact (a relayed card image, the kept SID+TREP 06 header, DDP_050) and points at the
+  separately reported signature verdict, so a tampered wrapped card shows the real
+  warning without the note contradicting it.
+* A schema finding is reported as `Section structure (schema violation): <trep>:
+  missing/out of order/unexpected [...]`; "the structural walk did not reach the end
+  of file" is reserved for a truncated walk, and the completeness bullet is emitted
+  only when a mandatory section is actually missing.
+* Unexpected array types outside the normative enumeration (RFU `25`-`7F`,
+  manufacturer-specific `80`-`FF`, and the observed `29`/`40`/`60` extensions) are
+  recorded as `unmapped_record_type` observations: the download stays complete and the
+  bytes stay raw.
+* Trailing bytes are partial in **both** generations: a lone marker prefix or a
+  truncated marker is `trailing_bytes`, only `00`/`FF` fill is padding.

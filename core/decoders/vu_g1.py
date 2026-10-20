@@ -44,12 +44,6 @@ def _record_key(identity, index):
     return f"{identity}#{index}"
 
 
-def _content_fingerprint(record):
-    """Value fingerprint of a record, ignoring bookkeeping (``_``-prefixed) keys."""
-    import json
-    payload = {k: v for k, v in record.items() if not str(k).startswith("_")}
-    return json.dumps(payload, sort_keys=True, default=str)
-
 
 def _append_once(target, record, identity, index):
     """Append *record* unless the same stored record is already published.

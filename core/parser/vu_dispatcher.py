@@ -539,13 +539,13 @@ def _decode_calibration_extension(rec):
             # One column per serial: the hex cell keeps the hex and carries the
             # compact decoded reading, so the table never has two columns for one
             # datum (the same rule as the timestamp columns).
-            "sensor_serial_number": rec[167:175].hex(),
+            "sensor_serial_hex": rec[167:175].hex(),
             "sensor_serial": serial_text(decode_extended_serial_number(rec, 167)),
             "sensor_serial_decoded": decode_extended_serial_number(rec, 167),
-            "sensor_gnss_serial_number": rec[175:183].hex(),
+            "sensor_gnss_serial_hex": rec[175:183].hex(),
             "sensor_gnss_serial": serial_text(decode_extended_serial_number(rec, 175)),
             "sensor_gnss_serial_decoded": decode_extended_serial_number(rec, 175),
-            "rcm_serial_number": rec[183:191].hex(),
+            "rcm_serial_hex": rec[183:191].hex(),
             "rcm_serial": serial_text(decode_extended_serial_number(rec, 183)),
             "rcm_serial_decoded": decode_extended_serial_number(rec, 183),
             "seal_data_vu": _decode_seal_data(rec[191:246]),
@@ -1832,6 +1832,11 @@ def iter_vu_sections(data, state=None):
                     while end < n and not (end + 1 < n and data[end] == 0x76
                                            and data[end + 1] in trep_bytes):
                         end += 1
+                    if end == n and state is not None:
+                        # A bare marker with no card behind it (a truncated
+                        # download): the bytes are trailing, not a card region.
+                        state["trailing_bytes"] = int(state.get("trailing_bytes")
+                                                     or 0) + (end - (pos + 2))
                 yield {"marker": pos, "trep": trep, "records": [],
                        "card_tlv": {"offset": pos + 2, "bytes": end - (pos + 2),
                                     "tlvs": count, "tlv_complete": tlv_complete,
@@ -1862,7 +1867,9 @@ def iter_vu_sections(data, state=None):
             # remainder is legal padding or a truncated record) instead of being
             # silently stepped over.
             if state is not None:
-                state["trailing_bytes"] = n - pos
+                remainder = data[pos:]
+                if any(byte not in (0x00, 0xFF) for byte in remainder):
+                    state["trailing_bytes"] = n - pos
             break
         rt = data[pos]
         rs = struct.unpack(">H", data[pos + 1:pos + 3])[0]
@@ -1895,6 +1902,14 @@ def iter_vu_sections(data, state=None):
         yield cur
     if state is not None:
         state.setdefault("truncated", False)
+        if pos < n and "trailing_bytes" not in state:
+            # The loop can only inspect positions with two bytes left; a shorter
+            # remainder (a lone marker prefix, for instance) is counted here so the
+            # caller never mistakes it for padding. 0x00/0xFF fill *is* padding (a
+            # VU fills unused space with FF), so it is not counted.
+            remainder = data[pos:]
+            if any(byte not in (0x00, 0xFF) for byte in remainder):
+                state["trailing_bytes"] = n - pos
 
 
 def walk_vu_record_arrays(data, results):
@@ -1926,6 +1941,7 @@ def walk_vu_record_arrays(data, results):
     schema_reports = []
     dropped_any = False
     structure_findings = []
+    observations = []
 
     for sec in iter_vu_sections(data, state):
         # The section fixes the EventFaultType assignment (DDP_011), each one
@@ -2019,6 +2035,34 @@ def walk_vu_record_arrays(data, results):
                 schema_report["out_of_order"], schema_report["duplicate_arrays"],
                 schema_report["unexpected_arrays"],
                 schema_report["signature_problem"])
+        # An array whose record type is outside the normative enumeration (RFU
+        # 25-7F, manufacturer-specific 80-FF, and the observed 0x29/0x40/0x60
+        # extensions) is an empirical extension, not a structure defect: it is
+        # reported as unmapped and the download stays complete. Missing or
+        # out-of-order prescribed arrays, and unexpected *normative* types, are
+        # defects.
+        observed = [rt for rt in schema_report["unexpected_arrays"]
+                    if not is_normative_record_type(int(rt, 16))]
+        if observed:
+            # Reported, but NOT a structure defect: an empirical extension keeps
+            # the download complete (the owner's rule: a manufacturer extension is
+            # not a fallback).
+            observations.append({
+                "trep": f"0x{sec['trep']:02X}",
+                "status": "unmapped_record_type",
+                "detail": ("observed record type(s) outside the normative "
+                           "enumeration, kept raw"),
+                "record_types": observed,
+                "missing_bytes": 0, "trailing_bytes": 0,
+            })
+            schema_report["empirical_arrays"] = observed
+            schema_report["unexpected_arrays"] = [
+                rt for rt in schema_report["unexpected_arrays"]
+                if rt not in observed]
+            if not (schema_report["missing_arrays"]
+                    or schema_report["out_of_order"]
+                    or schema_report["unexpected_arrays"]):
+                schema_report["status"] = "complete"
         if (schema_report["missing_arrays"] or schema_report["out_of_order"]
                 or schema_report["unexpected_arrays"]):
             # The prescribed arrays are absent, out of order or not defined for
@@ -2068,6 +2112,11 @@ def walk_vu_record_arrays(data, results):
                                    and not state.get("truncated", False)
                                    and not state.get("trailing_bytes")
                                    and not state.get("resync_bytes"))
+    if observations:
+        # Model-only notes: recorded in vu_integrity for the report, without making
+        # the walk incomplete.
+        results.setdefault("metadata", {}).setdefault(
+            "vu_integrity", []).extend(observations)
     if structure_findings:
         results.setdefault("metadata", {}).setdefault(
             "vu_integrity", []).extend(structure_findings)
@@ -2082,6 +2131,9 @@ def walk_vu_record_arrays(data, results):
                           "missing_bytes": int(state.get("trailing_bytes") or 0),
                           "trailing_bytes": int(state.get("trailing_bytes") or 0)})
     if state.get("trailing_bytes"):
+        # A remainder that is not 0x00/0xFF fill is a truncated marker or junk, not
+        # padding: the walk is incomplete and the bytes are reported, exactly as the
+        # generation-1 walker does for the same file.
         if not integrity:
             integrity.append({"trep": None, "status": "trailing_bytes",
                               "missing_bytes": 0,
@@ -2105,6 +2157,11 @@ def walk_vu_record_arrays(data, results):
         # completeness claim — a cut signature record looks exactly like this.
         results.setdefault("metadata", {})["vu_walk_truncated_bytes"] = int(
             state["trailing_bytes"])
+    if state.get("truncated"):
+        # A declared structure that runs past EOF: the shortfall is the remainder
+        # the array claimed but the bytes do not hold.
+        results.setdefault("metadata", {}).setdefault(
+            "vu_walk_truncated_bytes", int(state.get("trailing_bytes") or 0))
     if capped:
         results["_vu_walk_record_cap"] = VU_MAX_TOTAL_RECORDS
     if unmapped:

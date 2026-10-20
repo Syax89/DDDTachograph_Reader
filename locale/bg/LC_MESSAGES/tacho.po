@@ -2300,8 +2300,8 @@ msgstr "Версия на интерфейса за изтегляне"
 msgid "Entry Type Description"
 msgstr "Вид запис Описание"
 
-msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; the card data are complete and its signatures are verified normally."
-msgstr "Изображение на карта на водача, изтеглено през бордовия блок: първите два байта са заглавката на предаването (SID + TREP 06), запазена от програмата, която е записала файла, а не стандартната форма за съхранение на файл на карта (DDP_050). Някои други програми съобщават такъв файл като повреден; данните на картата са пълни и подписите им се проверяват нормално."
+msgid "Driver-card image downloaded through the vehicle unit: the two leading bytes are the transfer header (SID + TREP 06) kept by the tool that saved it, not the standard storage form of a card file (DDP_050). Some other programs report such a file as corrupt; this reader reports the card's own signature verdict separately."
+msgstr "Изображение на карта на водача, изтеглено през бордовия блок: първите два байта са заглавката на предаването (SID + TREP 06), запазена от програмата, която е записала файла, а не стандартната форма за съхранение на файл на карта (DDP_050). Някои други програми съобщават такъв файл като повреден; Някои други програми съобщават такъв файл като повреден; тази програма показва собствения резултат за подписите на картата отделно."
 
 msgid "{count} note(s) — click for details"
 msgstr "{count} бележка(и) — щракнете за подробности"
@@ -2316,3 +2316,6 @@ msgstr "Бележка за този файл.\n\n{filename}\n\n"
 
 msgid "RCM Serial Number"
 msgstr "RCM Сериен номер"
+
+msgid "Transfer header"
+msgstr "Заглавка на предаването"
