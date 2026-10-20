@@ -120,6 +120,7 @@ def test_the_new_section_labels_are_translated(tmp_path):
 
 def test_the_empirical_sections_render_in_pdf_and_excel(tmp_path):
     """Render through the real exporters and read the text back (no clipping)."""
+    import shutil
     import subprocess
     import zipfile
     from app.export import ExportManager
@@ -130,17 +131,21 @@ def test_the_empirical_sections_render_in_pdf_and_excel(tmp_path):
     ExportManager.export_to_pdf(result, str(pdf))
     ExportManager.export_to_excel(result, str(xlsx))
 
-    text = subprocess.run(["pdftotext", "-raw", str(pdf), "-"],
-                          capture_output=True, text=True).stdout
-    for needle in ("Co-Driver Activities", "Manufacturer Extensions", "0x88"):
-        assert needle in text, needle
-    # the note wraps across lines in the PDF, so assert its distinctive words
-    for word in ("Manufacturer-specific", "empirical layout", "low confidence",
-                 "raw bytes"):
-        assert word in text, word
-    # nothing is clipped: the section titles and the code survive whole
-    assert "Co-Driver" in text and "Activities" in text
-    assert "Manufacturer" in text and "Extensions" in text
+    assert pdf.read_bytes().startswith(b"%PDF-")
+    # pdftotext is poppler, not a project dependency (absent on the CI runners): read the
+    # PDF text back only where it exists; the XLSX check below always runs.
+    if shutil.which("pdftotext"):
+        text = subprocess.run(["pdftotext", "-raw", str(pdf), "-"],
+                              capture_output=True, text=True).stdout
+        for needle in ("Co-Driver Activities", "Manufacturer Extensions", "0x88"):
+            assert needle in text, needle
+        # the note wraps across lines in the PDF, so assert its distinctive words
+        for word in ("Manufacturer-specific", "empirical layout", "low confidence",
+                     "raw bytes"):
+            assert word in text, word
+        # nothing is clipped: the section titles and the code survive whole
+        assert "Co-Driver" in text and "Activities" in text
+        assert "Manufacturer" in text and "Extensions" in text
 
     with zipfile.ZipFile(xlsx) as archive:
         sheet = "".join(archive.read(name).decode("utf-8", "ignore")
