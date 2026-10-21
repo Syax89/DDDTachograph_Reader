@@ -293,7 +293,10 @@ def _g1_card_slots(value):
         out[name] = _card_slot_state(nibble)
         out[f"{name}_code"] = nibble
         out[f"{name}_type"] = card_type or "unassigned"
-        out[f"{name}_status"] = "assigned" if card_type else "unassigned"
+        # 0000 is "no card", 0001..0100 the four assigned card types, 0101..1111
+        # unassigned codes: an empty slot is *not* an assigned one.
+        out[f"{name}_status"] = ("assigned" if 0x01 <= nibble <= 0x04
+                                 else "unassigned")
     out["raw"] = f"0x{value:02X}"
     return out
 
@@ -529,12 +532,19 @@ def _complete_prefix_body(trep, body):
                 pos += 1 + k * stride
                 if k < need:
                     return (bytes(out), pos)
-            # VuOverSpeedingControlData (9) + two count-prefixed tails
+            # VuOverSpeedingControlData (9) precedes the overspeeding array ONLY:
+            # the time-adjustment array that follows carries nothing but its own
+            # count byte (§2.120), so each tail copies its own count.
+            if pos + 9 + 1 > len(body):
+                return (bytes(out), pos) if pos else None
+            out += body[pos:pos + 9 + 1]
+            pos += 10
             for stride in (31, 98):
-                if pos + 9 + 1 > len(body):
-                    return (bytes(out), pos) if pos else None
-                out += body[pos:pos + 9 + 1]
-                pos += 10
+                if stride == 98:
+                    if pos + 1 > len(body):
+                        return (bytes(out), pos)
+                    out += body[pos:pos + 1]
+                    pos += 1
                 need = out[-1]
                 fit = (len(body) - pos) // stride
                 k = min(need, max(0, fit))
@@ -543,7 +553,7 @@ def _complete_prefix_body(trep, body):
                 pos += k * stride
                 if k < need:
                     return (bytes(out), pos)
-            return (bytes(out), pos) if pos == len(body) else (bytes(out), pos)
+            return (bytes(out), pos)
 
         if trep == 0x05:
             header = 136                      # VuIdentification(116) + SensorPaired(20)
@@ -920,7 +930,9 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
             activities = results.setdefault("activities", [])
             day_record = {
                 "date": date_str,
-                "odometer_km": odo_midnight,
+                # The same sentinel rule as every other odometer: FFFFFF is "not
+                # available", never a distance of 16 777 215 km.
+                "odometer_km": odometer_km(odo_midnight),
                 "changes": list(changes),
                 "changes_count": n_ch,
                 "invalid_changes_count": invalid_changes,
@@ -1006,9 +1018,12 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
         if pos + n_ch * 2 + 1 > len(data):
             if not partial:
                 return False
-            n_ch = max(0, (len(data) - pos - 1) // 2)
-            # The header declared more values than the bytes hold: the day is
-            # published with what the file carries, and says so.
+            # Only the change values that are really there are read: no byte is
+            # reserved here (the place count after them is a separate field, and
+            # the guard below stops the walk when it too was cut off).
+            n_ch = max(0, (len(data) - pos) // 2)
+            # The day was cut, so it says so — even when every declared value
+            # survived the cut (the sections after them did not).
             changes_cut = True
         changes = []
         invalid_changes = 0
@@ -1024,6 +1039,14 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
                 invalid_changes += 1
         pos += n_ch * 2
 
+        # The guard runs before the byte it protects: a body cut at the place
+        # count is still a complete day (date, odometer, inserted card, changes),
+        # and reading the next count first turned it into an IndexError that lost
+        # the whole message.
+        if partial and pos + 1 > len(data):
+            _emit(iw_records, changes, n_ch, invalid_changes,
+                  declared_changes=declared_n_ch, changes_cut=changes_cut)
+            return True
         n_pl = data[pos]
         pos += 1
         if partial and pos + 2 > len(data):
@@ -1066,12 +1089,14 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
             })
             pos += 28
 
-        n_sc = struct.unpack(">H", data[pos:pos + 2])[0]
-        pos += 2
         if partial and pos + 2 > len(data):
+            # Same rule for the specific-condition count: the places read above
+            # are complete stored records and are published.
             _emit(iw_records, changes, n_ch, invalid_changes, places,
                   declared_changes=declared_n_ch, changes_cut=changes_cut)
             return True
+        n_sc = struct.unpack(">H", data[pos:pos + 2])[0]
+        pos += 2
         if pos + n_sc * 5 > len(data):
             if not partial:
                 return False
@@ -1106,7 +1131,15 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
 
 def _parse_full_card_number(data, offset):
     """Parse 18-byte FullCardNumber (Annex 1B §2.73):
-    cardType(1) + cardIssuingMemberState(1) + cardNumber(16)."""
+    cardType(1) + cardIssuingMemberState(1) + cardNumber(16).
+
+    The number is published exactly as the 16-character field stores it: a smart
+    card's numbering already opens with the Member State letter, so prefixing the
+    decoded nation again invented a 17-character number that matched neither the
+    card's own ``card_number`` (``core.decoders.card_ef``) nor the generation-2
+    reading of the same bytes (``decode_full_card_number_gen``). The issuing state
+    travels as its own field.
+    """
     if offset + 18 > len(data):
         return None
     card_type = data[offset]
@@ -1115,7 +1148,7 @@ def _parse_full_card_number(data, offset):
     return {
         "card_type": card_type,
         "nation": nation,
-        "card_number": f"{nation}{card_num}",
+        "card_number": card_num,
     }
 
 def _parse_vu_fault_record(data, offset):
@@ -1304,6 +1337,11 @@ def _parse_trep_03_structured(data, results, message_offset=None,
         osc_count = data[pos + 8]
         pos += 9
 
+        # Guard before the read: a body cut on the overspeeding count still holds
+        # complete faults and events, which are published instead of being lost.
+        if partial and pos + 1 > len(data):
+            _emit_trep03(faults, events)
+            return True
         n_overs = data[pos]
         pos += 1
         if pos + n_overs * 31 > len(data):
@@ -1338,16 +1376,19 @@ def _parse_trep_03_structured(data, results, message_offset=None,
             })
             pos += 31
 
-        n_adj = data[pos]
-        pos += 1
-        # Only the two TimeReal values are needed to keep a record: a short
-        # tail is a truncated record, not a reason to fail the whole section.
+        # A cut body may end before the count byte: the faults, events and
+        # overspeeding records read above are complete and are published.
         if partial and pos + 1 > len(data):
             return True
-        if pos + n_adj * 8 > len(data):
-            if not partial:
-                return False
-            n_adj = max(0, (len(data) - pos) // 8)
+        n_adj = data[pos]
+        pos += 1
+        # VuTimeAdjustmentRecord is 98 bytes (§2.120), so the count is bounded by
+        # the records the body really carries. A record whose own bytes are cut is
+        # kept with ``record_complete`` false (a stored record, not an error), but
+        # a record with not one byte in the file is never invented: a count that
+        # declares more than the body holds means the message was cut.
+        held = (len(data) - pos + 97) // 98 if len(data) > pos else 0
+        n_adj = min(n_adj, held)
         adjustments = []
         for _ in range(n_adj):
             rec = data[pos:pos + 98]
@@ -1731,12 +1772,16 @@ def _parse_trep_05_technical(data, results, message_offset=None):
             # A withheld TimeReal keeps the table's own missing-value convention
             # ("N/A"), exactly as this table rendered it before the columns were
             # upgraded to date+time; a usable value carries the full timestamp.
-            old_time = _g1_time(struct.unpack(">I", chunk[155:159])[0]) or "N/A"
-            new_time = _g1_time(struct.unpack(">I", chunk[159:163])[0]) or "N/A"
-            next_cal = _g1_time(struct.unpack(">I", chunk[163:167])[0]) or "N/A"
-            old_time_iso = old_time
-            new_time_iso = new_time
-            next_cal_iso = next_cal
+            # The ISO value and the display word are two different things: the
+            # ISO form is None when the TimeReal is outside the calendar (so the
+            # record can say WHY the cell is empty), the published column keeps the
+            # table's "N/A".
+            old_time_iso = _g1_time(struct.unpack(">I", chunk[155:159])[0])
+            new_time_iso = _g1_time(struct.unpack(">I", chunk[159:163])[0])
+            next_cal_iso = _g1_time(struct.unpack(">I", chunk[163:167])[0])
+            old_time = old_time_iso or "N/A"
+            new_time = new_time_iso or "N/A"
+            next_cal = next_cal_iso or "N/A"
             field_status = {}
             if not vin:
                 field_status["vin"] = "empty (activation parameters)"
@@ -2337,8 +2382,22 @@ def _extract_sensor_daily_records(body, start, copy_start, copy_end):
             pos += 4
             continue
         count = struct.unpack(">H", body[pos + 8:pos + 10])[0]
+        if count == 0:
+            # A day with no sample carries a date and nothing else: the empirical
+            # layout puts the samples after the count, so a zero count is an empty
+            # block or a false marker, never a day of data.
+            pos += 8
+            continue
         if count > 1500:  # max 25 hours at 1/min
             pos += 8
+            continue
+        # midnight + first_event + samples are ONE record: the first event of a day
+        # belongs to that day. A stored value outside [midnight, midnight+24h) is a
+        # false marker, and publishing it under this midnight would associate two
+        # unrelated records (and could date a day before the sensor existed, or
+        # after the download was taken).
+        if not (ts_midnight <= ts_event < ts_midnight + 86_400):
+            pos += 4
             continue
         speed_end = pos + 10 + count
         if speed_end > end:
@@ -2351,8 +2410,8 @@ def _extract_sensor_daily_records(body, start, copy_start, copy_end):
             records.append({
                 "confidence": "low",
                 "date": date_str,
-                "first_event": datetime.fromtimestamp(ts_event, tz=timezone.utc).isoformat()
-                if 946684800 <= ts_event <= 4102444800 else None,
+                "first_event": datetime.fromtimestamp(ts_event,
+                                                      tz=timezone.utc).isoformat(),
                 "speed_samples": count,
                 "speed_min": min(valid) if valid else None,
                 "speed_max": max(valid) if valid else None,

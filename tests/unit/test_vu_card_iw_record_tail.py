@@ -301,7 +301,10 @@ def test_g1_body_fields_stay_where_they_were():
     assert rec["insertion_time"] == ISO_G1_INSERTION
     assert rec["withdrawal_time"] == ISO_G1_WITHDRAWAL
     assert rec["card_slot"] == 0
-    assert rec["card"]["card_number"] == "I" + CARD_NUMBER_G1
+    # The 16-character cardNumber field, as stored (§2.73): the issuing nation is
+    # its own field, never a prefix glued onto the number.
+    assert rec["card"]["card_number"] == CARD_NUMBER_G1
+    assert rec["card"]["nation"] == "I"
     assert rec["previous_vehicle"]["registration_plate"] != CURRENT_PLATE_G1
 
 

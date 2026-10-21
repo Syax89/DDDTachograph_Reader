@@ -2426,7 +2426,10 @@ def decode_card_slots_status(value):
                                                    else "reserved")
         out[f"{name}_card_type"] = card_type or "unassigned"
         out[f"{name}_code"] = nibble
-        out[f"{name}_status"] = "assigned" if card_type else "unassigned"
+        # Same rule as the generation-1 panel: 0000 is "no card", so it is not an
+        # assigned slot (§2.152) — only 0001..0100 carry an assigned card type.
+        out[f"{name}_status"] = ("assigned" if 0x01 <= nibble <= 0x04
+                                 else "unassigned")
     out["raw"] = f"0x{value:02X}"
     return out
 
