@@ -31,6 +31,7 @@ Body layouts (Annex 1B §2.2.6.1-2.2.6.5; the card download is the request in
 Confirmed against real G1 VU downloads: the walk lands exactly on every
 subsequent ``0x76 TREP`` marker and on the end of file.
 """
+import bisect
 import struct
 
 from core.utils.logger import get_logger
@@ -129,7 +130,27 @@ def _trep06_body_len(d, p, n):
     return _next_valid_marker(d, p, n) - p
 
 
-def _trep11_body_len(d, p, n):
+def _trep14_positions(d, n, ctx=None):
+    """Sorted positions of the ``76 14`` trailer markers in ``d`` (cached per walk).
+
+    Indexing once turns :func:`_trep11_body_len` into a bisect instead of a
+    forward scan repeated per candidate: a buffer of ``76 06`` followed by N x
+    ``76 11`` used to cost O(n^2) (14 s for 32 KB).
+    """
+    if ctx is None:
+        ctx = _new_walk_ctx()
+    positions = ctx.get("trep14")
+    if positions is None:
+        positions = []
+        pos = d.find(b"\x76\x14", 0, n)
+        while pos != -1:
+            positions.append(pos)
+            pos = d.find(b"\x76\x14", pos + 1, n)
+        ctx["trep14"] = positions
+    return positions
+
+
+def _trep11_body_len(d, p, n, ctx=None):
     # A genuine G1 sensor download (TREP 0x11) is always closed by a
     # ``76 14`` trailer. Without that trailer the ``76 11`` we are looking at
     # is a false marker inside another section's payload (typically a byte pair
@@ -137,12 +158,11 @@ def _trep11_body_len(d, p, n):
     # Returning None makes the chain validation reject the candidate boundary,
     # letting the unbounded CardDownload extend to its real end instead of
     # being split mid-record and fed to the sensor decoder as garbage.
-    pos = p
-    while pos < n - 1:
-        if d[pos] == 0x76 and d[pos + 1] == 0x14:
-            return pos - p
-        pos += 1
-    return None
+    positions = _trep14_positions(d, n, ctx)
+    index = bisect.bisect_left(positions, p)
+    if index >= len(positions):
+        return None
+    return positions[index] - p
 
 
 def _trep14_body_len(d, p, n):
@@ -232,6 +252,8 @@ def _valid_chain_from(d, pos, n, memo, validation_depth=0, ctx=None):
             body_start = current + 2
             if trep == 0x06:
                 body_len = _next_valid_marker(d, body_start, n, validation_depth + 1, ctx) - body_start
+            elif trep == 0x11:
+                body_len = _trep11_body_len(d, body_start, n, ctx)
             else:
                 body_len = _BODY_LEN_FNS[trep](d, body_start, n)
             if body_len is None:
@@ -348,6 +370,8 @@ def iter_g1_vu_messages(data):
             inner, elements = card_image_extent(
                 memoryview(data)[body_start:body_start + body_len])
             card_incomplete = not (elements and inner == body_len)
+        elif trep == 0x11:
+            body_len = _trep11_body_len(data, body_start, n, ctx)
         else:
             body_len = _BODY_LEN_FNS[trep](data, body_start, n)
         if body_len is None:
