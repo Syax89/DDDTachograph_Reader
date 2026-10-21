@@ -42,6 +42,30 @@ def test_monthly_report_sorts_by_year_then_month():
     assert total_rows == ["02/2023 TOTAL", "11/2023 TOTAL", "01/2024 TOTAL"]
 
 
+def test_monthly_report_groups_iso_dated_days_by_their_real_month():
+    """A daily record can carry an ISO date (``2024-03-20``, a raw decoder's
+    shape), so the month must be derived from the date, not from its last
+    seven characters — which would file every ISO day under its own
+    ``03-20 TOTAL`` and never print a month."""
+    activities = [
+        {"date": "2024-03-20", "changes": [{"activity": "DRIVE", "time": "00:00"}]},
+        {"date": "2024-03-21", "changes": [{"activity": "DRIVE", "time": "00:00"}]},
+        {"date": "2024-04-02", "changes": [{"activity": "DRIVE", "time": "00:00"}]},
+        {"date": "02/04/2024", "changes": [{"activity": "DRIVE", "time": "00:00"}]},
+        {"date": "15/01/2024", "changes": [{"activity": "DRIVE", "time": "00:00"}]},
+    ]
+
+    _, rows = build_monthly_activity_report(activities)
+
+    month_labels = [r[0] for r in rows if str(r[0]).endswith("TOTAL")]
+    assert month_labels == ["01/2024 TOTAL", "03/2024 TOTAL", "04/2024 TOTAL"]
+    # Both ISO days are summed into their own month's subtotal (24 h each), and
+    # the ISO day of April joins the dd/mm/yyyy day of the same month.
+    subtotals = {r[0]: r[-1] for r in rows if str(r[0]).endswith("TOTAL")}
+    assert subtotals["03/2024 TOTAL"] == "48:00"
+    assert subtotals["04/2024 TOTAL"] == "48:00"
+
+
 def test_monthly_report_is_slot_aware_for_crew_days():
     """F-F1 / XF-F1 / XG-F1: the report engine must group by card slot.
 

@@ -98,6 +98,36 @@ def _cell_safe(value):
     return value
 
 
+def _excel_text(value):
+    """A value written to a worksheet cell: formula-guarded and XML-safe.
+
+    Every write path goes through here — a decoded field can carry a control
+    byte wherever it appears, not only in a data cell.
+    """
+    return _cell_safe(_spreadsheet_value(value))
+
+
+def _signature_sections(data):
+    """``(label, description, records)`` of the VU signature material.
+
+    These two live in their own containers rather than in a list section, and
+    they are kept uncapped, so every format that presents the parsed report
+    takes them from here — none of them silently drops a VU's signature result.
+    """
+    sections = []
+    sv = data.get("signature_verification")
+    treps = (sv.get("treps") or []) if isinstance(sv, dict) else []
+    if treps:
+        sections.append(("TREP Signatures",
+                         "Signature verification of each TREP block (VU files).",
+                         treps))
+    certs = data.get("vu_certificates") or []
+    if certs:
+        sections.append(("VU Certificates",
+                         "Certificates found in the file (VU files).", certs))
+    return sections
+
+
 def _pdf_number(value):
     """An integer with thin-space grouping, as the report tables print them."""
     return f"{value:,}".replace(",", " ")
@@ -149,6 +179,57 @@ def _pdf_plain(value):
 #: so the report never depends on a font installed on the reader's machine.
 _PDF_FALLBACK_FONT = "TachoDejaVuSans"
 
+#: The font the report is normally set in (see :func:`_pdf_markup`).
+_PDF_BASE_FONT = "Helvetica"
+
+
+def _register_fallback_font(value):
+    """Register the bundled face and return its font name.
+
+    *value* only appears in the failure message: a font that cannot be found
+    must fail the export rather than print a boxed name.
+    """
+    from reportlab.pdfbase import pdfmetrics
+
+    if _PDF_FALLBACK_FONT in pdfmetrics.getRegisteredFontNames():
+        return _PDF_FALLBACK_FONT
+    # Resolved like app/i18n.locale_dir: against the package, and against
+    # _MEIPASS when frozen.
+    base = getattr(sys, "_MEIPASS", None) or os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__)))
+    # DejaVu Sans 2.37, official dejavu-fonts-ttf-2.37.tar.bz2 —
+    # https://github.com/dejavu-fonts/dejavu-fonts/releases/tag/version_2_37
+    path = os.path.join(base, "assets", "fonts", "DejaVuSans.ttf")
+    if not os.path.isfile(path):
+        # Fail closed: a boxed identity in a report that looks complete is
+        # worse than a failed export (the callers already report this).
+        raise FileNotFoundError(
+            f"PDF export cannot draw {value!r}: the bundled fallback font "
+            f"{path} is missing from this installation")
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    pdfmetrics.registerFont(TTFont(_PDF_FALLBACK_FONT, path))
+    return _PDF_FALLBACK_FONT
+
+
+def _pdf_canvas_font(value):
+    """The font a plain canvas ``drawString`` can draw *value* with.
+
+    Paragraphs get a per-character fallback from :func:`_pdf_markup`; canvas
+    text has no markup, so a string the report's own font cannot encode is set
+    in the bundled face as a whole — otherwise reportlab prints a black square
+    for every character it cannot encode.
+    """
+    from reportlab.pdfbase import pdfmetrics
+
+    text = str(value)
+    encoding = pdfmetrics.getFont(_PDF_BASE_FONT).encName
+    try:
+        text.encode(encoding)
+    except UnicodeEncodeError:
+        return _register_fallback_font(text)
+    return _PDF_BASE_FONT
+
 
 def _pdf_markup(value):
     """*value* as escaped paragraph markup the report's font can really draw.
@@ -171,22 +252,7 @@ def _pdf_markup(value):
     else:
         return escape(text)
     if _PDF_FALLBACK_FONT not in pdfmetrics.getRegisteredFontNames():
-        # Resolved like app/i18n.locale_dir: against the package, and against
-        # _MEIPASS when frozen.
-        base = getattr(sys, "_MEIPASS", None) or os.path.dirname(
-            os.path.dirname(os.path.abspath(__file__)))
-        # DejaVu Sans 2.37, official dejavu-fonts-ttf-2.37.tar.bz2 —
-        # https://github.com/dejavu-fonts/dejavu-fonts/releases/tag/version_2_37
-        path = os.path.join(base, "assets", "fonts", "DejaVuSans.ttf")
-        if not os.path.isfile(path):
-            # Fail closed: a boxed identity in a report that looks complete is
-            # worse than a failed export (the callers already report this).
-            raise FileNotFoundError(
-                f"PDF export cannot draw {text!r}: the bundled fallback font "
-                f"{path} is missing from this installation")
-        from reportlab.pdfbase.ttfonts import TTFont
-
-        pdfmetrics.registerFont(TTFont(_PDF_FALLBACK_FONT, path))
+        _register_fallback_font(text)
     parts = []
     for char in text:
         try:
@@ -689,7 +755,7 @@ class ExportManager:
                 note = _excel_note_text(description, note_width)
                 ws.merge_cells(start_row=1, start_column=1, end_row=1,
                                end_column=len(headers))
-                cell = ws.cell(row=1, column=1, value=_spreadsheet_value(note))
+                cell = ws.cell(row=1, column=1, value=_excel_text(note))
                 cell.font = SUBTITLE_FONT
                 cell.alignment = Alignment(wrap_text=True, vertical="top")
                 ws.row_dimensions[1].height = _excel_note_height(note, note_width)
@@ -697,7 +763,7 @@ class ExportManager:
 
             for col, header in enumerate(headers, start=1):
                 cell = ws.cell(row=header_row, column=col,
-                               value=_spreadsheet_value(str(header)))
+                               value=_excel_text(str(header)))
                 cell.font = HEADER_FONT
                 cell.fill = HEADER_FILL
                 cell.alignment = Alignment(vertical="center", wrap_text=True)
@@ -786,7 +852,7 @@ class ExportManager:
         summary.column_dimensions["B"].width = _EXCEL_SUMMARY_VALUE_WIDTH
         summary.column_dimensions["C"].width = 9
         summary.cell(row=1, column=1, value="DDD Tachograph Report").font = TITLE_FONT
-        note = summary.cell(row=2, column=1, value=_spreadsheet_value(_EXCEL_SCOPE_NOTE))
+        note = summary.cell(row=2, column=1, value=_excel_text(_EXCEL_SCOPE_NOTE))
         note.font = SUBTITLE_FONT
         note.alignment = Alignment(wrap_text=True, vertical="top")
         summary.merge_cells(start_row=2, start_column=1, end_row=2, end_column=3)
@@ -801,10 +867,10 @@ class ExportManager:
             if not (field or value):
                 row += 1
                 continue
-            label_cell = summary.cell(row=row, column=1, value=_spreadsheet_value(field))
+            label_cell = summary.cell(row=row, column=1, value=_excel_text(field))
             label_cell.font = Font(bold=True)
             label_cell.alignment = TOP
-            value_cell = summary.cell(row=row, column=2, value=_spreadsheet_value(value))
+            value_cell = summary.cell(row=row, column=2, value=_excel_text(value))
             value_cell.alignment = Alignment(vertical="top", wrap_text=True)
             if field in _EXCEL_PROBLEM_LABELS:
                 label_cell.fill = ALERT_FILL
@@ -817,27 +883,13 @@ class ExportManager:
 
         # ── TREP signature material and VU certificates (kept, uncapped) ──
         used_names = {"Summary"}
-        sv = data.get("signature_verification")
-        treps = (sv.get("treps") or []) if isinstance(sv, dict) else []
-        if treps:
-            headers, rows = records_to_table(treps)
+        for label, description, records in _signature_sections(data):
+            headers, rows = records_to_table(records)
             if headers:
-                _add_sheet("TREP Signatures",
-                           "Signature verification of each TREP block (VU files).",
-                           headers, rows)
+                _add_sheet(label, description, headers, rows)
             else:
-                _log.warning("Skipping 'TREP Signatures': no visible export columns")
-                skipped.append("TREP Signatures")
-        certs = data.get("vu_certificates") or []
-        if certs:
-            headers, rows = records_to_table(certs)
-            if headers:
-                _add_sheet("VU Certificates",
-                           "Certificates found in the file (VU files).",
-                           headers, rows)
-            else:
-                _log.warning("Skipping 'VU Certificates': no visible export columns")
-                skipped.append("VU Certificates")
+                _log.warning("Skipping '%s': no visible export columns", label)
+                skipped.append(label)
 
         # ── Data sections ────────────────────────────────────────────────
         for label, desc, headers, rows, _truncated in section_tables(data):
@@ -915,10 +967,10 @@ class ExportManager:
                 "month cut before its subtotal has no total row, and Daily "
                 "Activities holds the day rows only."))
         for label, value in limit_rows:
-            label_cell = summary.cell(row=row, column=1, value=_spreadsheet_value(label))
+            label_cell = summary.cell(row=row, column=1, value=_excel_text(label))
             label_cell.font = Font(bold=True)
             label_cell.alignment = TOP
-            value_cell = summary.cell(row=row, column=2, value=_spreadsheet_value(value))
+            value_cell = summary.cell(row=row, column=2, value=_excel_text(value))
             value_cell.alignment = Alignment(vertical="top", wrap_text=True)
             summary.row_dimensions[row].height = _excel_note_height(
                 value, _EXCEL_SUMMARY_VALUE_WIDTH)
@@ -936,7 +988,7 @@ class ExportManager:
                                        horizontal="right" if col == 3 else "left")
         row += 1
         for name, count, contents in index:
-            link_cell = summary.cell(row=row, column=1, value=_spreadsheet_value(name))
+            link_cell = summary.cell(row=row, column=1, value=_excel_text(name))
             # An internal jump to this workbook's own sheet — never an external
             # target and never a HYPERLINK() formula. The location is quoted and
             # its apostrophes doubled exactly as Excel's own reference syntax
@@ -947,7 +999,7 @@ class ExportManager:
             link_cell.font = LINK_FONT
             link_cell.alignment = TOP
             contents_cell = summary.cell(row=row, column=2,
-                                         value=_spreadsheet_value(contents))
+                                         value=_excel_text(contents))
             # Wrapped and sized to the real column width: an index entry is
             # always fully visible, never cut at the column edge.
             contents_cell.alignment = Alignment(vertical="top", wrap_text=True)
@@ -970,8 +1022,14 @@ class ExportManager:
         with open(filepath, "w", newline="", encoding="utf-8-sig") as handle:
             writer = csv.writer(handle, delimiter=";")
 
-            def _write_row(row):
-                writer.writerow([_spreadsheet_value(value) for value in row])
+            def _write_row(row, *, protect=True):
+                # ``protect`` is off only for the section markers this function
+                # writes itself: a marker is not data, and ``=== X ===`` starts
+                # with ``=``, so the formula guard would rename every section
+                # (``'=== DAILY ACTIVITIES ===``) and break the documented
+                # marker. Data, headers and descriptions stay protected.
+                writer.writerow([_spreadsheet_value(value) for value in row]
+                                if protect else row)
 
             _write_row(["DDD TACHOGRAPH REPORT"])
             for field, value in summary_rows(data):
@@ -980,8 +1038,10 @@ class ExportManager:
             _write_row([])
 
             wrote_any = False
-            for label, desc, headers, rows, truncated in section_tables(data):
-                _write_row([f"=== {label.upper()} ==="])
+
+            def _write_section(label, desc, headers, rows, truncated=False):
+                nonlocal wrote_any
+                _write_row([f"=== {label.upper()} ==="], protect=False)
                 if desc:
                     _write_row([desc])
                 _write_row(headers)
@@ -991,6 +1051,18 @@ class ExportManager:
                     _write_row(["… (truncated)"])
                 _write_row([])
                 wrote_any = True
+
+            # The files' signature material first, in the order the workbook
+            # and the PDF print it.
+            for label, desc, records in _signature_sections(data):
+                headers, rows = records_to_table(records)
+                if headers:
+                    _write_section(label, desc, headers, rows)
+                else:
+                    _log.warning("Skipping '%s': no visible export columns", label)
+
+            for label, desc, headers, rows, truncated in section_tables(data):
+                _write_section(label, desc, headers, rows, truncated)
 
             if not wrote_any:
                 _write_row(["No data found"])
@@ -1137,7 +1209,12 @@ class ExportManager:
 
         def _build_table(data, col_widths, right_from_column=(), stripe=True,
                          shade_rows=(), pad=3):
-            table = LongTable(data, colWidths=col_widths, repeatRows=1)
+            # splitInRow keeps a value taller than the page: reportlab fragments
+            # the row (the header row repeats via repeatRows) instead of raising
+            # LayoutError and losing the whole export. A normal row is never
+            # split, so an ordinary report is unchanged.
+            table = LongTable(data, colWidths=col_widths, repeatRows=1,
+                              splitInRow=1)
             cmds = [
                 ("BACKGROUND", (0, 0), (-1, 0), PRIMARY),
                 ("GRID", (0, 0), (-1, -1), 0.3, GRID),
@@ -1626,17 +1703,21 @@ class ExportManager:
         # ═══════ FOOTER ═══════
         def _footer(canvas, document):
             canvas.saveState()
-            canvas.setFont("Helvetica", 7)
-            canvas.setFillColor(colors.grey)
             page_label = f"Page {document.page}"
-            budget = (avail_width
-                      - canvas.stringWidth(page_label, "Helvetica", 7) - 8)
             name = str(meta.get("filename") or "Tachograph file")
+            # Canvas text carries no markup, so a file name the report's own
+            # font cannot encode would print as black squares; the whole line
+            # is set in the bundled face instead (measured with that font, so
+            # the truncation still fits the margin).
+            font = _pdf_canvas_font(name)
+            canvas.setFont(font, 7)
+            canvas.setFillColor(colors.grey)
+            budget = avail_width - canvas.stringWidth(page_label, font, 7) - 8
             suffix = f"  ·  TachoReader v{__version__}"
             left = name + suffix
-            if canvas.stringWidth(left, "Helvetica", 7) > budget:
+            if canvas.stringWidth(left, font, 7) > budget:
                 while name and canvas.stringWidth(
-                        name + "\u2026" + suffix, "Helvetica", 7) > budget:
+                        name + "\u2026" + suffix, font, 7) > budget:
                     name = name[:-1]
                 left = (name + "\u2026" if name else "") + suffix
             canvas.drawString(doc.leftMargin, 8 * mm, left)

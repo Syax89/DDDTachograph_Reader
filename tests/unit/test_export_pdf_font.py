@@ -65,6 +65,51 @@ def _export_pdf(path, name=UNICODE_LABEL):
         return handle.read()
 
 
+def _footer_drawings(tmp_path, filename):
+    """``(font, text)`` of every ``drawString`` the export makes."""
+    from reportlab.pdfgen import canvas as canvas_module
+
+    drawn = []
+    original = canvas_module.Canvas.drawString
+
+    def spy(self, x, y, text, *args, **kwargs):
+        drawn.append((self._fontname, text))
+        return original(self, x, y, text, *args, **kwargs)
+
+    canvas_module.Canvas.drawString = spy
+    try:
+        export.ExportManager.export_to_pdf(
+            {"metadata": {"filename": filename},
+             "events": [{"description": "Over speeding",
+                         "begin": "2026-06-01T10:30:00+00:00"}]},
+            str(tmp_path / "footer.pdf"))
+    finally:
+        canvas_module.Canvas.drawString = original
+    return drawn
+
+
+def test_the_footer_sets_a_file_name_helvetica_cannot_draw_in_the_bundled_face(tmp_path):
+    """Canvas text has no paragraph markup, so the footer used to box it."""
+    latin = "\u0414\u0440\u0430\u0439\u0432\u0435\u0440-2024-\u0434\u0430\u043d\u043d\u0438.ddd"
+
+    footer = [(font, text) for font, text in _footer_drawings(tmp_path, latin)
+              if text.startswith(latin)]
+    assert footer, "the file name must reach the page footer"
+    assert {font for font, _text in footer} == {FALLBACK}
+    assert footer[0][1].startswith(latin), "the name is printed, not transliterated"
+
+
+def test_the_footer_keeps_the_reports_own_font_for_a_drawable_file_name(tmp_path):
+    footer = [(font, text) for font, text in _footer_drawings(tmp_path, "driver-card.ddd")
+              if text.startswith("driver-card.ddd")]
+    assert footer and {font for font, _text in footer} == {"Helvetica"}
+
+
+def test_the_canvas_font_is_the_reports_own_unless_a_character_needs_the_fallback():
+    assert export._pdf_canvas_font("driver-card.ddd") == export._PDF_BASE_FONT
+    assert export._pdf_canvas_font("one \u0116 label") == FALLBACK
+
+
 @pytest.fixture
 def unregistered_fallback(monkeypatch):
     """A fresh fallback-registration context (reportlab has no unregister API)."""
