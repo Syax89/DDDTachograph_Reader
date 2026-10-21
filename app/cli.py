@@ -211,8 +211,11 @@ Examples:
                 import traceback
                 traceback.print_exc()
 
-    # Summary
-    if args.summary or (not args.json and not args.pdf and not args.excel and not args.csv and not args.quiet):
+    # Summary — ``-q`` promises to suppress everything on screen, so it holds
+    # back an explicit ``--summary`` too (CLI-QUIET).
+    if not args.quiet and (
+            args.summary or (not args.json and not args.pdf and not args.excel
+                             and not args.csv)):
         print_summary(result, file=notice)
 
     # JSON on standard output: the documented default, or an explicit ``--json -``.
