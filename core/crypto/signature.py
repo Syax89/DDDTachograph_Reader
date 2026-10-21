@@ -32,14 +32,12 @@ class SignatureValidator:
     """
 
     def __init__(self, certs_dir=None):
+        # Console configuration belongs to the embedding application: the
+        # validator only emits records. A private StreamHandler here wrote every
+        # event twice (once through it, once through the root handler the host
+        # configured) and, being pinned at INFO, ignored ``--quiet`` entirely.
         self.logger = logging.getLogger("SignatureValidator")
-        if not self.logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter('%(levelname)s:%(name)s:%(message)s')
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
-            self.logger.setLevel(logging.INFO)
-        
+
         self.certs_dir = certs_dir or os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "certs")
         self.root_certificates = {} # Map of KeyID -> Certificate
         self.msca_certificates = {} # Cache for MSCA certs found in the file
