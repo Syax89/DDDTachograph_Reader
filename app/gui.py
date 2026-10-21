@@ -1202,11 +1202,18 @@ class DataTable(ttk.Frame):
         self._render(filtered)
 
     def _sort_by(self, col):
-        """Toggle-sort by column; dd/mm/yyyy dates sort chronologically and
-        numeric strings numerically, everything else alphabetically."""
+        """Toggle-sort by column; dd/mm/yyyy dates sort chronologically,
+        numeric strings numerically, "Xh YYm" durations by their minutes, and
+        everything else alphabetically."""
         idx = self._cols.index(col)
         descending = self._sort_state.get(col, False)
         date_re = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
+        # Every activity column of the dashboard holds a duration in the
+        # ``_fmt_duration_minutes`` shape ("9h 30m"), optionally followed by the
+        # infringement marker ("  !"). Compared as text, "12h 00m" sorted before
+        # "5h 00m" — that is "1" < "5" — so the sort disagreed with the numbers
+        # it was sorting.
+        duration_re = re.compile(r"\s*(\d+)h\s+(\d+)m")
 
         def key(row):
             v = row[idx] if idx < len(row) else ""
@@ -1214,6 +1221,9 @@ class DataTable(ttk.Frame):
             m = date_re.match(s)
             if m:  # dd/mm/yyyy → chronological
                 return (0, int(m.group(3)) * 10000 + int(m.group(2)) * 100 + int(m.group(1)))
+            d = duration_re.match(s)
+            if d:  # "Xh YYm" → minutes, so 12h sorts after 5h
+                return (0, int(d.group(1)) * 60 + int(d.group(2)))
             try:
                 # thousands are rendered with spaces (fmt_val)
                 num = float(s.replace(" ", "").replace(",", "."))
@@ -2306,36 +2316,37 @@ class ActivityTimelineChart(ttk.Frame):
 
     @staticmethod
     def _build_blocks(changes, is_vu):
-        """Convert a list of activity changes to per-slot block lists."""
-        slots = {}
-        # Recognise slots by the card slot label stored in the change record.
-        for ch in changes:
-            if not isinstance(ch, dict):
-                continue
-            slot = str(ch.get("slot") or "First")
-            if is_vu:
-                slot = "Slot 1" if slot == "First" else "Slot 2"
-            else:
-                slot = "Cardholder"
-            slots.setdefault(slot, []).append(ch)
+        """Convert a list of activity changes to per-slot block lists.
+
+        The segmentation comes from :func:`core.utils.activity_stats.day_segments`,
+        the single routine behind the Daily-Activities dashboard, the CLI
+        summary and the PDF report. Re-deriving it here made the chart disagree
+        with the dashboard on 471 of 1750 single-slot days of the tracked
+        samples: it painted a card-not-inserted period as Rest (Annex 1C §2.1
+        note 2 makes it UNKNOWN), left a missing leading 00:00 status entry
+        unaccounted (§2.170) and dropped an unrecognised activity label. The
+        blocks now tile the whole 24 h day, so a block's minutes always add up
+        to what the dashboard reports for the same slot.
+        """
+        from core.utils.activity_stats import day_segments
 
         blocks = {}
-        for slot_label, entries in slots.items():
-            blocks[slot_label] = []
-            # Sort by time, then build continuous blocks.
-            parsed = []
-            for entry in entries:
-                t = ActivityTimelineChart._parse_time(entry.get("time", ""))
-                act = str(entry.get("activity", "")).upper()
-                if t is not None and act in ACTIVITY_COLORS:
-                    parsed.append((t, act))
-            parsed.sort(key=lambda item: item[0])
-            if not parsed:
-                continue
-            # First block starts at its time; the next block's time closes it.
-            for i, (start, act) in enumerate(parsed):
-                end = parsed[i + 1][0] if i + 1 < len(parsed) else 86400
-                blocks[slot_label].append((start, end, act))
+
+        def label(raw_slot):
+            if is_vu:
+                return "Slot 1" if str(raw_slot) == "First" else "Slot 2"
+            # A driver card records one holder's activities, whichever slot the
+            # card was in, so they stay in the one "Cardholder" section the
+            # chart has always shown for card files.
+            return "Cardholder"
+
+        # A slot with records but no usable time keeps its (empty) section, as
+        # it did before: the axes and the slot label are still drawn.
+        for ch in changes:
+            if isinstance(ch, dict):
+                blocks.setdefault(label(ch.get("slot") or "First"), [])
+        for raw_slot, segments in day_segments(changes).items():
+            blocks.setdefault(label(raw_slot), []).extend(segments)
         return blocks
 
     def _schedule_draw(self):
@@ -6236,11 +6247,17 @@ class TachoExplorer(tk.Tk):
         drive_col = getattr(self, "_dashboard_drive_col", -1)
         if drv_col < 0 and ev_col < 0 and drive_col < 0:
             return
+        # The label is owned by the current dashboard and destroyed when that
+        # view goes away (see _cleanup_dashboard): a motion event delivered
+        # after the switch has nothing to show and must not raise.
+        tooltip_lbl = getattr(self, "_tooltip_lbl", None)
+        if tooltip_lbl is None:
+            return
         row_id = self.table.tv.identify_row(event.y)
         col_id = self.table.tv.identify_column(event.x)
         col_idx = int(col_id.replace("#", "")) - 1 if col_id else -1
         if not row_id or col_idx not in (drv_col, ev_col, drive_col):
-            self._tooltip_lbl.place_forget()
+            tooltip_lbl.place_forget()
             return
         # Look the row up by its stable key, never by its display position: the
         # table is sortable and filterable, so position i after a header click
@@ -6255,10 +6272,10 @@ class TachoExplorer(tk.Tk):
             rule_tips = getattr(self, "_dashboard_rule_tips", {}) or {}
             tip = rule_tips.get(key, "")
         if tip:
-            self._tooltip_lbl.config(text=tip, justify=tk.LEFT, wraplength=380)
-            self._tooltip_lbl.place(x=event.x + 16, y=event.y + 16)
+            tooltip_lbl.config(text=tip, justify=tk.LEFT, wraplength=380)
+            tooltip_lbl.place(x=event.x + 16, y=event.y + 16)
         else:
-            self._tooltip_lbl.place_forget()
+            tooltip_lbl.place_forget()
 
     def _cleanup_dashboard(self):
         """Drop what only the previous view (dashboard or summary) needed."""
@@ -6268,8 +6285,17 @@ class TachoExplorer(tk.Tk):
         if getattr(self, "_slot_toggle_frame", None) is not None:
             self._slot_toggle_frame.destroy()
             self._slot_toggle_frame = None
-        if getattr(self, "_tooltip_lbl", None) is not None:
-            self._tooltip_lbl.place_forget()
+        # Destroy the row tooltip, do not just hide it: the label is a child of
+        # the treeview, so a dashboard visited n times used to leave n labels
+        # behind (the summary panel's own label is destroyed the same way, see
+        # _cleanup_summary_tooltip).
+        tooltip_lbl = getattr(self, "_tooltip_lbl", None)
+        if tooltip_lbl is not None:
+            try:
+                tooltip_lbl.destroy()
+            except tk.TclError:      # widget already destroyed
+                pass
+            self._tooltip_lbl = None
         bind_id = getattr(self, "_dashboard_motion_bind", None)
         if bind_id is not None:
             try:
@@ -6277,6 +6303,30 @@ class TachoExplorer(tk.Tk):
             except Exception:
                 pass
             self._dashboard_motion_bind = None
+        # The day-detail handler is bound by _show_daily_summary and used to
+        # outlive the dashboard: it stayed armed on every later table, closing
+        # over the previous dashboard's _dashboard_data and day list, so a
+        # double-click in an ordinary table of another file ran the handler
+        # against the file that was open before. Drop it (and the state it
+        # reads) with the view that created it.
+        if getattr(self, "_dashboard_double_click_bound", False):
+            try:
+                self.table.tv.unbind("<Double-1>")
+            except Exception:
+                pass
+            self._dashboard_double_click_bound = False
+        for attribute, empty in (("_dashboard_activity_list", None),
+                                 ("_dashboard_data", None),
+                                 ("_dashboard_is_vu", None),
+                                 ("_dashboard_tooltips", {}),
+                                 ("_dashboard_ev_tips", {}),
+                                 ("_dashboard_rule_tips", {}),
+                                 ("_dashboard_card_day_km", {}),
+                                 ("_dashboard_drv_col", -1),
+                                 ("_dashboard_ev_col", -1),
+                                 ("_dashboard_drive_col", -1)):
+            if hasattr(self, attribute):
+                setattr(self, attribute, empty)
         # Every view switch comes through here, so the summary panel's own
         # reveal label (and its bindings on the table) is dropped here too.
         self._cleanup_summary_tooltip()
@@ -6742,6 +6792,9 @@ class TachoExplorer(tk.Tk):
             self.table.tv.unbind("<Double-1>")
             self.table.tv.bind("<Double-1>",
                                lambda e: self._on_dashboard_double_click(e))
+            # Remembered so _cleanup_dashboard unbinds it when this view goes
+            # away: the handler closes over this dashboard's day list and data.
+            self._dashboard_double_click_bound = True
 
             # ── Slot toggle for VU files ──
             if is_vu:

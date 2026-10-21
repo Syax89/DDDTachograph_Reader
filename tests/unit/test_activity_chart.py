@@ -50,13 +50,21 @@ class TestActivityTimelineChart:
         ]
         blocks = ActivityTimelineChart._build_blocks(changes, is_vu=True)
         assert set(blocks.keys()) == {"Slot 1", "Slot 2"}
-        assert len(blocks["Slot 1"]) == 2
+        # Slot 1 has no 00:00 entry, so the hours before 06:00 are UNKNOWN
+        # (Annex 1C §2.170, see
+        # test_gui_activity_chart_matches_dashboard.py); Slot 2 starts at 00:00.
+        assert blocks["Slot 1"] == [(0, 21600, "UNKNOWN"),
+                                    (21600, 57600, "DRIVE"),
+                                    (57600, 86400, "REST")]
         assert len(blocks["Slot 2"]) == 3
 
-    def test_unknown_activity_is_skipped(self):
+    def test_unknown_activity_is_bucketed_not_dropped(self):
+        """An unrecognised label keeps its minutes as UNKNOWN (no hole in the
+        day), exactly as the dashboard's totals bucket it."""
         changes = [{"activity": "XYZ", "time": "03:00", "slot": "First"}]
         blocks = ActivityTimelineChart._build_blocks(changes, is_vu=False)
-        assert blocks["Cardholder"] == []
+        assert blocks["Cardholder"] == [(0, 10800, "UNKNOWN"),
+                                        (10800, 86400, "UNKNOWN")]
 
     def test_unusable_time_is_dropped_not_drawn_at_a_bogus_offset(self):
         """The GUI timeline must reject out-of-range times, not draw them.
@@ -74,7 +82,10 @@ class TestActivityTimelineChart:
             {"activity": "WORK",  "time": "08:00", "slot": "First"},
             {"activity": "REST",  "time": "12:00", "slot": "First"},
         ], is_vu=False)
-        assert mixed == {"Cardholder": [(28800, 43200, "WORK"),
+        # Nothing is drawn at the fabricated offset; the hours before the first
+        # usable entry are UNKNOWN, not silently missing (Annex 1C §2.170).
+        assert mixed == {"Cardholder": [(0, 28800, "UNKNOWN"),
+                                        (28800, 43200, "WORK"),
                                         (43200, 86400, "REST")]}
 
     @pytest.mark.parametrize("bad", ["25:00", "08:75", "24:01", "-1:00", "12:-5",
