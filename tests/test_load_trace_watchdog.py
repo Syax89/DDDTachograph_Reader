@@ -1,4 +1,8 @@
-"""Stall watchdog and dialog timing of the opt-in load trace (no private files)."""
+"""Stall watchdog and dialog timing of the load trace (no private files).
+
+The *live file* is opt-in (``DDD_TRACE_LOAD=1``); the in-memory ring and the watchdog
+thread that reports a real stall are always on, so they run with the env var off too.
+"""
 import importlib
 import threading
 import time
@@ -15,22 +19,27 @@ def trace(monkeypatch, tmp_path):
     def load(enabled):
         monkeypatch.setenv("DDD_TRACE_LOAD", "1" if enabled else "0")
         from core.utils import load_trace
-        return importlib.reload(load_trace)
+        lt = importlib.reload(load_trace)
+        lt.STALL_REPORT = False          # a slow test is not a user-facing stall
+        lt.WATCHDOG = True               # pytest means no sampler; these tests ask for one
+        return lt
     yield load, tmp_path
     monkeypatch.setenv("DDD_TRACE_LOAD", "0")
     from core.utils import load_trace
     importlib.reload(load_trace)
 
 
-def test_off_creates_no_thread_and_no_file(trace):
+def test_off_keeps_the_watchdog_and_the_ring_but_writes_no_file(trace):
     load, home = trace
     lt = load(False)
-    before = threading.enumerate()
     lt.event("x")
     with lt.dialog("showinfo", "File Note"):
         pass
-    assert threading.enumerate() == before
-    assert not list(home.iterdir())
+    # always on in the app: the stall report needs the ring and the sampler without an env
+    # var (the test asks for the sampler because pytest itself never starts one)
+    assert any(t.name == "load-trace-watchdog" for t in threading.enumerate())
+    assert any("\tx\t" in line for line in lt._ring)
+    assert not list(home.iterdir())               # no live trace, and no stall happened
 
 
 def _blocked_for_the_test_stall():
@@ -79,7 +88,9 @@ def test_open_source_of_each_entry_point(trace, monkeypatch):
     monkeypatch.setattr(gui, "dropped_paths", lambda part, split=None: [part])
     started = []
     status = SimpleNamespace(config=lambda **k: None)
-    box = SimpleNamespace(_parsing=False, _rendering=False, status=status, tk=SimpleNamespace(splitlist=lambda x: x),
+    box = SimpleNamespace(_parsing=False, _rendering=False, _open_pending=False, status=status,
+                          tk=SimpleNamespace(splitlist=lambda x: x),
+                          after=lambda ms, fn: fn(),      # run the deferred start now
                           _start_parse=lambda path: (started.append(box._open_source), lt.opened(path, box._open_source)))
     gui.TachoExplorer._open_file(box)
     gui.TachoExplorer._open_recent(box, "/x/secret.ddd")

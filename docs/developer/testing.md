@@ -323,6 +323,117 @@ scripts, a 5000-day tree and the real files; a 5000-node tree must need ≤ 200 
 calls. If you change how the tree is populated, update
 `tests/unit/tree_snapshot_mocks.json` (mocks only — never commit a real file's labels).
 
+### Stall report (always on, no env var)
+
+An in-memory ring (`load_trace._ring`, `maxlen` 400) records every trace event whether or not
+`DDD_TRACE_LOAD` is set, and a watchdog thread (`load_trace._watch`, started by the first
+event — `header()` at window construction —, one sample every 0.5 s via
+`sys._current_frames()`) watches the main thread in every session. A main-thread stack that
+stays identical for 7 samples (6 intervals = 3 s) writes, **once per process**:
+
+* `~/ddd-reader-stall-report.txt` — UTF-8, mode `0o600`, overwritten: a `# platform=` /
+  `# python=` / `# frozen=` / `# tk=` header, the `stall` line (frozen seconds, and the
+  `module.function:line` stack), then the ring oldest-first. The path is printed to stderr.
+* the same `stall` line continues to go to `~/ddd-reader-load-trace.txt` when
+  `DDD_TRACE_LOAD=1`.
+
+Two waits are **not** stalls, because a user experiences them as normal use:
+tkinter's own loop (innermost frame `mainloop` in a file ending `tkinter/__init__.py`) and
+the native file picker (`commondialog.show` anywhere up the stack). A normal session writes
+no report file at all.
+
+Privacy: the report never carries a file name, a directory, a card number, a plate, a VIN, a
+driver name or dialog text. The ring lines are the same `key=value` fields the load trace
+already restricts to extension/size/generation/counts, and `load_trace.dialog()` writes a
+dialog title only when it is one of three fixed msgids (`title=other` otherwise).
+
+A sampler belongs to the module generation that started it (`load_trace._GEN`): a reload —
+tests only — retires the previous samplers, so two samplers never report side by side.
+`load_trace.STALL_REPORT` switches the *file* off; `tests/conftest.py` does that for the
+whole suite (a slow test is not a user-facing stall, and no test may write to the real home
+directory), and `tests/unit/test_stall_report.py` turns it back on against a temporary
+`HOME`. `tests/test_load_trace_watchdog.py` covers the live file.
+
+#### The sampler does not run under pytest (`load_trace.WATCHDOG`)
+
+An earlier revision kept the sampler running in the test suite too. A full
+`xvfb-run -a .venv/bin/python -X faulthandler -m pytest tests -q` then aborted after eleven
+tests with `Fatal Python error: Aborted` (exit 134). Faulthandler named the thread:
+
+```
+Current thread 0x00007f8786eff6c0 (most recent call first):
+  Garbage-collecting
+  File ".../core/utils/load_trace.py", line 195 in _watch
+  File "/usr/lib/python3.13/threading.py", line 994 in run
+```
+
+— the sampler, **inside a garbage-collection pass**, i.e. exactly the
+`Tcl_AsyncDelete: async handler deleted by the wrong thread` abort: a pass runs on whichever
+thread trips the threshold, the suite creates and drops Tk roots in a loop, and a Tk object
+(`PhotoImage`/`Variable`/interpreter `__del__`) finalized on the sampler's thread calls Tcl
+from a thread that does not own the interpreter. The crash above happened **with** a
+`gc.disable()`-while-allocating guard in place, because the allocation that *enters* the
+guard is itself enough to trip the collection: the guard was racy by construction, so it was
+removed (`app/gui.py:_gc_pause` is untouched again), rather than kept on a hypothesis.
+
+The remedy is the one that matches the cause: `load_trace.WATCHDOG` is
+`"pytest" not in sys.modules`, so the app (and a frozen build) always samples while a test
+session never does. A test that needs a sampler asks for it — `load_trace.WATCHDOG = True`
+(what `tests/test_load_trace_watchdog.py` does after its `importlib.reload`) or by starting
+`load_trace._watch` in a thread (what `tests/unit/test_stall_report.py` does). Support can
+force either way with `DDD_STALL_WATCHDOG=0|1` (`load_trace.sampler_allowed()`). The ring
+buffer keeps recording under pytest, so a test can still assert what was traced.
+
+The sampled read itself is defensive: `sys._current_frames()` is fetched inside a
+`try/except` and a missing frame simply counts as idle, so a failing sample can never take
+the app down. Residue worth knowing: any thread can still be the one that collects (the
+parse worker allocates megabytes), which is pre-existing and not something the sampler
+introduced.
+
+### Event pumping on macOS
+
+Symptom: on Aqua (Tk 8.6.13, frozen) one `self.update()` in `_pump_render` — reached from
+`_parse_done` — blocked 17–20 s inside Tk, always after the native file picker had closed
+(a third open), with no frame of ours on the stack. Hypothesis (unproven): `update()` enters
+a native event-tracking wait and returns only on the next event. The fix therefore does not
+depend on *why* Tk waits: on macOS a file open processes **no events at all**.
+
+* `_PUMP_USES_EVENTS` (`app/gui.py:156`, `sys.platform != "darwin"`, monkeypatchable;
+  `DDD_PUMP_MODE=events|idle` overrides it for support) picks the mode.
+* In the idle mode `_pump_render` calls `update_idletasks()` instead of `update()`, and
+  steps the indeterminate busy bar by hand, because Tk timers need events: one step per
+  12 ms of wall time since the previous pump (`ttk::progressbar::start 12` = `step 1`
+  every 12 ms), capped at 8 steps per pump. `progress.start(12)`, the adaptive throttle,
+  `force=True`, `_RenderAbandoned` and the swallowed widget-less-double failure are
+  unchanged. Linux and Windows keep the old `update()` path.
+* `_open_file` (`app/gui.py:4296`) no longer starts the parse inside the picker's call
+  stack: it schedules `_start_parse(path)` with `self.after(150, ...)`, so the *real*
+  mainloop handles the panel's teardown first. `_open_pending` is set across the picker and
+  the 150 ms, so a second click on Open starts neither a second picker nor a second parse
+  (`_start_parse` refuses again while `_parsing`/`_rendering`). The `askopenfilename`
+  arguments are untouched. Drop and recent-files clicks do not come out of a native panel
+  and still start directly.
+
+Audit — every event-pumping call in `app/` (`grep -n "\.update()\|wait_window\|
+wait_visibility\|mainloop(" app/*.py`; there is no `wait_window`, no `wait_visibility` and
+no nested `mainloop`, in `app/`, `core/` or `app/export.py`):
+
+| Where | What for | Can it run during/after an open? |
+| --- | --- | --- |
+| `app/gui.py:4440` `_pump_render` `self.update()` | keeps the window and the busy bar alive while a render holds the main thread | **yes — this was the 17–20 s stall.** Idle mode calls `update_idletasks()` (`:4447`) and steps the bar by hand |
+| `app/gui.py:1046` `DataTable.show` `_flush(self.tv)` (was `self.tv.update()`) | settle the geometry before `_sync_xscroll` | yes: it runs from `<<TreeviewSelect>>`, i.e. right after a render. Layout needs idle tasks only, so `_flush` (`:164`) = `update_idletasks()` on macOS |
+| `app/gui.py:6075` `_show_dashboard` `_flush(self.table.tv)` (was `tv.update()`) | same, for the dashboard table | yes, same path (the auto-selected node can be a dashboard) |
+| `app/gui.py:3476` `__init__` (Windows title bar), `:4535` / `:4612` (busy bar before an export worker), `:5253` / `:7128` (tooltips), `:1044`, `:6073`, `:7074` (`tv.update_idletasks()`) | `update_idletasks()` only | no events are processed, so they cannot enter a native wait: left as they are |
+| `app/gui.py:7763` `app.mainloop()` in `main` | the one real loop | not nested: the language switch returns from it and builds a new window |
+| `app/gui.py:4317` `after(150, …)`, `:4719` `after_idle(selection_set)`, `:4350` `after(50, _poll_parse_queue)` | deferred callbacks | run by the real loop, never by a pump |
+
+Rules for new code: nothing reachable from `_open_file`, `_parse_done`, `_on_tree_select`
+or `_show_dashboard` may call `update()` — use `_flush()`/`update_idletasks()` — and no
+parse may be started from inside a native panel's call stack (use `after`).
+
+Note on the comment in `_parse_done` ("Rendering's table sizing update() pumps the loop"):
+the call it means is the `_flush` row above, which is idle-only on macOS now.
+
 ### Load trace for a slow open (`DDD_TRACE_LOAD=1`)
 
-Opt-in, off by default (no file, one boolean check): `DDD_TRACE_LOAD=1` appends per-stage timings to `~/ddd-reader-load-trace.txt` (extension, size, generation and counts only — never contents, names or the file's directory). On macOS run `DDD_TRACE_LOAD=1 /Applications/<app>/Contents/MacOS/<binary>` from Terminal (or `open --env DDD_TRACE_LOAD=1 /Applications/<app>.app`), open two files in a row and send back `~/ddd-reader-load-trace.txt`; the lines say `open number=N`, the tree delete of the previous file and the render-pump totals. Code: `core/utils/load_trace.py`, test: `tests/unit/test_load_trace.py`.
+Live file is opt-in (the in-memory ring and the stall report above are always on): `DDD_TRACE_LOAD=1` appends per-stage timings to `~/ddd-reader-load-trace.txt` (extension, size, generation and counts only — never contents, names or the file's directory). On macOS run `DDD_TRACE_LOAD=1 /Applications/<app>/Contents/MacOS/<binary>` from Terminal (or `open --env DDD_TRACE_LOAD=1 /Applications/<app>.app`), open two files in a row and send back `~/ddd-reader-load-trace.txt`; the lines say `open number=N`, the tree delete of the previous file and the render-pump totals. Code: `core/utils/load_trace.py`, test: `tests/unit/test_load_trace.py`.

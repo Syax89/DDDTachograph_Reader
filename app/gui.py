@@ -143,6 +143,32 @@ _RENDER_PUMP_INTERVAL = 1 / 60
 _RENDER_PUMP_MAX_GAP = 0.25
 
 
+def _pump_uses_events(environ=os.environ, platform=sys.platform):
+    """Whether the render pump may process events (``update()``) or only idle tasks.
+
+    macOS: idle tasks only, because ``update()`` can block there inside Tk's native event
+    tracking after the file picker closed. ``DDD_PUMP_MODE=events|idle`` overrides it
+    (support: flip the behaviour without a rebuild)."""
+    return {"events": True, "idle": False}.get(environ.get("DDD_PUMP_MODE", ""),
+                                               platform != "darwin")
+
+
+_PUMP_USES_EVENTS = _pump_uses_events()
+
+#: ``Progressbar.start(12)`` ticks every 12 ms; without events the pump steps the bar itself,
+#: at most this many ticks per pump.
+_BAR_TICK = 0.012
+_BAR_MAX_TICKS = 8
+
+
+def _flush(widget):
+    """``update()``, or only the idle tasks (layout/redraw) where events must not run."""
+    if _PUMP_USES_EVENTS:
+        widget.update()
+    else:
+        widget.update_idletasks()
+
+
 class _RenderAbandoned(Exception):
     """The window went away while a render was pumping its event loop.
 
@@ -1017,7 +1043,7 @@ class DataTable(ttk.Frame):
         self.set_rows(rows)
         self.tv.update_idletasks()
         self._fit_columns()
-        self.tv.update()
+        _flush(self.tv)
         self._sync_xscroll()
         if self._fit_after_id is not None:
             self.tv.after_cancel(self._fit_after_id)
@@ -3371,6 +3397,8 @@ class TachoExplorer(tk.Tk):
     _parsing = False
     _gc_was_enabled = None      # None: the GC is not paused by a parse
     _pump_due = 0.0
+    _bar_at = 0.0               # last manual busy-bar step (idle pump mode)
+    _open_pending = False       # a picked file waits for its deferred parse start
 
     def __init__(self, initial_file=None):
         super().__init__()
@@ -4267,14 +4295,26 @@ class TachoExplorer(tk.Tk):
 
     def _open_file(self):
         """File-picker entry point; ignored while a parse (or its render) runs."""
-        if self._parsing or self._rendering:
+        if self._parsing or self._rendering or self._open_pending:
             return
-        path = load_trace.picker(lambda: filedialog.askopenfilename(
-            filetypes=[(_("DDD Files"), "*.ddd *.DDD"), (_("All Files"), "*.*")]))
+        self._open_pending = True
+        try:
+            path = load_trace.picker(lambda: filedialog.askopenfilename(
+                filetypes=[(_("DDD Files"), "*.ddd *.DDD"), (_("All Files"), "*.*")]))
+        except BaseException:
+            self._open_pending = False
+            raise
         if not path:
+            self._open_pending = False
             return
         self._open_source = "picker"
-        self._start_parse(path)
+
+        def start():
+            self._open_pending = False
+            self._start_parse(path)
+        # Not inside the picker's call stack: let the real mainloop handle the panel's
+        # teardown events first (macOS update() stall after the native panel closed).
+        self.after(150, start)
 
     def _open_initial_file(self):
         self._open_source = "cli"
@@ -4298,6 +4338,7 @@ class TachoExplorer(tk.Tk):
             filename=os.path.basename(path)))
         self.progress.pack(side=tk.RIGHT, padx=6, pady=1)
         self.progress.start(12)
+        self._bar_at = 0.0          # idle pump: step the bar from the render's first pump
 
         worker = threading.Thread(target=self._parse_worker, args=(path,), daemon=True)
         self._gc_was_enabled = _gc_pause()
@@ -4395,7 +4436,15 @@ class TachoExplorer(tk.Tk):
             raise _RenderAbandoned
         gone = False
         try:
-            self.update()
+            if _PUMP_USES_EVENTS:
+                self.update()
+            else:
+                # No timers fire without events: advance the busy bar by the ticks it missed.
+                ticks = min(_BAR_MAX_TICKS, int((now - (self._bar_at or now)) / _BAR_TICK))
+                self._bar_at = now
+                if ticks:
+                    self.progress.step(ticks)
+                self.update_idletasks()
             gone = self._destroyed or not self.winfo_exists()
         except Exception:  # noqa: BLE001 - a failed pump must not fail a render
             # Two very different cases land here. A widget-less test double has
@@ -6023,7 +6072,7 @@ class TachoExplorer(tk.Tk):
 
         self.table.tv.update_idletasks()
         self.table._fit_columns()
-        self.table.tv.update()
+        _flush(self.table.tv)
         self.table._sync_xscroll()
         if self.table._fit_after_id is not None:
             self.table.tv.after_cancel(self.table._fit_after_id)
