@@ -1175,11 +1175,18 @@ class DataTable(ttk.Frame):
         self._render(filtered)
 
     def _sort_by(self, col):
-        """Toggle-sort by column; dd/mm/yyyy dates sort chronologically and
-        numeric strings numerically, everything else alphabetically."""
+        """Toggle-sort by column; dd/mm/yyyy dates sort chronologically,
+        numeric strings numerically, "Xh YYm" durations by their minutes, and
+        everything else alphabetically."""
         idx = self._cols.index(col)
         descending = self._sort_state.get(col, False)
         date_re = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
+        # Every activity column of the dashboard holds a duration in the
+        # ``_fmt_duration_minutes`` shape ("9h 30m"), optionally followed by the
+        # infringement marker ("  !"). Compared as text, "12h 00m" sorted before
+        # "5h 00m" — that is "1" < "5" — so the sort disagreed with the numbers
+        # it was sorting.
+        duration_re = re.compile(r"\s*(\d+)h\s+(\d+)m")
 
         def key(row):
             v = row[idx] if idx < len(row) else ""
@@ -1187,6 +1194,9 @@ class DataTable(ttk.Frame):
             m = date_re.match(s)
             if m:  # dd/mm/yyyy → chronological
                 return (0, int(m.group(3)) * 10000 + int(m.group(2)) * 100 + int(m.group(1)))
+            d = duration_re.match(s)
+            if d:  # "Xh YYm" → minutes, so 12h sorts after 5h
+                return (0, int(d.group(1)) * 60 + int(d.group(2)))
             try:
                 # thousands are rendered with spaces (fmt_val)
                 num = float(s.replace(" ", "").replace(",", "."))
