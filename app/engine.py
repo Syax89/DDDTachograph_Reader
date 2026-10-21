@@ -813,13 +813,33 @@ class TachoParser:
                 return ("bytes", value.hex())
             return (type(value).__module__, type(value).__qualname__, repr(value))
 
-        seen = set()
+        def _fingerprint(record):
+            """A cheap, stable identity for one day: its scalar fields + list sizes.
+
+            A pure function of the record, so two canonically identical days always
+            share it; it exists only to keep the recursive ``_canonical`` walk off
+            the hot path (it used to run over every activity change of every day).
+            Two days with the same fingerprint are still compared canonically, so
+            the definition of "duplicate" does not change.
+            """
+            scalars, shapes = [], []
+            for field, value in record.items():
+                if isinstance(value, (list, tuple, set, dict)):
+                    shapes.append((field, type(value).__name__, len(value)))
+                else:
+                    scalars.append((field, _canonical(value)))
+            return (tuple(sorted(scalars, key=repr)), tuple(sorted(shapes)))
+
+        buckets = {}
         unique = []
         for act in self.results["activities"]:
-            key = _canonical(act)
-            if key not in seen:
-                seen.add(key)
-                unique.append(act)
+            bucket = buckets.setdefault(_fingerprint(act), [])
+            if bucket:
+                key = _canonical(act)
+                if any(_canonical(existing) == key for existing in bucket):
+                    continue
+            bucket.append(act)
+            unique.append(act)
         unique.sort(key=lambda x: _safe_parse_date(x.get("date")) or datetime.min, reverse=True)
         self.results["activities"] = unique
 
