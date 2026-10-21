@@ -120,7 +120,7 @@ def test_g1_event_keeps_all_four_card_slots(tmp_path):
         card = event[key]
         assert card["card_type"] == card_type, key
         assert card["nation"] == NATION[nation], key
-        assert card["card_number"] == NATION[nation] + number, key
+        assert card["card_number"] == number, key
     # A shifted read cannot pass: no two slots share a card.
     assert len({str(event[key]) for key, *_ in SLOTS}) == 4
 

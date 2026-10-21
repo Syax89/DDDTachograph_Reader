@@ -1131,7 +1131,15 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
 
 def _parse_full_card_number(data, offset):
     """Parse 18-byte FullCardNumber (Annex 1B §2.73):
-    cardType(1) + cardIssuingMemberState(1) + cardNumber(16)."""
+    cardType(1) + cardIssuingMemberState(1) + cardNumber(16).
+
+    The number is published exactly as the 16-character field stores it: a smart
+    card's numbering already opens with the Member State letter, so prefixing the
+    decoded nation again invented a 17-character number that matched neither the
+    card's own ``card_number`` (``core.decoders.card_ef``) nor the generation-2
+    reading of the same bytes (``decode_full_card_number_gen``). The issuing state
+    travels as its own field.
+    """
     if offset + 18 > len(data):
         return None
     card_type = data[offset]
@@ -1140,7 +1148,7 @@ def _parse_full_card_number(data, offset):
     return {
         "card_type": card_type,
         "nation": nation,
-        "card_number": f"{nation}{card_num}",
+        "card_number": card_num,
     }
 
 def _parse_vu_fault_record(data, offset):
