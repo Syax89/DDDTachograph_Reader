@@ -98,6 +98,15 @@ def _cell_safe(value):
     return value
 
 
+def _excel_text(value):
+    """A value written to a worksheet cell: formula-guarded and XML-safe.
+
+    Every write path goes through here — a decoded field can carry a control
+    byte wherever it appears, not only in a data cell.
+    """
+    return _cell_safe(_spreadsheet_value(value))
+
+
 def _pdf_number(value):
     """An integer with thin-space grouping, as the report tables print them."""
     return f"{value:,}".replace(",", " ")
@@ -689,7 +698,7 @@ class ExportManager:
                 note = _excel_note_text(description, note_width)
                 ws.merge_cells(start_row=1, start_column=1, end_row=1,
                                end_column=len(headers))
-                cell = ws.cell(row=1, column=1, value=_spreadsheet_value(note))
+                cell = ws.cell(row=1, column=1, value=_excel_text(note))
                 cell.font = SUBTITLE_FONT
                 cell.alignment = Alignment(wrap_text=True, vertical="top")
                 ws.row_dimensions[1].height = _excel_note_height(note, note_width)
@@ -697,7 +706,7 @@ class ExportManager:
 
             for col, header in enumerate(headers, start=1):
                 cell = ws.cell(row=header_row, column=col,
-                               value=_spreadsheet_value(str(header)))
+                               value=_excel_text(str(header)))
                 cell.font = HEADER_FONT
                 cell.fill = HEADER_FILL
                 cell.alignment = Alignment(vertical="center", wrap_text=True)
@@ -786,7 +795,7 @@ class ExportManager:
         summary.column_dimensions["B"].width = _EXCEL_SUMMARY_VALUE_WIDTH
         summary.column_dimensions["C"].width = 9
         summary.cell(row=1, column=1, value="DDD Tachograph Report").font = TITLE_FONT
-        note = summary.cell(row=2, column=1, value=_spreadsheet_value(_EXCEL_SCOPE_NOTE))
+        note = summary.cell(row=2, column=1, value=_excel_text(_EXCEL_SCOPE_NOTE))
         note.font = SUBTITLE_FONT
         note.alignment = Alignment(wrap_text=True, vertical="top")
         summary.merge_cells(start_row=2, start_column=1, end_row=2, end_column=3)
@@ -801,10 +810,10 @@ class ExportManager:
             if not (field or value):
                 row += 1
                 continue
-            label_cell = summary.cell(row=row, column=1, value=_spreadsheet_value(field))
+            label_cell = summary.cell(row=row, column=1, value=_excel_text(field))
             label_cell.font = Font(bold=True)
             label_cell.alignment = TOP
-            value_cell = summary.cell(row=row, column=2, value=_spreadsheet_value(value))
+            value_cell = summary.cell(row=row, column=2, value=_excel_text(value))
             value_cell.alignment = Alignment(vertical="top", wrap_text=True)
             if field in _EXCEL_PROBLEM_LABELS:
                 label_cell.fill = ALERT_FILL
@@ -915,10 +924,10 @@ class ExportManager:
                 "month cut before its subtotal has no total row, and Daily "
                 "Activities holds the day rows only."))
         for label, value in limit_rows:
-            label_cell = summary.cell(row=row, column=1, value=_spreadsheet_value(label))
+            label_cell = summary.cell(row=row, column=1, value=_excel_text(label))
             label_cell.font = Font(bold=True)
             label_cell.alignment = TOP
-            value_cell = summary.cell(row=row, column=2, value=_spreadsheet_value(value))
+            value_cell = summary.cell(row=row, column=2, value=_excel_text(value))
             value_cell.alignment = Alignment(vertical="top", wrap_text=True)
             summary.row_dimensions[row].height = _excel_note_height(
                 value, _EXCEL_SUMMARY_VALUE_WIDTH)
@@ -936,7 +945,7 @@ class ExportManager:
                                        horizontal="right" if col == 3 else "left")
         row += 1
         for name, count, contents in index:
-            link_cell = summary.cell(row=row, column=1, value=_spreadsheet_value(name))
+            link_cell = summary.cell(row=row, column=1, value=_excel_text(name))
             # An internal jump to this workbook's own sheet — never an external
             # target and never a HYPERLINK() formula. The location is quoted and
             # its apostrophes doubled exactly as Excel's own reference syntax
@@ -947,7 +956,7 @@ class ExportManager:
             link_cell.font = LINK_FONT
             link_cell.alignment = TOP
             contents_cell = summary.cell(row=row, column=2,
-                                         value=_spreadsheet_value(contents))
+                                         value=_excel_text(contents))
             # Wrapped and sized to the real column width: an index entry is
             # always fully visible, never cut at the column edge.
             contents_cell.alignment = Alignment(vertical="top", wrap_text=True)

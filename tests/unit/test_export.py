@@ -279,6 +279,30 @@ class TestExportManager(unittest.TestCase):
             assert _spreadsheet_value(formula) == "'" + formula
         assert _spreadsheet_value("  -42") == "  -42"
 
+    def test_excel_drops_control_bytes_from_every_cell_it_writes(self):
+        """A decoded field can carry a control byte; XML 1.0 forbids it.
+
+        Data cells were already cleaned, so a byte in the summary block or in a
+        column header used to abort the whole workbook export.
+        """
+        data = deepcopy(self.mock_data)
+        data["driver"]["firstname"] = "Io\x01an"
+        data["events"][0]["description"] = "Over \x02speeding"
+        data["events"][0]["\x01untrusted_header"] = "value"
+
+        ExportManager.export_to_excel(data, self.excel_path)
+
+        from openpyxl import load_workbook
+        wb = load_workbook(self.excel_path)
+        values = [cell.value for sheet in wb.worksheets
+                  for row in sheet.iter_rows() for cell in row
+                  if isinstance(cell.value, str)]
+
+        self.assertIn("Ioan Rossi", "\n".join(values))
+        self.assertIn("Over speeding", values)
+        self.assertIn("untrusted Header", values)
+        self.assertFalse([value for value in values if "\x01" in value or "\x02" in value])
+
     def test_excel_skips_sections_without_visible_columns(self):
         data = deepcopy(self.mock_data)
         data["events"] = [{"source": "internal", "confidence": "low"}]
