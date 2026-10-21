@@ -97,22 +97,32 @@ def test_exception_in_render_restores(monkeypatch):
 
 def test_slow_gc_pass_is_traced_and_nothing_hooked_when_off(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setitem(load_trace._gc, "hooked", False)
-    monkeypatch.setattr(load_trace, "ENABLED", False)
-    before = list(gc.callbacks)
-    load_trace.opened("a.ddd")
-    assert gc.callbacks == before and list(tmp_path.iterdir()) == []
-    monkeypatch.setattr(load_trace, "ENABLED", True)
-    monkeypatch.setattr(load_trace, "GC_MIN_SECONDS", -1.0)
-    monkeypatch.setattr(load_trace, "_announced", False)
+    # ``gc.callbacks`` and ``load_trace._gc`` are process-global: a test file that
+    # ran the trace before this one leaves its ``_gc_callback`` registered with
+    # ``_gc["hooked"]`` set, so "still ONE callback" counted the leftover too
+    # (``assert 2 == 1`` in the CI file order). Start unhooked and restore both.
+    saved_callbacks = list(gc.callbacks)
+    saved_gc = dict(load_trace._gc)
+    gc.callbacks[:] = [cb for cb in gc.callbacks
+                       if cb is not load_trace._gc_callback]
+    load_trace._gc["hooked"] = False
     try:
+        monkeypatch.setattr(load_trace, "ENABLED", False)
+        before = list(gc.callbacks)
+        load_trace.opened("a.ddd")
+        assert gc.callbacks == before and list(tmp_path.iterdir()) == []
+        monkeypatch.setattr(load_trace, "ENABLED", True)
+        monkeypatch.setattr(load_trace, "GC_MIN_SECONDS", -1.0)
+        monkeypatch.setattr(load_trace, "_announced", False)
         load_trace.opened("a.ddd")
         load_trace.opened("a.ddd")                     # still ONE callback
         assert gc.callbacks.count(load_trace._gc_callback) == 1
         gc.collect()
         load_trace.idle_report()
     finally:
-        gc.callbacks.remove(load_trace._gc_callback)
+        gc.callbacks[:] = saved_callbacks
+        load_trace._gc.clear()
+        load_trace._gc.update(saved_gc)
     text = (tmp_path / load_trace.FILE_NAME).read_text()
     assert "gc_state\tenabled=True" in text
     for key in ("gc_pass\tgeneration=2 seconds=", "collected=", "during=idle",
