@@ -2099,9 +2099,18 @@ def walk_vu_record_arrays(data, results):
         # Only record types with a result list can "reach the results": identity,
         # certificates, the current date/time, the slot word and the signature are
         # consumed into the panels/metadata by design and are not counted here.
-        stored = {f"0x{rt:02X}": nr for (rt, nr) in
-                  dict.fromkeys((rt, nr) for (_p, rt, _rs, nr, _e) in sec["records"])
-                  if rt in VU_RECORD_RESULT_KEYS}
+        # A record type may legitimately be carried by MORE than one array in the
+        # same section (a split event/fault list, a day downloaded twice): the
+        # declared count of that type is the SUM of its arrays' counters, the same
+        # way ``emitted`` accumulates every occurrence. Keying the declared count
+        # by record type alone kept only the last array's count, which turned a
+        # complete section into "emitted more than stored" with a negative
+        # difference — a false "partial download".
+        stored = {}
+        for (_p, rt, _rs, nr, _e) in sec["records"]:
+            if rt in VU_RECORD_RESULT_KEYS:
+                key = f"0x{rt:02X}"
+                stored[key] = stored.get(key, 0) + nr
         emitted_counts = {f"0x{rt:02X}": n for rt, n in emitted.items()
                           if isinstance(rt, int) and f"0x{rt:02X}" in stored}
         dropped = {rt: stored[rt] - emitted_counts.get(rt, 0)
