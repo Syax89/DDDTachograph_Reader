@@ -27,6 +27,7 @@ import datetime
 from core.utils.logger import get_logger
 from core.parser.vu_dispatcher import (
     TREP_DOWNLOAD_INTERFACE, TREP_SECTIONS, iter_vu_sections)
+from core.utils.coverage import merge_intervals
 from core.utils.constants import (
     CVC_EFFECTIVE_DATE_TAG,
     CVC_EXPIRATION_DATE_TAG,
@@ -303,7 +304,12 @@ def _unsigned_gaps(data, sections):
     recognises it (``DeterministicParser._classify_gaps`` → ``7600_DownloadTrailer``),
     so it is not counted as unsigned data riding along.
     """
-    covered = bytearray(len(data))
+    # Interval arithmetic, not a per-byte coverage map: the map allocated one
+    # byte per byte of the download (10 MB for a 10 MB file) and the gap scan
+    # walked it in Python, which cost 2.3 ms on a 108 KB download and 249 ms on
+    # a 10 MB one. The complement of the merged section ranges is the same set
+    # of gaps, computed in O(sections log sections).
+    covered = []
     for sec in sections:
         start = sec["marker"]
         end = start + 2
@@ -316,19 +322,18 @@ def _unsigned_gaps(data, sections):
             if rec_end > end:
                 end = rec_end
         end = min(end, len(data))
-        covered[start:end] = b"\x01" * (end - start)
+        if start < end:
+            covered.append((start, end))
 
     gaps = []
-    start = None
-    for pos, is_covered in enumerate(covered):
-        if not is_covered:
-            if start is None:
-                start = pos
-        elif start is not None:
-            gaps.append((start, pos))
-            start = None
-    if start is not None:
-        gaps.append((start, len(data)))
+    cursor = 0
+    for start, end in merge_intervals(covered):
+        if start > cursor:
+            gaps.append((cursor, start))
+        if end > cursor:
+            cursor = end
+    if cursor < len(data):
+        gaps.append((cursor, len(data)))
 
     def _is_download_trailer(s, e):
         return (e == len(data) and 2 <= e - s <= 8
