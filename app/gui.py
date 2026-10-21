@@ -6213,11 +6213,17 @@ class TachoExplorer(tk.Tk):
         drive_col = getattr(self, "_dashboard_drive_col", -1)
         if drv_col < 0 and ev_col < 0 and drive_col < 0:
             return
+        # The label is owned by the current dashboard and destroyed when that
+        # view goes away (see _cleanup_dashboard): a motion event delivered
+        # after the switch has nothing to show and must not raise.
+        tooltip_lbl = getattr(self, "_tooltip_lbl", None)
+        if tooltip_lbl is None:
+            return
         row_id = self.table.tv.identify_row(event.y)
         col_id = self.table.tv.identify_column(event.x)
         col_idx = int(col_id.replace("#", "")) - 1 if col_id else -1
         if not row_id or col_idx not in (drv_col, ev_col, drive_col):
-            self._tooltip_lbl.place_forget()
+            tooltip_lbl.place_forget()
             return
         # Look the row up by its stable key, never by its display position: the
         # table is sortable and filterable, so position i after a header click
@@ -6232,10 +6238,10 @@ class TachoExplorer(tk.Tk):
             rule_tips = getattr(self, "_dashboard_rule_tips", {}) or {}
             tip = rule_tips.get(key, "")
         if tip:
-            self._tooltip_lbl.config(text=tip, justify=tk.LEFT, wraplength=380)
-            self._tooltip_lbl.place(x=event.x + 16, y=event.y + 16)
+            tooltip_lbl.config(text=tip, justify=tk.LEFT, wraplength=380)
+            tooltip_lbl.place(x=event.x + 16, y=event.y + 16)
         else:
-            self._tooltip_lbl.place_forget()
+            tooltip_lbl.place_forget()
 
     def _cleanup_dashboard(self):
         """Drop what only the previous view (dashboard or summary) needed."""
@@ -6245,8 +6251,17 @@ class TachoExplorer(tk.Tk):
         if getattr(self, "_slot_toggle_frame", None) is not None:
             self._slot_toggle_frame.destroy()
             self._slot_toggle_frame = None
-        if getattr(self, "_tooltip_lbl", None) is not None:
-            self._tooltip_lbl.place_forget()
+        # Destroy the row tooltip, do not just hide it: the label is a child of
+        # the treeview, so a dashboard visited n times used to leave n labels
+        # behind (the summary panel's own label is destroyed the same way, see
+        # _cleanup_summary_tooltip).
+        tooltip_lbl = getattr(self, "_tooltip_lbl", None)
+        if tooltip_lbl is not None:
+            try:
+                tooltip_lbl.destroy()
+            except tk.TclError:      # widget already destroyed
+                pass
+            self._tooltip_lbl = None
         bind_id = getattr(self, "_dashboard_motion_bind", None)
         if bind_id is not None:
             try:
