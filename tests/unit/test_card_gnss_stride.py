@@ -56,13 +56,25 @@ def test_g2_payload_still_decoded_at_18_bytes():
     assert "gnss_authenticated" not in records[0]
 
 
-def test_generation_metadata_breaks_a_genuine_tie():
-    """An 18-record G2.2 payload is 342 bytes: valid at 19 *and* at 18."""
+def test_a_genuine_tie_is_resolved_by_validation_not_by_generation_metadata():
+    """An 18-record G2.2 payload is 342 bytes: valid at 19 *and* at 18.
+
+    A card EF is decoded before the parser refines the card's generation (card
+    files carry no 0x76 header), so ``metadata["generation"]`` is still
+    ``"G1 (Digital)"`` here even for a G2.2 card — measured on the corpus. The
+    hint therefore cannot break the tie, and the outcome must not depend on it:
+    the payload's own record validation decides.
+    """
     n = 18
     data = b"".join(_rec19(1700000000 + 60 * i, 45312, 9125, 1, 300000 + i)
                     for i in range(n))
-    assert len(data) == 342
-    hinted = {"metadata": {"generation": "G2.2"}}
-    parse_card_gnss_places(b"\x00\x00" + data, hinted)
-    assert len(hinted["gnss_ad_records"]) == n
-    assert hinted["gnss_ad_records"][-1]["odometer_km"] == 300000 + n - 1
+    assert len(data) == 342 and len(data) % 18 == 0 and len(data) % 19 == 0
+
+    for generation in ("G1 (Digital)", "G2.2 (Smart V2)", ""):
+        results = {"metadata": {"generation": generation}}
+        parse_card_gnss_places(b"\x00\x00" + data, results)
+        records = results["gnss_ad_records"]
+        assert len(records) == n, generation
+        assert records[0]["odometer_km"] == 300000, generation
+        assert records[-1]["odometer_km"] == 300000 + n - 1, generation
+        assert records[0]["gnss_authenticated"] is True, generation

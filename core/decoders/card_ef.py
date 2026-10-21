@@ -685,17 +685,19 @@ def parse_card_gnss_places(val, results):
     Both strides are legitimate *and* can both divide the payload length
     (36 × 19 = 684 is also 38 × 18), so divisibility alone does not identify
     the layout: every candidate is decoded and the one whose records survive
-    validation wins (the same scoring ``parse_g1_places`` uses), in
-    generation-preferred order.
+    validation wins (the same scoring ``parse_g1_places`` uses).
     """
     if len(val) < 20:
         return
     try:
         data = val[2:]  # skip gnssADPointerNewestRecord
-        gen = (results.get("metadata") or {}).get("generation", "")
-        # G2.2 records are 19 bytes; plain G2 (and an unknown generation) 18.
-        ordered = (19, 18) if "2.2" in gen else (18, 19)
-        candidates = [size for size in ordered if len(data) % size == 0]
+        # The generation cannot break a tie here: a card EF is decoded while the
+        # TLV walk runs, and ``DeterministicParser`` only refines a card's
+        # generation *after* that walk (card files carry no 0x76 header, so
+        # ``metadata["generation"]`` is still "G1 (Digital)" at this point even
+        # for a G2.2 card — measured on the corpus). The payload's own
+        # validation decides instead.
+        candidates = [size for size in (18, 19) if len(data) % size == 0]
         if not candidates:
             return
 
