@@ -1832,6 +1832,16 @@ def _parse_trep_05_technical(data, results, message_offset=None):
                 field_status["w_constant"] = f"implausible raw 0x{w_const:04X}"
             if old_time_iso is None:
                 field_status["old_time"] = "TimeReal outside the calendar"
+            # The record holds three stored TimeReals, and each one is withheld
+            # for the same reason: the siblings get the same status, or an
+            # unusable newTimeValue/nextCalibrationTime reads as an empty cell
+            # with no explanation (the `old_time`-only rule was unreachable for
+            # the other two).
+            if new_time_iso is None:
+                field_status["new_time"] = "TimeReal outside the calendar"
+            if next_cal_iso is None:
+                field_status["next_calibration_date"] = (
+                    "TimeReal outside the calendar")
             return {
                 # Identity is the position of the record in its message body (two
                 # stored calibrations may decode to identical fields), with the
