@@ -800,6 +800,9 @@ msgstr "Laiks kustībā"
 msgid "Total"
 msgstr "Kopā"
 
+msgid "Unknown"
+msgstr "Nezināms"
+
 msgid "Unknown bytes"
 msgstr "Nezināmi baiti"
 
@@ -1469,6 +1472,9 @@ msgstr "Ierīces ID"
 
 msgid "Distance"
 msgstr "Attālums"
+
+msgid "Distance km"
+msgstr "Attālums km"
 
 msgid "Download Activities"
 msgstr "Lejupielādes aktivitātes"

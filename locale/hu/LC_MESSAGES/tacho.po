@@ -800,6 +800,9 @@ msgstr "Idő mozgásban"
 msgid "Total"
 msgstr "Összesen"
 
+msgid "Unknown"
+msgstr "Ismeretlen"
+
 msgid "Unknown bytes"
 msgstr "Ismeretlen bájtok"
 
@@ -1469,6 +1472,9 @@ msgstr "Eszköz ID"
 
 msgid "Distance"
 msgstr "Távolság"
+
+msgid "Distance km"
+msgstr "Távolság (km)"
 
 msgid "Download Activities"
 msgstr "Letöltési tevékenységek"

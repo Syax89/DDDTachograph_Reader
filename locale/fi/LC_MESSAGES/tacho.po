@@ -800,6 +800,9 @@ msgstr "Aika liikkeessä"
 msgid "Total"
 msgstr "Yhteensä"
 
+msgid "Unknown"
+msgstr "Tuntematon"
+
 msgid "Unknown bytes"
 msgstr "Tuntemattomat tavut"
 
@@ -1469,6 +1472,9 @@ msgstr "Laitteen ID"
 
 msgid "Distance"
 msgstr "Matka"
+
+msgid "Distance km"
+msgstr "Matka km"
 
 msgid "Download Activities"
 msgstr "Latausaktiviteetit"

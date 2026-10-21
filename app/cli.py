@@ -85,12 +85,12 @@ Examples:
         sys.exit(1)
 
     if not _has_tachograph_structure(result):
-        # No card/VU/certificate record was decoded: the bytes are not a
-        # tachograph at all (CLI-NOT-A-TACHO). The CLI used to announce such a
-        # file as a "Driver Card, Gen G1" and exit 0, which a batch script reads
-        # as success.
-        print("Error: not a tachograph file: no tachograph structure was decoded",
-              file=sys.stderr)
+        # No card/VU/certificate record was decoded (CLI-NOT-A-TACHO). The CLI
+        # used to announce such a file as a "Driver Card, Gen G1" and exit 0,
+        # which a batch script reads as success. The message states the fact —
+        # a fragment of a real download can fail to decode too, so "not a
+        # tachograph file" claimed more than the parse proved.
+        print("Error: no tachograph structure was decoded", file=sys.stderr)
         sys.exit(1)
 
     # ``--json -`` is the conventional "write the JSON to standard output". It
@@ -243,9 +243,9 @@ def _has_tachograph_structure(result):
     text file or binary noise parses "successfully" with no decoded section.
     A tag that only tachograph data carries — a card-only/VU-only EF or one of
     the certificate records both share (``origin_detector``) — is the proof a
-    real download has and junk does not. Nothing recognised decoded means the
-    file is not a tachograph; a recognised record means it is, however little
-    else survived.
+    real download has and junk does not. Nothing recognised decoded is reported
+    as exactly that; a recognised record means the bytes are a tachograph,
+    however little else survived.
     """
     from core.parser.origin_detector import has_tachograph_content
     return has_tachograph_content(result)

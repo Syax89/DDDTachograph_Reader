@@ -800,6 +800,9 @@ msgstr "Laikas judant"
 msgid "Total"
 msgstr "Iš viso"
 
+msgid "Unknown"
+msgstr "Nežinoma"
+
 msgid "Unknown bytes"
 msgstr "Nežinomi baitai"
 
@@ -1469,6 +1472,9 @@ msgstr "Įrenginio ID"
 
 msgid "Distance"
 msgstr "Atstumas"
+
+msgid "Distance km"
+msgstr "Atstumas km"
 
 msgid "Download Activities"
 msgstr "Atsisiuntimo veikla"

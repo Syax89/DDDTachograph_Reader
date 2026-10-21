@@ -800,6 +800,9 @@ msgstr "Χρόνος σε κίνηση"
 msgid "Total"
 msgstr "Σύνολο"
 
+msgid "Unknown"
+msgstr "Άγνωστο"
+
 msgid "Unknown bytes"
 msgstr "Άγνωστα byte"
 
@@ -1469,6 +1472,9 @@ msgstr "ID συσκευής"
 
 msgid "Distance"
 msgstr "Απόσταση"
+
+msgid "Distance km"
+msgstr "Απόσταση km"
 
 msgid "Download Activities"
 msgstr "Δραστηριότητες λήψης"

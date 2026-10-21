@@ -117,25 +117,72 @@ def test_der_public_key_root_is_loaded():
     assert validator._g2_erca_keys(), "the loaded DER root is not usable as a G2 anchor"
 
 
-def test_der_certificate_root_is_loaded():
-    """A DER X.509 CA certificate is documented as accepted too."""
+def _synthetic_ca_certificate(key, common_name="Synthetic ERCA"):
+    """Self-signed X.509 CA certificate around ``key`` (no real material)."""
     import datetime
 
     from cryptography import x509
     from cryptography.hazmat.primitives import hashes
     from cryptography.x509.oid import NameOID
 
-    key = ec.generate_private_key(ec.SECP256R1())
-    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Synthetic ERCA")])
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name)])
     now = datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc)
-    cert = (x509.CertificateBuilder()
+    return (x509.CertificateBuilder()
             .subject_name(name).issuer_name(name)
             .public_key(key.public_key())
             .serial_number(1).not_valid_before(now)
             .not_valid_after(now + datetime.timedelta(days=365))
             .sign(key, hashes.SHA256()))
+
+
+def test_der_certificate_root_is_usable_as_a_g2_anchor():
+    """A DER X.509 CA certificate is documented as accepted — and must anchor.
+
+    Storing the ``x509.Certificate`` is not enough: the key extractors have to
+    reach its public key, otherwise the file is accepted silently and anchors
+    nothing while the log claims "Loaded Root Certificate (DER X509)".
+    """
+    key = ec.generate_private_key(ec.SECP256R1())
+    cert = _synthetic_ca_certificate(key)
     with tempfile.TemporaryDirectory() as certs_dir:
         _write(certs_dir, "erca.der", cert.public_bytes(serialization.Encoding.DER))
         validator = SignatureValidator(certs_dir=certs_dir)
 
     assert "CN=Synthetic ERCA" in validator.root_certificates
+    assert validator._g2_erca_keys(), "the DER certificate root is not usable as a G2 anchor"
+
+    # …and it anchors a real ERCA→MSCA→Card chain end to end.
+    identity = new_cvc_identity(key)
+    status, public_key = validator.validate_tacho_chain(
+        identity["card_cert"], identity["msca_cert"])
+    assert status is True, "a genuine chain was not anchored to the DER certificate root"
+    assert public_key is not None
+
+
+def test_pem_certificate_root_is_usable_as_a_g2_anchor():
+    """The PEM branch stores an X.509 certificate too; it must anchor as well."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    cert = _synthetic_ca_certificate(key)
+    with tempfile.TemporaryDirectory() as certs_dir:
+        _write(certs_dir, "erca.pem", cert.public_bytes(serialization.Encoding.PEM))
+        validator = SignatureValidator(certs_dir=certs_dir)
+
+    assert "CN=Synthetic ERCA" in validator.root_certificates
+    assert validator._g2_erca_keys(), "the PEM certificate root is not usable as a G2 anchor"
+
+    identity = new_cvc_identity(key)
+    status, _ = validator.validate_tacho_chain(
+        identity["card_cert"], identity["msca_cert"])
+    assert status is True, "a genuine chain was not anchored to the PEM certificate root"
+
+
+def test_rsa_certificate_root_is_usable_as_a_g1_anchor():
+    """An RSA X.509 root must reach the G1 key list, not just the store."""
+    key = rsa.generate_private_key(public_exponent=65537, key_size=1024)
+    cert = _synthetic_ca_certificate(key)
+    with tempfile.TemporaryDirectory() as certs_dir:
+        _write(certs_dir, "erca_rsa.der", cert.public_bytes(serialization.Encoding.DER))
+        validator = SignatureValidator(certs_dir=certs_dir)
+
+    assert validator.root_certificates, "the RSA certificate root was dropped"
+    assert validator._g1_erca_keys(), "the RSA certificate root is not usable as a G1 anchor"

@@ -44,6 +44,17 @@ def restore_logging():
 
 
 def test_validator_installs_no_handler_of_its_own(root_store):
+    """The validator never configures console output, whatever the root logger is.
+
+    The pre-fix code installed a private ``StreamHandler`` "only when nothing
+    else had": pytest puts its own handler on the root logger, so that guard
+    never fired under pytest and this test passed for pytest's reason instead of
+    the fix's. Clearing the root handlers for the duration reproduces the state
+    of a process that has not configured logging yet.
+    """
+    root = logging.getLogger()
+    root.handlers[:] = []
+
     validator = SignatureValidator(certs_dir=root_store)
 
     assert validator.logger.handlers == [], (

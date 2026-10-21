@@ -800,6 +800,9 @@ msgstr "Hareket halinde süre"
 msgid "Total"
 msgstr "Toplam"
 
+msgid "Unknown"
+msgstr "Bilinmiyor"
+
 msgid "Unknown bytes"
 msgstr "Bilinmeyen baytlar"
 
@@ -1469,6 +1472,9 @@ msgstr "Cihaz ID"
 
 msgid "Distance"
 msgstr "Mesafe"
+
+msgid "Distance km"
+msgstr "Mesafe km"
 
 msgid "Download Activities"
 msgstr "İndirme etkinlikleri"

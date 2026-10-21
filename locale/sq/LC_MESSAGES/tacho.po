@@ -800,6 +800,9 @@ msgstr "Kohë në lëvizje"
 msgid "Total"
 msgstr "Totali"
 
+msgid "Unknown"
+msgstr "E panjohur"
+
 msgid "Unknown bytes"
 msgstr "Bajte të panjohur"
 
@@ -1469,6 +1472,9 @@ msgstr "ID e pajisjes"
 
 msgid "Distance"
 msgstr "Distanca"
+
+msgid "Distance km"
+msgstr "Distanca km"
 
 msgid "Download Activities"
 msgstr "Aktivitetet e shkarkimit"

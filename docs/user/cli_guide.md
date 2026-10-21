@@ -124,6 +124,11 @@ python -m app.cli file.ddd --verbose --summary
 python -m app.cli file.ddd --pdf report.pdf --quiet
 ```
 
+`--json -` is the one exception: it explicitly asks for the JSON on standard
+output, so `-q --json -` still prints the payload there (and nothing else —
+summary, warnings and progress stay silent). Redirect it if only the file
+matters: `python -m app.cli file.ddd --json out.json --quiet`.
+
 ---
 
 ## Complete Option Reference
@@ -139,12 +144,12 @@ python -m app.cli file.ddd --pdf report.pdf --quiet
 | `--summary` | — | Show the compact text summary on screen |
 | `--version` | — | Print the reader version (`TachoReader 2.8.0`) |
 | `-v`, `--verbose` | — | Verbose debug output |
-| `-q`, `--quiet` | — | Suppress all screen output (files only) |
+| `-q`, `--quiet` | — | Suppress all screen output (files only); `--json -` still writes the JSON to standard output |
 
 **Exit codes:** `0` on success; `1` when the file is missing, cannot be parsed,
-is not a tachograph file (no card, VU or certificate record could be decoded
-from it), or an export failed; `2` for a usage error (unknown flag, missing file
-argument).
+carries no decodable tachograph structure (`Error: no tachograph structure was
+decoded` — no card, VU or certificate record could be decoded from it), or an
+export failed; `2` for a usage error (unknown flag, missing file argument).
 
 ---
 

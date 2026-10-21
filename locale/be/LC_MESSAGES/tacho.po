@@ -800,6 +800,9 @@ msgstr "Час у руху"
 msgid "Total"
 msgstr "Усяго"
 
+msgid "Unknown"
+msgstr "Невядома"
+
 msgid "Unknown bytes"
 msgstr "Невядомыя байты"
 
@@ -1469,6 +1472,9 @@ msgstr "ID прылады"
 
 msgid "Distance"
 msgstr "Адлегласць"
+
+msgid "Distance km"
+msgstr "Адлегласць км"
 
 msgid "Download Activities"
 msgstr "Актыўнасць выгрузкі"

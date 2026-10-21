@@ -1059,7 +1059,8 @@ class ExportManager:
                 wrote_any = True
 
             # The files' signature material first, in the order the workbook
-            # and the PDF print it.
+            # prints it. (The PDF carries the same two tables later, in the
+            # Technical Appendix and under different headings.)
             for label, desc, records in _signature_sections(data):
                 headers, rows = records_to_table(records)
                 if headers:

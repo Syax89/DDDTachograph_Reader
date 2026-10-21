@@ -800,6 +800,9 @@ msgstr "Am ag gluaiseacht"
 msgid "Total"
 msgstr "Iomlán"
 
+msgid "Unknown"
+msgstr "Anaithnid"
+
 msgid "Unknown bytes"
 msgstr "Bearta anaithnide"
 
@@ -1469,6 +1472,9 @@ msgstr "ID an ghléis"
 
 msgid "Distance"
 msgstr "Fad"
+
+msgid "Distance km"
+msgstr "Fad (km)"
 
 msgid "Download Activities"
 msgstr "Gníomhaíochtaí íoslódála"

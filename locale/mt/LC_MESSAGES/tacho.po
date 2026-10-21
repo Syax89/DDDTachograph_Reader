@@ -800,6 +800,9 @@ msgstr "Ħin miexi"
 msgid "Total"
 msgstr "Total"
 
+msgid "Unknown"
+msgstr "Mhux magħruf"
+
 msgid "Unknown bytes"
 msgstr "Bajts mhux magħrufa"
 
@@ -1469,6 +1472,9 @@ msgstr "ID tal-apparat"
 
 msgid "Distance"
 msgstr "Distanza"
+
+msgid "Distance km"
+msgstr "Distanza km"
 
 msgid "Download Activities"
 msgstr "Attivitajiet tad-download"

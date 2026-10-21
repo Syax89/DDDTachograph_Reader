@@ -800,6 +800,9 @@ msgstr "Vrijeme u pokretu"
 msgid "Total"
 msgstr "Ukupno"
 
+msgid "Unknown"
+msgstr "Nepoznato"
+
 msgid "Unknown bytes"
 msgstr "Nepoznati bajtovi"
 
@@ -1469,6 +1472,9 @@ msgstr "ID uređaja"
 
 msgid "Distance"
 msgstr "Udaljenost"
+
+msgid "Distance km"
+msgstr "Udaljenost km"
 
 msgid "Download Activities"
 msgstr "Aktivnosti preuzimanja"

@@ -800,6 +800,9 @@ msgstr "Timp în mișcare"
 msgid "Total"
 msgstr "Total"
 
+msgid "Unknown"
+msgstr "Necunoscut"
+
 msgid "Unknown bytes"
 msgstr "Octeți necunoscuți"
 
@@ -1469,6 +1472,9 @@ msgstr "ID dispozitiv"
 
 msgid "Distance"
 msgstr "Distanță"
+
+msgid "Distance km"
+msgstr "Distanță km"
 
 msgid "Download Activities"
 msgstr "Activități de descărcare"

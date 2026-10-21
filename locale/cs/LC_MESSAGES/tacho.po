@@ -800,6 +800,9 @@ msgstr "Čas v pohybu"
 msgid "Total"
 msgstr "Celkem"
 
+msgid "Unknown"
+msgstr "Neznámé"
+
 msgid "Unknown bytes"
 msgstr "Neznámé bajty"
 
@@ -1469,6 +1472,9 @@ msgstr "ID zařízení"
 
 msgid "Distance"
 msgstr "Vzdálenost"
+
+msgid "Distance km"
+msgstr "Vzdálenost km"
 
 msgid "Download Activities"
 msgstr "Aktivity stahování"

@@ -800,6 +800,9 @@ msgstr "Tid i bevægelse"
 msgid "Total"
 msgstr "I alt"
 
+msgid "Unknown"
+msgstr "Ukendt"
+
 msgid "Unknown bytes"
 msgstr "Ukendte byte"
 
@@ -1469,6 +1472,9 @@ msgstr "Enheds-ID"
 
 msgid "Distance"
 msgstr "Afstand"
+
+msgid "Distance km"
+msgstr "Afstand km"
 
 msgid "Download Activities"
 msgstr "Downloadaktiviteter"

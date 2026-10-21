@@ -2214,7 +2214,15 @@ ACTIVITY_COLORS = {
     "AVAILABLE": ACTIVITY_AVAILABLE,
 }
 ACTIVITY_LABEL = {"DRIVE": "Drive", "WORK": "Work", "REST": "Rest",
-                  "AVAILABLE": "Available"}
+                  "AVAILABLE": "Available", "UNKNOWN": "Unknown"}
+
+#: Activity rows of the timeline. UNKNOWN is a bucket of the shared segmentation
+#: (a card-not-inserted period, Annex 1C §2.1 note 2; an unrecognised activity
+#: code; a missing 00:00 status entry, §2.170) whose minutes the dashboard
+#: reports, so the chart paints it too — on a row of its own, added only when the
+#: day holds any unknown minutes, so a fully known day keeps its four rows.
+ACTIVITY_ROWS = ("DRIVE", "WORK", "REST", "AVAILABLE")
+UNKNOWN_ACTIVITY_ROW = "UNKNOWN"
 
 
 def _act_label(activity):
@@ -2394,6 +2402,20 @@ class ActivityTimelineChart(ttk.Frame):
             blocks.setdefault(label(raw_slot), []).extend(segments)
         return blocks
 
+    def _rows(self):
+        """The activity rows to draw, in order.
+
+        The four activities always; UNKNOWN only when the day has unknown
+        minutes, in the neutral colour :data:`ACTIVITY_UNKNOWN` — those minutes
+        are a bucket of the dashboard's totals, so leaving them unpainted made
+        the chart show fewer hours than the dashboard for the same day.
+        """
+        if any(activity == UNKNOWN_ACTIVITY_ROW
+               for blocks in self._slots.values()
+               for _start, _end, activity in blocks):
+            return [*ACTIVITY_ROWS, UNKNOWN_ACTIVITY_ROW]
+        return list(ACTIVITY_ROWS)
+
     def _schedule_draw(self):
         if self._draw_after_id is not None:
             self.after_cancel(self._draw_after_id)
@@ -2410,7 +2432,7 @@ class ActivityTimelineChart(ttk.Frame):
         if not self._slots:
             return
 
-        rows = ["DRIVE", "WORK", "REST", "AVAILABLE"]
+        rows = self._rows()
         # Translated row labels are wider than the original 100px gutter.
         label_gap, label_pad = 8, 4
         if self._label_font is None:
@@ -2475,7 +2497,7 @@ class ActivityTimelineChart(ttk.Frame):
         self._layout["oos_info"] = oos_info
 
         usable_h = per_section_h - header_h
-        row_h = max(18, min(30, (usable_h - 3 * gap) // 4))
+        row_h = max(18, min(30, (usable_h - (len(rows) - 1) * gap) // len(rows)))
 
         totals_lines = []
 
@@ -5965,17 +5987,22 @@ class TachoExplorer(tk.Tk):
                                               day_km, changes_count, day_di,
                                               day_schedule, day_markers,
                                               oos_events, day_vehicles)
-            # A card day has no odometer reading, only its own distance: keep
-            # showing that figure in the day's record table (unchanged view).
-            odometer = (day_data.get("odometer_km")
-                        or day_data.get("day_distance_km") or 0) or 0
+            # A card day has no odometer reading, only its own distance
+            # (Annex 1B ActivityDayDistance); a VU day carries a reading.
+            # Show whichever value the row actually has, under a header that
+            # says which of the two it is.
+            reading = day_data.get("odometer_km")
+            distance = day_data.get("day_distance_km")
+            odometer = reading or distance or 0
+            km_header = (_("Odometer km") if reading or distance is None
+                         else _("Distance km"))
             if changes:
                 rows = [[fmt_val(ev.get("time", "?")),
                          ui_text.activity(ev.get("activity", "?")),
                          fmt_val(ev.get("slot", "")) if ev.get("slot") else "",
                          fmt_val(ev.get("crew", "")),
                          fmt_val(odometer)] for ev in changes if isinstance(ev, dict)]
-                cols = [_("Time"), _("Activity"), _("Slot"), _("Crew"), _("Odometer km")]
+                cols = [_("Time"), _("Activity"), _("Slot"), _("Crew"), km_header]
             else:
                 cols, rows = ([_("Time"), _("Activity")],
                               [[fmt_val("\u2014"), _("(no changes)")]])

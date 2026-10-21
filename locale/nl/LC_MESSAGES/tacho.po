@@ -800,6 +800,9 @@ msgstr "Tijd in beweging"
 msgid "Total"
 msgstr "Totaal"
 
+msgid "Unknown"
+msgstr "Onbekend"
+
 msgid "Unknown bytes"
 msgstr "Onbekende bytes"
 
@@ -1469,6 +1472,9 @@ msgstr "Apparaat-ID"
 
 msgid "Distance"
 msgstr "Afstand"
+
+msgid "Distance km"
+msgstr "Afstand (km)"
 
 msgid "Download Activities"
 msgstr "Downloadactiviteiten"

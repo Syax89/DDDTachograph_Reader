@@ -800,6 +800,9 @@ msgstr "Zeit in Bewegung"
 msgid "Total"
 msgstr "Gesamt"
 
+msgid "Unknown"
+msgstr "Unbekannt"
+
 msgid "Unknown bytes"
 msgstr "Unbekannte Bytes"
 
@@ -1469,6 +1472,9 @@ msgstr "Geräte-ID"
 
 msgid "Distance"
 msgstr "Entfernung"
+
+msgid "Distance km"
+msgstr "Entfernung (km)"
 
 msgid "Download Activities"
 msgstr "Download-Aktivitäten"
