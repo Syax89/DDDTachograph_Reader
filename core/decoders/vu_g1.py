@@ -2382,8 +2382,22 @@ def _extract_sensor_daily_records(body, start, copy_start, copy_end):
             pos += 4
             continue
         count = struct.unpack(">H", body[pos + 8:pos + 10])[0]
+        if count == 0:
+            # A day with no sample carries a date and nothing else: the empirical
+            # layout puts the samples after the count, so a zero count is an empty
+            # block or a false marker, never a day of data.
+            pos += 8
+            continue
         if count > 1500:  # max 25 hours at 1/min
             pos += 8
+            continue
+        # midnight + first_event + samples are ONE record: the first event of a day
+        # belongs to that day. A stored value outside [midnight, midnight+24h) is a
+        # false marker, and publishing it under this midnight would associate two
+        # unrelated records (and could date a day before the sensor existed, or
+        # after the download was taken).
+        if not (ts_midnight <= ts_event < ts_midnight + 86_400):
+            pos += 4
             continue
         speed_end = pos + 10 + count
         if speed_end > end:
@@ -2396,8 +2410,8 @@ def _extract_sensor_daily_records(body, start, copy_start, copy_end):
             records.append({
                 "confidence": "low",
                 "date": date_str,
-                "first_event": datetime.fromtimestamp(ts_event, tz=timezone.utc).isoformat()
-                if 946684800 <= ts_event <= 4102444800 else None,
+                "first_event": datetime.fromtimestamp(ts_event,
+                                                      tz=timezone.utc).isoformat(),
                 "speed_samples": count,
                 "speed_min": min(valid) if valid else None,
                 "speed_max": max(valid) if valid else None,
