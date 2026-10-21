@@ -79,6 +79,15 @@ Examples:
         print(f"Error: parsing failed: {message}", file=sys.stderr)
         sys.exit(1)
 
+    if not _has_tachograph_structure(result):
+        # No card-only/VU-only tag was decoded: the bytes are not a tachograph
+        # at all (CLI-NOT-A-TACHO). The CLI used to announce such a file as a
+        # "Driver Card, Gen G1" and exit 0, which a batch script reads as
+        # success.
+        print("Error: not a tachograph file: no tachograph structure was decoded",
+              file=sys.stderr)
+        sys.exit(1)
+
     # Auto-generate output basename
     basename = os.path.splitext(os.path.basename(args.file))[0]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -204,6 +213,18 @@ Examples:
 
     if export_failed:
         sys.exit(1)
+
+def _has_tachograph_structure(result):
+    """Whether the parse proved the bytes are a tachograph at all.
+
+    The structural walk classifies every byte it cannot bind as *Unknown*, so a
+    text file or binary noise parses "successfully" with no decoded section.
+    A tag that exists only in a card or VU image (``origin_detector``) is the
+    proof a real download carries and junk does not.
+    """
+    from core.parser.origin_detector import has_tachograph_content
+    return has_tachograph_content(result)
+
 
 # Identity/field sentinels meaning "no value decoded". The CLI must never
 # render these as if they were real data (CLI-BOGUS-SENTINELS: F-F5, XF-F4,

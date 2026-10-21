@@ -135,7 +135,8 @@ python -m app.cli file.ddd --pdf report.pdf --quiet
 | `-q`, `--quiet` | — | Suppress all screen output (files only) |
 
 **Exit codes:** `0` on success; `1` when the file is missing, cannot be parsed,
-or an export failed; `2` for a usage error (unknown flag, missing file
+is not a tachograph file (no card or VU data could be decoded from it), or an
+export failed; `2` for a usage error (unknown flag, missing file
 argument).
 
 ---
