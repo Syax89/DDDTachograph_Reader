@@ -613,6 +613,33 @@ def _activity_to_iso(date_str):
         return date_str
 
 
+def _attach_day_distance(days, is_vu):
+    """Store each day's distance as ``_day_km`` and return ``{id(day): km}``.
+
+    *days* must be in chronological order. A VU activity block carries an
+    odometer reading, so its distance is the delta from the previous day. A
+    driver-card activity record carries no odometer at all — only
+    ActivityDayDistance (Annex 1B §2.24), the kilometres driven that day — so
+    the day's distance is used as-is. Differencing it against the previous day,
+    as the card route used to, produced a number with no meaning (and left the
+    day at 0 km in the tree, which only ever looked at VU days).
+    """
+    distances = {}
+    prev_odo = 0
+    for day in days:
+        odo = day.get("odometer_km", 0) or 0
+        km = 0
+        if is_vu and prev_odo and odo and odo > prev_odo:
+            km = odo - prev_odo
+        if not km:
+            km = int(day.get("day_distance_km") or 0)
+        if odo:
+            prev_odo = odo
+        day["_day_km"] = km
+        distances[id(day)] = km
+    return distances
+
+
 def _parse_iso(value):
     """Parse an ISO-8601 timestamp string to a UTC datetime, or None."""
     if not value or not isinstance(value, str):
@@ -5490,13 +5517,7 @@ class TachoExplorer(tk.Tk):
                 return (0, 0, 0)
         chronological = sorted(
             [d for d in activity_list if isinstance(d, dict)], key=_date_sort_key)
-        for i, day_data in enumerate(chronological):
-            day_data["_day_km"] = 0
-            if i > 0 and is_vu:
-                prev_odo = chronological[i - 1].get("odometer_km", 0) or 0
-                cur_odo = day_data.get("odometer_km", 0) or 0
-                if prev_odo and cur_odo and cur_odo > prev_odo:
-                    day_data["_day_km"] = cur_odo - prev_odo
+        _attach_day_distance(chronological, is_vu)
 
         node = self.tree.insert(parent, tk.END, text=_("Daily Activities"))
         self._payloads[node] = ("__daily_summary__", activity_list, data)
@@ -5605,7 +5626,10 @@ class TachoExplorer(tk.Tk):
                                               day_km, changes_count, day_di,
                                               day_schedule, day_markers,
                                               oos_events, day_vehicles)
-            odometer = day_data.get("odometer_km", 0) or 0
+            # A card day has no odometer reading, only its own distance: keep
+            # showing that figure in the day's record table (unchanged view).
+            odometer = (day_data.get("odometer_km")
+                        or day_data.get("day_distance_km") or 0) or 0
             if changes:
                 rows = [[fmt_val(ev.get("time", "?")),
                          ui_text.activity(ev.get("activity", "?")),
@@ -6475,20 +6499,13 @@ class TachoExplorer(tk.Tk):
         sort_key = lambda d: _activity_to_iso(str(d.get("date", "")))
         sorted_asc = sorted(valid, key=sort_key)
 
-        # Daily km from odometer deltas (chronological). VU days already carry
-        # a precomputed "_day_km"; for card files derive the distance from the
-        # midnight/odometer reading delta between consecutive days rather than
-        # showing the absolute odometer as if it were a daily distance.
+        # Daily km (chronological). The tree has already stored the same figure
+        # on every day ("_day_km"): a VU day's distance is the delta of its
+        # midnight odometer readings, while a driver-card day carries the
+        # kilometres driven that day itself.
         card_day_km = {}
         if not is_vu:
-            prev_odo = None
-            for day_data in sorted_asc:
-                cur_odo = (day_data.get("odometer_midnight")
-                           or day_data.get("odometer_km") or 0) or 0
-                if prev_odo is not None and cur_odo and prev_odo and cur_odo >= prev_odo:
-                    card_day_km[id(day_data)] = cur_odo - prev_odo
-                if cur_odo:
-                    prev_odo = cur_odo
+            card_day_km = _attach_day_distance(sorted_asc, is_vu)
         # GUI-DISTANCE-FALLBACK (XG-F9): expose the per-day card distance the
         # dashboard shows, so the day-detail popup (opened by double-click) can
         # display the SAME number instead of falling back to the absolute

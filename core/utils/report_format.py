@@ -653,6 +653,21 @@ def _parse_state_rows(meta):
     return rows
 
 
+def _day_km_value(day):
+    """The km figure of one activity day: an odometer reading if the file has
+    one, else the day's own distance.
+
+    VU activity blocks carry ``odometer_km``/``odometer_midnight`` (the reading
+    at midnight); driver-card activity records carry only ``day_distance_km``
+    (ActivityDayDistance, Annex 1B §2.24) — the kilometres driven that day.
+    """
+    for key in ("odometer_km", "odometer_midnight", "day_distance_km"):
+        value = day.get(key)
+        if value not in (None, ""):
+            return value
+    return 0
+
+
 def build_monthly_activity_report(activities):
     months = {}
     for day in activities:
@@ -685,7 +700,7 @@ def build_monthly_activity_report(activities):
             # ``odometer_km``), so the monthly Odometer column rendered a
             # hard 0 for every heuristic G1 VU day (F-F2 / XF-F5). Use the
             # same fallback as ``expand_activities`` below.
-            km = fmt_value(day.get("odometer_km", day.get("odometer_midnight", 0)))
+            km = fmt_value(_day_km_value(day))
             buckets, total = _compute_day_hours(day)
             unknown_str = _hours_str(buckets["unknown"])
             if buckets["unknown"] > 0:
@@ -723,7 +738,7 @@ def expand_activities(activities):
         if not isinstance(day, dict):
             continue
         date_str = fmt_value(day.get("date", day.get("timestamp", "N/A")))
-        km = day.get("odometer_km", day.get("odometer_midnight", 0))
+        km = _day_km_value(day)
         driver = day.get("driver", "")
         changes = day.get("changes", [])
         if not isinstance(changes, list) or not changes:
