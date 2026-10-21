@@ -158,6 +158,57 @@ def _pdf_plain(value):
 #: so the report never depends on a font installed on the reader's machine.
 _PDF_FALLBACK_FONT = "TachoDejaVuSans"
 
+#: The font the report is normally set in (see :func:`_pdf_markup`).
+_PDF_BASE_FONT = "Helvetica"
+
+
+def _register_fallback_font(value):
+    """Register the bundled face and return its font name.
+
+    *value* only appears in the failure message: a font that cannot be found
+    must fail the export rather than print a boxed name.
+    """
+    from reportlab.pdfbase import pdfmetrics
+
+    if _PDF_FALLBACK_FONT in pdfmetrics.getRegisteredFontNames():
+        return _PDF_FALLBACK_FONT
+    # Resolved like app/i18n.locale_dir: against the package, and against
+    # _MEIPASS when frozen.
+    base = getattr(sys, "_MEIPASS", None) or os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__)))
+    # DejaVu Sans 2.37, official dejavu-fonts-ttf-2.37.tar.bz2 —
+    # https://github.com/dejavu-fonts/dejavu-fonts/releases/tag/version_2_37
+    path = os.path.join(base, "assets", "fonts", "DejaVuSans.ttf")
+    if not os.path.isfile(path):
+        # Fail closed: a boxed identity in a report that looks complete is
+        # worse than a failed export (the callers already report this).
+        raise FileNotFoundError(
+            f"PDF export cannot draw {value!r}: the bundled fallback font "
+            f"{path} is missing from this installation")
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    pdfmetrics.registerFont(TTFont(_PDF_FALLBACK_FONT, path))
+    return _PDF_FALLBACK_FONT
+
+
+def _pdf_canvas_font(value):
+    """The font a plain canvas ``drawString`` can draw *value* with.
+
+    Paragraphs get a per-character fallback from :func:`_pdf_markup`; canvas
+    text has no markup, so a string the report's own font cannot encode is set
+    in the bundled face as a whole — otherwise reportlab prints a black square
+    for every character it cannot encode.
+    """
+    from reportlab.pdfbase import pdfmetrics
+
+    text = str(value)
+    encoding = pdfmetrics.getFont(_PDF_BASE_FONT).encName
+    try:
+        text.encode(encoding)
+    except UnicodeEncodeError:
+        return _register_fallback_font(text)
+    return _PDF_BASE_FONT
+
 
 def _pdf_markup(value):
     """*value* as escaped paragraph markup the report's font can really draw.
@@ -180,22 +231,7 @@ def _pdf_markup(value):
     else:
         return escape(text)
     if _PDF_FALLBACK_FONT not in pdfmetrics.getRegisteredFontNames():
-        # Resolved like app/i18n.locale_dir: against the package, and against
-        # _MEIPASS when frozen.
-        base = getattr(sys, "_MEIPASS", None) or os.path.dirname(
-            os.path.dirname(os.path.abspath(__file__)))
-        # DejaVu Sans 2.37, official dejavu-fonts-ttf-2.37.tar.bz2 —
-        # https://github.com/dejavu-fonts/dejavu-fonts/releases/tag/version_2_37
-        path = os.path.join(base, "assets", "fonts", "DejaVuSans.ttf")
-        if not os.path.isfile(path):
-            # Fail closed: a boxed identity in a report that looks complete is
-            # worse than a failed export (the callers already report this).
-            raise FileNotFoundError(
-                f"PDF export cannot draw {text!r}: the bundled fallback font "
-                f"{path} is missing from this installation")
-        from reportlab.pdfbase.ttfonts import TTFont
-
-        pdfmetrics.registerFont(TTFont(_PDF_FALLBACK_FONT, path))
+        _register_fallback_font(text)
     parts = []
     for char in text:
         try:
@@ -1641,17 +1677,21 @@ class ExportManager:
         # ═══════ FOOTER ═══════
         def _footer(canvas, document):
             canvas.saveState()
-            canvas.setFont("Helvetica", 7)
-            canvas.setFillColor(colors.grey)
             page_label = f"Page {document.page}"
-            budget = (avail_width
-                      - canvas.stringWidth(page_label, "Helvetica", 7) - 8)
             name = str(meta.get("filename") or "Tachograph file")
+            # Canvas text carries no markup, so a file name the report's own
+            # font cannot encode would print as black squares; the whole line
+            # is set in the bundled face instead (measured with that font, so
+            # the truncation still fits the margin).
+            font = _pdf_canvas_font(name)
+            canvas.setFont(font, 7)
+            canvas.setFillColor(colors.grey)
+            budget = avail_width - canvas.stringWidth(page_label, font, 7) - 8
             suffix = f"  ·  TachoReader v{__version__}"
             left = name + suffix
-            if canvas.stringWidth(left, "Helvetica", 7) > budget:
+            if canvas.stringWidth(left, font, 7) > budget:
                 while name and canvas.stringWidth(
-                        name + "\u2026" + suffix, "Helvetica", 7) > budget:
+                        name + "\u2026" + suffix, font, 7) > budget:
                     name = name[:-1]
                 left = (name + "\u2026" if name else "") + suffix
             canvas.drawString(doc.leftMargin, 8 * mm, left)
