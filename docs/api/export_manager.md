@@ -112,8 +112,8 @@ One file, UTF-8 with BOM, `;` delimiter, one block per section: a
 data rows, a blank separator. No row cap. Nested values are the compact report
 text and internal bookkeeping keys are omitted — use the JSON output for the full
 decoded structure. Cells that would start with `=`, `+`, `-` or `@` get a
-leading apostrophe, which is why a marker row reads `'=== EVENTS ===` in the raw
-text.
+leading apostrophe. The section marker rows (`=== EVENTS ===`) are the exception:
+they are written as is, so they read `=== EVENTS ===` in the raw text.
 
 ---
 
