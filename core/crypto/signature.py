@@ -314,14 +314,30 @@ class SignatureValidator:
         return self._validate_g1_chain(card_cert_raw, msca_cert_raw)
 
     def _g1_erca_key(self):
-        """Return the G1 ERCA root RSA public key from the loaded root material.
+        """Return the first G1 ERCA root RSA public key, or ``None``.
+
+        Compatibility accessor; chain validation uses :meth:`_g1_erca_keys` so
+        that every published root is tried.
+        """
+        keys = self._g1_erca_keys()
+        return keys[0] if keys else None
+
+    def _g1_erca_keys(self):
+        """Return every G1 ERCA root RSA public key from the loaded material.
 
         Accepts either an already-parsed RSAPublicKey, or raw JRC EC_PK bytes:
         KID(8) + n(128) + e(8) = 144 bytes, or n(128) + e(8) = 136 bytes.
+
+        The store is filled in ``os.listdir`` order, which is not sorted, and
+        several ERCA keys can legitimately coexist in ``certs/`` (a root
+        rollover, or a stale key left beside the current one). Consuming only
+        the first key made a genuine chain fail depending on directory order.
         """
+        keys = []
         for material in self.root_certificates.values():
             if isinstance(material, rsa.RSAPublicKey):
-                return material
+                keys.append(material)
+                continue
             if not isinstance(material, (bytes, bytearray)):
                 continue
             if len(material) == 144:
@@ -333,10 +349,10 @@ class SignatureValidator:
             else:
                 continue
             try:
-                return rsa.RSAPublicNumbers(e, n).public_key()
+                keys.append(rsa.RSAPublicNumbers(e, n).public_key())
             except ValueError as exc:
                 self.logger.debug("Invalid raw ERCA PK material: %s", exc)
-        return None
+        return keys
 
     def _g2_erca_keys(self):
         """Return a dict of CAR→(ECPublicKey, hash) for every G2 ERCA-2
@@ -447,12 +463,16 @@ class SignatureValidator:
         (the MSCA public modulus only exists inside its ERCA-signed envelope).
         """
         try:
-            erca_pub = self._g1_erca_key()
-            if erca_pub is None:
+            erca_keys = self._g1_erca_keys()
+            if not erca_keys:
                 self.logger.warning("G1 ERCA root key not available — chain cannot be verified")
                 return "Cannot Verify (Missing ERCA Root)", None
 
-            msca_pub, _ = self._g1_recover_key(msca_cert_raw, erca_pub)
+            msca_pub = None
+            for erca_pub in erca_keys:
+                msca_pub, _ = self._g1_recover_key(msca_cert_raw, erca_pub)
+                if msca_pub is not None:
+                    break
             if msca_pub is None:
                 self.logger.debug("G1 MSCA certificate unwrap FAILED under ERCA root")
                 return False, None

@@ -15,7 +15,7 @@ import os
 import tempfile
 
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
 from core.crypto.signature import SignatureValidator
 from tests.unit.card_crypto import new_cvc_identity
@@ -58,3 +58,44 @@ def test_pem_public_key_root_anchors_a_real_chain(caplog):
     assert status is True, "a genuine chain was not anchored to the loaded PEM root"
     assert public_key is not None
     assert not [r for r in caplog.records if "Failed to load cert" in r.getMessage()]
+
+
+# ── Every G1 ERCA key in the store is tried, not just the first ────────────
+
+def test_g1_chain_uses_every_erca_root_in_the_store():
+    """A decoy root ahead of the genuine one must not fail a genuine chain.
+
+    The loader keeps the root material in ``os.listdir`` order, which is not
+    sorted, and the G1 chain used to consume only the first RSA key it found.
+    Two published ERCA keys in ``certs/`` (or a stale key left behind beside
+    the current one) therefore reported a genuine chain as invalid.
+    """
+    from tests.unit.card_crypto import g1_identity
+
+    identity = g1_identity()
+    decoy = rsa.generate_private_key(public_exponent=65537, key_size=1024).public_key()
+    real = identity["erca_key"].public_key()
+
+    validator = SignatureValidator(certs_dir=tempfile.mkdtemp())
+    validator.root_certificates = {"decoy": decoy, "real": real}
+    status, public_key = validator.validate_tacho_chain(
+        identity["card_cert"], identity["msca_cert"])
+
+    assert status is True, "the genuine ERCA root was never tried"
+    assert public_key is not None
+
+
+def test_g1_chain_reports_a_bad_root_as_invalid():
+    """Trying every root must not turn a wrong root into a verified chain."""
+    from tests.unit.card_crypto import g1_identity
+
+    identity = g1_identity()
+    wrong = rsa.generate_private_key(public_exponent=65537, key_size=1024).public_key()
+
+    validator = SignatureValidator(certs_dir=tempfile.mkdtemp())
+    validator.root_certificates = {"wrong": wrong}
+    status, public_key = validator.validate_tacho_chain(
+        identity["card_cert"], identity["msca_cert"])
+
+    assert status is False
+    assert public_key is None
