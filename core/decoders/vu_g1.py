@@ -1013,9 +1013,12 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
         if pos + n_ch * 2 + 1 > len(data):
             if not partial:
                 return False
-            n_ch = max(0, (len(data) - pos - 1) // 2)
-            # The header declared more values than the bytes hold: the day is
-            # published with what the file carries, and says so.
+            # Only the change values that are really there are read: no byte is
+            # reserved here (the place count after them is a separate field, and
+            # the guard below stops the walk when it too was cut off).
+            n_ch = max(0, (len(data) - pos) // 2)
+            # The day was cut, so it says so — even when every declared value
+            # survived the cut (the sections after them did not).
             changes_cut = True
         changes = []
         invalid_changes = 0
@@ -1031,6 +1034,14 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
                 invalid_changes += 1
         pos += n_ch * 2
 
+        # The guard runs before the byte it protects: a body cut at the place
+        # count is still a complete day (date, odometer, inserted card, changes),
+        # and reading the next count first turned it into an IndexError that lost
+        # the whole message.
+        if partial and pos + 1 > len(data):
+            _emit(iw_records, changes, n_ch, invalid_changes,
+                  declared_changes=declared_n_ch, changes_cut=changes_cut)
+            return True
         n_pl = data[pos]
         pos += 1
         if partial and pos + 2 > len(data):
@@ -1073,12 +1084,14 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
             })
             pos += 28
 
-        n_sc = struct.unpack(">H", data[pos:pos + 2])[0]
-        pos += 2
         if partial and pos + 2 > len(data):
+            # Same rule for the specific-condition count: the places read above
+            # are complete stored records and are published.
             _emit(iw_records, changes, n_ch, invalid_changes, places,
                   declared_changes=declared_n_ch, changes_cut=changes_cut)
             return True
+        n_sc = struct.unpack(">H", data[pos:pos + 2])[0]
+        pos += 2
         if pos + n_sc * 5 > len(data):
             if not partial:
                 return False
@@ -1311,6 +1324,11 @@ def _parse_trep_03_structured(data, results, message_offset=None,
         osc_count = data[pos + 8]
         pos += 9
 
+        # Guard before the read: a body cut on the overspeeding count still holds
+        # complete faults and events, which are published instead of being lost.
+        if partial and pos + 1 > len(data):
+            _emit_trep03(faults, events)
+            return True
         n_overs = data[pos]
         pos += 1
         if pos + n_overs * 31 > len(data):

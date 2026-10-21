@@ -254,11 +254,13 @@ def test_synthetic_cut_day_is_flagged_and_says_so_on_every_surface(tmp_path):
                           _g1_activities_stream(declared=2, present=b"\x11\x80\x11\x80"))
     day = (result.get("activities") or [])[0]
     assert day["truncated"] is True
-    # the header declared 2 changes, the bytes hold one full pair: the day says so
+    # the header declared 2 changes and the bytes hold both pairs: every stored
+    # value is published, and the day still says it was cut (the sections after
+    # the change array are gone)
     assert day["declared_changes_count"] == 2
-    assert day["changes_count"] == 1
+    assert day["changes_count"] == 2
     assert day["note"] == NOTE
-    assert len(day["changes"]) == 1        # the change it did hold is kept
+    assert len(day["changes"]) == 2        # no stored value is dropped by the cut
     # information only: the flag is not an error
     assert day.get("note") == NOTE
 
