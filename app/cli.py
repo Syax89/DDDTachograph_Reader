@@ -17,6 +17,11 @@ from core.utils.activity_stats import compute_activity_totals
 
 def main():
     parser = argparse.ArgumentParser(
+        # ``prog`` comes from ``sys.argv[0]`` by default, which made the usage
+        # line and ``--version`` depend on the calling script ("cli.py",
+        # "main.py"). Name the command the examples below document, and print
+        # the reader version the GUI and the guides report (CLI-VERSION).
+        prog="tacho-cli",
         description="DDD Tachograph Reader CLI - Digital Tachograph File Analyzer",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -37,7 +42,7 @@ Examples:
     parser.add_argument("--all", nargs="?", const="auto", metavar="DIR", help="Generate all formats in a directory")
     parser.add_argument("--summary", action="store_true", help="Show compact text summary")
     parser.add_argument("--version", action="version",
-                        version=f"%(prog)s {__version__}")
+                        version=f"TachoReader {__version__}")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose debug output")
     parser.add_argument("-q", "--quiet", action="store_true", help="No screen output (files only)")
 
@@ -78,6 +83,29 @@ Examples:
                    if isinstance(parse_error, dict) else str(parse_error))
         print(f"Error: parsing failed: {message}", file=sys.stderr)
         sys.exit(1)
+
+    if not _has_tachograph_structure(result):
+        # No card-only/VU-only tag was decoded: the bytes are not a tachograph
+        # at all (CLI-NOT-A-TACHO). The CLI used to announce such a file as a
+        # "Driver Card, Gen G1" and exit 0, which a batch script reads as
+        # success.
+        print("Error: not a tachograph file: no tachograph structure was decoded",
+              file=sys.stderr)
+        sys.exit(1)
+
+    # ``--json -`` is the conventional "write the JSON to standard output". It
+    # used to be taken as a file name and created a file literally called "-".
+    json_to_stdout = args.json == "-"
+    if json_to_stdout:
+        args.json = None
+
+    # Standard output belongs to the JSON whenever the JSON goes there; the
+    # summary, the generated-file list and any progress text follow it to
+    # standard error so ``tacho-cli file.ddd > out.json`` parses (CLI-JSON-STDOUT).
+    stdout_is_json = json_to_stdout or (
+        not args.json and not args.pdf and not args.excel and not args.csv
+        and not args.summary and not args.quiet)
+    notice = sys.stderr if stdout_is_json else sys.stdout
 
     # Auto-generate output basename
     basename = os.path.splitext(os.path.basename(args.file))[0]
@@ -188,22 +216,37 @@ Examples:
                 import traceback
                 traceback.print_exc()
 
-    # Summary
-    if args.summary or (not args.json and not args.pdf and not args.excel and not args.csv and not args.quiet):
-        print_summary(result)
+    # Summary — ``-q`` promises to suppress everything on screen, so it holds
+    # back an explicit ``--summary`` too (CLI-QUIET).
+    if not args.quiet and (
+            args.summary or (not args.json and not args.pdf and not args.excel
+                             and not args.csv)):
+        print_summary(result, file=notice)
 
-    # Default: print JSON to stdout if no output flags
-    if not args.json and not args.pdf and not args.excel and not args.csv and not args.summary and not args.quiet:
+    # JSON on standard output: the documented default, or an explicit ``--json -``.
+    if stdout_is_json:
         print(json.dumps(result, indent=2, ensure_ascii=False, cls=BytesEncoder))
 
     if not args.quiet and generated:
-        print("\nGenerated files:")
+        print("\nGenerated files:", file=notice)
         for fmt, path in generated:
             size = os.path.getsize(path)
-            print(f"   {fmt}: {path} ({format_size(size)})")
+            print(f"   {fmt}: {path} ({format_size(size)})", file=notice)
 
     if export_failed:
         sys.exit(1)
+
+def _has_tachograph_structure(result):
+    """Whether the parse proved the bytes are a tachograph at all.
+
+    The structural walk classifies every byte it cannot bind as *Unknown*, so a
+    text file or binary noise parses "successfully" with no decoded section.
+    A tag that exists only in a card or VU image (``origin_detector``) is the
+    proof a real download carries and junk does not.
+    """
+    from core.parser.origin_detector import has_tachograph_content
+    return has_tachograph_content(result)
+
 
 # Identity/field sentinels meaning "no value decoded". The CLI must never
 # render these as if they were real data (CLI-BOGUS-SENTINELS: F-F5, XF-F4,
@@ -221,16 +264,17 @@ def _is_present(value):
     return text != "" and text.upper() not in _PLACEHOLDERS
 
 
-def print_summary(data):
-    """Prints a compact summary to screen."""
+def print_summary(data, file=None):
+    """Prints a compact summary to *file* (standard output by default)."""
+    out = sys.stdout if file is None else file
     meta = data.get("metadata", {})
     driver = data.get("driver", {})
     vehicle = data.get("vehicle", {})
     activities = data.get("activities", [])
 
-    print("=" * 60)
-    print("DDD TACHOGRAPH READER - SUMMARY")
-    print("=" * 60)
+    print("=" * 60, file=out)
+    print("DDD TACHOGRAPH READER - SUMMARY", file=out)
+    print("=" * 60, file=out)
 
     # File info — ``metadata.file_type``/``type`` is not populated by any
     # decoder, so the lookup used to fall through to the bogus "N/D" sentinel
@@ -239,10 +283,10 @@ def print_summary(data):
     if not _is_present(file_type):
         file_type = "Vehicle Unit" if meta.get("is_vu") else "Driver Card"
     gen = meta.get("generation", "N/D")
-    print(f"\nFile: {meta.get('filename', 'N/D')} ({file_type}, Gen {gen})")
+    print(f"\nFile: {meta.get('filename', 'N/D')} ({file_type}, Gen {gen})", file=out)
 
     # Signature
-    print(f"Integrity: {meta.get('integrity_check', 'N/D')}")
+    print(f"Integrity: {meta.get('integrity_check', 'N/D')}", file=out)
 
     # Driver — when no card data was decoded the ``driver`` dict carries the
     # truthy sentinel "N/A" in every field (core/registry/models.py), so the
@@ -254,15 +298,20 @@ def print_summary(data):
     card = driver.get("card_number") or ""
     identity = " ".join(p for p in (first, name) if _is_present(p))
     if identity:
-        print(f"\nDriver: {identity}")
+        print(f"\nDriver: {identity}", file=out)
     if _is_present(card):
-        print(f"   Card: {card}")
+        print(f"   Card: {card}", file=out)
 
-    # Vehicle
+    # Vehicle — one identity field can be absent on its own (two tracked samples
+    # carry a plate but no readable VIN), so each is rendered only when decoded
+    # instead of leaking the "N/A" sentinel next to the other (CLI-VIN-NA).
     vin = vehicle.get("vin", "N/A")
     plate = vehicle.get("plate", vehicle.get("registration", "N/A"))
-    if _is_present(vin) or _is_present(plate):
-        print(f"\nVehicle: {plate} (VIN: {vin})")
+    if _is_present(plate):
+        suffix = f" (VIN: {vin})" if _is_present(vin) else ""
+        print(f"\nVehicle: {plate}{suffix}", file=out)
+    elif _is_present(vin):
+        print(f"\nVehicle: VIN: {vin}", file=out)
 
     # Activities summary
     if activities:
@@ -284,11 +333,11 @@ def print_summary(data):
             avail_min += totals["AVAILABLE"]
         days = len(dates)
 
-        print(f"\nActivity ({len(activities)} daily blocks, {days} days):")
-        print(f"   Drive:     {drive_min // 60}h {drive_min % 60}m")
-        print(f"   Work:      {work_min // 60}h {work_min % 60}m")
-        print(f"   Available: {avail_min // 60}h {avail_min % 60}m")
-        print(f"   Rest:      {rest_min // 60}h {rest_min % 60}m")
+        print(f"\nActivity ({len(activities)} daily blocks, {days} days):", file=out)
+        print(f"   Drive:     {drive_min // 60}h {drive_min % 60}m", file=out)
+        print(f"   Work:      {work_min // 60}h {work_min % 60}m", file=out)
+        print(f"   Available: {avail_min // 60}h {avail_min % 60}m", file=out)
+        print(f"   Rest:      {rest_min // 60}h {rest_min % 60}m", file=out)
 
     # TREP completeness (VU only)
     trep_report = meta.get("trep_report")
@@ -296,11 +345,11 @@ def print_summary(data):
         from core.parser.trep_inventory import format_trep_summary
         summary = format_trep_summary(trep_report)
         if trep_report.get("is_partial"):
-            print(f"\nWarning: {summary}")
+            print(f"\nWarning: {summary}", file=out)
         else:
-            print(f"\nOK: {summary}")
+            print(f"\nOK: {summary}", file=out)
 
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 60, file=out)
 
 
 def format_size(bytes_val):

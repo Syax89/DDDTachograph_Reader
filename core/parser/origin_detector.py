@@ -58,6 +58,18 @@ def _observed_tags(results: Dict) -> set:
     return tags
 
 
+def has_tachograph_content(results: Dict) -> bool:
+    """Whether the decoded content holds any tachograph-only tag.
+
+    ``CARD_ONLY_TAGS`` / ``VU_ONLY_TAGS`` name EFs that exist nowhere but a card
+    or VU image, so observing one is proof the bytes are a tachograph. A file
+    that decoded end to end as "Unknown"/generic tags (a text file, binary
+    noise that happens to parse as 0x0001 padding) proves nothing and is not a
+    tachograph download.
+    """
+    return bool(_observed_tags(results) & (CARD_ONLY_TAGS | VU_ONLY_TAGS))
+
+
 def detect_origin(
     header_is_vu: bool,
     results: Dict,

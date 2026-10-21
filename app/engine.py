@@ -389,7 +389,9 @@ class TachoParser:
 
         The card was decoded from ``raw[delta:]``: every reported offset (the
         per-tag table, the coverage ranges) is relative to the card image, so it is
-        moved back onto the real file. Percentages do not change.
+        moved back onto the real file. Percentages do not change. The declared
+        file size is part of that: the parse measured the card image, not the file
+        (ENVELOPE-SIZE).
         """
         def shift(value):
             if isinstance(value, dict):
@@ -411,6 +413,13 @@ class TachoParser:
         if isinstance(coverage, dict):
             coverage["total_bytes"] = int(coverage.get("total_bytes") or 0) + delta
             coverage["uncovered_ranges"] = shift(coverage.get("uncovered_ranges") or [])
+        # ``deterministic.parse`` sized the metadata from the card image it was
+        # handed; the file also carries the envelope bytes.
+        metadata = results.get("metadata")
+        if isinstance(metadata, dict):
+            size = metadata.get("file_size_bytes")
+            if isinstance(size, int):
+                metadata["file_size_bytes"] = size + delta
 
     def _log_unhandled_tags(self):
         """Debug aid: report registered tags that never appeared in the file."""

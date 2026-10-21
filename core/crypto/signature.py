@@ -37,6 +37,12 @@ class SignatureValidator:
         # event twice (once through it, once through the root handler the host
         # configured) and, being pinned at INFO, ignored ``--quiet`` entirely.
         self.logger = logging.getLogger("SignatureValidator")
+        # The validator owns no console handler at all (CLI-LOG-NOISE /
+        # CRYPTO-LOG): installing one "only when nothing else has" is still
+        # order-dependent — a later ``logging.basicConfig`` adds a root handler
+        # while this private one, pinned at INFO, keeps printing each record a
+        # second time and ignoring ``--quiet``. Emitting records only leaves
+        # both the destination and the verbosity with the host application.
 
         self.certs_dir = certs_dir or os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "certs")
         self.root_certificates = {} # Map of KeyID -> Certificate
@@ -172,10 +178,14 @@ class SignatureValidator:
         public_numbers = rsa.RSAPublicNumbers(e_int, n)
         return public_numbers.public_key()
 
-    def unwrap_g1_certificate(self, certificate, public_key):
+    def unwrap_g1_certificate(self, certificate, public_key, parent_label=""):
         """
         Unwraps a G1 certificate (Annex 1B, Appendix 11).
         The certificate is RSA encrypted with the parent's public key.
+
+        ``parent_label`` names the candidate parent key in the diagnostic, so
+        that walking several ERCA roots (``_g1_erca_keys``) states which attempt
+        failed instead of repeating one anonymous line per root.
         """
         if len(certificate) != 128:
             return None
@@ -197,7 +207,9 @@ class SignatureValidator:
             # (the remaining 58 bytes of C' travel in clear after the signature)
 
             if recovered[0] != 0x6A or recovered[127] != 0xBC:
-                self.logger.debug("G1 ISO 9796-2 trailer check failed")
+                self.logger.debug(
+                    "G1 ISO 9796-2 trailer check failed%s",
+                    f" under {parent_label}" if parent_label else "")
                 return None
             
             return recovered
@@ -441,7 +453,7 @@ class SignatureValidator:
                                    car, curve.name)
         return result
 
-    def _g1_recover_key(self, cert_raw, parent_pubkey):
+    def _g1_recover_key(self, cert_raw, parent_pubkey, parent_label=""):
         """Unwrap a 194-byte G1 certificate (Annex 1B Appendix 11) with the parent
         RSA key and rebuild the certified key.
 
@@ -456,7 +468,7 @@ class SignatureValidator:
         if len(cert_raw) < 186:
             return None, None
         sig, remainder = cert_raw[:128], cert_raw[128:186]
-        recovered = self.unwrap_g1_certificate(sig, parent_pubkey)
+        recovered = self.unwrap_g1_certificate(sig, parent_pubkey, parent_label)
         if recovered is None:
             return None, None
         content = recovered[1:107] + remainder
@@ -520,8 +532,10 @@ class SignatureValidator:
                 return "Cannot Verify (Missing ERCA Root)", None
 
             msca_pub, msca_content = None, None
-            for erca_pub in erca_keys:
-                msca_pub, msca_content = self._g1_recover_key(msca_cert_raw, erca_pub)
+            for index, erca_pub in enumerate(erca_keys, start=1):
+                msca_pub, msca_content = self._g1_recover_key(
+                    msca_cert_raw, erca_pub,
+                    parent_label=f"ERCA root {index}/{len(erca_keys)}")
                 if msca_pub is not None:
                     break
             if msca_pub is None:
