@@ -800,6 +800,9 @@ msgstr "Kohë në lëvizje"
 msgid "Total"
 msgstr "Totali"
 
+msgid "Unknown"
+msgstr "E panjohur"
+
 msgid "Unknown bytes"
 msgstr "Bajte të panjohur"
 

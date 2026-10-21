@@ -800,6 +800,9 @@ msgstr "Laiks kustībā"
 msgid "Total"
 msgstr "Kopā"
 
+msgid "Unknown"
+msgstr "Nezināms"
+
 msgid "Unknown bytes"
 msgstr "Nezināmi baiti"
 

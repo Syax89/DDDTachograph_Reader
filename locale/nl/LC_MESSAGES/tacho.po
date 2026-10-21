@@ -800,6 +800,9 @@ msgstr "Tijd in beweging"
 msgid "Total"
 msgstr "Totaal"
 
+msgid "Unknown"
+msgstr "Onbekend"
+
 msgid "Unknown bytes"
 msgstr "Onbekende bytes"
 
