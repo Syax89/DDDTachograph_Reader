@@ -36,6 +36,25 @@ COFFEE = "https://buymeacoffee.com/syax89"
 
 
 @pytest.fixture
+def linux(monkeypatch):
+    """The platform of every non-macOS test: no LaunchServices here."""
+    monkeypatch.setattr(sys, "platform", "linux")
+
+
+@pytest.fixture
+def launcher(monkeypatch):
+    """``subprocess.Popen`` recorded, never launched."""
+    spawned = []
+
+    def _popen(args, **kwargs):
+        spawned.append((args, kwargs))
+        return None
+
+    monkeypatch.setattr(gui.subprocess, "Popen", _popen)
+    return spawned
+
+
+@pytest.fixture
 def links(monkeypatch):
     """``webbrowser.open`` recorded, never launched."""
     opened = []
@@ -94,10 +113,68 @@ def test_the_about_text_carries_name_version_licence_and_credits():
     assert "Commission Regulation" in text, "credits the specifications"
 
 
-def test_a_link_is_opened_through_webbrowser(links):
+def test_a_link_is_opened_through_webbrowser(linux, links):
     gui.open_url(ISSUES)
 
     assert links == [ISSUES]
+
+
+# ── macOS: LaunchServices, not the osascript helper ───────────────────────
+
+def test_macos_opens_a_link_with_usr_bin_open(macos, launcher, links):
+    """The owner's Dock icon: ``webbrowser`` spawns osascript inside the bundle."""
+    gui.open_url(ISSUES)
+
+    assert launcher == [([gui._MACOS_OPEN, ISSUES],
+                         {"stdout": gui.subprocess.DEVNULL,
+                          "stderr": gui.subprocess.DEVNULL,
+                          "close_fds": True})]
+    assert links == [], "macOS must not go through webbrowser (extra Dock icon)"
+
+
+def test_every_help_link_goes_through_usr_bin_open(macos, launcher, links):
+    for _label, url in gui.help_links():
+        gui.open_url(url)
+
+    assert [args for args, _kwargs in launcher] == [
+        [gui._MACOS_OPEN, url] for _label, url in gui.help_links()]
+    assert links == []
+
+
+def test_macos_falls_back_to_webbrowser_when_open_is_missing(
+        macos, links, monkeypatch):
+    def _missing(*_args, **_kwargs):
+        raise FileNotFoundError(2, "No such file or directory", gui._MACOS_OPEN)
+
+    monkeypatch.setattr(gui.subprocess, "Popen", _missing)
+    gui.open_url(RELEASES)
+
+    assert links == [RELEASES]
+
+
+def test_macos_falls_back_to_webbrowser_on_an_oserror(
+        macos, links, monkeypatch):
+    def _broken(*_args, **_kwargs):
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr(gui.subprocess, "Popen", _broken)
+    gui.open_url(COFFEE)
+
+    assert links == [COFFEE]
+
+
+@pytest.mark.parametrize("url", [
+    "file:///etc/passwd",
+    "javascript:alert(1)",
+    "mailto:someone@example.com",
+    "",
+])
+def test_only_web_addresses_reach_the_system_opener(macos, launcher, links, url):
+    """Only ``help_links()`` addresses are opened: nothing else may be launched."""
+    with pytest.raises(ValueError):
+        gui.open_url(url)
+
+    assert launcher == [] and links == []
 
 
 # ── macOS: a real menubar with a native Help menu ──────────────────────────
@@ -118,7 +195,7 @@ def test_macos_installs_a_menubar_with_a_menu_named_help(macos, monkeypatch):
         close(app)
 
 
-def test_the_macos_help_entries_open_their_urls(macos, monkeypatch, links):
+def test_the_macos_help_entries_open_their_urls(macos, monkeypatch, launcher):
     app = new_explorer(monkeypatch)
     try:
         menubar = app.nametowidget(app.cget("menu"))
@@ -128,7 +205,8 @@ def test_the_macos_help_entries_open_their_urls(macos, monkeypatch, links):
     finally:
         close(app)
 
-    assert links == [url for _label, url in gui.help_links()]
+    assert [args for args, _kwargs in launcher] == [
+        [gui._MACOS_OPEN, url] for _label, url in gui.help_links()]
 
 
 def test_macos_hooks_about_into_the_aqua_panel(macos, monkeypatch):

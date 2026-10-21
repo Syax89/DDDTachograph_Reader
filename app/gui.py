@@ -18,6 +18,7 @@ import re
 import json
 import queue
 import functools
+import subprocess
 import threading
 import time
 import traceback
@@ -82,6 +83,7 @@ def _px(value):
 import tkinter as tk  # noqa: E402
 import webbrowser  # noqa: E402
 from tkinter import ttk, filedialog, font as tkfont, messagebox  # noqa: E402
+from urllib.parse import urlparse  # noqa: E402
 
 from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
@@ -3508,8 +3510,42 @@ def about_text():
     ))
 
 
+#: LaunchServices' URL opener. `/usr/bin/open` is part of macOS itself, so it is
+#: always there in practice; the fallback exists for the pathological case.
+_MACOS_OPEN = "/usr/bin/open"
+
+#: The only schemes the app ever hands to the system: every address it opens
+#: comes from :func:`help_links`, and nothing else may be launched this way.
+_OPENABLE_SCHEMES = ("http", "https")
+
+
 def open_url(url):
-    """Open *url* in the user's browser — the only way the app leaves itself."""
+    """Open *url* in the user's browser — the only way the app leaves itself.
+
+    macOS: ``/usr/bin/open``, not ``webbrowser``. In the frozen (PyInstaller)
+    bundle ``webbrowser`` shells out to ``osascript``, and that helper registers
+    with LaunchServices as an application of its own: every Help link added a
+    second, bouncing "TachoReader" icon to the Dock. ``/usr/bin/open`` asks
+    LaunchServices for the URL's handler directly, from a plain process, so the
+    browser comes forward and nothing is added to the Dock. Anything else (a
+    missing binary, an OSError) falls through to ``webbrowser`` — a link that
+    opens with an extra icon is still better than a link that does nothing.
+
+    Only ``http``/``https`` addresses are opened: the callers pass the fixed list
+    from :func:`help_links`, and a ``file:`` or ``javascript:`` URL must never
+    reach the system opener on the strength of a wrong argument.
+    """
+    scheme = urlparse(url).scheme.lower()
+    if scheme not in _OPENABLE_SCHEMES:
+        raise ValueError(f"refusing to open a non-web URL: {url!r}")
+    if _is_macos():
+        try:
+            subprocess.Popen([_MACOS_OPEN, url], stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL, close_fds=True)
+            return
+        except OSError:
+            _log.warning("could not launch %s, falling back to webbrowser:\n%s",
+                         _MACOS_OPEN, traceback.format_exc())
     webbrowser.open(url)
 
 
