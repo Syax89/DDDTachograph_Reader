@@ -53,3 +53,38 @@ def test_anchored_vu_chain_still_reads_verified():
     parser._validate_certificate_chain()
 
     assert parser.validation_status == "Verified (VU Chain)"
+
+
+# ── A broken VU/MSCA certificate is not a missing one ──────────────────────
+
+def test_broken_vu_certificate_is_not_reported_as_incomplete():
+    """Tampering with the embedded MSCA certificate broke only the chain link.
+
+    Every TREP signature still verified (the VU key is sound); the file simply
+    carries a damaged certificate. "Incomplete Certificates" blamed a
+    certificate that is present in the file, sending the user looking for a
+    download problem that does not exist.
+    """
+    parser = _bare_parser()
+    parser.results["signature_verification"] = {
+        "available": True, "msca_to_vu": False, "all_treps_valid": True,
+        "root_anchored": False,
+        "treps": [{"trep": "0x21", "section": "Overview", "signature_valid": True}],
+    }
+
+    parser._validate_certificate_chain()
+
+    assert parser.validation_status != "Incomplete Certificates"
+    assert parser.validation_status.startswith("Unverified")
+
+
+def test_absent_vu_certificates_are_still_reported_as_incomplete():
+    """A download that genuinely carries no VU certificate keeps the old text."""
+    parser = _bare_parser()
+    parser.results["signature_verification"] = {
+        "available": False, "msca_to_vu": None, "all_treps_valid": False,
+    }
+
+    parser._validate_certificate_chain()
+
+    assert parser.validation_status == "Incomplete Certificates"

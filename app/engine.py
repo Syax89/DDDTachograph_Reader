@@ -975,7 +975,16 @@ class TachoParser:
                 else:
                     self.validation_status = "Partial (VU — chain ok)"
             elif not had_certs:
-                self.validation_status = "Incomplete Certificates"
+                if sv.get("available") and sv.get("msca_to_vu") is False:
+                    # The VU/MSCA certificates are present but do not chain: a
+                    # tampered or unparsable certificate, not a missing one.
+                    # (Wording deliberately avoids the "Invalid" prefix so the
+                    # canonical verdict stays PARTIAL — the TREP payload is
+                    # still signed by a sound VU key.)
+                    self.validation_status = (
+                        "Unverified (VU — VU/MSCA certificate chain invalid)")
+                else:
+                    self.validation_status = "Incomplete Certificates"
             # else: keep the negative chain outcome (e.g. "Invalid
             # Certificate Chain") — a failed chain must stay visible.
 
