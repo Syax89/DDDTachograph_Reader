@@ -42,6 +42,7 @@
   *Translate file contents* switch for file-decoded labels
 - Empty state with the **last 8** successfully opened files, and optional **drag & drop**
 - Keyboard operation, own monochrome icon set sized for the display, contrast-checked palette
+- **Help** entry point — a native Help menu with an About box on macOS, a Help button elsewhere — with the project, issue, release and donation links
 - Activity timeline and detailed-speed charts with per-day dashboards
 
 ### Export

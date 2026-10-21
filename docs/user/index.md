@@ -52,7 +52,8 @@ The tool supports all three generations of digital tachographs:
 - **Recent files and drag & drop** — the last 8 successfully opened files are one
   click away, and a `.ddd` file can be dropped on the window.
 - **Interactive daily activity timeline** — driving / work / availability / rest
-  on a 24-hour chart, with crew (dual-slot) support and out-of-scope markers.
+  on a 24-hour chart, plus the minutes that are none of them, with crew
+  (dual-slot) support and out-of-scope markers.
 - **Vehicles driven per day** — for driver-card activity views, the vehicle(s)
   used each day, with switch-over times on multi-vehicle days.
 - **Detailed speed graph** — the speed envelope as a band with a mean line,
@@ -66,6 +67,8 @@ The tool supports all three generations of digital tachographs:
 - **Excel and PDF reports built for reading** — typed spreadsheet cells with a
   Summary index, and a PDF with a structured cover and a Technical Appendix.
 - **Full country names** everywhere instead of raw nation codes.
+- **Help built in** — the project's links and an About box, in the macOS menu bar
+  and from a Help button on Windows and Linux.
 
 Release-by-release notes are in the [CHANGELOG](../../CHANGELOG.md). A visual
 product tour is available on the

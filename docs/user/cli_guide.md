@@ -142,7 +142,7 @@ matters: `python -m app.cli file.ddd --json out.json --quiet`.
 | `--csv` | `[FILE]` | Generate CSV report (optional output path) |
 | `--all` | `[DIR]` | Generate all four formats into a directory |
 | `--summary` | — | Show the compact text summary on screen |
-| `--version` | — | Print the reader version (`TachoReader 2.8.0`) |
+| `--version` | — | Print the reader version (`TachoReader 2.9.0`) |
 | `-v`, `--verbose` | — | Verbose debug output |
 | `-q`, `--quiet` | — | Suppress all screen output (files only); `--json -` still writes the JSON to standard output |
 

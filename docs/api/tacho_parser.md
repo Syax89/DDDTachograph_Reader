@@ -96,7 +96,7 @@ pct = parser.get_coverage_report()
 print(f"Coverage: {pct}%")
 
 # Certificate validation status
-print(parser.validation_status)  # "Verified", "Verified (Local Chain)", or "Invalid Certificate Chain"
+print(parser.validation_status)  # "Verified", "Unverified (Missing ERCA Root)", or "Invalid Certificate Chain"
 ```
 
 ## See Also

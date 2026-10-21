@@ -32,9 +32,10 @@ The packaged builds also answer `--version` (on Linux:
 | **Open DDD file** | Opens a file dialog to select a `.ddd` file |
 | **Export** | Drop-down menu: PDF (.pdf), Excel (.xlsx), CSV (.csv), JSON (.json) |
 | **Language** (globe) | Shows the active language; opens the language menu (see [Languages](#languages)) |
+| **Help** | Opens the Help window with the project's links (Windows and Linux only — on macOS it is a menu, see [Help and About](#help-and-about)) |
 | File label | Name of the currently loaded file |
 | Integrity status | Quiet while the file verifies cleanly; the verdict (or a warning) otherwise, readable in full on hover |
-| Integrity banner | Warning shown only when there is a problem — click it (or Tab to it and press Return/Space) for full details |
+| Integrity banner | Shown only when there is something to report — a warning, or a note about the file's form — click it (or Tab to it and press Return/Space) for full details |
 | Generation badge | Detected generation (G1, G2, G2.2) and file type (Card / VU) |
 
 A file is parsed while the window stays responsive: a progress bar appears in
@@ -64,6 +65,24 @@ so; dropping several files opens the first one). If the optional
 `tkinterdnd2` package or its platform binary is missing, the hint is not shown
 and everything else works unchanged.
 
+### Help and About
+
+Where the entry point sits depends on the platform; the contents do not.
+
+- **macOS** — a **Help** menu in the menu bar, holding the project's addresses.
+  macOS adds its own search field to that menu. **About** stays where macOS puts
+  it, in the application menu (the one named after the application), and shows
+  the reader's name, version, licence and credits. `Cmd+?` opens the same Help
+  window instead of an empty system panel.
+- **Windows and Linux** — a **Help** button at the end of the toolbar opens one
+  window with the same text and the same addresses. `Esc` closes it.
+
+The addresses are the project on GitHub, **Report an issue**, **Releases**, and
+**Buy me a coffee** (the optional donation link the project publishes). They open
+in your browser; on macOS the system opener is asked directly, so following a
+link does not add a second application icon to the Dock. Only one Help window is
+open at a time — choosing Help again brings the open one forward.
+
 ### Summary — the view a file opens on
 
 A loaded file opens on **Summary**, the first node in the tree. It is a
@@ -90,7 +109,9 @@ The integrity banner stays quiet when a file verifies cleanly. It only appears w
 - **Cryptographic validation** — the signature chain result (ERCA → MSCA → Card/VU) and, for cards, EF signature verification.
 - **Recovered data** — anything reconstructed by best-effort salvage of a partial/corrupted download.
 
-Possible signature outcomes include **Verified**, partial variants (e.g. *Verified (Local Chain)*, *Verified (VU Chain)*, *Missing ERCA*), an **Invalid Certificate Chain** failure, or a **Parse error**. A partial or missing chain means the data is still readable — only the cryptographic proof is incomplete.
+Possible signature outcomes include **Verified**, **Verified (VU Chain)**, a **Partial** form when part of the download is not covered by a signature (*Partial (VU — chain ok)*, *Partial (VU — unsigned bytes outside the signed sections)*), an **Unverified** form when the chain has no trusted root to anchor it (*Unverified (Missing ERCA Root)*, *Unverified (Local Chain Only — ERCA Missing)*, *Unverified (VU — TREP ok, no ERCA anchor)*), an **Invalid Certificate Chain** failure, or a **Parse error**. A partial or missing chain means the data is still readable — only the cryptographic proof is incomplete. The words never claim more than was checked: a chain that holds internally but is anchored to no trusted root is reported unverified rather than verified.
+
+A note is not a warning. Two facts about the *form* of a file appear in the same banner without turning it into a problem: a card image downloaded through the vehicle unit (the two leading bytes are the transfer header the saving tool kept — see [Download Completeness](#download-completeness--corrupted-files)), and a card whose first record is not the record a standard download starts with. A file whose only findings are such notes shows a neutral **{count} note(s) — click for details** banner with a document icon; the dialog then states the form of the file and how many of its signatures could not be verified. It never says the file is complete or authentic.
 
 ---
 
@@ -103,14 +124,13 @@ The tree organizes all parsed data into sections. Clicking a section shows its r
 | **Summary** | The view a file opens on (always the first node): file name and the period it covers, driver and/or vehicle, activity totals, and integrity |
 | **File Info** | File name, origin (Driver Card / Vehicle Unit, including "from VU download"), generation, integrity, decoder failures |
 | **Driver / Cardholder** | Card holder identity (driver card files) |
-| **Vehicle** | VIN, plate, registration nation, tachograph (next calibration, tyre size, authorised speed) |
-| **Activity & Usage** | Daily activities (day-by-day hierarchy with charts), vehicles used, events, faults, places, calibrations, control activities, and more |
-| **G2.2 — Smart V2** | GNSS accumulated driving, GNSS places, border crossings, load/unload records, load sensor, trailers |
-| **Vehicle Unit (VU)** | VU identification, sensor pairings, card insertions/withdrawals, time adjustments, company locks, downloads, power interruptions, overspeeding control, ITS consents, detailed speed |
-| **Security & Certificates** | Certificates and signature verification details |
-| **Raw Tags** | Every raw tag occurrence, for low-level inspection |
+| **Vehicle** / **Sensor** | VIN, plate, registration nation, tachograph (next calibration, tyre size, authorised speed) — or the sensor identification of a vehicle unit that reports one |
+| **Generation 1 [Annex 1B]**, **Generation 2 [Annex 1C]**, **Generation 2.2 [Annex 1C · 2023/980]** | The records the file of that generation carries, one node per record type, named after the record: daily activities and detailed speed as expandable day lists, everything else as a table. Only the generations the file actually reaches appear |
+| **Decode units**, **Co-Driver Activities**, **Manufacturer Extensions** | Shown only when the file has them: how every byte of a vehicle-unit download was accounted for, an observed co-driver activity array, and record types with no regulation-defined layout, listed with their raw bytes |
+| **Security & Certificates** | Signature results, decoded certificates, card chip identification, and EF signature verification details |
+| **Raw / Unparsed Data** | Every byte range the structural walk could not decode, with its offset, length and hex preview — shown only when there is one |
 
-Sections only appear when the loaded file actually contains that kind of data — a G1 driver card will not show the G2.2 or VU groups.
+Sections only appear when the loaded file actually contains that kind of data — a G1 driver card will not show the Generation 2 or Generation 2.2 nodes.
 
 Nation fields (registration, issuing, sensor) are shown with their **full country name** (e.g. *Italy*, *Germany*) rather than the raw code; with **Translate file contents** ticked the name appears in the interface language, otherwise in English.
 
@@ -123,12 +143,13 @@ Selecting the **Daily Activities** parent node opens an **activity dashboard**: 
 Expanding the node lists one entry per day. Selecting a day opens the **activity timeline chart**:
 
 - A 24-hour timeline with coloured bands for **Drive**, **Work**, **Available**, and **Rest/Break**.
+- A fifth row, **Unknown**, when the day holds minutes that are none of them: a period with no card inserted, an activity code the reader does not recognise, or a day whose status at midnight is missing. Those minutes are counted in the totals and painted in the chart's neutral colour, so the timeline and the dashboard agree. A day with no such minutes keeps the four rows.
 - Activity names — in the bands, the legend and the tooltips — follow the selected interface language.
 - Crew (dual-slot) days are drawn per slot, so two drivers recording at once are not flattened together; the day detail can be switched between slots.
 - Out-of-scope periods and specific-condition markers appear as triangles.
 - For **driver-card** files, the info line shows the **vehicle(s) driven that day** — a single plate, or every plate with its start–end window when the driver changed vehicle during the day.
 
-Each day also keeps a raw-record child table (time, activity type, card slot, crew status, odometer, daily counter).
+Each day also keeps a raw-record child table (time, activity type, card slot, crew status, distance or odometer, daily counter). The column is labelled **Odometer km** for a vehicle-unit day, which stores an odometer reading, and **Distance km** for a card day, which stores the kilometres driven that day.
 
 ![Activity dashboard](https://raw.githubusercontent.com/Syax89/DDDTachograph_Reader/master/docs/screenshots/01_activity_dashboard.png)
 
@@ -197,6 +218,7 @@ Values are formatted for readability: timestamps as `YYYY-MM-DD HH:MM`, coordina
 | `Space` | On the integrity banner: open the details |
 | `Ctrl+F` | Focus the filter box (views that have one) |
 | `Ctrl+C` / `Cmd+C` | Copy the selected table row as tab-separated text |
+| `Cmd+?` (macOS) | Open the Help window |
 | Double-click | Open a day node, like `Return` |
 
 ---

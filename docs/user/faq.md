@@ -63,7 +63,7 @@ Byte coverage is the proportion of the `.ddd` file that the parser can interpret
 
 ### What happens with a corrupted or partial download?
 
-The parser is deterministic-first and resilient: it decodes according to the EU specification wherever possible, and falls back to best-effort recovery only when needed. For VU downloads it reports **TREP completeness** (which mandatory sections are present, missing, or suspect). If a file is genuinely partial or corrupted, the reader shows a **CORRUPTED / PARTIAL FILE** page listing what was recovered and what was discarded. Anything reconstructed by salvage is clearly flagged as low-confidence, so it is never confused with cleanly decoded data. Implausible values (for example an impossible speed) are dropped rather than displayed.
+The parser is deterministic-first and resilient: it decodes according to the EU specification wherever possible, and falls back to best-effort recovery only when needed. For VU downloads it reports **TREP completeness** (which mandatory sections are present, missing, or suspect). If a file is genuinely partial or corrupted, the reader shows a **CORRUPTED / PARTIAL FILE** page listing what was recovered and what was discarded. Anything reconstructed by salvage is clearly flagged as low-confidence, so it is never confused with cleanly decoded data. An unusable value — an odometer at its "not available" sentinel, a timestamp outside the calendar the reader can render — is reported as not available beside the raw number it came from, and the record that carries it is still listed: the value is withheld, never the record. Plausibility windows only gate the recovery scan; they never delete a record the file declares.
 
 ---
 

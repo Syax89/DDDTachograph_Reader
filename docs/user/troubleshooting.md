@@ -68,6 +68,46 @@
 
 ---
 
+## The Window Seemed Frozen While Opening a File (macOS)
+
+**Symptom**: after choosing a file in the macOS file dialog the window stops
+responding for several seconds — the progress bar sits still and clicks do
+nothing — and then the file appears.
+
+**What changed**: opening a file no longer lets the render pump the Tk event loop
+on macOS. The window repaints with idle tasks only and moves the busy bar itself,
+the parse starts only after the system file dialog has closed, the garbage
+collector is paused while a file is parsed and drawn, and the tree column is
+fitted from a handful of measurements instead of one per node. Linux and Windows
+never had this behaviour and are unchanged.
+
+**If it still happens**: the reader now notices a real stall by itself, and there
+are two ways to capture more.
+
+1. **`~/ddd-reader-stall-report.txt`** — written by the application on its own
+   when the main thread stays in the same place for three seconds, once per
+   session, and its path is printed to standard error. It holds the platform, the
+   Python and Tk versions, the stack the window was stuck in and the last recorded
+   load steps — no file names, paths, card numbers or driver data — and a normal
+   session writes no report at all. A system dialog waiting for you and Tk's own
+   event loop are not treated as stalls. Attach it to an issue.
+2. **`DDD_TRACE_LOAD=1`** writes a live trace of each open to
+   `~/ddd-reader-load-trace.txt`: the extension, size, generation and record
+   counts of each stage, never contents, names or directories. Start the
+   application from the Terminal so the variable reaches it:
+
+   ```bash
+   DDD_TRACE_LOAD=1 /Applications/TachoReader.app/Contents/MacOS/TachoReader
+   ```
+
+   Open two files in a row and send that file back with the stall report.
+
+`DDD_PUMP_MODE=events` puts the old event-pumping render back for one run, which
+is how to confirm that the pump is the cause; `DDD_PUMP_MODE=idle` restores the
+default on macOS. It is a support switch, not a setting to keep.
+
+---
+
 ## Drag & Drop Does Nothing
 
 **Symptom**: You drop a `.ddd` file on the window and nothing happens, and the empty
@@ -161,7 +201,7 @@ Large `.ddd` files (90+ days of data, or vehicle unit files with detailed speed 
 
 1. **Use the CLI for batch processing**: The command-line interface is faster than the GUI for processing many files in a shell loop.
 2. **Export to JSON first, then analyze**: Parse the file once with JSON output, then use the JSON for repeated analysis instead of re-parsing the binary `.ddd`.
-3. **The GUI stays responsive**: the progress bar in the status bar keeps moving while a file loads, and the window is not frozen while it is drawn.
+3. **The GUI stays responsive**: the progress bar in the status bar keeps moving while a file loads, and the window is not frozen while it is drawn. If the window really does freeze on macOS while a file opens, see [The Window Seemed Frozen While Opening a File](#the-window-seemed-frozen-while-opening-a-file-macos) — the reader writes a report you can send.
 
 ---
 
