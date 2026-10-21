@@ -970,8 +970,14 @@ class ExportManager:
         with open(filepath, "w", newline="", encoding="utf-8-sig") as handle:
             writer = csv.writer(handle, delimiter=";")
 
-            def _write_row(row):
-                writer.writerow([_spreadsheet_value(value) for value in row])
+            def _write_row(row, *, protect=True):
+                # ``protect`` is off only for the section markers this function
+                # writes itself: a marker is not data, and ``=== X ===`` starts
+                # with ``=``, so the formula guard would rename every section
+                # (``'=== DAILY ACTIVITIES ===``) and break the documented
+                # marker. Data, headers and descriptions stay protected.
+                writer.writerow([_spreadsheet_value(value) for value in row]
+                                if protect else row)
 
             _write_row(["DDD TACHOGRAPH REPORT"])
             for field, value in summary_rows(data):
@@ -981,7 +987,7 @@ class ExportManager:
 
             wrote_any = False
             for label, desc, headers, rows, truncated in section_tables(data):
-                _write_row([f"=== {label.upper()} ==="])
+                _write_row([f"=== {label.upper()} ==="], protect=False)
                 if desc:
                     _write_row([desc])
                 _write_row(headers)

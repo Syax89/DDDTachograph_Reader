@@ -189,6 +189,30 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("2026-06-01 10:30", text)
         self.assertNotIn("2026-06-01T10:30:00+00:00", text)
 
+    def test_csv_section_titles_are_not_escaped_as_formulas(self):
+        """A title row is a marker, not data: ``=== X ===`` must not gain a
+        leading apostrophe (it would stop being the documented marker)."""
+        ExportManager.export_to_csv(self.mock_data, self.csv_path)
+
+        with open(self.csv_path, encoding="utf-8-sig") as handle:
+            lines = handle.read().splitlines()
+
+        titles = [line for line in lines if line.startswith(("===", "'==="))]
+        self.assertIn("=== DAILY ACTIVITIES ===", titles)
+        self.assertIn("=== EVENTS ===", titles)
+        self.assertEqual([line for line in titles if line.startswith("'")], [])
+        # Every emitted title is one of the exported sections, unabridged.
+        self.assertTrue(all(line.endswith(" ===") for line in titles))
+
+    def test_csv_section_descriptions_are_not_escaped_as_formulas(self):
+        ExportManager.export_to_csv(self.mock_data, self.csv_path)
+
+        with open(self.csv_path, encoding="utf-8-sig") as handle:
+            lines = handle.read().splitlines()
+
+        self.assertIn("Logged events (card insertion, power loss, security breach, "
+                      "motion conflicts, etc.).", lines)
+
     def test_summary_labels_distinguish_accounted_unknown_and_structural_metrics(self):
         rows = dict(summary_rows(self.mock_data))
 
