@@ -2279,36 +2279,37 @@ class ActivityTimelineChart(ttk.Frame):
 
     @staticmethod
     def _build_blocks(changes, is_vu):
-        """Convert a list of activity changes to per-slot block lists."""
-        slots = {}
-        # Recognise slots by the card slot label stored in the change record.
-        for ch in changes:
-            if not isinstance(ch, dict):
-                continue
-            slot = str(ch.get("slot") or "First")
-            if is_vu:
-                slot = "Slot 1" if slot == "First" else "Slot 2"
-            else:
-                slot = "Cardholder"
-            slots.setdefault(slot, []).append(ch)
+        """Convert a list of activity changes to per-slot block lists.
+
+        The segmentation comes from :func:`core.utils.activity_stats.day_segments`,
+        the single routine behind the Daily-Activities dashboard, the CLI
+        summary and the PDF report. Re-deriving it here made the chart disagree
+        with the dashboard on 471 of 1750 single-slot days of the tracked
+        samples: it painted a card-not-inserted period as Rest (Annex 1C §2.1
+        note 2 makes it UNKNOWN), left a missing leading 00:00 status entry
+        unaccounted (§2.170) and dropped an unrecognised activity label. The
+        blocks now tile the whole 24 h day, so a block's minutes always add up
+        to what the dashboard reports for the same slot.
+        """
+        from core.utils.activity_stats import day_segments
 
         blocks = {}
-        for slot_label, entries in slots.items():
-            blocks[slot_label] = []
-            # Sort by time, then build continuous blocks.
-            parsed = []
-            for entry in entries:
-                t = ActivityTimelineChart._parse_time(entry.get("time", ""))
-                act = str(entry.get("activity", "")).upper()
-                if t is not None and act in ACTIVITY_COLORS:
-                    parsed.append((t, act))
-            parsed.sort(key=lambda item: item[0])
-            if not parsed:
-                continue
-            # First block starts at its time; the next block's time closes it.
-            for i, (start, act) in enumerate(parsed):
-                end = parsed[i + 1][0] if i + 1 < len(parsed) else 86400
-                blocks[slot_label].append((start, end, act))
+
+        def label(raw_slot):
+            if is_vu:
+                return "Slot 1" if str(raw_slot) == "First" else "Slot 2"
+            # A driver card records one holder's activities, whichever slot the
+            # card was in, so they stay in the one "Cardholder" section the
+            # chart has always shown for card files.
+            return "Cardholder"
+
+        # A slot with records but no usable time keeps its (empty) section, as
+        # it did before: the axes and the slot label are still drawn.
+        for ch in changes:
+            if isinstance(ch, dict):
+                blocks.setdefault(label(ch.get("slot") or "First"), [])
+        for raw_slot, segments in day_segments(changes).items():
+            blocks.setdefault(label(raw_slot), []).extend(segments)
         return blocks
 
     def _schedule_draw(self):

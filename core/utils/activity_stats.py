@@ -19,9 +19,11 @@ Semantics:
 - The day ends at 86400 seconds (``24:00``).
 - Non-dict entries and unusable (out-of-range / unparsable) times are skipped.
 
-Both public functions share one segmentation routine (``_activity_segments``),
+Both public functions share one segmentation routine (:func:`day_segments`),
 so the totals and the driving-rule verdicts of a day can never disagree about
-which minutes were DRIVE.
+which minutes were DRIVE. The GUI's activity timeline draws from the same
+routine (see ``ActivityTimelineChart``), so the chart and the dashboard can
+never paint different hours for the same day either.
 """
 
 from typing import NamedTuple
@@ -165,6 +167,17 @@ def _activity_segments(changes):
             for i, (start, act) in enumerate(parsed)
         ]
     return segments
+
+
+def day_segments(changes):
+    """Public name of the shared day segmentation (see :func:`_activity_segments`).
+
+    Consumers that draw a day rather than total it — the GUI activity timeline
+    — call this instead of re-deriving the segmentation, so a chart and the
+    dashboard can never disagree about which minutes were DRIVE, REST or an
+    unrecorded (UNKNOWN) period.
+    """
+    return _activity_segments(changes)
 
 
 def compute_activity_totals(changes):
