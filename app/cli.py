@@ -88,6 +88,20 @@ Examples:
               file=sys.stderr)
         sys.exit(1)
 
+    # ``--json -`` is the conventional "write the JSON to standard output". It
+    # used to be taken as a file name and created a file literally called "-".
+    json_to_stdout = args.json == "-"
+    if json_to_stdout:
+        args.json = None
+
+    # Standard output belongs to the JSON whenever the JSON goes there; the
+    # summary, the generated-file list and any progress text follow it to
+    # standard error so ``tacho-cli file.ddd > out.json`` parses (CLI-JSON-STDOUT).
+    stdout_is_json = json_to_stdout or (
+        not args.json and not args.pdf and not args.excel and not args.csv
+        and not args.summary and not args.quiet)
+    notice = sys.stderr if stdout_is_json else sys.stdout
+
     # Auto-generate output basename
     basename = os.path.splitext(os.path.basename(args.file))[0]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -199,17 +213,17 @@ Examples:
 
     # Summary
     if args.summary or (not args.json and not args.pdf and not args.excel and not args.csv and not args.quiet):
-        print_summary(result)
+        print_summary(result, file=notice)
 
-    # Default: print JSON to stdout if no output flags
-    if not args.json and not args.pdf and not args.excel and not args.csv and not args.summary and not args.quiet:
+    # JSON on standard output: the documented default, or an explicit ``--json -``.
+    if stdout_is_json:
         print(json.dumps(result, indent=2, ensure_ascii=False, cls=BytesEncoder))
 
     if not args.quiet and generated:
-        print("\nGenerated files:")
+        print("\nGenerated files:", file=notice)
         for fmt, path in generated:
             size = os.path.getsize(path)
-            print(f"   {fmt}: {path} ({format_size(size)})")
+            print(f"   {fmt}: {path} ({format_size(size)})", file=notice)
 
     if export_failed:
         sys.exit(1)
@@ -242,16 +256,17 @@ def _is_present(value):
     return text != "" and text.upper() not in _PLACEHOLDERS
 
 
-def print_summary(data):
-    """Prints a compact summary to screen."""
+def print_summary(data, file=None):
+    """Prints a compact summary to *file* (standard output by default)."""
+    out = sys.stdout if file is None else file
     meta = data.get("metadata", {})
     driver = data.get("driver", {})
     vehicle = data.get("vehicle", {})
     activities = data.get("activities", [])
 
-    print("=" * 60)
-    print("DDD TACHOGRAPH READER - SUMMARY")
-    print("=" * 60)
+    print("=" * 60, file=out)
+    print("DDD TACHOGRAPH READER - SUMMARY", file=out)
+    print("=" * 60, file=out)
 
     # File info — ``metadata.file_type``/``type`` is not populated by any
     # decoder, so the lookup used to fall through to the bogus "N/D" sentinel
@@ -260,10 +275,10 @@ def print_summary(data):
     if not _is_present(file_type):
         file_type = "Vehicle Unit" if meta.get("is_vu") else "Driver Card"
     gen = meta.get("generation", "N/D")
-    print(f"\nFile: {meta.get('filename', 'N/D')} ({file_type}, Gen {gen})")
+    print(f"\nFile: {meta.get('filename', 'N/D')} ({file_type}, Gen {gen})", file=out)
 
     # Signature
-    print(f"Integrity: {meta.get('integrity_check', 'N/D')}")
+    print(f"Integrity: {meta.get('integrity_check', 'N/D')}", file=out)
 
     # Driver — when no card data was decoded the ``driver`` dict carries the
     # truthy sentinel "N/A" in every field (core/registry/models.py), so the
@@ -275,9 +290,9 @@ def print_summary(data):
     card = driver.get("card_number") or ""
     identity = " ".join(p for p in (first, name) if _is_present(p))
     if identity:
-        print(f"\nDriver: {identity}")
+        print(f"\nDriver: {identity}", file=out)
     if _is_present(card):
-        print(f"   Card: {card}")
+        print(f"   Card: {card}", file=out)
 
     # Vehicle — one identity field can be absent on its own (two tracked samples
     # carry a plate but no readable VIN), so each is rendered only when decoded
@@ -286,9 +301,9 @@ def print_summary(data):
     plate = vehicle.get("plate", vehicle.get("registration", "N/A"))
     if _is_present(plate):
         suffix = f" (VIN: {vin})" if _is_present(vin) else ""
-        print(f"\nVehicle: {plate}{suffix}")
+        print(f"\nVehicle: {plate}{suffix}", file=out)
     elif _is_present(vin):
-        print(f"\nVehicle: VIN: {vin}")
+        print(f"\nVehicle: VIN: {vin}", file=out)
 
     # Activities summary
     if activities:
@@ -310,11 +325,11 @@ def print_summary(data):
             avail_min += totals["AVAILABLE"]
         days = len(dates)
 
-        print(f"\nActivity ({len(activities)} daily blocks, {days} days):")
-        print(f"   Drive:     {drive_min // 60}h {drive_min % 60}m")
-        print(f"   Work:      {work_min // 60}h {work_min % 60}m")
-        print(f"   Available: {avail_min // 60}h {avail_min % 60}m")
-        print(f"   Rest:      {rest_min // 60}h {rest_min % 60}m")
+        print(f"\nActivity ({len(activities)} daily blocks, {days} days):", file=out)
+        print(f"   Drive:     {drive_min // 60}h {drive_min % 60}m", file=out)
+        print(f"   Work:      {work_min // 60}h {work_min % 60}m", file=out)
+        print(f"   Available: {avail_min // 60}h {avail_min % 60}m", file=out)
+        print(f"   Rest:      {rest_min // 60}h {rest_min % 60}m", file=out)
 
     # TREP completeness (VU only)
     trep_report = meta.get("trep_report")
@@ -322,11 +337,11 @@ def print_summary(data):
         from core.parser.trep_inventory import format_trep_summary
         summary = format_trep_summary(trep_report)
         if trep_report.get("is_partial"):
-            print(f"\nWarning: {summary}")
+            print(f"\nWarning: {summary}", file=out)
         else:
-            print(f"\nOK: {summary}")
+            print(f"\nOK: {summary}", file=out)
 
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 60, file=out)
 
 
 def format_size(bytes_val):
