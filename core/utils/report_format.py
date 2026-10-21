@@ -160,6 +160,11 @@ def integrity_verdict(result):
     if meta.get("is_vu") is True:
         sv = result.get("signature_verification") or {}
         if sv.get("all_treps_valid") and sv.get("msca_to_vu") and sv.get("root_anchored"):
+            # Bytes outside every signed section are covered by no signature:
+            # the download is authenticated only in part, however well every
+            # present section verifies (core.crypto.vu_signature._unsigned_gaps).
+            if sv.get("unsigned_bytes"):
+                return VERDICT_PARTIAL
             return VERDICT_VERIFIED
         if sv.get("all_treps_valid"):
             return VERDICT_PARTIAL

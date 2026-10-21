@@ -32,14 +32,12 @@ class SignatureValidator:
     """
 
     def __init__(self, certs_dir=None):
+        # Console configuration belongs to the embedding application: the
+        # validator only emits records. A private StreamHandler here wrote every
+        # event twice (once through it, once through the root handler the host
+        # configured) and, being pinned at INFO, ignored ``--quiet`` entirely.
         self.logger = logging.getLogger("SignatureValidator")
-        if not self.logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter('%(levelname)s:%(name)s:%(message)s')
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
-            self.logger.setLevel(logging.INFO)
-        
+
         self.certs_dir = certs_dir or os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "certs")
         self.root_certificates = {} # Map of KeyID -> Certificate
         self.msca_certificates = {} # Cache for MSCA certs found in the file
@@ -79,6 +77,26 @@ class SignatureValidator:
                 except OSError as exc:
                     self.logger.debug("Could not read %s: %s", filename, exc)
                 continue
+            if filename.endswith(".der"):
+                # DER material, documented in certs/README.txt next to the PEM
+                # form: either an X.509 certificate or a bare
+                # SubjectPublicKeyInfo. The extension used to fall through both
+                # branches below and be ignored without a word.
+                try:
+                    with open(os.path.join(self.certs_dir, filename), "rb") as f:
+                        der_data = f.read()
+                    try:
+                        cert = x509.load_der_x509_certificate(der_data)
+                        key = cert.subject.rfc4514_string()
+                        self.root_certificates[key] = cert
+                        self.logger.info("Loaded Root Certificate (DER X509): %s", key)
+                    except Exception:
+                        pub_key = serialization.load_der_public_key(der_data)
+                        self.root_certificates[filename] = pub_key
+                        self.logger.info("Loaded Root Public Key (DER): %s", filename)
+                except Exception as e:
+                    self.logger.error("Failed to load cert %s: %s", filename, e)
+                continue
             if filename.endswith(".pem") or filename.endswith(".cer"):
                 try:
                     path = os.path.join(self.certs_dir, filename)
@@ -89,7 +107,9 @@ class SignatureValidator:
                         if b"BEGIN ERCA PK" in cert_data:
                             lines = cert_data.decode().splitlines()
                             base64_data = "".join([line for line in lines if not line.startswith("---")])
-                            from cryptography.hazmat.primitives import serialization
+                            # ``serialization`` is imported at module level; re-importing
+                            # it here would make the name function-local and break the
+                            # generic PEM/DER branch below with UnboundLocalError.
                             import base64
                             # In G1, EC_PK is usually a raw RSA public key modulus + exponent
                             # but JRC provides it in a custom base64 wrap
@@ -302,24 +322,41 @@ class SignatureValidator:
             # unconstrained leading byte coincided with the 0x30/0x7F marker
             # would land here; retry as generation-1 and prefer a successful
             # recovery over the spurious generation-2 failure.
-            g1_result = self._validate_g1_chain(card_cert_raw, msca_cert_raw)
+            g1_result = self._validate_g1_chain(
+                card_cert_raw, msca_cert_raw, verification_time)
             if g1_result[0] is True:
                 self.last_chain_generation = "G1"
                 return g1_result
             self.last_chain_generation = "G2"
             return result
         self.last_chain_generation = "G1"
-        return self._validate_g1_chain(card_cert_raw, msca_cert_raw)
+        return self._validate_g1_chain(card_cert_raw, msca_cert_raw, verification_time)
 
     def _g1_erca_key(self):
-        """Return the G1 ERCA root RSA public key from the loaded root material.
+        """Return the first G1 ERCA root RSA public key, or ``None``.
+
+        Compatibility accessor; chain validation uses :meth:`_g1_erca_keys` so
+        that every published root is tried.
+        """
+        keys = self._g1_erca_keys()
+        return keys[0] if keys else None
+
+    def _g1_erca_keys(self):
+        """Return every G1 ERCA root RSA public key from the loaded material.
 
         Accepts either an already-parsed RSAPublicKey, or raw JRC EC_PK bytes:
         KID(8) + n(128) + e(8) = 144 bytes, or n(128) + e(8) = 136 bytes.
+
+        The store is filled in ``os.listdir`` order, which is not sorted, and
+        several ERCA keys can legitimately coexist in ``certs/`` (a root
+        rollover, or a stale key left beside the current one). Consuming only
+        the first key made a genuine chain fail depending on directory order.
         """
+        keys = []
         for material in self.root_certificates.values():
             if isinstance(material, rsa.RSAPublicKey):
-                return material
+                keys.append(material)
+                continue
             if not isinstance(material, (bytes, bytearray)):
                 continue
             if len(material) == 144:
@@ -331,10 +368,10 @@ class SignatureValidator:
             else:
                 continue
             try:
-                return rsa.RSAPublicNumbers(e, n).public_key()
+                keys.append(rsa.RSAPublicNumbers(e, n).public_key())
             except ValueError as exc:
                 self.logger.debug("Invalid raw ERCA PK material: %s", exc)
-        return None
+        return keys
 
     def _g2_erca_keys(self):
         """Return a dict of CAR→(ECPublicKey, hash) for every G2 ERCA-2
@@ -435,7 +472,39 @@ class SignatureValidator:
             self.logger.warning("G1 certified key is invalid: %s", exc)
             return None, None
 
-    def _validate_g1_chain(self, card_cert_raw, msca_cert_raw):
+    def _g1_certificate_temporal_status(self, content, verification_time=None):
+        """End Of Validity of a recovered G1 certificate (Annex 1B App. 11).
+
+        A generation-1 certificate states no start date: ``EOV`` is the only
+        temporal fact it carries, at ``content[16:20]`` after CPI(1) CAR(8)
+        CHA(7). Callers used to recover the content and drop it, so the report
+        never showed a G1 certificate date at all.
+
+        ``status`` follows :meth:`certificate_temporal_status`:
+        ``not_checked`` when no verification time is supplied (a historic
+        download is not judged against today's clock), ``expired``/``valid``
+        otherwise.
+        """
+        if not content or len(content) < 20:
+            return None
+        eov = int.from_bytes(content[16:20], "big")
+        if eov in (0, 0xFFFFFFFF):
+            # The certificate states no end of validity (the vehicle-unit
+            # certificates in the corpus carry 0xFFFFFFFF). Report nothing
+            # rather than an entry that says nothing.
+            return None
+        valid_to = datetime.datetime.fromtimestamp(eov, datetime.timezone.utc)
+        result = {"status": "not_checked", "valid_from": "",
+                  "valid_to": valid_to.isoformat()}
+        if verification_time is None:
+            return result
+        when = verification_time
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=datetime.timezone.utc)
+        result["status"] = "expired" if when > valid_to else "valid"
+        return result
+
+    def _validate_g1_chain(self, card_cert_raw, msca_cert_raw, verification_time=None):
         """G1 RSA-based chain validation (Annex 1B, Appendix 11).
 
         Full chain: the MSCA certificate is unwrapped with the ERCA root key,
@@ -445,21 +514,34 @@ class SignatureValidator:
         (the MSCA public modulus only exists inside its ERCA-signed envelope).
         """
         try:
-            erca_pub = self._g1_erca_key()
-            if erca_pub is None:
+            erca_keys = self._g1_erca_keys()
+            if not erca_keys:
                 self.logger.warning("G1 ERCA root key not available — chain cannot be verified")
                 return "Cannot Verify (Missing ERCA Root)", None
 
-            msca_pub, _ = self._g1_recover_key(msca_cert_raw, erca_pub)
+            msca_pub, msca_content = None, None
+            for erca_pub in erca_keys:
+                msca_pub, msca_content = self._g1_recover_key(msca_cert_raw, erca_pub)
+                if msca_pub is not None:
+                    break
             if msca_pub is None:
                 self.logger.debug("G1 MSCA certificate unwrap FAILED under ERCA root")
                 return False, None
 
-            card_pub, _ = self._g1_recover_key(card_cert_raw, msca_pub)
+            card_pub, card_content = self._g1_recover_key(card_cert_raw, msca_pub)
             if card_pub is None:
                 self.logger.warning("G1 card certificate unwrap FAILED under MSCA key")
                 return False, None
 
+            # The recovered content carries the certificate dates (EOV). They
+            # are reported, not judged: whether an expired G1 chain should fail
+            # closed like the G2 one is a separate policy question.
+            temporal = {}
+            for role, content in (("msca", msca_content), ("card", card_content)):
+                entry = self._g1_certificate_temporal_status(content, verification_time)
+                if entry is not None:
+                    temporal[role] = entry
+            self.last_chain_temporal_validity = temporal
             self.logger.info("G1 certificate chain VERIFIED (ERCA→MSCA→card, ISO 9796-2 + SHA-1)")
             return True, card_pub
 

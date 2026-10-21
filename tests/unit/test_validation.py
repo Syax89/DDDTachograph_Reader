@@ -92,7 +92,9 @@ class TestSignatureValidation(unittest.TestCase):
 
             # The lone marker is not a G2 encoding, so the G1 chain runs directly.
             validate_g2.assert_not_called()
-            validate_g1.assert_called_once_with(card_cert, msca_cert)
+            # The G1 chain also receives the download timestamp (None here) so
+            # it can report the certificate's End Of Validity.
+            validate_g1.assert_called_once_with(card_cert, msca_cert, None)
             self.assertEqual((status, key), (True, "g1key"))
             self.assertEqual(self.validator.last_chain_generation, "G1")
 

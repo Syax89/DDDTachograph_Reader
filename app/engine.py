@@ -971,14 +971,36 @@ class TachoParser:
             card_chain_failed = had_certs and status is False
             sv = self.results.get("signature_verification") or {}
             if sv.get("msca_to_vu") is True and not card_chain_failed:
-                if sv.get("all_treps_valid") and sv.get("root_anchored"):
+                if sv.get("all_treps_valid") and sv.get("root_anchored") and \
+                        not sv.get("unsigned_bytes"):
                     self.validation_status = "Verified (VU Chain)"
+                elif sv.get("all_treps_valid") and sv.get("root_anchored"):
+                    # Every section verified, but bytes outside every section
+                    # are authenticated by no signature: never present that as
+                    # a fully signed download (see core.crypto.vu_signature.
+                    # _unsigned_gaps).
+                    self.validation_status = (
+                        "Partial (VU — unsigned bytes outside the signed sections)")
                 elif sv.get("all_treps_valid"):
-                    self.validation_status = "Verified (VU — TREP ok, chain partial)"
+                    # TREP signatures hold, but the VU key is anchored to no
+                    # trusted ERCA root: a self-signed attacker VU would land
+                    # here too, so this must never print/export as Verified
+                    # (the card path reports the same condition as
+                    # "Unverified (Missing ERCA Root)").
+                    self.validation_status = "Unverified (VU — TREP ok, no ERCA anchor)"
                 else:
                     self.validation_status = "Partial (VU — chain ok)"
             elif not had_certs:
-                self.validation_status = "Incomplete Certificates"
+                if sv.get("available") and sv.get("msca_to_vu") is False:
+                    # The VU/MSCA certificates are present but do not chain: a
+                    # tampered or unparsable certificate, not a missing one.
+                    # (Wording deliberately avoids the "Invalid" prefix so the
+                    # canonical verdict stays PARTIAL — the TREP payload is
+                    # still signed by a sound VU key.)
+                    self.validation_status = (
+                        "Unverified (VU — VU/MSCA certificate chain invalid)")
+                else:
+                    self.validation_status = "Incomplete Certificates"
             # else: keep the negative chain outcome (e.g. "Invalid
             # Certificate Chain") — a failed chain must stay visible.
 

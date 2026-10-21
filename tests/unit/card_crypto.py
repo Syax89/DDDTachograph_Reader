@@ -124,10 +124,14 @@ def trusted_root_and_msca():
     return erca_cert, identity
 
 
-def _rsa_g1_cert(child, signer, car, chr_):
-    """A 194-byte G1 certificate: ISO 9796-2 recovered block + clear remainder."""
+def _rsa_g1_cert(child, signer, car, chr_, eov=2000000000):
+    """A 194-byte G1 certificate: ISO 9796-2 recovered block + clear remainder.
+
+    ``eov`` is the certificate's End Of Validity (TimeReal), the only date a
+    generation-1 certificate states.
+    """
     pub = child.public_key().public_numbers()
-    content = b"\x01" + car + b"\x00" * 7 + struct.pack(">I", 2000000000) + chr_
+    content = b"\x01" + car + b"\x00" * 7 + struct.pack(">I", eov) + chr_
     content += pub.n.to_bytes(128, "big") + pub.e.to_bytes(8, "big")
     assert len(content) == 164
     block = b"\x6a" + content[:106] + hashlib.sha1(content).digest() + b"\xbc"
@@ -136,14 +140,14 @@ def _rsa_g1_cert(child, signer, car, chr_):
     return sn.to_bytes(128, "big") + content[106:] + car
 
 
-def g1_identity():
+def g1_identity(eov=2000000000):
     """A real ERCA→MSCA→Card G1 RSA chain (ISO 9796-2, Annex 1B Appendix 11)."""
     erca = rsa.generate_private_key(public_exponent=65537, key_size=1024)
     msca = rsa.generate_private_key(public_exponent=65537, key_size=1024)
-    msca_cert = _rsa_g1_cert(msca, erca, b"ROOT0001", b"MSCA0001")
+    msca_cert = _rsa_g1_cert(msca, erca, b"ROOT0001", b"MSCA0001", eov)
     while True:
         card_key = rsa.generate_private_key(public_exponent=65537, key_size=1024)
-        card_cert = _rsa_g1_cert(card_key, msca, b"MSCA0001", b"CARD0001")
+        card_cert = _rsa_g1_cert(card_key, msca, b"MSCA0001", b"CARD0001", eov)
         # Avoid the unrelated encoding-marker G1/G2 ambiguity in the chain.
         if card_cert[0] not in (0x30, 0x7F):
             break

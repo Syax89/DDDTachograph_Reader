@@ -11,7 +11,7 @@ from app.theme import WARNING
 
 def _vu_data(**signature_verification):
     return {
-        "metadata": {"is_vu": True, "integrity_check": "Verified (VU — TREP ok, chain partial)"},
+        "metadata": {"is_vu": True, "integrity_check": "Unverified (VU — TREP ok, no ERCA anchor)"},
         "signature_verification": signature_verification,
     }
 
