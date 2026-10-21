@@ -1764,12 +1764,16 @@ def _parse_trep_05_technical(data, results, message_offset=None):
             # A withheld TimeReal keeps the table's own missing-value convention
             # ("N/A"), exactly as this table rendered it before the columns were
             # upgraded to date+time; a usable value carries the full timestamp.
-            old_time = _g1_time(struct.unpack(">I", chunk[155:159])[0]) or "N/A"
-            new_time = _g1_time(struct.unpack(">I", chunk[159:163])[0]) or "N/A"
-            next_cal = _g1_time(struct.unpack(">I", chunk[163:167])[0]) or "N/A"
-            old_time_iso = old_time
-            new_time_iso = new_time
-            next_cal_iso = next_cal
+            # The ISO value and the display word are two different things: the
+            # ISO form is None when the TimeReal is outside the calendar (so the
+            # record can say WHY the cell is empty), the published column keeps the
+            # table's "N/A".
+            old_time_iso = _g1_time(struct.unpack(">I", chunk[155:159])[0])
+            new_time_iso = _g1_time(struct.unpack(">I", chunk[159:163])[0])
+            next_cal_iso = _g1_time(struct.unpack(">I", chunk[163:167])[0])
+            old_time = old_time_iso or "N/A"
+            new_time = new_time_iso or "N/A"
+            next_cal = next_cal_iso or "N/A"
             field_status = {}
             if not vin:
                 field_status["vin"] = "empty (activation parameters)"
