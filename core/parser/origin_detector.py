@@ -45,6 +45,19 @@ VU_ONLY_TAGS = {
 }
 
 
+# Records that prove tachograph data but belong to neither origin on their own:
+# the certificate block (Annex 1B App. 1 EF_Certificate / EF_CA_Certificate and
+# their G2/G2.2 copies) sits in card *and* VU images, so it is in neither set
+# above. A card whose header was cut away but whose certificate records still
+# parse decoded real records — that is not "nothing recognised".
+CERTIFICATE_TAGS = {
+    0xC100,  # G1 CardCertificate
+    0xC101,  # G2/G2.2 CardCertificate
+    0xC108,  # G1 CA_Certificate
+    0xC109,  # G2/G2.2 CA_Certificate
+}
+
+
 def first_record_tag(results: Dict) -> Optional[int]:
     """Tag of the top-level record that opens the decoded stream.
 
@@ -106,12 +119,14 @@ def has_tachograph_content(results: Dict) -> bool:
     """Whether the decoded content holds any tachograph-only tag.
 
     ``CARD_ONLY_TAGS`` / ``VU_ONLY_TAGS`` name EFs that exist nowhere but a card
-    or VU image, so observing one is proof the bytes are a tachograph. A file
-    that decoded end to end as "Unknown"/generic tags (a text file, binary
-    noise that happens to parse as 0x0001 padding) proves nothing and is not a
-    tachograph download.
+    or VU image, so observing one is proof the bytes are a tachograph;
+    ``CERTIFICATE_TAGS`` are the certificate records they share. A file that
+    decoded end to end as "Unknown"/generic tags (a text file, binary noise that
+    happens to parse as 0x0001 padding) proves nothing and is not a tachograph
+    download.
     """
-    return bool(_observed_tags(results) & (CARD_ONLY_TAGS | VU_ONLY_TAGS))
+    return bool(_observed_tags(results)
+                & (CARD_ONLY_TAGS | VU_ONLY_TAGS | CERTIFICATE_TAGS))
 
 
 def detect_origin(
