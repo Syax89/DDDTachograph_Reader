@@ -930,7 +930,9 @@ def _parse_trep_02_g1_structured(data, results, message_offset=None,
             activities = results.setdefault("activities", [])
             day_record = {
                 "date": date_str,
-                "odometer_km": odo_midnight,
+                # The same sentinel rule as every other odometer: FFFFFF is "not
+                # available", never a distance of 16 777 215 km.
+                "odometer_km": odometer_km(odo_midnight),
                 "changes": list(changes),
                 "changes_count": n_ch,
                 "invalid_changes_count": invalid_changes,
