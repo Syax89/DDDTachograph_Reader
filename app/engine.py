@@ -955,8 +955,16 @@ class TachoParser:
             card_chain_failed = had_certs and status is False
             sv = self.results.get("signature_verification") or {}
             if sv.get("msca_to_vu") is True and not card_chain_failed:
-                if sv.get("all_treps_valid") and sv.get("root_anchored"):
+                if sv.get("all_treps_valid") and sv.get("root_anchored") and \
+                        not sv.get("unsigned_bytes"):
                     self.validation_status = "Verified (VU Chain)"
+                elif sv.get("all_treps_valid") and sv.get("root_anchored"):
+                    # Every section verified, but bytes outside every section
+                    # are authenticated by no signature: never present that as
+                    # a fully signed download (see core.crypto.vu_signature.
+                    # _unsigned_gaps).
+                    self.validation_status = (
+                        "Partial (VU — unsigned bytes outside the signed sections)")
                 elif sv.get("all_treps_valid"):
                     self.validation_status = "Verified (VU — TREP ok, chain partial)"
                 else:
