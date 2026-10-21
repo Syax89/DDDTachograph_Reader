@@ -1188,7 +1188,12 @@ class ExportManager:
 
         def _build_table(data, col_widths, right_from_column=(), stripe=True,
                          shade_rows=(), pad=3):
-            table = LongTable(data, colWidths=col_widths, repeatRows=1)
+            # splitInRow keeps a value taller than the page: reportlab fragments
+            # the row (the header row repeats via repeatRows) instead of raising
+            # LayoutError and losing the whole export. A normal row is never
+            # split, so an ordinary report is unchanged.
+            table = LongTable(data, colWidths=col_widths, repeatRows=1,
+                              splitInRow=1)
             cmds = [
                 ("BACKGROUND", (0, 0), (-1, 0), PRIMARY),
                 ("GRID", (0, 0), (-1, -1), 0.3, GRID),
