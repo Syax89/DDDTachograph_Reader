@@ -279,11 +279,16 @@ def print_summary(data):
     if _is_present(card):
         print(f"   Card: {card}")
 
-    # Vehicle
+    # Vehicle — one identity field can be absent on its own (two tracked samples
+    # carry a plate but no readable VIN), so each is rendered only when decoded
+    # instead of leaking the "N/A" sentinel next to the other (CLI-VIN-NA).
     vin = vehicle.get("vin", "N/A")
     plate = vehicle.get("plate", vehicle.get("registration", "N/A"))
-    if _is_present(vin) or _is_present(plate):
-        print(f"\nVehicle: {plate} (VIN: {vin})")
+    if _is_present(plate):
+        suffix = f" (VIN: {vin})" if _is_present(vin) else ""
+        print(f"\nVehicle: {plate}{suffix}")
+    elif _is_present(vin):
+        print(f"\nVehicle: VIN: {vin}")
 
     # Activities summary
     if activities:
