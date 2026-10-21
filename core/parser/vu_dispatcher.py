@@ -1916,6 +1916,16 @@ def iter_vu_sections(data, state=None):
                 state["resync_bytes"] = state.get("resync_bytes", 0) + 1
             pos += 1
             continue
+        if rs == 0 and nr > 1:
+            # A record of size 0 occupies no bytes, so its declared count is not
+            # bounded by the file at all: ``nr`` records of zero bytes are
+            # byte-for-byte the same as one. Keeping the declared count let 1 KB
+            # of five-byte headers reach the whole 500 000-record cap (187 MB of
+            # decoded dicts), which is exactly the amplification the record cap
+            # below claims to prevent. The header stays ACCEPTED (an extension is
+            # not junk and must not be resynchronised over); it just yields the one
+            # placeholder record its zero bytes can describe.
+            nr = 1
         if pos + 5 + rs * nr > n:
             # Header declares more bytes than exist before EOF (tail truncation or a
             # lying noOfRecords). Records are fixed-size, so every COMPLETE record is
