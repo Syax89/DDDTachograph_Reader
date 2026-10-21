@@ -17,6 +17,11 @@ from core.utils.activity_stats import compute_activity_totals
 
 def main():
     parser = argparse.ArgumentParser(
+        # ``prog`` comes from ``sys.argv[0]`` by default, which made the usage
+        # line and ``--version`` depend on the calling script ("cli.py",
+        # "main.py"). Name the command the examples below document, and print
+        # the reader version the GUI and the guides report (CLI-VERSION).
+        prog="tacho-cli",
         description="DDD Tachograph Reader CLI - Digital Tachograph File Analyzer",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -37,7 +42,7 @@ Examples:
     parser.add_argument("--all", nargs="?", const="auto", metavar="DIR", help="Generate all formats in a directory")
     parser.add_argument("--summary", action="store_true", help="Show compact text summary")
     parser.add_argument("--version", action="version",
-                        version=f"%(prog)s {__version__}")
+                        version=f"TachoReader {__version__}")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose debug output")
     parser.add_argument("-q", "--quiet", action="store_true", help="No screen output (files only)")
 
