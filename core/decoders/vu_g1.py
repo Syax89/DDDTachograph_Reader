@@ -1338,16 +1338,19 @@ def _parse_trep_03_structured(data, results, message_offset=None,
             })
             pos += 31
 
-        n_adj = data[pos]
-        pos += 1
-        # Only the two TimeReal values are needed to keep a record: a short
-        # tail is a truncated record, not a reason to fail the whole section.
+        # A cut body may end before the count byte: the faults, events and
+        # overspeeding records read above are complete and are published.
         if partial and pos + 1 > len(data):
             return True
-        if pos + n_adj * 8 > len(data):
-            if not partial:
-                return False
-            n_adj = max(0, (len(data) - pos) // 8)
+        n_adj = data[pos]
+        pos += 1
+        # VuTimeAdjustmentRecord is 98 bytes (§2.120), so the count is bounded by
+        # the records the body really carries. A record whose own bytes are cut is
+        # kept with ``record_complete`` false (a stored record, not an error), but
+        # a record with not one byte in the file is never invented: a count that
+        # declares more than the body holds means the message was cut.
+        held = (len(data) - pos + 97) // 98 if len(data) > pos else 0
+        n_adj = min(n_adj, held)
         adjustments = []
         for _ in range(n_adj):
             rec = data[pos:pos + 98]
