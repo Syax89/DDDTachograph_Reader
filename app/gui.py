@@ -80,12 +80,13 @@ def _px(value):
     return int(value)
 
 import tkinter as tk  # noqa: E402
+import webbrowser  # noqa: E402
 from tkinter import ttk, filedialog, font as tkfont, messagebox  # noqa: E402
 
 from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 
-from core.utils.version import __version__  # noqa: E402
+from core.utils.version import APP_NAME, __version__  # noqa: E402
 from core.utils import load_trace  # noqa: E402
 from core.utils import report_format  # noqa: E402
 from core.utils.report_format import (  # noqa: E402
@@ -3459,6 +3460,138 @@ def _integrity_bullets(data):
     return warnings + notices, notices
 
 
+# ── Help: one list of addresses, one About text, two entry points ───────────
+#
+# macOS has a menu bar, so Help lives in it (and a menu whose Tk name is `help`
+# becomes the *native* Help menu, with the search field Aqua puts there).
+# Windows and Linux have no menu bar in this app, so they get one Help button at
+# the end of the toolbar. Both read the same data below: one list of addresses,
+# one About text, so the two entry points cannot drift apart.
+
+#: The project's public address.
+PROJECT_URL = "https://github.com/Syax89/DDDTachograph_Reader"
+
+#: The donation link the project already publishes (README.md).
+DONATION_URL = "https://buymeacoffee.com/syax89"
+
+
+def help_links():
+    """``(label, url)`` for every address the Help entries open.
+
+    The one source of both entry points: the macOS Help menu and the
+    Windows/Linux Help dialog render this list. The labels are msgids and are
+    translated at call time, so a language switch reaches them too.
+    """
+    return (
+        (_("DDD Reader on GitHub"), PROJECT_URL),
+        (_("Report an issue"), f"{PROJECT_URL}/issues"),
+        (_("Releases"), f"{PROJECT_URL}/releases"),
+        (_("Buy me a coffee"), DONATION_URL),
+    )
+
+
+def about_text():
+    """The About body: name, version, licence and credits.
+
+    Shown by the Help dialog and by the macOS About panel, which is the same
+    text: the application menu's "About" item calls the Tcl command published in
+    :meth:`TachoExplorer._install_macos_help_menu`.
+    """
+    return "\n".join((
+        _("{app} version {version}").format(app=APP_NAME, version=__version__),
+        _("An open-source reader for digital tachograph (.ddd) files: card and "
+          "vehicle-unit downloads, parsed, signature-checked and exportable."),
+        _("License: MIT"),
+        _("Credits: the field layouts and the cryptographic checks follow "
+          "Commission Regulation (EU) 2016/799 (Annex 1C), Regulation (EEC) "
+          "3821/85 (Annex 1B) and Regulations (EU) 2021/1228 and 2023/980."),
+    ))
+
+
+def open_url(url):
+    """Open *url* in the user's browser — the only way the app leaves itself."""
+    webbrowser.open(url)
+
+
+def _is_macos():
+    """True on macOS. Read at call time: the menu bar decision is per platform."""
+    return sys.platform == "darwin"
+
+
+class HelpWindow(tk.Toplevel):
+    """Help / About over the main window (the Windows and Linux entry point).
+
+    One window at a time: a second Help click lifts the open one instead of
+    stacking a copy on top of it. The contents come from :func:`about_text` and
+    :func:`help_links`, never from a second copy of the text.
+    """
+
+    _open_window = None  # type: "HelpWindow | None"
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        HelpWindow._open_window = self
+        self.title(_("Help"))
+        self.transient(parent)
+        self.resizable(False, False)
+        self.configure(background=SURFACE_ALT)
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
+
+        body = tk.Frame(self, background=SURFACE_ALT, padx=_px(18), pady=_px(16))
+        body.pack(fill=tk.BOTH, expand=True)
+        self.about_label = ttk.Label(body, text=about_text(), justify=tk.LEFT,
+                                     font=FONT_BODY, wraplength=_px(520))
+        self.about_label.pack(anchor=tk.W, fill=tk.X)
+
+        links = ttk.Frame(body)
+        links.pack(anchor=tk.W, fill=tk.X, pady=(_px(12), 0))
+        self.link_buttons = []
+        for label, url in help_links():
+            button = ttk.Button(links, text=label,
+                                command=lambda target=url: open_url(target))
+            button.pack(side=tk.LEFT, padx=(0, _px(8)))
+            self.link_buttons.append(button)
+
+        self.close_button = ttk.Button(body, text=_("Close"),
+                                       command=self._on_close)
+        self.close_button.pack(anchor=tk.E, pady=(_px(14), 0))
+
+        self.bind("<Escape>", lambda _event: self._on_close())
+        self._centre_on(parent)
+        self.focus_set()
+
+    def _centre_on(self, parent):
+        """Place the dialog over *parent*, never off screen."""
+        try:
+            self.update_idletasks()
+            width, height = self.winfo_reqwidth(), self.winfo_reqheight()
+            x = parent.winfo_rootx() + max(0, (parent.winfo_width() - width) // 2)
+            y = parent.winfo_rooty() + max(0, (parent.winfo_height() - height) // 3)
+            self.geometry(f"+{max(0, x)}+{max(0, y)}")
+        except tk.TclError:                     # no geometry yet: let Tk place it
+            _log.debug("help window placement not available")
+
+    def _on_close(self):
+        if HelpWindow._open_window is self:
+            HelpWindow._open_window = None
+        self.destroy()
+
+
+def show_help(parent):
+    """Open the one Help window for *parent* (lifting the open one)."""
+    existing = HelpWindow._open_window
+    if existing is not None:
+        try:
+            if existing.winfo_exists():
+                existing.lift()
+                existing.focus_force()
+                return existing
+        except tk.TclError:                     # a Tk interpreter that is gone
+            pass
+        HelpWindow._open_window = None
+    return HelpWindow(parent)
+
+
 def _gc_pause():
     """Stop the collector (a pass over the previous file's big graph stalls every thread)."""
     was_enabled = gc.isenabled()
@@ -3740,7 +3873,38 @@ class TachoExplorer(tk.Tk):
 
     # ── Layout ──────────────────────────────────────────────
 
+    def _install_macos_help_menu(self):
+        """macOS: a real menu bar whose Help menu Aqua adopts as its own.
+
+        Only Aqua has a menu bar, and only a menu whose Tk *name* is ``help``
+        becomes the native Help menu — Aqua adds its search field to that menu
+        and to no other. The Tk widget path is therefore ``<menubar>.help``.
+
+        About is deliberately *not* one of our items: Tk 8.6 already puts
+        "About <app>" in the application menu, and its handler is the Tcl
+        command ``tk::mac::standardAboutPanel``. Publishing that command with
+        :meth:`createcommand` is the documented way to supply the panel's
+        content, so the About panel shows our text (name, version, licence,
+        credits) instead of Tk's bare one — and shows the same text the Windows
+        and Linux dialog does.
+        """
+        menubar = tk.Menu(self, tearoff=0)
+        self.configure(menu=menubar)
+        help_menu = tk.Menu(menubar, name="help", tearoff=0)
+        for label, url in help_links():
+            help_menu.add_command(label=label,
+                                  command=lambda target=url: open_url(target))
+        menubar.add_cascade(label=_("Help"), menu=help_menu)
+        self.createcommand("tk::mac::standardAboutPanel", lambda: show_help(self))
+
+    def _show_help(self):
+        """Open the Help / About dialog (the Windows and Linux entry point)."""
+        show_help(self)
+
     def _build_ui(self):
+        # A menu bar exists on macOS only; elsewhere Help is a toolbar button.
+        if _is_macos():
+            self._install_macos_help_menu()
         top = ttk.Frame(self, padding=(10, 8))
         top.pack(fill=tk.X)
         # The three toolbar controls lead with an icon from the commissioned
@@ -3767,6 +3931,18 @@ class TachoExplorer(tk.Tk):
         export_menu.add_command(label=_("JSON (.json)"), command=self._export_json)
         self.btn_export["menu"] = export_menu
         self.btn_export.pack(side=tk.LEFT, padx=(0, 14))
+        # The Help entry point for the platforms without a menu bar. It is the
+        # last control of the bar, so it is packed RIGHT *here* — ahead of the
+        # language button: pack gives the first RIGHT-packed child the outermost
+        # slot, and this one is meant to sit at the very end. On macOS the Help
+        # menu is in the menu bar instead, so no button is created there.
+        self.btn_help = None
+        if not _is_macos():
+            self.btn_help = ttk.Button(top, text=_("Help"),
+                                       image=_icon("file-info", 20, top) or "",
+                                       compound=tk.LEFT,
+                                       command=self._show_help)
+            self.btn_help.pack(side=tk.RIGHT, padx=(8, 0))
         # The language menu: two entries only. The 34 languages live in their own
         # submenu (they are a long list and would otherwise bury the preference
         # below them), and the "translate file contents" choice sits under a
