@@ -191,15 +191,23 @@ class CoverageTracker:
         totals: Dict[str, int] = defaultdict(int)
         active: List[Tuple[int, int, str]] = []
         points = sorted(boundaries)
+        # Covered-but-unclassified bytes are answered from the merged intervals
+        # with one forward cursor. Testing every point against every range was
+        # O(points x ranges) for a caller of mark_covered: seconds per file.
+        from core.utils.coverage import merge_intervals
+        covered = merge_intervals(self.covered_ranges) if self.covered_ranges else []
+        cursor = 0
         for index, start in enumerate(points[:-1]):
             for order, end, classification in events[start]:
                 heapq.heappush(active, (-order, end, classification))
             end = points[index + 1]
             while active and active[0][1] <= start:
                 heapq.heappop(active)
+            while cursor < len(covered) and covered[cursor][1] <= start:
+                cursor += 1
             if active:
                 totals[active[0][2]] += end - start
-            elif any(range_start <= start < range_end for range_start, range_end in self.covered_ranges):
+            elif cursor < len(covered) and covered[cursor][0] <= start:
                 totals["Unclassified"] += end - start
         return dict(totals)
 
