@@ -293,7 +293,10 @@ def _g1_card_slots(value):
         out[name] = _card_slot_state(nibble)
         out[f"{name}_code"] = nibble
         out[f"{name}_type"] = card_type or "unassigned"
-        out[f"{name}_status"] = "assigned" if card_type else "unassigned"
+        # 0000 is "no card", 0001..0100 the four assigned card types, 0101..1111
+        # unassigned codes: an empty slot is *not* an assigned one.
+        out[f"{name}_status"] = ("assigned" if 0x01 <= nibble <= 0x04
+                                 else "unassigned")
     out["raw"] = f"0x{value:02X}"
     return out
 

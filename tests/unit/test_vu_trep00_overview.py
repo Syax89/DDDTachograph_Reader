@@ -123,7 +123,8 @@ def test_overview_slot_nibbles_report_unassigned_and_empty():
     assert slots["driver_slot"] == "empty"
     assert slots["codriver_slot"] == "reserved"
     assert slots["codriver_slot_status"] == "unassigned"
-    assert slots["driver_slot_status"] == "assigned"
+    # 0xF0: the driver slot nibble is 0000 ("no card"), not an assigned type.
+    assert slots["driver_slot_status"] == "unassigned"
 
     results = _results()
     walk_vu_record_arrays(_overview_stream(slots=0x00), results)
