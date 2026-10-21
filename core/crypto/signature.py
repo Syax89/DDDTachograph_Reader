@@ -89,7 +89,9 @@ class SignatureValidator:
                         if b"BEGIN ERCA PK" in cert_data:
                             lines = cert_data.decode().splitlines()
                             base64_data = "".join([line for line in lines if not line.startswith("---")])
-                            from cryptography.hazmat.primitives import serialization
+                            # ``serialization`` is imported at module level; re-importing
+                            # it here would make the name function-local and break the
+                            # generic PEM/DER branch below with UnboundLocalError.
                             import base64
                             # In G1, EC_PK is usually a raw RSA public key modulus + exponent
                             # but JRC provides it in a custom base64 wrap
