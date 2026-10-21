@@ -1148,8 +1148,14 @@ def decode_time_adjustment(rec):
         out["workshop_address"] = decode_name(rec, 44)
         out["workshop_card"] = decode_full_card_number_gen(rec, 80)
     else:
-        out["missing_bytes"] = TIME_ADJUSTMENT_RECORD_SIZE - len(rec)
-        out["raw_tail_hex"] = rec[8:].hex()
+        if len(rec) < TIME_ADJUSTMENT_RECORD_SIZE:
+            out["missing_bytes"] = TIME_ADJUSTMENT_RECORD_SIZE - len(rec)
+            out["raw_tail_hex"] = rec[8:].hex()
+        else:
+            # Longer than the canonical record: the bytes past it are an
+            # extension, published as a tail (never a negative shortfall).
+            out["raw_tail_bytes"] = len(rec) - TIME_ADJUSTMENT_RECORD_SIZE
+            out["raw_tail_hex"] = rec[TIME_ADJUSTMENT_RECORD_SIZE:].hex()
     return out
 
 
@@ -1652,8 +1658,14 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         out["record_complete"] = len(rec) == DETAILED_SPEED_BLOCK_SIZE
         if not out["record_complete"]:
             out["confidence"] = "low"
-            out["missing_bytes"] = DETAILED_SPEED_BLOCK_SIZE - len(rec)
-            out["raw_tail_hex"] = rec.hex()
+            if len(rec) < DETAILED_SPEED_BLOCK_SIZE:
+                out["missing_bytes"] = DETAILED_SPEED_BLOCK_SIZE - len(rec)
+                out["raw_tail_hex"] = rec.hex()
+            else:
+                # Longer than the canonical block: the excess is an extension and
+                # is published as a tail (a negative "missing" is not a fact).
+                out["raw_tail_bytes"] = len(rec) - DETAILED_SPEED_BLOCK_SIZE
+                out["raw_tail_hex"] = rec[DETAILED_SPEED_BLOCK_SIZE:].hex()
             return out
         out["confidence"] = "high"
         # Summarised (not expanded) to avoid a 60×N value dump.
