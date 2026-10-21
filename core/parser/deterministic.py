@@ -15,6 +15,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 from core.utils.constants import MAX_TLV_LENGTH, MAX_RECURSION_DEPTH, looks_like_g2_certificate
+from core.utils.coverage import KNOWN_PADDING_BYTES
 from core.registry.registry import DecoderRegistry
 from core.utils.ber_tlv import read_ber_tlv_header
 from core.utils.logger import get_logger
@@ -44,6 +45,19 @@ _TRTP_GENERATION = {
     0x21: "G2", 0x22: "G2", 0x23: "G2", 0x24: "G2", 0x25: "G2",
     0x31: "G2.2", 0x32: "G2.2", 0x33: "G2.2", 0x35: "G2.2",
 }
+
+
+def _fill_run_end(data: bytes, pos: int, end: int, fill: int) -> int:
+    """End of the run of *fill* bytes that starts at *pos*.
+
+    ``bytes.lstrip`` strips the run in C, so a megabyte of fill costs one copy
+    instead of one Python-level pair check per byte.
+    """
+    tail = data[pos:end]
+    return pos + len(tail) - len(tail.lstrip(_FILL_BYTES[fill]))
+
+
+_FILL_BYTES = {value: bytes([value]) for value in KNOWN_PADDING_BYTES}
 
 
 #: Upper bound on the intervals one tracker keeps. A real download has thousands at
@@ -611,16 +625,56 @@ class DeterministicParser:
         raw_key = f"{tag:04X}_{tag_name}"
         return f"{parent_path} > {raw_key}" if parent_path else raw_key
 
-    def _skip_padding(self, raw_data: bytes, pos: int, end: int) -> int:
+    def _padding_stop(self, data: bytes, pos: int, end: int, mode: str) -> int:
+        """End of the padding run starting at *pos* (``pos`` when there is none).
+
+        A run is at least two identical fill bytes (0x00/0xFF/0x55): a lone
+        leading 0x00 is the first byte of a card record header (EF_ICC 0002h,
+        EF_IC 0005h), never fill.
+
+        The run must also never take a byte that starts a record. A zero-filled
+        gap in front of a low-tag card EF leaves fill-valued bytes that belong
+        to the record header (0002h starts with 0x00), so the run is cut back to
+        the record start; consuming it instead used to lose the record and
+        desync the whole walk.
+        """
+        fill = data[pos]
+        if fill not in KNOWN_PADDING_BYTES:
+            return pos
+        if pos + 1 >= end:
+            return pos + 1  # lone trailing padding byte at buffer end
+        if data[pos + 1] != fill:
+            return pos
+        stop = _fill_run_end(data, pos, end, fill)
+        if self._starts_known_record(data, stop, end, mode):
+            return stop
+        # Only the last byte of the run can start a record that the run hides:
+        # the tag's first byte is the fill byte, so its second byte is the first
+        # non-fill byte of the run.
+        if stop - 1 >= pos and self._starts_known_record(data, stop - 1, end, mode):
+            return stop - 1
+        return stop
+
+    def _starts_known_record(self, data: bytes, pos: int, end: int, mode: str) -> bool:
+        """True when *pos* holds the header of a record with a registered decoder."""
+        if pos >= end:
+            return False
+        if mode == 'stap':
+            result = self._try_read_stap(data, pos, end)
+        else:
+            result = self._try_read_ber_tlv(data, pos, end)
+        if result is None:
+            return False
+        tag, _length, _hdr_size, _payload, dtype = result
+        return self.registry.get_decoder(tag, generation=self.generation,
+                                         is_vu=self.is_vu, dtype=dtype) is not None
+
+    def _skip_padding(self, raw_data: bytes, pos: int, end: int,
+                      mode: Optional[str] = None) -> int:
         """Advance over a top-level padding run, classifying and recording it."""
-        from core.utils.coverage import is_padding_block, KNOWN_PADDING_BYTES
         start = pos
-        while pos + 1 < end and is_padding_block(bytes([raw_data[pos], raw_data[pos+1]])) is not None:
-            pos += 1
-        if pos > start:
-            pos += 1  # include the last byte of the padding run
-        elif pos + 1 == end and raw_data[pos] in KNOWN_PADDING_BYTES:
-            pos += 1  # lone trailing padding byte at buffer end
+        pos = self._padding_stop(raw_data, pos, end,
+                                 mode or ('stap' if self.generation == 'G1' else 'ber'))
         if pos > start:
             fill_byte = raw_data[start]
             self.coverage.mark_padding(start, pos, fill_byte)
@@ -633,16 +687,11 @@ class DeterministicParser:
             })
         return pos
 
-    def _skip_padding_inner(self, data: bytes, pos: int, end: int, base_offset: int, depth: int, parent_path: str) -> int:
+    def _skip_padding_inner(self, data: bytes, pos: int, end: int, base_offset: int,
+                          depth: int, parent_path: str, mode: str = 'stap') -> int:
         """Same as :meth:`_skip_padding` but inside a container (relative offsets)."""
-        from core.utils.coverage import is_padding_block, KNOWN_PADDING_BYTES
         start = pos
-        while pos + 1 < end and is_padding_block(bytes([data[pos], data[pos+1]])) is not None:
-            pos += 1
-        if pos > start:
-            pos += 1  # include the last byte of the padding run
-        elif pos + 1 == end and data[pos] in KNOWN_PADDING_BYTES:
-            pos += 1  # lone trailing padding byte at buffer end
+        pos = self._padding_stop(data, pos, end, mode)
         if pos > start:
             self.coverage.mark_padding(base_offset + start, base_offset + pos, data[start])
 
@@ -912,7 +961,8 @@ class DeterministicParser:
         end = len(payload)
 
         while pos < end:
-            pos = self._skip_padding_inner(payload, pos, end, container_offset, depth, parent_path)
+            pos = self._skip_padding_inner(payload, pos, end, container_offset, depth,
+                                           parent_path, mode)
             if pos >= end:
                 break
 
