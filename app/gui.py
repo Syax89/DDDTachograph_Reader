@@ -3377,6 +3377,46 @@ def _envelope_notice(data):
     return "\u2022 " + CARD_ENVELOPE_NOTICE
 
 
+#: Informational bullet for a card file whose opening record is not the record a
+#: standard download starts with (``metadata["header_form"]``). Like the envelope
+#: note it describes the file's FORM and hands the trust question to the count in
+#: the note itself: a file altered at its header may still carry every signed EF
+#: untouched, so the note must never read as a clean bill of health.
+CARD_HEADER_NOTICE = _(
+    "File header differs from a standard download: the first record is {tag}, "
+    "where a card download starts with the card's identification record "
+    "(0x0002 or 0x0005 for a G1 card, 0x0101 for a G2 card).")
+
+
+def _signature_verdict_clause(data):
+    """How many card-data signatures could not be verified, as one sentence.
+
+    Counts come from the verification report itself (``failed`` + ``skipped`` of
+    ``total``), so a file whose signatures all verified says "0 of N" instead of
+    borrowing a reassuring word, and one with no report at all says exactly that.
+    """
+    efv = (data or {}).get("ef_signature_verification") or {}
+    total = int(efv.get("total") or 0)
+    if not total:
+        return _("No EF signatures verified")
+    unverified = int(efv.get("failed") or 0) + int(efv.get("skipped") or 0)
+    return _("{unverified} of {total} signature(s) could not be verified").format(
+        unverified=unverified, total=total)
+
+
+def _header_notice(data):
+    """The informational bullet for a non-standard card header, or None."""
+    meta = (data or {}).get("metadata") or {}
+    header = meta.get("header_form")
+    if not isinstance(header, dict) or not header.get("first_record"):
+        return None
+    if meta.get("is_vu") is not False:
+        return None
+    return "\u2022 {} {}.".format(
+        CARD_HEADER_NOTICE.format(tag=header["first_record"]),
+        _signature_verdict_clause(data))
+
+
 def _integrity_bullets(data):
     """``(bullets, notices)`` for *data* without a GUI instance.
 
@@ -3413,8 +3453,9 @@ def _integrity_bullets(data):
     trep = meta.get("trep_report") or {}
     if truncated or (not trep.get("complete_walk", True) and not schema_findings):
         warnings.append("\u2022 The structural walk did not reach the end of file")
-    notice = _envelope_notice(data)
-    notices = [notice] if notice else []
+    # Form notes, never problems: a card image relayed through the vehicle unit,
+    # and a card whose header is not the record a standard download opens with.
+    notices = [note for note in (_envelope_notice(data), _header_notice(data)) if note]
     return warnings + notices, notices
 
 
@@ -4951,7 +4992,7 @@ class TachoExplorer(tk.Tk):
             # It is kept apart from the real warnings so a healthy file is never
             # announced as a warning.
             notice = _envelope_notice(data)
-            notices = [notice] if notice else []
+            notices = [note for note in (notice, _header_notice(data)) if note]
             bullets = warnings + notices
 
             self._integrity_warnings = bullets

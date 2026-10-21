@@ -365,6 +365,7 @@ class TachoParser:
         if self._envelope_rejected:
             self.results["metadata"].setdefault("vu_integrity", []).append(
                 dict(self._envelope_rejected))
+        self._record_header_form()
         if offset:
             self.results["metadata"]["envelope"] = {
                 "type": "TREP 06 card download relayed by the VU",
@@ -382,6 +383,27 @@ class TachoParser:
                 "Card image extracted from a VU Card Download "
                 "(TREP 06, DDP_049/DDP_050) \u2014 valid selective download")
             self._shift_envelope_offsets(self.results, offset)
+
+    def _record_header_form(self):
+        """Publish the FORM of the file's first record when it is not standard.
+
+        A card download opens with the card's own identification record
+        (0x0002/0x0005 for a G1 card, 0x0101 for a G2 card — see
+        ``core.parser.origin_detector.STANDARD_CARD_HEADER_TAGS``). Those records
+        sit below the signed-EF space, so altering the header's tag bytes leaves
+        the stream framed and every signed EF intact: the verdict stays
+        "Verified" and no warning bullet exists to carry the fact. It is
+        published here — as a note about the file's form, never a verdict — so
+        the window and the report can say it. Absent for a standard download, so
+        nothing changes there.
+        """
+        if self.is_vu:
+            return
+        from core.parser.origin_detector import nonstandard_header
+        tag = nonstandard_header(self.results)
+        if tag is None:
+            return
+        self.results["metadata"]["header_form"] = {"first_record": f"0x{tag:04X}"}
 
     @staticmethod
     def _shift_envelope_offsets(results, delta):

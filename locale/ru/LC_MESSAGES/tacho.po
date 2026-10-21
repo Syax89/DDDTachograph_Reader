@@ -2343,3 +2343,39 @@ msgstr "Блок скорости этого интервала минут об�
 
 msgid "This record was cut off in the file"
 msgstr "Эта запись обрезана в файле"
+
+msgid "File header differs from a standard download: the first record is {tag}, where a card download starts with the card's identification record (0x0002 or 0x0005 for a G1 card, 0x0101 for a G2 card)."
+msgstr "Заголовок файла не соответствует стандартной загрузке: первая запись — {tag}, тогда как загрузка карты начинается с записи идентификации карты (0x0002 или 0x0005 для карты G1, 0x0101 для карты G2)."
+
+msgid "{unverified} of {total} signature(s) could not be verified"
+msgstr "Не удалось проверить {unverified} из {total} подписей"
+
+msgid "An open-source reader for digital tachograph (.ddd) files: card and vehicle-unit downloads, parsed, signature-checked and exportable."
+msgstr "Читатель с открытым исходным кодом для файлов цифрового тахографа (.ddd): загрузки с карты и с бортового устройства, прочитанные, проверенные по подписи и экспортируемые."
+
+msgid "Buy me a coffee"
+msgstr "Угости меня кофе"
+
+msgid "Close"
+msgstr "Закрыть"
+
+msgid "Credits: the field layouts and the cryptographic checks follow Commission Regulation (EU) 2016/799 (Annex 1C), Regulation (EEC) 3821/85 (Annex 1B) and Regulations (EU) 2021/1228 and 2023/980."
+msgstr "Благодарности: раскладка полей и криптографические проверки соответствуют Регламенту (ЕС) 2016/799 (приложение 1C), Регламенту (ЕЭС) 3821/85 (приложение 1B) и Регламентам (ЕС) 2021/1228 и 2023/980."
+
+msgid "DDD Reader on GitHub"
+msgstr "DDD Reader на GitHub"
+
+msgid "Help"
+msgstr "Справка"
+
+msgid "License: MIT"
+msgstr "Лицензия: MIT"
+
+msgid "Releases"
+msgstr "Выпуски"
+
+msgid "Report an issue"
+msgstr "Сообщить о проблеме"
+
+msgid "{app} version {version}"
+msgstr "{app} версия {version}"

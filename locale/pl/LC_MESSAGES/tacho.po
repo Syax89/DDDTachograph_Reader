@@ -2343,3 +2343,39 @@ msgstr "Blok prędkości tego przedziału minut został ucięty w pliku"
 
 msgid "This record was cut off in the file"
 msgstr "Ten zapis został ucięty w pliku"
+
+msgid "File header differs from a standard download: the first record is {tag}, where a card download starts with the card's identification record (0x0002 or 0x0005 for a G1 card, 0x0101 for a G2 card)."
+msgstr "Nagłówek pliku nie odpowiada standardowemu pobraniu: pierwszy rekord to {tag}, podczas gdy pobranie karty zaczyna się od rekordu identyfikacji karty (0x0002 lub 0x0005 dla karty G1, 0x0101 dla karty G2)."
+
+msgid "{unverified} of {total} signature(s) could not be verified"
+msgstr "Nie udało się zweryfikować {unverified} z {total} podpisów"
+
+msgid "An open-source reader for digital tachograph (.ddd) files: card and vehicle-unit downloads, parsed, signature-checked and exportable."
+msgstr "Czytnik o otwartym kodzie źródłowym dla plików cyfrowego tachografu (.ddd): pobrania z karty i z jednostki pojazdu, odczytane, zweryfikowane podpisem i gotowe do eksportu."
+
+msgid "Buy me a coffee"
+msgstr "Postaw mi kawę"
+
+msgid "Close"
+msgstr "Zamknij"
+
+msgid "Credits: the field layouts and the cryptographic checks follow Commission Regulation (EU) 2016/799 (Annex 1C), Regulation (EEC) 3821/85 (Annex 1B) and Regulations (EU) 2021/1228 and 2023/980."
+msgstr "Podziękowania: układy pól i kontrole kryptograficzne opierają się na rozporządzeniu (UE) 2016/799 (załącznik 1C), rozporządzeniu (EWG) 3821/85 (załącznik 1B) oraz rozporządzeniach (UE) 2021/1228 i 2023/980."
+
+msgid "DDD Reader on GitHub"
+msgstr "DDD Reader w GitHubie"
+
+msgid "Help"
+msgstr "Pomoc"
+
+msgid "License: MIT"
+msgstr "Licencja: MIT"
+
+msgid "Releases"
+msgstr "Wydania"
+
+msgid "Report an issue"
+msgstr "Zgłoś problem"
+
+msgid "{app} version {version}"
+msgstr "{app} wersja {version}"

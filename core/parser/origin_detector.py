@@ -18,7 +18,7 @@ such.
 """
 from __future__ import annotations
 
-from typing import Dict, Iterable, Tuple
+from typing import Dict, Iterable, Optional, Tuple
 
 ORIGIN_CARD = "driver_card"
 ORIGIN_VU = "vehicle_unit"
@@ -43,6 +43,50 @@ VU_ONLY_TAGS = {
     # an observed compatibility tag for origin detection, never as a TREP alias.
     0x7631, 0x7632, 0x7633, 0x7634, 0x7635,
 }
+
+
+def first_record_tag(results: Dict) -> Optional[int]:
+    """Tag of the top-level record that opens the decoded stream.
+
+    ``None`` when nothing was decoded. Nested TLV children share their parent's
+    offset, so the shallowest occurrence wins a tie: the record that opens the
+    file is the parent one.
+    """
+    best = None                     # (offset, depth, tag) of the best candidate
+    for occs in (results.get("raw_tags") or {}).values():
+        for occ in occs or ():
+            if not isinstance(occ, dict):
+                continue
+            try:
+                offset = int(str(occ.get("offset", "0x0")), 16)
+                tag = int(str(occ.get("tag_id", "0x0")), 16)
+            except (TypeError, ValueError):
+                continue
+            depth = occ.get("depth")
+            depth = depth if isinstance(depth, int) else 0
+            if best is None or (offset, depth) < best[:2]:
+                best = (offset, depth, tag)
+    return None if best is None else best[2]
+
+
+def nonstandard_header(results: Dict) -> Optional[int]:
+    """The opening record's tag when it cannot open a card download.
+
+    A card download starts with one of the card file identifiers
+    (``core.parser.card_envelope.CARD_FILE_TAGS``: EF_ICC/EF_IC or the generation-2
+    identification group, and the certificate records a download may lead with).
+    Those records sit below the signed-EF space, so rewriting the header's tag
+    bytes leaves the stream framed and every signed EF intact — the verdict stays
+    clean and nothing else in the app would ever mention it. That is the fact this
+    reports: not a verdict, and not a guess (a file where nothing decoded returns
+    ``None``).
+    """
+    from core.parser.card_envelope import CARD_FILE_TAGS
+
+    tag = first_record_tag(results)
+    if tag is None or tag in CARD_FILE_TAGS:
+        return None
+    return tag
 
 
 def _observed_tags(results: Dict) -> set:

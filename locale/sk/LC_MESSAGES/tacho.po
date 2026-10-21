@@ -2343,3 +2343,39 @@ msgstr "Blok rýchlosti tohto minútového intervalu bol v súbore skrátený"
 
 msgid "This record was cut off in the file"
 msgstr "Tento záznam bol v súbore skrátený"
+
+msgid "File header differs from a standard download: the first record is {tag}, where a card download starts with the card's identification record (0x0002 or 0x0005 for a G1 card, 0x0101 for a G2 card)."
+msgstr "Hlavička súboru nezodpovedá štandardnému stiahnutiu: prvý záznam je {tag}, kým stiahnutie karty začína záznamom identifikácie karty (0x0002 alebo 0x0005 pre kartu G1, 0x0101 pre kartu G2)."
+
+msgid "{unverified} of {total} signature(s) could not be verified"
+msgstr "Nepodarilo sa overiť {unverified} z {total} podpisov"
+
+msgid "An open-source reader for digital tachograph (.ddd) files: card and vehicle-unit downloads, parsed, signature-checked and exportable."
+msgstr "Čítačka s otvoreným zdrojovým kódom pre súbory digitálneho tachografu (.ddd): stiahnutia z karty a z palubnej jednotky, načítané, overené podpisom a exportovateľné."
+
+msgid "Buy me a coffee"
+msgstr "Kúpte mi kávu"
+
+msgid "Close"
+msgstr "Zavrieť"
+
+msgid "Credits: the field layouts and the cryptographic checks follow Commission Regulation (EU) 2016/799 (Annex 1C), Regulation (EEC) 3821/85 (Annex 1B) and Regulations (EU) 2021/1228 and 2023/980."
+msgstr "Poďakovanie: rozvrhnutia polí a kryptografické kontroly vychádzajú z nariadenia (EÚ) 2016/799 (príloha 1C), nariadenia (EHS) 3821/85 (príloha 1B) a nariadení (EÚ) 2021/1228 a 2023/980."
+
+msgid "DDD Reader on GitHub"
+msgstr "DDD Reader na GitHube"
+
+msgid "Help"
+msgstr "Pomocník"
+
+msgid "License: MIT"
+msgstr "Licencia: MIT"
+
+msgid "Releases"
+msgstr "Vydania"
+
+msgid "Report an issue"
+msgstr "Nahlásiť problém"
+
+msgid "{app} version {version}"
+msgstr "{app} verzia {version}"

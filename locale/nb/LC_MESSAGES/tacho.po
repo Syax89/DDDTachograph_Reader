@@ -2343,3 +2343,39 @@ msgstr "Hastighetsblokken for dette minuttintervallet ble kuttet i filen"
 
 msgid "This record was cut off in the file"
 msgstr "Denne posten ble kuttet i filen"
+
+msgid "File header differs from a standard download: the first record is {tag}, where a card download starts with the card's identification record (0x0002 or 0x0005 for a G1 card, 0x0101 for a G2 card)."
+msgstr "Filhodet samsvarer ikke med en standardnedlasting: den første posten er {tag}, mens en kortnedlasting begynner med kortets identifikasjonspost (0x0002 eller 0x0005 for et G1-kort, 0x0101 for et G2-kort)."
+
+msgid "{unverified} of {total} signature(s) could not be verified"
+msgstr "{unverified} av {total} signatur(er) kunne ikke verifiseres"
+
+msgid "An open-source reader for digital tachograph (.ddd) files: card and vehicle-unit downloads, parsed, signature-checked and exportable."
+msgstr "En åpen kildekode-leser for digitale fartsskriverfiler (.ddd): nedlastinger fra kort og kjøretøyenhet, tolket, signaturkontrollert og eksporterbar."
+
+msgid "Buy me a coffee"
+msgstr "Kjøp en kaffe til meg"
+
+msgid "Close"
+msgstr "Lukk"
+
+msgid "Credits: the field layouts and the cryptographic checks follow Commission Regulation (EU) 2016/799 (Annex 1C), Regulation (EEC) 3821/85 (Annex 1B) and Regulations (EU) 2021/1228 and 2023/980."
+msgstr "Credits: feltlayoutene og de kryptografiske kontrollene følger forordning (EU) 2016/799 (vedlegg 1C), forordning (EØF) 3821/85 (vedlegg 1B) og forordningene (EU) 2021/1228 og 2023/980."
+
+msgid "DDD Reader on GitHub"
+msgstr "DDD Reader på GitHub"
+
+msgid "Help"
+msgstr "Hjelp"
+
+msgid "License: MIT"
+msgstr "Lisens: MIT"
+
+msgid "Releases"
+msgstr "Utgivelser"
+
+msgid "Report an issue"
+msgstr "Rapporter et problem"
+
+msgid "{app} version {version}"
+msgstr "{app} versjon {version}"
