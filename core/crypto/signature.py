@@ -322,14 +322,15 @@ class SignatureValidator:
             # unconstrained leading byte coincided with the 0x30/0x7F marker
             # would land here; retry as generation-1 and prefer a successful
             # recovery over the spurious generation-2 failure.
-            g1_result = self._validate_g1_chain(card_cert_raw, msca_cert_raw)
+            g1_result = self._validate_g1_chain(
+                card_cert_raw, msca_cert_raw, verification_time)
             if g1_result[0] is True:
                 self.last_chain_generation = "G1"
                 return g1_result
             self.last_chain_generation = "G2"
             return result
         self.last_chain_generation = "G1"
-        return self._validate_g1_chain(card_cert_raw, msca_cert_raw)
+        return self._validate_g1_chain(card_cert_raw, msca_cert_raw, verification_time)
 
     def _g1_erca_key(self):
         """Return the first G1 ERCA root RSA public key, or ``None``.
@@ -471,7 +472,39 @@ class SignatureValidator:
             self.logger.warning("G1 certified key is invalid: %s", exc)
             return None, None
 
-    def _validate_g1_chain(self, card_cert_raw, msca_cert_raw):
+    def _g1_certificate_temporal_status(self, content, verification_time=None):
+        """End Of Validity of a recovered G1 certificate (Annex 1B App. 11).
+
+        A generation-1 certificate states no start date: ``EOV`` is the only
+        temporal fact it carries, at ``content[16:20]`` after CPI(1) CAR(8)
+        CHA(7). Callers used to recover the content and drop it, so the report
+        never showed a G1 certificate date at all.
+
+        ``status`` follows :meth:`certificate_temporal_status`:
+        ``not_checked`` when no verification time is supplied (a historic
+        download is not judged against today's clock), ``expired``/``valid``
+        otherwise.
+        """
+        if not content or len(content) < 20:
+            return None
+        eov = int.from_bytes(content[16:20], "big")
+        if eov in (0, 0xFFFFFFFF):
+            # The certificate states no end of validity (the vehicle-unit
+            # certificates in the corpus carry 0xFFFFFFFF). Report nothing
+            # rather than an entry that says nothing.
+            return None
+        valid_to = datetime.datetime.fromtimestamp(eov, datetime.timezone.utc)
+        result = {"status": "not_checked", "valid_from": "",
+                  "valid_to": valid_to.isoformat()}
+        if verification_time is None:
+            return result
+        when = verification_time
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=datetime.timezone.utc)
+        result["status"] = "expired" if when > valid_to else "valid"
+        return result
+
+    def _validate_g1_chain(self, card_cert_raw, msca_cert_raw, verification_time=None):
         """G1 RSA-based chain validation (Annex 1B, Appendix 11).
 
         Full chain: the MSCA certificate is unwrapped with the ERCA root key,
@@ -486,20 +519,29 @@ class SignatureValidator:
                 self.logger.warning("G1 ERCA root key not available — chain cannot be verified")
                 return "Cannot Verify (Missing ERCA Root)", None
 
-            msca_pub = None
+            msca_pub, msca_content = None, None
             for erca_pub in erca_keys:
-                msca_pub, _ = self._g1_recover_key(msca_cert_raw, erca_pub)
+                msca_pub, msca_content = self._g1_recover_key(msca_cert_raw, erca_pub)
                 if msca_pub is not None:
                     break
             if msca_pub is None:
                 self.logger.debug("G1 MSCA certificate unwrap FAILED under ERCA root")
                 return False, None
 
-            card_pub, _ = self._g1_recover_key(card_cert_raw, msca_pub)
+            card_pub, card_content = self._g1_recover_key(card_cert_raw, msca_pub)
             if card_pub is None:
                 self.logger.warning("G1 card certificate unwrap FAILED under MSCA key")
                 return False, None
 
+            # The recovered content carries the certificate dates (EOV). They
+            # are reported, not judged: whether an expired G1 chain should fail
+            # closed like the G2 one is a separate policy question.
+            temporal = {}
+            for role, content in (("msca", msca_content), ("card", card_content)):
+                entry = self._g1_certificate_temporal_status(content, verification_time)
+                if entry is not None:
+                    temporal[role] = entry
+            self.last_chain_temporal_validity = temporal
             self.logger.info("G1 certificate chain VERIFIED (ERCA→MSCA→card, ISO 9796-2 + SHA-1)")
             return True, card_pub
 
