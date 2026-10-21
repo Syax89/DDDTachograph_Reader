@@ -117,7 +117,14 @@ def test_the_integrity_warning_opens_after_the_file_is_on_screen(explorer, monke
     flagged["metadata"] = dict(flagged.get("metadata") or {}, integrity_check="Card data signature mismatch")
     seen.clear()
     explorer._parse_done(flagged, "/tmp/flagged.ddd")
-    explorer.update()
+    # The box waits for the busy state to end by polling on a timer (see
+    # _warn_when_idle), so settle the loop until it is there instead of
+    # expecting it in the first event turn.
+    import time
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline and not seen:
+        explorer.update()
+        time.sleep(0.01)
 
     assert seen, "the warning was lost"
     name, parsing, rendering, open_state, bar = seen[0]

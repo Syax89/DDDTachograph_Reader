@@ -215,6 +215,7 @@ def test_macos_hooks_about_into_the_aqua_panel(macos, monkeypatch):
         # `createcommand` publishes a Tcl command under exactly this name; it is
         # what Tk 8.6's own "About <app>" item calls on Aqua.
         assert app.tk.call("info", "commands", "tk::mac::standardAboutPanel")
+        assert app.tk.call("info", "commands", "tkAboutDialog")
     finally:
         close(app)
 

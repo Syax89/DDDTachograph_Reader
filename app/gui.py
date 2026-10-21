@@ -145,6 +145,13 @@ _RENDER_PUMP_INTERVAL = 1 / 60
 #: busy bar must still tick at least ~4 times a second however slow a pump is.
 _RENDER_PUMP_MAX_GAP = 0.25
 
+#: How often a warning that must wait for a file to finish opening looks again
+#: (see ``TachoExplorer._warn_when_idle``). A timer, not an idle callback: an
+#: idle callback is re-entered — the whole idle queue is — by every
+#: ``update_idletasks()`` the render pumps, and a callback that re-arms itself
+#: makes that drain loop without end while the render is still running.
+_WARN_POLL_MS = 50
+
 
 def _pump_uses_events(environ=os.environ, platform=sys.platform):
     """Whether the render pump may process events (``update()``) or only idle tasks.
@@ -170,6 +177,28 @@ def _flush(widget):
         widget.update()
     else:
         widget.update_idletasks()
+
+
+def _bring_to_front(window):
+    """Finish the pending layout and raise *window* before a modal box opens.
+
+    ``update_idletasks()`` (never ``update()``: this runs inside a Tk callback and
+    a nested *event* loop there could deliver another open) settles geometry, the
+    redraw and the deferred selection render, so the box is parented to the
+    window the user is about to see rather than to one still halfway through
+    being rebuilt. ``lift()`` then keeps the box from opening *behind* the window
+    — the state a drag & drop from another application left the window in.
+
+    Module-level, like :func:`_flush`, and best-effort for the same reason: the
+    window-less doubles the trace tests use have nothing to flush or raise, and
+    neither may stop a notice from being shown.
+    """
+    try:
+        window.update_idletasks()
+        window.lift()
+    except Exception:                 # noqa: BLE001 - see the docstring
+        _log.debug("could not bring the window forward: %s",
+                   traceback.format_exc())
 
 
 class _RenderAbandoned(Exception):
@@ -3941,6 +3970,9 @@ class TachoExplorer(tk.Tk):
                                   command=lambda target=url: open_url(target))
         menubar.add_cascade(label=_("Help"), menu=help_menu)
         self.createcommand("tk::mac::standardAboutPanel", lambda: show_help(self))
+        # Tk 8.6 Aqua runs the Tcl proc `tkAboutDialog` for the application menu's
+        # "About" item; `standardAboutPanel` alone is not what it calls.
+        self.createcommand("tkAboutDialog", lambda: show_help(self))
         self.createcommand("tk::mac::ShowHelp", lambda: show_help(self))
 
     def _show_help(self):
@@ -5264,10 +5296,28 @@ class TachoExplorer(tk.Tk):
         opened behind the window (after a drag & drop from another application)
         the program looked stuck loading for good. Deferred to the idle loop it
         appears over a finished window, with the file already on screen.
+
+        The wait is a *timer*, and that is the difference between a box on the
+        owner's macOS build and no box at all. An idle callback is not a quiet
+        place to park: ``update_idletasks()`` — the pump of the macOS render —
+        runs the whole idle queue, re-armed callbacks included, so an idle
+        ``_warn_when_idle`` fires *during* the render, sees the flags still set,
+        and re-arms itself inside the same drain; each of those re-entries can
+        also be swallowed by a Tk that is mid-redraw, and a queue that is busy
+        for the whole render is a queue the notice can be lost in. A 50 ms timer
+        cannot run inside an idle drain and leaves the box where it belongs:
+        after the render has finished, with nothing left to re-enter.
+
+        Before the box opens the window is flushed and raised
+        (:func:`_bring_to_front`), because a modal box parented to a window that
+        is still unmapped, behind the browser or not yet laid out can open where
+        nobody sees it — and the notice is worth nothing if it is not on screen.
         """
         if self._parsing or self._rendering:
-            self.after_idle(self._warn_when_idle, title, message, kind)
+            if not self._destroyed:
+                self.after(_WARN_POLL_MS, self._warn_when_idle, title, message, kind)
             return
+        _bring_to_front(self)
         with load_trace.dialog(kind, title):
             getattr(messagebox, kind)(title, message)
 
