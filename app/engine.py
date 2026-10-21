@@ -829,16 +829,43 @@ class TachoParser:
             except (ValueError, TypeError):
                 return datetime.min
 
+        def _type_shape(value):
+            """The container types inside *value*, so no two shapes can fold.
+
+            ``json.dumps`` cannot express two things this test needs: a tuple
+            serialises exactly like a list, and an integer dict key lands on its
+            string form, so two *different* day blocks were called the same one
+            and the second was dropped. The JSON text stays the bulk of the
+            comparison (one C call); this walks containers only and records what
+            JSON loses — a scalar contributes nothing, a non-string key only its
+            type, so the per-value cost that made the old recursive canonicaliser
+            expensive stays gone.
+            """
+            if isinstance(value, dict):
+                return ("dict",
+                        tuple(sorted(type(key).__name__ for key in value
+                                     if type(key) is not str)),
+                        tuple(_type_shape(item) for _, item
+                              in sorted(value.items(), key=lambda kv: repr(kv[0]))))
+            if isinstance(value, (list, tuple)):
+                return (type(value).__name__,
+                        tuple(_type_shape(item) for item in value))
+            if isinstance(value, (set, frozenset)):
+                return ("set", tuple(sorted(
+                    (_type_shape(item) for item in value), key=repr)))
+            return ()
+
         def _canonical(value):
             """Deterministic, hashable representation of decoded data.
 
             ``json.dumps`` with sorted keys is the cheap equivalent of the
-            recursive tuple builder this used to be: key order does not matter,
-            types are kept distinct, and a day block no longer costs one Python
-            call per nested value (it was the single most expensive call of a
-            full parse).
+            recursive tuple builder this used to be: key order does not matter
+            and a day block no longer costs one Python call per nested value (it
+            was the single most expensive call of a full parse). The type shape
+            restores the type distinctions JSON folds away.
             """
-            return json.dumps(value, sort_keys=True, default=repr)
+            return (json.dumps(value, sort_keys=True, default=repr),
+                    _type_shape(value))
 
         def _fingerprint(record):
             """A cheap, stable identity for one day: its scalar fields + list sizes.
