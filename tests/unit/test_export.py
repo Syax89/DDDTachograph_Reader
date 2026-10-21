@@ -239,6 +239,18 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("Logged events (card insertion, power loss, security breach, "
                       "motion conflicts, etc.).", lines)
 
+    def test_summary_expands_nation_codes_the_way_the_tables_do(self):
+        """The cover and the workbook Summary print a nation as the tables do:
+        a country name, not the bare code (``I`` beside ``Italy``)."""
+        data = deepcopy(self.mock_data)
+        data["driver"]["issuing_nation"] = "I"
+        data["vehicle"]["registration_nation"] = "D"
+
+        rows = dict(summary_rows(data))
+
+        self.assertEqual(rows["Issuing Nation"], "Italy")
+        self.assertEqual(rows["Vehicle Registration Nation"], "Germany")
+
     def test_summary_labels_distinguish_accounted_unknown_and_structural_metrics(self):
         rows = dict(summary_rows(self.mock_data))
 

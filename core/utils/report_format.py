@@ -847,14 +847,14 @@ def summary_rows(data):
                     "licence_number", "preferred_language"):
             val = driver.get(key, "N/A")
             if val and val != "N/A":
-                rows.append((humanize_key(key), fmt_value(val)))
+                rows.append((humanize_key(key), fmt_scalar(val, key=key)))
 
     if vehicle.get("plate", "N/A") != "N/A" or vehicle.get("vin", "N/A") != "N/A":
         rows.append(("", ""))
         for key in ("plate", "vin", "registration_nation"):
             val = vehicle.get(key, "N/A")
             if val and val != "N/A":
-                rows.append((f"Vehicle {humanize_key(key)}", fmt_value(val)))
+                rows.append((f"Vehicle {humanize_key(key)}", fmt_scalar(val, key=key)))
 
     # Disclose a partial/uncertain parse in the exported report (D2-009), so a
     # truncated download is not written out as if it were complete.
