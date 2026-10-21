@@ -3,8 +3,9 @@
 ``argparse`` fills ``%(prog)s`` from ``sys.argv[0]``, so the documented check
 printed ``cli.py 2.8.0`` — and ``main.py 2.8.0`` through the compatibility entry
 point, i.e. the version string depended on how the CLI was started. The GUI and
-both user guides say ``TachoReader 2.8.0``; the usage line should show the
-command the help text itself documents (``tacho-cli``).
+both user guides name the reader (``TachoReader 2.9.0`` in this release); the
+usage line should show the command the help text itself documents
+(``tacho-cli``).
 """
 import subprocess
 import sys

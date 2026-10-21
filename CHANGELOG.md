@@ -1,4 +1,201 @@
-## [Unreleased]
+## [2.9.0] - 2026-10-21
+
+This release is about what the reader claims. Every transfer a vehicle unit can
+send is now decoded against the text that defines it — including a card image
+relayed through the unit, and a download cut short at its tail — and a file that
+promises more records than its bytes hold, or that carries bytes no signature
+covers, says so instead of being presented as complete. Alongside that, opening a
+file no longer risks stalling the window on macOS, the application gains a Help
+entry point with an About box, and a long list of individual decoding, export,
+command-line and window defects is fixed.
+
+---
+
+### A card day's distance is `day_distance_km` in the exported JSON
+
+One breaking change, and it is a rename only. In the JSON export a driver card's
+daily record publishes the kilometres driven that day as `day_distance_km`. It
+used to be `odometer_km`, which was wrong: a card day records a distance, not an
+odometer reading, so every consumer that read the old key was handed a number
+that looked like an absolute odometer and was not one. The numbers themselves are
+unchanged. A vehicle-unit day keeps `odometer_km`, because a vehicle unit really
+does store an odometer reading for the day.
+
+Nothing else changes shape. The tables and the reports already take a day's
+distance from a helper that knows which of the two values it is looking at, so
+their figures are the same as before — and for the same reason the day table now
+labels the column a card day shows "Distance km" while a vehicle-unit day keeps
+"Odometer km".
+
+---
+
+### Vehicle-unit downloads are decoded transfer type by transfer type
+
+A vehicle-unit download is a sequence of transfers: the standard numbers them
+`TREP 00` onwards, and each one carries a different record array with its own
+layout. This release reads every transfer against the text that defines it —
+Annex 1B for a generation-1 unit, Appendix 1 and Appendix 7 of Annex 1C for
+generation 2 and generation 2.2 — instead of walking the file as an
+undifferentiated byte stream.
+
+**Each transfer is decoded on its own.** The normative decoder runs first, for
+that transfer only. When one transfer cannot be decoded, a recovery scan is
+offered its bytes and nothing else, and the next transfer resumes normally from
+its own marker, so a scan can neither read outside the unit nor publish a record
+under another unit's name. Every byte of the file then belongs to a declared unit
+— decoded, recovered, unreadable or padding — the unit list is published, and the
+units always add up to the size of the file. The list is a **Decode units**
+section in the window and in every export.
+
+The extent a section declares is authoritative. A complete record is read before
+any marker inside its bytes is considered, so a marker-shaped byte pair in a
+record's payload is data and not a boundary; a section boundary is honoured only
+after the last complete record it declared, and only when it checks out as one.
+
+**Structure decides what is decodable, never a field value.** A transfer the
+standard defines is decoded from its counts and its sizes. A blank vehicle
+identification number on a unit that has not been activated, a clock value that
+cannot be rendered as a date, an odometer at its "not available" sentinel: none of
+these can turn a decoded transfer into a missing one, drop a stored record, or
+push a file onto the recovery scan. Before this release a blank identification
+number lost a whole Overview — identity, clock, company locks and control records
+— and a day with more activity changes than an invented cap was re-read by a scan
+instead of being decoded.
+
+**Every stored record is published.** A record the counters declare is emitted
+even when one of its values is unusable: the value is withheld as *not available*
+beside the raw integer and an explicit status, and the record stays. A section
+reports how many records it declared, how many it emitted and how many it dropped,
+and any difference makes the download partial. The recovery scan follows the same
+rule, so a record carrying nothing at all (an empty day, a driver with no name) is
+not published as data.
+
+**A record is identified by where it is stored, not by what it says.** Two stored
+records with identical fields are two records, and the same bytes read twice are
+one. That keeps a driver's two identical company locks, two controls in the same
+second, two calibrations with equal fields and two insertions of the same card in
+the report — records that used to collapse into each other — while a recovery scan
+that re-reads bytes the walk already decoded still adds no second copy.
+
+**A message cut at its tail is read up to the cut.** Records are fixed-size, so
+the complete records before a truncation are decoded by the same decoder as an
+intact message, with the counts clamped to what fits; only the cut remainder
+becomes an unreadable (or recovered) range, and the file stays partial. A
+published record whose own payload the file cut says so: it carries the count its
+header declared and an informational note, which appears as a **Note** column in
+that section — and only there, and only when such a record exists. A day whose
+activity changes were cut is therefore no longer shown as a rest day.
+
+**A finding is a finding.** Missing, out-of-order, unexpected or duplicated
+arrays, a signature array that does not hold the single signature record the
+standard gives it, a signature block shorter than its curve allows, a card region
+that does not close: each is recorded as an integrity finding that makes the
+download partial. The records that were decoded stay decoded — a structural
+finding is never a reason to re-read bytes that already yielded data. What the
+file does not contain is reported too: a tail-cut array states the count it
+declared, the count it holds and the bytes it is missing.
+
+**Integrity is not decodability.** A generation-1 download whose final signature
+block is one byte short decodes every declared record; it used to report the walk
+as incomplete, switch to the byte scan, and add low-confidence duplicates on top
+of the correct records (calibrations 7 → 13, certificates 2 → 4 on the sample that
+showed it). The shortfall is now an integrity finding — the download is partial,
+and no scan is started. The same holds for bytes after the last message: `00`/`FF`
+fill is padding, anything else is trailing bytes and makes the file partial, so a
+dangling marker byte is never mistaken for fill.
+
+**A recovery route says why it ran.** When one runs, the report records the route,
+the transfer and offset, and a reason from a closed list — a truncated file, a
+count that points past the data, a record size that contradicts the standard, an
+unknown or misplaced section, a schema violation, or a defect of this reader. A
+damaged file is never relabelled as a defect of the reader, and a defect of the
+reader is never hidden as damage.
+
+What is decoded, transfer by transfer:
+
+- **`TREP 00`, the interface version.** Read as its two octets with the codes
+  Annex 1C assigns them, the disagreement between the two texts of the same act
+  carried alongside, and no signature expected — the standard defines none for
+  this transfer, so it is no longer counted as an invalid one.
+- **Overview.** The current date and time of the unit, the card-slot status read
+  per nibble, and vehicle registration numbers decoded through their declared code
+  page instead of being filtered to ASCII.
+- **Activities.** The daily work period entry types including the two
+  GNSS-derived begin/end types generation 2 defines, generation-local condition
+  meanings, a place variant chosen by the transfer rather than by the file's
+  generation label, a `0°/0°` position treated as a real fix with range checks
+  around it, and the previous vehicle and manual-input flag of each insertion.
+- **Events and faults.** The generation-1 point-2.70 list (from the readable
+  consolidated text, where `0A` is a vehicle motion conflict and the 2002 print
+  still says reserved), section-inherited versions for over-speeding and
+  power-interruption records, and short or empty time adjustments kept with a
+  completeness flag instead of being dropped.
+- **Detailed speed.** The normative 64-byte block kept under its aggregated run
+  with all sixty samples (`FF` meaning no information), and a block with an
+  unusable timestamp kept rather than skipped.
+- **Technical data.** The extended serial number decoded where the standard puts
+  it — serial, BCD month, two-digit year suffix, manufacturer-specific type and
+  registered manufacturer — for the unit, the sensor, the coupled sensor, the
+  calibrations and the cards; the extended seal identifier split into its
+  manufacturer code and seal identifier; the calibration variant chosen by the
+  section's generation, with the size actually decoded named, and the difference
+  from the expected size flagged; the card structure version read as its two
+  halves; and the activation calibration (empty identification number, zero tyre
+  circumference) no longer discarded as implausible.
+- **`digitalMapVersion`** is an `IA5String(12)`: the generation-2, version-2 unit
+  identification therefore ends at 138 bytes, and the twelve octets are reported
+  as valid IA5 text or as invalid and kept raw. What the characters mean is not
+  stated by the regulation and is not invented here.
+
+One limit is worth stating here. Where the regulation leaves a field open — the
+meaning of the map-version characters, the manufacturer-specific event data, the
+record types above `0x24` — the reader keeps the bytes and says the field is
+unresolved instead of inventing a reading, and no compliance statement is made for
+them. The calibration purpose is generation-aware as well: `05` and `06` exist
+only from generation 2 on, so a generation-1 record reads them as reserved instead
+of being given a name it cannot have.
+
+**A card image wrapped in a transfer header is a card.** Some tools save a card
+download exactly as the vehicle unit relayed it, so the file starts with the
+`SID 76` + `TREP 06` header that the standard strips for the storage form of a
+card file. Such a file is now recognised structurally, before the card-or-unit
+decision, and decoded through exactly the pipeline a plain card takes — same
+generation detection, same elementary-file signature verification, same
+certificate chain — with every offset shifted past the header. The card inside is
+bounded by its own two-byte length field, so a real card image (whose elementary
+files are 12–14 KB) is no longer cut at the first big one. And a card region is
+recognised anywhere inside a generation-1 unit stream, at any position, as a card:
+it is reported with its own verdict and generation, and it takes no part in the
+unit's signature accounting.
+
+Because other software rejects the wrapped form, the window explains it: the file
+is a card image downloaded through the vehicle unit, the two leading bytes are the
+transfer header kept by the tool that saved it and not the standard storage form,
+and some other programs report such a file as corrupt. The same clarification is a
+**Transfer header** row in the report summary, so the PDF, Excel and CSV exports
+say it too. It is phrased as a note and never as a warning, it keeps the card's
+own signature verdict, and it states the form of the file without ever calling the
+data complete or authentic. A plain card carries no such row.
+
+**Manufacturer extensions are shown and explained.** The observed co-driver
+activities array is a rendered section, described as the extension it is (and
+naming the unit it was observed on). Record arrays whose type has no name in the
+regulation are a **Manufacturer Extensions** section: one row per type with the
+code, the declared record size, the record count and the raw bytes, so a file that
+carries an extension says so even when its layout is unknown. Every such section
+carries the same note — the layout is manufacturer-specific or empirical, no
+regulation defines these fields, the values are read with low confidence and the
+raw bytes are preserved. A file with these sections is not partial, declares no
+fallback and raises no warning.
+
+Rows are also tidier: a decoded serial is one compact scalar (serial, month and
+year, manufacturer) with no neighbouring column carrying a near-identical label,
+the three calibration timestamps carry date and time in one set of columns with
+the ISO forms kept in the JSON, the unit's current date and time is the first row
+of the Overview panel, and a datum that used to appear twice in a panel or a
+report now appears once.
+
+---
 
 ### Vehicle-unit fields the standard defines are decoded instead of dropped
 
@@ -39,9 +236,13 @@ labelled low confidence in the JSON, and it is deliberately *not* declared as a
 heuristic fallback (no banner, no warning): a valid download did not fall back
 from anything.
 
-Not done: seal and serial-number subfields, `SensorPaired` (`0x07`), one Gen1
-calibration record the plausibility gates drop, and the card-type names of the
-overview status. See `docs/developer/normative-completion.md`.
+Not done: `SensorPaired` (`0x07`) is surfaced with its name and canonical size
+but without a field-level decode; a full field-by-field conformance verdict
+exists only for generation-2 events and faults; and the overview card-slot status
+reports whether a slot is empty, occupied or unassigned rather than naming the
+card type it holds. See `docs/developer/normative-completion.md`.
+
+---
 
 ### Long manufacturer names are readable in Excel and keep their letters in the PDF
 
@@ -62,6 +263,8 @@ overview status. See `docs/developer/normative-completion.md`.
   reports do not change. If that font is missing from an installation, the PDF
   export fails and says why rather than returning a complete-looking report with
   a boxed identity.
+
+---
 
 ### Gen2 vehicle-unit events and faults are decoded in full, with a verdict
 
@@ -92,6 +295,8 @@ confidence.
 - No decode step switches to a backup route silently any more: a fallback to the
   heuristic byte scan is logged at warning level and recorded in
   `metadata.decode_paths`, and nothing recovered that way can look conformant.
+
+---
 
 ### Event and fault type codes are read against the right version of the list
 
@@ -128,6 +333,254 @@ file.
   three manufacturer error bytes stay exactly as recorded and low confidence:
   their meaning is the vendor's own, no verified three-byte wire-format mapping
   was obtained, and `000000` is not read as "no error".
+
+---
+
+### A file open no longer stalls the window on macOS
+
+On macOS a long open could freeze the window for several seconds, always after
+the system file picker had closed, with the progress bar stuck and nothing to
+click. The cause was the render: to keep the window alive while it drew a file,
+the render pumped the Tk event loop, and that pump could block inside the system
+while nothing of the reader was running.
+
+Opening a file no longer pumps the event loop on macOS at all:
+
+- The render repaints with idle tasks only, and moves the busy bar itself, one
+  step per 12 ms of elapsed time, because a Tk timer needs events and the window
+  now processes none during an open. Linux and Windows keep the previous
+  behaviour.
+- The parse starts after the native file picker has returned, so the panel's own
+  teardown is handled by the real event loop and not inside the picker's call
+  stack. A second click on **Open**, a drop or a language switch during that
+  moment is refused exactly as before, so no second parse starts.
+- The render pump measures how long its own last step took and waits
+  proportionally, so a heavy render spends its time drawing rather than pumping.
+- The garbage collector is paused while a file is parsed and drawn, and the
+  finished result is parked in the permanent generation afterwards, so a
+  collection pass over the previous file's data cannot stall the open.
+- The tree column is fitted from a handful of measurements instead of one per
+  node, so a file with thousands of days no longer pays for thousands of
+  measurements before anything appears.
+
+If an open still stalls, the reader now reports it by itself. A watchdog watches
+the main thread in every session; when it stays in the same place for three
+seconds it writes `~/ddd-reader-stall-report.txt` once, with the platform, the
+Python and Tk versions, the stack it was stuck in and the last recorded load
+steps — and prints the path to standard error. Two waits are deliberately not
+reported, because they are normal use rather than stalls: Tk's own event loop,
+and a system dialog waiting for the user.
+
+Two environment variables exist for support, and neither is needed in normal use.
+`DDD_TRACE_LOAD=1` writes a live trace of an open (`~/ddd-reader-load-trace.txt`,
+extension, size, generation and counts only — never file names, contents or
+directories). `DDD_PUMP_MODE=events` puts the old event-pumping render back;
+`DDD_PUMP_MODE=idle` forces the new one.
+
+---
+
+### A Help entry point, and an About box that names the version
+
+The application now explains itself in one place, reachable the way each
+platform expects.
+
+On **macOS** it is a native **Help** menu in the menu bar — the system adds its
+own search field to that menu — listing the project's addresses. **About** stays
+where macOS puts it, in the application menu, and now shows the real text: the
+name, the version, the licence and the credits. `Cmd+?` and the extra "Help" item
+the system adds open this application's Help window, where Tk used to answer with
+"Help isn't available for this app".
+
+On **Windows and Linux**, which have no menu bar here, a **Help** button at the
+end of the toolbar opens the same window. It is text-only on purpose: at the
+minimum window size an icon's width would cost the integrity verdict its room.
+
+Either way the entries are the same four addresses — the project on GitHub,
+**Report an issue**, **Releases**, and **Buy me a coffee** — and they open in your
+browser. On macOS the address is handed to `/usr/bin/open`, so following a link
+no longer adds a second bouncing application icon to the Dock. One Help window at
+a time: clicking again brings the open one forward instead of stacking a copy.
+
+---
+
+### Integrity notices say what the file's form is, and what was verified
+
+The integrity dialog now opens when the file is actually on screen. It used to be
+deferred to the idle queue, which the render also drains, so the box could be
+re-entered in the middle of a draw and lost; it is now deferred by a short timer,
+and the window is finished and raised before the box appears over it.
+
+Two things the reader used to say nothing about, it now states:
+
+- **A card whose first record is not the record a standard download starts with**
+  gets a neutral note: which record the file starts with, what a standard
+  download starts with, and how many of its data signatures could not be
+  verified. It is a statement about the file's form, never a verdict — it never
+  says the file is complete, valid or authentic, and it stays neutral even when
+  every signature verified, because a rewritten header is exactly a case the
+  signature verdict cannot see.
+- **That note only appears for content that decodes as tachograph data.** A text
+  file, a JSON export or a PDF opened by mistake is rejected as before, with no
+  claim about a header it does not have.
+
+Smaller, and visible: a Field/Value row with no value is no longer drawn at all,
+so the certificate and signature panels no longer show a label with an empty cell
+beside it. A value that does have content is rendered readably — the tag list of
+missing files reads `0x0502, 0x0523` rather than two decimal numbers, and an
+untrusted generation keeps its name.
+
+---
+
+### Correctness fixes in what the reader decodes and validates
+
+**Crypto and the integrity verdict.**
+
+- A vehicle-unit chain that is anchored to no trusted root is reported as
+  unverified. It used to read "Verified (VU — TREP ok, chain partial)" — so a
+  user with an empty `certs/` folder was told the file was verified although the
+  unit's key was anchored to nothing, which is also where a self-signed
+  attacker's unit would land.
+- Bytes outside every signed section no longer ride along under a "verified"
+  verdict: a download is reported as partial when bytes no signature covers were
+  read.
+- A damaged or unparsable vehicle-unit or MSCA certificate is reported as invalid,
+  not as missing — the two used to share the "incomplete certificates" wording,
+  which points the reader at the wrong repair.
+- Every root key in the certificate store is tried, not only the first one found.
+  Several can legitimately coexist (a root rollover, or a stale key left beside
+  the current one), and consuming only the first made a genuine chain fail
+  depending on the order the files were listed in.
+- A root certificate loaded from a PEM or DER file now actually anchors a chain:
+  an X.509 certificate is reduced to its public key before use. Previously the
+  file was accepted, the log said it had been loaded, and nothing was anchored.
+  DER files are read too, as `certs/README.txt` always said they could be.
+- A recovered generation-1 certificate reports its end of validity, which used to
+  be recovered and then discarded, so a generation-1 card now shows a certificate
+  date like every other generation.
+- The signature validator no longer installs a logging handler of its own: every
+  line was printed twice, and `--quiet` could not silence the crypto lines at all.
+
+**Generation 1.**
+
+- The card number of a generation-1 file is no longer prefixed with the issuing
+  nation; the number is the sixteen characters the card holds.
+- The "not available" odometer sentinel is applied to the day odometer of a
+  generation-1 activity record, as it already was elsewhere.
+- An empty card-slot status nibble reads as unassigned instead of being guessed
+  into a card type.
+- The partial-read guards no longer read past the cut, so every stored activity
+  change of a shortened body survives.
+- The prefix clamp of a cut events-and-faults body copies the time-adjustment
+  count instead of a second copy of the over-speeding control block.
+- The time-adjustment count is bounded by the 98-byte records the body actually
+  holds, so a body claiming more than it carries no longer walks off its end.
+- A cut events-and-faults body publishes the faults, events, over-speeding
+  records and control block it does hold, and reports that it was cut, instead of
+  discarding them and reading as complete.
+- Every unusable timestamp of a calibration record is reported, not only the
+  first of the three.
+
+**Generation 2.**
+
+- A tail-cut record array reports its shortfall — the count it declared, the count
+  it holds and the bytes it is missing — instead of leaving a false "this record
+  was cut off" note on the last complete record and saying nothing about the
+  records the file does not contain.
+- An unavailable odometer is reported as *not available*, never as `0 km`, in
+  every decoder that reads one, in both generations.
+- An over-long detailed-speed block or time-adjustment record reports the bytes
+  past the canonical size as a tail, instead of a negative "missing bytes" count
+  with the whole record repeated.
+- A cut unit identification reports the bytes it is missing and low confidence;
+  a 125-byte record of the canonical 126 was published as high confidence with no
+  truncation flag at all.
+- A record array that declares records of size zero yields the one record its
+  zero bytes describe, instead of trying to materialise as many records as the
+  header claims.
+- Repeated arrays of the same record type sum their declared counts, so a section
+  carrying two of them no longer reports a negative number of dropped records,
+  logs a warning and marks a complete download partial.
+
+**Parsing.**
+
+- A run of padding no longer swallows the first byte of the next record, which
+  used to make that record disappear and desynchronise the rest of the file.
+- Unclassified coverage bytes are answered from merged intervals rather than
+  point by point, so the accounting stays linear in the number of ranges.
+- The trailer that closes a sensor transfer is indexed once per walk instead of
+  being rescanned for every candidate, which made a damaged file quadratic in its
+  own length.
+- A generation-2 CA certificate on `C108h` is decoded instead of being rejected by
+  a length registration that only ever described the generation-1 form — one real
+  sample carries four certificates, not three.
+- Coverage bookkeeping and the decoder argument count are cached, so a parse does
+  not repeatedly pay for the same work.
+
+---
+
+### Correctness fixes in the exports, the command line and the window
+
+**Excel and CSV.**
+
+- The formula guard runs *after* the bytes XML forbids are stripped, not before.
+  A decoded value such as `"\x01=2+2"` used to slip past the guard and leave a
+  cell that opens with `=`, which the workbook then stores as a live formula.
+- Every cell is checked that way, not only data cells, so no write path can carry
+  a control byte into the file.
+- A CSV section marker is written as is (`=== EVENTS ===`) instead of gaining the
+  formula apostrophe that renamed every section in the raw text, while a
+  formula-shaped value inside that section is still guarded.
+- The list of signature results and the vehicle unit's certificates appear in the
+  CSV export too; they were present in the other formats only.
+- A nation prints as its country name in the summary, as it already did in the
+  tables — not as a bare code beside it.
+- A day dated in ISO form is grouped into its real month instead of into the
+  month its last seven characters happen to spell.
+
+**PDF.**
+
+- A table row taller than the page is split across pages instead of failing the
+  whole export. A decoded value can be longer than a page is tall.
+- A page footer the report's standard font cannot encode is set in the bundled
+  font instead of losing its characters.
+
+**The command line.**
+
+- Standard output carries the JSON and the human summary goes to standard error,
+  so the parsed structure can be piped straight into another tool while both stay
+  visible in a terminal.
+- `--json -` means standard output.
+- `-q` suppresses an explicitly requested `--summary`, while `--json -` still
+  prints its payload.
+- `--version` prints the reader's version (`TachoReader 2.9.0`), not the name of
+  the script that happened to be invoked.
+- A file that carries no decodable tachograph structure is rejected with a
+  message that says so, instead of being reported as a card.
+- A file with no vehicle identification number no longer prints the "not
+  available" sentinel next to the plate.
+- The two bytes of a transfer header count in the reported file size.
+- The modules listed as hidden imports for the frozen builds are modules that
+  exist.
+
+**The window.**
+
+- The activity timeline paints its unknown minutes: a card-not-inserted period, an
+  unrecognised activity code and a missing status at midnight are counted by the
+  dashboard and were drawn by nothing, so a half-unknown day showed an empty
+  timeline and fewer hours than the totals beside it. The timeline now draws an
+  **Unknown** row — and only when the day holds such minutes, so a fully known day
+  keeps the four rows it had.
+- The timeline is drawn from the same day segmentation as the dashboard, so the
+  two agree — before, they disagreed on more than a quarter of the days in a
+  typical card and on most vehicle-unit days.
+- A card day's day table is labelled "Distance km" and a vehicle-unit day keeps
+  "Odometer km", matching the value each of them actually holds.
+- The dashboard's row tooltip is destroyed when the dashboard goes away instead of
+  accumulating one more label per visit; the dashboard's double-click binding and
+  the state it reads are dropped on a view change, so a later table cannot open
+  the previous dashboard's day.
+- Activity duration columns sort by their minutes; "12h 00m" no longer sorts
+  before "5h 30m" because the column fell back to comparing text.
 
 ---
 
