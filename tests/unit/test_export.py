@@ -230,14 +230,38 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("Signature verification of each TREP block (VU files).", text)
         self.assertIn("Certificates found in the file (VU files).", text)
 
-    def test_csv_section_descriptions_are_not_escaped_as_formulas(self):
-        ExportManager.export_to_csv(self.mock_data, self.csv_path)
+    def test_csv_section_marker_rows_bypass_the_formula_guard(self):
+        """The marker rows — and only they — are written unescaped.
 
-        with open(self.csv_path, encoding="utf-8-sig") as handle:
-            lines = handle.read().splitlines()
+        ``=== EVENTS ===`` starts with ``=``, so a marker written through the
+        formula guard would become ``'=== EVENTS ===`` and stop being the
+        documented section marker. Everything else stays protected: the
+        description under the marker keeps its own row, and a formula-shaped
+        value (an event description) still gains the guarding apostrophe.
+        """
+        data = deepcopy(self.mock_data)
+        data["events"][0]["description"] = "=cmd|' /c calc'!A0"
+        ExportManager.export_to_csv(data, self.csv_path)
 
-        self.assertIn("Logged events (card insertion, power loss, security breach, "
-                      "motion conflicts, etc.).", lines)
+        with open(self.csv_path, newline="", encoding="utf-8-sig") as handle:
+            rows = list(csv.reader(handle, delimiter=";"))
+        first_column = [row[0] for row in rows if row]
+
+        self.assertIn("=== EVENTS ===", first_column)
+        self.assertNotIn("'=== EVENTS ===", first_column)
+        self.assertEqual([v for v in first_column if v.startswith("'===")], [])
+
+        # The row after the marker is the section's description, not a second
+        # marker (nothing re-uses the marker exemption for it).
+        marker = first_column.index("=== EVENTS ===")
+        self.assertEqual(
+            first_column[marker + 1],
+            "Logged events (card insertion, power loss, security breach, "
+            "motion conflicts, etc.).")
+
+        # A formula-shaped description is still data: it keeps the apostrophe.
+        self.assertIn("'=cmd|' /c calc'!A0", first_column)
+        self.assertNotIn("=cmd|' /c calc'!A0", first_column)
 
     def test_summary_expands_nation_codes_the_way_the_tables_do(self):
         """The cover and the workbook Summary print a nation as the tables do:
