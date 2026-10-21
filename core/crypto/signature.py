@@ -356,7 +356,8 @@ class SignatureValidator:
     def _g1_erca_keys(self):
         """Return every G1 ERCA root RSA public key from the loaded material.
 
-        Accepts either an already-parsed RSAPublicKey, or raw JRC EC_PK bytes:
+        Accepts an X.509 certificate (whose public key is then used), an
+        already-parsed RSAPublicKey, or raw JRC EC_PK bytes:
         KID(8) + n(128) + e(8) = 144 bytes, or n(128) + e(8) = 136 bytes.
 
         The store is filled in ``os.listdir`` order, which is not sorted, and
@@ -366,6 +367,11 @@ class SignatureValidator:
         """
         keys = []
         for material in self.root_certificates.values():
+            if isinstance(material, x509.Certificate):
+                # ``_load_root_certificates`` keeps a DER/PEM X.509 certificate
+                # as the Certificate object (the G2 chain validator consumes it
+                # whole); the anchorable material is its public key.
+                material = material.public_key()
             if isinstance(material, rsa.RSAPublicKey):
                 keys.append(material)
                 continue
@@ -390,6 +396,8 @@ class SignatureValidator:
         root key found in the loaded root material.
 
         Accepts:
+          - An X.509 certificate (e.g. a DER/PEM CA certificate): its public
+            key is used in place of the certificate.
           - An ``EllipticCurvePublicKey`` already parsed (e.g. from a
             DER/PEM SubjectPublicKeyInfo).
           - A CVC certificate (0x7F21) — the CAR is read from the cert.
@@ -418,6 +426,11 @@ class SignatureValidator:
 
         result = {}
         for material in self.root_certificates.values():
+            if isinstance(material, x509.Certificate):
+                # ``_load_root_certificates`` keeps a DER/PEM X.509 certificate
+                # as the Certificate object (the G2 chain validator consumes it
+                # whole); the anchorable material is its public key.
+                material = material.public_key()
             if isinstance(material, ec.EllipticCurvePublicKey):
                 encoded = material.public_bytes(
                     serialization.Encoding.X962,
