@@ -2343,3 +2343,39 @@ msgstr "A percintervallum sebességblokkja le lett vágva a fájlban"
 
 msgid "This record was cut off in the file"
 msgstr "Ez a rekord le lett vágva a fájlban"
+
+msgid "File header differs from a standard download: the first record is {tag}, where a card download starts with the card's identification record (0x0002 or 0x0005 for a G1 card, 0x0101 for a G2 card)."
+msgstr "A fájl fejléce nem szabványos letöltésnek felel meg: az első rekord {tag}, míg a kártya letöltése a kártya azonosító rekordjával kezdődik (0x0002 vagy 0x0005 G1 kártyához, 0x0101 G2 kártyához)."
+
+msgid "{unverified} of {total} signature(s) could not be verified"
+msgstr "{total} aláírásból {unverified} nem volt ellenőrizhető"
+
+msgid "An open-source reader for digital tachograph (.ddd) files: card and vehicle-unit downloads, parsed, signature-checked and exportable."
+msgstr "Nyílt forráskódú olvasó digitális menetíró (.ddd) fájlokhoz: kártya- és járműegység-letöltések, feldolgozva, aláírással ellenőrizve és exportálhatóan."
+
+msgid "Buy me a coffee"
+msgstr "Hívj meg egy kávéra"
+
+msgid "Close"
+msgstr "Bezárás"
+
+msgid "Credits: the field layouts and the cryptographic checks follow Commission Regulation (EU) 2016/799 (Annex 1C), Regulation (EEC) 3821/85 (Annex 1B) and Regulations (EU) 2021/1228 and 2023/980."
+msgstr "Köszönet: a mezőelrendezések és a kriptográfiai ellenőrzések az (EU) 2016/799 rendeletet (1C. melléklet), az (EGK) 3821/85 rendeletet (1B. melléklet), valamint az (EU) 2021/1228 és 2023/980 rendeleteket követik."
+
+msgid "DDD Reader on GitHub"
+msgstr "DDD Reader a GitHubon"
+
+msgid "Help"
+msgstr "Súgó"
+
+msgid "License: MIT"
+msgstr "Licenc: MIT"
+
+msgid "Releases"
+msgstr "Kiadások"
+
+msgid "Report an issue"
+msgstr "Hiba jelentése"
+
+msgid "{app} version {version}"
+msgstr "{app} {version} verzió"

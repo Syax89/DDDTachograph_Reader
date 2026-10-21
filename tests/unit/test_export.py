@@ -189,6 +189,68 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("2026-06-01 10:30", text)
         self.assertNotIn("2026-06-01T10:30:00+00:00", text)
 
+    def test_csv_section_titles_are_not_escaped_as_formulas(self):
+        """A title row is a marker, not data: ``=== X ===`` must not gain a
+        leading apostrophe (it would stop being the documented marker)."""
+        ExportManager.export_to_csv(self.mock_data, self.csv_path)
+
+        with open(self.csv_path, encoding="utf-8-sig") as handle:
+            lines = handle.read().splitlines()
+
+        titles = [line for line in lines if line.startswith(("===", "'==="))]
+        self.assertIn("=== DAILY ACTIVITIES ===", titles)
+        self.assertIn("=== EVENTS ===", titles)
+        self.assertEqual([line for line in titles if line.startswith("'")], [])
+        # Every emitted title is one of the exported sections, unabridged.
+        self.assertTrue(all(line.endswith(" ===") for line in titles))
+
+    def test_csv_lists_the_signature_material_the_other_formats_carry(self):
+        """Excel and the PDF carry the TREP verdicts and the VU certificates.
+
+        The CSV is one block per section of the same report, so those blocks
+        must be there too — a VU download's signature result is not a
+        workbook-only fact.
+        """
+        data = deepcopy(self.mock_data)
+        data["signature_verification"] = {
+            "summary": "All TREPs valid (root anchored)",
+            "treps": [{"trep": "0x21", "status": "valid", "length": 64}],
+        }
+        data["vu_certificates"] = [{"car": "IT", "format": "CVC"}]
+
+        ExportManager.export_to_csv(data, self.csv_path)
+
+        with open(self.csv_path, encoding="utf-8-sig") as handle:
+            text = handle.read()
+
+        self.assertIn("=== TREP SIGNATURES ===", text)
+        self.assertIn("=== VU CERTIFICATES ===", text)
+        trep_block = text.split("=== TREP SIGNATURES ===")[1].split("\n\n")[0]
+        self.assertIn("valid", trep_block)
+        self.assertIn("Signature verification of each TREP block (VU files).", text)
+        self.assertIn("Certificates found in the file (VU files).", text)
+
+    def test_csv_section_descriptions_are_not_escaped_as_formulas(self):
+        ExportManager.export_to_csv(self.mock_data, self.csv_path)
+
+        with open(self.csv_path, encoding="utf-8-sig") as handle:
+            lines = handle.read().splitlines()
+
+        self.assertIn("Logged events (card insertion, power loss, security breach, "
+                      "motion conflicts, etc.).", lines)
+
+    def test_summary_expands_nation_codes_the_way_the_tables_do(self):
+        """The cover and the workbook Summary print a nation as the tables do:
+        a country name, not the bare code (``I`` beside ``Italy``)."""
+        data = deepcopy(self.mock_data)
+        data["driver"]["issuing_nation"] = "I"
+        data["vehicle"]["registration_nation"] = "D"
+
+        rows = dict(summary_rows(data))
+
+        self.assertEqual(rows["Issuing Nation"], "Italy")
+        self.assertEqual(rows["Vehicle Registration Nation"], "Germany")
+
     def test_summary_labels_distinguish_accounted_unknown_and_structural_metrics(self):
         rows = dict(summary_rows(self.mock_data))
 
@@ -254,6 +316,30 @@ class TestExportManager(unittest.TestCase):
         for formula in ("\t=SUM(1,1)", "\r+SUM(1,1)", "\n@SUM(1,1)", "  =SUM(1,1)"):
             assert _spreadsheet_value(formula) == "'" + formula
         assert _spreadsheet_value("  -42") == "  -42"
+
+    def test_excel_drops_control_bytes_from_every_cell_it_writes(self):
+        """A decoded field can carry a control byte; XML 1.0 forbids it.
+
+        Data cells were already cleaned, so a byte in the summary block or in a
+        column header used to abort the whole workbook export.
+        """
+        data = deepcopy(self.mock_data)
+        data["driver"]["firstname"] = "Io\x01an"
+        data["events"][0]["description"] = "Over \x02speeding"
+        data["events"][0]["\x01untrusted_header"] = "value"
+
+        ExportManager.export_to_excel(data, self.excel_path)
+
+        from openpyxl import load_workbook
+        wb = load_workbook(self.excel_path)
+        values = [cell.value for sheet in wb.worksheets
+                  for row in sheet.iter_rows() for cell in row
+                  if isinstance(cell.value, str)]
+
+        self.assertIn("Ioan Rossi", "\n".join(values))
+        self.assertIn("Over speeding", values)
+        self.assertIn("untrusted Header", values)
+        self.assertFalse([value for value in values if "\x01" in value or "\x02" in value])
 
     def test_excel_skips_sections_without_visible_columns(self):
         data = deepcopy(self.mock_data)

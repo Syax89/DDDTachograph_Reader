@@ -2343,3 +2343,39 @@ msgstr "Blloku i shpejtësisë i këtij intervali minutash u pre në skedar"
 
 msgid "This record was cut off in the file"
 msgstr "Ky rekord u pre në skedar"
+
+msgid "File header differs from a standard download: the first record is {tag}, where a card download starts with the card's identification record (0x0002 or 0x0005 for a G1 card, 0x0101 for a G2 card)."
+msgstr "Koka e skedarit nuk përputhet me një shkarkim standard: regjistri i parë është {tag}, ndërsa një shkarkim karte fillon me regjistrin e identifikimit të kartës (0x0002 ose 0x0005 për një kartë G1, 0x0101 për një kartë G2)."
+
+msgid "{unverified} of {total} signature(s) could not be verified"
+msgstr "Nuk u verifikuan dot {unverified} nga {total} nënshkrime"
+
+msgid "An open-source reader for digital tachograph (.ddd) files: card and vehicle-unit downloads, parsed, signature-checked and exportable."
+msgstr "Një lexues me kod të hapur për skedarë të tahografit digjital (.ddd): shkarkime karte dhe njësie mjeti, të analizuara, të verifikuara me nënshkrim dhe të eksportueshme."
+
+msgid "Buy me a coffee"
+msgstr "Më paguaj një kafe"
+
+msgid "Close"
+msgstr "Mbyll"
+
+msgid "Credits: the field layouts and the cryptographic checks follow Commission Regulation (EU) 2016/799 (Annex 1C), Regulation (EEC) 3821/85 (Annex 1B) and Regulations (EU) 2021/1228 and 2023/980."
+msgstr "Falënderime: strukturat e fushave dhe kontrollet kriptografike ndjekin Rregulloren (BE) 2016/799 (Shtojca 1C), Rregulloren (KEE) 3821/85 (Shtojca 1B) dhe Rregulloret (BE) 2021/1228 dhe 2023/980."
+
+msgid "DDD Reader on GitHub"
+msgstr "DDD Reader në GitHub"
+
+msgid "Help"
+msgstr "Ndihmë"
+
+msgid "License: MIT"
+msgstr "Licenca: MIT"
+
+msgid "Releases"
+msgstr "Publikime"
+
+msgid "Report an issue"
+msgstr "Raporto një problem"
+
+msgid "{app} version {version}"
+msgstr "{app} versioni {version}"

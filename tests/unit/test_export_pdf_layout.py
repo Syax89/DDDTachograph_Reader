@@ -294,6 +294,22 @@ def test_no_page_is_blank_for_minimal_normal_signature_or_month_end(tmp_path, fi
     assert spy.blank_pages() == [], "pages with nothing drawn on them"
 
 
+def test_a_cell_taller_than_the_page_is_split_instead_of_failing_the_export(tmp_path):
+    """A decoded value can be longer than a page is tall (a malformed string, a
+    manufacturer blob). The table must fragment that row, as the wide-record
+    cards already do, instead of raising LayoutError and losing the export."""
+    long_value = "x" * 5000
+    data = normal_data()
+    data["metadata"]["origin_note"] = long_value
+
+    path, spy = render(tmp_path, data)
+
+    body = open(path, "rb").read()
+    assert body.startswith(b"%PDF-") and body.strip().endswith(b"%%EOF")
+    assert spy.pages >= 1
+    assert any(long_value in text for text in spy.texts), "the value is not dropped"
+
+
 def test_every_section_heading_carries_data_on_its_page(tmp_path):
     """A heading must not be stranded at the foot of a page with no data."""
     data = month_end_data()

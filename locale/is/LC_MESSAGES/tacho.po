@@ -2343,3 +2343,39 @@ msgstr "Hraðablokkur þessa mínútubils var klipptur í skránni"
 
 msgid "This record was cut off in the file"
 msgstr "Þessi færsla var klippt í skránni"
+
+msgid "File header differs from a standard download: the first record is {tag}, where a card download starts with the card's identification record (0x0002 or 0x0005 for a G1 card, 0x0101 for a G2 card)."
+msgstr "Skráarhausinn passar ekki við staðlað niðurhal: fyrsta færslan er {tag}, en niðurhal korts hefst á auðkenningarfærslu kortsins (0x0002 eða 0x0005 fyrir G1-kort, 0x0101 fyrir G2-kort)."
+
+msgid "{unverified} of {total} signature(s) could not be verified"
+msgstr "Ekki tókst að sannreyna {unverified} af {total} undirskriftum"
+
+msgid "An open-source reader for digital tachograph (.ddd) files: card and vehicle-unit downloads, parsed, signature-checked and exportable."
+msgstr "Opinn uppspretta lesari fyrir stafræn akstursritaskrár (.ddd): niðurhöl af korti og ökutækiseiningu, túlkuð, undirskriftarstaðfest og útflutningshæf."
+
+msgid "Buy me a coffee"
+msgstr "Bjóddu mér upp á kaffi"
+
+msgid "Close"
+msgstr "Loka"
+
+msgid "Credits: the field layouts and the cryptographic checks follow Commission Regulation (EU) 2016/799 (Annex 1C), Regulation (EEC) 3821/85 (Annex 1B) and Regulations (EU) 2021/1228 and 2023/980."
+msgstr "Heiður: reitauppsetningarnar og dulritunarprófanirnar fylgja reglugerð (ESB) 2016/799 (viðauki 1C), reglugerð (EBE) 3821/85 (viðauki 1B) og reglugerðum (ESB) 2021/1228 og 2023/980."
+
+msgid "DDD Reader on GitHub"
+msgstr "DDD Reader á GitHub"
+
+msgid "Help"
+msgstr "Hjálp"
+
+msgid "License: MIT"
+msgstr "Leyfi: MIT"
+
+msgid "Releases"
+msgstr "Útgáfur"
+
+msgid "Report an issue"
+msgstr "Tilkynna vandamál"
+
+msgid "{app} version {version}"
+msgstr "{app} útgáfa {version}"

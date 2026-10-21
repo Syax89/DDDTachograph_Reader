@@ -427,9 +427,19 @@ def decode_vu_identification(rec):
     canonical = 138 if len(rec) >= 138 else 126
     out["record_bytes"] = len(rec)
     out["record_complete"] = len(rec) == canonical
+    if not out["record_complete"]:
+        # A non-canonical body is not a high-confidence record. A body SHORTER
+        # than the canonical size was cut: the shortfall is published as
+        # ``missing_bytes`` so the walker flags it (machine flag + informational
+        # note), exactly like every other fixed-size type. Without it the
+        # ``record_complete: False`` of a 125-byte record sat next to
+        # ``confidence: high`` and no truncation flag at all.
+        out["confidence"] = "low"
     if len(rec) > canonical:
         out["raw_tail_bytes"] = len(rec) - canonical
         out["raw_tail_hex"] = rec[canonical:].hex()
+    elif len(rec) < canonical:
+        out["missing_bytes"] = canonical - len(rec)
     if len(rec) >= 138:
         # digitalMapVersion (generation 2, version 2 only). Reg. (EU) 2021/1228
         # prints the ASN.1 as ``VuDigitalMapVersion ::= IA5String (SIZE(12))``
@@ -1138,8 +1148,14 @@ def decode_time_adjustment(rec):
         out["workshop_address"] = decode_name(rec, 44)
         out["workshop_card"] = decode_full_card_number_gen(rec, 80)
     else:
-        out["missing_bytes"] = TIME_ADJUSTMENT_RECORD_SIZE - len(rec)
-        out["raw_tail_hex"] = rec[8:].hex()
+        if len(rec) < TIME_ADJUSTMENT_RECORD_SIZE:
+            out["missing_bytes"] = TIME_ADJUSTMENT_RECORD_SIZE - len(rec)
+            out["raw_tail_hex"] = rec[8:].hex()
+        else:
+            # Longer than the canonical record: the bytes past it are an
+            # extension, published as a tail (never a negative shortfall).
+            out["raw_tail_bytes"] = len(rec) - TIME_ADJUSTMENT_RECORD_SIZE
+            out["raw_tail_hex"] = rec[TIME_ADJUSTMENT_RECORD_SIZE:].hex()
     return out
 
 
@@ -1642,8 +1658,14 @@ def _decode_record(record_type, rec, version=EVENT_FAULT_VERSION_UNKNOWN,
         out["record_complete"] = len(rec) == DETAILED_SPEED_BLOCK_SIZE
         if not out["record_complete"]:
             out["confidence"] = "low"
-            out["missing_bytes"] = DETAILED_SPEED_BLOCK_SIZE - len(rec)
-            out["raw_tail_hex"] = rec.hex()
+            if len(rec) < DETAILED_SPEED_BLOCK_SIZE:
+                out["missing_bytes"] = DETAILED_SPEED_BLOCK_SIZE - len(rec)
+                out["raw_tail_hex"] = rec.hex()
+            else:
+                # Longer than the canonical block: the excess is an extension and
+                # is published as a tail (a negative "missing" is not a fact).
+                out["raw_tail_bytes"] = len(rec) - DETAILED_SPEED_BLOCK_SIZE
+                out["raw_tail_hex"] = rec[DETAILED_SPEED_BLOCK_SIZE:].hex()
             return out
         out["confidence"] = "high"
         # Summarised (not expanded) to avoid a 60×N value dump.
@@ -1916,6 +1938,16 @@ def iter_vu_sections(data, state=None):
                 state["resync_bytes"] = state.get("resync_bytes", 0) + 1
             pos += 1
             continue
+        if rs == 0 and nr > 1:
+            # A record of size 0 occupies no bytes, so its declared count is not
+            # bounded by the file at all: ``nr`` records of zero bytes are
+            # byte-for-byte the same as one. Keeping the declared count let 1 KB
+            # of five-byte headers reach the whole 500 000-record cap (187 MB of
+            # decoded dicts), which is exactly the amplification the record cap
+            # below claims to prevent. The header stays ACCEPTED (an extension is
+            # not junk and must not be resynchronised over); it just yields the one
+            # placeholder record its zero bytes can describe.
+            nr = 1
         if pos + 5 + rs * nr > n:
             # Header declares more bytes than exist before EOF (tail truncation or a
             # lying noOfRecords). Records are fixed-size, so every COMPLETE record is
@@ -1954,9 +1986,12 @@ def iter_vu_sections(data, state=None):
                 state["truncated"] = True
             if cur is not None:
                 cur["records"].append((pos, rt, rs, fits, pos + 5 + rs * fits))
-                # The array declared more records than the bytes hold: its last
-                # published record is cut and must say so.
-                cur.setdefault("cut_arrays", set()).add(pos)
+                # The array declared more records than the bytes hold. Every record
+                # published from it is COMPLETE (fits = floor(available / rs)), so
+                # the shortfall is the array's, not the last record's: it is
+                # reported per array below instead of a false "this record was cut"
+                # note on a fully present record.
+                cur.setdefault("short_arrays", []).append((rt, nr, fits, rs))
             # Only the bytes AFTER the last complete record are a failed range, and
             # a resync marker is searched from there — with the full check, so a
             # real section that follows a lying count is still reached.
@@ -2056,8 +2091,10 @@ def walk_vu_record_arrays(data, results):
                 # presented as a known record type (D2-005). Its bytes are kept so
                 # the extension can be shown.
                 unmapped.setdefault(rt, (rt, rs, nr, data[rpos:rpos + rs * nr]))
-            cut_array = pos in sec.get("cut_arrays", ())
-            for index in range(nr):
+            # The per-record index is not needed: a shortfall is the array's,
+            # reported once in ``vu_integrity`` (``array_truncated``), not
+            # annotated on each complete record.
+            for _index in range(nr):
                 if total_records >= VU_MAX_TOTAL_RECORDS:
                     capped = True
                     break
@@ -2067,14 +2104,6 @@ def walk_vu_record_arrays(data, results):
                 if decoded.get("missing_bytes") and decoded.get("missing_bytes") > 0:
                     # The record is shorter than any canonical size for its type:
                     # its payload was cut. Published with what it has, flagged.
-                    decoded["truncated"] = True
-                    decoded["note"] = (TRUNCATED_CHANGES_NOTE
-                                       if decoded.get("changes") is not None
-                                       else TRUNCATED_RECORD_NOTE)
-                elif cut_array and index == nr - 1:
-                    # The array ran out of bytes inside this record: it is published
-                    # with what it has and carries the machine flag plus the
-                    # informational note (information, not an error).
                     decoded["truncated"] = True
                     decoded["note"] = (TRUNCATED_CHANGES_NOTE
                                        if decoded.get("changes") is not None
@@ -2099,9 +2128,18 @@ def walk_vu_record_arrays(data, results):
         # Only record types with a result list can "reach the results": identity,
         # certificates, the current date/time, the slot word and the signature are
         # consumed into the panels/metadata by design and are not counted here.
-        stored = {f"0x{rt:02X}": nr for (rt, nr) in
-                  dict.fromkeys((rt, nr) for (_p, rt, _rs, nr, _e) in sec["records"])
-                  if rt in VU_RECORD_RESULT_KEYS}
+        # A record type may legitimately be carried by MORE than one array in the
+        # same section (a split event/fault list, a day downloaded twice): the
+        # declared count of that type is the SUM of its arrays' counters, the same
+        # way ``emitted`` accumulates every occurrence. Keying the declared count
+        # by record type alone kept only the last array's count, which turned a
+        # complete section into "emitted more than stored" with a negative
+        # difference — a false "partial download".
+        stored = {}
+        for (_p, rt, _rs, nr, _e) in sec["records"]:
+            if rt in VU_RECORD_RESULT_KEYS:
+                key = f"0x{rt:02X}"
+                stored[key] = stored.get(key, 0) + nr
         emitted_counts = {f"0x{rt:02X}": n for rt, n in emitted.items()
                           if isinstance(rt, int) and f"0x{rt:02X}" in stored}
         dropped = {rt: stored[rt] - emitted_counts.get(rt, 0)
@@ -2176,6 +2214,24 @@ def walk_vu_record_arrays(data, results):
                 "missing_bytes": 0,
                 "trailing_bytes": 0,
             })
+        if sec.get("short_arrays"):
+            # An array that declares more records than the bytes hold: the records
+            # that ARE there were published (all complete); what is absent is
+            # reported here, with the count and the bytes the file does not have.
+            # The last complete record of such an array is never called "cut".
+            for (rt, declared, present, rs) in sec["short_arrays"]:
+                structure_findings.append({
+                    "trep": f"0x{sec['trep']:02X}",
+                    "status": "array_truncated",
+                    "detail": (f"RecordArray 0x{rt:02X} declares {declared} "
+                               f"record(s) of {rs} byte(s); the bytes hold "
+                               f"{present}"),
+                    "record_type": f"0x{rt:02X}",
+                    "declared_records": int(declared),
+                    "present_records": int(present),
+                    "missing_bytes": int(declared - present) * int(rs),
+                    "trailing_bytes": 0,
+                })
         if schema_report["signature_problem"]:
             # A malformed/absent signature array is an INTEGRITY finding (the
             # data above it is decoded): reported, partial, never re-scanned.
@@ -2426,7 +2482,10 @@ def decode_card_slots_status(value):
                                                    else "reserved")
         out[f"{name}_card_type"] = card_type or "unassigned"
         out[f"{name}_code"] = nibble
-        out[f"{name}_status"] = "assigned" if card_type else "unassigned"
+        # Same rule as the generation-1 panel: 0000 is "no card", so it is not an
+        # assigned slot (§2.152) — only 0001..0100 carry an assigned card type.
+        out[f"{name}_status"] = ("assigned" if 0x01 <= nibble <= 0x04
+                                 else "unassigned")
     out["raw"] = f"0x{value:02X}"
     return out
 
@@ -2601,9 +2660,12 @@ def _emit_section(section, results):
             except ValueError:
                 continue
             break
-        km = 0
+        # The distance is the one the file states: ``None`` when the record
+        # carries the "not available" sentinel (``odometer_km()`` maps it to
+        # None). Defaulting to 0 published a distance the file never made.
+        km = None
         for r in recs.get(0x05, []):
-            if r.get("odometer_km"):
+            if r.get("odometer_km") is not None:
                 km = r["odometer_km"]
                 break
         # Daily changes come from BOTH the driver (0x01) and the co-driver
@@ -2618,7 +2680,9 @@ def _emit_section(section, results):
                 elif r.get("activity_status"):
                     invalid_changes += 1
         results.setdefault("activities", []).append(
-            {"date": date_str, "odometer_km": int(km), "changes": changes,
+            {"date": date_str,
+             "odometer_km": int(km) if km is not None else None,
+             "changes": changes,
              "invalid_changes_count": invalid_changes,
              "source": "vu_recordarray"})
         emitted["activity_day"] = emitted.get("activity_day", 0) + 1

@@ -27,12 +27,18 @@ def test_activity_dedup_only_removes_structurally_identical_records():
         "daily_counter": 1,
         "changes": [{"time": "00:00", "metadata": {"codes": [1, 2]}}],
     }
+    # A value that differs only by type (0 vs "0") is a different record: the
+    # canonical form must not fold the two into one.
+    typed_int = {"date": "01/01/2025", "daily_counter": 0, "odometer_km": 1000}
+    typed_str = {"date": "01/01/2025", "daily_counter": 0, "odometer_km": "1000"}
     parser = TachoParser.__new__(TachoParser)
-    parser.results = {"activities": [original, duplicate, distinct_change, distinct_counter]}
+    parser.results = {"activities": [original, duplicate, distinct_change,
+                                     distinct_counter, typed_int, typed_str]}
 
     parser._dedup_and_sort_activities()
 
-    assert parser.results["activities"] == [original, distinct_change, distinct_counter]
+    assert parser.results["activities"] == [original, distinct_change,
+                                            distinct_counter, typed_int, typed_str]
 
 
 def test_decode_activity_val_rejects_invalid_minutes_and_retains_midnight():

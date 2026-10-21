@@ -15,6 +15,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 from core.utils.constants import MAX_TLV_LENGTH, MAX_RECURSION_DEPTH, looks_like_g2_certificate
+from core.utils.coverage import KNOWN_PADDING_BYTES
 from core.registry.registry import DecoderRegistry
 from core.utils.ber_tlv import read_ber_tlv_header
 from core.utils.logger import get_logger
@@ -46,6 +47,39 @@ _TRTP_GENERATION = {
 }
 
 
+#: Decoder id -> number of required positional parameters (cached inspection).
+_DECODER_ARITY: Dict[Any, int] = {}
+
+
+def _decoder_arity(decoder_fn) -> int:
+    """Required positional parameter count of *decoder_fn*, computed once.
+
+    ``inspect.signature`` walks the code object; a download dispatches the same
+    decoder thousands of times, so the answer is cached per function.
+    """
+    arity = _DECODER_ARITY.get(decoder_fn)
+    if arity is None:
+        sig = inspect.signature(decoder_fn)
+        arity = len([p for p in sig.parameters.values()
+                     if p.default is inspect.Parameter.empty
+                     and p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)])
+        _DECODER_ARITY[decoder_fn] = arity
+    return arity
+
+
+def _fill_run_end(data: bytes, pos: int, end: int, fill: int) -> int:
+    """End of the run of *fill* bytes that starts at *pos*.
+
+    ``bytes.lstrip`` strips the run in C, so a megabyte of fill costs one copy
+    instead of one Python-level pair check per byte.
+    """
+    tail = data[pos:end]
+    return pos + len(tail) - len(tail.lstrip(_FILL_BYTES[fill]))
+
+
+_FILL_BYTES = {value: bytes([value]) for value in KNOWN_PADDING_BYTES}
+
+
 #: Upper bound on the intervals one tracker keeps. A real download has thousands at
 #: most (one per tag/record); reaching this means the walk is walking a flood, so the
 #: list is frozen, the truncation is recorded and the file is reported partial.
@@ -72,13 +106,18 @@ class CoverageTracker:
             self._append_range(self.covered_ranges, (start, end))
 
     def mark_classified(self, start: int, end: int, classification: str):
-        """Cover [start, end) and tally it under *classification* (e.g. Tag_0504)."""
+        """Cover [start, end) and tally it under *classification* (e.g. Tag_0504).
+
+        The walk calls this once per record and once per skipped byte, so it
+        records both intervals directly instead of chaining through
+        ``mark_covered`` and re-clamping an already clamped range.
+        """
         start, end = self._bounded_range(start, end)
-        self.mark_covered(start, end)
-        if start < end:
-            self.classifications[classification] += end - start
-            self._append_range(self.classification_ranges,
-                               (start, end, classification))
+        if start >= end:
+            return
+        self._append_range(self.covered_ranges, (start, end))
+        self.classifications[classification] += end - start
+        self._append_range(self.classification_ranges, (start, end, classification))
 
     def _append_range(self, ranges: list, item: tuple):
         """Append a range, extending the previous one when it continues it.
@@ -109,19 +148,22 @@ class CoverageTracker:
     def mark_unknown(self, start: int, end: int, data: bytes):
         """Cover [start, end) as undecodable; the raw bytes are kept for triage."""
         start, end = self._bounded_range(start, end)
-        self.mark_classified(start, end, "Unknown")
-        if start < end:
-            # Keep only a bounded sample and merge adjacent bytes. A corrupt
-            # stream must not create one Python object per byte or repeatedly
-            # copy an unbounded raw range.
-            sample = data[:min(end - start, 128)]
-            if self.unknown_ranges and self.unknown_ranges[-1][1] == start:
-                previous_start, _previous_end, previous_sample = self.unknown_ranges[-1]
-                remaining = 128 - len(previous_sample)
-                self.unknown_ranges[-1] = (
-                    previous_start, end, previous_sample + sample[:remaining])
-            else:
-                self.unknown_ranges.append((start, end, sample))
+        if start >= end:
+            return
+        self._append_range(self.covered_ranges, (start, end))
+        self.classifications["Unknown"] += end - start
+        self._append_range(self.classification_ranges, (start, end, "Unknown"))
+        # Keep only a bounded sample and merge adjacent bytes. A corrupt
+        # stream must not create one Python object per byte or repeatedly
+        # copy an unbounded raw range.
+        sample = data[:min(end - start, 128)]
+        if self.unknown_ranges and self.unknown_ranges[-1][1] == start:
+            previous_start, _previous_end, previous_sample = self.unknown_ranges[-1]
+            remaining = 128 - len(previous_sample)
+            self.unknown_ranges[-1] = (
+                previous_start, end, previous_sample + sample[:remaining])
+        else:
+            self.unknown_ranges.append((start, end, sample))
 
     def _bounded_range(self, start: int, end: int) -> Tuple[int, int]:
         """Clamp an external byte interval to this tracker's file bounds."""
@@ -177,15 +219,23 @@ class CoverageTracker:
         totals: Dict[str, int] = defaultdict(int)
         active: List[Tuple[int, int, str]] = []
         points = sorted(boundaries)
+        # Covered-but-unclassified bytes are answered from the merged intervals
+        # with one forward cursor. Testing every point against every range was
+        # O(points x ranges) for a caller of mark_covered: seconds per file.
+        from core.utils.coverage import merge_intervals
+        covered = merge_intervals(self.covered_ranges) if self.covered_ranges else []
+        cursor = 0
         for index, start in enumerate(points[:-1]):
             for order, end, classification in events[start]:
                 heapq.heappush(active, (-order, end, classification))
             end = points[index + 1]
             while active and active[0][1] <= start:
                 heapq.heappop(active)
+            while cursor < len(covered) and covered[cursor][1] <= start:
+                cursor += 1
             if active:
                 totals[active[0][2]] += end - start
-            elif any(range_start <= start < range_end for range_start, range_end in self.covered_ranges):
+            elif cursor < len(covered) and covered[cursor][0] <= start:
                 totals["Unclassified"] += end - start
         return dict(totals)
 
@@ -611,16 +661,56 @@ class DeterministicParser:
         raw_key = f"{tag:04X}_{tag_name}"
         return f"{parent_path} > {raw_key}" if parent_path else raw_key
 
-    def _skip_padding(self, raw_data: bytes, pos: int, end: int) -> int:
+    def _padding_stop(self, data: bytes, pos: int, end: int, mode: str) -> int:
+        """End of the padding run starting at *pos* (``pos`` when there is none).
+
+        A run is at least two identical fill bytes (0x00/0xFF/0x55): a lone
+        leading 0x00 is the first byte of a card record header (EF_ICC 0002h,
+        EF_IC 0005h), never fill.
+
+        The run must also never take a byte that starts a record. A zero-filled
+        gap in front of a low-tag card EF leaves fill-valued bytes that belong
+        to the record header (0002h starts with 0x00), so the run is cut back to
+        the record start; consuming it instead used to lose the record and
+        desync the whole walk.
+        """
+        fill = data[pos]
+        if fill not in KNOWN_PADDING_BYTES:
+            return pos
+        if pos + 1 >= end:
+            return pos + 1  # lone trailing padding byte at buffer end
+        if data[pos + 1] != fill:
+            return pos
+        stop = _fill_run_end(data, pos, end, fill)
+        if self._starts_known_record(data, stop, end, mode):
+            return stop
+        # Only the last byte of the run can start a record that the run hides:
+        # the tag's first byte is the fill byte, so its second byte is the first
+        # non-fill byte of the run.
+        if stop - 1 >= pos and self._starts_known_record(data, stop - 1, end, mode):
+            return stop - 1
+        return stop
+
+    def _starts_known_record(self, data: bytes, pos: int, end: int, mode: str) -> bool:
+        """True when *pos* holds the header of a record with a registered decoder."""
+        if pos >= end:
+            return False
+        if mode == 'stap':
+            result = self._try_read_stap(data, pos, end)
+        else:
+            result = self._try_read_ber_tlv(data, pos, end)
+        if result is None:
+            return False
+        tag, _length, _hdr_size, _payload, dtype = result
+        return self.registry.get_decoder(tag, generation=self.generation,
+                                         is_vu=self.is_vu, dtype=dtype) is not None
+
+    def _skip_padding(self, raw_data: bytes, pos: int, end: int,
+                      mode: Optional[str] = None) -> int:
         """Advance over a top-level padding run, classifying and recording it."""
-        from core.utils.coverage import is_padding_block, KNOWN_PADDING_BYTES
         start = pos
-        while pos + 1 < end and is_padding_block(bytes([raw_data[pos], raw_data[pos+1]])) is not None:
-            pos += 1
-        if pos > start:
-            pos += 1  # include the last byte of the padding run
-        elif pos + 1 == end and raw_data[pos] in KNOWN_PADDING_BYTES:
-            pos += 1  # lone trailing padding byte at buffer end
+        pos = self._padding_stop(raw_data, pos, end,
+                                 mode or ('stap' if self.generation == 'G1' else 'ber'))
         if pos > start:
             fill_byte = raw_data[start]
             self.coverage.mark_padding(start, pos, fill_byte)
@@ -633,16 +723,11 @@ class DeterministicParser:
             })
         return pos
 
-    def _skip_padding_inner(self, data: bytes, pos: int, end: int, base_offset: int, depth: int, parent_path: str) -> int:
+    def _skip_padding_inner(self, data: bytes, pos: int, end: int, base_offset: int,
+                          depth: int, parent_path: str, mode: str = 'stap') -> int:
         """Same as :meth:`_skip_padding` but inside a container (relative offsets)."""
-        from core.utils.coverage import is_padding_block, KNOWN_PADDING_BYTES
         start = pos
-        while pos + 1 < end and is_padding_block(bytes([data[pos], data[pos+1]])) is not None:
-            pos += 1
-        if pos > start:
-            pos += 1  # include the last byte of the padding run
-        elif pos + 1 == end and data[pos] in KNOWN_PADDING_BYTES:
-            pos += 1  # lone trailing padding byte at buffer end
+        pos = self._padding_stop(data, pos, end, mode)
         if pos > start:
             self.coverage.mark_padding(base_offset + start, base_offset + pos, data[start])
 
@@ -816,11 +901,7 @@ class DeterministicParser:
                 )
                 return
             try:
-                sig = inspect.signature(dec.decoder_fn)
-                n_params = len([p for p in sig.parameters.values()
-                                if p.default is inspect.Parameter.empty
-                                and p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)])
-                if n_params == 3:
+                if _decoder_arity(dec.decoder_fn) == 3:
                     dec.decoder_fn(payload, self.results, tag)
                 else:
                     dec.decoder_fn(payload, self.results)
@@ -912,7 +993,8 @@ class DeterministicParser:
         end = len(payload)
 
         while pos < end:
-            pos = self._skip_padding_inner(payload, pos, end, container_offset, depth, parent_path)
+            pos = self._skip_padding_inner(payload, pos, end, container_offset, depth,
+                                           parent_path, mode)
             if pos >= end:
                 break
 

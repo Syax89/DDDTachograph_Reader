@@ -17,6 +17,7 @@ available, exactly like ``tests/unit/test_batch12_gui.py``):
 so no real history is read or written.
 """
 import os
+import time
 from pathlib import Path
 
 import pytest
@@ -133,6 +134,12 @@ def test_empty_state_open_button_runs_the_top_bar_action(explorer, monkeypatch):
     assert len(buttons) == 1
     buttons[0].invoke()
 
+    # ``_open_file`` starts the parse 150 ms *after* the picker returned (never inside the
+    # native panel's call stack, see docs/developer/testing.md), so pump the loop for it.
+    deadline = time.monotonic() + 5
+    while not opened and time.monotonic() < deadline:
+        explorer.update()
+        time.sleep(0.01)
     assert opened == ["/data/picked.ddd"]
     # Both buttons are Tkinter registrations of the *same* handler.
     assert str(buttons[0].cget("command")).split("_", 1)[-1] == "open_file"

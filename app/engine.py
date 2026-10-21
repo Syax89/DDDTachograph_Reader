@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from core.crypto.signature import SignatureValidator
 from core.registry.registry import DecoderRegistry
 from core.registry.models import TachoResult, build_generations_tree
+from core.utils import load_trace
 from core.utils.version import __version__
 from core import decoders
 from core.decoders.common import mark_heuristic
@@ -245,7 +246,8 @@ class TachoParser:
         callers can fail closed on integrity-relevant phases.
         """
         try:
-            fn()
+            with load_trace.span("phase." + phase_name):
+                fn()
             return True
         except KeyboardInterrupt:
             raise
@@ -363,6 +365,7 @@ class TachoParser:
         if self._envelope_rejected:
             self.results["metadata"].setdefault("vu_integrity", []).append(
                 dict(self._envelope_rejected))
+        self._record_header_form()
         if offset:
             self.results["metadata"]["envelope"] = {
                 "type": "TREP 06 card download relayed by the VU",
@@ -381,13 +384,36 @@ class TachoParser:
                 "(TREP 06, DDP_049/DDP_050) \u2014 valid selective download")
             self._shift_envelope_offsets(self.results, offset)
 
+    def _record_header_form(self):
+        """Publish the FORM of the file's first record when it is not standard.
+
+        A card download opens with the card's own identification record
+        (0x0002/0x0005 for a G1 card, 0x0101 for a G2 card — see
+        ``core.parser.origin_detector.STANDARD_CARD_HEADER_TAGS``). Those records
+        sit below the signed-EF space, so altering the header's tag bytes leaves
+        the stream framed and every signed EF intact: the verdict stays
+        "Verified" and no warning bullet exists to carry the fact. It is
+        published here — as a note about the file's form, never a verdict — so
+        the window and the report can say it. Absent for a standard download, so
+        nothing changes there.
+        """
+        if self.is_vu:
+            return
+        from core.parser.origin_detector import nonstandard_header
+        tag = nonstandard_header(self.results)
+        if tag is None:
+            return
+        self.results["metadata"]["header_form"] = {"first_record": f"0x{tag:04X}"}
+
     @staticmethod
     def _shift_envelope_offsets(results, delta):
         """Shift the offsets produced by an envelope parse by *delta* bytes.
 
         The card was decoded from ``raw[delta:]``: every reported offset (the
         per-tag table, the coverage ranges) is relative to the card image, so it is
-        moved back onto the real file. Percentages do not change.
+        moved back onto the real file. Percentages do not change. The declared
+        file size is part of that: the parse measured the card image, not the file
+        (ENVELOPE-SIZE).
         """
         def shift(value):
             if isinstance(value, dict):
@@ -409,6 +435,13 @@ class TachoParser:
         if isinstance(coverage, dict):
             coverage["total_bytes"] = int(coverage.get("total_bytes") or 0) + delta
             coverage["uncovered_ranges"] = shift(coverage.get("uncovered_ranges") or [])
+        # ``deterministic.parse`` sized the metadata from the card image it was
+        # handed; the file also carries the envelope bytes.
+        metadata = results.get("metadata")
+        if isinstance(metadata, dict):
+            size = metadata.get("file_size_bytes")
+            if isinstance(size, int):
+                metadata["file_size_bytes"] = size + delta
 
     def _log_unhandled_tags(self):
         """Debug aid: report registered tags that never appeared in the file."""
@@ -797,27 +830,43 @@ class TachoParser:
                 return datetime.min
 
         def _canonical(value):
-            """Build a deterministic, hashable representation of decoded data."""
-            if isinstance(value, dict):
-                items = ((_canonical(key), _canonical(item)) for key, item in value.items())
-                return ("dict", tuple(sorted(items, key=repr)))
-            if isinstance(value, list):
-                return ("list", tuple(_canonical(item) for item in value))
-            if isinstance(value, tuple):
-                return ("tuple", tuple(_canonical(item) for item in value))
-            if isinstance(value, set):
-                return ("set", tuple(sorted((_canonical(item) for item in value), key=repr)))
-            if isinstance(value, bytes):
-                return ("bytes", value.hex())
-            return (type(value).__module__, type(value).__qualname__, repr(value))
+            """Deterministic, hashable representation of decoded data.
 
-        seen = set()
+            ``json.dumps`` with sorted keys is the cheap equivalent of the
+            recursive tuple builder this used to be: key order does not matter,
+            types are kept distinct, and a day block no longer costs one Python
+            call per nested value (it was the single most expensive call of a
+            full parse).
+            """
+            return json.dumps(value, sort_keys=True, default=repr)
+
+        def _fingerprint(record):
+            """A cheap, stable identity for one day: its scalar fields + list sizes.
+
+            A pure function of the record, so two canonically identical days always
+            share it; it exists only to keep the recursive ``_canonical`` walk off
+            the hot path (it used to run over every activity change of every day).
+            Two days with the same fingerprint are still compared canonically, so
+            the definition of "duplicate" does not change.
+            """
+            scalars, shapes = [], []
+            for field, value in record.items():
+                if isinstance(value, (list, tuple, set, dict)):
+                    shapes.append((field, type(value).__name__, len(value)))
+                else:
+                    scalars.append((field, _canonical(value)))
+            return (tuple(sorted(scalars, key=repr)), tuple(sorted(shapes)))
+
+        buckets = {}
         unique = []
         for act in self.results["activities"]:
-            key = _canonical(act)
-            if key not in seen:
-                seen.add(key)
-                unique.append(act)
+            bucket = buckets.setdefault(_fingerprint(act), [])
+            if bucket:
+                key = _canonical(act)
+                if any(_canonical(existing) == key for existing in bucket):
+                    continue
+            bucket.append(act)
+            unique.append(act)
         unique.sort(key=lambda x: _safe_parse_date(x.get("date")) or datetime.min, reverse=True)
         self.results["activities"] = unique
 
@@ -953,14 +1002,36 @@ class TachoParser:
             card_chain_failed = had_certs and status is False
             sv = self.results.get("signature_verification") or {}
             if sv.get("msca_to_vu") is True and not card_chain_failed:
-                if sv.get("all_treps_valid") and sv.get("root_anchored"):
+                if sv.get("all_treps_valid") and sv.get("root_anchored") and \
+                        not sv.get("unsigned_bytes"):
                     self.validation_status = "Verified (VU Chain)"
+                elif sv.get("all_treps_valid") and sv.get("root_anchored"):
+                    # Every section verified, but bytes outside every section
+                    # are authenticated by no signature: never present that as
+                    # a fully signed download (see core.crypto.vu_signature.
+                    # _unsigned_gaps).
+                    self.validation_status = (
+                        "Partial (VU — unsigned bytes outside the signed sections)")
                 elif sv.get("all_treps_valid"):
-                    self.validation_status = "Verified (VU — TREP ok, chain partial)"
+                    # TREP signatures hold, but the VU key is anchored to no
+                    # trusted ERCA root: a self-signed attacker VU would land
+                    # here too, so this must never print/export as Verified
+                    # (the card path reports the same condition as
+                    # "Unverified (Missing ERCA Root)").
+                    self.validation_status = "Unverified (VU — TREP ok, no ERCA anchor)"
                 else:
                     self.validation_status = "Partial (VU — chain ok)"
             elif not had_certs:
-                self.validation_status = "Incomplete Certificates"
+                if sv.get("available") and sv.get("msca_to_vu") is False:
+                    # The VU/MSCA certificates are present but do not chain: a
+                    # tampered or unparsable certificate, not a missing one.
+                    # (Wording deliberately avoids the "Invalid" prefix so the
+                    # canonical verdict stays PARTIAL — the TREP payload is
+                    # still signed by a sound VU key.)
+                    self.validation_status = (
+                        "Unverified (VU — VU/MSCA certificate chain invalid)")
+                else:
+                    self.validation_status = "Incomplete Certificates"
             # else: keep the negative chain outcome (e.g. "Invalid
             # Certificate Chain") — a failed chain must stay visible.
 

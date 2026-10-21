@@ -123,8 +123,38 @@ def dict_section_key_is_visible(key):
     return True
 
 
-def dict_section_rows(section, formatter):
-    """``(key, formatted)`` pairs a dict section may render, in insertion order.
+#: Dict-section keys whose value is a list of EF (Elementary File) tag ids. The
+#: model keeps the integers (the verdict logic compares them); a reader needs the
+#: tag form the rest of the app uses, so the shared renderer hands over
+#: ``0x0502, 0x0523`` instead of ``1298, 1315``.
+EF_TAG_LIST_KEYS = frozenset({"missing_core_efs"})
+
+
+def dict_section_value(key, value):
+    """The value a dict-section row shows for *key*: stored form → readable form.
+
+    Only values whose inspection form differs from their storage form are
+    rewritten (currently the missing-EF tag list); everything else is passed to
+    the caller's formatter untouched.
+    """
+    if key in EF_TAG_LIST_KEYS and isinstance(value, (list, tuple)):
+        return ", ".join(f"0x{int(tag):04X}" for tag in value)
+    return value
+
+
+def row_has_content(formatted):
+    """True when a formatted cell carries something a reader can actually see.
+
+    A key/value panel has no "empty" placeholder: a label whose value formats to
+    ``None``/``[]``/``""`` would be a row with no content, and it must not be
+    drawn at all (the shared rule of the dict renderers, see
+    ``tests/unit/test_dict_section_no_empty_rows.py``).
+    """
+    return bool(str(formatted).strip())
+
+
+def dict_section_items(section):
+    """``(key, value)`` pairs a dict section may render, in insertion order.
 
     Shared by the Excel/CSV/PDF dict sheets and the GUI key/value panel so the
     two can never disagree about which bookkeeping keys stay off screen.
@@ -132,7 +162,23 @@ def dict_section_rows(section, formatter):
     for key, value in section.items():
         if not dict_section_key_is_visible(key):
             continue
-        yield key, formatter(value)
+        yield key, dict_section_value(key, value)
+
+
+def dict_section_rows(section, formatter):
+    """``(key, formatted)`` pairs a dict section may render, in insertion order.
+
+    Rows whose formatted value has no content are dropped here, not in a view:
+    the EF verification report carries ``key_trust=None`` on a G1 card and
+    ``untrusted_generations=[]`` / ``missing_core_efs=[]`` whenever everything
+    verified, and a panel that rendered those keys anyway showed three labels
+    with a blank value.
+    """
+    for key, value in dict_section_items(section):
+        formatted = formatter(value)
+        if not row_has_content(formatted):
+            continue
+        yield key, formatted
 
 
 # Canonical trust verdicts for a parsed download. Consumers (GUI badge, rename
@@ -160,6 +206,11 @@ def integrity_verdict(result):
     if meta.get("is_vu") is True:
         sv = result.get("signature_verification") or {}
         if sv.get("all_treps_valid") and sv.get("msca_to_vu") and sv.get("root_anchored"):
+            # Bytes outside every signed section are covered by no signature:
+            # the download is authenticated only in part, however well every
+            # present section verifies (core.crypto.vu_signature._unsigned_gaps).
+            if sv.get("unsigned_bytes"):
+                return VERDICT_PARTIAL
             return VERDICT_VERIFIED
         if sv.get("all_treps_valid"):
             return VERDICT_PARTIAL
@@ -653,13 +704,49 @@ def _parse_state_rows(meta):
     return rows
 
 
+def _day_km_value(day):
+    """The km figure of one activity day: an odometer reading if the file has
+    one, else the day's own distance.
+
+    VU activity blocks carry ``odometer_km``/``odometer_midnight`` (the reading
+    at midnight); driver-card activity records carry only ``day_distance_km``
+    (ActivityDayDistance, Annex 1B §2.24) — the kilometres driven that day.
+    """
+    for key in ("odometer_km", "odometer_midnight", "day_distance_km"):
+        value = day.get(key)
+        if value not in (None, ""):
+            return value
+    return 0
+
+
+_DAY_DATE_RE = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
+_ISO_DAY_DATE_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
+
+
+def _month_key(date_str):
+    """The ``MM/YYYY`` a daily record's date belongs to.
+
+    Two shapes reach here: the report formatter's ``dd/mm/yyyy`` and the ISO
+    ``yyyy-mm-dd`` a raw decoder emits. The month is read from the date rather
+    than from its last seven characters — which only works for the first shape,
+    where an ISO day became a month of its own (``03-20 TOTAL``).
+    """
+    text = str(date_str).strip()[:10]
+    match = _DAY_DATE_RE.match(text)
+    if match:
+        return f"{match.group(2)}/{match.group(3)}"
+    match = _ISO_DAY_DATE_RE.match(text)
+    if match:
+        return f"{match.group(2)}/{match.group(1)}"
+    return text[-7:] if len(text) >= 7 else text
+
+
 def build_monthly_activity_report(activities):
     months = {}
     for day in activities:
         if not isinstance(day, dict):
             continue
-        date_str = str(day.get("date", ""))
-        month_key = date_str[-7:] if len(date_str) >= 7 else date_str
+        month_key = _month_key(day.get("date", ""))
         months.setdefault(month_key, []).append(day)
 
     headers = ["Date", "Odometer km", "Drive (h)", "Work (h)",
@@ -685,7 +772,7 @@ def build_monthly_activity_report(activities):
             # ``odometer_km``), so the monthly Odometer column rendered a
             # hard 0 for every heuristic G1 VU day (F-F2 / XF-F5). Use the
             # same fallback as ``expand_activities`` below.
-            km = fmt_value(day.get("odometer_km", day.get("odometer_midnight", 0)))
+            km = fmt_value(_day_km_value(day))
             buckets, total = _compute_day_hours(day)
             unknown_str = _hours_str(buckets["unknown"])
             if buckets["unknown"] > 0:
@@ -723,7 +810,7 @@ def expand_activities(activities):
         if not isinstance(day, dict):
             continue
         date_str = fmt_value(day.get("date", day.get("timestamp", "N/A")))
-        km = day.get("odometer_km", day.get("odometer_midnight", 0))
+        km = _day_km_value(day)
         driver = day.get("driver", "")
         changes = day.get("changes", [])
         if not isinstance(changes, list) or not changes:
@@ -826,14 +913,14 @@ def summary_rows(data):
                     "licence_number", "preferred_language"):
             val = driver.get(key, "N/A")
             if val and val != "N/A":
-                rows.append((humanize_key(key), fmt_value(val)))
+                rows.append((humanize_key(key), fmt_scalar(val, key=key)))
 
     if vehicle.get("plate", "N/A") != "N/A" or vehicle.get("vin", "N/A") != "N/A":
         rows.append(("", ""))
         for key in ("plate", "vin", "registration_nation"):
             val = vehicle.get(key, "N/A")
             if val and val != "N/A":
-                rows.append((f"Vehicle {humanize_key(key)}", fmt_value(val)))
+                rows.append((f"Vehicle {humanize_key(key)}", fmt_scalar(val, key=key)))
 
     # Disclose a partial/uncertain parse in the exported report (D2-009), so a
     # truncated download is not written out as if it were complete.

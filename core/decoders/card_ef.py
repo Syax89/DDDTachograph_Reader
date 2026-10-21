@@ -640,6 +640,38 @@ def parse_card_vehicle_units(val, results):
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Vehicle units used parse failed: %s", exc)
 
+def _decode_gnss_ad_records(data, rec_size):
+    """Decode *data* as N × GNSSAccumulatedDrivingRecord of *rec_size* bytes.
+
+    Chunks that fail validation (implausible timeStamp, impossible coordinate)
+    are dropped, so the length of the result measures how well the stride fits
+    the payload.
+    """
+    records = []
+    for i in range(0, len(data) - rec_size + 1, rec_size):
+        chunk = data[i:i + rec_size]
+        ts = struct.unpack(">I", chunk[0:4])[0]
+        if ts < 946684800 or ts > 4102444800:
+            continue
+        lat = _decode_gnss_coord(chunk, 9, maximum_degrees=90)
+        lon = _decode_gnss_coord(chunk, 12, maximum_degrees=180)
+        if lat is None or lon is None:
+            continue
+        rec = {
+            "timestamp": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
+            "gnss_accuracy": chunk[8],
+            "latitude": lat,
+            "longitude": lon,
+        }
+        if rec_size == 19:
+            rec["gnss_authenticated"] = chunk[15] == 1
+        odo_off = 15 if rec_size == 18 else 16
+        odo = int.from_bytes(chunk[odo_off:odo_off + 3], 'big')
+        if odo != 0xFFFFFF and odo < 10000000:
+            rec["odometer_km"] = odo
+        records.append(rec)
+    return records
+
 def parse_card_gnss_places(val, results):
     """Parse EF GNSS_Places (tag 0x0524) — Annex 1C §2.78, G2 driver card.
 
@@ -649,45 +681,38 @@ def parse_card_gnss_places(val, results):
       vehicleOdometerValue   3  OdometerShort
     Record size 18 (G2); the G2.2 variant carries a GNSSPlaceAuthRecord (12)
     → 19 bytes. Confirmed against real G2 card downloads.
+
+    Both strides are legitimate *and* can both divide the payload length
+    (36 × 19 = 684 is also 38 × 18), so divisibility alone does not identify
+    the layout: every candidate is decoded and the one whose records survive
+    validation wins (the same scoring ``parse_g1_places`` uses), in
+    generation-preferred order.
     """
     if len(val) < 20:
         return
     try:
         data = val[2:]  # skip gnssADPointerNewestRecord
-        if len(data) % 18 == 0:
-            rec_size = 18
-        elif len(data) % 19 == 0:
-            rec_size = 19
-        else:
+        gen = (results.get("metadata") or {}).get("generation", "")
+        # G2.2 records are 19 bytes; plain G2 (and an unknown generation) 18.
+        ordered = (19, 18) if "2.2" in gen else (18, 19)
+        candidates = [size for size in ordered if len(data) % size == 0]
+        if not candidates:
             return
+
+        best = []
+        for rec_size in candidates:
+            decoded = _decode_gnss_ad_records(data, rec_size)
+            if len(decoded) > len(best):
+                best = decoded
+
         records = results.setdefault("gnss_ad_records", [])
         seen = {(r.get("timestamp"), r.get("latitude"), r.get("longitude"))
                 for r in records if isinstance(r, dict)}
-        for i in range(0, len(data), rec_size):
-            chunk = data[i:i + rec_size]
-            ts = struct.unpack(">I", chunk[0:4])[0]
-            if ts < 946684800 or ts > 4102444800:
+        for rec in best:
+            key = (rec["timestamp"], rec["latitude"], rec["longitude"])
+            if key in seen:
                 continue
-            lat = _decode_gnss_coord(chunk, 9, maximum_degrees=90)
-            lon = _decode_gnss_coord(chunk, 12, maximum_degrees=180)
-            if lat is None or lon is None:
-                continue
-            dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
-            if (dt, lat, lon) in seen:
-                continue
-            seen.add((dt, lat, lon))
-            rec = {
-                "timestamp": dt,
-                "gnss_accuracy": chunk[8],
-                "latitude": lat,
-                "longitude": lon,
-            }
-            odo_off = 15 if rec_size == 18 else 16
-            if rec_size == 19:
-                rec["gnss_authenticated"] = chunk[15] == 1
-            odo = int.from_bytes(chunk[odo_off:odo_off + 3], 'big')
-            if odo != 0xFFFFFF and odo < 10000000:
-                rec["odometer_km"] = odo
+            seen.add(key)
             records.append(rec)
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Card GNSS places parse failed: %s", exc)

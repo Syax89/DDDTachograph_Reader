@@ -259,11 +259,17 @@ def _same_path(first, second):
 
 
 def install(lang):
-    """Load the catalog for ``lang`` and return the language actually applied.
+    """Load the catalog for ``lang`` and return the code now in effect.
 
     An unsupported code, a missing ``.mo`` or a corrupt one all resolve to
     English (``NullTranslations``) instead of raising: a bad catalog must never
     stop the application from starting.
+
+    The return value is the *selected* language code, not a probe of whether the
+    catalog loaded: a supported code whose catalog is unreadable still returns
+    that code while the strings come out as English msgids (the existing
+    behaviour ``test_i18n.py`` pins). A build ships every catalog compiled, so
+    the two only differ for a damaged bundle.
     """
     global _translation
     if not isinstance(lang, str) or lang not in LANGUAGES:

@@ -543,7 +543,14 @@ def parse_cyclic_buffer_activities(val, results):
                     counters_data = get_cyclic_data(val, ptr+8, 4)
                     pres, dist = struct.unpack(">HH", counters_data)
 
-                    daily = {"date": date_str, "odometer_km": int(dist), "changes": []}
+                    # CardActivityDailyRecord (Annex 1B §2.24): the two
+                    # 16-bit fields are DailyPresenceCounter and
+                    # ActivityDayDistance — the *kilometres driven that day*,
+                    # not an odometer reading. Naming it ``odometer_km`` put a
+                    # daily distance next to the VU's absolute odometer and made
+                    # every consumer difference it against the previous day.
+                    daily = {"date": date_str, "day_distance_km": int(dist),
+                             "changes": []}
 
                     act_len = rec_len - 12
                     if act_len > 0:

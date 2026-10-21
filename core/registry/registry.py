@@ -454,10 +454,17 @@ class DecoderRegistry:
                        annex_ref="Annex 1B §2.29", generation="G1",
                        signature_block=True, record_size=194),
 
+            # C108h is the CA certificate FID in both generations: the flat
+            # 194-byte ISO 9796-2 RSA block in the generation-1 DF, a CVC
+            # (0x7F21) or DER X.509 certificate in the generation-2 DF, whose
+            # length follows the key profile and is not 194 bytes. Pinning
+            # record_size=194 here made the payload gate drop every genuine
+            # generation-2 CA certificate; parse_certificate decides the form
+            # from the payload itself and ignores anything that is neither.
             TagDecoder(0xC108, "G1_CA_Certificate",
                        decoders.parse_certificate,
                        annex_ref="Annex 1B §2.30", generation="G1",
-                       signature_block=True, record_size=194),
+                       signature_block=True),
 
             TagDecoder(0xC101, "G2_CardCertificate",
                        decoders.parse_certificate,
@@ -469,15 +476,16 @@ class DecoderRegistry:
                        annex_ref="Annex 1C §2.31", generation="G2",
                        signature_block=True),
 
+            # Same generation-1/generation-2 length caveat as 0xC108h above.
             TagDecoder(0x0103, "G2_CardCertificate",
                        decoders.parse_certificate,
                        annex_ref="Annex 1C §2.30", generation="G2",
-                       signature_block=True, record_size=194),
+                       signature_block=True),
 
             TagDecoder(0x0104, "G2_MemberStateCertificate",
                        decoders.parse_certificate,
                        annex_ref="Annex 1C §2.31", generation="G2",
-                       signature_block=True, record_size=194),
+                       signature_block=True),
 
             # Legacy compatibility aliases retained only so raw bytes carrying
             # these non-normative FIDs reach the certificate inspector. TCS_152

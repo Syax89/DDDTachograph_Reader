@@ -551,6 +551,16 @@ def _open_day_popup(app, day=DAY):
     return DayDetailWindow(app, day, [], 0, 0, "", {}, [], [], [], {})
 
 
+def _pump_until(app, condition, seconds=10.0):
+    """Turn the event loop until *condition* holds (a box arrives on a timer)."""
+    import time
+
+    end = time.monotonic() + seconds
+    while time.monotonic() < end and not condition():
+        app.update()
+        time.sleep(0.01)
+
+
 @pytest.fixture
 def explorer(monkeypatch):
     """A real TachoExplorer window (skipped when there is no display)."""
@@ -563,6 +573,14 @@ def explorer(monkeypatch):
     try:
         yield app
     finally:
+        # Cancel the timers first, like the product's own _shutdown: an ``after``
+        # script still queued in this interpreter keeps firing at widgets that no
+        # longer exist, and Tk reports that on the *next* test's stderr.
+        try:
+            for after_id in app.tk.call("after", "info"):
+                app.tk.call("after", "cancel", after_id)
+        except tkinter.TclError:
+            pass
         try:
             app.destroy()
         except tkinter.TclError:
@@ -728,7 +746,10 @@ def test_failed_render_holds_then_releases_the_busy_guard(explorer, monkeypatch)
     explorer._populate_tree = explode
 
     explorer._parse_done({"metadata": {}, "raw_tags": [{"tag": 1}]}, CURRENT_FILE)
-    explorer.update()   # the error box now waits for the idle loop, i.e. for the busy state to end
+    # The error box waits for the busy state to end: _warn_when_idle polls the
+    # flags on a timer rather than riding the idle queue (see its docstring), so
+    # settle the loop until it is there.
+    _pump_until(explorer, lambda: dialogs)
 
     assert seen == [True]
     assert dialogs == ["Rendering Error"]

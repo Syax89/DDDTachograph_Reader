@@ -15,6 +15,22 @@ def reset_registry():
 
 
 @pytest.fixture(autouse=True)
+def pump_mode(monkeypatch):
+    """Pin the render pump to the events mode.
+
+    ``app.gui._PUMP_USES_EVENTS`` follows the platform (macOS renders with
+    ``update_idletasks`` only, see docs/developer/testing.md), so without this a macOS
+    developer would run a different suite from CI. The tests that check the idle mode set
+    the constant themselves, after this fixture.
+    """
+    try:
+        import app.gui as gui
+    except ImportError:                  # no tkinter at all: nothing to pin
+        return
+    monkeypatch.setattr(gui, "_PUMP_USES_EVENTS", True)
+
+
+@pytest.fixture(autouse=True)
 def isolate_translate_data():
     """Reset the "translate file contents" flag: it is process-global state."""
     import app.ui_text as ui_text

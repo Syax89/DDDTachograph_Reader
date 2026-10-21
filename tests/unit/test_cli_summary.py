@@ -65,3 +65,26 @@ def test_summary_vehicle_real_plate_prints_vehicle_line(capsys):
     print_summary(data)
     out = capsys.readouterr().out
     assert "Vehicle: FG000JH (VIN: YV2RTY0C9HB000000)" in out
+
+
+def test_summary_absent_vin_is_not_rendered_as_data(capsys):
+    """A plate with no VIN must not print the 'N/A' sentinel (CLI-VIN-NA).
+
+    Two of the tracked samples carry a plate but no readable VIN, and the
+    summary printed ``Vehicle: <plate> (VIN: N/A)`` — the exact sentinel leak
+    ``_is_present`` exists to prevent.
+    """
+    data = {"metadata": {}, "vehicle": {"vin": "N/A", "plate": "AB123CD"}}
+    print_summary(data)
+    out = capsys.readouterr().out
+    assert "Vehicle: AB123CD" in out
+    assert "N/A" not in out
+
+
+def test_summary_absent_plate_prints_only_the_vin(capsys):
+    """The mirror case: a VIN without a plate must still print the vehicle."""
+    data = {"metadata": {}, "vehicle": {"vin": "YV2RTY0C9HB000000", "plate": "N/A"}}
+    print_summary(data)
+    out = capsys.readouterr().out
+    assert "Vehicle: VIN: YV2RTY0C9HB000000" in out
+    assert "N/A" not in out

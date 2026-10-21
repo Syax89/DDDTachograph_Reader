@@ -11,12 +11,14 @@ section's content shown in table form (one row per record, one column per
 field), with column sorting and text filtering.
 """
 
+import gc
 import os
 import sys
 import re
 import json
 import queue
 import functools
+import subprocess
 import threading
 import time
 import traceback
@@ -79,12 +81,15 @@ def _px(value):
     return int(value)
 
 import tkinter as tk  # noqa: E402
+import webbrowser  # noqa: E402
 from tkinter import ttk, filedialog, font as tkfont, messagebox  # noqa: E402
+from urllib.parse import urlparse  # noqa: E402
 
 from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 
-from core.utils.version import __version__  # noqa: E402
+from core.utils.version import APP_NAME, __version__  # noqa: E402
+from core.utils import load_trace  # noqa: E402
 from core.utils import report_format  # noqa: E402
 from core.utils.report_format import (  # noqa: E402
     NATION_COLS, VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
@@ -135,6 +140,65 @@ except ImportError:
 #: that the bar keeps moving and long enough that pumping stays cheap next to
 #: the work it interrupts. See ``TachoExplorer._pump_render``.
 _RENDER_PUMP_INTERVAL = 1 / 60
+
+#: Upper bound of the adaptive gap between pumps (see ``_pump_render``): the
+#: busy bar must still tick at least ~4 times a second however slow a pump is.
+_RENDER_PUMP_MAX_GAP = 0.25
+
+#: How often a warning that must wait for a file to finish opening looks again
+#: (see ``TachoExplorer._warn_when_idle``). A timer, not an idle callback: an
+#: idle callback is re-entered — the whole idle queue is — by every
+#: ``update_idletasks()`` the render pumps, and a callback that re-arms itself
+#: makes that drain loop without end while the render is still running.
+_WARN_POLL_MS = 50
+
+
+def _pump_uses_events(environ=os.environ, platform=sys.platform):
+    """Whether the render pump may process events (``update()``) or only idle tasks.
+
+    macOS: idle tasks only, because ``update()`` can block there inside Tk's native event
+    tracking after the file picker closed. ``DDD_PUMP_MODE=events|idle`` overrides it
+    (support: flip the behaviour without a rebuild)."""
+    return {"events": True, "idle": False}.get(environ.get("DDD_PUMP_MODE", ""),
+                                               platform != "darwin")
+
+
+_PUMP_USES_EVENTS = _pump_uses_events()
+
+#: ``Progressbar.start(12)`` ticks every 12 ms; without events the pump steps the bar itself,
+#: at most this many ticks per pump.
+_BAR_TICK = 0.012
+_BAR_MAX_TICKS = 8
+
+
+def _flush(widget):
+    """``update()``, or only the idle tasks (layout/redraw) where events must not run."""
+    if _PUMP_USES_EVENTS:
+        widget.update()
+    else:
+        widget.update_idletasks()
+
+
+def _bring_to_front(window):
+    """Finish the pending layout and raise *window* before a modal box opens.
+
+    ``update_idletasks()`` (never ``update()``: this runs inside a Tk callback and
+    a nested *event* loop there could deliver another open) settles geometry, the
+    redraw and the deferred selection render, so the box is parented to the
+    window the user is about to see rather than to one still halfway through
+    being rebuilt. ``lift()`` then keeps the box from opening *behind* the window
+    — the state a drag & drop from another application left the window in.
+
+    Module-level, like :func:`_flush`, and best-effort for the same reason: the
+    window-less doubles the trace tests use have nothing to flush or raise, and
+    neither may stop a notice from being shown.
+    """
+    try:
+        window.update_idletasks()
+        window.lift()
+    except Exception:                 # noqa: BLE001 - see the docstring
+        _log.debug("could not bring the window forward: %s",
+                   traceback.format_exc())
 
 
 class _RenderAbandoned(Exception):
@@ -485,6 +549,13 @@ def _kv_rows(d):
     A *list* of records is accepted too (a key/value view of its first record), so a
     caller can ask for the field view of a record list without checking its shape
     first — the section tables remain the place where a list is rendered in full.
+
+    A row whose value formats to nothing is not a row: the panel has no "empty"
+    column, so a blank pair would only read as a defect (the EF verification
+    report publishes ``key_trust=None``, ``untrusted_generations=[]`` and
+    ``missing_core_efs=[]`` on a healthy card). The rule itself is shared —
+    ``report_format.row_has_content`` — so the export sheets cannot drift from
+    the panel.
     """
     if isinstance(d, (list, tuple)):
         d = d[0] if d and isinstance(d[0], dict) else {}
@@ -492,7 +563,7 @@ def _kv_rows(d):
     # `confidence` and the shared BOOKKEEPING_KEYS stay in the JSON: only that
     # explicit set is skipped — HIDDEN_KEYS also holds `name`, which VU Company
     # Info does show.
-    for k, v in report_format.dict_section_rows(d, lambda value: value):
+    for k, v in report_format.dict_section_items(d):
         field = ui_text.label(k)
         if isinstance(v, dict) and v:
             for sk, sv in v.items():
@@ -501,9 +572,15 @@ def _kv_rows(d):
                 if sk in report_format.MODEL_ONLY_DICT_KEYS:
                     continue
                 subfield = f"{field} \u203a {ui_text.label(sk)}"
-                rows.append([subfield, fmt_val(sv, key=sk)])
+                subvalue = fmt_val(sv, key=sk)
+                if not report_format.row_has_content(subvalue):
+                    continue
+                rows.append([subfield, subvalue])
         else:
-            rows.append([field, fmt_val(v, key=k)])
+            value = fmt_val(v, key=k)
+            if not report_format.row_has_content(value):
+                continue
+            rows.append([field, value])
     return ([_("Field"), _("Value")], rows)
 
 
@@ -579,6 +656,33 @@ def _activity_to_iso(date_str):
         return f"{int(year):04d}-{int(month):02d}-{int(day):02d}"
     except (ValueError, AttributeError):
         return date_str
+
+
+def _attach_day_distance(days, is_vu):
+    """Store each day's distance as ``_day_km`` and return ``{id(day): km}``.
+
+    *days* must be in chronological order. A VU activity block carries an
+    odometer reading, so its distance is the delta from the previous day. A
+    driver-card activity record carries no odometer at all — only
+    ActivityDayDistance (Annex 1B §2.24), the kilometres driven that day — so
+    the day's distance is used as-is. Differencing it against the previous day,
+    as the card route used to, produced a number with no meaning (and left the
+    day at 0 km in the tree, which only ever looked at VU days).
+    """
+    distances = {}
+    prev_odo = 0
+    for day in days:
+        odo = day.get("odometer_km", 0) or 0
+        km = 0
+        if is_vu and prev_odo and odo and odo > prev_odo:
+            km = odo - prev_odo
+        if not km:
+            km = int(day.get("day_distance_km") or 0)
+        if odo:
+            prev_odo = odo
+        day["_day_km"] = km
+        distances[id(day)] = km
+    return distances
 
 
 def _parse_iso(value):
@@ -1011,7 +1115,7 @@ class DataTable(ttk.Frame):
         self.set_rows(rows)
         self.tv.update_idletasks()
         self._fit_columns()
-        self.tv.update()
+        _flush(self.tv)
         self._sync_xscroll()
         if self._fit_after_id is not None:
             self.tv.after_cancel(self._fit_after_id)
@@ -1143,11 +1247,18 @@ class DataTable(ttk.Frame):
         self._render(filtered)
 
     def _sort_by(self, col):
-        """Toggle-sort by column; dd/mm/yyyy dates sort chronologically and
-        numeric strings numerically, everything else alphabetically."""
+        """Toggle-sort by column; dd/mm/yyyy dates sort chronologically,
+        numeric strings numerically, "Xh YYm" durations by their minutes, and
+        everything else alphabetically."""
         idx = self._cols.index(col)
         descending = self._sort_state.get(col, False)
         date_re = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
+        # Every activity column of the dashboard holds a duration in the
+        # ``_fmt_duration_minutes`` shape ("9h 30m"), optionally followed by the
+        # infringement marker ("  !"). Compared as text, "12h 00m" sorted before
+        # "5h 00m" — that is "1" < "5" — so the sort disagreed with the numbers
+        # it was sorting.
+        duration_re = re.compile(r"\s*(\d+)h\s+(\d+)m")
 
         def key(row):
             v = row[idx] if idx < len(row) else ""
@@ -1155,6 +1266,9 @@ class DataTable(ttk.Frame):
             m = date_re.match(s)
             if m:  # dd/mm/yyyy → chronological
                 return (0, int(m.group(3)) * 10000 + int(m.group(2)) * 100 + int(m.group(1)))
+            d = duration_re.match(s)
+            if d:  # "Xh YYm" → minutes, so 12h sorts after 5h
+                return (0, int(d.group(1)) * 60 + int(d.group(2)))
             try:
                 # thousands are rendered with spaces (fmt_val)
                 num = float(s.replace(" ", "").replace(",", "."))
@@ -2247,36 +2361,37 @@ class ActivityTimelineChart(ttk.Frame):
 
     @staticmethod
     def _build_blocks(changes, is_vu):
-        """Convert a list of activity changes to per-slot block lists."""
-        slots = {}
-        # Recognise slots by the card slot label stored in the change record.
-        for ch in changes:
-            if not isinstance(ch, dict):
-                continue
-            slot = str(ch.get("slot") or "First")
-            if is_vu:
-                slot = "Slot 1" if slot == "First" else "Slot 2"
-            else:
-                slot = "Cardholder"
-            slots.setdefault(slot, []).append(ch)
+        """Convert a list of activity changes to per-slot block lists.
+
+        The segmentation comes from :func:`core.utils.activity_stats.day_segments`,
+        the single routine behind the Daily-Activities dashboard, the CLI
+        summary and the PDF report. Re-deriving it here made the chart disagree
+        with the dashboard on 471 of 1750 single-slot days of the tracked
+        samples: it painted a card-not-inserted period as Rest (Annex 1C §2.1
+        note 2 makes it UNKNOWN), left a missing leading 00:00 status entry
+        unaccounted (§2.170) and dropped an unrecognised activity label. The
+        blocks now tile the whole 24 h day, so a block's minutes always add up
+        to what the dashboard reports for the same slot.
+        """
+        from core.utils.activity_stats import day_segments
 
         blocks = {}
-        for slot_label, entries in slots.items():
-            blocks[slot_label] = []
-            # Sort by time, then build continuous blocks.
-            parsed = []
-            for entry in entries:
-                t = ActivityTimelineChart._parse_time(entry.get("time", ""))
-                act = str(entry.get("activity", "")).upper()
-                if t is not None and act in ACTIVITY_COLORS:
-                    parsed.append((t, act))
-            parsed.sort(key=lambda item: item[0])
-            if not parsed:
-                continue
-            # First block starts at its time; the next block's time closes it.
-            for i, (start, act) in enumerate(parsed):
-                end = parsed[i + 1][0] if i + 1 < len(parsed) else 86400
-                blocks[slot_label].append((start, end, act))
+
+        def label(raw_slot):
+            if is_vu:
+                return "Slot 1" if str(raw_slot) == "First" else "Slot 2"
+            # A driver card records one holder's activities, whichever slot the
+            # card was in, so they stay in the one "Cardholder" section the
+            # chart has always shown for card files.
+            return "Cardholder"
+
+        # A slot with records but no usable time keeps its (empty) section, as
+        # it did before: the axes and the slot label are still drawn.
+        for ch in changes:
+            if isinstance(ch, dict):
+                blocks.setdefault(label(ch.get("slot") or "First"), [])
+        for raw_slot, segments in day_segments(changes).items():
+            blocks.setdefault(label(raw_slot), []).extend(segments)
         return blocks
 
     def _schedule_draw(self):
@@ -3294,6 +3409,46 @@ def _envelope_notice(data):
     return "\u2022 " + CARD_ENVELOPE_NOTICE
 
 
+#: Informational bullet for a card file whose opening record is not the record a
+#: standard download starts with (``metadata["header_form"]``). Like the envelope
+#: note it describes the file's FORM and hands the trust question to the count in
+#: the note itself: a file altered at its header may still carry every signed EF
+#: untouched, so the note must never read as a clean bill of health.
+CARD_HEADER_NOTICE = _(
+    "File header differs from a standard download: the first record is {tag}, "
+    "where a card download starts with the card's identification record "
+    "(0x0002 or 0x0005 for a G1 card, 0x0101 for a G2 card).")
+
+
+def _signature_verdict_clause(data):
+    """How many card-data signatures could not be verified, as one sentence.
+
+    Counts come from the verification report itself (``failed`` + ``skipped`` of
+    ``total``), so a file whose signatures all verified says "0 of N" instead of
+    borrowing a reassuring word, and one with no report at all says exactly that.
+    """
+    efv = (data or {}).get("ef_signature_verification") or {}
+    total = int(efv.get("total") or 0)
+    if not total:
+        return _("No EF signatures verified")
+    unverified = int(efv.get("failed") or 0) + int(efv.get("skipped") or 0)
+    return _("{unverified} of {total} signature(s) could not be verified").format(
+        unverified=unverified, total=total)
+
+
+def _header_notice(data):
+    """The informational bullet for a non-standard card header, or None."""
+    meta = (data or {}).get("metadata") or {}
+    header = meta.get("header_form")
+    if not isinstance(header, dict) or not header.get("first_record"):
+        return None
+    if meta.get("is_vu") is not False:
+        return None
+    return "\u2022 {} {}.".format(
+        CARD_HEADER_NOTICE.format(tag=header["first_record"]),
+        _signature_verdict_clause(data))
+
+
 def _integrity_bullets(data):
     """``(bullets, notices)`` for *data* without a GUI instance.
 
@@ -3330,9 +3485,193 @@ def _integrity_bullets(data):
     trep = meta.get("trep_report") or {}
     if truncated or (not trep.get("complete_walk", True) and not schema_findings):
         warnings.append("\u2022 The structural walk did not reach the end of file")
-    notice = _envelope_notice(data)
-    notices = [notice] if notice else []
+    # Form notes, never problems: a card image relayed through the vehicle unit,
+    # and a card whose header is not the record a standard download opens with.
+    notices = [note for note in (_envelope_notice(data), _header_notice(data)) if note]
     return warnings + notices, notices
+
+
+# ── Help: one list of addresses, one About text, two entry points ───────────
+#
+# macOS has a menu bar, so Help lives in it (and a menu whose Tk name is `help`
+# becomes the *native* Help menu, with the search field Aqua puts there).
+# Windows and Linux have no menu bar in this app, so they get one Help button at
+# the end of the toolbar. Both read the same data below: one list of addresses,
+# one About text, so the two entry points cannot drift apart.
+
+#: The project's public address.
+PROJECT_URL = "https://github.com/Syax89/DDDTachograph_Reader"
+
+#: The donation link the project already publishes (README.md).
+DONATION_URL = "https://buymeacoffee.com/syax89"
+
+
+def help_links():
+    """``(label, url)`` for every address the Help entries open.
+
+    The one source of both entry points: the macOS Help menu and the
+    Windows/Linux Help dialog render this list. The labels are msgids and are
+    translated at call time, so a language switch reaches them too.
+    """
+    return (
+        (_("DDD Reader on GitHub"), PROJECT_URL),
+        (_("Report an issue"), f"{PROJECT_URL}/issues"),
+        (_("Releases"), f"{PROJECT_URL}/releases"),
+        (_("Buy me a coffee"), DONATION_URL),
+    )
+
+
+def about_text():
+    """The About body: name, version, licence and credits.
+
+    Shown by the Help dialog and by the macOS About panel, which is the same
+    text: the application menu's "About" item calls the Tcl command published in
+    :meth:`TachoExplorer._install_macos_help_menu`.
+    """
+    return "\n".join((
+        _("{app} version {version}").format(app=APP_NAME, version=__version__),
+        _("An open-source reader for digital tachograph (.ddd) files: card and "
+          "vehicle-unit downloads, parsed, signature-checked and exportable."),
+        _("License: MIT"),
+        _("Credits: the field layouts and the cryptographic checks follow "
+          "Commission Regulation (EU) 2016/799 (Annex 1C), Regulation (EEC) "
+          "3821/85 (Annex 1B) and Regulations (EU) 2021/1228 and 2023/980."),
+    ))
+
+
+#: LaunchServices' URL opener. `/usr/bin/open` is part of macOS itself, so it is
+#: always there in practice; the fallback exists for the pathological case.
+_MACOS_OPEN = "/usr/bin/open"
+
+#: The only schemes the app ever hands to the system: every address it opens
+#: comes from :func:`help_links`, and nothing else may be launched this way.
+_OPENABLE_SCHEMES = ("http", "https")
+
+
+def open_url(url):
+    """Open *url* in the user's browser — the only way the app leaves itself.
+
+    macOS: ``/usr/bin/open``, not ``webbrowser``. In the frozen (PyInstaller)
+    bundle ``webbrowser`` shells out to ``osascript``, and that helper registers
+    with LaunchServices as an application of its own: every Help link added a
+    second, bouncing "TachoReader" icon to the Dock. ``/usr/bin/open`` asks
+    LaunchServices for the URL's handler directly, from a plain process, so the
+    browser comes forward and nothing is added to the Dock. Anything else (a
+    missing binary, an OSError) falls through to ``webbrowser`` — a link that
+    opens with an extra icon is still better than a link that does nothing.
+
+    Only ``http``/``https`` addresses are opened: the callers pass the fixed list
+    from :func:`help_links`, and a ``file:`` or ``javascript:`` URL must never
+    reach the system opener on the strength of a wrong argument.
+    """
+    scheme = urlparse(url).scheme.lower()
+    if scheme not in _OPENABLE_SCHEMES:
+        raise ValueError(f"refusing to open a non-web URL: {url!r}")
+    if _is_macos():
+        try:
+            subprocess.Popen([_MACOS_OPEN, url], stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL, close_fds=True)
+            return
+        except OSError:
+            _log.warning("could not launch %s, falling back to webbrowser:\n%s",
+                         _MACOS_OPEN, traceback.format_exc())
+    webbrowser.open(url)
+
+
+def _is_macos():
+    """True on macOS. Read at call time: the menu bar decision is per platform."""
+    return sys.platform == "darwin"
+
+
+class HelpWindow(tk.Toplevel):
+    """Help / About over the main window (the Windows and Linux entry point).
+
+    One window at a time: a second Help click lifts the open one instead of
+    stacking a copy on top of it. The contents come from :func:`about_text` and
+    :func:`help_links`, never from a second copy of the text.
+    """
+
+    _open_window = None  # type: "HelpWindow | None"
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        HelpWindow._open_window = self
+        self.title(_("Help"))
+        self.transient(parent)
+        self.resizable(False, False)
+        self.configure(background=SURFACE_ALT)
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
+
+        body = tk.Frame(self, background=SURFACE_ALT, padx=_px(18), pady=_px(16))
+        body.pack(fill=tk.BOTH, expand=True)
+        self.about_label = ttk.Label(body, text=about_text(), justify=tk.LEFT,
+                                     font=FONT_BODY, wraplength=_px(520))
+        self.about_label.pack(anchor=tk.W, fill=tk.X)
+
+        links = ttk.Frame(body)
+        links.pack(anchor=tk.W, fill=tk.X, pady=(_px(12), 0))
+        self.link_buttons = []
+        for label, url in help_links():
+            button = ttk.Button(links, text=label,
+                                command=lambda target=url: open_url(target))
+            button.pack(side=tk.LEFT, padx=(0, _px(8)))
+            self.link_buttons.append(button)
+
+        self.close_button = ttk.Button(body, text=_("Close"),
+                                       command=self._on_close)
+        self.close_button.pack(anchor=tk.E, pady=(_px(14), 0))
+
+        self.bind("<Escape>", lambda _event: self._on_close())
+        self._centre_on(parent)
+        self.focus_set()
+
+    def _centre_on(self, parent):
+        """Place the dialog over *parent*, never off screen."""
+        try:
+            self.update_idletasks()
+            width, height = self.winfo_reqwidth(), self.winfo_reqheight()
+            x = parent.winfo_rootx() + max(0, (parent.winfo_width() - width) // 2)
+            y = parent.winfo_rooty() + max(0, (parent.winfo_height() - height) // 3)
+            self.geometry(f"+{max(0, x)}+{max(0, y)}")
+        except tk.TclError:                     # no geometry yet: let Tk place it
+            _log.debug("help window placement not available")
+
+    def _on_close(self):
+        if HelpWindow._open_window is self:
+            HelpWindow._open_window = None
+        self.destroy()
+
+
+def show_help(parent):
+    """Open the one Help window for *parent* (lifting the open one)."""
+    existing = HelpWindow._open_window
+    if existing is not None:
+        try:
+            if existing.winfo_exists():
+                existing.lift()
+                existing.focus_force()
+                return existing
+        except tk.TclError:                     # a Tk interpreter that is gone
+            pass
+        HelpWindow._open_window = None
+    return HelpWindow(parent)
+
+
+def _gc_pause():
+    """Stop the collector (a pass over the previous file's big graph stalls every thread)."""
+    was_enabled = gc.isenabled()
+    gc.unfreeze()
+    gc.disable()
+    return was_enabled
+
+
+def _gc_resume(was_enabled):
+    """Park the finished result graph in the permanent generation and restore the GC."""
+    try:
+        gc.freeze()
+    finally:
+        if was_enabled:
+            gc.enable()
 
 
 class TachoExplorer(tk.Tk):
@@ -3346,7 +3685,10 @@ class TachoExplorer(tk.Tk):
     _destroyed = False
     _rendering = False
     _parsing = False
+    _gc_was_enabled = None      # None: the GC is not paused by a parse
     _pump_due = 0.0
+    _bar_at = 0.0               # last manual busy-bar step (idle pump mode)
+    _open_pending = False       # a picked file waits for its deferred parse start
 
     def __init__(self, initial_file=None):
         super().__init__()
@@ -3362,6 +3704,7 @@ class TachoExplorer(tk.Tk):
         self._restart_requested = False
         self._restart_file = None
         self.title(f"Tacho Explorer v{__version__}")
+        load_trace.header(self, __version__)
         self.geometry(f"{_px(1280)}x{_px(760)}")
         self.minsize(_px(900), _px(560))
 
@@ -3584,6 +3927,7 @@ class TachoExplorer(tk.Tk):
         if not paths:
             self.status.config(text=_("Nothing to open in that drop"))
             return "copy"
+        self._open_source = "drop"  # read by the load trace only
         self._start_parse(paths[0])
         if len(paths) > 1:
             # After _start_parse: it writes its own "Parsing ..." status, which
@@ -3594,7 +3938,51 @@ class TachoExplorer(tk.Tk):
 
     # ── Layout ──────────────────────────────────────────────
 
+    def _install_macos_help_menu(self):
+        """macOS: a real menu bar whose Help menu Aqua adopts as its own.
+
+        Only Aqua has a menu bar, and only a menu whose Tk *name* is ``help``
+        becomes the native Help menu — Aqua adds its search field to that menu
+        and to no other. The Tk widget path is therefore ``<menubar>.help``.
+
+        About is deliberately *not* one of our items: Tk 8.6 already puts
+        "About <app>" in the application menu, and its handler is the Tcl
+        command ``tk::mac::standardAboutPanel``. Publishing that command with
+        :meth:`createcommand` is the documented way to supply the panel's
+        content, so the About panel shows our text (name, version, licence,
+        credits) instead of Tk's bare one — and shows the same text the Windows
+        and Linux dialog does.
+
+        ``tk::mac::ShowHelp`` is what Cmd+? and the "<app> Help" item Tk adds to
+        this menu call (``tkMacOSXMenus.c``: ``showHelp:`` evaluates
+        ``::tk::mac::ShowHelp`` when that command exists). Without it ``[super
+        showHelp:]`` runs, and since the bundle ships no Help Book (no
+        ``CFBundleHelpBookFolder``) Aqua answers with "Help isn't available for
+        <app>" — the popup the owner saw. Publishing the command routes both the
+        shortcut and the item to the app's own Help/About dialog, which is the
+        same window the Windows and Linux Help button opens.
+        """
+        menubar = tk.Menu(self, tearoff=0)
+        self.configure(menu=menubar)
+        help_menu = tk.Menu(menubar, name="help", tearoff=0)
+        for label, url in help_links():
+            help_menu.add_command(label=label,
+                                  command=lambda target=url: open_url(target))
+        menubar.add_cascade(label=_("Help"), menu=help_menu)
+        self.createcommand("tk::mac::standardAboutPanel", lambda: show_help(self))
+        # Tk 8.6 Aqua runs the Tcl proc `tkAboutDialog` for the application menu's
+        # "About" item; `standardAboutPanel` alone is not what it calls.
+        self.createcommand("tkAboutDialog", lambda: show_help(self))
+        self.createcommand("tk::mac::ShowHelp", lambda: show_help(self))
+
+    def _show_help(self):
+        """Open the Help / About dialog (the Windows and Linux entry point)."""
+        show_help(self)
+
     def _build_ui(self):
+        # A menu bar exists on macOS only; elsewhere Help is a toolbar button.
+        if _is_macos():
+            self._install_macos_help_menu()
         top = ttk.Frame(self, padding=(10, 8))
         top.pack(fill=tk.X)
         # The three toolbar controls lead with an icon from the commissioned
@@ -3621,6 +4009,18 @@ class TachoExplorer(tk.Tk):
         export_menu.add_command(label=_("JSON (.json)"), command=self._export_json)
         self.btn_export["menu"] = export_menu
         self.btn_export.pack(side=tk.LEFT, padx=(0, 14))
+        # The Help entry point for the platforms without a menu bar. It is the
+        # last control of the bar, so it is packed RIGHT *here* — ahead of the
+        # language button: pack gives the first RIGHT-packed child the outermost
+        # slot, and this one is meant to sit at the very end. On macOS the Help
+        # menu is in the menu bar instead, so no button is created there.
+        self.btn_help = None
+        if not _is_macos():
+            # Text only: at the minimum window size the icon's width would cost
+            # the verdict label its room (the verdict elides, the bar must not).
+            self.btn_help = ttk.Button(top, text=_("Help"), width=0,
+                                       command=self._show_help)
+            self.btn_help.pack(side=tk.RIGHT, padx=(8, 0))
         # The language menu: two entries only. The 34 languages live in their own
         # submenu (they are a long list and would otherwise bury the preference
         # below them), and the "translate file contents" choice sits under a
@@ -3770,12 +4170,12 @@ class TachoExplorer(tk.Tk):
             self._show_empty_state()
 
         if self._initial_file and os.path.isfile(self._initial_file):
-            self.after(100, lambda: self._start_parse(self._initial_file))
+            self.after(100, self._open_initial_file)
 
     # ── Empty state (no file loaded) ────────────────────────
 
     def _fit_tree_column(self):
-        """Make the tree's column as wide as its widest node.
+        """Make the tree's column as wide as its widest node, in near-constant cost.
 
         The pane is a fixed width, and node names are not: a G2.2 card has
         "Driver Card Application Identification V 2" and the Greek catalog
@@ -3783,39 +4183,117 @@ class TachoExplorer(tk.Tk):
         column at least as wide as the widest label, collapsed nodes included,
         lets the horizontal scrollbar reach the end of any of them (it only
         appears when one overflows) instead of cutting the name off.
+
+        Cost: the old version measured every node (a Tk round trip for the text, one
+        for the image and one ``Font.measure`` each), which dominated the render of a
+        G2 download with a node per day. Now each node is read with **one**
+        ``tree.item`` call, the width of a label is bounded exactly by
+        ``len(text) * w_max`` (``w_max`` = the widest single glyph among the
+        characters that actually occur), and candidates are measured widest-bound
+        first and pruned as soon as the next bound cannot beat the best exact width.
+        The result is the same width to the pixel — the test suite compares it with
+        the old algorithm on the mocks, five scripts, a 5000-day tree and the real
+        files.
         """
+        measures = [0]   # font.measure calls, reported by the load trace
         try:
             style = ttk.Style(self)
             font = tkfont.Font(font=style.lookup("Treeview", "font") or "TkDefaultFont")
-            indent = int(float(style.lookup("Treeview", "indent") or 20))
-            needed = 0
+            if load_trace.ENABLED:
+                real_measure = font.measure
 
+                def _counted(*args, **kwargs):
+                    measures[0] += 1
+                    return real_measure(*args, **kwargs)
+                font.measure = _counted
+            indent = int(float(style.lookup("Treeview", "indent") or 20))
+            pad = _px(8)
+            image_pad = _px(4)
+
+            # ── 1. one Tcl call per node: (text, image) come back together ──
+            nodes = []
             visited = 0
 
-            def visit(parent, depth):
-                nonlocal needed, visited
+            def collect(parent, depth):
+                nonlocal visited
                 for iid in self.tree.get_children(parent):
                     visited += 1
-                    if visited % 64 == 0:
-                        # A file can have thousands of day nodes: keep the busy
-                        # bar turning while they are measured.
+                    if visited % 256 == 0:
+                        # Thousands of day nodes: keep the busy bar turning while
+                        # they are collected.
                         self._pump_render()
-                    width = indent * (depth + 1) - 1 + font.measure(self.tree.item(iid, "text")) + _px(8)
-                    image = self.tree.item(iid, "image")
+                    # One round trip: `item` with no option returns every value.
+                    # Tk hands it back as a dict on the Tk 8.6/9 builds we ship and
+                    # as a positional tuple on older ones — read both shapes.
+                    values = self.tree.item(iid)
+                    if isinstance(values, dict):
+                        text = values.get("text", "")
+                        image = values.get("image", "")
+                    else:
+                        text = values[0] if values else ""
+                        image = values[1] if len(values) > 1 else ""
                     if isinstance(image, (tuple, list)):   # Tk hands back a 1-tuple
                         image = image[0] if image else ""
-                    if image:
-                        width += int(self.tk.call("image", "width", str(image))) + _px(4)
-                    needed = max(needed, width)
-                    visit(iid, depth + 1)
+                    nodes.append((depth, text, image))
+                    collect(iid, depth + 1)
 
-            visit("", 0)
+            collect("", 0)
+            if not nodes:
+                width = _px(200)
+                self.tree.column("#0", width=width, minwidth=width)
+                return
+
+            # ── 2. one measure per distinct character ──
+            # A label's width is the sum of its characters' widths (this is how Tk
+            # measures a string; kerning only ever makes it narrower, so the sum is
+            # also a safe upper bound), so glyph widths are measured once and the
+            # per-node bound becomes a pure-Python lookup — no Tcl round trip per
+            # node, and it is tight enough to prune even equal-length labels.
+            glyph_width = {}
+            for (_depth, text, _image) in nodes:
+                for char in text:
+                    if char not in glyph_width:
+                        glyph_width[char] = font.measure(char)
+
+            def text_bound(text):
+                return sum(glyph_width[char] for char in text)
+
+            # ── 3. bound per node, widest first, measure exactly, prune ──
+            image_widths = {}
+
+            def upper_bound(depth, text, image):
+                bound = indent * (depth + 1) - 1 + text_bound(text) + pad
+                if image:
+                    if image not in image_widths:
+                        image_widths[image] = int(self.tk.call("image", "width",
+                                                               str(image)))
+                    bound += image_widths[image] + image_pad
+                return bound
+
+            candidates = sorted(
+                ((upper_bound(depth, text, image), depth, text, image)
+                 for (depth, text, image) in nodes), reverse=True)
+            text_widths = {}
+            needed = 0
+            for index, (bound, depth, text, image) in enumerate(candidates):
+                if bound <= needed:
+                    break                      # nothing left can be wider
+                if index and index % 64 == 0:
+                    self._pump_render()
+                if text not in text_widths:
+                    text_widths[text] = font.measure(text)
+                width = indent * (depth + 1) - 1 + text_widths[text] + pad
+                if image:
+                    width += image_widths[image] + image_pad
+                needed = max(needed, width)
+
             width = max(needed, _px(200))
             self.tree.column("#0", width=width, minwidth=width)
         except Exception:
             # Cosmetic: a tree that could not be measured keeps its column
             # width and must never turn a file that parsed into a render error.
             _log.debug("tree column not fitted: %s", traceback.format_exc())
+        load_trace.event("fit_tree_column.measure_calls", measure_calls=measures[0])
 
     def _place_sash(self, pw, event):
         """Give the tree its natural width once the panes have a real size."""
@@ -3956,8 +4434,10 @@ class TachoExplorer(tk.Tk):
         refuses to start while a parse — or the render of its result — runs; the
         same guard applies here.
         """
+        load_trace.event("recent.click", refused="yes" if self._parsing or self._rendering else "no")
         if self._parsing or self._rendering:
             return
+        self._open_source = "recent"
         self._start_parse(path)
 
     def _toggle_translate_data(self):
@@ -4128,6 +4608,7 @@ class TachoExplorer(tk.Tk):
         its own, so other windows' timers are unaffected.
         """
         self._destroyed = True
+        self._resume_gc()       # the poll stops on _destroyed, so no _finish_parse may come
         DayDetailWindow.forget_all()
         try:
             # Cancel at Tcl level: `Misc.after_cancel` also deletes the callback's
@@ -4160,13 +4641,30 @@ class TachoExplorer(tk.Tk):
 
     def _open_file(self):
         """File-picker entry point; ignored while a parse (or its render) runs."""
-        if self._parsing or self._rendering:
+        if self._parsing or self._rendering or self._open_pending:
             return
-        path = filedialog.askopenfilename(
-            filetypes=[(_("DDD Files"), "*.ddd *.DDD"), (_("All Files"), "*.*")])
+        self._open_pending = True
+        try:
+            path = load_trace.picker(lambda: filedialog.askopenfilename(
+                filetypes=[(_("DDD Files"), "*.ddd *.DDD"), (_("All Files"), "*.*")]))
+        except BaseException:
+            self._open_pending = False
+            raise
         if not path:
+            self._open_pending = False
             return
-        self._start_parse(path)
+        self._open_source = "picker"
+
+        def start():
+            self._open_pending = False
+            self._start_parse(path)
+        # Not inside the picker's call stack: let the real mainloop handle the panel's
+        # teardown events first (macOS update() stall after the native panel closed).
+        self.after(150, start)
+
+    def _open_initial_file(self):
+        self._open_source = "cli"
+        self._start_parse(self._initial_file)
 
     def _start_parse(self, path):
         """Run the parse on a worker thread so the UI stays responsive;
@@ -4179,21 +4677,29 @@ class TachoExplorer(tk.Tk):
             # second open can now arrive *while* the tree is being rebuilt.
             return
         self._parsing = True
+        load_trace.opened(path, getattr(self, "_open_source", "?"))
         self.btn_open.config(state=tk.DISABLED)
         self.btn_export.config(state=tk.DISABLED)
         self.status.config(text=_("Parsing {filename}\u2026").format(
             filename=os.path.basename(path)))
         self.progress.pack(side=tk.RIGHT, padx=6, pady=1)
         self.progress.start(12)
+        self._bar_at = 0.0          # idle pump: step the bar from the render's first pump
 
         worker = threading.Thread(target=self._parse_worker, args=(path,), daemon=True)
-        worker.start()
+        self._gc_was_enabled = _gc_pause()
+        try:
+            worker.start()
+        except BaseException:
+            self._resume_gc()
+            raise
         self.after(50, self._poll_parse_queue)
 
     def _parse_worker(self, path):
         """Worker-thread body: parse and post (path, results, error) to the queue."""
         try:
-            data = TachoParser(path).parse()
+            with load_trace.span("worker_parse"):
+                data = TachoParser(path).parse()
             self._parse_queue.put((path, data, None))
         except Exception as e:
             _log.error("Parse failed: %s\n%s", e, traceback.format_exc())
@@ -4212,11 +4718,19 @@ class TachoExplorer(tk.Tk):
         if error is not None:
             self._parse_error(error)
         else:
+            load_trace.event("parse_result_delivered")
             self._parse_done(data, path)
+
+    def _resume_gc(self):
+        """Undo ``_gc_pause`` once (idempotent)."""
+        was_enabled, self._gc_was_enabled = self._gc_was_enabled, None
+        if was_enabled is not None:
+            _gc_resume(was_enabled)
 
     def _finish_parse(self):
         """Restore the idle UI state (progress bar, buttons) after a parse."""
         self._parsing = False
+        self._resume_gc()
         try:
             self.progress.stop()
             self.progress.pack_forget()
@@ -4239,8 +4753,11 @@ class TachoExplorer(tk.Tk):
         stay True until it ends (Open, drop-to-open and the language restart are
         all refused on it) and ``_finish_parse`` has to run in ``_parse_done``'s
         ``finally``, so the work cannot be split into ``after`` slices — the
-        loop is pumped from *inside* the render instead, at most once per
-        :data:`_RENDER_PUMP_INTERVAL`. That is what keeps the indeterminate
+        loop is pumped from *inside* the render instead. The gap after a pump is
+        ``max(_RENDER_PUMP_INTERVAL, 4 * its own duration)`` measured from its
+        end and capped at :data:`_RENDER_PUMP_MAX_GAP`, so pumps cost at most
+        ~20% of the render even where one ``update()`` is slow (macOS redraws
+        the whole tree) instead of turning it pump-bound. That is what keeps the indeterminate
         progress bar animating (it is driven by a Tk timer) instead of freezing
         for the whole render and reading as a hang.
 
@@ -4256,6 +4773,7 @@ class TachoExplorer(tk.Tk):
         restore — and is signalled with :class:`_RenderAbandoned` so the render
         stops instead of walking a destroyed widget tree.
         """
+        load_trace.pump_call()
         now = time.monotonic()
         if not force and now < self._pump_due:
             return
@@ -4264,7 +4782,15 @@ class TachoExplorer(tk.Tk):
             raise _RenderAbandoned
         gone = False
         try:
-            self.update()
+            if _PUMP_USES_EVENTS:
+                self.update()
+            else:
+                # No timers fire without events: advance the busy bar by the ticks it missed.
+                ticks = min(_BAR_MAX_TICKS, int((now - (self._bar_at or now)) / _BAR_TICK))
+                self._bar_at = now
+                if ticks:
+                    self.progress.step(ticks)
+                self.update_idletasks()
             gone = self._destroyed or not self.winfo_exists()
         except Exception:  # noqa: BLE001 - a failed pump must not fail a render
             # Two very different cases land here. A widget-less test double has
@@ -4273,6 +4799,11 @@ class TachoExplorer(tk.Tk):
             # ``_destroyed`` is what tells that apart — the render has to stop.
             gone = self._destroyed
             _log.debug("render pump skipped: %s", traceback.format_exc())
+        end = time.monotonic()
+        load_trace.pump_update(end - now)
+        self._pump_due = end + min(
+            _RENDER_PUMP_MAX_GAP, max(_RENDER_PUMP_INTERVAL, 4 * (end - now))
+        )
         if gone:
             raise _RenderAbandoned
 
@@ -4492,6 +5023,7 @@ class TachoExplorer(tk.Tk):
         # Rendering's table sizing update() pumps the loop: stay busy until done.
         self._parsing = True
         self._rendering = True
+        load_trace.event("parse_done.start", generation=(data.get("metadata") or {}).get("generation"))
         try:
             self.current_data = data
             self.current_file = path
@@ -4502,10 +5034,15 @@ class TachoExplorer(tk.Tk):
             add_recent_file(path)
             # One pump before the heavy part: the status line and the busy bar
             # reach the screen before the tree rebuild starts, not after it.
-            self._pump_render(force=True)
-            self._populate_tree(data)
-            self._fit_tree_column()
-            self._update_top_bar(data)
+            with load_trace.span("parse_done.first_pump"):
+                self._pump_render(force=True)
+            with load_trace.span("populate_tree"):
+                self._populate_tree(data)
+            load_trace.event("populate_tree.nodes", nodes=self._trace_node_count())
+            with load_trace.span("fit_tree_column"):
+                self._fit_tree_column()
+            with load_trace.span("update_top_bar"):
+                self._update_top_bar(data)
             self.btn_export.config(state=tk.NORMAL)
             target = getattr(self, "_auto_select_iid", None)
             if target and not self.tree.exists(target):
@@ -4537,7 +5074,8 @@ class TachoExplorer(tk.Tk):
                 text=_("Loaded: {filename}  |  {generation}").format(
                     filename=os.path.basename(path),
                     generation=meta.get("generation", "?")))
-            self._check_integrity(data, path)
+            with load_trace.span("check_integrity"):
+                self._check_integrity(data, path)
         except _RenderAbandoned:
             _log.debug("window closed during the render: nothing left to draw")
         except Exception:
@@ -4549,6 +5087,30 @@ class TachoExplorer(tk.Tk):
         finally:
             self._rendering = False
             self._finish_parse()
+            load_trace.event("parse_done.end")
+            if load_trace.ENABLED:
+                self.after_idle(lambda: self.after_idle(self._trace_idle))
+
+    def _trace_node_count(self):
+        """Number of tree nodes (0 unless the load trace is on: it walks the tree)."""
+        if not load_trace.ENABLED:
+            return 0
+        pending, count = list(self.tree.get_children("")), 0
+        while pending:
+            count += 1
+            pending.extend(self.tree.get_children(pending.pop()))
+        return count
+
+    def _trace_idle(self):
+        """Final trace line once nothing parses or renders and the deferred callbacks ran."""
+        if self._destroyed:
+            return
+        if self._parsing or self._rendering:
+            self.after_idle(lambda: self.after_idle(self._trace_idle))
+            return
+        load_trace.pump_report()
+        load_trace.event("idle")
+        load_trace.idle_report()
 
     def _check_integrity(self, data, path):
             """Warn the user when a file shows signs of corruption or data loss."""
@@ -4684,7 +5246,7 @@ class TachoExplorer(tk.Tk):
             # It is kept apart from the real warnings so a healthy file is never
             # announced as a warning.
             notice = _envelope_notice(data)
-            notices = [notice] if notice else []
+            notices = [note for note in (notice, _header_notice(data)) if note]
             bullets = warnings + notices
 
             self._integrity_warnings = bullets
@@ -4734,11 +5296,30 @@ class TachoExplorer(tk.Tk):
         opened behind the window (after a drag & drop from another application)
         the program looked stuck loading for good. Deferred to the idle loop it
         appears over a finished window, with the file already on screen.
+
+        The wait is a *timer*, and that is the difference between a box on the
+        owner's macOS build and no box at all. An idle callback is not a quiet
+        place to park: ``update_idletasks()`` — the pump of the macOS render —
+        runs the whole idle queue, re-armed callbacks included, so an idle
+        ``_warn_when_idle`` fires *during* the render, sees the flags still set,
+        and re-arms itself inside the same drain; each of those re-entries can
+        also be swallowed by a Tk that is mid-redraw, and a queue that is busy
+        for the whole render is a queue the notice can be lost in. A 50 ms timer
+        cannot run inside an idle drain and leaves the box where it belongs:
+        after the render has finished, with nothing left to re-enter.
+
+        Before the box opens the window is flushed and raised
+        (:func:`_bring_to_front`), because a modal box parented to a window that
+        is still unmapped, behind the browser or not yet laid out can open where
+        nobody sees it — and the notice is worth nothing if it is not on screen.
         """
         if self._parsing or self._rendering:
-            self.after_idle(self._warn_when_idle, title, message, kind)
+            if not self._destroyed:
+                self.after(_WARN_POLL_MS, self._warn_when_idle, title, message, kind)
             return
-        getattr(messagebox, kind)(title, message)
+        _bring_to_front(self)
+        with load_trace.dialog(kind, title):
+            getattr(messagebox, kind)(title, message)
 
     def _activate_integrity_banner(self):
         """Return/space on the banner: the same dialog a click opens."""
@@ -4966,7 +5547,9 @@ class TachoExplorer(tk.Tk):
         starts after, minus what the right-hand block *asks* for.
         """
         reserved = 0
-        for neighbour in (self.lbl_gen, self.btn_lang):
+        for neighbour in (self.lbl_gen, self.btn_lang, self.btn_help):
+            if neighbour is None:        # no Help button on macOS (native menu)
+                continue
             try:
                 # What it asks for plus the padx it is packed with, on both
                 # sides: the badge is packed with padx=8, which is 16 px.
@@ -5273,13 +5856,7 @@ class TachoExplorer(tk.Tk):
                 return (0, 0, 0)
         chronological = sorted(
             [d for d in activity_list if isinstance(d, dict)], key=_date_sort_key)
-        for i, day_data in enumerate(chronological):
-            day_data["_day_km"] = 0
-            if i > 0 and is_vu:
-                prev_odo = chronological[i - 1].get("odometer_km", 0) or 0
-                cur_odo = day_data.get("odometer_km", 0) or 0
-                if prev_odo and cur_odo and cur_odo > prev_odo:
-                    day_data["_day_km"] = cur_odo - prev_odo
+        _attach_day_distance(chronological, is_vu)
 
         node = self.tree.insert(parent, tk.END, text=_("Daily Activities"))
         self._payloads[node] = ("__daily_summary__", activity_list, data)
@@ -5388,7 +5965,10 @@ class TachoExplorer(tk.Tk):
                                               day_km, changes_count, day_di,
                                               day_schedule, day_markers,
                                               oos_events, day_vehicles)
-            odometer = day_data.get("odometer_km", 0) or 0
+            # A card day has no odometer reading, only its own distance: keep
+            # showing that figure in the day's record table (unchanged view).
+            odometer = (day_data.get("odometer_km")
+                        or day_data.get("day_distance_km") or 0) or 0
             if changes:
                 rows = [[fmt_val(ev.get("time", "?")),
                          ui_text.activity(ev.get("activity", "?")),
@@ -5453,7 +6033,8 @@ class TachoExplorer(tk.Tk):
         """Rebuild the section tree from the generations dict produced by
         :func:`build_generations_tree`.  File info, driver/vehicle summary,
         security and activities (day hierarchy) are handled separately."""
-        self.tree.delete(*self.tree.get_children())
+        with load_trace.span("tree_delete_previous", nodes=self._trace_node_count()):
+            self.tree.delete(*self.tree.get_children())
         self._payloads.clear()
         self._auto_select_iid = None
         self._opened_data = data
@@ -5568,7 +6149,8 @@ class TachoExplorer(tk.Tk):
                 if item_name == "_RawTags":
                     continue
                 if item_name in ("DriverActivityData", "Daily Activities") and isinstance(item_data, list):
-                    self._populate_daily_activities(gnode, data, item_data)
+                    with load_trace.span("populate_daily_activities", days=len(item_data)):
+                        self._populate_daily_activities(gnode, data, item_data)
                     continue
                 if item_name in ("DetailedSpeed", "Detailed Speed (0x052C)"):
                     self._populate_detailed_speed(gnode, data, item_data)
@@ -5853,7 +6435,7 @@ class TachoExplorer(tk.Tk):
 
         self.table.tv.update_idletasks()
         self.table._fit_columns()
-        self.table.tv.update()
+        _flush(self.table.tv)
         self.table._sync_xscroll()
         if self.table._fit_after_id is not None:
             self.table.tv.after_cancel(self.table._fit_after_id)
@@ -5993,11 +6575,17 @@ class TachoExplorer(tk.Tk):
         drive_col = getattr(self, "_dashboard_drive_col", -1)
         if drv_col < 0 and ev_col < 0 and drive_col < 0:
             return
+        # The label is owned by the current dashboard and destroyed when that
+        # view goes away (see _cleanup_dashboard): a motion event delivered
+        # after the switch has nothing to show and must not raise.
+        tooltip_lbl = getattr(self, "_tooltip_lbl", None)
+        if tooltip_lbl is None:
+            return
         row_id = self.table.tv.identify_row(event.y)
         col_id = self.table.tv.identify_column(event.x)
         col_idx = int(col_id.replace("#", "")) - 1 if col_id else -1
         if not row_id or col_idx not in (drv_col, ev_col, drive_col):
-            self._tooltip_lbl.place_forget()
+            tooltip_lbl.place_forget()
             return
         # Look the row up by its stable key, never by its display position: the
         # table is sortable and filterable, so position i after a header click
@@ -6012,10 +6600,10 @@ class TachoExplorer(tk.Tk):
             rule_tips = getattr(self, "_dashboard_rule_tips", {}) or {}
             tip = rule_tips.get(key, "")
         if tip:
-            self._tooltip_lbl.config(text=tip, justify=tk.LEFT, wraplength=380)
-            self._tooltip_lbl.place(x=event.x + 16, y=event.y + 16)
+            tooltip_lbl.config(text=tip, justify=tk.LEFT, wraplength=380)
+            tooltip_lbl.place(x=event.x + 16, y=event.y + 16)
         else:
-            self._tooltip_lbl.place_forget()
+            tooltip_lbl.place_forget()
 
     def _cleanup_dashboard(self):
         """Drop what only the previous view (dashboard or summary) needed."""
@@ -6025,8 +6613,17 @@ class TachoExplorer(tk.Tk):
         if getattr(self, "_slot_toggle_frame", None) is not None:
             self._slot_toggle_frame.destroy()
             self._slot_toggle_frame = None
-        if getattr(self, "_tooltip_lbl", None) is not None:
-            self._tooltip_lbl.place_forget()
+        # Destroy the row tooltip, do not just hide it: the label is a child of
+        # the treeview, so a dashboard visited n times used to leave n labels
+        # behind (the summary panel's own label is destroyed the same way, see
+        # _cleanup_summary_tooltip).
+        tooltip_lbl = getattr(self, "_tooltip_lbl", None)
+        if tooltip_lbl is not None:
+            try:
+                tooltip_lbl.destroy()
+            except tk.TclError:      # widget already destroyed
+                pass
+            self._tooltip_lbl = None
         bind_id = getattr(self, "_dashboard_motion_bind", None)
         if bind_id is not None:
             try:
@@ -6034,6 +6631,30 @@ class TachoExplorer(tk.Tk):
             except Exception:
                 pass
             self._dashboard_motion_bind = None
+        # The day-detail handler is bound by _show_daily_summary and used to
+        # outlive the dashboard: it stayed armed on every later table, closing
+        # over the previous dashboard's _dashboard_data and day list, so a
+        # double-click in an ordinary table of another file ran the handler
+        # against the file that was open before. Drop it (and the state it
+        # reads) with the view that created it.
+        if getattr(self, "_dashboard_double_click_bound", False):
+            try:
+                self.table.tv.unbind("<Double-1>")
+            except Exception:
+                pass
+            self._dashboard_double_click_bound = False
+        for attribute, empty in (("_dashboard_activity_list", None),
+                                 ("_dashboard_data", None),
+                                 ("_dashboard_is_vu", None),
+                                 ("_dashboard_tooltips", {}),
+                                 ("_dashboard_ev_tips", {}),
+                                 ("_dashboard_rule_tips", {}),
+                                 ("_dashboard_card_day_km", {}),
+                                 ("_dashboard_drv_col", -1),
+                                 ("_dashboard_ev_col", -1),
+                                 ("_dashboard_drive_col", -1)):
+            if hasattr(self, attribute):
+                setattr(self, attribute, empty)
         # Every view switch comes through here, so the summary panel's own
         # reveal label (and its bindings on the table) is dropped here too.
         self._cleanup_summary_tooltip()
@@ -6256,20 +6877,13 @@ class TachoExplorer(tk.Tk):
         sort_key = lambda d: _activity_to_iso(str(d.get("date", "")))
         sorted_asc = sorted(valid, key=sort_key)
 
-        # Daily km from odometer deltas (chronological). VU days already carry
-        # a precomputed "_day_km"; for card files derive the distance from the
-        # midnight/odometer reading delta between consecutive days rather than
-        # showing the absolute odometer as if it were a daily distance.
+        # Daily km (chronological). The tree has already stored the same figure
+        # on every day ("_day_km"): a VU day's distance is the delta of its
+        # midnight odometer readings, while a driver-card day carries the
+        # kilometres driven that day itself.
         card_day_km = {}
         if not is_vu:
-            prev_odo = None
-            for day_data in sorted_asc:
-                cur_odo = (day_data.get("odometer_midnight")
-                           or day_data.get("odometer_km") or 0) or 0
-                if prev_odo is not None and cur_odo and prev_odo and cur_odo >= prev_odo:
-                    card_day_km[id(day_data)] = cur_odo - prev_odo
-                if cur_odo:
-                    prev_odo = cur_odo
+            card_day_km = _attach_day_distance(sorted_asc, is_vu)
         # GUI-DISTANCE-FALLBACK (XG-F9): expose the per-day card distance the
         # dashboard shows, so the day-detail popup (opened by double-click) can
         # display the SAME number instead of falling back to the absolute
@@ -6506,6 +7120,9 @@ class TachoExplorer(tk.Tk):
             self.table.tv.unbind("<Double-1>")
             self.table.tv.bind("<Double-1>",
                                lambda e: self._on_dashboard_double_click(e))
+            # Remembered so _cleanup_dashboard unbinds it when this view goes
+            # away: the handler closes over this dashboard's day list and data.
+            self._dashboard_double_click_bound = True
 
             # ── Slot toggle for VU files ──
             if is_vu:
@@ -6711,6 +7328,17 @@ class TachoExplorer(tk.Tk):
         return True
 
     def _on_tree_select(self, _event):
+        """Tree selection → show the node's payload (timed when the load trace is on)."""
+        if not load_trace.ENABLED or self._rendering:
+            return self._on_tree_select_impl(_event)
+        sel = self.tree.selection()
+        payload = self._payloads.get(sel[0]) if sel else None
+        kind = ("group" if not payload else payload[0].strip("_") if payload[0].startswith("__")
+                else "summary" if len(payload) >= 5 and payload[4] else "section")
+        with load_trace.span("tree_select", kind=kind):
+            return self._on_tree_select_impl(_event)
+
+    def _on_tree_select_impl(self, _event):
         """Tree selection → show the node's stored payload in the table."""
         if self._rendering:
             # A <<TreeviewSelect>> can arrive *during* a render: it pumps the

@@ -21,10 +21,13 @@ for.
 ## Basic Usage
 
 With a file and no output flag, the CLI prints the compact summary **and** the
-JSON to standard output:
+JSON. The JSON owns standard output and the summary goes to standard error, so
+the parsed structure can be piped straight into another tool while a human
+reading the terminal still sees both:
 
 ```bash
 python -m app.cli file.ddd
+python -m app.cli file.ddd | jq '.metadata.integrity_check'
 ```
 
 ### Parse and Display Summary
@@ -57,7 +60,11 @@ python -m app.cli file.ddd --json
 
 Auto names are second-granular and never overwrite: a second run in the same
 second gets a numeric suffix (`file_20261019_143022_1.json`). An explicit path is
-used exactly as given.
+used exactly as given — except `-`, which means standard output:
+
+```bash
+python -m app.cli file.ddd --json - > result.json
+```
 
 The JSON is the **complete parsed output** of the reader — metadata, driver,
 vehicle, activities, records, raw tags and verification results — and not a
@@ -130,12 +137,13 @@ python -m app.cli file.ddd --pdf report.pdf --quiet
 | `--csv` | `[FILE]` | Generate CSV report (optional output path) |
 | `--all` | `[DIR]` | Generate all four formats into a directory |
 | `--summary` | — | Show the compact text summary on screen |
-| `--version` | — | Print the reader version (`cli.py 2.8.0`) |
+| `--version` | — | Print the reader version (`TachoReader 2.8.0`) |
 | `-v`, `--verbose` | — | Verbose debug output |
 | `-q`, `--quiet` | — | Suppress all screen output (files only) |
 
 **Exit codes:** `0` on success; `1` when the file is missing, cannot be parsed,
-or an export failed; `2` for a usage error (unknown flag, missing file
+is not a tachograph file (no card or VU data could be decoded from it), or an
+export failed; `2` for a usage error (unknown flag, missing file
 argument).
 
 ---
@@ -156,8 +164,9 @@ Quote `"$f"`: tachograph download names often contain spaces.
 
 ## Integrating with Scripts
 
-The default invocation mixes a human summary with the JSON, so a script asks for
-the JSON file and parses that:
+The default invocation puts the JSON on standard output and the human summary on
+standard error, so a script can pipe the default output directly. It can equally
+ask for a JSON file and parse that:
 
 ```bash
 python -m app.cli file.ddd --json result.json --quiet
