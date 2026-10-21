@@ -2642,9 +2642,12 @@ def _emit_section(section, results):
             except ValueError:
                 continue
             break
-        km = 0
+        # The distance is the one the file states: ``None`` when the record
+        # carries the "not available" sentinel (``odometer_km()`` maps it to
+        # None). Defaulting to 0 published a distance the file never made.
+        km = None
         for r in recs.get(0x05, []):
-            if r.get("odometer_km"):
+            if r.get("odometer_km") is not None:
                 km = r["odometer_km"]
                 break
         # Daily changes come from BOTH the driver (0x01) and the co-driver
@@ -2659,7 +2662,9 @@ def _emit_section(section, results):
                 elif r.get("activity_status"):
                     invalid_changes += 1
         results.setdefault("activities", []).append(
-            {"date": date_str, "odometer_km": int(km), "changes": changes,
+            {"date": date_str,
+             "odometer_km": int(km) if km is not None else None,
+             "changes": changes,
              "invalid_changes_count": invalid_changes,
              "source": "vu_recordarray"})
         emitted["activity_day"] = emitted.get("activity_day", 0) + 1
