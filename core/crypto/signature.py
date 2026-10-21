@@ -77,6 +77,26 @@ class SignatureValidator:
                 except OSError as exc:
                     self.logger.debug("Could not read %s: %s", filename, exc)
                 continue
+            if filename.endswith(".der"):
+                # DER material, documented in certs/README.txt next to the PEM
+                # form: either an X.509 certificate or a bare
+                # SubjectPublicKeyInfo. The extension used to fall through both
+                # branches below and be ignored without a word.
+                try:
+                    with open(os.path.join(self.certs_dir, filename), "rb") as f:
+                        der_data = f.read()
+                    try:
+                        cert = x509.load_der_x509_certificate(der_data)
+                        key = cert.subject.rfc4514_string()
+                        self.root_certificates[key] = cert
+                        self.logger.info("Loaded Root Certificate (DER X509): %s", key)
+                    except Exception:
+                        pub_key = serialization.load_der_public_key(der_data)
+                        self.root_certificates[filename] = pub_key
+                        self.logger.info("Loaded Root Public Key (DER): %s", filename)
+                except Exception as e:
+                    self.logger.error("Failed to load cert %s: %s", filename, e)
+                continue
             if filename.endswith(".pem") or filename.endswith(".cer"):
                 try:
                     path = os.path.join(self.certs_dir, filename)

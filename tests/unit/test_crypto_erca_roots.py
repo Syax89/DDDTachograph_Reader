@@ -99,3 +99,43 @@ def test_g1_chain_reports_a_bad_root_as_invalid():
 
     assert status is False
     assert public_key is None
+
+
+# ── DER material, as documented in certs/README.txt ────────────────────────
+
+def test_der_public_key_root_is_loaded():
+    """``certs/README.txt`` documents ``.pem/.der``; ``.der`` was ignored."""
+    erca_key = ec.generate_private_key(ec.SECP256R1())
+    der = erca_key.public_key().public_bytes(
+        serialization.Encoding.DER,
+        serialization.PublicFormat.SubjectPublicKeyInfo)
+    with tempfile.TemporaryDirectory() as certs_dir:
+        _write(certs_dir, "ERCA2_PK.der", der)
+        validator = SignatureValidator(certs_dir=certs_dir)
+
+    assert validator.root_certificates, "the DER root key was dropped"
+    assert validator._g2_erca_keys(), "the loaded DER root is not usable as a G2 anchor"
+
+
+def test_der_certificate_root_is_loaded():
+    """A DER X.509 CA certificate is documented as accepted too."""
+    import datetime
+
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.x509.oid import NameOID
+
+    key = ec.generate_private_key(ec.SECP256R1())
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Synthetic ERCA")])
+    now = datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc)
+    cert = (x509.CertificateBuilder()
+            .subject_name(name).issuer_name(name)
+            .public_key(key.public_key())
+            .serial_number(1).not_valid_before(now)
+            .not_valid_after(now + datetime.timedelta(days=365))
+            .sign(key, hashes.SHA256()))
+    with tempfile.TemporaryDirectory() as certs_dir:
+        _write(certs_dir, "erca.der", cert.public_bytes(serialization.Encoding.DER))
+        validator = SignatureValidator(certs_dir=certs_dir)
+
+    assert "CN=Synthetic ERCA" in validator.root_certificates
