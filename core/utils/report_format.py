@@ -123,8 +123,38 @@ def dict_section_key_is_visible(key):
     return True
 
 
-def dict_section_rows(section, formatter):
-    """``(key, formatted)`` pairs a dict section may render, in insertion order.
+#: Dict-section keys whose value is a list of EF (Elementary File) tag ids. The
+#: model keeps the integers (the verdict logic compares them); a reader needs the
+#: tag form the rest of the app uses, so the shared renderer hands over
+#: ``0x0502, 0x0523`` instead of ``1298, 1315``.
+EF_TAG_LIST_KEYS = frozenset({"missing_core_efs"})
+
+
+def dict_section_value(key, value):
+    """The value a dict-section row shows for *key*: stored form → readable form.
+
+    Only values whose inspection form differs from their storage form are
+    rewritten (currently the missing-EF tag list); everything else is passed to
+    the caller's formatter untouched.
+    """
+    if key in EF_TAG_LIST_KEYS and isinstance(value, (list, tuple)):
+        return ", ".join(f"0x{int(tag):04X}" for tag in value)
+    return value
+
+
+def row_has_content(formatted):
+    """True when a formatted cell carries something a reader can actually see.
+
+    A key/value panel has no "empty" placeholder: a label whose value formats to
+    ``None``/``[]``/``""`` would be a row with no content, and it must not be
+    drawn at all (the shared rule of the dict renderers, see
+    ``tests/unit/test_dict_section_no_empty_rows.py``).
+    """
+    return bool(str(formatted).strip())
+
+
+def dict_section_items(section):
+    """``(key, value)`` pairs a dict section may render, in insertion order.
 
     Shared by the Excel/CSV/PDF dict sheets and the GUI key/value panel so the
     two can never disagree about which bookkeeping keys stay off screen.
@@ -132,7 +162,23 @@ def dict_section_rows(section, formatter):
     for key, value in section.items():
         if not dict_section_key_is_visible(key):
             continue
-        yield key, formatter(value)
+        yield key, dict_section_value(key, value)
+
+
+def dict_section_rows(section, formatter):
+    """``(key, formatted)`` pairs a dict section may render, in insertion order.
+
+    Rows whose formatted value has no content are dropped here, not in a view:
+    the EF verification report carries ``key_trust=None`` on a G1 card and
+    ``untrusted_generations=[]`` / ``missing_core_efs=[]`` whenever everything
+    verified, and a panel that rendered those keys anyway showed three labels
+    with a blank value.
+    """
+    for key, value in dict_section_items(section):
+        formatted = formatter(value)
+        if not row_has_content(formatted):
+            continue
+        yield key, formatted
 
 
 # Canonical trust verdicts for a parsed download. Consumers (GUI badge, rename

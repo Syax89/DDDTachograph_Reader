@@ -517,6 +517,13 @@ def _kv_rows(d):
     A *list* of records is accepted too (a key/value view of its first record), so a
     caller can ask for the field view of a record list without checking its shape
     first — the section tables remain the place where a list is rendered in full.
+
+    A row whose value formats to nothing is not a row: the panel has no "empty"
+    column, so a blank pair would only read as a defect (the EF verification
+    report publishes ``key_trust=None``, ``untrusted_generations=[]`` and
+    ``missing_core_efs=[]`` on a healthy card). The rule itself is shared —
+    ``report_format.row_has_content`` — so the export sheets cannot drift from
+    the panel.
     """
     if isinstance(d, (list, tuple)):
         d = d[0] if d and isinstance(d[0], dict) else {}
@@ -524,7 +531,7 @@ def _kv_rows(d):
     # `confidence` and the shared BOOKKEEPING_KEYS stay in the JSON: only that
     # explicit set is skipped — HIDDEN_KEYS also holds `name`, which VU Company
     # Info does show.
-    for k, v in report_format.dict_section_rows(d, lambda value: value):
+    for k, v in report_format.dict_section_items(d):
         field = ui_text.label(k)
         if isinstance(v, dict) and v:
             for sk, sv in v.items():
@@ -533,9 +540,15 @@ def _kv_rows(d):
                 if sk in report_format.MODEL_ONLY_DICT_KEYS:
                     continue
                 subfield = f"{field} \u203a {ui_text.label(sk)}"
-                rows.append([subfield, fmt_val(sv, key=sk)])
+                subvalue = fmt_val(sv, key=sk)
+                if not report_format.row_has_content(subvalue):
+                    continue
+                rows.append([subfield, subvalue])
         else:
-            rows.append([field, fmt_val(v, key=k)])
+            value = fmt_val(v, key=k)
+            if not report_format.row_has_content(value):
+                continue
+            rows.append([field, value])
     return ([_("Field"), _("Value")], rows)
 
 
