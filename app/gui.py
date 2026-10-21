@@ -6269,6 +6269,30 @@ class TachoExplorer(tk.Tk):
             except Exception:
                 pass
             self._dashboard_motion_bind = None
+        # The day-detail handler is bound by _show_daily_summary and used to
+        # outlive the dashboard: it stayed armed on every later table, closing
+        # over the previous dashboard's _dashboard_data and day list, so a
+        # double-click in an ordinary table of another file ran the handler
+        # against the file that was open before. Drop it (and the state it
+        # reads) with the view that created it.
+        if getattr(self, "_dashboard_double_click_bound", False):
+            try:
+                self.table.tv.unbind("<Double-1>")
+            except Exception:
+                pass
+            self._dashboard_double_click_bound = False
+        for attribute, empty in (("_dashboard_activity_list", None),
+                                 ("_dashboard_data", None),
+                                 ("_dashboard_is_vu", None),
+                                 ("_dashboard_tooltips", {}),
+                                 ("_dashboard_ev_tips", {}),
+                                 ("_dashboard_rule_tips", {}),
+                                 ("_dashboard_card_day_km", {}),
+                                 ("_dashboard_drv_col", -1),
+                                 ("_dashboard_ev_col", -1),
+                                 ("_dashboard_drive_col", -1)):
+            if hasattr(self, attribute):
+                setattr(self, attribute, empty)
         # Every view switch comes through here, so the summary panel's own
         # reveal label (and its bindings on the table) is dropped here too.
         self._cleanup_summary_tooltip()
@@ -6741,6 +6765,9 @@ class TachoExplorer(tk.Tk):
             self.table.tv.unbind("<Double-1>")
             self.table.tv.bind("<Double-1>",
                                lambda e: self._on_dashboard_double_click(e))
+            # Remembered so _cleanup_dashboard unbinds it when this view goes
+            # away: the handler closes over this dashboard's day list and data.
+            self._dashboard_double_click_bound = True
 
             # ── Slot toggle for VU files ──
             if is_vu:
