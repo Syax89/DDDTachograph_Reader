@@ -47,6 +47,26 @@ _TRTP_GENERATION = {
 }
 
 
+#: Decoder id -> number of required positional parameters (cached inspection).
+_DECODER_ARITY: Dict[Any, int] = {}
+
+
+def _decoder_arity(decoder_fn) -> int:
+    """Required positional parameter count of *decoder_fn*, computed once.
+
+    ``inspect.signature`` walks the code object; a download dispatches the same
+    decoder thousands of times, so the answer is cached per function.
+    """
+    arity = _DECODER_ARITY.get(decoder_fn)
+    if arity is None:
+        sig = inspect.signature(decoder_fn)
+        arity = len([p for p in sig.parameters.values()
+                     if p.default is inspect.Parameter.empty
+                     and p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)])
+        _DECODER_ARITY[decoder_fn] = arity
+    return arity
+
+
 def _fill_run_end(data: bytes, pos: int, end: int, fill: int) -> int:
     """End of the run of *fill* bytes that starts at *pos*.
 
@@ -86,13 +106,18 @@ class CoverageTracker:
             self._append_range(self.covered_ranges, (start, end))
 
     def mark_classified(self, start: int, end: int, classification: str):
-        """Cover [start, end) and tally it under *classification* (e.g. Tag_0504)."""
+        """Cover [start, end) and tally it under *classification* (e.g. Tag_0504).
+
+        The walk calls this once per record and once per skipped byte, so it
+        records both intervals directly instead of chaining through
+        ``mark_covered`` and re-clamping an already clamped range.
+        """
         start, end = self._bounded_range(start, end)
-        self.mark_covered(start, end)
-        if start < end:
-            self.classifications[classification] += end - start
-            self._append_range(self.classification_ranges,
-                               (start, end, classification))
+        if start >= end:
+            return
+        self._append_range(self.covered_ranges, (start, end))
+        self.classifications[classification] += end - start
+        self._append_range(self.classification_ranges, (start, end, classification))
 
     def _append_range(self, ranges: list, item: tuple):
         """Append a range, extending the previous one when it continues it.
@@ -123,19 +148,22 @@ class CoverageTracker:
     def mark_unknown(self, start: int, end: int, data: bytes):
         """Cover [start, end) as undecodable; the raw bytes are kept for triage."""
         start, end = self._bounded_range(start, end)
-        self.mark_classified(start, end, "Unknown")
-        if start < end:
-            # Keep only a bounded sample and merge adjacent bytes. A corrupt
-            # stream must not create one Python object per byte or repeatedly
-            # copy an unbounded raw range.
-            sample = data[:min(end - start, 128)]
-            if self.unknown_ranges and self.unknown_ranges[-1][1] == start:
-                previous_start, _previous_end, previous_sample = self.unknown_ranges[-1]
-                remaining = 128 - len(previous_sample)
-                self.unknown_ranges[-1] = (
-                    previous_start, end, previous_sample + sample[:remaining])
-            else:
-                self.unknown_ranges.append((start, end, sample))
+        if start >= end:
+            return
+        self._append_range(self.covered_ranges, (start, end))
+        self.classifications["Unknown"] += end - start
+        self._append_range(self.classification_ranges, (start, end, "Unknown"))
+        # Keep only a bounded sample and merge adjacent bytes. A corrupt
+        # stream must not create one Python object per byte or repeatedly
+        # copy an unbounded raw range.
+        sample = data[:min(end - start, 128)]
+        if self.unknown_ranges and self.unknown_ranges[-1][1] == start:
+            previous_start, _previous_end, previous_sample = self.unknown_ranges[-1]
+            remaining = 128 - len(previous_sample)
+            self.unknown_ranges[-1] = (
+                previous_start, end, previous_sample + sample[:remaining])
+        else:
+            self.unknown_ranges.append((start, end, sample))
 
     def _bounded_range(self, start: int, end: int) -> Tuple[int, int]:
         """Clamp an external byte interval to this tracker's file bounds."""
@@ -873,11 +901,7 @@ class DeterministicParser:
                 )
                 return
             try:
-                sig = inspect.signature(dec.decoder_fn)
-                n_params = len([p for p in sig.parameters.values()
-                                if p.default is inspect.Parameter.empty
-                                and p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)])
-                if n_params == 3:
+                if _decoder_arity(dec.decoder_fn) == 3:
                     dec.decoder_fn(payload, self.results, tag)
                 else:
                     dec.decoder_fn(payload, self.results)
