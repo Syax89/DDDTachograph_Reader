@@ -250,3 +250,39 @@ def test_a_clean_card_still_opens_with_no_banner(explorer, g1_card, tmp_path):
     _render(explorer, result, path)
 
     assert explorer.integrity_banner.cget("text") == ""
+
+
+# ── the notice is about a CARD, so only a card may get it ──────────────────
+
+def _parse_junk(tmp_path, name, blob):
+    path = os.path.join(str(tmp_path), name)
+    with open(path, "wb") as handle:
+        handle.write(blob)
+    DecoderRegistry.reset_instance()
+    from app.engine import TachoParser as _Parser
+    return _Parser(path).parse()
+
+
+def test_input_that_is_not_a_tachograph_gets_no_header_notice(tmp_path):
+    """Junk has no card header to differ from a standard download.
+
+    The FORM fact is published whenever the decoded first record is not a card
+    file identifier — including for input that decoded no tachograph record at
+    all, where the window then stated that "the file header differs from a
+    standard download" about a text file.
+    """
+    result = _parse_junk(tmp_path, "junk.ddd",
+                         b"hello world not a tacho file at all\n" * 8)
+
+    assert result["metadata"]["is_vu"] is False
+    assert "header_form" not in result["metadata"]
+    assert gui._header_notice(result) is None
+    assert gui._integrity_bullets(result)[1] == []
+
+
+def test_a_pdf_like_blob_gets_no_header_notice(tmp_path):
+    result = _parse_junk(tmp_path, "doc.ddd",
+                         b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n" * 4)
+
+    assert "header_form" not in result["metadata"]
+    assert gui._header_notice(result) is None

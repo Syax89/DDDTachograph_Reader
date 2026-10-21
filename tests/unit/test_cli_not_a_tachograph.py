@@ -10,6 +10,7 @@ A file is only announced as a card/VU when the parser identified *some*
 tachograph structure; the tests also pin the healthy path so the guard cannot
 start rejecting real files.
 """
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -54,3 +55,36 @@ def test_real_card_is_still_accepted():
     proc = run_cli(MOCK_CARD, "--summary")
     assert proc.returncode == 0, proc.stderr
     assert "Driver Card" in proc.stdout
+
+
+def _certificate_fragment():
+    """The certificate records of the mock card, alone: a real tachograph fragment."""
+    data = MOCK_CARD.read_bytes()
+    start = 0
+    while start + 5 <= len(data):
+        tag = int.from_bytes(data[start:start + 2], "big")
+        length = int.from_bytes(data[start + 3:start + 5], "big")
+        if tag in (0xC100, 0xC101, 0xC108, 0xC109):
+            return data[start:]
+        start += 5 + length
+    raise AssertionError("no certificate record in the mock card")
+
+
+@pytest.mark.skipif(not MOCK_CARD.exists(), reason="mock corpus not generated")
+def test_certificate_records_alone_are_accepted(tmp_path):
+    """A fragment that decoded real records is not "nothing decoded".
+
+    The certificate records exist in card *and* VU images, so they are in
+    neither ``CARD_ONLY_TAGS`` nor ``VU_ONLY_TAGS``. A card whose header was cut
+    away but whose two certificate records parse is a tachograph fragment, not
+    arbitrary bytes: the guard must not announce "no tachograph structure was
+    decoded" for it.
+    """
+    fragment = tmp_path / "fragment.ddd"
+    fragment.write_bytes(_certificate_fragment())
+    out = tmp_path / "out.json"
+    proc = run_cli(fragment, "--json", str(out), "-q")
+    assert proc.returncode == 0, proc.stderr
+    assert "not a tachograph" not in proc.stderr.lower()
+    assert out.exists()
+    assert json.loads(out.read_text())["metadata"]["origin"] == "driver_card"

@@ -80,3 +80,34 @@ def test_a_usable_calibration_clock_carries_no_status():
     record = results["calibrations"][0]
     assert record["old_time"] == record["old_time_iso"] != "N/A"
     assert "old_time" not in record["field_status"]
+
+
+def test_every_out_of_calendar_clock_of_the_record_is_reported():
+    """The record holds THREE TimeReals; each one gets the same reason.
+
+    ``VuCalibrationRecord`` (Annex 1B §2.118) carries oldTimeValue,
+    newTimeValue and nextCalibrationTime. Only ``old_time`` gained a status, so
+    an unusable ``newTimeValue``/``nextCalibrationTime`` read as an empty cell
+    with no explanation.
+    """
+    results = _results()
+    record_body = bytearray(_calibration(old_time=TIME))
+    record_body[159:163] = struct.pack(">I", 0)          # newTimeValue
+    record_body[163:167] = struct.pack(">I", 0)          # nextCalibrationTime
+    _parse_trep_05_technical(_body(bytes(record_body)), results)
+    record = results["calibrations"][0]
+    assert record["new_time_iso"] is None
+    assert record["next_calibration_iso"] is None
+    assert record["new_time"] == record["next_calibration_date"] == "N/A"
+    assert record["field_status"]["new_time"] == STATUS
+    assert record["field_status"]["next_calibration_date"] == STATUS
+    # A usable sibling keeps no status at all.
+    assert "old_time" not in record["field_status"]
+
+
+def test_a_usable_record_reports_no_clock_status_for_any_sibling():
+    results = _results()
+    _parse_trep_05_technical(_body(_calibration(old_time=TIME)), results)
+    assert results["calibrations"][0]["field_status"].get("new_time") is None
+    assert results["calibrations"][0]["field_status"].get(
+        "next_calibration_date") is None

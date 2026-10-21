@@ -341,6 +341,34 @@ class TestExportManager(unittest.TestCase):
         self.assertIn("untrusted Header", values)
         self.assertFalse([value for value in values if "\x01" in value or "\x02" in value])
 
+    def test_excel_control_bytes_cannot_smuggle_a_formula_in(self):
+        """A control byte must not hide a formula from the guard.
+
+        The XLSX writer drops XML-illegal bytes, so a value that begins with one
+        was never recognised as a formula candidate: stripping afterwards left a
+        cell that *starts* with "=", which openpyxl stores as a live formula.
+        Strip first, then guard — in the summary block and in a data cell alike.
+        """
+        data = deepcopy(self.mock_data)
+        data["driver"]["firstname"] = "\x01=1+1"
+        data["events"][0]["description"] = "\x02=2+2"
+
+        ExportManager.export_to_excel(data, self.excel_path)
+
+        from openpyxl import load_workbook
+        wb = load_workbook(self.excel_path)
+        formulas = [(sheet.title, cell.coordinate, cell.value)
+                    for sheet in wb.worksheets
+                    for row in sheet.iter_rows() for cell in row
+                    if cell.data_type == "f"]
+        self.assertEqual(formulas, [])
+
+        values = [cell.value for sheet in wb.worksheets
+                  for row in sheet.iter_rows() for cell in row
+                  if isinstance(cell.value, str)]
+        self.assertIn("'=1+1 Rossi", "\n".join(values))
+        self.assertIn("'=2+2", values)
+
     def test_excel_skips_sections_without_visible_columns(self):
         data = deepcopy(self.mock_data)
         data["events"] = [{"source": "internal", "confidence": "low"}]

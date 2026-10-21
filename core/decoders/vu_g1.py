@@ -1289,6 +1289,59 @@ def _parse_trep_03_structured(data, results, message_offset=None,
                         "card_codriver_end": evt["card_codriver_end"],
                     }, identity, ("event", idx))
                 evt["_key"] = key
+
+        def _emit_trep03_tail(overspeed, control):
+            """Publish the overspeeding control block and its event records.
+
+            ``control`` is ``(last, first, count)`` of the 9-byte
+            ``VuOverSpeedingControlData`` that precedes the array, or ``None``
+            when the body ended before it. Shared by the intact walk and by the
+            cut guards, so a cut message publishes exactly the records it holds.
+            """
+            if control is not None:
+                osc_last, osc_first, osc_count = control
+                # VuOverSpeedingControlData is a stored record ("default value if
+                # no data", DDP_031): it is emitted even when both clocks are
+                # unusable, in which case the time cells keep the table's N/A
+                # convention and the raw values travel next to them.
+                ctrl = {
+                    "_key": _record_key(identity, "overspeed_control"),
+                    "last_control_time": _g1_time(osc_last),
+                    "last_control_time_raw": osc_last,
+                    "first_overspeed_since": _g1_time(osc_first),
+                    "first_overspeed_since_raw": osc_first,
+                    "time_status": ("valid" if (_g1_time(osc_last)
+                                                or _g1_time(osc_first))
+                                    else "invalid"),
+                    "number_of_overspeed": osc_count,
+                }
+                ctrl_list = results.setdefault("overspeeding_control", [])
+                key = ctrl.pop("_key")
+                _append_once(ctrl_list, ctrl, identity, "overspeed_control")
+                ctrl["_key"] = key
+
+            existing_overs = results.setdefault("overspeeding_events", [])
+            for idx, over in enumerate(overspeed):
+                key = over.pop("_key")
+                _append_once(existing_overs, over, identity, ("overspeed", idx))
+                over["_key"] = key
+
+        def _note_cut(detail, missing_bytes=1):
+            """Record that this body ended before its last array (integrity).
+
+            The records read before the cut are complete and are published; the
+            bytes that are not there are a finding, never silence — a partial
+            download must not read as a clean one. ``array_truncated`` is the
+            vocabulary the walkers already use for an array the standard
+            declares and the file does not hold (§2.120 here).
+            """
+            findings = results.setdefault("metadata", {}).setdefault(
+                "vu_integrity", [])
+            finding = {"trep": "0x03", "status": "array_truncated",
+                       "detail": detail, "missing_bytes": int(missing_bytes),
+                       "trailing_bytes": 0}
+            if finding not in findings:
+                findings.append(finding)
         if len(data) < 12:
             return False
         pos = 0
@@ -1331,6 +1384,8 @@ def _parse_trep_03_structured(data, results, message_offset=None,
             # The stored fault and event records before this mandatory control
             # block are complete: publish them and let the cut be the zone.
             _emit_trep03(faults, events)
+            _note_cut("message ends before the VuOverSpeedingControlData block",
+                      missing_bytes=9 - (len(data) - pos))
             return True
         osc_last = struct.unpack(">I", data[pos:pos + 4])[0]
         osc_first = struct.unpack(">I", data[pos + 4:pos + 8])[0]
@@ -1341,6 +1396,9 @@ def _parse_trep_03_structured(data, results, message_offset=None,
         # complete faults and events, which are published instead of being lost.
         if partial and pos + 1 > len(data):
             _emit_trep03(faults, events)
+            _emit_trep03_tail([], (osc_last, osc_first, osc_count))
+            _note_cut("message ends before the overspeeding count "
+                      "(VuOverSpeedingEventData)")
             return True
         n_overs = data[pos]
         pos += 1
@@ -1376,9 +1434,15 @@ def _parse_trep_03_structured(data, results, message_offset=None,
             })
             pos += 31
 
-        # A cut body may end before the count byte: the faults, events and
-        # overspeeding records read above are complete and are published.
+        # A cut body may end before the count byte: the faults, events, control
+        # block and overspeeding records read above are complete stored records
+        # and are published — returning here without them dropped every one of
+        # them, and left the cut invisible.
         if partial and pos + 1 > len(data):
+            _emit_trep03(faults, events)
+            _emit_trep03_tail(overspeed, (osc_last, osc_first, osc_count))
+            _note_cut("message ends before the time-adjustment count "
+                      "(VuTimeAdjustmentData)")
             return True
         n_adj = data[pos]
         pos += 1
@@ -1420,31 +1484,7 @@ def _parse_trep_03_structured(data, results, message_offset=None,
         # Keys include end time and record purpose: the VU stores distinct
         # records sharing the same (type, begin), e.g. one per record purpose.
         _emit_trep03(faults, events)
-
-        # VuOverSpeedingControlData is a stored record ("default value if no
-        # data", DDP_031): it is emitted even when both clocks are unusable, in
-        # which case the time cells keep the table's N/A convention and the raw
-        # values travel next to them.
-        ctrl = {
-            "_key": _record_key(identity, "overspeed_control"),
-            "last_control_time": _g1_time(osc_last),
-            "last_control_time_raw": osc_last,
-            "first_overspeed_since": _g1_time(osc_first),
-            "first_overspeed_since_raw": osc_first,
-            "time_status": ("valid" if (_g1_time(osc_last) or _g1_time(osc_first))
-                            else "invalid"),
-            "number_of_overspeed": osc_count,
-        }
-        ctrl_list = results.setdefault("overspeeding_control", [])
-        key = ctrl.pop("_key")
-        _append_once(ctrl_list, ctrl, identity, "overspeed_control")
-        ctrl["_key"] = key
-
-        existing_overs = results.setdefault("overspeeding_events", [])
-        for idx, over in enumerate(overspeed):
-            key = over.pop("_key")
-            _append_once(existing_overs, over, identity, ("overspeed", idx))
-            over["_key"] = key
+        _emit_trep03_tail(overspeed, (osc_last, osc_first, osc_count))
 
         existing_adj = results.setdefault("time_adjustments", [])
         for idx, adjustment in enumerate(adjustments):
@@ -1792,6 +1832,16 @@ def _parse_trep_05_technical(data, results, message_offset=None):
                 field_status["w_constant"] = f"implausible raw 0x{w_const:04X}"
             if old_time_iso is None:
                 field_status["old_time"] = "TimeReal outside the calendar"
+            # The record holds three stored TimeReals, and each one is withheld
+            # for the same reason: the siblings get the same status, or an
+            # unusable newTimeValue/nextCalibrationTime reads as an empty cell
+            # with no explanation (the `old_time`-only rule was unreachable for
+            # the other two).
+            if new_time_iso is None:
+                field_status["new_time"] = "TimeReal outside the calendar"
+            if next_cal_iso is None:
+                field_status["next_calibration_date"] = (
+                    "TimeReal outside the calendar")
             return {
                 # Identity is the position of the record in its message body (two
                 # stored calibrations may decode to identical fields), with the

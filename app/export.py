@@ -103,8 +103,13 @@ def _excel_text(value):
 
     Every write path goes through here — a decoded field can carry a control
     byte wherever it appears, not only in a data cell.
+
+    Order matters: the control bytes are stripped *first*, because the guard
+    only recognises a formula by its first character. Stripping afterwards
+    would let ``"\\x01=2+2"`` past the guard and leave a cell that opens with
+    ``=`` — a live formula (CWE-1236).
     """
-    return _cell_safe(_spreadsheet_value(value))
+    return _spreadsheet_value(_cell_safe(value))
 
 
 def _signature_sections(data):
@@ -791,8 +796,9 @@ class ExportManager:
                     raw = row[col - 1] if col <= len(row) else None
                     value, number_format = _excel_typed_value(kinds[col - 1], raw)
                     # A malformed string in the file can carry control bytes, which
-                    # XML 1.0 forbids: drop them instead of aborting the export.
-                    cell = ws.cell(row=excel_row, column=col, value=_cell_safe(value))
+                    # XML 1.0 forbids: drop them, then guard the result like every
+                    # other cell (same helper, same order).
+                    cell = ws.cell(row=excel_row, column=col, value=_excel_text(value))
                     if number_format:
                         cell.number_format = number_format
                     typed = isinstance(value, (int, float, date, datetime, timedelta))

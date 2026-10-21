@@ -159,8 +159,7 @@ Two details you will notice when reading the raw text:
 
 - Every cell that would otherwise start with `=`, `+`, `-` or `@` is prefixed with
   an apostrophe, so a spreadsheet treats it as text and never as a formula. The
-  section markers start with `=`, so they appear as `'=== EVENTS ===` in the raw
-  file and as `=== EVENTS ===` once a spreadsheet opens it.
+  section markers (`=== EVENTS ===`) are the exception: they are written as is.
 - Nested values are the same compact report text as in the other reports, and
   internal bookkeeping keys are left out. It is not the full decoded structure —
   that is JSON.
