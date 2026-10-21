@@ -1473,6 +1473,9 @@ msgstr "ID на устройството"
 msgid "Distance"
 msgstr "Разстояние"
 
+msgid "Distance km"
+msgstr "Разстояние км"
+
 msgid "Download Activities"
 msgstr "Дейности по изтегляне"
 

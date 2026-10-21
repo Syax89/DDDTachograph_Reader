@@ -82,3 +82,61 @@ def test_gui_day_distance_uses_the_card_distance_and_vu_deltas():
                {"date": "15/11/2023", "odometer_km": 250_320, "changes": []}]
     _attach_day_distance(vu_days, is_vu=True)
     assert [day["_day_km"] for day in vu_days] == [0, 320]
+
+
+# ── The day's record table must label the figure it shows ──────────────────
+
+def _day_table_columns(data, days):
+    """Return the columns/rows ``_populate_daily_activities`` hands to the day
+    section (tree + sections mocked; no real file, no personal data)."""
+    import pytest
+    pytest.importorskip("tkinter")
+    from unittest.mock import Mock
+
+    from app.gui import TachoExplorer
+
+    app = object.__new__(TachoExplorer)
+    app._payloads = {}
+    app.tree = Mock()
+    app.tree.insert.return_value = "node"
+    app._day_vehicles_info = Mock(return_value=[])
+    app._add_activity_day = Mock(return_value="daynode")
+    captured = {}
+
+    def _section(_node, _title, cols, rows):
+        captured["cols"] = cols
+        captured["rows"] = rows
+
+    app._add_section = _section
+    app._populate_daily_activities("parent", data, days)
+    return captured["cols"], captured["rows"]
+
+
+def _one_change():
+    return [{"time": "00:00", "activity": "REST", "slot": "First",
+             "crew": False, "card_inserted": True}]
+
+
+def test_gui_card_day_table_labels_the_day_distance_not_an_odometer():
+    """A card day has no odometer reading: its table must not say "Odometer".
+
+    Annex 1B ``ActivityDayDistance`` is the day's driven kilometres; heading it
+    "Odometer km" re-creates exactly the misreading the key split removed.
+    """
+    cols, rows = _day_table_columns(
+        {"metadata": {"is_vu": False}, "driver": {"firstname": "A", "surname": "B"}},
+        [{"date": "04/12/2020", "day_distance_km": 487, "changes": _one_change()}])
+
+    assert cols[-1] == "Distance km"
+    assert rows[0][-1] == "487"
+    assert "Odometer km" not in cols
+
+
+def test_gui_vu_day_table_keeps_the_odometer_header():
+    """A VU day carries a real odometer reading; its header stays as it was."""
+    cols, rows = _day_table_columns(
+        {"metadata": {"is_vu": True}},
+        [{"date": "04/12/2020", "odometer_km": 250_000, "changes": _one_change()}])
+
+    assert cols[-1] == "Odometer km"
+    assert rows[0][-1] == "250 000"

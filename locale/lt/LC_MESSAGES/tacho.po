@@ -1473,6 +1473,9 @@ msgstr "Įrenginio ID"
 msgid "Distance"
 msgstr "Atstumas"
 
+msgid "Distance km"
+msgstr "Atstumas km"
+
 msgid "Download Activities"
 msgstr "Atsisiuntimo veikla"
 

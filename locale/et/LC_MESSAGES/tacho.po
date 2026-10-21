@@ -1473,6 +1473,9 @@ msgstr "Seadme ID"
 msgid "Distance"
 msgstr "Vahemaa"
 
+msgid "Distance km"
+msgstr "Vahemaa km"
+
 msgid "Download Activities"
 msgstr "Allalaadimise aktiivsused"
 

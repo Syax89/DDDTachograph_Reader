@@ -1473,6 +1473,9 @@ msgstr "Enhets-ID"
 msgid "Distance"
 msgstr "Sträcka"
 
+msgid "Distance km"
+msgstr "Sträcka (km)"
+
 msgid "Download Activities"
 msgstr "Nedladdningsaktiviteter"
 

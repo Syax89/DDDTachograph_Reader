@@ -1473,6 +1473,9 @@ msgstr "Tækja-ID"
 msgid "Distance"
 msgstr "Vegalengd"
 
+msgid "Distance km"
+msgstr "Vegalengd (km)"
+
 msgid "Download Activities"
 msgstr "Niðurhalsvirkni"
 

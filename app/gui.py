@@ -5987,17 +5987,22 @@ class TachoExplorer(tk.Tk):
                                               day_km, changes_count, day_di,
                                               day_schedule, day_markers,
                                               oos_events, day_vehicles)
-            # A card day has no odometer reading, only its own distance: keep
-            # showing that figure in the day's record table (unchanged view).
-            odometer = (day_data.get("odometer_km")
-                        or day_data.get("day_distance_km") or 0) or 0
+            # A card day has no odometer reading, only its own distance
+            # (Annex 1B ActivityDayDistance); a VU day carries a reading.
+            # Show whichever value the row actually has, under a header that
+            # says which of the two it is.
+            reading = day_data.get("odometer_km")
+            distance = day_data.get("day_distance_km")
+            odometer = reading or distance or 0
+            km_header = (_("Odometer km") if reading or distance is None
+                         else _("Distance km"))
             if changes:
                 rows = [[fmt_val(ev.get("time", "?")),
                          ui_text.activity(ev.get("activity", "?")),
                          fmt_val(ev.get("slot", "")) if ev.get("slot") else "",
                          fmt_val(ev.get("crew", "")),
                          fmt_val(odometer)] for ev in changes if isinstance(ev, dict)]
-                cols = [_("Time"), _("Activity"), _("Slot"), _("Crew"), _("Odometer km")]
+                cols = [_("Time"), _("Activity"), _("Slot"), _("Crew"), km_header]
             else:
                 cols, rows = ([_("Time"), _("Activity")],
                               [[fmt_val("\u2014"), _("(no changes)")]])

@@ -1473,6 +1473,9 @@ msgstr "ID urządzenia"
 msgid "Distance"
 msgstr "Odległość"
 
+msgid "Distance km"
+msgstr "Odległość km"
+
 msgid "Download Activities"
 msgstr "Aktywności pobierania"
 

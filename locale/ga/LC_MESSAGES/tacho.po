@@ -1473,6 +1473,9 @@ msgstr "ID an ghléis"
 msgid "Distance"
 msgstr "Fad"
 
+msgid "Distance km"
+msgstr "Fad (km)"
+
 msgid "Download Activities"
 msgstr "Gníomhaíochtaí íoslódála"
 

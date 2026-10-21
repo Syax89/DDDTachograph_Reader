@@ -1473,6 +1473,9 @@ msgstr "Eszköz ID"
 msgid "Distance"
 msgstr "Távolság"
 
+msgid "Distance km"
+msgstr "Távolság (km)"
+
 msgid "Download Activities"
 msgstr "Letöltési tevékenységek"
 

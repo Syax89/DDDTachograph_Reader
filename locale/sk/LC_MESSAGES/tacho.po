@@ -1473,6 +1473,9 @@ msgstr "ID zariadenia"
 msgid "Distance"
 msgstr "Vzdialenosť"
 
+msgid "Distance km"
+msgstr "Vzdialenosť km"
+
 msgid "Download Activities"
 msgstr "Aktivity sťahovania"
 

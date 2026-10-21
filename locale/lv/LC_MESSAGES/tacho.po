@@ -1473,6 +1473,9 @@ msgstr "Ierīces ID"
 msgid "Distance"
 msgstr "Attālums"
 
+msgid "Distance km"
+msgstr "Attālums km"
+
 msgid "Download Activities"
 msgstr "Lejupielādes aktivitātes"
 

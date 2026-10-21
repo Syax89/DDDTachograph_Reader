@@ -1473,6 +1473,9 @@ msgstr "Laitteen ID"
 msgid "Distance"
 msgstr "Matka"
 
+msgid "Distance km"
+msgstr "Matka km"
+
 msgid "Download Activities"
 msgstr "Latausaktiviteetit"
 
