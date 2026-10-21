@@ -966,7 +966,12 @@ class TachoParser:
                     self.validation_status = (
                         "Partial (VU — unsigned bytes outside the signed sections)")
                 elif sv.get("all_treps_valid"):
-                    self.validation_status = "Verified (VU — TREP ok, chain partial)"
+                    # TREP signatures hold, but the VU key is anchored to no
+                    # trusted ERCA root: a self-signed attacker VU would land
+                    # here too, so this must never print/export as Verified
+                    # (the card path reports the same condition as
+                    # "Unverified (Missing ERCA Root)").
+                    self.validation_status = "Unverified (VU — TREP ok, no ERCA anchor)"
                 else:
                     self.validation_status = "Partial (VU — chain ok)"
             elif not had_certs:
