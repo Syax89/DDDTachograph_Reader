@@ -4,6 +4,10 @@ Off: one boolean test per call, no file is created. On: one line per stage is ap
 to ``~/ddd-reader-load-trace.txt`` (``<seconds since process start>\\t<stage>\\t<details>``)
 and the path is printed once to stderr. Only the file extension, size, generation and
 counts are ever written: no contents, identifiers, file name or directory.
+
+A watchdog thread (started at the first line) samples the main thread's Python stack and
+writes ``stall`` / ``stall.end`` when it stays the same for ``STALL_SAMPLES`` samples: only
+``module.function:line`` of app/stdlib code, never arguments, locals or dialog texts.
 """
 import contextlib
 import gc
@@ -24,14 +28,24 @@ _stage = ""                         # innermost open span, to say where a slow u
 _opens = 0
 _gc = {"hooked": False, "start": 0.0, "passes": 0, "total": 0.0, "max": 0.0}
 GC_MIN_SECONDS = 0.020
+INTERVAL = 0.5                      # watchdog sampling period (seconds)
+STALL_SAMPLES = 4                   # identical samples = a stall (>= 2 s)
+STACK_DEPTH = 12
+FIXED_TITLES = ("File Note", "File Integrity Warning", "Rendering Error")  # app msgids
+_watchdog = None
+_STDLIB = os.path.dirname(os.__file__)
 _pump = {"calls": 0, "real": 0, "seconds": 0.0, "longest": 0.0, "longest_stage": ""}
 
 
 def event(stage, **fields):
     """Append one trace line."""
-    global _announced
+    global _announced, _watchdog
     if not ENABLED:
         return
+    with _lock:
+        if _watchdog is None:
+            _watchdog = threading.Thread(target=_watch, name="load-trace-watchdog", daemon=True)
+            _watchdog.start()
     line = "%.3f\t%s\t%s\n" % (time.monotonic() - _T0, stage,
                                " ".join(f"{k}={v}" for k, v in fields.items()))
     path = os.path.join(os.path.expanduser("~"), FILE_NAME)
@@ -44,6 +58,64 @@ def event(stage, **fields):
         if not _announced:
             _announced = True
             print(f"DDD_TRACE_LOAD: writing {path}", file=sys.stderr)
+
+
+def _module(path):
+    """App/stdlib module name of a source file; anything else: its bare file name."""
+    path = path.replace("\\", "/")
+    for root in ("/app/", "/core/"):
+        if root in path:
+            path = root[1:] + path.rsplit(root, 1)[1]
+            break
+    else:
+        std = _STDLIB.replace("\\", "/") + "/"
+        path = path[len(std):] if path.startswith(std) else os.path.basename(path)
+    return path[:-3].replace("/", ".") if path.endswith(".py") else path
+
+
+def _stack(frame):
+    """Innermost-first ``(module, function, line)`` of the frame chain."""
+    out = []
+    while frame is not None and len(out) < STACK_DEPTH:
+        out.append((_module(frame.f_code.co_filename), frame.f_code.co_name, frame.f_lineno))
+        frame = frame.f_back
+    return tuple(out)
+
+
+def _watch():
+    main = threading.main_thread().ident
+    last, count, since, reported = None, 0, 0.0, False
+    while True:
+        time.sleep(INTERVAL)
+        stack = _stack(sys._current_frames().get(main))
+        # the Tk event loop waiting for events is idle, not stuck
+        idle = not stack or stack[0][:2] == ("tkinter.__init__", "mainloop")
+        if stack == last and not idle:
+            count += 1
+            if count == STALL_SAMPLES:
+                reported = True
+                event("stall", **{"seconds>": "%g" % (count * INTERVAL),
+                                  "stack": " <- ".join("%s.%s:%d" % f for f in stack)})
+            continue
+        if reported:
+            event("stall.end", seconds=round(time.monotonic() - since, 2))
+        last, count, since, reported = stack, 1, time.monotonic(), False
+
+
+@contextlib.contextmanager
+def dialog(kind, title):
+    """Time one modal message box call; the title is written only if it is a fixed msgid."""
+    if not ENABLED:
+        yield
+        return
+    fields = {"kind": kind, "title": title if title in FIXED_TITLES else "other"}
+    started = time.monotonic()
+    event("warn_when_idle.enter", **fields)
+    try:
+        yield
+    finally:
+        event("warn_when_idle.returned", blocked_seconds=round(time.monotonic() - started, 3),
+              **fields)
 
 
 @contextlib.contextmanager
@@ -74,7 +146,7 @@ def header(root, version):
         _gc_state()
 
 
-def opened(path):
+def opened(path, source="?"):
     """A file open was requested: number it and record extension and size only."""
     global _opens
     if ENABLED:
@@ -84,8 +156,20 @@ def opened(path):
         except OSError:
             size = "?"
         event("open requested", **{"open number": _opens},
-              ext=os.path.splitext(path)[1].lower(), size_bytes=size)
+              ext=os.path.splitext(path)[1].lower(), size_bytes=size, source=source)
         _gc_state()
+
+
+def picker(choose):
+    """Run ``choose()`` (the file picker) and trace how long it was open and if a file was chosen."""
+    if not ENABLED:
+        return choose()
+    started = time.monotonic()
+    event("picker.opened")
+    path = choose()
+    event("picker.closed", seconds=round(time.monotonic() - started, 3),
+          chosen="yes" if path else "no")
+    return path
 
 
 def _gc_callback(phase, info):

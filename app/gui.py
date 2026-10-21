@@ -3609,6 +3609,7 @@ class TachoExplorer(tk.Tk):
         if not paths:
             self.status.config(text=_("Nothing to open in that drop"))
             return "copy"
+        self._open_source = "drop"  # read by the load trace only
         self._start_parse(paths[0])
         if len(paths) > 1:
             # After _start_parse: it writes its own "Parsing ..." status, which
@@ -3795,7 +3796,7 @@ class TachoExplorer(tk.Tk):
             self._show_empty_state()
 
         if self._initial_file and os.path.isfile(self._initial_file):
-            self.after(100, lambda: self._start_parse(self._initial_file))
+            self.after(100, self._open_initial_file)
 
     # ── Empty state (no file loaded) ────────────────────────
 
@@ -4059,8 +4060,10 @@ class TachoExplorer(tk.Tk):
         refuses to start while a parse — or the render of its result — runs; the
         same guard applies here.
         """
+        load_trace.event("recent.click", refused="yes" if self._parsing or self._rendering else "no")
         if self._parsing or self._rendering:
             return
+        self._open_source = "recent"
         self._start_parse(path)
 
     def _toggle_translate_data(self):
@@ -4266,11 +4269,16 @@ class TachoExplorer(tk.Tk):
         """File-picker entry point; ignored while a parse (or its render) runs."""
         if self._parsing or self._rendering:
             return
-        path = filedialog.askopenfilename(
-            filetypes=[(_("DDD Files"), "*.ddd *.DDD"), (_("All Files"), "*.*")])
+        path = load_trace.picker(lambda: filedialog.askopenfilename(
+            filetypes=[(_("DDD Files"), "*.ddd *.DDD"), (_("All Files"), "*.*")]))
         if not path:
             return
+        self._open_source = "picker"
         self._start_parse(path)
+
+    def _open_initial_file(self):
+        self._open_source = "cli"
+        self._start_parse(self._initial_file)
 
     def _start_parse(self, path):
         """Run the parse on a worker thread so the UI stays responsive;
@@ -4283,7 +4291,7 @@ class TachoExplorer(tk.Tk):
             # second open can now arrive *while* the tree is being rebuilt.
             return
         self._parsing = True
-        load_trace.opened(path)
+        load_trace.opened(path, getattr(self, "_open_source", "?"))
         self.btn_open.config(state=tk.DISABLED)
         self.btn_export.config(state=tk.DISABLED)
         self.status.config(text=_("Parsing {filename}\u2026").format(
@@ -4631,7 +4639,8 @@ class TachoExplorer(tk.Tk):
             add_recent_file(path)
             # One pump before the heavy part: the status line and the busy bar
             # reach the screen before the tree rebuild starts, not after it.
-            self._pump_render(force=True)
+            with load_trace.span("parse_done.first_pump"):
+                self._pump_render(force=True)
             with load_trace.span("populate_tree"):
                 self._populate_tree(data)
             load_trace.event("populate_tree.nodes", nodes=self._trace_node_count())
@@ -4896,7 +4905,8 @@ class TachoExplorer(tk.Tk):
         if self._parsing or self._rendering:
             self.after_idle(self._warn_when_idle, title, message, kind)
             return
-        getattr(messagebox, kind)(title, message)
+        with load_trace.dialog(kind, title):
+            getattr(messagebox, kind)(title, message)
 
     def _activate_integrity_banner(self):
         """Return/space on the banner: the same dialog a click opens."""
