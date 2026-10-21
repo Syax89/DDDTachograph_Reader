@@ -107,6 +107,27 @@ def _excel_text(value):
     return _cell_safe(_spreadsheet_value(value))
 
 
+def _signature_sections(data):
+    """``(label, description, records)`` of the VU signature material.
+
+    These two live in their own containers rather than in a list section, and
+    they are kept uncapped, so every format that presents the parsed report
+    takes them from here — none of them silently drops a VU's signature result.
+    """
+    sections = []
+    sv = data.get("signature_verification")
+    treps = (sv.get("treps") or []) if isinstance(sv, dict) else []
+    if treps:
+        sections.append(("TREP Signatures",
+                         "Signature verification of each TREP block (VU files).",
+                         treps))
+    certs = data.get("vu_certificates") or []
+    if certs:
+        sections.append(("VU Certificates",
+                         "Certificates found in the file (VU files).", certs))
+    return sections
+
+
 def _pdf_number(value):
     """An integer with thin-space grouping, as the report tables print them."""
     return f"{value:,}".replace(",", " ")
@@ -862,27 +883,13 @@ class ExportManager:
 
         # ── TREP signature material and VU certificates (kept, uncapped) ──
         used_names = {"Summary"}
-        sv = data.get("signature_verification")
-        treps = (sv.get("treps") or []) if isinstance(sv, dict) else []
-        if treps:
-            headers, rows = records_to_table(treps)
+        for label, description, records in _signature_sections(data):
+            headers, rows = records_to_table(records)
             if headers:
-                _add_sheet("TREP Signatures",
-                           "Signature verification of each TREP block (VU files).",
-                           headers, rows)
+                _add_sheet(label, description, headers, rows)
             else:
-                _log.warning("Skipping 'TREP Signatures': no visible export columns")
-                skipped.append("TREP Signatures")
-        certs = data.get("vu_certificates") or []
-        if certs:
-            headers, rows = records_to_table(certs)
-            if headers:
-                _add_sheet("VU Certificates",
-                           "Certificates found in the file (VU files).",
-                           headers, rows)
-            else:
-                _log.warning("Skipping 'VU Certificates': no visible export columns")
-                skipped.append("VU Certificates")
+                _log.warning("Skipping '%s': no visible export columns", label)
+                skipped.append(label)
 
         # ── Data sections ────────────────────────────────────────────────
         for label, desc, headers, rows, _truncated in section_tables(data):
@@ -1031,7 +1038,9 @@ class ExportManager:
             _write_row([])
 
             wrote_any = False
-            for label, desc, headers, rows, truncated in section_tables(data):
+
+            def _write_section(label, desc, headers, rows, truncated=False):
+                nonlocal wrote_any
                 _write_row([f"=== {label.upper()} ==="], protect=False)
                 if desc:
                     _write_row([desc])
@@ -1042,6 +1051,18 @@ class ExportManager:
                     _write_row(["… (truncated)"])
                 _write_row([])
                 wrote_any = True
+
+            # The files' signature material first, in the order the workbook
+            # and the PDF print it.
+            for label, desc, records in _signature_sections(data):
+                headers, rows = records_to_table(records)
+                if headers:
+                    _write_section(label, desc, headers, rows)
+                else:
+                    _log.warning("Skipping '%s': no visible export columns", label)
+
+            for label, desc, headers, rows, truncated in section_tables(data):
+                _write_section(label, desc, headers, rows, truncated)
 
             if not wrote_any:
                 _write_row(["No data found"])

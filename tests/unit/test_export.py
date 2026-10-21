@@ -204,6 +204,32 @@ class TestExportManager(unittest.TestCase):
         # Every emitted title is one of the exported sections, unabridged.
         self.assertTrue(all(line.endswith(" ===") for line in titles))
 
+    def test_csv_lists_the_signature_material_the_other_formats_carry(self):
+        """Excel and the PDF carry the TREP verdicts and the VU certificates.
+
+        The CSV is one block per section of the same report, so those blocks
+        must be there too — a VU download's signature result is not a
+        workbook-only fact.
+        """
+        data = deepcopy(self.mock_data)
+        data["signature_verification"] = {
+            "summary": "All TREPs valid (root anchored)",
+            "treps": [{"trep": "0x21", "status": "valid", "length": 64}],
+        }
+        data["vu_certificates"] = [{"car": "IT", "format": "CVC"}]
+
+        ExportManager.export_to_csv(data, self.csv_path)
+
+        with open(self.csv_path, encoding="utf-8-sig") as handle:
+            text = handle.read()
+
+        self.assertIn("=== TREP SIGNATURES ===", text)
+        self.assertIn("=== VU CERTIFICATES ===", text)
+        trep_block = text.split("=== TREP SIGNATURES ===")[1].split("\n\n")[0]
+        self.assertIn("valid", trep_block)
+        self.assertIn("Signature verification of each TREP block (VU files).", text)
+        self.assertIn("Certificates found in the file (VU files).", text)
+
     def test_csv_section_descriptions_are_not_escaped_as_formulas(self):
         ExportManager.export_to_csv(self.mock_data, self.csv_path)
 
