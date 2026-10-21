@@ -219,6 +219,40 @@ def test_macos_hooks_about_into_the_aqua_panel(macos, monkeypatch):
         close(app)
 
 
+def test_macos_hooks_cmd_question_mark_into_the_help_dialog(macos, monkeypatch):
+    """Cmd+? and Tk's own "<app> Help" item must reach our dialog.
+
+    Tk 8.6's ``showHelp:`` evaluates ``::tk::mac::ShowHelp`` when that command
+    exists and falls through to ``[super showHelp:]`` otherwise; with no Help
+    Book in the bundle, that fallback is the "Help isn't available" popup the
+    owner saw. So the command must exist and must open the Help window.
+    """
+    app = new_explorer(monkeypatch)
+    try:
+        assert app.tk.call("info", "commands", "tk::mac::ShowHelp")
+        app.tk.call("tk::mac::ShowHelp")          # what Cmd+? ends up calling
+        app.update()
+        assert gui.HelpWindow._open_window is not None
+        assert APP_NAME in gui.HelpWindow._open_window.about_label.cget("text")
+    finally:
+        gui.HelpWindow._open_window = None
+        close(app)
+
+
+def test_macos_publishes_no_preferences_hook(macos, monkeypatch):
+    """There is no preferences dialog, so Tk must not be given one to call.
+
+    Publishing ``tk::mac::ShowPreferences`` would light up the application
+    menu's Preferences item and point it at nothing (Tk hides that item while
+    the command is absent): the app has no preferences window of its own.
+    """
+    app = new_explorer(monkeypatch)
+    try:
+        assert not app.tk.call("info", "commands", "tk::mac::ShowPreferences")
+    finally:
+        close(app)
+
+
 def test_macos_adds_no_toolbar_help_button(macos, monkeypatch):
     app = new_explorer(monkeypatch)
     try:

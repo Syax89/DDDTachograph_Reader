@@ -3923,6 +3923,15 @@ class TachoExplorer(tk.Tk):
         content, so the About panel shows our text (name, version, licence,
         credits) instead of Tk's bare one — and shows the same text the Windows
         and Linux dialog does.
+
+        ``tk::mac::ShowHelp`` is what Cmd+? and the "<app> Help" item Tk adds to
+        this menu call (``tkMacOSXMenus.c``: ``showHelp:`` evaluates
+        ``::tk::mac::ShowHelp`` when that command exists). Without it ``[super
+        showHelp:]`` runs, and since the bundle ships no Help Book (no
+        ``CFBundleHelpBookFolder``) Aqua answers with "Help isn't available for
+        <app>" — the popup the owner saw. Publishing the command routes both the
+        shortcut and the item to the app's own Help/About dialog, which is the
+        same window the Windows and Linux Help button opens.
         """
         menubar = tk.Menu(self, tearoff=0)
         self.configure(menu=menubar)
@@ -3932,6 +3941,7 @@ class TachoExplorer(tk.Tk):
                                   command=lambda target=url: open_url(target))
         menubar.add_cascade(label=_("Help"), menu=help_menu)
         self.createcommand("tk::mac::standardAboutPanel", lambda: show_help(self))
+        self.createcommand("tk::mac::ShowHelp", lambda: show_help(self))
 
     def _show_help(self):
         """Open the Help / About dialog (the Windows and Linux entry point)."""
