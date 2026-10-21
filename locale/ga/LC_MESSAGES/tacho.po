@@ -800,9 +800,6 @@ msgstr "Am ag gluaiseacht"
 msgid "Total"
 msgstr "Iomlán"
 
-msgid "Unknown"
-msgstr "Anaithnid"
-
 msgid "Unknown bytes"
 msgstr "Bearta anaithnide"
 

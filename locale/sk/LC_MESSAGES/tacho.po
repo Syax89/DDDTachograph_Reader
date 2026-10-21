@@ -800,9 +800,6 @@ msgstr "Čas v pohybe"
 msgid "Total"
 msgstr "Spolu"
 
-msgid "Unknown"
-msgstr "Neznáme"
-
 msgid "Unknown bytes"
 msgstr "Neznáme bajty"
 

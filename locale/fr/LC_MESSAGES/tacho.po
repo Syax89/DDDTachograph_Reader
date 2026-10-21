@@ -800,9 +800,6 @@ msgstr "Temps en mouvement"
 msgid "Total"
 msgstr "Total"
 
-msgid "Unknown"
-msgstr "Inconnu"
-
 msgid "Unknown bytes"
 msgstr "Octets inconnus"
 

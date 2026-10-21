@@ -800,9 +800,6 @@ msgstr "Време в движение"
 msgid "Total"
 msgstr "Общо"
 
-msgid "Unknown"
-msgstr "Неизвестно"
-
 msgid "Unknown bytes"
 msgstr "Неизвестни байтове"
 

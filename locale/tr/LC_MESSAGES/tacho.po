@@ -800,9 +800,6 @@ msgstr "Hareket halinde süre"
 msgid "Total"
 msgstr "Toplam"
 
-msgid "Unknown"
-msgstr "Bilinmiyor"
-
 msgid "Unknown bytes"
 msgstr "Bilinmeyen baytlar"
 

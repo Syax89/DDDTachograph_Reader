@@ -800,9 +800,6 @@ msgstr "Laikas judant"
 msgid "Total"
 msgstr "Iš viso"
 
-msgid "Unknown"
-msgstr "Nežinoma"
-
 msgid "Unknown bytes"
 msgstr "Nežinomi baitai"
 

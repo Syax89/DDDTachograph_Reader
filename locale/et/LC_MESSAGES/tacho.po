@@ -800,9 +800,6 @@ msgstr "Aeg liikumises"
 msgid "Total"
 msgstr "Kokku"
 
-msgid "Unknown"
-msgstr "Tundmatu"
-
 msgid "Unknown bytes"
 msgstr "Tundmatud baidid"
 

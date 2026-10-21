@@ -800,9 +800,6 @@ msgstr "Tími á hreyfingu"
 msgid "Total"
 msgstr "Samtals"
 
-msgid "Unknown"
-msgstr "Óþekkt"
-
 msgid "Unknown bytes"
 msgstr "Óþekkt bæt"
 

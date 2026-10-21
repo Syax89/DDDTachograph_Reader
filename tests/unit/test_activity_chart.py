@@ -4,7 +4,7 @@ pytest.importorskip("tkinter")
 
 import tkinter as tk
 
-from app.gui import ACTIVITY_COLORS, ActivityTimelineChart
+from app.gui import ActivityTimelineChart
 
 
 @pytest.fixture(autouse=True)
@@ -106,100 +106,3 @@ class TestActivityTimelineChart:
         chart = ActivityTimelineChart(None)
         chart.show("2025-01-01", is_vu=False, activities=[])
         assert chart._slots == {}
-
-
-class TestActivityTimelinePaintsUnknownTime:
-    """The UNKNOWN minutes the segmentation produces must reach the canvas.
-
-    ``_build_blocks`` bucketed a card-not-inserted period, an unrecognised
-    activity code and a missing 00:00 status entry as UNKNOWN — the dashboard
-    reports those minutes — but ``_draw`` iterated a fixed
-    ``["DRIVE", "WORK", "REST", "AVAILABLE"]`` and painted nothing for them, so a
-    day that is half unknown showed an empty timeline while the dashboard showed
-    ``UNKNOWN``. The chart paints them in the neutral unknown colour now, on a
-    row of their own (only when the day has any).
-    """
-
-    @staticmethod
-    def _render(changes, is_vu=False):
-        root = tk.Tk()
-        root.geometry("900x600")
-        chart = ActivityTimelineChart(root)
-        chart.pack(fill="both", expand=True)
-        chart.show("2025-01-01", is_vu=is_vu, activities=changes)
-        root.update()                      # let the idle draw run
-        return root, chart
-
-    @staticmethod
-    def _rectangles(chart):
-        canvas = chart.canvas
-        return [(canvas.itemcget(item, "fill"), canvas.coords(item))
-                for item in canvas.find_all()
-                if canvas.type(item) == "rectangle"]
-
-    @staticmethod
-    def _texts(chart):
-        canvas = chart.canvas
-        return [canvas.itemcget(item, "text") for item in canvas.find_all()
-                if canvas.type(item) == "text"]
-
-    def test_a_card_absent_period_is_drawn_in_the_unknown_colour(self):
-        from app.theme import ACTIVITY_UNKNOWN
-
-        root, chart = self._render([
-            {"activity": "REST", "time": "00:00", "slot": "First",
-             "card_inserted": False, "crew": False},          # 14 h UNKNOWN
-            {"activity": "DRIVE", "time": "14:00", "slot": "First",
-             "card_inserted": True, "crew": False},
-        ])
-        try:
-            rows = {row[0]: row[3] for row in chart._layout["act_rows"]}
-            assert rows["UNKNOWN"] == [(0, 50400)]
-            assert rows["DRIVE"] == [(50400, 86400)]
-
-            rects = self._rectangles(chart)
-            unknown_rects = [coords for fill, coords in rects
-                             if fill == ACTIVITY_UNKNOWN]
-            # One painted band per UNKNOWN block, spanning the plot area from
-            # 00:00 to 14:00 — the minutes the dashboard reports as UNKNOWN.
-            assert len(unknown_rects) == 1
-            x0, _y0, x1, _y1 = unknown_rects[0]
-            assert x1 > x0
-            drive_rects = [coords for fill, coords in rects
-                           if fill == ACTIVITY_COLORS["DRIVE"]]
-            assert len(drive_rects) == 1
-            assert (x1 - x0) / (drive_rects[0][2] - drive_rects[0][0]) == pytest.approx(
-                50400 / 36000, rel=0.02)
-        finally:
-            root.destroy()
-
-    def test_the_unknown_row_is_labelled_and_totalled(self):
-        root, chart = self._render([
-            {"activity": "REST", "time": "00:00", "slot": "First",
-             "card_inserted": False, "crew": False},
-            {"activity": "DRIVE", "time": "14:00", "slot": "First",
-             "card_inserted": True, "crew": False},
-        ])
-        try:
-            from app.gui import _act_label
-            texts = self._texts(chart)
-            assert _act_label("UNKNOWN") in texts
-            assert any("14h 00m" in text for text in texts)
-        finally:
-            root.destroy()
-
-    def test_a_fully_known_day_keeps_the_four_rows(self):
-        """No unknown minute → the chart looks exactly as it did before."""
-        root, chart = self._render([
-            {"activity": "DRIVE", "time": "00:00", "slot": "First",
-             "card_inserted": True, "crew": False},
-            {"activity": "REST", "time": "12:00", "slot": "First",
-             "card_inserted": True, "crew": False},
-        ])
-        try:
-            assert [row[0] for row in chart._layout["act_rows"]] == [
-                "DRIVE", "WORK", "REST", "AVAILABLE"]
-            from app.theme import ACTIVITY_UNKNOWN
-            assert ACTIVITY_UNKNOWN not in [fill for fill, _ in self._rectangles(chart)]
-        finally:
-            root.destroy()

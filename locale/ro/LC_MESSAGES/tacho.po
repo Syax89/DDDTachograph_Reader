@@ -800,9 +800,6 @@ msgstr "Timp în mișcare"
 msgid "Total"
 msgstr "Total"
 
-msgid "Unknown"
-msgstr "Necunoscut"
-
 msgid "Unknown bytes"
 msgstr "Octeți necunoscuți"
 

@@ -800,9 +800,6 @@ msgstr "Idő mozgásban"
 msgid "Total"
 msgstr "Összesen"
 
-msgid "Unknown"
-msgstr "Ismeretlen"
-
 msgid "Unknown bytes"
 msgstr "Ismeretlen bájtok"
 

@@ -800,9 +800,6 @@ msgstr "Час у руху"
 msgid "Total"
 msgstr "Усяго"
 
-msgid "Unknown"
-msgstr "Невядома"
-
 msgid "Unknown bytes"
 msgstr "Невядомыя байты"
 
