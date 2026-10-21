@@ -800,6 +800,9 @@ msgstr "Tid i bevegelse"
 msgid "Total"
 msgstr "Totalt"
 
+msgid "Unknown"
+msgstr "Ukjent"
+
 msgid "Unknown bytes"
 msgstr "Ukjente bytes"
 

@@ -800,6 +800,9 @@ msgstr "Χρόνος σε κίνηση"
 msgid "Total"
 msgstr "Σύνολο"
 
+msgid "Unknown"
+msgstr "Άγνωστο"
+
 msgid "Unknown bytes"
 msgstr "Άγνωστα byte"
 

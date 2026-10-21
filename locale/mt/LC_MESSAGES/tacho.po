@@ -800,6 +800,9 @@ msgstr "Ħin miexi"
 msgid "Total"
 msgstr "Total"
 
+msgid "Unknown"
+msgstr "Mhux magħruf"
+
 msgid "Unknown bytes"
 msgstr "Bajts mhux magħrufa"
 

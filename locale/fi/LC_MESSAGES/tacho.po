@@ -800,6 +800,9 @@ msgstr "Aika liikkeessä"
 msgid "Total"
 msgstr "Yhteensä"
 
+msgid "Unknown"
+msgstr "Tuntematon"
+
 msgid "Unknown bytes"
 msgstr "Tuntemattomat tavut"
 

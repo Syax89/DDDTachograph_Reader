@@ -800,6 +800,9 @@ msgstr "Čas v gibanju"
 msgid "Total"
 msgstr "Skupaj"
 
+msgid "Unknown"
+msgstr "Neznano"
+
 msgid "Unknown bytes"
 msgstr "Neznani bajti"
 
