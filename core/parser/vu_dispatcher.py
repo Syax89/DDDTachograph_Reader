@@ -427,9 +427,19 @@ def decode_vu_identification(rec):
     canonical = 138 if len(rec) >= 138 else 126
     out["record_bytes"] = len(rec)
     out["record_complete"] = len(rec) == canonical
+    if not out["record_complete"]:
+        # A non-canonical body is not a high-confidence record. A body SHORTER
+        # than the canonical size was cut: the shortfall is published as
+        # ``missing_bytes`` so the walker flags it (machine flag + informational
+        # note), exactly like every other fixed-size type. Without it the
+        # ``record_complete: False`` of a 125-byte record sat next to
+        # ``confidence: high`` and no truncation flag at all.
+        out["confidence"] = "low"
     if len(rec) > canonical:
         out["raw_tail_bytes"] = len(rec) - canonical
         out["raw_tail_hex"] = rec[canonical:].hex()
+    elif len(rec) < canonical:
+        out["missing_bytes"] = canonical - len(rec)
     if len(rec) >= 138:
         # digitalMapVersion (generation 2, version 2 only). Reg. (EU) 2021/1228
         # prints the ASN.1 as ``VuDigitalMapVersion ::= IA5String (SIZE(12))``
