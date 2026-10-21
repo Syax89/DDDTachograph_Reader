@@ -653,13 +653,34 @@ def _parse_state_rows(meta):
     return rows
 
 
+_DAY_DATE_RE = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
+_ISO_DAY_DATE_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})$")
+
+
+def _month_key(date_str):
+    """The ``MM/YYYY`` a daily record's date belongs to.
+
+    Two shapes reach here: the report formatter's ``dd/mm/yyyy`` and the ISO
+    ``yyyy-mm-dd`` a raw decoder emits. The month is read from the date rather
+    than from its last seven characters — which only works for the first shape,
+    where an ISO day became a month of its own (``03-20 TOTAL``).
+    """
+    text = str(date_str).strip()[:10]
+    match = _DAY_DATE_RE.match(text)
+    if match:
+        return f"{match.group(2)}/{match.group(3)}"
+    match = _ISO_DAY_DATE_RE.match(text)
+    if match:
+        return f"{match.group(2)}/{match.group(1)}"
+    return text[-7:] if len(text) >= 7 else text
+
+
 def build_monthly_activity_report(activities):
     months = {}
     for day in activities:
         if not isinstance(day, dict):
             continue
-        date_str = str(day.get("date", ""))
-        month_key = date_str[-7:] if len(date_str) >= 7 else date_str
+        month_key = _month_key(day.get("date", ""))
         months.setdefault(month_key, []).append(day)
 
     headers = ["Date", "Odometer km", "Drive (h)", "Work (h)",
