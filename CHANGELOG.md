@@ -1,13 +1,21 @@
 ## [2.9.0] - 2026-10-21
 
-This release is about what the reader claims. Every transfer a vehicle unit can
-send is now decoded against the text that defines it — including a card image
-relayed through the unit, and a download cut short at its tail — and a file that
-promises more records than its bytes hold, or that carries bytes no signature
-covers, says so instead of being presented as complete. Alongside that, opening a
-file no longer risks stalling the window on macOS, the application gains a Help
-entry point with an About box, and a long list of individual decoding, export,
-command-line and window defects is fixed.
+<!-- release-notes:start -->
+Every vehicle-unit transfer is now decoded against the text that defines it, a file open no longer risks stalling the window on macOS, and the application gains a Help entry point — alongside a long list of decoding, export, command-line and window fixes.
+
+**Highlights**
+
+- **Vehicle-unit downloads, transfer by transfer.** Each TREP is decoded against Annex 1B / Annex 1C Appendix 7, including a card image wrapped in a transfer header and a download cut at its tail. Every byte is accounted for in a new *Decode units* section, and a file that promises more records than it holds says so.
+- **No stalled opens on macOS.** The render no longer pumps the Tk event loop, the parse starts after the file picker closes, and a real stall writes `~/ddd-reader-stall-report.txt` by itself.
+- **Help.** A native Help menu on macOS (About in the application menu), a Help button on Windows and Linux — project, issue, release and donation links.
+- **Integrity, stated.** The dialog opens once the file is on screen; a card whose header is not a standard download gets a neutral note; empty Field/Value rows are gone.
+- **Verdicts that claim only what was checked.** An unanchored vehicle-unit chain is *Unverified*; bytes outside the signed sections no longer pass as "verified"; DER/PEM ERCA roots now anchor.
+- **Fixes across the board.** G1 card numbers keep their own text (no nation prefix), an unavailable odometer is *not available* instead of `0 km`, tail-cut arrays report their shortfall, the Excel formula guard cannot be bypassed by a control byte, `--json -` and `-q` behave as documented, and the activity timeline paints its unknown minutes.
+
+**Breaking:** in the JSON export a card day's distance is `day_distance_km` (it was `odometer_km`); a vehicle-unit day keeps `odometer_km`. The numbers are unchanged.
+
+**Downloads:** Windows (`…-windows-x64.zip`), macOS (`…-macos.dmg`), Linux (`…-linux-x86_64.flatpak`). Full detail in the [CHANGELOG](https://github.com/Syax89/DDDTachograph_Reader/blob/master/CHANGELOG.md).
+<!-- release-notes:end -->
 
 ---
 

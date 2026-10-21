@@ -224,12 +224,24 @@ jobs:
 
     - name: Extract release notes from CHANGELOG
       # Extracted once here, not on every platform, so all platforms agree.
+      # A version section may carry a short summary between the
+      # '<!-- release-notes:start -->' and '<!-- release-notes:end -->' markers:
+      # the release body is then that summary, and the detailed section stays in
+      # the changelog for the record. Without the markers the whole section is
+      # used, as before.
       run: |
         VERSION="${GITHUB_REF_NAME#v}"
         awk -v ver="$VERSION" '
           $0 ~ "^## \\[" ver "\\]" {flag=1; next}
-          /^## \[/ {flag=0}
-          flag' CHANGELOG.md > release_notes.md
+          /^## \\[/ {flag=0}
+          flag' CHANGELOG.md > section.md
+        if grep -q '<!-- release-notes:start -->' section.md; then
+          awk '/<!-- release-notes:start -->/ {flag=1; next}
+               /<!-- release-notes:end -->/   {flag=0}
+               flag' section.md > release_notes.md
+        else
+          cp section.md release_notes.md
+        fi
         test -s release_notes.md || echo "Release $GITHUB_REF_NAME" > release_notes.md
 
     - name: Publish GitHub release
