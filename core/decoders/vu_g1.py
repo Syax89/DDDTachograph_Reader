@@ -529,12 +529,19 @@ def _complete_prefix_body(trep, body):
                 pos += 1 + k * stride
                 if k < need:
                     return (bytes(out), pos)
-            # VuOverSpeedingControlData (9) + two count-prefixed tails
+            # VuOverSpeedingControlData (9) precedes the overspeeding array ONLY:
+            # the time-adjustment array that follows carries nothing but its own
+            # count byte (§2.120), so each tail copies its own count.
+            if pos + 9 + 1 > len(body):
+                return (bytes(out), pos) if pos else None
+            out += body[pos:pos + 9 + 1]
+            pos += 10
             for stride in (31, 98):
-                if pos + 9 + 1 > len(body):
-                    return (bytes(out), pos) if pos else None
-                out += body[pos:pos + 9 + 1]
-                pos += 10
+                if stride == 98:
+                    if pos + 1 > len(body):
+                        return (bytes(out), pos)
+                    out += body[pos:pos + 1]
+                    pos += 1
                 need = out[-1]
                 fit = (len(body) - pos) // stride
                 k = min(need, max(0, fit))
@@ -543,7 +550,7 @@ def _complete_prefix_body(trep, body):
                 pos += k * stride
                 if k < need:
                     return (bytes(out), pos)
-            return (bytes(out), pos) if pos == len(body) else (bytes(out), pos)
+            return (bytes(out), pos)
 
         if trep == 0x05:
             header = 136                      # VuIdentification(116) + SensorPaired(20)
