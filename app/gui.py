@@ -3938,9 +3938,9 @@ class TachoExplorer(tk.Tk):
         # menu is in the menu bar instead, so no button is created there.
         self.btn_help = None
         if not _is_macos():
-            self.btn_help = ttk.Button(top, text=_("Help"),
-                                       image=_icon("file-info", 20, top) or "",
-                                       compound=tk.LEFT,
+            # Text only: at the minimum window size the icon's width would cost
+            # the verdict label its room (the verdict elides, the bar must not).
+            self.btn_help = ttk.Button(top, text=_("Help"), width=0,
                                        command=self._show_help)
             self.btn_help.pack(side=tk.RIGHT, padx=(8, 0))
         # The language menu: two entries only. The 34 languages live in their own
@@ -5451,7 +5451,9 @@ class TachoExplorer(tk.Tk):
         starts after, minus what the right-hand block *asks* for.
         """
         reserved = 0
-        for neighbour in (self.lbl_gen, self.btn_lang):
+        for neighbour in (self.lbl_gen, self.btn_lang, self.btn_help):
+            if neighbour is None:        # no Help button on macOS (native menu)
+                continue
             try:
                 # What it asks for plus the padx it is packed with, on both
                 # sides: the badge is packed with padx=8, which is 16 px.

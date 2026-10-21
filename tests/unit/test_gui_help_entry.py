@@ -177,22 +177,6 @@ def test_the_toolbar_help_button_exists_and_opens_the_dialog(windows, monkeypatc
         close(app)
 
 
-def test_the_help_button_carries_an_icon_from_the_set(windows, monkeypatch):
-    from app import icons
-
-    app = new_explorer(monkeypatch)
-    try:
-        size = gui._icon_px(20, app.btn_help)
-        expected = icons.icon("file-info", size, master=app.btn_help)
-        assert expected is not None
-        value = app.btn_help.cget("image")
-        carried = str(value[0]) if isinstance(value, (tuple, list)) else str(value)
-        assert carried == str(expected)
-        assert str(app.btn_help.cget("compound")) == "left"
-    finally:
-        close(app)
-
-
 # ── the dialog itself: same data, every link clickable ────────────────────
 
 def test_the_help_dialog_shows_the_about_text_and_one_button_per_link(
