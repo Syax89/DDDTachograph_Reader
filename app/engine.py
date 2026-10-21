@@ -799,19 +799,15 @@ class TachoParser:
                 return datetime.min
 
         def _canonical(value):
-            """Build a deterministic, hashable representation of decoded data."""
-            if isinstance(value, dict):
-                items = ((_canonical(key), _canonical(item)) for key, item in value.items())
-                return ("dict", tuple(sorted(items, key=repr)))
-            if isinstance(value, list):
-                return ("list", tuple(_canonical(item) for item in value))
-            if isinstance(value, tuple):
-                return ("tuple", tuple(_canonical(item) for item in value))
-            if isinstance(value, set):
-                return ("set", tuple(sorted((_canonical(item) for item in value), key=repr)))
-            if isinstance(value, bytes):
-                return ("bytes", value.hex())
-            return (type(value).__module__, type(value).__qualname__, repr(value))
+            """Deterministic, hashable representation of decoded data.
+
+            ``json.dumps`` with sorted keys is the cheap equivalent of the
+            recursive tuple builder this used to be: key order does not matter,
+            types are kept distinct, and a day block no longer costs one Python
+            call per nested value (it was the single most expensive call of a
+            full parse).
+            """
+            return json.dumps(value, sort_keys=True, default=repr)
 
         seen = set()
         unique = []
