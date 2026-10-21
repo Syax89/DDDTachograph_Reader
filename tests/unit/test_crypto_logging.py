@@ -10,7 +10,6 @@ The validator writes through ``logging`` only: verbosity and destination belong
 to the application that embeds it.
 """
 import logging
-import os
 import tempfile
 
 import pytest

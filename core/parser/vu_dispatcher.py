@@ -2091,7 +2091,10 @@ def walk_vu_record_arrays(data, results):
                 # presented as a known record type (D2-005). Its bytes are kept so
                 # the extension can be shown.
                 unmapped.setdefault(rt, (rt, rs, nr, data[rpos:rpos + rs * nr]))
-            for index in range(nr):
+            # The per-record index is not needed: a shortfall is the array's,
+            # reported once in ``vu_integrity`` (``array_truncated``), not
+            # annotated on each complete record.
+            for _index in range(nr):
                 if total_records >= VU_MAX_TOTAL_RECORDS:
                     capped = True
                     break
