@@ -259,7 +259,7 @@ def _same_path(first, second):
 
 
 def install(lang):
-    """Load the catalog for ``lang`` and return the code now in effect.
+    """Load the catalog for ``lang`` and return the selected language code.
 
     An unsupported code, a missing ``.mo`` or a corrupt one all resolve to
     English (``NullTranslations``) instead of raising: a bad catalog must never

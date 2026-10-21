@@ -34,7 +34,7 @@ def test_text_file_is_rejected(tmp_path):
     junk.write_bytes(b"hello world not a tacho file at all")
     proc = run_cli(junk, "--summary")
     assert proc.returncode == 1
-    assert "not a tachograph file" in proc.stderr.lower()
+    assert "no tachograph structure was decoded" in proc.stderr.lower()
     # The old behaviour announced a card generation for those bytes.
     assert "Driver Card" not in proc.stdout
     assert "Vehicle Unit" not in proc.stdout
@@ -46,7 +46,7 @@ def test_random_bytes_are_rejected(tmp_path):
     junk.write_bytes(bytes(range(256)) * 4)
     proc = run_cli(junk, "--summary")
     assert proc.returncode == 1
-    assert "not a tachograph file" in proc.stderr.lower()
+    assert "no tachograph structure was decoded" in proc.stderr.lower()
 
 
 @pytest.mark.skipif(not MOCK_CARD.exists(), reason="mock corpus not generated")
@@ -85,6 +85,6 @@ def test_certificate_records_alone_are_accepted(tmp_path):
     out = tmp_path / "out.json"
     proc = run_cli(fragment, "--json", str(out), "-q")
     assert proc.returncode == 0, proc.stderr
-    assert "not a tachograph" not in proc.stderr.lower()
+    assert "no tachograph structure was decoded" not in proc.stderr.lower()
     assert out.exists()
     assert json.loads(out.read_text())["metadata"]["origin"] == "driver_card"
