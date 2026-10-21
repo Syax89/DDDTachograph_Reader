@@ -1986,9 +1986,12 @@ def iter_vu_sections(data, state=None):
                 state["truncated"] = True
             if cur is not None:
                 cur["records"].append((pos, rt, rs, fits, pos + 5 + rs * fits))
-                # The array declared more records than the bytes hold: its last
-                # published record is cut and must say so.
-                cur.setdefault("cut_arrays", set()).add(pos)
+                # The array declared more records than the bytes hold. Every record
+                # published from it is COMPLETE (fits = floor(available / rs)), so
+                # the shortfall is the array's, not the last record's: it is
+                # reported per array below instead of a false "this record was cut"
+                # note on a fully present record.
+                cur.setdefault("short_arrays", []).append((rt, nr, fits, rs))
             # Only the bytes AFTER the last complete record are a failed range, and
             # a resync marker is searched from there — with the full check, so a
             # real section that follows a lying count is still reached.
@@ -2088,7 +2091,6 @@ def walk_vu_record_arrays(data, results):
                 # presented as a known record type (D2-005). Its bytes are kept so
                 # the extension can be shown.
                 unmapped.setdefault(rt, (rt, rs, nr, data[rpos:rpos + rs * nr]))
-            cut_array = pos in sec.get("cut_arrays", ())
             for index in range(nr):
                 if total_records >= VU_MAX_TOTAL_RECORDS:
                     capped = True
@@ -2099,14 +2101,6 @@ def walk_vu_record_arrays(data, results):
                 if decoded.get("missing_bytes") and decoded.get("missing_bytes") > 0:
                     # The record is shorter than any canonical size for its type:
                     # its payload was cut. Published with what it has, flagged.
-                    decoded["truncated"] = True
-                    decoded["note"] = (TRUNCATED_CHANGES_NOTE
-                                       if decoded.get("changes") is not None
-                                       else TRUNCATED_RECORD_NOTE)
-                elif cut_array and index == nr - 1:
-                    # The array ran out of bytes inside this record: it is published
-                    # with what it has and carries the machine flag plus the
-                    # informational note (information, not an error).
                     decoded["truncated"] = True
                     decoded["note"] = (TRUNCATED_CHANGES_NOTE
                                        if decoded.get("changes") is not None
@@ -2217,6 +2211,24 @@ def walk_vu_record_arrays(data, results):
                 "missing_bytes": 0,
                 "trailing_bytes": 0,
             })
+        if sec.get("short_arrays"):
+            # An array that declares more records than the bytes hold: the records
+            # that ARE there were published (all complete); what is absent is
+            # reported here, with the count and the bytes the file does not have.
+            # The last complete record of such an array is never called "cut".
+            for (rt, declared, present, rs) in sec["short_arrays"]:
+                structure_findings.append({
+                    "trep": f"0x{sec['trep']:02X}",
+                    "status": "array_truncated",
+                    "detail": (f"RecordArray 0x{rt:02X} declares {declared} "
+                               f"record(s) of {rs} byte(s); the bytes hold "
+                               f"{present}"),
+                    "record_type": f"0x{rt:02X}",
+                    "declared_records": int(declared),
+                    "present_records": int(present),
+                    "missing_bytes": int(declared - present) * int(rs),
+                    "trailing_bytes": 0,
+                })
         if schema_report["signature_problem"]:
             # A malformed/absent signature array is an INTEGRITY finding (the
             # data above it is decoded): reported, partial, never re-scanned.
