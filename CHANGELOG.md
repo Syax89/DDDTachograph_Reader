@@ -1,4 +1,12 @@
-## [Unreleased]
+## [2.9.1] - 2026-10-22
+
+<!-- release-notes:start -->
+Fixed six untranslated field labels in **Identification** and **Driving Licence
+Info** across all 33 translated interfaces, including the suggested Russian
+wording. Tachograph decoding, JSON data and English exports are unchanged.
+
+[Full changelog](https://github.com/Syax89/DDDTachograph_Reader/blob/v2.9.1/CHANGELOG.md).
+<!-- release-notes:end -->
 
 ### Fixed
 
