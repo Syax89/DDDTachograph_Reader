@@ -20,6 +20,37 @@ def fast(monkeypatch, tmp_path):
     return tmp_path / load_trace.STALL_FILE
 
 
+@pytest.fixture
+def sampler(fast):
+    """Start the real watchdog worker and guarantee it is retired before ``fast`` unwinds.
+
+    ``_watch`` runs until the module generation it was started under is replaced, so the
+    fixture captures that generation up front and changes ``_GEN`` on teardown. Because this
+    fixture depends on ``fast``, the worker is joined while ``INTERVAL`` is still 0.05 — i.e.
+    before the monkeypatch that installed it is undone — so no sampler survives the test.
+    """
+    started = []
+
+    def start():
+        token = load_trace._GEN        # the generation this worker belongs to
+        thread = threading.Thread(target=load_trace._watch, args=(token,), daemon=True)
+        thread.start()
+        started.append(thread)
+        return thread
+
+    original = load_trace._GEN
+    try:
+        yield start
+    finally:
+        load_trace._GEN = object()     # the module's own retirement protocol
+        try:
+            for thread in started:
+                thread.join(timeout=5.0)
+                assert not thread.is_alive(), "the stall sampler outlived its test"
+        finally:
+            load_trace._GEN = original
+
+
 def _watch_main_thread_for(seconds):
     """Run the watchdog loop while *this* (main) thread executes ``sleep``-like work."""
     threading.Thread(target=load_trace._watch, daemon=True).start()
@@ -34,7 +65,7 @@ def test_normal_session_creates_no_file(fast, tmp_path, monkeypatch):
     assert not fast.exists() and list(tmp_path.iterdir()) == []
 
 
-def test_real_stall_dumps_the_ring_once_and_privately(fast, tmp_path, capsys):
+def test_real_stall_dumps_the_ring_once_and_privately(fast, sampler, tmp_path, capsys):
     secret_dir = tmp_path / "secretdir"
     load_trace.event("open requested", ext=".ddd", size_bytes=7)
     load_trace.header(types.SimpleNamespace(tk=types.SimpleNamespace(
@@ -43,7 +74,7 @@ def test_real_stall_dumps_the_ring_once_and_privately(fast, tmp_path, capsys):
         pass
     # pytest means no sampler (see test_no_sampler_starts_in_a_pytest_session_unless_asked):
     # this test asks for one, exactly as the app's first event() would start it
-    threading.Thread(target=load_trace._watch, daemon=True).start()
+    sampler()
     load_trace.event("again")
     time.sleep(0.5)                      # the real stack sits in time.sleep: a stall
     assert fast.exists()
