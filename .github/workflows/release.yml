@@ -233,7 +233,7 @@ jobs:
         VERSION="${GITHUB_REF_NAME#v}"
         awk -v ver="$VERSION" '
           $0 ~ "^## \\[" ver "\\]" {flag=1; next}
-          /^## \\[/ {flag=0}
+          /^## \[/ {flag=0}
           flag' CHANGELOG.md > section.md
         if grep -q '<!-- release-notes:start -->' section.md; then
           awk '/<!-- release-notes:start -->/ {flag=1; next}

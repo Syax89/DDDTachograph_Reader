@@ -1,9 +1,8 @@
 ## [2.9.1] - 2026-10-22
 
 <!-- release-notes:start -->
-Fixed six untranslated field labels in **Identification** and **Driving Licence
-Info** across all 33 translated interfaces, including the suggested Russian
-wording. Tachograph decoding, JSON data and English exports are unchanged.
+- Fixed six untranslated field labels in **Identification** and **Driving Licence Info** across all 33 translated interfaces, including the suggested Russian wording.
+- Tachograph decoding, JSON data and English exports are unchanged.
 
 [Full changelog](https://github.com/Syax89/DDDTachograph_Reader/blob/v2.9.1/CHANGELOG.md).
 <!-- release-notes:end -->
@@ -18,6 +17,10 @@ catalog entries were missing from all 33 catalogs, so the panel mixed translated
 and English rows. They are now translated in every shipped language, the Russian
 ones with the wording the reporting user suggested. Card data, the JSON keys, the
 English exports and the summary's own labels are unchanged.
+
+### Maintenance
+
+- Fixed release-note extraction so short summaries publish correctly.
 
 ---
 
