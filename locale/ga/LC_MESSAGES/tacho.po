@@ -2385,3 +2385,25 @@ msgstr "Tuairiscigh fadhb"
 
 msgid "{app} version {version}"
 msgstr "{app} leagan {version}"
+
+# Card identification and driving-licence field labels (issue #13). The field
+# view shows these Title Case headings verbatim, so each catalog needs them as
+# their own entry; the summary keeps its sentence-case wording above.
+
+msgid "Issuing Nation"
+msgstr "Náisiún eisithe"
+
+msgid "Expiry Date"
+msgstr "Dáta éaga"
+
+msgid "Birth Date"
+msgstr "Dáta breithe"
+
+msgid "Preferred Language"
+msgstr "Teanga roghnaithe"
+
+msgid "Licence Number"
+msgstr "Uimhir cheadúnais"
+
+msgid "Licence Issuing Nation"
+msgstr "Náisiún eisithe an cheadúnais"

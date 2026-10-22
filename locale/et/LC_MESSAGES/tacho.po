@@ -2385,3 +2385,25 @@ msgstr "Teata probleemist"
 
 msgid "{app} version {version}"
 msgstr "{app} versioon {version}"
+
+# Card identification and driving-licence field labels (issue #13). The field
+# view shows these Title Case headings verbatim, so each catalog needs them as
+# their own entry; the summary keeps its sentence-case wording above.
+
+msgid "Issuing Nation"
+msgstr "Väljaandja riik"
+
+msgid "Expiry Date"
+msgstr "Kehtivuse lõpp"
+
+msgid "Birth Date"
+msgstr "Sünniaeg"
+
+msgid "Preferred Language"
+msgstr "Eelistatud keel"
+
+msgid "Licence Number"
+msgstr "Juhiloa number"
+
+msgid "Licence Issuing Nation"
+msgstr "Juhiloa väljaandja riik"

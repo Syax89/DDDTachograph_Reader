@@ -1,3 +1,18 @@
+## [Unreleased]
+
+### Fixed
+
+Six card-field headings — *Issuing Nation*, *Expiry Date*, *Birth Date*,
+*Preferred Language*, *Licence Number* and *Licence Issuing Nation* — stayed
+English in every translated UI. The **Identification** and **Driving Licence
+Info** panels build their headings from the record keys, and those six exact
+catalog entries were missing from all 33 catalogs, so the panel mixed translated
+and English rows. They are now translated in every shipped language, the Russian
+ones with the wording the reporting user suggested. Card data, the JSON keys, the
+English exports and the summary's own labels are unchanged.
+
+---
+
 ## [2.9.0] - 2026-10-21
 
 <!-- release-notes:start -->

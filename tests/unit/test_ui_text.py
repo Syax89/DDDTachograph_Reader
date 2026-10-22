@@ -381,3 +381,96 @@ def test_a_label_ending_in_a_date_uses_the_placeholder_entry(monkeypatch):
     assert label("Daily Activities 31/12/2031") == "Tag 31/12/2031"
     assert label("Detailed Speed 2024-12-14") == "V 2024-12-14"
     assert label("Other 01/01/2025") == "Other 01/01/2025"
+
+
+# ── the six card-field labels of the field view (issue #13) ────────────────
+#
+# ``_kv_rows`` humanises a card record's snake_case keys into these exact Title
+# Case msgids; the overview's CARD DETAILS block names the same facts with its
+# own ``"  Issuing nation"``-style literals, which every catalog already had.
+# The Title Case entries were missing, so the Identification and Driving
+# Licence Info panels fell back to English in all 33 translated UIs.
+
+#: ``(key, English msgid, the reporter's Russian wording)`` per field.
+CARD_FIELDS = (
+    ("issuing_nation", "Issuing Nation", "Страна выдачи"),
+    ("expiry_date", "Expiry Date", "Дата истечения"),
+    ("birth_date", "Birth Date", "Дата рождения"),
+    ("preferred_language", "Preferred Language", "Предпочитаемый язык"),
+    ("licence_number", "Licence Number", "Номер удостоверения"),
+    ("licence_issuing_nation", "Licence Issuing Nation",
+     "Страна выдачи удостоверения"),
+)
+CARD_RECORD = {key: "SYNTHETIC" for key, _msgid, _ru in CARD_FIELDS}
+CATALOG_CODES = tuple(code for code in i18n.LANGUAGES if code != i18n.DEFAULT_LANGUAGE)
+
+
+@pytest.mark.parametrize("code", CATALOG_CODES)
+def test_every_catalog_translates_the_six_card_field_labels(code, monkeypatch):
+    """The real field-panel rows of all six keys, in every shipped catalog.
+
+    The "translate file contents" preference cannot affect these headings — they
+    are the application's own chrome, not a value decoded from the file — so the
+    rows must read the same with the preference off and on.
+    """
+    import app.gui as gui
+    import app.ui_text as ui_text
+
+    mo_path = CATALOG_DIR / code / "LC_MESSAGES" / "tacho.mo"
+    assert mo_path.is_file(), f"{code}: {mo_path.name} is missing (run the compiler)"
+    monkeypatch.setattr(i18n, "locale_dir", lambda: str(CATALOG_DIR))
+
+    i18n.install(i18n.DEFAULT_LANGUAGE)
+    baseline = [field for field, _value in gui._kv_rows(dict(CARD_RECORD))[1]]
+    assert baseline == [msgid for _key, msgid, _ru in CARD_FIELDS]
+
+    assert i18n.install(code) == code
+    for translate_data in (False, True):
+        ui_text.configure_translate_data(translate_data)
+        rows = [(str(field), str(value))
+                for field, value in gui._kv_rows(dict(CARD_RECORD))[1]]
+        labels = [field for field, _value in rows]
+
+        assert [value for _field, value in rows] == ["SYNTHETIC"] * len(CARD_FIELDS)
+        assert all(label.strip() for label in labels), (code, labels)
+        assert len(set(labels)) == len(CARD_FIELDS), (code, labels)
+        # The summary's "  ..." entry must not leak its leading spaces here.
+        assert [label for label in labels if label != label.lstrip()] == [], (code, labels)
+        untranslated = [msgid for msgid, shown in zip(baseline, labels, strict=True)
+                        if shown == msgid]
+        assert not untranslated, f"{code}: still English: {untranslated}"
+        if code == "ru":
+            assert labels == [ru for _key, _msgid, ru in CARD_FIELDS]
+    ui_text.configure_translate_data(False)
+
+
+def test_a_real_window_renders_the_translated_card_field_rows(explorer, monkeypatch):
+    """Those headings reach the widget, not just the catalog (issue #13)."""
+    import copy
+
+    monkeypatch.setattr(i18n, "locale_dir", lambda: str(CATALOG_DIR))
+    # After construction on purpose: the panel is built from the parsed data.
+    assert i18n.install("ru") == "ru"
+
+    data = copy.deepcopy(MOCK_DDD)
+    sections = data["generations"]["Generation 1"]
+    sections["Identification"] = {key: "SYNTHETIC"
+                                  for key, _msgid, _ru in CARD_FIELDS[:4]}
+    sections["DrivingLicenceInfo"] = {key: "SYNTHETIC"
+                                      for key, _msgid, _ru in CARD_FIELDS[4:]}
+    explorer._parse_done(data, "mock.ddd")
+    explorer.update()
+
+    app_sections = (("Идентификация", CARD_FIELDS[:4]),
+                    ("Сведения о водительском удостоверении", CARD_FIELDS[4:]))
+    for heading, fields in app_sections:
+        node = next(iid for iid, payload in explorer._payloads.items()
+                    if isinstance(payload, tuple) and payload and payload[0] == heading)
+        explorer.tree.selection_set(node)
+        explorer.tree.event_generate("<<TreeviewSelect>>")
+        explorer.update()
+
+        tv = explorer.table.tv
+        rows = [tuple(str(cell) for cell in tv.item(row, "values"))
+                for row in tv.get_children("")]
+        assert rows == [(ru, "SYNTHETIC") for _key, _msgid, ru in fields]
