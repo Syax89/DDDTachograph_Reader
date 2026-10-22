@@ -2385,3 +2385,25 @@ msgstr "Sorun bildir"
 
 msgid "{app} version {version}"
 msgstr "{app} sürüm {version}"
+
+# Card identification and driving-licence field labels (issue #13). The field
+# view shows these Title Case headings verbatim, so each catalog needs them as
+# their own entry; the summary keeps its sentence-case wording above.
+
+msgid "Issuing Nation"
+msgstr "Düzenleyen ülke"
+
+msgid "Expiry Date"
+msgstr "Son kullanma tarihi"
+
+msgid "Birth Date"
+msgstr "Doğum tarihi"
+
+msgid "Preferred Language"
+msgstr "Tercih edilen dil"
+
+msgid "Licence Number"
+msgstr "Ehliyet numarası"
+
+msgid "Licence Issuing Nation"
+msgstr "Ehliyeti düzenleyen ülke"

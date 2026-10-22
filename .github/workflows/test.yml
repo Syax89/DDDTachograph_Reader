@@ -108,6 +108,7 @@ jobs:
         tests/unit/test_gui_integrity_badge.py
         tests/unit/test_batch18_gui.py
         tests/unit/test_gui_accessibility.py
+        tests/unit/test_ui_text.py
         -q
 
   coverage:

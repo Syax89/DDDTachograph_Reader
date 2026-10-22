@@ -2385,3 +2385,25 @@ msgstr "Повідомити про проблему"
 
 msgid "{app} version {version}"
 msgstr "{app} версія {version}"
+
+# Card identification and driving-licence field labels (issue #13). The field
+# view shows these Title Case headings verbatim, so each catalog needs them as
+# their own entry; the summary keeps its sentence-case wording above.
+
+msgid "Issuing Nation"
+msgstr "Країна видачі"
+
+msgid "Expiry Date"
+msgstr "Дата закінчення"
+
+msgid "Birth Date"
+msgstr "Дата народження"
+
+msgid "Preferred Language"
+msgstr "Бажана мова"
+
+msgid "Licence Number"
+msgstr "Номер посвідчення водія"
+
+msgid "Licence Issuing Nation"
+msgstr "Країна видачі посвідчення водія"
