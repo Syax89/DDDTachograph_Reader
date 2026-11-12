@@ -1,5 +1,23 @@
 ## [Unreleased]
 
+### Added
+
+- **Driving and rest times (`--rules`).** `tacho-cli card.ddd --rules` checks a
+  driver card's recorded activity against Regulation (EC) No 561/2006: breaks
+  after 4 h 30 of driving (art. 7, including the 15 + 30 min split), daily
+  driving between two daily rests with the twice-a-week 10 h extension
+  (art. 6(1)), 56 h weekly and 90 h fortnightly driving (art. 6(2)-(3)), daily
+  rest within 24 h — regular, 3 h + 9 h split or reduced, at most three reduced
+  between weekly rests (art. 8(1)-(4)) — and weekly rest timing and the two-week
+  requirement (art. 8(6)). Days are joined into one UTC timeline, so a shift
+  over midnight is measured as one. Every finding is marked *indicative, not a
+  legal determination*; a result that depends on an unrecorded period (card not
+  inserted, a missing day, the end of the download) or on crew-mode driving is
+  *indeterminate*, never an infringement. With `--json` the report is added
+  under `regulation_561`. Vehicle-unit downloads are not analysed (their
+  timeline is per vehicle and slot, not per driver). The new module is
+  `core/analysis/regulation_561.py`; the GUI is unchanged.
+
 ### Fixed
 
 - **Integrity verdict — broken card chain.** A G2 card certificate not signed by
