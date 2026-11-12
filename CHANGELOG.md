@@ -24,6 +24,11 @@
   verifies under a root already in `certs/`. Before, it was filed under the
   old root's reference, so MSCAs issued under the new root could never be
   anchored, and an unchained link would have been trusted on sight.
+- **Vehicle-unit daily totals.** On a single-manned vehicle unit the empty
+  co-driver slot (no card all day) counted as 24 h of *Unknown*, so every day
+  read "Unknown 24:00" and totalled well over 24 h (e.g. 36:01). A slot that
+  held no card at any time of the day is now left out of the totals; crew days
+  and days with no card in any slot are unchanged.
 - **Calibration due-date marker.** A next-calibration date without a time zone
   raised a swallowed `TypeError`, so the "expired / due soon" marker silently
   disappeared from the VU overview.

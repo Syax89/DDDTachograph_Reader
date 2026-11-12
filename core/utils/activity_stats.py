@@ -13,6 +13,9 @@ Semantics:
 - Rest/Available/Unknown durations are kept at the **maximum** across slots
   because they share the same 24h day and cannot exceed it (they are periods,
   not additive).
+- A slot that held no card at any time of the day (the empty co-driver slot of
+  a single-manned vehicle unit) is left out of the totals, unless no slot held
+  a card that day.
 - An activity label that is not one of the four recognised kinds is bucketed
   as ``UNKNOWN`` rather than silently dropped, so no recorded hour disappears
   from the totals.
@@ -180,6 +183,21 @@ def day_segments(changes):
     return _activity_segments(changes)
 
 
+def _slots_with_a_card(changes):
+    """Slots holding a card for at least part of the day.
+
+    A slot counts unless *every* one of its changes explicitly says
+    ``card_inserted`` False; records that carry no such flag (driver-card
+    downloads) always count, so their totals are unchanged.
+    """
+    carded = set()
+    for ch in changes:
+        if isinstance(ch, dict) and ch.get("card_inserted") is not False \
+                and parse_time(ch.get("time", "")) is not None:
+            carded.add(str(ch.get("slot") or "First"))
+    return carded
+
+
 def compute_activity_totals(changes):
     """Return dict {ACTIVITY: total_minutes} from a list of activity changes.
 
@@ -192,7 +210,16 @@ def compute_activity_totals(changes):
     max, like REST/AVAILABLE).
     """
     totals = {a: 0 for a in ACTIVITY_KINDS + (UNKNOWN_ACTIVITY,)}
-    for segments in _activity_segments(changes).values():
+    carded = _slots_with_a_card(changes)
+    for slot, segments in _activity_segments(changes).items():
+        if carded and slot not in carded:
+            # A slot with no card inserted all day (the empty co-driver slot of
+            # a single-manned vehicle unit) records no driver at all. Counting
+            # its 24h of card-absent UNKNOWN made every VU day read
+            # "Unknown 24:00", and the day total exceed 24h, although only one
+            # driver was on board. A day on which no slot ever held a card
+            # keeps its UNKNOWN time (``carded`` is empty).
+            continue
         slot_tot: dict[str, int] = {}
         for start, end, act in segments:
             slot_tot[act] = slot_tot.get(act, 0) + (end - start) // 60
