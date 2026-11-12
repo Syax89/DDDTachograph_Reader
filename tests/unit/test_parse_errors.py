@@ -107,3 +107,22 @@ def test_smoke_check_rejects_structured_parse_error(monkeypatch, tmp_path):
 
     assert gui._smoke_check(str(tmp_path / "input.ddd")) == 1
     assert messages[-1] == "SMOKE FAIL: parse error File is empty"
+
+
+def test_oversized_file_fails_fast_with_structured_parse_error(tmp_path, monkeypatch):
+    from app import engine
+    path = tmp_path / "huge.ddd"
+    path.write_bytes(b"\x76\x21" * 64)
+    monkeypatch.setattr(engine, "MAX_FILE_SIZE_BYTES", 100)
+    with patch.object(TachoParser, "_open_file") as opened:
+        result = TachoParser(str(path)).parse()
+
+    opened.assert_not_called()
+    assert result["metadata"]["parse_error"]["code"] == "file_too_large"
+    assert "128 bytes" in result["metadata"]["parse_error"]["message"]
+    assert result["metadata"]["integrity_check"] == "File Too Large"
+
+
+def test_size_cap_is_generous():
+    from app.engine import MAX_FILE_SIZE_BYTES
+    assert MAX_FILE_SIZE_BYTES >= 16 * 1024 * 1024

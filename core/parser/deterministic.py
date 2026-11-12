@@ -906,6 +906,9 @@ class DeterministicParser:
                 else:
                     dec.decoder_fn(payload, self.results)
             except Exception:
+                # Not silent: the shared logger's failure counter tallies this
+                # line, so it reaches metadata.decoder_failures and the
+                # "Decoder failures" row of the summary and reports.
                 _log.warning("Decoder 0x%04X (%s) dispatch failed", tag,
                            dec.name if dec else "unknown", exc_info=True)
 

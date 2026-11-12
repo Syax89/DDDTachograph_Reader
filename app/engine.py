@@ -45,6 +45,13 @@ def _results_size(results):
     return sum(len(value) for value in _result_records(results).values())
 
 
+# Largest input accepted. Real downloads are well under 1 MB (a VU with
+# detailed speed reaches a few MB); a crafted file of repeated bytes made the
+# structural walk take tens of seconds per megabyte, so anything this large is
+# refused up front instead of hanging the caller.
+MAX_FILE_SIZE_BYTES = 32 * 1024 * 1024
+
+
 def _parse_timestamp(value):
     """Parse an ISO-8601 tachograph timestamp to an aware UTC datetime, or None."""
     if not isinstance(value, str) or not value:
@@ -181,6 +188,14 @@ class TachoParser:
             self.results["metadata"]["parse_error"] = {
                 "code": "empty_file",
                 "message": "File is empty",
+            }
+            return self.results
+        if self.file_size > MAX_FILE_SIZE_BYTES:
+            self.results["metadata"]["integrity_check"] = "File Too Large"
+            self.results["metadata"]["parse_error"] = {
+                "code": "file_too_large",
+                "message": (f"File is too large ({self.file_size} bytes; "
+                            f"limit {MAX_FILE_SIZE_BYTES} bytes)"),
             }
             return self.results
 
@@ -950,23 +965,66 @@ class TachoParser:
         latest["recorded_until"] = f"{cut // 3600:02d}:{cut % 3600 // 60:02d}"
 
     def _signature_timestamp(self):
-        """The moment the download was signed, for certificate-date evaluation.
+        """The reference instant certificate dates are judged against.
 
-        For a VU download this is the latest VuDownloadActivityData
-        ``downloading_time``; for a driver card the EF Card_Download date.
-        Returns ``None`` when the file carries no such timestamp, so an undated
-        file keeps its historical "not checked" behaviour instead of being
-        judged against the wall clock (a historic download's expired certificate
-        remains useful evidence).
+        The file carries no reliable download time: VuDownloadActivityData
+        ``downloading_time`` and EF Card_Download hold the *previous* download
+        (verified on real files), so judging certificates against them could
+        call a certificate valid that had already expired when this data was
+        recorded. The reference is therefore the latest instant the file
+        records:
+
+        * the most recent activity day, at its ``recorded_until`` cut (set by
+          ``_mark_last_recorded_day``, which runs just before the
+          certificate-chain phase) or else its latest status change;
+        * for a VU, every VuDownloadablePeriod ``max_downloadable_time``;
+        * the download-time fields above, kept as a lower bound.
+
+        Instants later than the wall clock (plus a day of clock skew) are
+        ignored: a corrupt date must not make every certificate look expired.
+        Returns ``None`` when nothing usable is found, so an undated file keeps
+        its historical "not checked" behaviour instead of being judged against
+        the wall clock (a historic download's expired certificate remains
+        useful evidence). The same instant is passed to ``verify_vu_download``,
+        which runs in the earlier VU-semantics phase before ``recorded_until``
+        exists; the result is identical there, because that cut is only ever
+        the day's latest change or a same-day ``max_downloadable_time``, both
+        of which are candidates here already.
         """
-        candidates = []
+        from core.utils.activity_stats import parse_time
+        parsed = []
         for entry in self.results.get("download_activities") or []:
             if isinstance(entry, dict):
-                candidates.append(entry.get("downloading_time"))
+                parsed.append(_parse_timestamp(entry.get("downloading_time")))
         for entry in self.results.get("card_downloads") or []:
             if isinstance(entry, dict):
-                candidates.append(entry.get("download_time"))
-        parsed = [t for t in (_parse_timestamp(value) for value in candidates) if t]
+                parsed.append(_parse_timestamp(entry.get("download_time")))
+        if self.is_vu:
+            for period in self.results.get("downloadable_periods") or []:
+                if isinstance(period, dict):
+                    parsed.append(_parse_timestamp(period.get("max_downloadable_time")))
+        latest_day = None
+        for day in self.results.get("activities") or []:
+            if not isinstance(day, dict):
+                continue
+            try:
+                when = datetime.strptime(day.get("date"), "%d/%m/%Y")
+            except (ValueError, TypeError):
+                continue
+            if latest_day is None or when > latest_day[1]:
+                latest_day = (day, when)
+        if latest_day is not None:
+            day, when = latest_day
+            secs = parse_time(day.get("recorded_until", ""))
+            if secs is None:
+                times = [parse_time(ch.get("time", "")) for ch in day.get("changes") or []
+                         if isinstance(ch, dict)]
+                times = [t for t in times if t is not None]
+                secs = max(times) if times else 0
+            parsed.append(datetime.fromtimestamp(
+                when.replace(tzinfo=timezone.utc).timestamp() + secs, tz=timezone.utc))
+        horizon = datetime.now(timezone.utc).timestamp() + 86400
+        parsed = [t for t in parsed if t is not None and t.timestamp() <= horizon]
         return max(parsed) if parsed else None
 
     def _validate_certificate_chain(self):
