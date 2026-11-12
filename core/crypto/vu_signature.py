@@ -41,8 +41,8 @@ _CURVE_OID_LABELS = EC_CURVE_OIDS
 
 _CURVES = {
     "2b2403030208010107": (ec.BrainpoolP256R1(), hashes.SHA256),  # brainpoolP256r1
-    "2b2403030208010b0d": (ec.BrainpoolP384R1(), hashes.SHA384),  # brainpoolP384r1
-    "2b2403030208010d0b": (ec.BrainpoolP512R1(), hashes.SHA512),  # brainpoolP512r1
+    "2b240303020801010b": (ec.BrainpoolP384R1(), hashes.SHA384),  # brainpoolP384r1
+    "2b240303020801010d": (ec.BrainpoolP512R1(), hashes.SHA512),  # brainpoolP512r1
     "2a8648ce3d030107": (ec.SECP256R1(), hashes.SHA256),          # NIST P-256
     "2b81040022": (ec.SECP384R1(), hashes.SHA384),                # NIST P-384
     "2b81040023": (ec.SECP521R1(), hashes.SHA512),                # NIST P-521

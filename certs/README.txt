@@ -11,3 +11,8 @@ G2 (Annex 1C, brainpoolP256r1 ECDSA):
 
 The ERCA-2 public key is published by the EU JRC Digital Tachograph team
 at https://dtc.jrc.ec.europa.eu/
+
+ERCA link certificates (old root -> new root, CVC 0x7F21) can be placed here
+as .bin files next to the root they chain from. A link is trusted only when
+its signature verifies under a root already in this directory; its key is then
+registered under the new root's reference (CHR).

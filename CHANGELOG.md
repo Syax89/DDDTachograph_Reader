@@ -14,6 +14,16 @@
 - **Integrity verdict — G1 VU unsigned tail.** Bytes after the last framed G1 VU
   message are now reported as `unsigned_bytes` and keep the download at
   *Partial*, as the G2 path already did. A short `0x76 0x00` trailer is ignored.
+- **Certificates on brainpoolP384r1 / brainpoolP512r1.** Their curve OIDs were
+  mis-encoded, so no 384- or 512-bit CVC certificate could be verified (or
+  named) — every chain under such an MSCA or ERCA failed. Found by running the
+  JRC interoperability test PKI through the verifier: 42 of its 115
+  certificates failed before the fix, none after.
+- **ERCA link certificates.** A link certificate (old root → new root) is now
+  registered under the new root it certifies, and only after its signature
+  verifies under a root already in `certs/`. Before, it was filed under the
+  old root's reference, so MSCAs issued under the new root could never be
+  anchored, and an unchained link would have been trusted on sight.
 - **Calibration due-date marker.** A next-calibration date without a time zone
   raised a swallowed `TypeError`, so the "expired / due soon" marker silently
   disappeared from the VU overview.
