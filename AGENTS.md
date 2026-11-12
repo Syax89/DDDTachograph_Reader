@@ -45,4 +45,4 @@ All tag specifications are in `scripts/`:
 - Reg. EU 2021/1228 — G2.2 additional specs
 
 ## Coverage guarantee
-Every tracked `.ddd` sample in `DDD/` is parsed with full byte coverage. `DeterministicParser._classify_gaps()` sweeps any bytes missed by the structural walk, classifying them as padding or tracked unknown ranges. Shared interval merging via `core/coverage_utils.merge_intervals()`. Coverage audit: `python3 scripts/coverage_audit.py`.
+Every tracked `.ddd` sample in `DDD/` is parsed with full byte coverage. `DeterministicParser._classify_gaps()` sweeps any bytes missed by the structural walk, classifying them as padding or tracked unknown ranges. Shared interval merging via `core/utils/coverage.merge_intervals()`. Coverage audit: `python3 scripts/coverage_audit.py`.
