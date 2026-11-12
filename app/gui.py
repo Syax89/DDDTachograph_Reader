@@ -96,7 +96,8 @@ from core.utils.report_format import (  # noqa: E402
     fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
 from core.utils.activity_stats import (  # noqa: E402
     DAILY_DRIVE_LIMIT_MIN, QUALIFYING_BREAK_MIN,
-    RULE_CONTINUOUS_DRIVING, RULE_DAILY_DRIVING, evaluate_driving_rules)
+    RULE_CONTINUOUS_DRIVING, RULE_DAILY_DRIVING, evaluate_driving_rules,
+    recorded_until_seconds)
 from core.decoders.common import nation_full_name, get_nation  # noqa: E402
 from app.i18n import (  # noqa: E402
     LANGUAGES, _, add_recent_file, install, save_language, save_translate_data,
@@ -698,7 +699,7 @@ def _parse_iso(value):
     return dt.astimezone(timezone.utc)
 
 
-def _compute_activity_totals(changes):
+def _compute_activity_totals(changes, recorded_until=None):
     """Return dict {ACTIVITY: total_minutes} from a list of activity changes.
 
     Changes are grouped per card slot (driver) first, so crew days (two
@@ -710,7 +711,7 @@ def _compute_activity_totals(changes):
     across slots because they share the same 24h day and cannot exceed it.
     """
     from core.utils.activity_stats import compute_activity_totals as _shared
-    return _shared(changes)
+    return _shared(changes, recorded_until)
 
 
 def _changes_for_slot(changes, slot_name):
@@ -2313,12 +2314,14 @@ class ActivityTimelineChart(ttk.Frame):
         self._changes_count = 0
         self._vehicle_info = []
         self._details_data = {}
+        self._recorded_until = None
 
     def show(self, day, is_vu, activities, day_km=0, changes_count=0,
              driver_info="", slot_schedule=None, markers=None,
-             vehicle_info=None, oos_events=None, data=None):
+             vehicle_info=None, oos_events=None, data=None, recorded_until=None):
         self._day = day
-        self._slots = self._build_blocks(activities, is_vu)
+        self._recorded_until = recorded_until
+        self._slots = self._build_blocks(activities, is_vu, recorded_until)
         self._slot_schedule = slot_schedule or {}
         self._markers = markers or []
         self._oos_events = oos_events or []
@@ -2338,7 +2341,8 @@ class ActivityTimelineChart(ttk.Frame):
                             self._changes_count, self._driver_name,
                             self._slot_schedule, self._markers,
                             self._oos_events, self._vehicle_info,
-                            self._details_data, is_vu=self._is_vu)
+                            self._details_data, is_vu=self._is_vu,
+                            recorded_until=self._recorded_until)
 
         self.detail_btn.unbind("<Button-1>")
         self.detail_btn.bind("<Button-1>", _open_detail)
@@ -2400,7 +2404,7 @@ class ActivityTimelineChart(ttk.Frame):
         return parse_time(time_str)
 
     @staticmethod
-    def _build_blocks(changes, is_vu):
+    def _build_blocks(changes, is_vu, recorded_until=None):
         """Convert a list of activity changes to per-slot block lists.
 
         The segmentation comes from :func:`core.utils.activity_stats.day_segments`,
@@ -2430,7 +2434,7 @@ class ActivityTimelineChart(ttk.Frame):
         for ch in changes:
             if isinstance(ch, dict):
                 blocks.setdefault(label(ch.get("slot") or "First"), [])
-        for raw_slot, segments in day_segments(changes).items():
+        for raw_slot, segments in day_segments(changes, recorded_until).items():
             blocks.setdefault(label(raw_slot), []).extend(segments)
         return blocks
 
@@ -2761,7 +2765,8 @@ class DayDetailWindow(tk.Toplevel):
 
     def __init__(self, parent, day, activities, day_km, changes_count,
                  driver_info, slot_schedule, markers, oos_events,
-                 vehicle_info, data, is_vu=False, initial_slot=1):
+                 vehicle_info, data, is_vu=False, initial_slot=1,
+                 recorded_until=None):
         # GUI-STALE-DAY-POPUP (G-F1/XG-F5): the reuse key must carry the FILE
         # identity, not just the day label. Two different files can share a
         # ``dd/mm/yyyy`` day (e.g. two downloads covering the same date); keying
@@ -2800,6 +2805,9 @@ class DayDetailWindow(tk.Toplevel):
         self._iso_date = _activity_to_iso(day)
         self._is_vu = is_vu
         self._data = data
+        # Seconds at which the recording of this (most recent) day ends, or
+        # None: the last entry then lasts until 24:00, as on every other day.
+        self._recorded_until = recorded_until
         self._slot_schedule = slot_schedule or {}
         self._markers = markers or []
         self._oos_events = oos_events or []
@@ -3171,20 +3179,31 @@ class DayDetailWindow(tk.Toplevel):
                 continue
             start_min = _hhmm_to_min(start_time)
             next_time = "24:00"
+            open_ended = False
             if i + 1 < len(activities):
                 nt = activities[i + 1].get("time", "")
                 if isinstance(nt, str) and ":" in nt:
                     next_time = nt
+            elif self._recorded_until is not None:
+                # The download's most recent day: the recording ends here, so
+                # the last entry's duration is unknown rather than "until
+                # midnight" (core.utils.activity_stats._cut_at).
+                cut_min = self._recorded_until // 60
+                if cut_min > start_min:
+                    next_time = f"{cut_min // 60:02d}:{cut_min % 60:02d}"
+                else:
+                    open_ended = True
             end_min = _hhmm_to_min(next_time)
             dur_min = max(0, end_min - start_min)
-            if dur_min <= 0:
+            if dur_min <= 0 and not open_ended:
                 continue
-            dur_str = _format_duration(dur_min)
+            dur_str = _format_duration(dur_min) if not open_ended else "\u2014"
 
             slot = ch.get("slot", "")
             crew = ch.get("crew", False)
             card_in = ch.get("card_inserted", True)
-            time_range = f"{start_time} \u2192 {next_time}"
+            time_range = (f"{start_time} \u2192 ?" if open_ended
+                          else f"{start_time} \u2192 {next_time}")
             detail = _fmt_range_dur(time_range, dur_str)
 
             # Driver / slot info
@@ -5737,11 +5756,11 @@ class TachoExplorer(tk.Tk):
 
     def _add_activity_day(self, parent, day, is_vu, activities, day_km,
                           changes_count, driver_info, slot_schedule, markers,
-                          oos_events=None, vehicle_info=None):
+                          oos_events=None, vehicle_info=None, recorded_until=None):
         iid = self.tree.insert(parent, tk.END, text=day)
         self._payloads[iid] = ("__activity_chart__", day, is_vu, activities,
                                day_km, changes_count, driver_info, slot_schedule,
-                               markers, oos_events, vehicle_info)
+                               markers, oos_events, vehicle_info, recorded_until)
         return iid
 
     @staticmethod
@@ -6018,7 +6037,8 @@ class TachoExplorer(tk.Tk):
             day_node = self._add_activity_day(node, date_str, is_vu, changes,
                                               day_km, changes_count, day_di,
                                               day_schedule, day_markers,
-                                              oos_events, day_vehicles)
+                                              oos_events, day_vehicles,
+                                              recorded_until_seconds(day_data))
             # A card day has no odometer reading, only its own distance
             # (Annex 1B ActivityDayDistance); a VU day carries a reading.
             # Show whichever value the row actually has, under a header that
@@ -6626,7 +6646,8 @@ class TachoExplorer(tk.Tk):
             self, "_vu_slot_filter", "Slot 1") == "Slot 2") else 1
         DayDetailWindow(self, date_str, changes, day_km, changes_count,
                         driver_name, slot_schedule, markers, oos_events,
-                        day_vehicles, data, is_vu=is_vu, initial_slot=initial_slot)
+                        day_vehicles, data, is_vu=is_vu, initial_slot=initial_slot,
+                        recorded_until=recorded_until_seconds(day_data))
 
     def _on_dashboard_motion(self, event):
         drv_col = getattr(self, "_dashboard_drv_col", -1)
@@ -6996,7 +7017,8 @@ class TachoExplorer(tk.Tk):
                 else:
                     day_km = card_day_km.get(id(day_data), 0)
                     odo = 0
-                day_tots = _compute_activity_totals(changes)
+                day_cut = recorded_until_seconds(day_data)
+                day_tots = _compute_activity_totals(changes, day_cut)
                 # Driving-time rules of Reg. (EC) 561/2006: art. 6(1) (more than
                 # 9 h of daily driving) and art. 7 (more than 4 h 30 min of
                 # continuous driving without a qualifying break). A crew day is
@@ -7006,7 +7028,7 @@ class TachoExplorer(tk.Tk):
                 # (:data:`SHOW_DRIVING_INFRACTIONS`) must not stop the
                 # computation, so flipping the switch back is one line and the
                 # verdict is already there.
-                day_rules = evaluate_driving_rules(changes)
+                day_rules = evaluate_driving_rules(changes, day_cut)
                 for act in totals_global:
                     totals_global[act] += day_tots[act]
                 for act in m_tot:
@@ -7379,11 +7401,13 @@ class TachoExplorer(tk.Tk):
         payload = self._payloads.get(iid)
         if not payload or payload[0] != "__activity_chart__":
             return False
-        day, is_vu, activities, day_km, changes_count, driver_info, slot_schedule, markers, oos_events, vehicle_info = payload[1:]
+        (day, is_vu, activities, day_km, changes_count, driver_info, slot_schedule,
+         markers, oos_events, vehicle_info, *rest) = payload[1:]
         data = getattr(self, "_opened_data", None) or {}
         DayDetailWindow(self, day, activities, day_km, changes_count,
                         driver_info, slot_schedule, markers, oos_events,
-                        vehicle_info, data, is_vu=is_vu)
+                        vehicle_info, data, is_vu=is_vu,
+                        recorded_until=rest[0] if rest else None)
         return True
 
     def _on_tree_select(self, _event):
@@ -7472,7 +7496,7 @@ class TachoExplorer(tk.Tk):
 
     def _show_activity_chart(self, day, is_vu, activities, day_km,
                              changes_count, driver_info, slot_schedule, markers,
-                             oos_events=None, vehicle_info=None):
+                             oos_events=None, vehicle_info=None, recorded_until=None):
         self._cleanup_dashboard()
         self._hide_empty_state()
         self.table.pack_forget()
@@ -7481,7 +7505,8 @@ class TachoExplorer(tk.Tk):
         self.activity_chart.show(day, is_vu, activities, day_km,
                                  changes_count, driver_info, slot_schedule, markers,
                                  vehicle_info, oos_events,
-                                 data=getattr(self, "_opened_data", None) or {})
+                                 data=getattr(self, "_opened_data", None) or {},
+                                 recorded_until=recorded_until)
 
     def _show_summary(self, title, cols, rows, meta):
         """Render a rich info panel with section headers instead of a data table."""
@@ -7766,7 +7791,8 @@ class TachoExplorer(tk.Tk):
             changes = record.get("changes") if isinstance(record, dict) else None
             if not isinstance(changes, list) or not changes:
                 continue
-            day_totals = _compute_activity_totals(changes)
+            day_totals = _compute_activity_totals(
+                changes, recorded_until_seconds(record))
             for activity in totals:
                 totals[activity] += day_totals[activity]
 

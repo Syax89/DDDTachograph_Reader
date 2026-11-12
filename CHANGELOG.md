@@ -29,6 +29,16 @@
   read "Unknown 24:00" and totalled well over 24 h (e.g. 36:01). A slot that
   held no card at any time of the day is now left out of the totals; crew days
   and days with no card in any slot are unchanged.
+- **The download's last day no longer runs to midnight.** Its final status
+  entry says what was happening at that instant, not for how long, yet it was
+  stretched to 24:00 — a card downloaded at 18:49 whose last entry was "DRIVE
+  at 15:59" reported 15:23 of driving instead of 7:22, and G1 cards showed up
+  to 17 h of *Work* on their download day. The parser now marks the most recent
+  day with `recorded_until` (its last status change or, for a vehicle unit,
+  the `maxDownloadableTime` on that day) and every view — dashboard, timeline,
+  day detail, PDF/Excel/CSV, CLI — counts the rest of that day as *Unknown*.
+  The file holds no reliable download time: `VuDownloadActivityData` and EF
+  `Card_Download` record the *previous* download.
 - **Calibration due-date marker.** A next-calibration date without a time zone
   raised a swallowed `TypeError`, so the "expired / due soon" marker silently
   disappeared from the VU overview.

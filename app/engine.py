@@ -203,6 +203,7 @@ class TachoParser:
             self.results["metadata"]["coverage_pct"] = \
                 self.results.get("coverage", {}).get("covered_pct", 100.0)
             self._run_phase("activity_dedup", self._dedup_and_sort_activities)
+            self._run_phase("last_recorded_day", self._mark_last_recorded_day)
             chain_phase_ok = self._run_phase(
                 "certificate_chain", self._validate_certificate_chain)
             self._run_phase("g1_vu_signatures", self._verify_g1_vu_signatures)
@@ -898,6 +899,55 @@ class TachoParser:
             unique.append(act)
         unique.sort(key=lambda x: _safe_parse_date(x.get("date")) or datetime.min, reverse=True)
         self.results["activities"] = unique
+
+    def _mark_last_recorded_day(self):
+        """Mark where the recording of the download's most recent day ends.
+
+        Every earlier day is closed by the next day's 00:00 status entry; the
+        most recent one is not, and its last entry used to be stretched to
+        24:00, inventing hours (a card downloaded at 18:49 whose last entry was
+        "DRIVE at 15:59" showed 8 h of extra driving). The file carries no
+        reliable download time: VuDownloadActivityData and EF Card_Download
+        hold the *previous* download. The cut is therefore the last recorded
+        instant: the day's latest status change, or — for a VU — the
+        VuDownloadablePeriod ``maxDownloadableTime`` when it falls on that day
+        (the latest data the unit held). A ``maxDownloadableTime`` on a later
+        date means the unit recorded past this day, which is then complete.
+        The activity totals treat the time after the cut as UNKNOWN
+        (``core.utils.activity_stats.recorded_until_seconds``).
+        """
+        from core.utils.activity_stats import parse_time
+        def _day_date(value):
+            try:
+                return datetime.strptime(value, "%d/%m/%Y")
+            except (ValueError, TypeError):
+                return None
+
+        days = [(d, _day_date(d.get("date")))
+                for d in self.results.get("activities") or [] if isinstance(d, dict)]
+        days = [(d, when) for d, when in days if when is not None]
+        if not days:
+            return
+        latest, latest_date = max(days, key=lambda item: item[1])
+        times = [parse_time(ch.get("time", "")) for ch in latest.get("changes") or []
+                 if isinstance(ch, dict)]
+        times = [t for t in times if t is not None]
+        cut = max(times) if times else None
+        if self.is_vu:
+            for period in self.results.get("downloadable_periods") or []:
+                if not isinstance(period, dict):
+                    continue
+                newest = _parse_timestamp(period.get("max_downloadable_time"))
+                if newest is None:
+                    continue
+                if newest.date() > latest_date.date():
+                    return
+                if newest.date() == latest_date.date():
+                    secs = newest.hour * 3600 + newest.minute * 60
+                    cut = secs if cut is None else max(cut, secs)
+        if cut is None:
+            return
+        latest["recorded_until"] = f"{cut // 3600:02d}:{cut % 3600 // 60:02d}"
 
     def _signature_timestamp(self):
         """The moment the download was signed, for certificate-date evaluation.

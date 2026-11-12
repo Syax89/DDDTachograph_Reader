@@ -12,7 +12,7 @@ from datetime import datetime
 
 from core.utils.encoding import BytesEncoder
 from core.utils.version import __version__
-from core.utils.activity_stats import compute_activity_totals
+from core.utils.activity_stats import compute_activity_totals, recorded_until_seconds
 
 
 def main():
@@ -329,7 +329,8 @@ def print_summary(data, file=None):
             date_val = day_block.get("date", "")
             if date_val:
                 dates.add(date_val)
-            totals = compute_activity_totals(day_block.get("changes") or [])
+            totals = compute_activity_totals(day_block.get("changes") or [],
+                                             recorded_until_seconds(day_block))
             drive_min += totals["DRIVE"]
             work_min += totals["WORK"]
             rest_min += totals["REST"]

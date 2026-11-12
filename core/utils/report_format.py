@@ -8,7 +8,7 @@ humanised (``vehicle_plate`` → ``Vehicle Plate``).
 """
 import re
 
-from core.utils.activity_stats import compute_activity_totals
+from core.utils.activity_stats import compute_activity_totals, recorded_until_seconds
 
 # Tachograph "data not available" sentinels.
 _NOT_AVAILABLE_INTS = {0xFFFFFF, 0xFFFFFFFF}
@@ -649,7 +649,7 @@ def _compute_day_hours(day):
     buckets = {"drive": 0, "work": 0, "rest": 0, "available": 0, "unknown": 0}
     if not isinstance(changes, list) or not changes:
         return buckets, 0
-    totals = compute_activity_totals(changes)
+    totals = compute_activity_totals(changes, recorded_until_seconds(day))
     buckets["drive"] = totals["DRIVE"]
     buckets["work"] = totals["WORK"]
     buckets["rest"] = totals["REST"]
