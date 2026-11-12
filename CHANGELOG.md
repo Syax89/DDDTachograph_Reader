@@ -92,6 +92,12 @@
 
 ### Maintenance
 
+- `pytest tests/` now generates the synthetic mock downloads before collection
+  when they are missing, so about a hundred mock-based tests run locally as
+  they do in CI instead of being skipped (`TACHO_NO_MOCK_GENERATION=1` opts
+  out). Tests that read real files from `DDD/` no longer assume the original
+  author's corpus: they skip when the needed kind of download is absent and
+  check exact corpus counts only on that corpus.
 - `app/gui.py` shrank by about 1 600 lines: the detailed-speed chart moved to
   `app/gui_speed_chart.py` and the day-detail window to `app/gui_day_detail.py`
   (unchanged code; `app.gui` re-exports every name). Tests that inspect the
