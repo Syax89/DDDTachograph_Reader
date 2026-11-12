@@ -45,6 +45,10 @@ Examples:
     parser.add_argument("--pdf", nargs="?", const="auto", metavar="FILE", help="Generate PDF report (optional: file path)")
     parser.add_argument("--excel", nargs="?", const="auto", metavar="FILE", help="Generate Excel report (optional: file path)")
     parser.add_argument("--csv", nargs="?", const="auto", metavar="FILE", help="Generate CSV report (optional: file path)")
+    parser.add_argument("--gpx", nargs="?", const="auto", metavar="FILE",
+                        help="Export the GNSS positions as GPX (optional: file path)")
+    parser.add_argument("--kml", nargs="?", const="auto", metavar="FILE",
+                        help="Export the GNSS positions as KML (optional: file path)")
     parser.add_argument("--all", nargs="?", const="auto", metavar="DIR", help="Generate all formats in a directory")
     parser.add_argument("--summary", action="store_true", help="Show compact text summary")
     parser.add_argument("--version", action="version",
@@ -143,6 +147,7 @@ def _process_file(args, path, batch=False):
     # and the batch table.
     stdout_is_json = not batch and (json_to_stdout or (
         not args.json and not args.pdf and not args.excel and not args.csv
+        and not args.gpx and not args.kml
         and not args.summary and not args.quiet))
     notice = sys.stderr if stdout_is_json else sys.stdout
 
@@ -196,6 +201,10 @@ def _process_file(args, path, batch=False):
             args.excel = resolve_path("auto", "xlsx", out_dir)
         if args.csv in (None, "auto"):
             args.csv = resolve_path("auto", "csv", out_dir)
+        # GPX/KML stay opt-in, but a bare flag lands in the --all directory.
+        for attr in ("gpx", "kml"):
+            if getattr(args, attr) == "auto":
+                setattr(args, attr, resolve_path("auto", attr, out_dir))
 
     generated = []
     export_failed = False
@@ -259,11 +268,25 @@ def _process_file(args, path, batch=False):
                 import traceback
                 traceback.print_exc()
 
+    # GNSS positions (GPX / KML). Not part of --all: a map file is asked for.
+    for attr, label in (("gpx", "GPX"), ("kml", "KML")):
+        target = getattr(args, attr)
+        if not target:
+            continue
+        geo_path = resolve_path(target, attr)
+        try:
+            from app.geo_export import export_positions
+            export_positions(result, geo_path, attr)
+            generated.append((label, geo_path))
+        except Exception as e:
+            export_failed = True
+            warn(f"{label} generation failed: {e}")
+
     # Summary — ``-q`` promises to suppress everything on screen, so it holds
     # back an explicit ``--summary`` too (CLI-QUIET).
     if not args.quiet and (
             args.summary or (not args.json and not args.pdf and not args.excel
-                             and not args.csv)):
+                             and not args.csv and not args.gpx and not args.kml)):
         print_summary(result, file=notice)
 
     # JSON on standard output: the documented default, or an explicit ``--json -``.
@@ -280,7 +303,8 @@ def _process_file(args, path, batch=False):
 
 
 # Output flags and the extension of the file each writes.
-_FORMATS = (("json", "json"), ("pdf", "pdf"), ("excel", "xlsx"), ("csv", "csv"))
+_FORMATS = (("json", "json"), ("pdf", "pdf"), ("excel", "xlsx"), ("csv", "csv"),
+            ("gpx", "gpx"), ("kml", "kml"))
 
 
 def _collect_inputs(paths, recursive):

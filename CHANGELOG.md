@@ -2,7 +2,7 @@
 
 ### Added
 
-- **GPX / KML export of GNSS positions** (Export menu): the route from the
+- **GPX / KML export of GNSS positions** (Export menu, CLI `--gpx`/`--kml`): the route from the
   accumulated-driving positions as a track, plus daily work period places,
   border crossings and load/unload operations as waypoints. Positions without
   a valid fix are left out; no driver or card identifier is written. Files

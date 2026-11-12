@@ -90,6 +90,20 @@ python -m app.cli file.ddd --pdf report.pdf
 python -m app.cli file.ddd --csv report.csv
 ```
 
+**GNSS positions for a map** (G2/G2.2 files; generation 1 records no
+positions, so its file is empty but valid):
+
+```bash
+python -m app.cli file.ddd --gpx route.gpx
+python -m app.cli file.ddd --kml route.kml
+```
+
+The route (positions recorded every 3 h of accumulated driving) is a track;
+the start/end of each daily work period, border crossings and load/unload
+operations are waypoints. No driver name or card number is written. GPX/KML
+are not part of `--all`; a bare `--gpx`/`--kml` next to `--all` writes into
+that directory, and in a batch `--gpx DIR`/`--kml DIR` write one file per input.
+
 **All formats at once** (JSON, PDF, Excel, CSV into a directory):
 
 ```bash
@@ -141,6 +155,8 @@ matters: `python -m app.cli file.ddd --json out.json --quiet`.
 | `--pdf` | `[FILE]` | Generate PDF report (optional output path; needs `reportlab`) |
 | `--excel` | `[FILE]` | Generate Excel report (optional output path; needs `openpyxl`) |
 | `--csv` | `[FILE]` | Generate CSV report (optional output path) |
+| `--gpx` | `[FILE]` | Export the GNSS positions as GPX (optional output path) |
+| `--kml` | `[FILE]` | Export the GNSS positions as KML (optional output path) |
 | `--all` | `[DIR]` | Generate all four formats into a directory (in a batch: every file's reports into that one directory) |
 | `--summary` | — | Show the compact text summary on screen |
 | `--version` | — | Print the reader version (`TachoReader 2.9.1`) |
