@@ -135,12 +135,13 @@ matters: `python -m app.cli file.ddd --json out.json --quiet`.
 
 | Flag | Argument | Description |
 |------|----------|-------------|
-| *(positional)* | `FILE` | Path to the `.ddd` file to analyse (required) |
+| *(positional)* | `PATH …` | One or more `.ddd` files or directories (required); more than one, or any directory, makes a [batch](#batch-processing) |
+| `-r`, `--recursive` | — | In a batch, also scan the subdirectories of a directory argument |
 | `--json` | `[FILE]` | Generate JSON output (optional output path) |
 | `--pdf` | `[FILE]` | Generate PDF report (optional output path; needs `reportlab`) |
 | `--excel` | `[FILE]` | Generate Excel report (optional output path; needs `openpyxl`) |
 | `--csv` | `[FILE]` | Generate CSV report (optional output path) |
-| `--all` | `[DIR]` | Generate all four formats into a directory |
+| `--all` | `[DIR]` | Generate all four formats into a directory (in a batch: every file's reports into that one directory) |
 | `--summary` | — | Show the compact text summary on screen |
 | `--version` | — | Print the reader version (`TachoReader 2.9.1`) |
 | `-v`, `--verbose` | — | Verbose debug output |
@@ -149,21 +150,76 @@ matters: `python -m app.cli file.ddd --json out.json --quiet`.
 **Exit codes:** `0` on success; `1` when the file is missing, cannot be parsed,
 carries no decodable tachograph structure (`Error: no tachograph structure was
 decoded` — no card, VU or certificate record could be decoded from it), or an
-export failed; `2` for a usage error (unknown flag, missing file argument).
+export failed; `2` for a usage error (unknown flag, missing file argument,
+`--json -` with several inputs). In a batch, `0` means every input was processed
+and `1` that at least one failed — the others were still processed.
 
 ---
 
 ## Batch Processing
 
-The CLI processes one file per invocation. To process a directory, loop in the shell:
+Give several paths, or a directory, and the CLI processes them all in one run:
 
 ```bash
-for f in DDD/*.ddd; do
-  python -m app.cli "$f" --json --quiet
-done
+python -m app.cli DDD/ --summary                   # every .ddd in DDD/
+python -m app.cli DDD/ --recursive --all reports/   # sub-folders too, all formats
+python -m app.cli a.ddd b.ddd "c d.ddd" --excel xlsx/
 ```
 
-Quote `"$f"`: tachograph download names often contain spaces.
+**Which files.** A file argument is processed as given. A directory contributes
+the `.ddd` files directly inside it (the extension in any letter case: `.ddd`,
+`.DDD`), in name order; `-r` / `--recursive` adds those in its subdirectories.
+Other files are ignored. A file reached twice (a file and its own folder) is
+processed once. A directory holding no `.ddd` file is reported as an error.
+
+**When it is a batch.** More than one path, or any directory — even one that
+holds a single file — is a batch. A single file path is the classic run
+described above, unchanged.
+
+**Where the outputs go.** In a batch an output argument names a **directory**,
+created if needed, and every input gets its own auto-named file in it
+(`<file>_<timestamp>.<ext>`, with a numeric suffix rather than an overwrite when
+two inputs share a name):
+
+| Flag in a batch | Writes |
+|-----------------|--------|
+| `--json DIR` / `--pdf DIR` / `--excel DIR` / `--csv DIR` | one file per input into `DIR` |
+| bare `--json` / `--pdf` / `--excel` / `--csv` | one auto-named file per input in the current directory |
+| `--all DIR` | all four formats of every input into `DIR` |
+| bare `--all` | one `<file>_output/` directory per input, as for a single file |
+| `--json -` | refused (exit `2`): standard output cannot hold several JSON documents |
+
+If an output path exists and is not a directory, the run stops with exit `1`
+before any file is parsed.
+
+**What is printed.** A batch never writes JSON to standard output. Each input
+prints its summary when `--summary` is given or when no output flag is, then its
+list of generated files; errors and warnings go to standard error and name the
+file (`Error: DDD/x.ddd: no tachograph structure was decoded`). The run ends
+with a table of every input:
+
+```
+============================================================
+BATCH SUMMARY: 3 inputs, 2 OK, 1 failed
+============================================================
+File            Gen              Type  Integrity   Days  Errors
+DDD/card.ddd    G1 (Digital)     Card  verified     242  -
+DDD/vu.ddd      G2.2 (Smart V2)  VU    partial       31  -
+DDD/broken.ddd  -                -     -              -  no tachograph structure was decoded
+```
+
+*Integrity* is the canonical verdict — `verified`, `partial`, `unverified` or
+`corrupt` — the same classification the window's integrity badge uses; *Days*
+counts the distinct days with activity records. `-q` holds back the summaries,
+the file lists and the table; errors still reach standard error.
+
+**Errors.** One bad input never stops the batch: it is reported, gets its row in
+the table, and the next input is processed. The exit code is `1` if any input
+failed (missing, unparsable, not a tachograph download, an export failed, or an
+empty directory), `0` otherwise.
+
+Files are processed one after another in a single process; there is no parallel
+mode.
 
 ---
 

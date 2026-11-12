@@ -1,3 +1,19 @@
+## [Unreleased]
+
+### Added
+
+- **Batch processing in the CLI.** `tacho-cli` takes several paths and
+  directories in one run (`tacho-cli DDD/ --recursive --all reports/`): a
+  directory contributes its `.ddd` files (any letter case), `-r`/`--recursive`
+  descends into subdirectories, and in a batch an output argument
+  (`--json`/`--pdf`/`--excel`/`--csv`/`--all DIR`) names a directory that gets one
+  auto-named report per input. `--summary` prints one summary per file, and a
+  final table lists each input's generation, card/VU kind, integrity verdict,
+  days and errors. A bad file is reported and the batch continues; the exit code
+  is `1` if any input failed. A single file path behaves exactly as before.
+
+---
+
 ## [2.9.1] - 2026-10-22
 
 <!-- release-notes:start -->
