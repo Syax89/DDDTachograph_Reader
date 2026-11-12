@@ -2407,3 +2407,9 @@ msgstr "Číslo řidičského průkazu"
 
 msgid "Licence Issuing Nation"
 msgstr "Vydávající země řidičského průkazu"
+
+msgid "GPX (.gpx)"
+msgstr "Formát GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "Formát KML (.kml)"

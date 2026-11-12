@@ -2407,3 +2407,9 @@ msgstr "Numri i patentës"
 
 msgid "Licence Issuing Nation"
 msgstr "Vendi lëshues i patentës"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

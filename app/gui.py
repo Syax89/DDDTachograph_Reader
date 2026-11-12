@@ -4080,6 +4080,9 @@ class TachoExplorer(tk.Tk):
         export_menu.add_command(label=_("Excel (.xlsx)"), command=self._export_excel)
         export_menu.add_command(label=_("CSV (.csv)"), command=self._export_csv)
         export_menu.add_command(label=_("JSON (.json)"), command=self._export_json)
+        export_menu.add_separator()
+        export_menu.add_command(label=_("GPX (.gpx)"), command=self._export_gpx)
+        export_menu.add_command(label=_("KML (.kml)"), command=self._export_kml)
         self.btn_export["menu"] = export_menu
         self.btn_export.pack(side=tk.LEFT, padx=(0, 14))
         # The Help entry point for the platforms without a menu bar. It is the
@@ -5012,6 +5015,18 @@ class TachoExplorer(tk.Tk):
     def _export_csv(self):
         self._run_export("CSV", ".csv", [(_("CSV Files"), "*.csv")],
                          lambda d, p: ExportManager.export_to_csv(d, p))
+
+    def _export_gpx(self):
+        """GNSS positions (route + places + border crossings) as GPX."""
+        from app.geo_export import export_positions
+        self._run_export("GPX", ".gpx", [(_("GPX (.gpx)"), "*.gpx")],
+                         lambda d, p: export_positions(d, p, "gpx"))
+
+    def _export_kml(self):
+        """GNSS positions as KML (Google Earth and most map tools)."""
+        from app.geo_export import export_positions
+        self._run_export("KML", ".kml", [(_("KML (.kml)"), "*.kml")],
+                         lambda d, p: export_positions(d, p, "kml"))
 
     def _export_json(self):
         if self._rendering:

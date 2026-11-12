@@ -2407,3 +2407,9 @@ msgstr "Número de permiso"
 
 msgid "Licence Issuing Nation"
 msgstr "País emisor del permiso"
+
+msgid "GPX (.gpx)"
+msgstr "Archivo GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "Archivo KML (.kml)"

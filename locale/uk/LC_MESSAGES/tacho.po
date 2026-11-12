@@ -2407,3 +2407,9 @@ msgstr "Номер посвідчення водія"
 
 msgid "Licence Issuing Nation"
 msgstr "Країна видачі посвідчення водія"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

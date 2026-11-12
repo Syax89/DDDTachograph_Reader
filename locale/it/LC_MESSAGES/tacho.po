@@ -2407,3 +2407,9 @@ msgstr "Numero patente"
 
 msgid "Licence Issuing Nation"
 msgstr "Paese di rilascio della patente"
+
+msgid "GPX (.gpx)"
+msgstr "Formato GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "Formato KML (.kml)"

@@ -2407,3 +2407,9 @@ msgstr "Numru tal-liċenzja"
 
 msgid "Licence Issuing Nation"
 msgstr "Nazzjon tal-ħruġ tal-liċenzja"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

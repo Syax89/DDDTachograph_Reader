@@ -2407,3 +2407,9 @@ msgstr "Numer prawa jazdy"
 
 msgid "Licence Issuing Nation"
 msgstr "Kraj wydania prawa jazdy"
+
+msgid "GPX (.gpx)"
+msgstr "Format GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "Format KML (.kml)"

@@ -2407,3 +2407,9 @@ msgstr "Нумар пасведчання кіроўцы"
 
 msgid "Licence Issuing Nation"
 msgstr "Краіна выдачы пасведчання кіроўцы"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

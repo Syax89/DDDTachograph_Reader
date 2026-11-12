@@ -2407,3 +2407,9 @@ msgstr "Numéro de permis"
 
 msgid "Licence Issuing Nation"
 msgstr "Pays de délivrance du permis"
+
+msgid "GPX (.gpx)"
+msgstr "Format GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "Format KML (.kml)"

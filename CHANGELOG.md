@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Added
+
+- **GPX / KML export of GNSS positions** (Export menu): the route from the
+  accumulated-driving positions as a track, plus daily work period places,
+  border crossings and load/unload operations as waypoints. Positions without
+  a valid fix are left out; no driver or card identifier is written. Files
+  with no positions (generation 1) give an empty, valid document.
+
 ### Fixed
 
 - **Integrity verdict — broken card chain.** A G2 card certificate not signed by

@@ -2407,3 +2407,9 @@ msgstr "Uimhir cheadúnais"
 
 msgid "Licence Issuing Nation"
 msgstr "Náisiún eisithe an cheadúnais"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

@@ -2407,3 +2407,9 @@ msgstr "Juhiloa number"
 
 msgid "Licence Issuing Nation"
 msgstr "Juhiloa väljaandja riik"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

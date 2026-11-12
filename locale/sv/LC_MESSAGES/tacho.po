@@ -2407,3 +2407,9 @@ msgstr "Körkortsnummer"
 
 msgid "Licence Issuing Nation"
 msgstr "Körkortets utfärdande land"
+
+msgid "GPX (.gpx)"
+msgstr "GPX-dokument (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML-dokument (.kml)"

@@ -2407,3 +2407,9 @@ msgstr "Número de carta de condução"
 
 msgid "Licence Issuing Nation"
 msgstr "País emissor da carta de condução"
+
+msgid "GPX (.gpx)"
+msgstr "Ficheiro GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "Ficheiro KML (.kml)"
