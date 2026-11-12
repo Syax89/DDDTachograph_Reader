@@ -8,11 +8,15 @@ All tests are run with:
 python -m pytest tests/ -v
 ```
 
-Generate the synthetic fixtures first to run the mock coverage tests, as CI does:
+The synthetic fixtures in `tests/mock_data/` (six mock downloads, no personal
+data, git-ignored) are generated automatically before collection by
+`tests/conftest.py` when missing, so a plain `pytest tests/` runs the same
+mock-based tests as CI. To regenerate them by hand, or to keep the old
+skip-when-missing behaviour:
 
 ```bash
-python tests/integration/generate_mock_ddd.py
-python -m pytest tests/ -v
+python tests/integration/generate_mock_ddd.py          # rewrite all six
+TACHO_NO_MOCK_GENERATION=1 python -m pytest tests/ -v  # do not generate
 ```
 
 Run a specific test file:
