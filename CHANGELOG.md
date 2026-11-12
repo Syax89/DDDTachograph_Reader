@@ -75,6 +75,13 @@
   raised a swallowed `TypeError`, so the "expired / due soon" marker silently
   disappeared from the VU overview.
 
+### Maintenance
+
+- `app/gui.py` shrank by about 1 600 lines: the detailed-speed chart moved to
+  `app/gui_speed_chart.py` and the day-detail window to `app/gui_day_detail.py`
+  (unchanged code; `app.gui` re-exports every name). Tests that inspect the
+  GUI's source for msgids, colours, icons and emoji now read all three modules.
+
 ---
 
 ## [2.9.1] - 2026-10-22

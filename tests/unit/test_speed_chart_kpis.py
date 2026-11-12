@@ -218,9 +218,9 @@ def test_the_event_dot_is_explained_only_when_the_day_has_events(root):
 
 def test_the_legend_follows_the_language_of_the_ui(root, monkeypatch):
     """The legend is UI chrome: it is translated like every other label."""
-    import app.gui as gui
+    import app.gui_speed_chart as speed_chart
 
-    monkeypatch.setattr(gui, "_", lambda text: f"<{text}>")
+    monkeypatch.setattr(speed_chart, "_", lambda text: f"<{text}>")
     chart = _chart(root, events=EVENTS)
 
     assert [label.cget("text") for label in chart._legend_labels] == [

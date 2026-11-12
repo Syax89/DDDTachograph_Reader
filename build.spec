@@ -74,6 +74,8 @@ a = Analysis(
         # pyinstaller-hooks-contrib hook bundles the tkdnd shared library and
         # its .tcl files for the target platform.
         'tkinterdnd2',
+        # GPX/KML export (imported lazily by the Export menu and the CLI).
+        'app.geo_export',
         'cryptography',
         'core.crypto.signature',
         'core.crypto.vu_signature',
