@@ -1,3 +1,25 @@
+## [Unreleased]
+
+### Fixed
+
+- **Integrity verdict — broken card chain.** A G2 card certificate not signed by
+  the MSCA it presents was reported as *Partial* and, in a VU download, could be
+  overwritten by a valid VU chain to read *Verified (VU Chain)*. It is now an
+  invalid certificate chain and is never laundered by the VU verdict.
+- **Integrity verdict — certificate dates.** A G1 card/VU chain, or a G2 VU/MSCA
+  certificate, that had expired (or was not yet valid) when the download was
+  signed no longer reads as verified; it is reported as *Unverified (certificate
+  expired at download time: …)*. Dates are still judged at the download's own
+  timestamp, never against today's clock, and undated files are not judged.
+- **Integrity verdict — G1 VU unsigned tail.** Bytes after the last framed G1 VU
+  message are now reported as `unsigned_bytes` and keep the download at
+  *Partial*, as the G2 path already did. A short `0x76 0x00` trailer is ignored.
+- **Calibration due-date marker.** A next-calibration date without a time zone
+  raised a swallowed `TypeError`, so the "expired / due soon" marker silently
+  disappeared from the VU overview.
+
+---
+
 ## [2.9.1] - 2026-10-22
 
 <!-- release-notes:start -->

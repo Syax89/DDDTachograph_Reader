@@ -484,6 +484,16 @@ def verify_vu_download(raw_data, erca_keys=None, verification_time=None):
 
         report["all_treps_valid"] = bool(report["treps"]) and all_valid
 
+        # Certificate dates never change the chain-link or TREP results above,
+        # but a VU/MSCA certificate that was expired (or not yet valid) when
+        # the download was signed must keep the download from reading as
+        # verified. Listed separately so the verdict can fail closed on it.
+        dates_invalid = sorted(
+            role for role, value in report["certificate_temporal_validity"].items()
+            if (value or {}).get("status") in ("expired", "not_yet_valid"))
+        if dates_invalid:
+            report["certificate_dates_invalid"] = dates_invalid
+
         # Bytes outside every section are authenticated by no signature. Flag
         # them so a report never asserts a fully signed download while unsigned
         # bytes ride along. (A recognised download trailer is not counted.)

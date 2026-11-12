@@ -205,6 +205,11 @@ def integrity_verdict(result):
 
     if meta.get("is_vu") is True:
         sv = result.get("signature_verification") or {}
+        if sv.get("certificate_dates_invalid"):
+            # A certificate in the chain was expired or not yet valid when the
+            # download was signed: the signatures may hold, but the download is
+            # not authenticated by a certificate valid at that moment.
+            return VERDICT_UNVERIFIED
         if sv.get("all_treps_valid") and sv.get("msca_to_vu") and sv.get("root_anchored"):
             # Bytes outside every signed section are covered by no signature:
             # the download is authenticated only in part, however well every

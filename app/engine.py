@@ -85,6 +85,7 @@ class TachoParser:
         # Per-generation chain trust. A verified chain for one generation must
         # never launder another generation's untrusted signing key.
         self._chain_trust = {"G1": False, "G2": False}
+        self._expired_certificate_roles = []
         self._chain_present = {"G1": False, "G2": False}
 
         # Initialize results using the model but keep it as a dict for legacy compatibility
@@ -279,6 +280,7 @@ class TachoParser:
         self.card_cert_g1 = None
         self.validation_status = "Pending"
         self._chain_trust = {"G1": False, "G2": False}
+        self._expired_certificate_roles = []
         self._chain_present = {"G1": False, "G2": False}
 
     def _open_file(self):
@@ -990,6 +992,22 @@ class TachoParser:
                 chain_trust["G1"] = True
             temporal.update(self.validator.last_chain_temporal_validity)
 
+        # Certificate dates are judged at the moment the download was signed
+        # (see _signature_timestamp), never against today's clock. The G2 CVC
+        # and X.509 paths already fail closed on them inside the validator; the
+        # G1 path only *reports* EOV, so a G1 chain that unwraps cleanly but
+        # whose card/MSCA certificate had expired when the data was signed must
+        # not read as verified. The signatures are still mathematically sound,
+        # so the verdict is "unverified", not "invalid/corrupt".
+        expired_roles = sorted(
+            role for role, value in temporal.items()
+            if isinstance(value, dict)
+            and value.get("status") in ("expired", "not_yet_valid"))
+        if status is True and expired_roles:
+            status = "Expired at download time"
+            chain_trust = {gen: False for gen in chain_trust}
+        self._expired_certificate_roles = expired_roles
+
         self._chain_trust = chain_trust
         self._chain_present = chain_present
 
@@ -1013,6 +1031,19 @@ class TachoParser:
             self.card_public_key = pubkey
         elif status == "Cannot Verify (Missing ERCA Root)":
             self.validation_status = "Unverified (Missing ERCA Root)"
+        elif status == "Expired at download time":
+            self.validation_status = (
+                "Unverified (certificate expired at download time: "
+                + ", ".join(expired_roles) + ")")
+            # Keep the key: the EF/TREP signatures are still checked and
+            # reported, they just cannot lift the verdict to verified.
+            self.card_public_key = pubkey
+        elif status == "Partial — MSCA→Card FAILED":
+            # The card certificate is not signed by the MSCA it presents: the
+            # chain is broken outright, not partially verified. Reporting the
+            # validator's "Partial …" wording verbatim mapped it to PARTIAL and
+            # let a valid VU chain elsewhere in the file overwrite it below.
+            self.validation_status = "Invalid Certificate Chain (MSCA→Card signature FAILED)"
         elif status is not False:
             self.validation_status = str(status)
         else:
@@ -1026,10 +1057,17 @@ class TachoParser:
             # prove the VU payload, not the card, and must never launder a
             # broken card chain. The overall verdict is the worst of the parts,
             # not the best.
-            card_chain_failed = had_certs and status is False
+            card_chain_failed = had_certs and (
+                status is False or status == "Partial — MSCA→Card FAILED")
             sv = self.results.get("signature_verification") or {}
             if sv.get("msca_to_vu") is True and not card_chain_failed:
-                if sv.get("all_treps_valid") and sv.get("root_anchored") and \
+                if sv.get("certificate_dates_invalid"):
+                    # Signatures hold, but the VU/MSCA certificate was not
+                    # valid when the download was signed.
+                    self.validation_status = (
+                        "Unverified (VU certificate expired at download time: "
+                        + ", ".join(sv["certificate_dates_invalid"]) + ")")
+                elif sv.get("all_treps_valid") and sv.get("root_anchored") and \
                         not sv.get("unsigned_bytes"):
                     self.validation_status = "Verified (VU Chain)"
                 elif sv.get("all_treps_valid") and sv.get("root_anchored"):
@@ -1243,6 +1281,26 @@ class TachoParser:
             report["treps"].append(entry)
 
         report["all_treps_valid"] = signed_messages > 0 and all_valid
+
+        expired_roles = getattr(self, "_expired_certificate_roles", None) or []
+        if expired_roles:
+            report["certificate_dates_invalid"] = list(expired_roles)
+
+        # The message walk is contiguous from offset 0 and stops at the first
+        # position it cannot frame. Bytes after the last framed message are
+        # authenticated by no TREP signature, exactly like the gaps the G2
+        # verifier reports (core.crypto.vu_signature._unsigned_gaps), so a
+        # download carrying them must not read as fully verified. A short
+        # ``0x76 0x00`` download trailer is not payload.
+        raw = bytes(self.raw_data)
+        tail_start = messages[-1]["end"]
+        tail = len(raw) - tail_start
+        is_trailer = (2 <= tail <= 8 and raw[tail_start] == 0x76
+                      and raw[tail_start + 1] == 0x00)
+        if tail > 0 and not is_trailer:
+            report["unsigned_bytes"] = tail
+            report["unsigned_ranges"] = [[tail_start, len(raw)]]
+
         valid_count = sum(entry["signature_valid"] is True for entry in report["treps"])
         report["summary"] = (
             f"G1 VU TREP signatures: {valid_count}/{signed_messages} valid"
@@ -1250,7 +1308,10 @@ class TachoParser:
         self.results["signature_verification"] = report
 
         if self.validation_status.startswith("Verified"):
-            if report["all_treps_valid"]:
+            if report["all_treps_valid"] and report.get("unsigned_bytes"):
+                self.validation_status = (
+                    "Partial (G1 VU — unsigned bytes outside the signed sections)")
+            elif report["all_treps_valid"]:
                 self.validation_status = "Verified (G1 VU chain and TREP signatures)"
             elif report["missing_signatures"]:
                 self.validation_status = "Incomplete (G1 VU TREP signatures missing)"

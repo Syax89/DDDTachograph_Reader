@@ -728,6 +728,38 @@ def _changes_for_slot(changes, slot_name):
             if isinstance(c, dict) and str(c.get("slot") or "") in ("", slot_name)]
 
 
+def _calibration_days_left(next_date, now=None):
+    """Whole days from ``now`` to the next calibration date, or ``None``.
+
+    Accepts a ``datetime`` or the two string shapes the decoders produce: ISO
+    8601 (G2, ``2025-01-21T09:04:31+00:00``, sometimes with ``Z`` or without
+    an offset) and the G1 ``DD/MM/YYYY[ HH:MM]`` form. A value without a time
+    zone is read as UTC: comparing a naive date with an aware ``now`` used to
+    raise ``TypeError``, which the caller swallowed, so the "calibration
+    expired / due soon" flag silently disappeared.
+    """
+    from datetime import datetime, timezone
+    if now is None:
+        now = datetime.now(timezone.utc)
+    nd = None
+    if isinstance(next_date, datetime):
+        nd = next_date
+    elif isinstance(next_date, str) and next_date.strip():
+        text = next_date.strip()
+        try:
+            nd = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        except ValueError:
+            try:
+                nd = datetime.strptime(text[:10], "%d/%m/%Y")
+            except ValueError:
+                return None
+    if nd is None:
+        return None
+    if nd.tzinfo is None:
+        nd = nd.replace(tzinfo=timezone.utc)
+    return (nd - now).days
+
+
 def _fmt_duration_minutes(mins):
     """Render a minute count as 'Xh Ym'."""
     return f"{mins // 60}h {mins % 60:02d}m"
@@ -7777,26 +7809,12 @@ class TachoExplorer(tk.Tk):
             days_left = 0
             next_date = cal.get("next_calibration_date")
             if next_date:
-                try:
-                    from datetime import datetime, timezone
-                    if isinstance(next_date, str):
-                        # ISO format (G2): 2025-01-21T09:04:31+00:00
-                        # G1 format: 27/01/2018 or 27/01/2018 09:04
-                        try:
-                            nd = datetime.fromisoformat(next_date.replace("Z", "+00:00"))
-                        except (ValueError, TypeError):
-                            try:
-                                nd = datetime.strptime(next_date[:10], "%d/%m/%Y")
-                                nd = nd.replace(tzinfo=timezone.utc)
-                            except (ValueError, TypeError):
-                                raise
-                    else:
-                        nd = next_date
-                    days_left = (nd - datetime.now(timezone.utc)).days
+                days_left = _calibration_days_left(next_date)
+                if days_left is not None:
                     cal_expired = days_left < 0
                     cal_soon = 0 <= days_left < 90
-                except Exception:
-                    pass
+                else:
+                    days_left = 0
             # Untranslated, exactly as before: the label was a composed
             # string, never a msgid, and inventing one would mean asking
             # 33 catalogs for a translation nobody has written.
