@@ -31,6 +31,11 @@
   under `regulation_561`. Vehicle-unit downloads are not analysed (their
   timeline is per vehicle and slot, not per driver). The new module is
   `core/analysis/regulation_561.py`; the GUI is unchanged.
+- **Monthly period report (`--period-report [FILE]`).** One row per driver card
+  or vehicle and month over every input — days, days with driving, activity
+  totals, distance and, for drivers, the indicative 561/2006 counts —
+  with overlapping downloads merged day by day so no day counts twice. Written
+  as `.csv` or `.xlsx`, or printed when no file is given.
 
 ### Fixed
 

@@ -35,6 +35,7 @@ Examples:
   tacho-cli a.ddd b.ddd --all out/       # Batch: every report into out/
   tacho-cli downloads/ -r --excel xlsx/  # Batch: a folder, one workbook per file
   tacho-cli file.ddd --rules             # Indicative 561/2006 driving/rest analysis
+  tacho-cli downloads/ --period-report months.xlsx  # Monthly totals per driver/vehicle
         """
     )
     parser.add_argument("file", nargs="+", metavar="PATH",
@@ -55,6 +56,10 @@ Examples:
     parser.add_argument("--rules", action="store_true",
                         help="Indicative driving/rest-time analysis (Reg. (EC) No 561/2006, driver cards); "
                              "added to --json under 'regulation_561'")
+    parser.add_argument("--period-report", nargs="?", const="-", metavar="FILE",
+                        help="Monthly totals per driver card / vehicle over every input, "
+                             "overlapping downloads merged (FILE: .csv or .xlsx; "
+                             "without FILE the table is printed)")
     parser.add_argument("--version", action="version",
                         version=f"TachoReader {__version__}")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose debug output")
@@ -78,11 +83,35 @@ Examples:
     # One path that is not a directory is the classic single-file run, whose
     # output stays exactly as before; anything else is a batch.
     if len(args.file) == 1 and not os.path.isdir(args.file[0]):
-        rc = _process_file(args, args.file[0])[0]
+        rc, result, _errors = _process_file(args, args.file[0])
+        if args.period_report:
+            report_rc = _period_report(args, [(args.file[0], result)] if result else [])
+            rc = rc or report_rc
         if rc:
             sys.exit(rc)
         return
     sys.exit(_run_batch(parser, args))
+
+
+def _period_report(args, results):
+    """Write or print the monthly report over *results*; return an exit code."""
+    from core.analysis.period_report import (
+        build_period_report, format_table, write_period_report)
+    sources = [(os.path.basename(path), result) for path, result in results if result]
+    rows = build_period_report(sources)
+    if args.period_report == "-":
+        if not args.quiet:
+            print("\n".join(["", "PERIOD REPORT (per driver card / vehicle and month)"]
+                            + format_table(rows)))
+        return 0
+    try:
+        write_period_report(rows, args.period_report)
+    except Exception as e:
+        print(f"Error: period report failed: {e}", file=sys.stderr)
+        return 1
+    if not args.quiet:
+        print(f"\nPeriod report ({len(rows)} rows): {args.period_report}")
+    return 0
 
 
 def _process_file(args, path, batch=False):
@@ -152,7 +181,8 @@ def _process_file(args, path, batch=False):
     stdout_is_json = not batch and (json_to_stdout or (
         not args.json and not args.pdf and not args.excel and not args.csv
         and not args.gpx and not args.kml
-        and not args.summary and not args.quiet and not args.rules))
+        and not args.summary and not args.quiet and not args.rules
+        and not args.period_report))
     notice = sys.stderr if stdout_is_json else sys.stdout
 
     # Auto-generate output basename
@@ -300,7 +330,7 @@ def _process_file(args, path, batch=False):
     if not args.quiet and (
             args.summary or (not args.json and not args.pdf and not args.excel
                              and not args.csv and not args.gpx and not args.kml
-                             and not args.rules)):
+                             and not args.rules and not args.period_report)):
         print_summary(result, file=notice)
 
     if rules_report is not None and not args.quiet:
@@ -403,7 +433,11 @@ def _run_batch(parser, args):
 
     if not args.quiet:
         _print_batch_table(rows)
-    return 1 if any(rc for _, rc, _, _ in rows) else 0
+    failed = 1 if any(rc for _, rc, _, _ in rows) else 0
+    if args.period_report:
+        failed = _period_report(
+            args, [(path, result) for path, _rc, result, _e in rows if result]) or failed
+    return failed
 
 
 def _activity_days(result):

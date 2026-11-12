@@ -190,6 +190,23 @@ matters: `python -m app.cli file.ddd --json out.json --quiet`.
 
 ---
 
+## Period Report (per driver / vehicle and month)
+
+```bash
+python -m app.cli downloads/ -r --period-report months.xlsx   # or .csv
+python -m app.cli card.ddd --period-report                    # print the table
+```
+
+One row per driver card (card downloads) or vehicle (VU downloads, by plate)
+and month: days recorded, days with driving, Drive/Work/Rest/Available/Unknown
+minutes, distance and — for drivers — the number of indicative Regulation (EC)
+No 561/2006 infringements and indeterminate results (see `--rules`), counted in
+the month their period starts. Overlapping downloads of the same driver or
+vehicle are merged day by day, so a day held by two files counts once (the
+more complete copy wins). Distance is the card's daily distance, or for a VU
+the odometer increase from the previous calendar day. The report can be
+combined with any other option; without FILE the table goes to the screen.
+
 ## Complete Option Reference
 
 | Flag | Argument | Description |
@@ -202,6 +219,7 @@ matters: `python -m app.cli file.ddd --json out.json --quiet`.
 | `--csv` | `[FILE]` | Generate CSV report (optional output path) |
 | `--gpx` | `[FILE]` | Export the GNSS positions as GPX (optional output path) |
 | `--kml` | `[FILE]` | Export the GNSS positions as KML (optional output path) |
+| `--period-report` | `[FILE]` | Monthly totals per driver/vehicle over every input (`.csv`/`.xlsx`; printed without FILE) |
 | `--all` | `[DIR]` | Generate all four formats into a directory (in a batch: every file's reports into that one directory) |
 | `--summary` | — | Show the compact text summary on screen |
 | `--rules` | — | Indicative Regulation (EC) No 561/2006 driving/rest-time analysis (driver cards); added to `--json` as `regulation_561` |

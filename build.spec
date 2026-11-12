@@ -82,6 +82,7 @@ a = Analysis(
         'core.crypto.ef_signature',
         'core',
         'core.analysis.regulation_561',
+        'core.analysis.period_report',
         'core.decoders',
         # The decoders were split per generation; the old names
         # (primitives/card/g22_card/vu_trep/g2_dispatch) had not existed for a
