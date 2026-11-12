@@ -7,6 +7,15 @@
   border crossings and load/unload operations as waypoints. Positions without
   a valid fix are left out; no driver or card identifier is written. Files
   with no positions (generation 1) give an empty, valid document.
+- **Batch processing in the CLI.** `tacho-cli` takes several paths and
+  directories in one run (`tacho-cli DDD/ --recursive --all reports/`): a
+  directory contributes its `.ddd` files (any letter case), `-r`/`--recursive`
+  descends into subdirectories, and in a batch an output argument
+  (`--json`/`--pdf`/`--excel`/`--csv`/`--all DIR`) names a directory that gets one
+  auto-named report per input. `--summary` prints one summary per file, and a
+  final table lists each input's generation, card/VU kind, integrity verdict,
+  days and errors. A bad file is reported and the batch continues; the exit code
+  is `1` if any input failed. A single file path behaves exactly as before.
 
 ### Fixed
 

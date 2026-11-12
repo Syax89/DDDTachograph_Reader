@@ -32,9 +32,15 @@ Examples:
   tacho-cli file.ddd --excel report.xlsx # Generate Excel
   tacho-cli file.ddd --all output_dir/   # Generate all formats
   tacho-cli file.ddd --summary           # Text summary only
+  tacho-cli a.ddd b.ddd --all out/       # Batch: every report into out/
+  tacho-cli downloads/ -r --excel xlsx/  # Batch: a folder, one workbook per file
         """
     )
-    parser.add_argument("file", help="Path to .ddd file to analyze")
+    parser.add_argument("file", nargs="+", metavar="PATH",
+                        help="Path to a .ddd file, or a directory of .ddd files; "
+                             "several paths make a batch")
+    parser.add_argument("-r", "--recursive", action="store_true",
+                        help="Also scan subdirectories of a directory argument")
     parser.add_argument("--json", nargs="?", const="auto", metavar="FILE", help="Generate JSON output (optional: file path)")
     parser.add_argument("--pdf", nargs="?", const="auto", metavar="FILE", help="Generate PDF report (optional: file path)")
     parser.add_argument("--excel", nargs="?", const="auto", metavar="FILE", help="Generate Excel report (optional: file path)")
@@ -61,28 +67,60 @@ Examples:
         from core.utils.logger import enable_debug
         enable_debug()
 
-    if not os.path.isfile(args.file):
-        print(f"Error: file not found: {args.file}", file=sys.stderr)
-        sys.exit(1)
+    # One path that is not a directory is the classic single-file run, whose
+    # output stays exactly as before; anything else is a batch.
+    if len(args.file) == 1 and not os.path.isdir(args.file[0]):
+        rc = _process_file(args, args.file[0])[0]
+        if rc:
+            sys.exit(rc)
+        return
+    sys.exit(_run_batch(parser, args))
+
+
+def _process_file(args, path, batch=False):
+    """Parse *path* and write the outputs *args* ask for.
+
+    Returns ``(exit_code, result, errors)``: ``result`` is the parsed dict (or
+    ``None`` when nothing parsed) and ``errors`` the messages reported for this
+    file. In a *batch* every message names the file, an explicit output path is
+    a directory, and standard output never carries the JSON.
+    """
+    # Work on a copy: the output resolution below rewrites the flags, and a
+    # batch reuses the same namespace for every file.
+    args = argparse.Namespace(**vars(args))
+    where = f"{path}: " if batch else ""
+    result = None
+    errors = []
+
+    def fail(message):
+        print(f"Error: {where}{message}", file=sys.stderr)
+        errors.append(message)
+        return 1, result, errors
+
+    def warn(message):
+        print(f"Warning: {where}{message}", file=sys.stderr)
+        errors.append(message)
+
+    if not os.path.isfile(path):
+        return fail(f"file not found: {path}" if not batch else "file not found")
 
     # Parse
     try:
         from app.engine import TachoParser
-        ddd = TachoParser(args.file)
+        ddd = TachoParser(path)
         result = ddd.parse()
     except Exception as e:
-        print(f"Error: parsing failed: {e}", file=sys.stderr)
+        rc = fail(f"parsing failed: {e}")
         if args.verbose:
             import traceback
             traceback.print_exc()
-        sys.exit(1)
+        return rc
 
     parse_error = (result.get("metadata") or {}).get("parse_error")
     if parse_error:
         message = (parse_error.get("message", "Unknown parse error")
                    if isinstance(parse_error, dict) else str(parse_error))
-        print(f"Error: parsing failed: {message}", file=sys.stderr)
-        sys.exit(1)
+        return fail(f"parsing failed: {message}")
 
     if not _has_tachograph_structure(result):
         # No card/VU/certificate record was decoded (CLI-NOT-A-TACHO). The CLI
@@ -90,8 +128,7 @@ Examples:
         # which a batch script reads as success. The message states the fact —
         # a fragment of a real download can fail to decode too, so "not a
         # tachograph file" claimed more than the parse proved.
-        print("Error: no tachograph structure was decoded", file=sys.stderr)
-        sys.exit(1)
+        return fail("no tachograph structure was decoded")
 
     # ``--json -`` is the conventional "write the JSON to standard output". It
     # used to be taken as a file name and created a file literally called "-".
@@ -102,13 +139,15 @@ Examples:
     # Standard output belongs to the JSON whenever the JSON goes there; the
     # summary, the generated-file list and any progress text follow it to
     # standard error so ``tacho-cli file.ddd > out.json`` parses (CLI-JSON-STDOUT).
-    stdout_is_json = json_to_stdout or (
+    # A batch never streams JSON: its standard output is the per-file summaries
+    # and the batch table.
+    stdout_is_json = not batch and (json_to_stdout or (
         not args.json and not args.pdf and not args.excel and not args.csv
-        and not args.summary and not args.quiet)
+        and not args.summary and not args.quiet))
     notice = sys.stderr if stdout_is_json else sys.stdout
 
     # Auto-generate output basename
-    basename = os.path.splitext(os.path.basename(args.file))[0]
+    basename = os.path.splitext(os.path.basename(path))[0]
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     def resolve_path(val, ext, default_dir="."):
@@ -129,18 +168,23 @@ Examples:
             counter += 1
         return path
 
+    if batch:
+        # In a batch an explicit output FILE names a directory: one auto-named
+        # report per input lands in it (``_run_batch`` has created it).
+        for attr, ext in _FORMATS:
+            target = getattr(args, attr)
+            if target not in (None, "auto"):
+                setattr(args, attr, resolve_path("auto", ext, target))
+
     # --all mode
     if args.all is not None:
         out_dir = args.all if args.all != "auto" else f"{basename}_output"
         if os.path.exists(out_dir) and not os.path.isdir(out_dir):
-            print(f"Error: --all output path exists and is not a directory: {out_dir}",
-                  file=sys.stderr)
-            sys.exit(1)
+            return fail(f"--all output path exists and is not a directory: {out_dir}")
         try:
             os.makedirs(out_dir, exist_ok=True)
         except OSError as e:
-            print(f"Error: cannot create output directory {out_dir}: {e}", file=sys.stderr)
-            sys.exit(1)
+            return fail(f"cannot create output directory {out_dir}: {e}")
         # A bare ``--json``/``--pdf``/... stores the value "auto"; treat it as
         # unset here so the file is written into the --all directory rather
         # than the current working directory (XF-F7).
@@ -165,7 +209,7 @@ Examples:
             generated.append(("JSON", json_path))
         except Exception as e:
             export_failed = True
-            print(f"Warning: JSON generation failed: {e}", file=sys.stderr)
+            warn(f"JSON generation failed: {e}")
             if args.verbose:
                 import traceback
                 traceback.print_exc()
@@ -179,11 +223,10 @@ Examples:
             generated.append(("PDF", pdf_path))
         except ImportError as e:
             export_failed = True
-            print(f"Warning: PDF export requires reportlab (pip install reportlab): {e}",
-                  file=sys.stderr)
+            warn(f"PDF export requires reportlab (pip install reportlab): {e}")
         except Exception as e:
             export_failed = True
-            print(f"Warning: PDF generation failed: {e}", file=sys.stderr)
+            warn(f"PDF generation failed: {e}")
             if args.verbose:
                 import traceback
                 traceback.print_exc()
@@ -197,7 +240,7 @@ Examples:
             generated.append(("Excel", excel_path))
         except Exception as e:
             export_failed = True
-            print(f"Warning: Excel generation failed: {e}", file=sys.stderr)
+            warn(f"Excel generation failed: {e}")
             if args.verbose:
                 import traceback
                 traceback.print_exc()
@@ -211,7 +254,7 @@ Examples:
             generated.append(("CSV", csv_path))
         except Exception as e:
             export_failed = True
-            print(f"Warning: CSV generation failed: {e}", file=sys.stderr)
+            warn(f"CSV generation failed: {e}")
             if args.verbose:
                 import traceback
                 traceback.print_exc()
@@ -229,12 +272,134 @@ Examples:
 
     if not args.quiet and generated:
         print("\nGenerated files:", file=notice)
-        for fmt, path in generated:
-            size = os.path.getsize(path)
-            print(f"   {fmt}: {path} ({format_size(size)})", file=notice)
+        for fmt, out_path in generated:
+            size = os.path.getsize(out_path)
+            print(f"   {fmt}: {out_path} ({format_size(size)})", file=notice)
 
-    if export_failed:
-        sys.exit(1)
+    return (1 if export_failed else 0), result, errors
+
+
+# Output flags and the extension of the file each writes.
+_FORMATS = (("json", "json"), ("pdf", "pdf"), ("excel", "xlsx"), ("csv", "csv"))
+
+
+def _collect_inputs(paths, recursive):
+    """Expand the PATH arguments into ``[(path, problem)]`` in command-line order.
+
+    A file is kept as given (a missing one is reported by ``_process_file``); a
+    directory contributes its ``.ddd`` files (any letter case), sorted, from
+    every subdirectory too with *recursive*. A directory holding none yields
+    one entry whose *problem* says so. A file reached twice is processed once.
+    """
+    entries = []
+    seen = set()
+
+    def add(path):
+        key = os.path.realpath(path)
+        if key not in seen:
+            seen.add(key)
+            entries.append((path, None))
+
+    for path in paths:
+        if not os.path.isdir(path):
+            add(path)
+            continue
+        found = []
+        if recursive:
+            for root, dirs, files in os.walk(path):
+                dirs.sort()
+                found.extend(os.path.join(root, name) for name in sorted(files)
+                             if name.lower().endswith(".ddd"))
+        else:
+            found = [os.path.join(path, name) for name in sorted(os.listdir(path))
+                     if name.lower().endswith(".ddd")
+                     and os.path.isfile(os.path.join(path, name))]
+        if not found:
+            hint = "" if recursive else " (use --recursive to scan subdirectories)"
+            entries.append((path, f"no .ddd files found{hint}"))
+        for file_path in found:
+            add(file_path)
+    return entries
+
+
+def _run_batch(parser, args):
+    """Process several inputs; one failing file never stops the others.
+
+    Returns the exit code: ``0`` when every input was processed, ``1`` when any
+    input failed (missing, unparsable, no tachograph structure, an export
+    failed, or a directory without ``.ddd`` files).
+    """
+    if args.json == "-":
+        parser.error("--json - writes one file's JSON to standard output; "
+                     "it needs a single input file")
+
+    # Explicit output targets are directories in a batch: create them once,
+    # before any file is parsed, so a bad target fails the run up front.
+    targets = [(f"--{attr}", getattr(args, attr)) for attr, _ in _FORMATS]
+    targets.append(("--all", args.all))
+    for flag, target in targets:
+        if target in (None, "auto"):
+            continue
+        if os.path.exists(target) and not os.path.isdir(target):
+            print(f"Error: {flag} needs a directory with several inputs, "
+                  f"and {target} exists and is not a directory", file=sys.stderr)
+            return 1
+        try:
+            os.makedirs(target, exist_ok=True)
+        except OSError as e:
+            print(f"Error: cannot create output directory {target}: {e}", file=sys.stderr)
+            return 1
+
+    rows = []
+    for path, problem in _collect_inputs(args.file, args.recursive):
+        if problem:
+            print(f"Error: {path}: {problem}", file=sys.stderr)
+            rows.append((path, 1, None, [problem]))
+            continue
+        rc, result, errors = _process_file(args, path, batch=True)
+        rows.append((path, rc, result, errors))
+
+    if not args.quiet:
+        _print_batch_table(rows)
+    return 1 if any(rc for _, rc, _, _ in rows) else 0
+
+
+def _activity_days(result):
+    """Number of distinct dates carrying a daily activity record."""
+    return len({block.get("date") for block in result.get("activities") or []
+                if isinstance(block, dict) and block.get("date")})
+
+
+def _print_batch_table(rows, file=None):
+    """Print one line per input: generation, kind, verdict, days and errors."""
+    from core.utils.report_format import integrity_verdict
+    out = sys.stdout if file is None else file
+    header = ("File", "Gen", "Type", "Integrity", "Days", "Errors")
+    lines = []
+    for path, _rc, result, errors in rows:
+        gen = kind = verdict = days = "-"
+        if result is not None:
+            meta = result.get("metadata") or {}
+            if meta.get("parse_error"):
+                verdict = integrity_verdict(result)
+            elif _has_tachograph_structure(result):
+                gen = str(meta.get("generation") or "-")
+                kind = "VU" if meta.get("is_vu") else "Card"
+                verdict = integrity_verdict(result)
+                days = str(_activity_days(result))
+        lines.append((path, gen, kind, verdict, days, "; ".join(errors) or "-"))
+    widths = [max(len(line[i]) for line in [header, *lines]) for i in range(5)]
+    failed = sum(1 for _, rc, _, _ in rows if rc)
+    print("\n" + "=" * 60, file=out)
+    noun = "input" if len(rows) == 1 else "inputs"
+    print(f"BATCH SUMMARY: {len(rows)} {noun}, {len(rows) - failed} OK, {failed} failed",
+          file=out)
+    print("=" * 60, file=out)
+    for line in [header, *lines]:
+        cells = [cell.ljust(width) for cell, width in zip(line[:5], widths, strict=True)]
+        cells[4] = line[4].rjust(widths[4])
+        print("  ".join([*cells, line[5]]), file=out)
+
 
 def _has_tachograph_structure(result):
     """Whether the parse proved the bytes are a tachograph at all.
