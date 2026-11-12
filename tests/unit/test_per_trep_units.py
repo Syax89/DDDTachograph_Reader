@@ -14,7 +14,8 @@ from app.engine import TachoParser
 from core.decoders import vu_g1
 from core.registry.registry import DecoderRegistry
 from tests.unit import vu_synthetic as S
-from tests.unit.real_data import real_ddd_files, require_real_file
+from tests.unit.real_data import (
+    real_ddd_files, real_vu_files, require_real_file, vu_generation)
 from tests.unit.test_g1_vu_semantics import (
     _g1_calibration, _overview_body, _trep03_body, _trep05_body)
 
@@ -36,6 +37,8 @@ def test_every_intact_unit_is_normative():
     files = real_ddd_files()
     if not files:
         pytest.skip("no private corpus available")
+    if not real_vu_files():
+        pytest.skip("no VU download in DDD/ (decode units are a VU-stream datum)")
     seen = 0
     for path in files:
         DecoderRegistry.reset_instance()
@@ -45,6 +48,8 @@ def test_every_intact_unit_is_normative():
             assert unit["path"] == "normative", (path, unit)
             assert unit["offset"] >= 0 and unit["length"] > 0
         assert not result["metadata"].get("heuristic_fields"), path
+        if vu_generation(path):
+            assert units, (path, "a VU download published no decode units")
         seen += len(units)
     assert seen, "no units published"
 
