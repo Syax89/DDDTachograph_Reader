@@ -34,6 +34,7 @@ Examples:
   tacho-cli file.ddd --summary           # Text summary only
   tacho-cli a.ddd b.ddd --all out/       # Batch: every report into out/
   tacho-cli downloads/ -r --excel xlsx/  # Batch: a folder, one workbook per file
+  tacho-cli file.ddd --rules             # Indicative 561/2006 driving/rest analysis
         """
     )
     parser.add_argument("file", nargs="+", metavar="PATH",
@@ -51,6 +52,9 @@ Examples:
                         help="Export the GNSS positions as KML (optional: file path)")
     parser.add_argument("--all", nargs="?", const="auto", metavar="DIR", help="Generate all formats in a directory")
     parser.add_argument("--summary", action="store_true", help="Show compact text summary")
+    parser.add_argument("--rules", action="store_true",
+                        help="Indicative driving/rest-time analysis (Reg. (EC) No 561/2006, driver cards); "
+                             "added to --json under 'regulation_561'")
     parser.add_argument("--version", action="version",
                         version=f"TachoReader {__version__}")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose debug output")
@@ -148,7 +152,7 @@ def _process_file(args, path, batch=False):
     stdout_is_json = not batch and (json_to_stdout or (
         not args.json and not args.pdf and not args.excel and not args.csv
         and not args.gpx and not args.kml
-        and not args.summary and not args.quiet))
+        and not args.summary and not args.quiet and not args.rules))
     notice = sys.stderr if stdout_is_json else sys.stdout
 
     # Auto-generate output basename
@@ -209,12 +213,21 @@ def _process_file(args, path, batch=False):
     generated = []
     export_failed = False
 
+    # --rules: an indicative Regulation (EC) No 561/2006 analysis. It joins the
+    # JSON only when asked for, so the default JSON keeps its shape.
+    rules_report = None
+    json_result = result
+    if args.rules:
+        from core.analysis.regulation_561 import analyse_result
+        rules_report = analyse_result(result)
+        json_result = {**result, "regulation_561": rules_report}
+
     # JSON output
     if args.json:
         json_path = resolve_path(args.json, "json")
         try:
             with open(json_path, 'w', encoding='utf-8') as f:
-                json.dump(result, f, indent=2, ensure_ascii=False, cls=BytesEncoder)
+                json.dump(json_result, f, indent=2, ensure_ascii=False, cls=BytesEncoder)
             generated.append(("JSON", json_path))
         except Exception as e:
             export_failed = True
@@ -286,12 +299,17 @@ def _process_file(args, path, batch=False):
     # back an explicit ``--summary`` too (CLI-QUIET).
     if not args.quiet and (
             args.summary or (not args.json and not args.pdf and not args.excel
-                             and not args.csv and not args.gpx and not args.kml)):
+                             and not args.csv and not args.gpx and not args.kml
+                             and not args.rules)):
         print_summary(result, file=notice)
+
+    if rules_report is not None and not args.quiet:
+        from core.analysis.regulation_561 import format_report
+        print("\n".join(format_report(rules_report)), file=notice)
 
     # JSON on standard output: the documented default, or an explicit ``--json -``.
     if stdout_is_json:
-        print(json.dumps(result, indent=2, ensure_ascii=False, cls=BytesEncoder))
+        print(json.dumps(json_result, indent=2, ensure_ascii=False, cls=BytesEncoder))
 
     if not args.quiet and generated:
         print("\nGenerated files:", file=notice)

@@ -122,6 +122,51 @@ standard error as a `Warning: …` line (for a missing `reportlab`: `Warning: PD
 requires reportlab (pip install reportlab): …`; other failures read
 `Warning: … generation failed: …`), and the process exits non-zero.
 
+### Driving and Rest Times (Regulation (EC) No 561/2006)
+
+`--rules` adds an **indicative** check of a driver card's recorded activity
+against the driving-time, break and rest rules of Regulation (EC) No 561/2006:
+
+```bash
+python -m app.cli card.ddd --rules              # text report on screen
+python -m app.cli card.ddd --rules --json -     # JSON, with the report under "regulation_561"
+```
+
+On its own, `--rules` prints only the report (add `--summary` for the summary
+too). With `--json` the report is added to the JSON under the key
+`regulation_561` — only when `--rules` is given, so the default JSON keeps its
+shape. The report lists *findings*, each with the rule, its article, the period
+(UTC), the measured value, the limit and an explanation, plus a per-rule count
+of what was assessed.
+
+What is checked — the days are joined into one continuous UTC timeline, so
+periods running over midnight are measured as a whole:
+
+| Rule | Article | Limit |
+|------|---------|-------|
+| Break after driving | 7 | 4 h 30 driving, then 45 min — or 15 min followed by 30 min — of rest |
+| Daily driving | 6(1) | 9 h between two daily rests, 10 h at most twice per fixed week |
+| Weekly / fortnightly driving | 6(2), 6(3) | 56 h per Monday–Sunday week, 90 h in two consecutive weeks |
+| Daily rest | 8(1)–(2) | 11 h (or 3 h + 9 h, or reduced 9 h) within 24 h of the previous rest |
+| Reduced daily rests | 8(4) | at most three between two weekly rests |
+| Weekly rest | 8(6) | starts within six 24-hour periods of the previous one; two per two weeks, one of them ≥ 45 h |
+
+Only *Rest* counts as a break or rest: *Work* and *Availability* do not. A
+finding is either an **infringement** or **indeterminate**. Periods the card did
+not record (card not inserted, missing days, the time after the download) can
+never produce an infringement: when a result depends on whether such a period
+was rest, it is indeterminate. Periods recorded in crew mode make break and
+daily results indeterminate too, because the multi-manning rules are not
+modelled; nor are reduced-weekly-rest compensation, ferry/train interruptions,
+derogations and exemptions (the report lists them under *Not modelled*).
+
+Vehicle-unit downloads are not analysed: a vehicle unit records per vehicle and
+card slot, not per driver, so the report only says so. Analyse the driver card.
+
+> **The result is indicative, not a legal determination.** It reflects only
+> the recorded data and a subset of the Regulation; use it to find periods
+> worth a closer look, not to decide whether a driver broke the law.
+
 ### Verbose Output
 
 Use `-v` or `--verbose` for detailed debug logs and full Python tracebacks on errors:
@@ -159,6 +204,7 @@ matters: `python -m app.cli file.ddd --json out.json --quiet`.
 | `--kml` | `[FILE]` | Export the GNSS positions as KML (optional output path) |
 | `--all` | `[DIR]` | Generate all four formats into a directory (in a batch: every file's reports into that one directory) |
 | `--summary` | — | Show the compact text summary on screen |
+| `--rules` | — | Indicative Regulation (EC) No 561/2006 driving/rest-time analysis (driver cards); added to `--json` as `regulation_561` |
 | `--version` | — | Print the reader version (`TachoReader 2.9.1`) |
 | `-v`, `--verbose` | — | Verbose debug output |
 | `-q`, `--quiet` | — | Suppress all screen output (files only); `--json -` still writes the JSON to standard output |
