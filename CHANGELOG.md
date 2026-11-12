@@ -2,6 +2,21 @@
 
 ### Fixed
 
+- **Certificate dates — reference instant.** Certificates were judged at the
+  VuDownloadActivityData / EF Card_Download time, which holds the *previous*
+  download. They are now judged at the latest instant the file records (last
+  activity day's recording cut, a VU's `maxDownloadableTime`, the download
+  fields as a lower bound); a G1 card without a download record is now judged
+  too. Files with no usable date are still not judged.
+- **GUI freeze on a corrupt card withdrawal.** The VU Daily-Activities
+  dashboard walked every day from a card insertion to its withdrawal, and a
+  corrupt withdrawal in 2100 meant ~36 000 days on the UI thread. The walk is
+  now clipped to the days that carry activity; results are unchanged.
+- **Oversized input.** Files over 32 MB are refused up front with a
+  `file_too_large` parse error instead of tying up the parser for minutes.
+- **Decoder failures in the CLI summary.** `--summary` now warns when a field
+  decoder raised (`metadata.decoder_failure_count` > 0), as the PDF/Excel
+  reports already did.
 - **Integrity verdict — broken card chain.** A G2 card certificate not signed by
   the MSCA it presents was reported as *Partial* and, in a VU download, could be
   overwritten by a valid VU chain to read *Verified (VU Chain)*. It is now an
@@ -9,8 +24,8 @@
 - **Integrity verdict — certificate dates.** A G1 card/VU chain, or a G2 VU/MSCA
   certificate, that had expired (or was not yet valid) when the download was
   signed no longer reads as verified; it is reported as *Unverified (certificate
-  expired at download time: …)*. Dates are still judged at the download's own
-  timestamp, never against today's clock, and undated files are not judged.
+  expired at download time: …)*. Dates are judged at the file's own latest
+  recorded instant, never against today's clock, and undated files are not judged.
 - **Integrity verdict — G1 VU unsigned tail.** Bytes after the last framed G1 VU
   message are now reported as `unsigned_bytes` and keep the download at
   *Partial*, as the G2 path already did. A short `0x76 0x00` trailer is ignored.

@@ -290,6 +290,12 @@ def print_summary(data, file=None):
 
     # Signature
     print(f"Integrity: {meta.get('integrity_check', 'N/D')}", file=out)
+    # A decoder that raised leaves its field out of the result; the export
+    # reports already carry a "Decoder failures" row, the summary must too.
+    failures = meta.get("decoder_failure_count", 0)
+    if isinstance(failures, int) and failures > 0:
+        print(f"Warning: {failures} decoder failure(s) during parsing; "
+              "some fields may be missing", file=out)
 
     # Driver — when no card data was decoded the ``driver`` dict carries the
     # truthy sentinel "N/A" in every field (core/registry/models.py), so the

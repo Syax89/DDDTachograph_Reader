@@ -729,6 +729,99 @@ def _changes_for_slot(changes, slot_name):
             if isinstance(c, dict) and str(c.get("slot") or "") in ("", slot_name)]
 
 
+def _driver_names_by_date(activity_list, iw_records, slot_name):
+    """Return ``{date_iso: {driver name}}`` for one VU slot view.
+
+    Each card insertion/withdrawal record (VuCardIWRecord) is walked day by
+    day and a driver is attached to a day when that day's ``card_inserted``
+    activity changes put the card in *slot_name*. Only days that carry such a
+    change can ever match, so the walk is clipped to the range of those days:
+    the decoders accept a withdrawal time up to 2100, and one corrupt record
+    used to cost ~36 000 iterations (each re-scanning every change) on the Tk
+    thread, freezing the GUI. For sane data the result is unchanged.
+    """
+    # (date_iso, minute_of_day) -> slot, from the unfiltered activity changes
+    slot_by_minute: dict[tuple[str, int], str] = {}
+    for day_data in activity_list:
+        if not isinstance(day_data, dict):
+            continue
+        date_iso = _activity_to_iso(str(day_data.get("date", "")))
+        for ch in day_data.get("changes") or []:
+            if not isinstance(ch, dict) or not ch.get("card_inserted"):
+                continue
+            t = ch.get("time", "")
+            if isinstance(t, str) and ":" in t:
+                try:
+                    h, m = t.split(":")[:2]
+                    minute = int(h) * 60 + int(m)
+                except ValueError:
+                    continue
+                slot = str(ch.get("slot") or "")
+                if slot:
+                    slot_by_minute[(date_iso, minute)] = slot
+    # First slot seen per day: the "any time on this day" fallback.
+    first_slot_by_day: dict[str, str] = {}
+    for (d, _m), s in slot_by_minute.items():
+        first_slot_by_day.setdefault(d, s)
+    known_days = []
+    for d in first_slot_by_day:
+        try:
+            known_days.append(datetime.strptime(d, "%Y-%m-%d").date())
+        except ValueError:
+            pass
+    iw_by_date: dict[str, set] = {}
+    if not known_days:
+        return iw_by_date
+    first_day, last_day = min(known_days), max(known_days)
+
+    for iw in iw_records:
+        if not isinstance(iw, dict):
+            continue
+        name = f"{iw.get('holder_first_names','')} {iw.get('holder_surname','')}".strip()
+        if not name or name == "N/A N/A":
+            continue
+        ins_str = iw.get("insertion_time", "")
+        ins_dt = None
+        for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+            try:
+                ins_dt = datetime.strptime(ins_str[:19], fmt)
+            except (ValueError, IndexError, TypeError):
+                pass
+        if ins_dt is None:
+            continue
+        wit_str = iw.get("withdrawal_time", "")
+        wit_dt = None
+        if isinstance(wit_str, str) and wit_str:
+            for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+                try:
+                    wit_dt = datetime.strptime(wit_str[:19], fmt)
+                except (ValueError, IndexError):
+                    pass
+        if wit_dt is None:
+            wit_dt = ins_dt
+        current = max(ins_dt.date(), first_day)
+        end = min(wit_dt.date(), last_day)
+        while current <= end:
+            day_iso = current.isoformat()
+            iw_slot = ""
+            # Look for a card_inserted event within 2 minutes on the insertion day
+            if current == ins_dt.date():
+                ins_minute = ins_dt.hour * 60 + ins_dt.minute
+                for offset in range(-2, 3):
+                    check_min = ins_minute + offset
+                    if 0 <= check_min < 1440:
+                        iw_slot = slot_by_minute.get((day_iso, check_min), "")
+                        if iw_slot:
+                            break
+            if not iw_slot:
+                # Fallback: use card_inserted from any time on this day
+                iw_slot = first_slot_by_day.get(day_iso, "")
+            if iw_slot in ("First", "Second") and iw_slot == slot_name:
+                iw_by_date.setdefault(day_iso, set()).add(name)
+            current += timedelta(days=1)
+    return iw_by_date
+
+
 def _calibration_days_left(next_date, now=None):
     """Whole days from ``now`` to the next calibration date, or ``None``.
 
@@ -6775,83 +6868,10 @@ class TachoExplorer(tk.Tk):
             valid = filtered
 
         # Per-day driver names from card_iw, filtered by selected slot
-        iw_by_date = {}
-        if is_vu:
-            # Build a lookup: (date_iso, minute_of_day) -> slot
-            # from the original unfiltered activity changes
-            slot_by_minute: dict[tuple[str, int], str] = {}
-            for day_data in activity_list:
-                if not isinstance(day_data, dict):
-                    continue
-                date_str = str(day_data.get("date", ""))
-                date_iso = _activity_to_iso(date_str)
-                for ch in day_data.get("changes") or []:
-                    if not isinstance(ch, dict):
-                        continue
-                    if not ch.get("card_inserted"):
-                        continue
-                    t = ch.get("time", "")
-                    if isinstance(t, str) and ":" in t:
-                        try:
-                            h, m = t.split(":")[:2]
-                            minute = int(h) * 60 + int(m)
-                            slot = str(ch.get("slot") or "")
-                            if slot:
-                                slot_by_minute[(date_iso, minute)] = slot
-                        except ValueError:
-                            pass
-
-            iw_records = data.get("card_iw_records") or []
-            for iw in iw_records:
-                if not isinstance(iw, dict):
-                    continue
-                name = f"{iw.get('holder_first_names','')} {iw.get('holder_surname','')}".strip()
-                if not name or name == "N/A N/A":
-                    continue
-                ins_str = iw.get("insertion_time", "")
-                ins_dt = None
-                for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
-                    try:
-                        ins_dt = datetime.strptime(ins_str[:19], fmt)
-                    except (ValueError, IndexError, TypeError):
-                        pass
-                if ins_dt is None:
-                    continue
-                wit_str = iw.get("withdrawal_time", "")
-                wit_dt = None
-                if isinstance(wit_str, str) and wit_str:
-                    for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
-                        try:
-                            wit_dt = datetime.strptime(wit_str[:19], fmt)
-                        except (ValueError, IndexError):
-                            pass
-                if wit_dt is None:
-                    wit_dt = ins_dt.replace(hour=23, minute=59, second=59)
-                current = ins_dt
-                while current.date() <= wit_dt.date():
-                    day_iso = current.date().isoformat()
-                    # Determine which slot this driver is in on this day
-                    ins_minute = ins_dt.hour * 60 + ins_dt.minute if current.date() == ins_dt.date() else 0
-                    iw_slot = ""
-                    # Look for a card_inserted event within 2 minutes on the insertion day
-                    if current.date() == ins_dt.date():
-                        for offset in range(-2, 3):
-                            check_min = ins_minute + offset
-                            if 0 <= check_min < 1440:
-                                iw_slot = slot_by_minute.get((day_iso, check_min), "")
-                                if iw_slot:
-                                    break
-                    if not iw_slot:
-                        # Fallback: use card_inserted from any time on this day
-                        for (d, _m), s in slot_by_minute.items():
-                            if d == day_iso:
-                                iw_slot = s
-                                break
-                    iw_slot_name = "First" if iw_slot == "First" else ("Second" if iw_slot == "Second" else "")
-                    if iw_slot_name and iw_slot_name == slot_name:
-                        iw_by_date.setdefault(day_iso, set()).add(name)
-                    current = datetime(current.year, current.month, current.day,
-                                        tzinfo=timezone.utc) + timedelta(days=1)
+        iw_by_date = (_driver_names_by_date(activity_list,
+                                            data.get("card_iw_records") or [],
+                                            slot_name)
+                      if is_vu else {})
 
         # Global driver names for KPI count
         driver_names = set()
