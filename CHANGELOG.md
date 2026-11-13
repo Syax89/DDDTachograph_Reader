@@ -102,6 +102,12 @@
   200 kB) are refused up front as malformed (`too_many_sections` /
   `file_too_large`) instead of being walked for tens of seconds.
 
+- Checked against the JRC's official pages (November 2026): `ERCA Gen2(1)` is
+  still the only production Smart Tachograph root (no Gen2(2) root or link
+  certificate is published), and all 243 published MSCA certificates — on
+  brainpoolP256r1 or NIST P-256 — verify under the root in `certs/`. Two of
+  them are kept as public test fixtures (`tests/fixtures/msca/`).
+
 ### Maintenance
 
 - `pytest tests/` now generates the synthetic mock downloads before collection
