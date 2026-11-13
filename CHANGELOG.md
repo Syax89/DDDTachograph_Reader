@@ -95,6 +95,12 @@
   raised a swallowed `TypeError`, so the "expired / due soon" marker silently
   disappeared from the VU overview.
 
+- **Crafted files no longer stall the parser.** A G1 stream of repeated
+  `76 02` markers hit a quadratic de-duplication loop (200 kB took ~10 s, now
+  0.2 s). A vehicle-unit stream with more than 4 096 sections (real downloads
+  hold a few hundred at most) and a card file over 1 MB (real cards stay under
+  200 kB) are refused up front as malformed (`too_many_sections` /
+  `file_too_large`) instead of being walked for tens of seconds.
 ### Maintenance
 
 - `pytest tests/` now generates the synthetic mock downloads before collection

@@ -51,6 +51,21 @@ def _results_size(results):
 # refused up front instead of hanging the caller.
 MAX_FILE_SIZE_BYTES = 32 * 1024 * 1024
 
+#: Most section markers a vehicle-unit download may carry. A real one holds a
+#: handful of fixed sections plus one activity section per downloaded day (the
+#: unit keeps 365 days), so a few hundred at most; the tracked samples carry 13
+#: to 55. A crafted stream of empty ``76 21`` sections costs ~30 µs each in
+#: every later pass (1.6 MB of them took ~30 s), so a stream past this count is
+#: refused up front as malformed instead of being walked.
+MAX_VU_SECTIONS = 4096
+
+#: Largest card download (anything not starting with the VU SID ``0x76``). A
+#: driver, workshop, company or control card holds well under 200 kB even with
+#: both generations' applications (the tracked samples: 25-67 kB), while a
+#: crafted stream of zero-length STAP elements costs ~2 µs a byte (8 MB took
+#: ~14 s). 1 MB keeps a five-fold margin and bounds the worst case near 2 s.
+MAX_CARD_FILE_BYTES = 1024 * 1024
+
 
 def _parse_timestamp(value):
     """Parse an ISO-8601 tachograph timestamp to an aware UTC datetime, or None."""
@@ -204,6 +219,22 @@ class TachoParser:
 
         try:
             self._open_file()
+            if not self.is_vu and self.file_size > MAX_CARD_FILE_BYTES:
+                self.results["metadata"]["integrity_check"] = "File Too Large"
+                self.results["metadata"]["parse_error"] = {
+                    "code": "file_too_large",
+                    "message": (f"Not a plausible card download: {self.file_size} bytes "
+                                f"(a card holds at most {MAX_CARD_FILE_BYTES} bytes)"),
+                }
+                return self.results
+            if self.is_vu and self._too_many_vu_sections():
+                self.results["metadata"]["integrity_check"] = "Malformed File"
+                self.results["metadata"]["parse_error"] = {
+                    "code": "too_many_sections",
+                    "message": (f"Not a plausible vehicle-unit download: more than "
+                                f"{MAX_VU_SECTIONS} sections"),
+                }
+                return self.results
             # Structural pass: this is the foundation. If it fails there is no
             # data to show, so it stays a fatal parse_error below.
             self._run_structural_parse()
@@ -298,6 +329,21 @@ class TachoParser:
         self._chain_trust = {"G1": False, "G2": False}
         self._expired_certificate_roles = []
         self._chain_present = {"G1": False, "G2": False}
+
+    def _too_many_vu_sections(self):
+        """True when the VU stream holds more than :data:`MAX_VU_SECTIONS` sections.
+
+        Counts with the canonical section iterator and stops at the limit, so a
+        genuine download costs a few hundred cheap steps and a crafted one no
+        more than the limit.
+        """
+        from core.parser.vu_dispatcher import iter_vu_sections
+        count = 0
+        for _section in iter_vu_sections(self.raw_data):
+            count += 1
+            if count > MAX_VU_SECTIONS:
+                return True
+        return False
 
     def _open_file(self):
         """Memory-map the file and detect VU vs card (first byte 0x76 = VU)."""

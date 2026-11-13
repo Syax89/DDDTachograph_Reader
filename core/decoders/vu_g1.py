@@ -1,5 +1,7 @@
 """Vehicle-unit G1 download decoders: VU overview and TREP 02-06 stream walkers (Annex 1B)."""
 
+import collections
+import threading
 import struct
 import typing
 from datetime import datetime, timezone
@@ -81,12 +83,51 @@ def _append_once(target, record, identity, index):
     different record.
     """
     key = _record_key(identity, index)
-    for existing in target:
-        if isinstance(existing, dict) and existing.get("_key") == key:
-            return False
+    keys = _published_keys(target)
+    if key in keys:
+        return False
     record["_key"] = key
     target.append(record)
+    keys.add(key)
+    _KEY_INDEX.entries[id(target)] = (target, keys, len(target), id(record))
     return True
+
+
+class _KeyIndexCache(threading.local):
+    """Per-thread ``{id(list): (list, keys, length, id(last item))}``.
+
+    ``_append_once`` used to scan the whole list for every record, which is
+    quadratic: a crafted 200 kB G1 download of repeated ``76 02`` markers made
+    24 000 records and 276 million comparisons (about 10 s). The key set of each
+    target list is kept here instead. An entry is trusted only while the list is
+    the same object with the same length and last item, so a list another code
+    path appended to, trimmed or replaced is simply re-indexed. At most
+    ``_KEY_INDEX_SIZE`` lists are held, so nothing outlives a parse for long.
+    """
+
+    def __init__(self):
+        self.entries = collections.OrderedDict()
+
+
+_KEY_INDEX = _KeyIndexCache()
+_KEY_INDEX_SIZE = 32
+
+
+def _published_keys(target):
+    """The ``_key`` set of *target*, from the cache when it is still valid."""
+    entries = _KEY_INDEX.entries
+    entry = entries.get(id(target))
+    last = id(target[-1]) if target else None
+    if (entry is not None and entry[0] is target and entry[2] == len(target)
+            and entry[3] == last):
+        entries.move_to_end(id(target))
+        return entry[1]
+    keys = {existing.get("_key") for existing in target if isinstance(existing, dict)}
+    entries[id(target)] = (target, keys, len(target), last)
+    entries.move_to_end(id(target))
+    while len(entries) > _KEY_INDEX_SIZE:
+        entries.popitem(last=False)
+    return keys
 
 
 def _g1_time(ts, *, with_seconds=True):
