@@ -395,7 +395,11 @@ class StructureMixin:
             rows = [[ui_text.label(content_title(k)), group_summary(v, k, one_driver)]
                     for k, v in groups.items()]
         elif unit.empty in _EMPTY_WORDS:
-            cols, rows = [_("Content")], [[_EMPTY_WORDS[unit.empty]()]]
+            # One sentence per row, so a long explanation is never cut off.
+            text = _EMPTY_WORDS[unit.empty]()
+            cols = [_("Content")]
+            rows = [[part.strip() + ("" if part.strip().endswith(".") else ".")]
+                    for part in text.split(". ") if part.strip()]
         else:
             cols, rows = byte_view
             byte_view = None
