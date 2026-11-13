@@ -75,7 +75,7 @@ def _attach_day_distance(days, is_vu):
     return distances
 
 
-def _compute_activity_totals(changes, recorded_until=None):
+def _compute_activity_totals(changes, recorded_until=None, one_driver=False):
     """Return dict {ACTIVITY: total_minutes} from a list of activity changes.
 
     Changes are grouped per card slot (driver) first, so crew days (two
@@ -87,7 +87,7 @@ def _compute_activity_totals(changes, recorded_until=None):
     across slots because they share the same 24h day and cannot exceed it.
     """
     from core.utils.activity_stats import compute_activity_totals as _shared
-    return _shared(changes, recorded_until)
+    return _shared(changes, recorded_until, one_driver=one_driver)
 
 
 def _driver_names_by_date(activity_list, iw_records, slot_name):

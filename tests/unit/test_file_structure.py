@@ -205,6 +205,29 @@ def test_no_bytes_no_layout():
     assert build_layout(b"\x00", None) == []
 
 
+def test_certificates_are_not_called_driver_card_certificates():
+    from core.structure import content_title
+    assert content_title("certificates") == "Certificates"
+    assert content_title("events") == "Events"
+
+
+def test_a_day_row_sums_its_changes_up():
+    from app.gui_explorer_structure import content_rows
+    day = {"date": "01/05/2025", "changes": [
+        {"activity": "REST", "time": "00:00", "slot": "First"},
+        {"activity": "DRIVE", "time": "06:00", "slot": "First"},
+        {"activity": "REST", "time": "10:30", "slot": "First"}]}
+    cols, rows = content_rows([day], "activities")
+    shown = dict(zip(cols, rows[0], strict=True))
+    assert not any("items" in str(v) for v in rows[0])
+    assert shown["Drive"] == "4:30"
+    assert shown["Rest"] == "19:30"
+    assert shown["Unknown"] == "0:00"
+    # the last day of a download ends where the recording ends
+    cols, rows = content_rows([day], "activities", {"01/05/2025": 12 * 3600})
+    assert dict(zip(cols, rows[0], strict=True))["Rest"] == "7:30"     # 0-6 and 10:30-12
+
+
 def test_hex_rows():
     rows = hex_rows(bytes(range(20)) + b"AB", base=0x10)
     assert rows[0][0] == "0x00000010"

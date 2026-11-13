@@ -26,6 +26,7 @@ from app.gui_base import (  # noqa: F401
     tkfont,
     ui_text,
 )
+from core.utils.activity_stats import is_card_result
 
 
 class SummaryMixin:
@@ -313,7 +314,8 @@ class SummaryMixin:
             if not isinstance(changes, list) or not changes:
                 continue
             day_totals = _compute_activity_totals(
-                changes, recorded_until_seconds(record))
+                changes, recorded_until_seconds(record),
+                one_driver=is_card_result(data))
             for activity in totals:
                 totals[activity] += day_totals[activity]
 

@@ -1590,7 +1590,8 @@ class ActivityTimelineChart(ttk.Frame):
         for ch in changes:
             if isinstance(ch, dict):
                 blocks.setdefault(label(ch.get("slot") or "First"), [])
-        for raw_slot, segments in day_segments(changes, recorded_until).items():
+        for raw_slot, segments in day_segments(changes, recorded_until,
+                                               one_driver=not is_vu).items():
             blocks.setdefault(label(raw_slot), []).extend(segments)
         return blocks
 

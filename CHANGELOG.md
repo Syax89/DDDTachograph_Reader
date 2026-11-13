@@ -18,6 +18,17 @@
   Summary, Daily Activities and Detailed Speed stay as views at the top.
   Exports and the JSON are unchanged.
 
+### Fixed
+
+- **Driver-card days on which the card changed slot no longer exceed 24 hours.**
+  A card records one driver; its slot bit only says which slot of the vehicle
+  unit it sat in. Reading the two slots as two drivers (the vehicle-unit
+  reading) counted the hours before the move twice, and such a day showed up to
+  33 h 40 (with ~17 h of *Unknown*) in the Daily Activities dashboard, the
+  summary totals, the PDF/CLI totals, the monthly table and the period report.
+  Card days are now one timeline, as the 561 analysis already did; vehicle-unit
+  days are unchanged. Every day of the 13 sample files now adds up to 24 h.
+
 ### Changed
 
 - **Record tables are easier to read.**

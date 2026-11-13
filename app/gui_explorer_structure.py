@@ -19,6 +19,7 @@ from app.gui_base import (  # noqa: F401
     ui_text,
 )
 from core.structure import build_layout, content_title, hex_rows
+from core.utils.activity_stats import compute_activity_totals, recorded_until_seconds
 
 #: Tree rows inserted between two pumps of the event loop.
 _PUMP_EVERY = 200
@@ -66,11 +67,35 @@ def _flat(record):
     return out
 
 
+def _hm(minutes):
+    return f"{int(minutes) // 60}:{int(minutes) % 60:02d}"
+
+
+def _day_totals(record, cuts, one_driver=True):
+    """A day record with its activity changes summed up instead of listed.
+
+    The changes themselves are in the day's chart (Daily Activities); here the
+    row says how many there are and what they add up to. The last day of a
+    download ends where the recording ends (*cuts*: the parser's
+    ``recorded_until`` by date), exactly as in every other view.
+    """
+    changes = record.get("changes")
+    if not isinstance(changes, list):
+        return record
+    cut = cuts.get(record.get("date"))
+    totals = compute_activity_totals(changes, cut, one_driver=one_driver)
+    out = {k: v for k, v in record.items() if k != "changes"}
+    out["changes_count"] = len(changes)
+    for activity in ("DRIVE", "WORK", "AVAILABLE", "REST", "UNKNOWN"):
+        out[activity.lower()] = _hm(totals.get(activity, 0))
+    return out
+
+
 #: Content groups whose first column names a part of the file.
 _NAMED_PARTS = {"record_arrays": "record_array", "elementary_files": "elementary_file"}
 
 
-def content_rows(value, key=None):
+def content_rows(value, key=None, cuts=None, one_driver=True):
     """``(columns, rows)`` for one content group of a unit."""
     if isinstance(value, set):
         value = sorted(value, key=str)
@@ -80,7 +105,8 @@ def content_rows(value, key=None):
         return _kv_rows(shown)
     if isinstance(value, (list, tuple)):
         if value and all(isinstance(item, dict) for item in value):
-            records = [_flat(item) for item in value]
+            records = [_day_totals(_flat(item), cuts or {}, one_driver)
+                       for item in value]
             part = _NAMED_PARTS.get(key)
             if part:
                 records = [dict(r, **{part: ui_text.label(r.get(part))}) for r in records]
@@ -204,15 +230,20 @@ class StructureMixin:
     def _show_unit(self, unit, key=None):
         """Show a unit: its records, or its bytes when it decodes to nothing."""
         groups = unit.content()
+        cuts = {day.get("date"): recorded_until_seconds(day)
+                for day in ((getattr(self, "_opened_data", None) or {}).get("activities") or [])
+                if isinstance(day, dict) and recorded_until_seconds(day) is not None}
+        one_driver = not ((getattr(self, "_opened_data", None) or {})
+                          .get("metadata") or {}).get("is_vu")
         title = ui_text.label(unit.title) + (f" {unit.detail}" if unit.detail else "")
         meta = self._unit_meta(unit)
         byte_view = self._unit_bytes(unit)
         if key is not None and key in groups:
             title = f"{title} — {ui_text.label(content_title(key))}"
-            cols, rows = content_rows(groups[key], key)
+            cols, rows = content_rows(groups[key], key, cuts, one_driver)
         elif len(groups) == 1:
             only = next(iter(groups))
-            cols, rows = content_rows(groups[only], only)
+            cols, rows = content_rows(groups[only], only, cuts, one_driver)
         elif groups:
             cols = [_("Content"), _("Records")]
             rows = [[ui_text.label(content_title(k)), _records_count(v)]

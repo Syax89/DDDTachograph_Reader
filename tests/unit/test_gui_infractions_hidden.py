@@ -236,9 +236,9 @@ def test_the_evaluation_still_runs_with_the_infractions_hidden(explorer):
     real = gui.evaluate_driving_rules
     seen = []
 
-    def spy(changes, recorded_until=None):
+    def spy(changes, recorded_until=None, **kwargs):
         seen.append(changes)
-        return real(changes, recorded_until)
+        return real(changes, recorded_until, **kwargs)
 
     with patch.object(gui, "evaluate_driving_rules", spy):
         explorer._show_daily_summary([FLAGGED_DAY, CLEAN_DAY], CARD_DATA)

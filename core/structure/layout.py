@@ -114,14 +114,23 @@ class Unit:
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 def content_title(key: str) -> str:
-    """English title of a content group (a parser result key)."""
+    """English title of a content group (a parser result key).
+
+    One part of the file holds one kind of certificate (the VU's, the member
+    state's, the card's), so the group is called *Certificates*: the export
+    title "Driver Card Certificates" would misname the ones of a vehicle unit.
+    """
+    own = {"driver": "Driver / Cardholder", "vehicle": "Vehicle",
+           "certificates": "Certificates",
+           "record_arrays": "Record Arrays",
+           "elementary_files": "Elementary Files"}
+    if key in own:
+        return own[key]
     from core.utils.report_format import DICT_SECTIONS, EXPORT_SECTIONS
     for name, title in list(EXPORT_SECTIONS) + list(DICT_SECTIONS):
         if name == key:
             return title
-    return {"driver": "Driver / Cardholder", "vehicle": "Vehicle",
-            "record_arrays": "Record Arrays",
-            "elementary_files": "Elementary Files"}.get(key, key)
+    return key
 
 
 def hex_rows(data: bytes, base: int = 0, limit: int = HEX_DUMP_LIMIT) -> list:
