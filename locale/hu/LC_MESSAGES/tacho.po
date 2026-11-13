@@ -2539,3 +2539,15 @@ msgstr "{count} nap"
 
 msgid "Record type"
 msgstr "Rekordtípus"
+
+msgid "End of sensor download"
+msgstr "Az érzékelőletöltés vége"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Nincs rekord: ez a tömb üres, csak a fejlécét tartalmazza."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Nincs rekord: a fájl minden helye üres (soha nem írták)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Nincs adat: ez a rész csak az érzékelőletöltés végét jelzi."

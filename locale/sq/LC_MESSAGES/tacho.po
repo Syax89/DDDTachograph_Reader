@@ -2539,3 +2539,15 @@ msgstr "{count} ditë"
 
 msgid "Record type"
 msgstr "Lloji i regjistrimit"
+
+msgid "End of sensor download"
+msgstr "Fundi i shkarkimit të sensorit"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Asnjë regjistrim: ky varg është bosh dhe ka vetëm kokën e tij."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Asnjë regjistrim: të gjitha vendet e këtij skedari janë bosh (asnjëherë të shkruara)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Asnjë e dhënë: kjo pjesë shënon vetëm fundin e shkarkimit të sensorit."

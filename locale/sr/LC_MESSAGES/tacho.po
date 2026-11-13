@@ -2539,3 +2539,15 @@ msgstr "{count} дана"
 
 msgid "Record type"
 msgstr "Врста записа"
+
+msgid "End of sensor download"
+msgstr "Крај преузимања сензора"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Нема записа: овај низ је празан и садржи само заглавље."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Нема записа: сва места ове датотеке су празна (никада уписана)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Нема података: овај део само означава крај преузимања сензора."

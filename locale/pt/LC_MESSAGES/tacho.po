@@ -2539,3 +2539,15 @@ msgstr "{count} dias"
 
 msgid "Record type"
 msgstr "Tipo de registo"
+
+msgid "End of sensor download"
+msgstr "Fim da descarga do sensor"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Sem registos: esta matriz está vazia e contém apenas o cabeçalho."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Sem registos: todas as posições deste ficheiro estão vazias (nunca escritas)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Sem dados: esta parte apenas marca o fim da descarga do sensor."

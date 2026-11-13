@@ -2539,3 +2539,15 @@ msgstr "{count} dager"
 
 msgid "Record type"
 msgstr "Posttype"
+
+msgid "End of sensor download"
+msgstr "Slutt på sensornedlasting"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Ingen poster: denne matrisen er tom og inneholder bare hodet."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Ingen poster: alle plassene i denne filen er tomme (aldri skrevet)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Ingen data: denne delen markerer bare slutten på sensornedlastingen."

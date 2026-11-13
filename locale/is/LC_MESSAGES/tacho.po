@@ -2539,3 +2539,15 @@ msgstr "{count} dagar"
 
 msgid "Record type"
 msgstr "Færslugerð"
+
+msgid "End of sensor download"
+msgstr "Lok niðurhals skynjara"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Engar færslur: þetta fylki er tómt og inniheldur aðeins hausinn."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Engar færslur: öll hólf þessarar skrár eru tóm (aldrei skrifuð)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Engin gögn: þessi hluti markar aðeins lok niðurhals skynjarans."

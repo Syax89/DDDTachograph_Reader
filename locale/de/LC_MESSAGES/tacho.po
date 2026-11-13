@@ -2539,3 +2539,15 @@ msgstr "{count} Tage"
 
 msgid "Record type"
 msgstr "Datensatztyp"
+
+msgid "End of sensor download"
+msgstr "Ende des Sensor-Downloads"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Keine Datensätze: Dieses Array ist leer und enthält nur seinen Kopf."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Keine Datensätze: Alle Plätze dieser Datei sind leer (nie beschrieben)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Keine Daten: Dieser Teil markiert nur das Ende des Sensor-Downloads."

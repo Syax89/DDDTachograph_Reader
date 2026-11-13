@@ -2539,3 +2539,15 @@ msgstr "{count} dienų"
 
 msgid "Record type"
 msgstr "Įrašo tipas"
+
+msgid "End of sensor download"
+msgstr "Jutiklio atsisiuntimo pabaiga"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Įrašų nėra: šis masyvas tuščias ir turi tik antraštę."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Įrašų nėra: visos šio failo vietos tuščios (niekada neįrašytos)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Duomenų nėra: ši dalis tik žymi jutiklio atsisiuntimo pabaigą."

@@ -20,6 +20,10 @@
     application lists each EF with what it holds and its signature;
   - selecting a part decodes that part's own bytes; a *Bytes* switch shows
     it as a hex dump with offsets;
+  - a part with no record says why instead of showing hex: an empty
+    RecordArray (only its header), a card EF whose slots were never written,
+    the terminator of a sensor download; the download interface version
+    (TREP 00) is decoded;
   - padding and unrecognised bytes between parts are listed too, so the
     parts add up to the whole file.
   Summary, Daily Activities and Detailed Speed stay as views at the top.

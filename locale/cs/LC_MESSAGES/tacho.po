@@ -2539,3 +2539,15 @@ msgstr "{count} dní"
 
 msgid "Record type"
 msgstr "Typ záznamu"
+
+msgid "End of sensor download"
+msgstr "Konec stahování snímače"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Žádné záznamy: toto pole je prázdné a obsahuje jen hlavičku."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Žádné záznamy: všechny pozice tohoto souboru jsou prázdné (nikdy nezapsané)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Žádná data: tato část jen označuje konec stahování snímače."

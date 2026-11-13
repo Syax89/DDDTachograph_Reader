@@ -259,6 +259,15 @@ def content_rows(value, key=None, cuts=None, one_driver=True):
     return [_("Value")], [[fmt_val(value)]]
 
 
+#: What an empty part says instead of a bare hex dump (the bytes stay one
+#: switch away). Functions, so the text follows the interface language.
+_EMPTY_WORDS = {
+    "array": lambda: _("No records: this array is empty and holds only its header."),
+    "blank": lambda: _("No records: every slot of this file is blank (never written)."),
+    "terminator": lambda: _("No data: this part only marks the end of the sensor download."),
+}
+
+
 class StructureMixin:
     """The file-structure tree and the views of its units."""
 
@@ -382,6 +391,8 @@ class StructureMixin:
             cols = [_("Content"), _("Value")]
             rows = [[ui_text.label(content_title(k)), group_summary(v, k, one_driver)]
                     for k, v in groups.items()]
+        elif unit.empty in _EMPTY_WORDS:
+            cols, rows = [_("Content")], [[_EMPTY_WORDS[unit.empty]()]]
         else:
             cols, rows = byte_view
             byte_view = None

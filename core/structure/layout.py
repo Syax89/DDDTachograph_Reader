@@ -49,7 +49,7 @@ _SECTION_TITLES = {
     "TechnicalData": "Technical data",
     "CardDownload": "Card download",
     "SensorSpecialData": "Sensor data",
-    "SensorTrailer": "Sensor data",
+    "SensorTrailer": "End of sensor download",
 }
 
 #: Card EF names as Annex 1B/1C write them, by file identifier.
@@ -83,6 +83,10 @@ class Unit:
     tag: str = ""               # "TREP 0x32", "EF 0x0504", "RecordArray 0x01"
     spec: str = ""              # the regulation's own name ("VuActivityDailyRecord")
     detail: str = ""            # "90 × 2 B", a date, ...
+    #: Why the part holds no record: "array" (a RecordArray of 0 records, only
+    #: its header), "blank" (every byte 00/20/FF: slots never written),
+    #: "terminator" (a marker that ends a transfer and carries no data).
+    empty: str = ""
     signature: Optional[bool] = None   # True verified, False failed, None not checked
     children: list = field(default_factory=list)
     decoder: Optional[Callable[[], dict]] = None
@@ -234,8 +238,10 @@ def _vu_g2(raw: bytes, results: dict) -> list:
         tag = f"TREP 0x{trep:02X}"
         if sec.get("interface") is not None:
             body = bytes(sec["interface"])
-            units.append(Unit("section", "Download interface version", marker,
-                              2 + len(body), tag=tag, detail=body.hex(" ")))
+            section = Unit("section", "Download interface version", marker,
+                           2 + len(body), tag=tag)
+            section.decoder = _interface_decoder(body)
+            units.append(section)
             continue
         if sec.get("card_tlv"):
             info = sec["card_tlv"]
@@ -280,6 +286,15 @@ def array_title(rt: int) -> str:
     return content_title(key) if key else f"Record type 0x{rt:02X}"
 
 
+def _interface_decoder(body):
+    def decode():
+        from core.parser.vu_dispatcher import _emit_interface_version
+        fresh = _fresh_results()
+        _emit_interface_version(body, fresh)
+        return _content_of(fresh)
+    return decode
+
+
 def _g2_array(raw, pos, rt, rs, nr, rec_end, trep, version) -> Unit:
     from core.parser import vu_dispatcher as vd
 
@@ -288,6 +303,8 @@ def _g2_array(raw, pos, rt, rs, nr, rec_end, trep, version) -> Unit:
                 tag=f"RecordArray 0x{rt:02X}", spec=name,
                 detail=f"{nr} × {rs} B")
     unit.count = nr                          # type: ignore[attr-defined]
+    if nr == 0:
+        unit.empty = "array"
 
     def decode():
         records = []
@@ -336,6 +353,8 @@ def _vu_g1(raw: bytes, results: dict) -> list:
             section.children = _embedded_card(raw[body_start:body_end], body_start, results)
             units.append(section)
             continue
+        if trep == 0x14:
+            section.empty = "terminator"
         if trep == 0x02:
             section.detail = _time_real(raw[body_start:body_start + 4])
         section.decoder = _g1_decoder(trep, raw[body_start:body_end], msg["pos"])
@@ -435,6 +454,8 @@ def _card_units(raw: bytes, results: dict, raw_tags: dict, base: int = 0,
         else:
             unit.decoder = _card_decoder(occ["tag"], payload, dtype,
                                          generation_source or raw, base + start)
+            if payload and all(b in (0x00, 0x20, 0xFF) for b in payload):
+                unit.empty = "blank"
         unit._dtype = dtype                  # type: ignore[attr-defined]
         unit._tag = occ["tag"]               # type: ignore[attr-defined]
         elements.append(unit)

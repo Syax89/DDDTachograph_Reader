@@ -2539,3 +2539,15 @@ msgstr "{count} дни"
 
 msgid "Record type"
 msgstr "Вид запис"
+
+msgid "End of sensor download"
+msgstr "Край на изтеглянето от датчика"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Няма записи: този масив е празен и съдържа само заглавката си."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Няма записи: всички позиции на този файл са празни (никога не са записвани)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Няма данни: тази част само отбелязва края на изтеглянето от датчика."

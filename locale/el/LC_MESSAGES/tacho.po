@@ -2539,3 +2539,15 @@ msgstr "{count} ημέρες"
 
 msgid "Record type"
 msgstr "Τύπος εγγραφής"
+
+msgid "End of sensor download"
+msgstr "Τέλος μεταφόρτωσης αισθητήρα"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Καμία εγγραφή: ο πίνακας είναι κενός και περιέχει μόνο την κεφαλίδα του."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Καμία εγγραφή: όλες οι θέσεις του αρχείου είναι κενές (δεν γράφτηκαν ποτέ)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Κανένα δεδομένο: αυτό το τμήμα σηματοδοτεί μόνο το τέλος της μεταφόρτωσης του αισθητήρα."

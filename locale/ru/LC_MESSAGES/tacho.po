@@ -2539,3 +2539,15 @@ msgstr "Дней: {count}"
 
 msgid "Record type"
 msgstr "Тип записи"
+
+msgid "End of sensor download"
+msgstr "Конец выгрузки датчика"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Нет записей: этот массив пуст и содержит только заголовок."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Нет записей: все ячейки этого файла пусты (никогда не записывались)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Нет данных: эта часть лишь отмечает конец выгрузки датчика."

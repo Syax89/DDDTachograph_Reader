@@ -2539,3 +2539,15 @@ msgstr "{count} jiem"
 
 msgid "Record type"
 msgstr "Tip ta' rekord"
+
+msgid "End of sensor download"
+msgstr "Tmiem it-tniżżil tas-sensur"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "L-ebda rekord: dan l-array huwa vojt u fih biss l-intestatura tiegħu."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "L-ebda rekord: il-postijiet kollha ta' dan il-fajl huma vojta (qatt miktuba)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "L-ebda data: din il-parti timmarka biss it-tmiem tat-tniżżil tas-sensur."

@@ -2539,3 +2539,15 @@ msgstr "{count} zile"
 
 msgid "Record type"
 msgstr "Tip de înregistrare"
+
+msgid "End of sensor download"
+msgstr "Sfârșitul descărcării senzorului"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Nicio înregistrare: acest tablou este gol și conține doar antetul."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Nicio înregistrare: toate pozițiile acestui fișier sunt goale (niciodată scrise)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Nicio dată: această parte marchează doar sfârșitul descărcării senzorului."

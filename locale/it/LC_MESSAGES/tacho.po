@@ -2539,3 +2539,15 @@ msgstr "{count} giorni"
 
 msgid "Record type"
 msgstr "Tipo di record"
+
+msgid "End of sensor download"
+msgstr "Fine del download sensore"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Nessun record: l'array è vuoto e contiene solo la sua intestazione."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Nessun record: tutti gli slot di questo file sono vuoti (mai scritti)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Nessun dato: questa parte segna solo la fine del download del sensore."

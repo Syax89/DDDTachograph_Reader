@@ -2539,3 +2539,15 @@ msgstr "{count} dienas"
 
 msgid "Record type"
 msgstr "Ieraksta tips"
+
+msgid "End of sensor download"
+msgstr "Sensora lejupielādes beigas"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Nav ierakstu: šis masīvs ir tukšs un satur tikai galveni."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Nav ierakstu: visas šī faila vietas ir tukšas (nekad nav rakstītas)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Nav datu: šī daļa tikai iezīmē sensora lejupielādes beigas."

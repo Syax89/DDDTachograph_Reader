@@ -360,3 +360,28 @@ def test_a_day_line_and_a_period_line():
     later = dict(day, date="03/05/2025")
     assert group_summary([later, day], "activities") == "2 days  ·  01/05/2025 – 03/05/2025"
     assert group_summary([]) == "None"
+
+
+def test_empty_parts_say_why_instead_of_hex(built):
+    raw, units = _layout(built["vu"])
+    # an array of zero records is only its header
+    stream = b"\x76\x32" + _array(0x06, [struct.pack(">I", 1_700_006_400)]) + \
+        struct.pack(">BHH", 0x09, 5, 0)
+    units = build_layout(stream, {"metadata": {"is_vu": True, "generation": "G2"}})
+    empty = [a for a in units[0].children if a.tag == "RecordArray 0x09"][0]
+    assert empty.empty == "array" and not empty.content()
+    # a card EF whose bytes are all 00/20 holds no written record
+    blank = _stap(0x0503, 0x00, b"\x00" * 10 + b" " * 14)
+    card = _stap(0x0002, 0x00, bytes(25)) + blank
+    result = {"metadata": {"is_vu": False}, "raw_tags": {}}
+    from core.parser.deterministic import DeterministicParser
+    result["raw_tags"] = DeterministicParser().parse(card, is_vu=False)["raw_tags"]
+    efs = [u for top in build_layout(card, result) for u in top.walk() if u.kind == "ef"]
+    assert [ef.empty for ef in efs if ef.tag == "EF 0x0503"] == ["blank"]
+
+
+def test_the_download_interface_version_is_decoded():
+    units = build_layout(b"\x76\x00\x01\x01", {"metadata": {"is_vu": True,
+                                                             "generation": "G2.2"}})
+    content = units[0].content()
+    assert "Generation 2, version 2" in str(content)

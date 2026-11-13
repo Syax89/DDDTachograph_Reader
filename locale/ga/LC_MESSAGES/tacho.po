@@ -2539,3 +2539,15 @@ msgstr "{count} lá"
 
 msgid "Record type"
 msgstr "Cineál taifid"
+
+msgid "End of sensor download"
+msgstr "Deireadh íoslódáil an bhraiteora"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Gan taifid: tá an t-eagar seo folamh agus níl ann ach a cheanntásc."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Gan taifid: tá gach sliotán sa chomhad seo bán (níor scríobhadh riamh)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Gan sonraí: ní dhéanann an chuid seo ach deireadh íoslódáil an bhraiteora a mharcáil."

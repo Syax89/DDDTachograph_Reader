@@ -2539,3 +2539,15 @@ msgstr "{count} dni"
 
 msgid "Record type"
 msgstr "Vrsta zapisa"
+
+msgid "End of sensor download"
+msgstr "Konec prenosa tipala"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Ni zapisov: to polje je prazno in vsebuje samo glavo."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Ni zapisov: vsa mesta te datoteke so prazna (nikoli zapisana)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Ni podatkov: ta del le označuje konec prenosa tipala."

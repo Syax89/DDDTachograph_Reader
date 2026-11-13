@@ -2539,3 +2539,15 @@ msgstr "{count} dagar"
 
 msgid "Record type"
 msgstr "Posttyp"
+
+msgid "End of sensor download"
+msgstr "Slut på givarnedladdning"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Inga poster: denna matris är tom och innehåller bara sitt huvud."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Inga poster: alla platser i denna fil är tomma (aldrig skrivna)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Inga data: denna del markerar bara slutet på givarnedladdningen."

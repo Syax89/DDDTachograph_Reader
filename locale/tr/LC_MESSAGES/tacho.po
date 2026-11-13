@@ -2539,3 +2539,15 @@ msgstr "{count} gün"
 
 msgid "Record type"
 msgstr "Kayıt türü"
+
+msgid "End of sensor download"
+msgstr "Sensör indirmesinin sonu"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Kayıt yok: bu dizi boş ve yalnızca başlığını içeriyor."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Kayıt yok: bu dosyanın tüm yuvaları boş (hiç yazılmamış)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Veri yok: bu bölüm yalnızca sensör indirmesinin sonunu işaretler."

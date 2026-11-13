@@ -2539,3 +2539,15 @@ msgstr "{count} päeva"
 
 msgid "Record type"
 msgstr "Kirje tüüp"
+
+msgid "End of sensor download"
+msgstr "Anduri allalaadimise lõpp"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Kirjeid pole: see massiiv on tühi ja sisaldab ainult päist."
+
+msgid "No records: every slot of this file is blank (never written)."
+msgstr "Kirjeid pole: faili kõik kohad on tühjad (pole kunagi kirjutatud)."
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Andmeid pole: see osa tähistab ainult anduri allalaadimise lõppu."
