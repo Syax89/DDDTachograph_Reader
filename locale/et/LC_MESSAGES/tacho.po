@@ -2503,3 +2503,39 @@ msgstr "Elementaarfail"
 
 msgid "File Identifier"
 msgstr "Faili identifikaator"
+
+msgid "Activity changes"
+msgstr "Tegevuse muutused"
+
+msgid "Card slots"
+msgstr "Kaardipesad"
+
+msgid "VU date and time"
+msgstr "Sõidukiüksuse kuupäev ja kellaaeg"
+
+msgid "Member State certificate"
+msgstr "Liikmesriigi sertifikaat"
+
+msgid "Odometer at midnight"
+msgstr "Läbisõidumõõdiku näit keskööl"
+
+msgid "Day"
+msgstr "Päev"
+
+msgid "Registration plate"
+msgstr "Registreerimismärk"
+
+msgid "VU certificate"
+msgstr "Sõidukiüksuse sertifikaat"
+
+msgid "None"
+msgstr "Puudub"
+
+msgid "{count} records"
+msgstr "{count} kirjet"
+
+msgid "{count} days"
+msgstr "{count} päeva"
+
+msgid "Record type"
+msgstr "Kirje tüüp"

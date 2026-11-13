@@ -2503,3 +2503,39 @@ msgstr "Fichier élémentaire"
 
 msgid "File Identifier"
 msgstr "Identifiant de fichier"
+
+msgid "Activity changes"
+msgstr "Changements d'activité"
+
+msgid "Card slots"
+msgstr "Lecteurs de carte"
+
+msgid "VU date and time"
+msgstr "Date et heure de l'UEV"
+
+msgid "Member State certificate"
+msgstr "Certificat de l'État membre"
+
+msgid "Odometer at midnight"
+msgstr "Kilométrage à minuit"
+
+msgid "Day"
+msgstr "Jour"
+
+msgid "Registration plate"
+msgstr "Plaque d'immatriculation"
+
+msgid "VU certificate"
+msgstr "Certificat de l'UEV"
+
+msgid "None"
+msgstr "Aucun"
+
+msgid "{count} records"
+msgstr "{count} enregistrements"
+
+msgid "{count} days"
+msgstr "{count} jours"
+
+msgid "Record type"
+msgstr "Type d'enregistrement"

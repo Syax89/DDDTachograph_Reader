@@ -2503,3 +2503,39 @@ msgstr "Elementardatei"
 
 msgid "File Identifier"
 msgstr "Dateikennung"
+
+msgid "Activity changes"
+msgstr "Aktivitätswechsel"
+
+msgid "Card slots"
+msgstr "Kartensteckplätze"
+
+msgid "VU date and time"
+msgstr "Datum und Uhrzeit der FE"
+
+msgid "Member State certificate"
+msgstr "Mitgliedstaatzertifikat"
+
+msgid "Odometer at midnight"
+msgstr "Kilometerstand um Mitternacht"
+
+msgid "Day"
+msgstr "Tag"
+
+msgid "Registration plate"
+msgstr "Amtliches Kennzeichen"
+
+msgid "VU certificate"
+msgstr "FE-Zertifikat"
+
+msgid "None"
+msgstr "Keine"
+
+msgid "{count} records"
+msgstr "{count} Datensätze"
+
+msgid "{count} days"
+msgstr "{count} Tage"
+
+msgid "Record type"
+msgstr "Datensatztyp"

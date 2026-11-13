@@ -2503,3 +2503,39 @@ msgstr "Plik elementarny"
 
 msgid "File Identifier"
 msgstr "Identyfikator pliku"
+
+msgid "Activity changes"
+msgstr "Zmiany czynności"
+
+msgid "Card slots"
+msgstr "Gniazda kart"
+
+msgid "VU date and time"
+msgstr "Data i godzina VU"
+
+msgid "Member State certificate"
+msgstr "Certyfikat państwa członkowskiego"
+
+msgid "Odometer at midnight"
+msgstr "Stan licznika o północy"
+
+msgid "Day"
+msgstr "Dzień"
+
+msgid "Registration plate"
+msgstr "Numer rejestracyjny"
+
+msgid "VU certificate"
+msgstr "Certyfikat VU"
+
+msgid "None"
+msgstr "Brak"
+
+msgid "{count} records"
+msgstr "{count} rekordów"
+
+msgid "{count} days"
+msgstr "{count} dni"
+
+msgid "Record type"
+msgstr "Typ rekordu"

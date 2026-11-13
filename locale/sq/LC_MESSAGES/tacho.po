@@ -2503,3 +2503,39 @@ msgstr "Skedar elementar"
 
 msgid "File Identifier"
 msgstr "Identifikuesi i skedarit"
+
+msgid "Activity changes"
+msgstr "Ndryshime aktiviteti"
+
+msgid "Card slots"
+msgstr "Foletë e kartave"
+
+msgid "VU date and time"
+msgstr "Data dhe ora e VU"
+
+msgid "Member State certificate"
+msgstr "Certifikata e shtetit anëtar"
+
+msgid "Odometer at midnight"
+msgstr "Kilometrazhi në mesnatë"
+
+msgid "Day"
+msgstr "Dita"
+
+msgid "Registration plate"
+msgstr "Targa"
+
+msgid "VU certificate"
+msgstr "Certifikata e VU"
+
+msgid "None"
+msgstr "Asnjë"
+
+msgid "{count} records"
+msgstr "{count} regjistrime"
+
+msgid "{count} days"
+msgstr "{count} ditë"
+
+msgid "Record type"
+msgstr "Lloji i regjistrimit"

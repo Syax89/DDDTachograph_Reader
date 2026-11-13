@@ -328,3 +328,31 @@ def test_only_problems_carry_an_icon():
     assert icon(Unit("gap", "Padding", 0, 10)) is None
     assert icon(Unit("section", "Overview", 0, 10, signature=False)) == "status-error"
     assert icon(Unit("gap", "Unrecognised bytes", 0, 10)) == "status-warning"
+
+
+def test_a_section_reads_in_words(built):
+    from app.gui_explorer_structure import StructureMixin
+    raw, units = _layout(built["vu"])
+    section = units[0]
+    assert [a.title for a in section.children] == [
+        "Day", "Odometer at midnight", "Activity changes", "Signature"]
+    assert section.children[2].spec == "VuActivityDailyRecord"
+    cols, rows = StructureMixin._section_overview(None, section)
+    shown = {row[0]: row[1] for row in rows}
+    assert shown["Day"] == "15/11/2023"
+    assert shown["Odometer at midnight"] == "4096 km"
+    assert shown["Activity changes"].startswith("3  ·  ")
+    # where it is in the file is there, behind the technical switch
+    assert cols.technical >= {"Offset", "Length", "Record type"}
+
+
+def test_a_day_line_and_a_period_line():
+    from app.gui_explorer_structure import group_summary
+    day = {"date": "01/05/2025", "odometer_km": 1000, "changes": [
+        {"activity": "REST", "time": "00:00", "slot": "First"},
+        {"activity": "DRIVE", "time": "06:00", "slot": "First"},
+        {"activity": "REST", "time": "10:30", "slot": "First"}]}
+    assert group_summary([day], "activities") == "1000 km  ·  Drive 4:30  ·  Rest 19:30"
+    later = dict(day, date="03/05/2025")
+    assert group_summary([later, day], "activities") == "2 days  ·  01/05/2025 – 03/05/2025"
+    assert group_summary([]) == "None"

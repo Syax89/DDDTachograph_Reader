@@ -12,6 +12,12 @@
     generation-2 applications, each with the signature that follows it;
   - a section or EF whose signature does not verify is marked in red;
     verified parts carry no mark (the verdict is in the table header);
+  - parts are named in words ("Activity changes · 90", "Card Insertion /
+    Withdrawal · 1"); the regulation's record name is in the table header;
+  - a section reads as a summary — the day, the odometer at midnight, who
+    inserted a card and when, the activity totals, the places, the signature
+    — with offsets, sizes and record types behind *Technical columns*; a card
+    application lists each EF with what it holds and its signature;
   - selecting a part decodes that part's own bytes; a *Bytes* switch shows
     it as a hex dump with offsets;
   - padding and unrecognised bytes between parts are listed too, so the

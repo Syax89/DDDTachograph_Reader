@@ -2503,3 +2503,39 @@ msgstr "Elementarusis failas"
 
 msgid "File Identifier"
 msgstr "Failo identifikatorius"
+
+msgid "Activity changes"
+msgstr "Veiklos pakeitimai"
+
+msgid "Card slots"
+msgstr "Kortelių lizdai"
+
+msgid "VU date and time"
+msgstr "Transporto priemonės bloko data ir laikas"
+
+msgid "Member State certificate"
+msgstr "Valstybės narės sertifikatas"
+
+msgid "Odometer at midnight"
+msgstr "Odometro rodmuo vidurnaktį"
+
+msgid "Day"
+msgstr "Diena"
+
+msgid "Registration plate"
+msgstr "Valstybinis numeris"
+
+msgid "VU certificate"
+msgstr "Transporto priemonės bloko sertifikatas"
+
+msgid "None"
+msgstr "Nėra"
+
+msgid "{count} records"
+msgstr "{count} įrašų"
+
+msgid "{count} days"
+msgstr "{count} dienų"
+
+msgid "Record type"
+msgstr "Įrašo tipas"

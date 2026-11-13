@@ -81,6 +81,7 @@ class Unit:
     offset: int
     length: int
     tag: str = ""               # "TREP 0x32", "EF 0x0504", "RecordArray 0x01"
+    spec: str = ""              # the regulation's own name ("VuActivityDailyRecord")
     detail: str = ""            # "90 × 2 B", a date, ...
     signature: Optional[bool] = None   # True verified, False failed, None not checked
     children: list = field(default_factory=list)
@@ -260,12 +261,33 @@ def _vu_g2(raw: bytes, results: dict) -> list:
     return units
 
 
+#: Plain names of the record types that have no result list of their own.
+_ARRAY_TITLES = {
+    0x01: "Activity changes", 0x02: "Card slots", 0x03: "VU date and time",
+    0x04: "Member State certificate", 0x05: "Odometer at midnight", 0x06: "Day",
+    0x08: "Signature", 0x0A: "VIN", 0x0B: "Registration plate",
+    0x0F: "VU certificate", 0x15: "Events", 0x18: "Faults",
+    0x24: "Registration plate",
+}
+
+
+def array_title(rt: int) -> str:
+    """What a RecordArray holds, in words (the regulation's name is ``spec``)."""
+    from core.parser.vu_dispatcher import VU_RECORD_RESULT_KEYS
+    if rt in _ARRAY_TITLES:
+        return _ARRAY_TITLES[rt]
+    key = VU_RECORD_RESULT_KEYS.get(rt)
+    return content_title(key) if key else f"Record type 0x{rt:02X}"
+
+
 def _g2_array(raw, pos, rt, rs, nr, rec_end, trep, version) -> Unit:
     from core.parser import vu_dispatcher as vd
 
     name = (vd.RECORD_TYPES.get(rt) or (f"RecordType 0x{rt:02X}",))[0]
-    unit = Unit("array", name, pos, rec_end - pos, tag=f"RecordArray 0x{rt:02X}",
+    unit = Unit("array", array_title(rt), pos, rec_end - pos,
+                tag=f"RecordArray 0x{rt:02X}", spec=name,
                 detail=f"{nr} × {rs} B")
+    unit.count = nr                          # type: ignore[attr-defined]
 
     def decode():
         records = []
@@ -285,7 +307,7 @@ def _g2_array(raw, pos, rt, rs, nr, rec_end, trep, version) -> Unit:
 def _array_index(section: Unit) -> Callable[[], dict]:
     """A section's own table: the RecordArrays it is made of."""
     def decode():
-        rows = [{"record_array": child.title,
+        rows = [{"record_array": child.spec or child.title,
                  "record_type": child.tag.replace("RecordArray ", ""),
                  "records": child.detail,
                  "offset": f"0x{child.offset:08X}",

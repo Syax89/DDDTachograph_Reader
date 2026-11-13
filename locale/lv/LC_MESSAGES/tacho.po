@@ -2503,3 +2503,39 @@ msgstr "Elementārais fails"
 
 msgid "File Identifier"
 msgstr "Faila identifikators"
+
+msgid "Activity changes"
+msgstr "Darbību maiņas"
+
+msgid "Card slots"
+msgstr "Karšu sloti"
+
+msgid "VU date and time"
+msgstr "Transportlīdzekļa vienības datums un laiks"
+
+msgid "Member State certificate"
+msgstr "Dalībvalsts sertifikāts"
+
+msgid "Odometer at midnight"
+msgstr "Odometra rādījums pusnaktī"
+
+msgid "Day"
+msgstr "Diena"
+
+msgid "Registration plate"
+msgstr "Reģistrācijas numurs"
+
+msgid "VU certificate"
+msgstr "Transportlīdzekļa vienības sertifikāts"
+
+msgid "None"
+msgstr "Nav"
+
+msgid "{count} records"
+msgstr "{count} ieraksti"
+
+msgid "{count} days"
+msgstr "{count} dienas"
+
+msgid "Record type"
+msgstr "Ieraksta tips"

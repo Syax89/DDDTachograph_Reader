@@ -2503,3 +2503,39 @@ msgstr "Elementární soubor"
 
 msgid "File Identifier"
 msgstr "Identifikátor souboru"
+
+msgid "Activity changes"
+msgstr "Změny činnosti"
+
+msgid "Card slots"
+msgstr "Sloty karet"
+
+msgid "VU date and time"
+msgstr "Datum a čas VU"
+
+msgid "Member State certificate"
+msgstr "Certifikát členského státu"
+
+msgid "Odometer at midnight"
+msgstr "Stav počítadla o půlnoci"
+
+msgid "Day"
+msgstr "Den"
+
+msgid "Registration plate"
+msgstr "Registrační značka"
+
+msgid "VU certificate"
+msgstr "Certifikát VU"
+
+msgid "None"
+msgstr "Žádné"
+
+msgid "{count} records"
+msgstr "{count} záznamů"
+
+msgid "{count} days"
+msgstr "{count} dní"
+
+msgid "Record type"
+msgstr "Typ záznamu"

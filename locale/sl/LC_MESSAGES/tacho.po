@@ -2503,3 +2503,39 @@ msgstr "Elementarna datoteka"
 
 msgid "File Identifier"
 msgstr "Identifikator datoteke"
+
+msgid "Activity changes"
+msgstr "Spremembe dejavnosti"
+
+msgid "Card slots"
+msgstr "Reže za kartice"
+
+msgid "VU date and time"
+msgstr "Datum in čas VU"
+
+msgid "Member State certificate"
+msgstr "Potrdilo države članice"
+
+msgid "Odometer at midnight"
+msgstr "Stanje števca ob polnoči"
+
+msgid "Day"
+msgstr "Dan"
+
+msgid "Registration plate"
+msgstr "Registrska tablica"
+
+msgid "VU certificate"
+msgstr "Potrdilo VU"
+
+msgid "None"
+msgstr "Brez"
+
+msgid "{count} records"
+msgstr "{count} zapisov"
+
+msgid "{count} days"
+msgstr "{count} dni"
+
+msgid "Record type"
+msgstr "Vrsta zapisa"

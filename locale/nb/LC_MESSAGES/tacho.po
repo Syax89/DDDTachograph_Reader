@@ -2503,3 +2503,39 @@ msgstr "Elementær fil"
 
 msgid "File Identifier"
 msgstr "Fil-ID"
+
+msgid "Activity changes"
+msgstr "Aktivitetsskifter"
+
+msgid "Card slots"
+msgstr "Kortspor"
+
+msgid "VU date and time"
+msgstr "Kjøretøyenhetens dato og tid"
+
+msgid "Member State certificate"
+msgstr "Medlemsstatens sertifikat"
+
+msgid "Odometer at midnight"
+msgstr "Kilometerstand ved midnatt"
+
+msgid "Day"
+msgstr "Dag"
+
+msgid "Registration plate"
+msgstr "Registreringsnummer"
+
+msgid "VU certificate"
+msgstr "Kjøretøyenhetens sertifikat"
+
+msgid "None"
+msgstr "Ingen"
+
+msgid "{count} records"
+msgstr "{count} poster"
+
+msgid "{count} days"
+msgstr "{count} dager"
+
+msgid "Record type"
+msgstr "Posttype"

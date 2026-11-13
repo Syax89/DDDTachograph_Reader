@@ -489,6 +489,11 @@ def _fmt_dict(d):
 
 
 
+#: EquipmentType of a card (Annex 1C §2.67), as a card number carries it.
+_CARD_TYPES = {1: "Driver card", 2: "Workshop card", 3: "Control card",
+               4: "Company card"}
+
+
 def fmt_val(v, key=None):
     """Render any parser value for display: booleans as Yes/No, floats
     trimmed, large ints with thousands spaces, 0xFFFFFF sentinels as N/A,
@@ -513,6 +518,11 @@ def fmt_val(v, key=None):
     if key == "card_slot" and isinstance(v, int) and not isinstance(v, bool) and v in (0, 1):
         # CardSlotNumber (Annex 1B §2.34): 0 driver slot, 1 co-driver slot.
         return ui_text.data_text("Driver slot" if v == 0 else "Co-driver slot")
+    if key == "card_type" and isinstance(v, int) and not isinstance(v, bool) and v in _CARD_TYPES:
+        # EquipmentType of a FullCardNumber (Annex 1C §2.67).
+        return ui_text.data_text(_CARD_TYPES[v])
+    if key == "generation" and isinstance(v, int) and not isinstance(v, bool) and v in (1, 2):
+        return ui_text.data_text(f"Generation {v}")
     if key == "record_purpose" and isinstance(v, int) and not isinstance(v, bool):
         # EventFaultRecordPurpose is a code (Annex 1B §2.72); the reader wants
         # the sentence, e.g. "the longest event for one of the last 10 days".

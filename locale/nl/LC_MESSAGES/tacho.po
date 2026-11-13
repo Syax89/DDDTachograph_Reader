@@ -2503,3 +2503,39 @@ msgstr "Elementair bestand"
 
 msgid "File Identifier"
 msgstr "Bestandsidentificatie"
+
+msgid "Activity changes"
+msgstr "Activiteitswijzigingen"
+
+msgid "Card slots"
+msgstr "Kaartsleuven"
+
+msgid "VU date and time"
+msgstr "Datum en tijd van de VU"
+
+msgid "Member State certificate"
+msgstr "Certificaat van de lidstaat"
+
+msgid "Odometer at midnight"
+msgstr "Kilometerstand om middernacht"
+
+msgid "Day"
+msgstr "Dag"
+
+msgid "Registration plate"
+msgstr "Kenteken"
+
+msgid "VU certificate"
+msgstr "VU-certificaat"
+
+msgid "None"
+msgstr "Geen"
+
+msgid "{count} records"
+msgstr "{count} records"
+
+msgid "{count} days"
+msgstr "{count} dagen"
+
+msgid "Record type"
+msgstr "Recordtype"

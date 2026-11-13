@@ -2503,3 +2503,39 @@ msgstr "Fichero elemental"
 
 msgid "File Identifier"
 msgstr "Identificador de fichero"
+
+msgid "Activity changes"
+msgstr "Cambios de actividad"
+
+msgid "Card slots"
+msgstr "Ranuras de tarjeta"
+
+msgid "VU date and time"
+msgstr "Fecha y hora de la UV"
+
+msgid "Member State certificate"
+msgstr "Certificado del Estado miembro"
+
+msgid "Odometer at midnight"
+msgstr "Cuentakilómetros a medianoche"
+
+msgid "Day"
+msgstr "Día"
+
+msgid "Registration plate"
+msgstr "Matrícula"
+
+msgid "VU certificate"
+msgstr "Certificado de la UV"
+
+msgid "None"
+msgstr "Ninguno"
+
+msgid "{count} records"
+msgstr "{count} registros"
+
+msgid "{count} days"
+msgstr "{count} días"
+
+msgid "Record type"
+msgstr "Tipo de registro"

@@ -2503,3 +2503,39 @@ msgstr "Στοιχειώδες αρχείο"
 
 msgid "File Identifier"
 msgstr "Αναγνωριστικό αρχείου"
+
+msgid "Activity changes"
+msgstr "Αλλαγές δραστηριότητας"
+
+msgid "Card slots"
+msgstr "Υποδοχές κάρτας"
+
+msgid "VU date and time"
+msgstr "Ημερομηνία και ώρα VU"
+
+msgid "Member State certificate"
+msgstr "Πιστοποιητικό κράτους μέλους"
+
+msgid "Odometer at midnight"
+msgstr "Χιλιόμετρα τα μεσάνυχτα"
+
+msgid "Day"
+msgstr "Ημέρα"
+
+msgid "Registration plate"
+msgstr "Πινακίδα κυκλοφορίας"
+
+msgid "VU certificate"
+msgstr "Πιστοποιητικό VU"
+
+msgid "None"
+msgstr "Κανένα"
+
+msgid "{count} records"
+msgstr "{count} εγγραφές"
+
+msgid "{count} days"
+msgstr "{count} ημέρες"
+
+msgid "Record type"
+msgstr "Τύπος εγγραφής"

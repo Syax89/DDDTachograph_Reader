@@ -2503,3 +2503,39 @@ msgstr "Perustiedosto"
 
 msgid "File Identifier"
 msgstr "Tiedoston tunniste"
+
+msgid "Activity changes"
+msgstr "Toimintojen vaihdot"
+
+msgid "Card slots"
+msgstr "Korttipaikat"
+
+msgid "VU date and time"
+msgstr "Ajoneuvoyksikön päivämäärä ja aika"
+
+msgid "Member State certificate"
+msgstr "Jäsenvaltion varmenne"
+
+msgid "Odometer at midnight"
+msgstr "Matkamittarin lukema keskiyöllä"
+
+msgid "Day"
+msgstr "Päivä"
+
+msgid "Registration plate"
+msgstr "Rekisterikilpi"
+
+msgid "VU certificate"
+msgstr "Ajoneuvoyksikön varmenne"
+
+msgid "None"
+msgstr "Ei mitään"
+
+msgid "{count} records"
+msgstr "{count} tietuetta"
+
+msgid "{count} days"
+msgstr "{count} päivää"
+
+msgid "Record type"
+msgstr "Tietuetyyppi"

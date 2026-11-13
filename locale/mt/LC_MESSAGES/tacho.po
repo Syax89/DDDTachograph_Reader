@@ -2503,3 +2503,39 @@ msgstr "Fajl elementari"
 
 msgid "File Identifier"
 msgstr "Identifikatur tal-fajl"
+
+msgid "Activity changes"
+msgstr "Bidliet fl-attività"
+
+msgid "Card slots"
+msgstr "Slots tal-karti"
+
+msgid "VU date and time"
+msgstr "Data u ħin tal-VU"
+
+msgid "Member State certificate"
+msgstr "Ċertifikat tal-Istat Membru"
+
+msgid "Odometer at midnight"
+msgstr "Odometru f'nofs il-lejl"
+
+msgid "Day"
+msgstr "Jum"
+
+msgid "Registration plate"
+msgstr "Numru tar-reġistrazzjoni"
+
+msgid "VU certificate"
+msgstr "Ċertifikat tal-VU"
+
+msgid "None"
+msgstr "Xejn"
+
+msgid "{count} records"
+msgstr "{count} rekords"
+
+msgid "{count} days"
+msgstr "{count} jiem"
+
+msgid "Record type"
+msgstr "Tip ta' rekord"

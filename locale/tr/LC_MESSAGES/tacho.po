@@ -2503,3 +2503,39 @@ msgstr "Temel dosya"
 
 msgid "File Identifier"
 msgstr "Dosya tanımlayıcısı"
+
+msgid "Activity changes"
+msgstr "Faaliyet değişiklikleri"
+
+msgid "Card slots"
+msgstr "Kart yuvaları"
+
+msgid "VU date and time"
+msgstr "Araç ünitesinin tarih ve saati"
+
+msgid "Member State certificate"
+msgstr "Üye devlet sertifikası"
+
+msgid "Odometer at midnight"
+msgstr "Gece yarısı kilometre"
+
+msgid "Day"
+msgstr "Gün"
+
+msgid "Registration plate"
+msgstr "Plaka"
+
+msgid "VU certificate"
+msgstr "Araç ünitesi sertifikası"
+
+msgid "None"
+msgstr "Yok"
+
+msgid "{count} records"
+msgstr "{count} kayıt"
+
+msgid "{count} days"
+msgstr "{count} gün"
+
+msgid "Record type"
+msgstr "Kayıt türü"

@@ -18,6 +18,7 @@ from app.gui_base import (  # noqa: F401
     tk,
     ui_text,
 )
+from app.gui_text import Columns
 from core.structure import build_layout, content_title, hex_rows
 from core.utils.activity_stats import compute_activity_totals, recorded_until_seconds
 
@@ -60,7 +61,8 @@ def _flat(record):
     for key, value in record.items():
         if isinstance(value, dict):
             for inner, inner_value in value.items():
-                name = inner if inner not in record and inner not in out else f"{key}_{inner}"
+                free = inner == key or (inner not in record and inner not in out)
+                name = inner if free else f"{key}_{inner}"
                 out[name] = inner_value
         else:
             out[key] = value
@@ -89,6 +91,157 @@ def _day_totals(record, cuts, one_driver=True):
     for activity in ("DRIVE", "WORK", "AVAILABLE", "REST", "UNKNOWN"):
         out[activity.lower()] = _hm(totals.get(activity, 0))
     return out
+
+
+#: Words that say nothing on their own in a one-line summary.
+_FILLER = {"", "yes", "no", "n/a", "none", "0"}
+
+
+def _first_cells(record, limit=3):
+    """The first few readable values of a record, for a one-line summary."""
+    cols, rows = _rows_for([_flat(record)], None)
+    technical = getattr(cols, "technical", frozenset())
+    out = []
+    for col, cell in zip(cols, rows[0] if rows else [], strict=False):
+        text = str(cell).strip()
+        if col in technical or text.lower() in _FILLER:
+            continue
+        out.append(text)
+        if len(out) == limit:
+            break
+    return "  ·  ".join(out)
+
+
+def _activity_line(changes, one_driver):
+    totals = compute_activity_totals(changes, one_driver=one_driver)
+    parts = [f"{ui_text.label(name.title())} {_hm(totals.get(name, 0))}"
+             for name in ("DRIVE", "WORK", "AVAILABLE", "REST", "UNKNOWN")
+             if totals.get(name)]
+    return "  ·  ".join(parts)
+
+
+def _days_line(days, one_driver):
+    """One day: its odometer and hours; several: how many and which period."""
+    if len(days) == 1:
+        day = days[0]
+        odometer = day.get("odometer_km") or day.get("odometer_midnight")
+        parts = [f"{fmt_val(odometer, key='odometer_km')} km"] if isinstance(odometer, (int, float)) else []
+        parts.append(_activity_line(day.get("changes") or [], one_driver))
+        return "  \u00b7  ".join(part for part in parts if part)
+    dates = sorted((str(d.get("date")) for d in days if d.get("date")),
+                   key=lambda text: text[6:10] + text[3:5] + text[0:2])
+    period = f"  \u00b7  {dates[0]} \u2013 {dates[-1]}" if dates else ""
+    return _("{count} days").format(count=len(days)) + period
+
+
+def _card_session(record):
+    """``SURNAME First  03:49 → 15:50`` for a card insertion/withdrawal."""
+    flat = _flat(record)
+    name = " ".join(str(flat.get(k) or "").strip()
+                    for k in ("holder_surname", "holder_first_names")).strip()
+    begin = fmt_val(flat.get("insertion_time"), key="insertion_time")
+    end = fmt_val(flat.get("withdrawal_time"), key="withdrawal_time")
+    times = f"{begin} → {end}" if end else begin
+    return f"{name}  {times}".strip()
+
+
+def group_summary(value, key=None, one_driver=True):
+    """One line that says what a content group holds, in words."""
+    if isinstance(value, set):
+        value = sorted(value, key=str)
+    if isinstance(value, dict):
+        return _first_cells(value)
+    if not isinstance(value, (list, tuple)) or not value:
+        return _("None")
+    records = [item for item in value if isinstance(item, dict)]
+    if key == "activities" and records:
+        return _days_line(records, one_driver)
+    if key in ("card_iw_records", "VuCardIWRecord") and records:
+        return ";  ".join(_card_session(r) for r in records[:3]) + (
+            "  …" if len(records) > 3 else "")
+    if len(value) == 1 and records:
+        return _first_cells(records[0])
+    return _("{count} records").format(count=len(value))
+
+
+def array_summary(array, signature=None, one_driver=False):
+    """What one RecordArray of a vehicle-unit section says, in one line."""
+    rt = int(array.tag.rsplit("0x", 1)[-1], 16) if "0x" in array.tag else -1
+    if rt == 0x08:
+        return _signature_text(signature)
+    records = next(iter(array.content().values()), [])
+    if not records:
+        return _("None")
+    if rt in (0x01, 0x29):
+        changes = [r.get("activity") for r in records if isinstance(r.get("activity"), dict)]
+        return f"{len(records)}  ·  {_activity_line(changes, one_driver)}"
+    if rt == 0x0D:
+        return group_summary(records, "card_iw_records")
+    special = _ARRAY_LINES.get(rt)
+    if special is not None:
+        try:
+            return _DOT.join(special(r) for r in records[:3]) + (
+                "  \u2026" if len(records) > 3 else "")
+        except (AttributeError, KeyError, TypeError, ValueError):
+            pass                         # an odd record: the generic line below
+    return group_summary(records)
+
+
+_DOT = "  \u00b7  "
+
+
+def _date_only(value):
+    return fmt_val(value, key="date").split(" ")[0]
+
+
+def _time_real_hex(value):
+    """A certificate date ('642e0b80', TimeReal in hex) as dd/mm/yyyy."""
+    from datetime import datetime, timezone
+    seconds = int(str(value), 16)
+    return datetime.fromtimestamp(seconds, tz=timezone.utc).strftime("%d/%m/%Y")
+
+
+def _certificate_line(r):
+    return (f"{r.get('chr')} \u2190 {r.get('car')}{_DOT}"
+            f"{_time_real_hex(r.get('effective_date'))} \u2013 "
+            f"{_time_real_hex(r.get('expiration_date'))}")
+
+
+def _slots_line(r):
+    slots = r.get("slots") or {}
+    return (f"{fmt_val(0, key='card_slot')}: {ui_text.data_text(slots.get('driver_slot'))}{_DOT}"
+            f"{fmt_val(1, key='card_slot')}: {ui_text.data_text(slots.get('codriver_slot'))}")
+
+
+def _plate_line(r):
+    nation = fmt_val(r.get("nation"), key="nation") if r.get("nation") else ""
+    return f"{r.get('plate')} ({nation})" if nation else str(r.get("plate"))
+
+
+def _download_line(r):
+    card = r.get("card") or {}
+    return _DOT.join(str(part) for part in (
+        fmt_val(r.get("downloading_time"), key="downloading_time"),
+        r.get("company_or_workshop_name"), card.get("card_number")) if part)
+
+
+def _place_line(r):
+    return " ".join(str(part) for part in (
+        ui_text.data_text(str(r.get("entry_type") or "").title()),
+        fmt_val(r.get("timestamp"), key="timestamp"),
+        fmt_val(r.get("nation"), key="nation") if r.get("nation") else "") if part)
+
+
+#: One-line readers of the record types whose generic line says too little.
+_ARRAY_LINES = {
+    0x02: _slots_line,
+    0x04: _certificate_line, 0x0F: _certificate_line,
+    0x05: lambda r: f"{fmt_val(r['odometer_km'], key='odometer_km')} km",
+    0x06: lambda r: _date_only(r["time"]),
+    0x0B: _plate_line, 0x24: _plate_line,
+    0x14: _download_line,
+    0x1C: _place_line,
+}
 
 
 #: Content groups whose first column names a part of the file.
@@ -165,7 +318,8 @@ class StructureMixin:
         """
         title = ui_text.label(unit.title)
         if unit.kind == "array":
-            return f"{title}  \u00b7  {unit.detail}" if unit.detail else title
+            count = getattr(unit, "count", None)
+            return f"{title}  \u00b7  {count}" if count is not None else title
         if unit.detail:
             title = f"{title} {unit.detail}"
         if unit.kind == "group":
@@ -217,6 +371,8 @@ class StructureMixin:
             offset=f"0x{unit.offset:08X}", length=unit.length)]
         if unit.tag:
             parts.append(unit.tag)
+        if unit.spec:
+            parts.append(f"{unit.spec} ({unit.detail})" if unit.detail else unit.spec)
         if unit.kind in ("section", "ef", "signature") and (
                 unit.signature is not None or unit.kind == "signature"
                 or any(c.kind == "signature" for c in unit.children)):
@@ -239,15 +395,19 @@ class StructureMixin:
         title = ui_text.label(unit.title) + (f" {unit.detail}" if unit.detail else "")
         meta = self._unit_meta(unit)
         byte_view = self._unit_bytes(unit)
-        if key is not None and key in groups:
+        if key is None and unit.children and all(c.kind == "array" for c in unit.children):
+            cols, rows = self._section_overview(unit)
+        elif key is None and unit.kind == "group":
+            cols, rows = self._group_overview(unit, one_driver)
+        elif key is not None and key in groups:
             title = f"{title} — {ui_text.label(content_title(key))}"
             cols, rows = content_rows(groups[key], key, cuts, one_driver)
         elif len(groups) == 1:
             only = next(iter(groups))
             cols, rows = content_rows(groups[only], only, cuts, one_driver)
         elif groups:
-            cols = [_("Content"), _("Records")]
-            rows = [[ui_text.label(content_title(k)), _records_count(v)]
+            cols = [_("Content"), _("Value")]
+            rows = [[ui_text.label(content_title(k)), group_summary(v, k, one_driver)]
                     for k, v in groups.items()]
         else:
             cols, rows = byte_view
@@ -267,3 +427,43 @@ class StructureMixin:
         self._show_table(_("File Structure"), cols, rows,
                          _("{count} units · {length} bytes").format(
                              count=len(units), length=total))
+
+    def _section_overview(self, section):
+        """A vehicle-unit section in words: one row per RecordArray.
+
+        *Content* names what the array holds and *Value* says it (the day, the
+        odometer, who inserted a card and when, the activity totals...). The
+        regulation's name, the record count and size, the offset and length
+        are technical columns.
+        """
+        tech = [_("Record type"), _("Records"), _("Offset"), _("Length")]
+        cols = Columns([_("Content"), _("Value")] + tech, technical=tech)
+        rows = []
+        for array in section.children:
+            rows.append([ui_text.label(array.title),
+                         array_summary(array, section.signature),
+                         array.spec, array.detail,
+                         f"0x{array.offset:08X}", array.length])
+        return cols, rows
+
+    def _group_overview(self, group, one_driver):
+        """A card application in words: one row per elementary file."""
+        tech = [_("Tag"), _("Offset"), _("Length")]
+        cols = Columns([_("Content"), _("Value"), _("Signature")] + tech, technical=tech)
+        rows = []
+        for ef in group.children:
+            content = ef.content() if ef.decoder is not None else {}
+            if len(content) == 1:
+                key, value = next(iter(content.items()))
+                value_text = group_summary(value, key, one_driver)
+            elif content:
+                value_text = "  \u00b7  ".join(
+                    f"{ui_text.label(content_title(k))}: {group_summary(v, k, one_driver)}"
+                    for k, v in content.items())
+            else:
+                value_text = _("None")
+            signed = any(c.kind == "signature" for c in ef.children)
+            rows.append([ui_text.label(ef.title), value_text,
+                         _signature_text(ef.signature) if signed else _("Not signed"),
+                         ef.tag, f"0x{ef.offset:08X}", ef.length])
+        return cols, rows

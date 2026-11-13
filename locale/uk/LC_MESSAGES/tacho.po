@@ -2503,3 +2503,39 @@ msgstr "Елементарний файл"
 
 msgid "File Identifier"
 msgstr "Ідентифікатор файлу"
+
+msgid "Activity changes"
+msgstr "Зміни діяльності"
+
+msgid "Card slots"
+msgstr "Слоти карток"
+
+msgid "VU date and time"
+msgstr "Дата й час бортового пристрою"
+
+msgid "Member State certificate"
+msgstr "Сертифікат держави-члена"
+
+msgid "Odometer at midnight"
+msgstr "Пробіг опівночі"
+
+msgid "Day"
+msgstr "День"
+
+msgid "Registration plate"
+msgstr "Реєстраційний номер"
+
+msgid "VU certificate"
+msgstr "Сертифікат бортового пристрою"
+
+msgid "None"
+msgstr "Немає"
+
+msgid "{count} records"
+msgstr "Записів: {count}"
+
+msgid "{count} days"
+msgstr "Днів: {count}"
+
+msgid "Record type"
+msgstr "Тип запису"

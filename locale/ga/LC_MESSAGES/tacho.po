@@ -2503,3 +2503,39 @@ msgstr "Comhad bunúsach"
 
 msgid "File Identifier"
 msgstr "Aitheantóir comhaid"
+
+msgid "Activity changes"
+msgstr "Athruithe gníomhaíochta"
+
+msgid "Card slots"
+msgstr "Sliotáin chárta"
+
+msgid "VU date and time"
+msgstr "Dáta agus am an aonaid feithicle"
+
+msgid "Member State certificate"
+msgstr "Deimhniú an Bhallstáit"
+
+msgid "Odometer at midnight"
+msgstr "Odaiméadar ag meán oíche"
+
+msgid "Day"
+msgstr "Lá"
+
+msgid "Registration plate"
+msgstr "Uimhir chláraithe"
+
+msgid "VU certificate"
+msgstr "Deimhniú an aonaid feithicle"
+
+msgid "None"
+msgstr "Dada"
+
+msgid "{count} records"
+msgstr "{count} taifead"
+
+msgid "{count} days"
+msgstr "{count} lá"
+
+msgid "Record type"
+msgstr "Cineál taifid"

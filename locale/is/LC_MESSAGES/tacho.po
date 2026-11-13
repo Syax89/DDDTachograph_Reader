@@ -2503,3 +2503,39 @@ msgstr "Grunnskrá"
 
 msgid "File Identifier"
 msgstr "Auðkenni skráar"
+
+msgid "Activity changes"
+msgstr "Breytingar á virkni"
+
+msgid "Card slots"
+msgstr "Kortaraufar"
+
+msgid "VU date and time"
+msgstr "Dagsetning og tími ökutækiseiningar"
+
+msgid "Member State certificate"
+msgstr "Vottorð aðildarríkis"
+
+msgid "Odometer at midnight"
+msgstr "Kílómetrastaða á miðnætti"
+
+msgid "Day"
+msgstr "Dagur"
+
+msgid "Registration plate"
+msgstr "Skráningarnúmer"
+
+msgid "VU certificate"
+msgstr "Vottorð ökutækiseiningar"
+
+msgid "None"
+msgstr "Ekkert"
+
+msgid "{count} records"
+msgstr "{count} færslur"
+
+msgid "{count} days"
+msgstr "{count} dagar"
+
+msgid "Record type"
+msgstr "Færslugerð"

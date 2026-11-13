@@ -2503,3 +2503,39 @@ msgstr "Елементарна датотека"
 
 msgid "File Identifier"
 msgstr "Идентификатор на датотеката"
+
+msgid "Activity changes"
+msgstr "Промени на активноста"
+
+msgid "Card slots"
+msgstr "Слотови за картички"
+
+msgid "VU date and time"
+msgstr "Датум и време на VU"
+
+msgid "Member State certificate"
+msgstr "Сертификат на државата членка"
+
+msgid "Odometer at midnight"
+msgstr "Километража на полноќ"
+
+msgid "Day"
+msgstr "Ден"
+
+msgid "Registration plate"
+msgstr "Регистарска ознака"
+
+msgid "VU certificate"
+msgstr "Сертификат на VU"
+
+msgid "None"
+msgstr "Нема"
+
+msgid "{count} records"
+msgstr "{count} записи"
+
+msgid "{count} days"
+msgstr "{count} дена"
+
+msgid "Record type"
+msgstr "Тип на запис"

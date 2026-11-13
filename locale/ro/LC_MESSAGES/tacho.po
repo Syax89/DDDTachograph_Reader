@@ -2503,3 +2503,39 @@ msgstr "Fișier elementar"
 
 msgid "File Identifier"
 msgstr "Identificator de fișier"
+
+msgid "Activity changes"
+msgstr "Schimbări de activitate"
+
+msgid "Card slots"
+msgstr "Sloturi card"
+
+msgid "VU date and time"
+msgstr "Data și ora VU"
+
+msgid "Member State certificate"
+msgstr "Certificatul statului membru"
+
+msgid "Odometer at midnight"
+msgstr "Kilometraj la miezul nopții"
+
+msgid "Day"
+msgstr "Zi"
+
+msgid "Registration plate"
+msgstr "Număr de înmatriculare"
+
+msgid "VU certificate"
+msgstr "Certificatul VU"
+
+msgid "None"
+msgstr "Niciunul"
+
+msgid "{count} records"
+msgstr "{count} înregistrări"
+
+msgid "{count} days"
+msgstr "{count} zile"
+
+msgid "Record type"
+msgstr "Tip de înregistrare"
