@@ -2551,3 +2551,9 @@ msgstr "Нема записа: сва места ове датотеке су п
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Нема података: овај део само означава крај преузимања сензора."
+
+msgid "Card download through a vehicle unit"
+msgstr "Преузимање картице преко јединице возила"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Нема података: ова ознака показује да је картица преузета преко јединице возила."

@@ -2551,3 +2551,9 @@ msgstr "Ni zapisov: vsa mesta te datoteke so prazna (nikoli zapisana)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Ni podatkov: ta del le označuje konec prenosa tipala."
+
+msgid "Card download through a vehicle unit"
+msgstr "Prenos kartice prek enote vozila"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Ni podatkov: ta oznaka pove, da je bila kartica prenesena prek enote vozila."

@@ -2551,3 +2551,9 @@ msgstr "Nav ierakstu: visas šī faila vietas ir tukšas (nekad nav rakstītas).
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Nav datu: šī daļa tikai iezīmē sensora lejupielādes beigas."
+
+msgid "Card download through a vehicle unit"
+msgstr "Kartes lejupielāde caur transportlīdzekļa vienību"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Nav datu: šis marķieris norāda, ka karte lejupielādēta caur transportlīdzekļa vienību."

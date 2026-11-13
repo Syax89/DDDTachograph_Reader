@@ -2551,3 +2551,9 @@ msgstr "Brak rekordów: wszystkie pozycje tego pliku są puste (nigdy nie zapisa
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Brak danych: ta część oznacza tylko koniec pobierania danych czujnika."
+
+msgid "Card download through a vehicle unit"
+msgstr "Pobranie danych z karty przez urządzenie pojazdu"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Brak danych: ten znacznik oznacza, że kartę pobrano przez urządzenie pojazdu."

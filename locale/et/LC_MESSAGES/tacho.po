@@ -2551,3 +2551,9 @@ msgstr "Kirjeid pole: faili kõik kohad on tühjad (pole kunagi kirjutatud)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Andmeid pole: see osa tähistab ainult anduri allalaadimise lõppu."
+
+msgid "Card download through a vehicle unit"
+msgstr "Kaardi allalaadimine sõidukiüksuse kaudu"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Andmeid pole: see märgis näitab, et kaart laaditi alla sõidukiüksuse kaudu."

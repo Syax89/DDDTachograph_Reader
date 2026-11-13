@@ -265,6 +265,7 @@ _EMPTY_WORDS = {
     "array": lambda: _("No records: this array is empty and holds only its header."),
     "blank": lambda: _("No records: every slot of this file is blank (never written)."),
     "terminator": lambda: _("No data: this part only marks the end of the sensor download."),
+    "marker": lambda: _("No data: this marker says the card was downloaded through a vehicle unit."),
 }
 
 

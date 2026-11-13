@@ -385,3 +385,13 @@ def test_the_download_interface_version_is_decoded():
                                                              "generation": "G2.2"}})
     content = units[0].content()
     assert "Generation 2, version 2" in str(content)
+
+
+def test_a_card_downloaded_through_a_vu_starts_with_its_marker(tmp_path):
+    card = b"\x76\x06" + _card_stream()
+    path = tmp_path / "via_vu.ddd"
+    path.write_bytes(card)
+    units = build_layout(card, TachoParser(str(path)).parse())
+    _tiles(card, units)
+    assert (units[0].title, units[0].empty, units[0].tag) == (
+        "Card download through a vehicle unit", "marker", "TREP 0x06")

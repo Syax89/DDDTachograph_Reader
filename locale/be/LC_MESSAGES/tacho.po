@@ -2551,3 +2551,9 @@ msgstr "Няма запісаў: усе ячэйкі гэтага файла п�
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Няма даных: гэтая частка толькі адзначае канец выгрузкі датчыка."
+
+msgid "Card download through a vehicle unit"
+msgstr "Выгрузка карткі праз бартавую прыладу"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Няма даных: гэты маркер азначае, што картка выгружана праз бартавую прыладу."

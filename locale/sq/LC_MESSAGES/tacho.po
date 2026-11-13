@@ -2551,3 +2551,9 @@ msgstr "Asnjë regjistrim: të gjitha vendet e këtij skedari janë bosh (asnjë
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Asnjë e dhënë: kjo pjesë shënon vetëm fundin e shkarkimit të sensorit."
+
+msgid "Card download through a vehicle unit"
+msgstr "Shkarkimi i kartës përmes njësisë së automjetit"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Asnjë e dhënë: ky shënues tregon se karta u shkarkua përmes njësisë së automjetit."

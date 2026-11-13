@@ -2551,3 +2551,9 @@ msgstr "Ei tietueita: tiedoston kaikki paikat ovat tyhjiä (ei koskaan kirjoitet
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Ei tietoja: tämä osa merkitsee vain anturin latauksen loppua."
+
+msgid "Card download through a vehicle unit"
+msgstr "Kortin lataus ajoneuvoyksikön kautta"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Ei tietoja: tämä merkki kertoo, että kortti ladattiin ajoneuvoyksikön kautta."

@@ -2551,3 +2551,9 @@ msgstr "Geen records: alle plaatsen van dit bestand zijn leeg (nooit beschreven)
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Geen gegevens: dit deel markeert alleen het einde van de sensordownload."
+
+msgid "Card download through a vehicle unit"
+msgstr "Kaartdownload via een voertuigunit"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Geen gegevens: deze markering geeft aan dat de kaart via een voertuigunit is gedownload."

@@ -2551,3 +2551,9 @@ msgstr "Sem registos: todas as posições deste ficheiro estão vazias (nunca es
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Sem dados: esta parte apenas marca o fim da descarga do sensor."
+
+msgid "Card download through a vehicle unit"
+msgstr "Descarga do cartão através de uma unidade do veículo"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Sem dados: este marcador indica que o cartão foi descarregado através de uma unidade do veículo."

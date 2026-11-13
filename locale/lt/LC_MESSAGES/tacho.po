@@ -2551,3 +2551,9 @@ msgstr "Įrašų nėra: visos šio failo vietos tuščios (niekada neįrašytos)
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Duomenų nėra: ši dalis tik žymi jutiklio atsisiuntimo pabaigą."
+
+msgid "Card download through a vehicle unit"
+msgstr "Kortelės atsisiuntimas per transporto priemonės bloką"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Duomenų nėra: šis žymeklis rodo, kad kortelė atsisiųsta per transporto priemonės bloką."

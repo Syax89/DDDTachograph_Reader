@@ -576,4 +576,10 @@ def build_layout(raw: bytes, results: dict) -> list:
     if not units:
         return []
     units = sorted(units + _gaps(raw, units), key=lambda u: u.offset)
+    if (not meta.get("is_vu") and units[0].kind == "gap"
+            and raw[:2] == b"\x76\x06" and units[0].length == 2):
+        # A card image downloaded through a vehicle unit keeps the VU's
+        # CardDownload marker (SID 76, TREP 06) in front of its first EF.
+        units[0] = Unit("section", "Card download through a vehicle unit", 0, 2,
+                        tag="TREP 0x06", empty="marker")
     return units

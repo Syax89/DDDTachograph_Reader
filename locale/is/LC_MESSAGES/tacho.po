@@ -2551,3 +2551,9 @@ msgstr "Engar færslur: öll hólf þessarar skrár eru tóm (aldrei skrifuð)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Engin gögn: þessi hluti markar aðeins lok niðurhals skynjarans."
+
+msgid "Card download through a vehicle unit"
+msgstr "Niðurhal korts um ökutækiseiningu"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Engin gögn: þetta merki sýnir að kortinu var hlaðið niður um ökutækiseiningu."

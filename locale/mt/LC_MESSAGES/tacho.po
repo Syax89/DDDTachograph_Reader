@@ -2551,3 +2551,9 @@ msgstr "L-ebda rekord: il-postijiet kollha ta' dan il-fajl huma vojta (qatt mikt
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "L-ebda data: din il-parti timmarka biss it-tmiem tat-tniżżil tas-sensur."
+
+msgid "Card download through a vehicle unit"
+msgstr "Tniżżil tal-karta permezz tal-unità tal-vettura"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "L-ebda data: dan il-marker juri li l-karta tniżżlet permezz tal-unità tal-vettura."

@@ -2551,3 +2551,9 @@ msgstr "Nincs rekord: a fájl minden helye üres (soha nem írták)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Nincs adat: ez a rész csak az érzékelőletöltés végét jelzi."
+
+msgid "Card download through a vehicle unit"
+msgstr "Kártyaletöltés járműegységen keresztül"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Nincs adat: ez a jelölő azt mutatja, hogy a kártyát járműegységen keresztül töltötték le."

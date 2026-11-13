@@ -2551,3 +2551,9 @@ msgstr "Nicio înregistrare: toate pozițiile acestui fișier sunt goale (niciod
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Nicio dată: această parte marchează doar sfârșitul descărcării senzorului."
+
+msgid "Card download through a vehicle unit"
+msgstr "Descărcare card prin unitatea vehiculului"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Nicio dată: acest marcaj arată că cardul a fost descărcat prin unitatea vehiculului."

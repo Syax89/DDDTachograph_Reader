@@ -2551,3 +2551,9 @@ msgstr "Нет записей: все ячейки этого файла пус�
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Нет данных: эта часть лишь отмечает конец выгрузки датчика."
+
+msgid "Card download through a vehicle unit"
+msgstr "Выгрузка карты через бортовое устройство"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Нет данных: этот маркер означает, что карта выгружена через бортовое устройство."

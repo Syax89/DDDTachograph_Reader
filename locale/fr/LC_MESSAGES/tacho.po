@@ -2551,3 +2551,9 @@ msgstr "Aucun enregistrement : tous les emplacements de ce fichier sont vides (j
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Aucune donnée : cette partie marque seulement la fin du téléchargement du capteur."
+
+msgid "Card download through a vehicle unit"
+msgstr "Téléchargement de carte via une unité embarquée"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Aucune donnée : ce marqueur indique que la carte a été téléchargée via une unité embarquée."

@@ -2551,3 +2551,9 @@ msgstr "Gan taifid: tá gach sliotán sa chomhad seo bán (níor scríobhadh ria
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Gan sonraí: ní dhéanann an chuid seo ach deireadh íoslódáil an bhraiteora a mharcáil."
+
+msgid "Card download through a vehicle unit"
+msgstr "Íoslódáil cárta trí aonad feithicle"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Gan sonraí: léiríonn an marcóir seo gur íoslódáladh an cárta trí aonad feithicle."

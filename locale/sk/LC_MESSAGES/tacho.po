@@ -2551,3 +2551,9 @@ msgstr "Žiadne záznamy: všetky pozície tohto súboru sú prázdne (nikdy nez
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Žiadne údaje: táto časť len označuje koniec sťahovania snímača."
+
+msgid "Card download through a vehicle unit"
+msgstr "Stiahnutie karty cez palubnú jednotku"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Žiadne údaje: táto značka hovorí, že karta bola stiahnutá cez palubnú jednotku."

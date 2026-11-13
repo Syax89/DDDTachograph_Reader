@@ -2551,3 +2551,9 @@ msgstr "Ingen poster: alle pladser i denne fil er tomme (aldrig skrevet)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Ingen data: denne del markerer kun slutningen på sensordownloadet."
+
+msgid "Card download through a vehicle unit"
+msgstr "Kortdownload via køretøjsenhed"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Ingen data: denne markør viser, at kortet er downloadet via en køretøjsenhed."

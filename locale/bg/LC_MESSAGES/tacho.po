@@ -2551,3 +2551,9 @@ msgstr "Няма записи: всички позиции на този фай�
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Няма данни: тази част само отбелязва края на изтеглянето от датчика."
+
+msgid "Card download through a vehicle unit"
+msgstr "Изтегляне на карта чрез бордовото устройство"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Няма данни: този маркер показва, че картата е изтеглена чрез бордовото устройство."

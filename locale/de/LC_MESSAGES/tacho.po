@@ -2551,3 +2551,9 @@ msgstr "Keine Datensätze: Alle Plätze dieser Datei sind leer (nie beschrieben)
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Keine Daten: Dieser Teil markiert nur das Ende des Sensor-Downloads."
+
+msgid "Card download through a vehicle unit"
+msgstr "Kartendownload über eine Fahrzeugeinheit"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Keine Daten: Diese Markierung zeigt, dass die Karte über eine Fahrzeugeinheit heruntergeladen wurde."

@@ -2551,3 +2551,9 @@ msgstr "Немає записів: усі комірки цього файлу �
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Немає даних: ця частина лише позначає кінець вивантаження датчика."
+
+msgid "Card download through a vehicle unit"
+msgstr "Вивантаження картки через бортовий пристрій"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Немає даних: цей маркер означає, що картку вивантажено через бортовий пристрій."

@@ -2551,3 +2551,9 @@ msgstr "Kayıt yok: bu dosyanın tüm yuvaları boş (hiç yazılmamış)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Veri yok: bu bölüm yalnızca sensör indirmesinin sonunu işaretler."
+
+msgid "Card download through a vehicle unit"
+msgstr "Araç ünitesi üzerinden kart indirme"
+
+msgid "No data: this marker says the card was downloaded through a vehicle unit."
+msgstr "Veri yok: bu işaret kartın bir araç ünitesi üzerinden indirildiğini gösterir."
