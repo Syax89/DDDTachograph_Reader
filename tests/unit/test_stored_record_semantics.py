@@ -7,6 +7,7 @@
 * `time_status` disagreed across generations for TimeReal 0;
 * the generation-1 calibration table lost its `N/A` convention for a withheld time.
 """
+import os
 import struct
 
 import pytest
@@ -186,36 +187,52 @@ def test_every_label_this_branch_added_has_a_catalog_msgid():
     and columns). The panel's legacy nested rows ("Card Slot Status", "Driver
     Slot", …) predate the branch and are reported in .audit/AUTHOR.md rather than
     silently covered by a wider assertion here.
+
+    The catalog check needs no corpus. That the labels really are what the
+    surfaces render is checked against the present files, per label, only when
+    a file of the kind that carries it is present (VU Serial: a generation-1 VU
+    download; the calibration serials and the interface version: a G2.2 one).
     """
     import glob
     import re
     from core.utils import report_format as rf
-    from tests.unit.real_data import real_ddd_files
+    from tests.unit.real_data import (
+        ROOT_DIR, is_author_corpus, real_ddd_files, vu_generation)
 
+    any_file = {None, "g1", "g2", "g22"}
+    any_vu = {"g1", "g2", "g22"}
+    #: label → the file kinds (``vu_generation``) that render it
     branch_labels = {
-        rf.humanize_key("download_interface_version"),
-        rf.humanize_key("current_date_time"),
-        rf.humanize_key("rcm_serial"),
-        rf.humanize_key("sensor_gnss_serial"),
-        rf.humanize_key("sensor_serial"),
-        rf.humanize_key("entry_type_description"),
-        "VU Serial",
+        rf.humanize_key("download_interface_version"): {"g22"},
+        rf.humanize_key("current_date_time"): any_vu,
+        rf.humanize_key("rcm_serial"): {"g22"},
+        rf.humanize_key("sensor_gnss_serial"): {"g22"},
+        rf.humanize_key("sensor_serial"): {"g1", "g22"},
+        rf.humanize_key("entry_type_description"): any_file,
+        "VU Serial": {"g1"},
     }
-    # the labels really are what the surfaces render
-    files = real_ddd_files()
-    if not files:
-        pytest.skip("no private corpus available")
-    rendered = set()
-    for path in files:
-        DecoderRegistry.reset_instance()
-        rendered |= _panel_labels(TachoParser(path).parse())
-    for label in branch_labels:
-        assert label in rendered, label
-    for path in sorted(glob.glob("locale/*/LC_MESSAGES/tacho.po")):
+    catalogs = sorted(glob.glob(os.path.join(
+        ROOT_DIR, "locale", "*", "LC_MESSAGES", "tacho.po")))
+    assert catalogs, "no translation catalog found"
+    for path in catalogs:
         msgids = set(re.findall(r'^msgid "(.*)"$',
                                 open(path, encoding="utf-8").read(), re.M))
         missing = sorted(label for label in branch_labels if label not in msgids)
         assert not missing, (path, missing)
+
+    # the labels really are what the surfaces render
+    files = real_ddd_files()
+    if not files:
+        pytest.skip("no private corpus available (catalog check passed)")
+    rendered, kinds = set(), set()
+    for path in files:
+        DecoderRegistry.reset_instance()
+        rendered |= _panel_labels(TachoParser(path).parse())
+        kinds.add(vu_generation(path))
+    author = is_author_corpus()
+    for label, carriers in branch_labels.items():
+        if author or kinds & carriers:
+            assert label in rendered, label
 
 
 def test_the_dead_msgids_of_this_branch_are_gone():

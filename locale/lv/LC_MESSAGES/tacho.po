@@ -2407,3 +2407,9 @@ msgstr "Vadītāja apliecības numurs"
 
 msgid "Licence Issuing Nation"
 msgstr "Vadītāja apliecības izdevējvalsts"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

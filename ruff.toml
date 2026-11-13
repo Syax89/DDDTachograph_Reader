@@ -11,3 +11,6 @@ ignore = [
 
 [lint.per-file-ignores]
 "build.spec" = ["E402", "F821"]  # PyInstaller spec: Analysis/EXE are injected globals
+# The GUI foundation imports what gui.py and the gui_explorer_* mixins use and
+# re-export; an "unused" import there is a name the rest of the GUI takes from it.
+"app/gui_base.py" = ["F401"]

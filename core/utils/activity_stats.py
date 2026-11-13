@@ -13,10 +13,16 @@ Semantics:
 - Rest/Available/Unknown durations are kept at the **maximum** across slots
   because they share the same 24h day and cannot exceed it (they are periods,
   not additive).
+- A slot that held no card at any time of the day (the empty co-driver slot of
+  a single-manned vehicle unit) is left out of the totals, unless no slot held
+  a card that day.
 - An activity label that is not one of the four recognised kinds is bucketed
   as ``UNKNOWN`` rather than silently dropped, so no recorded hour disappears
   from the totals.
-- The day ends at 86400 seconds (``24:00``).
+- The day ends at 86400 seconds (``24:00``), except the most recent day of a
+  download: from its ``recorded_until`` instant on, time is UNKNOWN (see
+  :func:`_cut_at`). Callers pass it as ``recorded_until``
+  (:func:`recorded_until_seconds`).
 - Non-dict entries and unusable (out-of-range / unparsable) times are skipped.
 
 Both public functions share one segmentation routine (:func:`day_segments`),
@@ -116,7 +122,7 @@ def parse_time(time_str):
     return hours * 3600 + minutes * 60
 
 
-def _activity_segments(changes):
+def _activity_segments(changes, recorded_until=None):
     """Return ``{slot: [(start_second, end_second, kind), ...]}`` for one day.
 
     The one place where a day's changes become a timeline. Changes are grouped
@@ -166,10 +172,47 @@ def _activity_segments(changes):
             (start, parsed[i + 1][0] if i + 1 < len(parsed) else DAY_END_SECONDS, act)
             for i, (start, act) in enumerate(parsed)
         ]
+    if recorded_until is not None and 0 <= recorded_until < DAY_END_SECONDS:
+        segments = {slot: _cut_at(segs, recorded_until)
+                    for slot, segs in segments.items()}
     return segments
 
 
-def day_segments(changes):
+def _cut_at(segments, cut):
+    """Turn everything after ``cut`` (seconds) into UNKNOWN.
+
+    The last day of a download ends where the recording ends, not at 24:00:
+    the final status entry says what was going on at that instant, not how
+    long it lasted. Extending it to midnight invented hours — a driver card
+    downloaded at 18:49 whose last entry was "DRIVE at 15:59" showed 8 h of
+    driving nobody recorded. The day still tiles 24 h; the unrecorded tail is
+    UNKNOWN, like any other period the record leaves unattributed.
+    """
+    out = []
+    for start, end, act in segments:
+        if end <= cut:
+            out.append((start, end, act))
+        elif start >= cut:
+            out.append((start, end, UNKNOWN_ACTIVITY))
+        else:
+            out.append((start, cut, act))
+            out.append((cut, end, UNKNOWN_ACTIVITY))
+    return out
+
+
+def recorded_until_seconds(day):
+    """The ``recorded_until`` cut of a day record, in seconds, or ``None``.
+
+    Set by the parser on the most recent day of a download only (see
+    ``TachoParser._mark_last_recorded_day``); every other day ends at 24:00.
+    """
+    if not isinstance(day, dict):
+        return None
+    value = day.get("recorded_until")
+    return parse_time(value) if value else None
+
+
+def day_segments(changes, recorded_until=None):
     """Public name of the shared day segmentation (see :func:`_activity_segments`).
 
     Consumers that draw a day rather than total it — the GUI activity timeline
@@ -177,10 +220,25 @@ def day_segments(changes):
     dashboard can never disagree about which minutes were DRIVE, REST or an
     unrecorded (UNKNOWN) period.
     """
-    return _activity_segments(changes)
+    return _activity_segments(changes, recorded_until)
 
 
-def compute_activity_totals(changes):
+def _slots_with_a_card(changes):
+    """Slots holding a card for at least part of the day.
+
+    A slot counts unless *every* one of its changes explicitly says
+    ``card_inserted`` False; records that carry no such flag (driver-card
+    downloads) always count, so their totals are unchanged.
+    """
+    carded = set()
+    for ch in changes:
+        if isinstance(ch, dict) and ch.get("card_inserted") is not False \
+                and parse_time(ch.get("time", "")) is not None:
+            carded.add(str(ch.get("slot") or "First"))
+    return carded
+
+
+def compute_activity_totals(changes, recorded_until=None):
     """Return dict {ACTIVITY: total_minutes} from a list of activity changes.
 
     Keys: DRIVE, WORK, REST, AVAILABLE, UNKNOWN. Any activity label outside the
@@ -192,7 +250,16 @@ def compute_activity_totals(changes):
     max, like REST/AVAILABLE).
     """
     totals = {a: 0 for a in ACTIVITY_KINDS + (UNKNOWN_ACTIVITY,)}
-    for segments in _activity_segments(changes).values():
+    carded = _slots_with_a_card(changes)
+    for slot, segments in _activity_segments(changes, recorded_until).items():
+        if carded and slot not in carded:
+            # A slot with no card inserted all day (the empty co-driver slot of
+            # a single-manned vehicle unit) records no driver at all. Counting
+            # its 24h of card-absent UNKNOWN made every VU day read
+            # "Unknown 24:00", and the day total exceed 24h, although only one
+            # driver was on board. A day on which no slot ever held a card
+            # keeps its UNKNOWN time (``carded`` is empty).
+            continue
         slot_tot: dict[str, int] = {}
         for start, end, act in segments:
             slot_tot[act] = slot_tot.get(act, 0) + (end - start) // 60
@@ -205,7 +272,7 @@ def compute_activity_totals(changes):
     return totals
 
 
-def evaluate_driving_rules(changes) -> DrivingRuleReport:
+def evaluate_driving_rules(changes, recorded_until=None) -> DrivingRuleReport:
     """Return the driving-time rules broken by one day of changes.
 
     Only two rules are judged — Regulation (EC) No 561/2006 art. 6(1) (daily
@@ -256,7 +323,7 @@ def evaluate_driving_rules(changes) -> DrivingRuleReport:
         without a qualifying break, and the list of breaches (each with the
         measured value, the limit it broke and the slot it belongs to).
     """
-    segments = _activity_segments(changes)
+    segments = _activity_segments(changes, recorded_until)
     drive_min = 0
     longest_stretch = 0
     breaches: list[DrivingRuleBreach] = []

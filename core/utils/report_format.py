@@ -8,7 +8,7 @@ humanised (``vehicle_plate`` → ``Vehicle Plate``).
 """
 import re
 
-from core.utils.activity_stats import compute_activity_totals
+from core.utils.activity_stats import compute_activity_totals, recorded_until_seconds
 
 # Tachograph "data not available" sentinels.
 _NOT_AVAILABLE_INTS = {0xFFFFFF, 0xFFFFFFFF}
@@ -205,6 +205,11 @@ def integrity_verdict(result):
 
     if meta.get("is_vu") is True:
         sv = result.get("signature_verification") or {}
+        if sv.get("certificate_dates_invalid"):
+            # A certificate in the chain was expired or not yet valid when the
+            # download was signed: the signatures may hold, but the download is
+            # not authenticated by a certificate valid at that moment.
+            return VERDICT_UNVERIFIED
         if sv.get("all_treps_valid") and sv.get("msca_to_vu") and sv.get("root_anchored"):
             # Bytes outside every signed section are covered by no signature:
             # the download is authenticated only in part, however well every
@@ -644,7 +649,7 @@ def _compute_day_hours(day):
     buckets = {"drive": 0, "work": 0, "rest": 0, "available": 0, "unknown": 0}
     if not isinstance(changes, list) or not changes:
         return buckets, 0
-    totals = compute_activity_totals(changes)
+    totals = compute_activity_totals(changes, recorded_until_seconds(day))
     buckets["drive"] = totals["DRIVE"]
     buckets["work"] = totals["WORK"]
     buckets["rest"] = totals["REST"]

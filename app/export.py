@@ -19,7 +19,7 @@ from core.utils.report_format import (
     DICT_SECTIONS, VERDICT_CORRUPT, integrity_verdict, records_to_table,
     section_tables, summary_rows,
 )
-from core.utils.activity_stats import compute_activity_totals
+from core.utils.activity_stats import compute_activity_totals, recorded_until_seconds
 
 _log = logging.getLogger("export")
 
@@ -1563,7 +1563,8 @@ class ExportManager:
                 continue
             if day.get("changes"):
                 active_days += 1
-            day_totals = compute_activity_totals(day.get("changes") or [])
+            day_totals = compute_activity_totals(day.get("changes") or [],
+                                                 recorded_until_seconds(day))
             totals["drive"] += day_totals["DRIVE"]
             totals["work"] += day_totals["WORK"]
             totals["rest"] += day_totals["REST"]

@@ -2407,3 +2407,9 @@ msgstr "Vairuotojo pažymėjimo numeris"
 
 msgid "Licence Issuing Nation"
 msgstr "Vairuotojo pažymėjimą išdavusi šalis"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

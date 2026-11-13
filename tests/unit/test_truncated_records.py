@@ -20,7 +20,7 @@ from app.engine import TachoParser
 from core.registry.registry import DecoderRegistry
 from core.utils import report_format as rf
 from tests.unit import vu_synthetic as S
-from tests.unit.real_data import real_ddd_files, require_real_file
+from tests.unit.real_data import is_author_corpus, real_ddd_files, require_real_file
 
 TIME = S.BASE_TIME
 NOTE = "The activity changes of this day were cut off in the file"
@@ -169,7 +169,7 @@ def test_a_cut_record_is_flagged_or_lives_in_a_declared_zone(tmp_path):
     files = [path for path in real_ddd_files()]
     if not files:
         pytest.skip("no corpus available")
-    checked, flagged, in_zone = 0, 0, 0
+    checked, flagged, in_zone, swept = 0, 0, 0, 0
     for path in files:
         with open(path, "rb") as handle:
             raw = handle.read()
@@ -179,6 +179,7 @@ def test_a_cut_record_is_flagged_or_lives_in_a_declared_zone(tmp_path):
         intact = TachoParser(path).parse()
         if not (intact["metadata"].get("vu_units")):
             continue                      # a card file: not this record path
+        swept += 1
         for step in range(1, 13):
             cut = len(raw) * step // 13
             result = _parse_bytes(tmp_path, f"sweep{step}.ddd", raw[:cut])
@@ -220,7 +221,13 @@ def test_a_cut_record_is_flagged_or_lives_in_a_declared_zone(tmp_path):
                     in_zone += 1
     print(f"\nsweep: {checked} records, {flagged} flagged truncated, "
           f"{in_zone} out of declared zones")
-    assert checked > 1000
+    if not swept:
+        pytest.skip("no VU download of at least 2 KiB in DDD/ (the sweep is VU-only)")
+    # Any VU download publishes records once most of it survives the cut.
+    assert checked > 0, "the sweep over the VU downloads published no record"
+    if is_author_corpus():
+        # Scale of the original private corpus: the sweep must stay this wide.
+        assert checked > 1000
 
 
 # ── The note msgids ──────────────────────────────────────────────────────

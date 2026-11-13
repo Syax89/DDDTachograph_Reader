@@ -2407,3 +2407,9 @@ msgstr "Номер удостоверения"
 
 msgid "Licence Issuing Nation"
 msgstr "Страна выдачи удостоверения"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

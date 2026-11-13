@@ -26,7 +26,7 @@ from core.parser.vu_dispatcher import (
     VU_EVENT_RECORD_SIZE, VU_FAULT_RECORD_SIZE, walk_vu_record_arrays)
 from core.utils.event_codes import EVENT_FAULT_VERSION_2, EVENT_TYPES, FAULT_TYPES
 from core.utils.report_format import humanize_key, visible_columns
-from tests.unit.real_data import real_ddd_files, requires_real_files
+from tests.unit.real_data import is_author_corpus, real_ddd_files, requires_real_files
 
 #: Conformance bookkeeping stays in the JSON: it is hidden from every table
 #: (GUI `HIDDEN_KEYS` and `report_format.HIDDEN_KEYS`), like ``confidence``.
@@ -944,6 +944,14 @@ class TestPrivateCorpus(unittest.TestCase):
                 for key in ("vu_events", "vu_faults"):
                     if key in paths:
                         self.assertEqual(paths[key]["non_normative"], 0)
+                # Every published record was tallied by the deterministic path:
+                # nothing reached the tables around the normative decoder.
+                for key, tally in (("events", "vu_events"), ("faults", "vu_faults")):
+                    bucket = paths.get(tally) or {}
+                    self.assertEqual(
+                        len(results.get(key) or []),
+                        bucket.get("normative", 0) + bucket.get("non_normative", 0),
+                        f"{key}: published records differ from the decode tally")
                 for record in results.get("events") or []:
                     self.assertTrue(record["normative"],
                                     f"event {record['event_type_code']:#04x}: "
@@ -957,9 +965,12 @@ class TestPrivateCorpus(unittest.TestCase):
                     self._assert_cards_are_tachograph_cards(record)
                     faults += 1
 
-        # Field counts of the corpus itself (121 events / 14 faults over the six
-        # Gen2/G2.2 VU downloads): a regression on either side must be seen.
-        self.assertEqual((events, faults), (121, 14))
+        # Field counts of the original private corpus (121 events / 14 faults
+        # over its six Gen2/G2.2 VU downloads): a regression on either side must
+        # be seen. Another corpus has other counts; the per-record checks above
+        # hold for any of them.
+        if is_author_corpus():
+            self.assertEqual((events, faults), (121, 14))
 
 
 if __name__ == "__main__":

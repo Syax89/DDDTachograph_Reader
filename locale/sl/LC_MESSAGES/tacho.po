@@ -2407,3 +2407,9 @@ msgstr "Številka vozniškega dovoljenja"
 
 msgid "Licence Issuing Nation"
 msgstr "Država izdaje vozniškega dovoljenja"
+
+msgid "GPX (.gpx)"
+msgstr "Dokument GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "Dokument KML (.kml)"

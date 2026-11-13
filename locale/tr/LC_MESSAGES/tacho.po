@@ -2407,3 +2407,9 @@ msgstr "Ehliyet numarası"
 
 msgid "Licence Issuing Nation"
 msgstr "Ehliyeti düzenleyen ülke"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

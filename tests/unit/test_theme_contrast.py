@@ -29,6 +29,7 @@ import pytest
 import app.theme as theme
 
 GUI_PATH = Path(__file__).resolve().parents[2] / "app" / "gui.py"
+from tests.unit.gui_sources import gui_source  # noqa: E402
 
 
 def _luminance(hexcolor):
@@ -135,7 +136,7 @@ def test_the_gui_names_a_palette_entry_instead_of_a_raw_colour():
     the UI draws names a token from :mod:`app.theme`, and every token is in
     the table above.
     """
-    source = GUI_PATH.read_text(encoding="utf-8")
+    source = gui_source()
     for option in ("foreground", "fg", "background", "bg"):
         assert f'{option}="gray"' not in source, option
         assert f"{option}='gray'" not in source, option
@@ -148,5 +149,5 @@ def test_the_day_detail_time_column_reads_the_text_token():
     column that could not be read had to move to a token of its own — this
     pins that it did.
     """
-    source = GUI_PATH.read_text(encoding="utf-8")
+    source = gui_source()
     assert 'tag_configure("t_time", foreground=TEXT_FAINT_TEXT' in source

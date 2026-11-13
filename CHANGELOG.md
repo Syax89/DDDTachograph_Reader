@@ -1,3 +1,134 @@
+## [Unreleased]
+
+### Added
+
+- **GPX / KML export of GNSS positions** (Export menu, CLI `--gpx`/`--kml`): the route from the
+  accumulated-driving positions as a track, plus daily work period places,
+  border crossings and load/unload operations as waypoints. Positions without
+  a valid fix are left out; no driver or card identifier is written. Files
+  with no positions (generation 1) give an empty, valid document.
+- **Batch processing in the CLI.** `tacho-cli` takes several paths and
+  directories in one run (`tacho-cli DDD/ --recursive --all reports/`): a
+  directory contributes its `.ddd` files (any letter case), `-r`/`--recursive`
+  descends into subdirectories, and in a batch an output argument
+  (`--json`/`--pdf`/`--excel`/`--csv`/`--all DIR`) names a directory that gets one
+  auto-named report per input. `--summary` prints one summary per file, and a
+  final table lists each input's generation, card/VU kind, integrity verdict,
+  days and errors. A bad file is reported and the batch continues; the exit code
+  is `1` if any input failed. A single file path behaves exactly as before.
+- **Driving and rest times (`--rules`).** `tacho-cli card.ddd --rules` checks a
+  driver card's recorded activity against Regulation (EC) No 561/2006: breaks
+  after 4 h 30 of driving (art. 7, including the 15 + 30 min split), daily
+  driving between two daily rests with the twice-a-week 10 h extension
+  (art. 6(1)), 56 h weekly and 90 h fortnightly driving (art. 6(2)-(3)), daily
+  rest within 24 h — regular, 3 h + 9 h split or reduced, at most three reduced
+  between weekly rests (art. 8(1)-(4)) — and weekly rest timing and the two-week
+  requirement (art. 8(6)). Days are joined into one UTC timeline, so a shift
+  over midnight is measured as one. Every finding is marked *indicative, not a
+  legal determination*; a result that depends on an unrecorded period (card not
+  inserted, a missing day, the end of the download) or on crew-mode driving is
+  *indeterminate*, never an infringement. With `--json` the report is added
+  under `regulation_561`. Vehicle-unit downloads are not analysed (their
+  timeline is per vehicle and slot, not per driver). The new module is
+  `core/analysis/regulation_561.py`; the GUI is unchanged.
+- **Monthly period report (`--period-report [FILE]`).** One row per driver card
+  or vehicle and month over every input — days, days with driving, activity
+  totals, distance and, for drivers, the indicative 561/2006 counts —
+  with overlapping downloads merged day by day so no day counts twice. Written
+  as `.csv` or `.xlsx`, or printed when no file is given.
+
+### Fixed
+
+- **Certificate dates — reference instant.** Certificates were judged at the
+  VuDownloadActivityData / EF Card_Download time, which holds the *previous*
+  download. They are now judged at the latest instant the file records (last
+  activity day's recording cut, a VU's `maxDownloadableTime`, the download
+  fields as a lower bound); a G1 card without a download record is now judged
+  too. Files with no usable date are still not judged.
+- **GUI freeze on a corrupt card withdrawal.** The VU Daily-Activities
+  dashboard walked every day from a card insertion to its withdrawal, and a
+  corrupt withdrawal in 2100 meant ~36 000 days on the UI thread. The walk is
+  now clipped to the days that carry activity; results are unchanged.
+- **Oversized input.** Files over 32 MB are refused up front with a
+  `file_too_large` parse error instead of tying up the parser for minutes.
+- **Decoder failures in the CLI summary.** `--summary` now warns when a field
+  decoder raised (`metadata.decoder_failure_count` > 0), as the PDF/Excel
+  reports already did.
+- **Integrity verdict — broken card chain.** A G2 card certificate not signed by
+  the MSCA it presents was reported as *Partial* and, in a VU download, could be
+  overwritten by a valid VU chain to read *Verified (VU Chain)*. It is now an
+  invalid certificate chain and is never laundered by the VU verdict.
+- **Integrity verdict — certificate dates.** A G1 card/VU chain, or a G2 VU/MSCA
+  certificate, that had expired (or was not yet valid) when the download was
+  signed no longer reads as verified; it is reported as *Unverified (certificate
+  expired at download time: …)*. Dates are judged at the file's own latest
+  recorded instant, never against today's clock, and undated files are not judged.
+- **Integrity verdict — G1 VU unsigned tail.** Bytes after the last framed G1 VU
+  message are now reported as `unsigned_bytes` and keep the download at
+  *Partial*, as the G2 path already did. A short `0x76 0x00` trailer is ignored.
+- **Certificates on brainpoolP384r1 / brainpoolP512r1.** Their curve OIDs were
+  mis-encoded, so no 384- or 512-bit CVC certificate could be verified (or
+  named) — every chain under such an MSCA or ERCA failed. Found by running the
+  JRC interoperability test PKI through the verifier: 42 of its 115
+  certificates failed before the fix, none after.
+- **ERCA link certificates.** A link certificate (old root → new root) is now
+  registered under the new root it certifies, and only after its signature
+  verifies under a root already in `certs/`. Before, it was filed under the
+  old root's reference, so MSCAs issued under the new root could never be
+  anchored, and an unchained link would have been trusted on sight.
+- **Vehicle-unit daily totals.** On a single-manned vehicle unit the empty
+  co-driver slot (no card all day) counted as 24 h of *Unknown*, so every day
+  read "Unknown 24:00" and totalled well over 24 h (e.g. 36:01). A slot that
+  held no card at any time of the day is now left out of the totals; crew days
+  and days with no card in any slot are unchanged.
+- **The download's last day no longer runs to midnight.** Its final status
+  entry says what was happening at that instant, not for how long, yet it was
+  stretched to 24:00 — a card downloaded at 18:49 whose last entry was "DRIVE
+  at 15:59" reported 15:23 of driving instead of 7:22, and G1 cards showed up
+  to 17 h of *Work* on their download day. The parser now marks the most recent
+  day with `recorded_until` (its last status change or, for a vehicle unit,
+  the `maxDownloadableTime` on that day) and every view — dashboard, timeline,
+  day detail, PDF/Excel/CSV, CLI — counts the rest of that day as *Unknown*.
+  The file holds no reliable download time: `VuDownloadActivityData` and EF
+  `Card_Download` record the *previous* download.
+- **Calibration due-date marker.** A next-calibration date without a time zone
+  raised a swallowed `TypeError`, so the "expired / due soon" marker silently
+  disappeared from the VU overview.
+
+- **Crafted files no longer stall the parser.** A G1 stream of repeated
+  `76 02` markers hit a quadratic de-duplication loop (200 kB took ~10 s, now
+  0.2 s). A vehicle-unit stream with more than 4 096 sections (real downloads
+  hold a few hundred at most) and a card file over 1 MB (real cards stay under
+  200 kB) are refused up front as malformed (`too_many_sections` /
+  `file_too_large`) instead of being walked for tens of seconds.
+
+- Checked against the JRC's official pages (November 2026): `ERCA Gen2(1)` is
+  still the only production Smart Tachograph root (no Gen2(2) root or link
+  certificate is published), and all 243 published MSCA certificates — on
+  brainpoolP256r1 or NIST P-256 — verify under the root in `certs/`. Two of
+  them are kept as public test fixtures (`tests/fixtures/msca/`).
+
+### Maintenance
+
+- `pytest tests/` now generates the synthetic mock downloads before collection
+  when they are missing, so about a hundred mock-based tests run locally as
+  they do in CI instead of being skipped (`TACHO_NO_MOCK_GENERATION=1` opts
+  out). Tests that read real files from `DDD/` no longer assume the original
+  author's corpus: they skip when the needed kind of download is absent and
+  check exact corpus counts only on that corpus.
+- `app/gui.py` went from 8 200 to about 550 lines: it keeps the main window
+  class `TachoExplorer`, now composed from seven mixins
+  (`app/gui_explorer_{shell,load,export,status,tree,dashboard,summary}.py`),
+  and the entry points. The shared foundation (DPI and event pump, icons,
+  `DataTable`, activity timeline, help window, helpers) is `app/gui_base.py`;
+  the speed chart, day-detail window, data preparation and panel text have
+  their own modules. Code moved unchanged and `app.gui` re-exports every name;
+  the names the tests patch on `app.gui` are read through `gui_base._live`, so
+  those patches still apply. Tests that inspect the GUI's source read every
+  `app/gui*.py` module.
+
+---
+
 ## [2.9.1] - 2026-10-22
 
 <!-- release-notes:start -->

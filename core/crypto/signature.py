@@ -391,6 +391,57 @@ class SignatureValidator:
                 self.logger.debug("Invalid raw ERCA PK material: %s", exc)
         return keys
 
+    def _register_cvc_roots(self, cvc_roots, result):
+        """Register ERCA-2 CVC keys under the CHR they certify.
+
+        A self-signed root (CAR == CHR) is registered under its own reference.
+        A link certificate (e.g. ERCA (1) → ERCA (2), Annex 1C Appendix 11
+        §9.1.1) carries the *new* root's key, signed by the *previous* root: it
+        is registered under its CHR, and only once its signature verifies under
+        a root already trusted. Keying it by its CAR — as before — filed the
+        new key under the old root's reference, so MSCAs issued under the new
+        root could never be anchored, and an unchained link certificate would
+        have been trusted on sight. Links are resolved to a fixpoint, so a chain
+        of them (1 → 2 → 3) works in any file order.
+        """
+        from core.crypto.vu_signature import cvc_public_key, verify_cvc_chain_link
+        pending = []
+        for cvc in cvc_roots:
+            car, chr_ = cvc.get("car", ""), cvc.get("chr", "")
+            if not car:
+                continue
+            if chr_ and chr_ != car:
+                pending.append(cvc)
+                continue
+            pub, hash_algo = cvc_public_key(cvc)
+            if pub is None:
+                continue
+            result[car] = (pub, hash_algo)
+            self.logger.info("Registered G2 ERCA-2 CVC key (CAR=%s, curve=%s)",
+                             car, pub.curve.name)
+        progress = True
+        while pending and progress:
+            progress = False
+            for cvc in list(pending):
+                issuer = result.get(cvc["car"])
+                if issuer is None:
+                    continue
+                pending.remove(cvc)
+                progress = True
+                pub, hash_algo = cvc_public_key(cvc)
+                if pub is None or not verify_cvc_chain_link(cvc, *issuer):
+                    self.logger.warning(
+                        "ERCA-2 link certificate %s→%s does not verify; ignored",
+                        cvc["car"], cvc["chr"])
+                    continue
+                result.setdefault(cvc["chr"], (pub, hash_algo))
+                self.logger.info("Registered G2 ERCA-2 link key (CHR=%s via CAR=%s, curve=%s)",
+                                 cvc["chr"], cvc["car"], pub.curve.name)
+        for cvc in pending:
+            self.logger.warning(
+                "ERCA-2 link certificate %s→%s has no trusted issuer; ignored",
+                cvc["car"], cvc["chr"])
+
     def _g2_erca_keys(self):
         """Return a dict of CAR→(ECPublicKey, hash) for every G2 ERCA-2
         root key found in the loaded root material.
@@ -425,6 +476,7 @@ class SignatureValidator:
         }
 
         result = {}
+        cvc_roots = []
         for material in self.root_certificates.values():
             if isinstance(material, x509.Certificate):
                 # ``_load_root_certificates`` keeps a DER/PEM X.509 certificate
@@ -441,19 +493,16 @@ class SignatureValidator:
                 continue
             if isinstance(material, (bytes, bytearray)):
                 if material[0] == 0x7F and len(material) >= 100:
-                    # CVC certificate — parse it to extract the public key.
-                    from core.crypto.vu_signature import parse_cvc, cvc_public_key
+                    # CVC certificate: resolved after this loop, because a link
+                    # certificate can only be trusted once its issuer is.
+                    from core.crypto.vu_signature import parse_cvc
                     try:
                         cvc = parse_cvc(bytes(material))
-                        if cvc and cvc.get("public_point"):
-                            pub, hash_algo = cvc_public_key(cvc)
-                            car = cvc.get("car", "")
-                            if pub is not None and car:
-                                result[car] = (pub, hash_algo)
-                                self.logger.info("Registered G2 ERCA-2 CVC key (CAR=%s, curve=%s)",
-                                               car, pub.curve.name)
                     except Exception as exc:
                         self.logger.debug("CVC ERCA key parse failed: %s", exc)
+                        cvc = None
+                    if cvc and cvc.get("public_point"):
+                        cvc_roots.append(cvc)
                     continue
                 for curve in point_curves.get(len(material), ()):
                     try:
@@ -464,6 +513,7 @@ class SignatureValidator:
                     result[f"{car}:{curve.name}"] = (pub, _hash_for(curve.key_size))
                     self.logger.info("Registered G2 ERCA-2 raw key (synthetic CAR=%s, curve=%s)",
                                    car, curve.name)
+        self._register_cvc_roots(cvc_roots, result)
         return result
 
     def _g1_recover_key(self, cert_raw, parent_pubkey, parent_label=""):

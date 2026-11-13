@@ -27,6 +27,7 @@ REAL_SETTINGS_PATH = i18n.settings_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GUI_PATH = REPO_ROOT / "app" / "gui.py"
+from tests.unit.gui_sources import gui_source  # noqa: E402
 COMPILER_PATH = REPO_ROOT / "scripts" / "compile_translations.py"
 CATALOG_DIR = REPO_ROOT / "locale"
 
@@ -69,17 +70,17 @@ def compiler():
 
 def _activity_labels():
     """Return the values of the module-level ACTIVITY_LABEL dict in gui.py."""
-    tree = ast.parse(GUI_PATH.read_text(encoding="utf-8"))
+    tree = ast.parse(gui_source())
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign) and any(
                 isinstance(t, ast.Name) and t.id == "ACTIVITY_LABEL" for t in node.targets):
             return {value.value for value in node.value.values}
-    raise AssertionError("ACTIVITY_LABEL not found in app/gui.py")
+    raise AssertionError("ACTIVITY_LABEL not found in the GUI modules")
 
 
 def _literal_msgids():
     """Every ``_("literal")`` msgid in gui.py."""
-    tree = ast.parse(GUI_PATH.read_text(encoding="utf-8"))
+    tree = ast.parse(gui_source())
     found = set()
     for node in ast.walk(tree):
         if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
@@ -439,7 +440,7 @@ def test_every_msgid_the_gui_uses_is_declared():
     for msgid in literals:
         assert msgid, "empty msgid would translate everything"
     # The dynamic list is complete: each entry really is used by gui.py.
-    source = GUI_PATH.read_text(encoding="utf-8")
+    source = gui_source()
     for msgid in DYNAMIC_MSGIDS:
         assert msgid in source, msgid
 

@@ -20,6 +20,7 @@ import app.theme as theme
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GUI_PATH = REPO_ROOT / "app" / "gui.py"
+from tests.unit.gui_sources import gui_source  # noqa: E402
 THEME_PATH = REPO_ROOT / "app" / "theme.py"
 
 HEX_RE = re.compile(r"#[0-9a-fA-F]{6}\b")
@@ -71,7 +72,7 @@ def _font_constants():
 # ── gui.py holds no colours any more ──────────────────────────────────────
 
 def test_gui_has_no_raw_hex_literal():
-    source = GUI_PATH.read_text(encoding="utf-8")
+    source = gui_source()
     assert HEX_RE.findall(source) == []
 
 
@@ -176,7 +177,7 @@ def test_font_constants_are_plain_tuples():
 
 def test_gui_uses_the_font_constants():
     """No inline ``font=("", 12, "bold")`` survives in the GUI."""
-    source = GUI_PATH.read_text(encoding="utf-8")
+    source = gui_source()
     assert 'font=("' not in source
     assert 'font=("", ' not in source
 
@@ -202,7 +203,7 @@ def test_theme_declares_no_widget_code():
 def test_every_colour_constant_is_used_by_the_gui(name):
     """A palette entry nothing paints is dead weight: keep the two in sync."""
     value = _colour_constants()[name]
-    source = GUI_PATH.read_text(encoding="utf-8")
+    source = gui_source()
     alias_users = {alias for alias, alias_value in _colour_constants().items()
                    if alias_value == value}
     assert any(re.search(rf"\b{alias}\b", source) for alias in alias_users), name
@@ -252,7 +253,7 @@ def test_activity_colour_maps_reference_the_activity_names():
     The two share a hex value today, so comparing values cannot tell
     "this is Drive" from "this is selected"; the assignment can.
     """
-    colours = _colours_dict_values(GUI_PATH, "ACTIVITY_COLORS")
+    colours = _colours_dict_values(REPO_ROOT / "app" / "gui_base.py", "ACTIVITY_COLORS")
     assert sorted(colours) == sorted(ACTIVITY_CONSTANTS)
     for code, value in colours.items():
         assert isinstance(value, ast.Name), (code, ast.dump(value))
@@ -301,5 +302,4 @@ def test_the_day_detail_window_has_no_unused_colour_map():
     import app.gui as gui
 
     assert not hasattr(gui.DayDetailWindow, "COLORS")
-    assert "DayDetailWindow.COLORS" not in (REPO_ROOT / "app" / "gui.py").read_text(
-        encoding="utf-8")
+    assert "DayDetailWindow.COLORS" not in gui_source()

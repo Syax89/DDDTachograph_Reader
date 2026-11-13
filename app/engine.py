@@ -45,6 +45,28 @@ def _results_size(results):
     return sum(len(value) for value in _result_records(results).values())
 
 
+# Largest input accepted. Real downloads are well under 1 MB (a VU with
+# detailed speed reaches a few MB); a crafted file of repeated bytes made the
+# structural walk take tens of seconds per megabyte, so anything this large is
+# refused up front instead of hanging the caller.
+MAX_FILE_SIZE_BYTES = 32 * 1024 * 1024
+
+#: Most section markers a vehicle-unit download may carry. A real one holds a
+#: handful of fixed sections plus one activity section per downloaded day (the
+#: unit keeps 365 days), so a few hundred at most; the tracked samples carry 13
+#: to 55. A crafted stream of empty ``76 21`` sections costs ~30 µs each in
+#: every later pass (1.6 MB of them took ~30 s), so a stream past this count is
+#: refused up front as malformed instead of being walked.
+MAX_VU_SECTIONS = 4096
+
+#: Largest card download (anything not starting with the VU SID ``0x76``). A
+#: driver, workshop, company or control card holds well under 200 kB even with
+#: both generations' applications (the tracked samples: 25-67 kB), while a
+#: crafted stream of zero-length STAP elements costs ~2 µs a byte (8 MB took
+#: ~14 s). 1 MB keeps a five-fold margin and bounds the worst case near 2 s.
+MAX_CARD_FILE_BYTES = 1024 * 1024
+
+
 def _parse_timestamp(value):
     """Parse an ISO-8601 tachograph timestamp to an aware UTC datetime, or None."""
     if not isinstance(value, str) or not value:
@@ -85,6 +107,7 @@ class TachoParser:
         # Per-generation chain trust. A verified chain for one generation must
         # never launder another generation's untrusted signing key.
         self._chain_trust = {"G1": False, "G2": False}
+        self._expired_certificate_roles = []
         self._chain_present = {"G1": False, "G2": False}
 
         # Initialize results using the model but keep it as a dict for legacy compatibility
@@ -182,12 +205,36 @@ class TachoParser:
                 "message": "File is empty",
             }
             return self.results
+        if self.file_size > MAX_FILE_SIZE_BYTES:
+            self.results["metadata"]["integrity_check"] = "File Too Large"
+            self.results["metadata"]["parse_error"] = {
+                "code": "file_too_large",
+                "message": (f"File is too large ({self.file_size} bytes; "
+                            f"limit {MAX_FILE_SIZE_BYTES} bytes)"),
+            }
+            return self.results
 
         reset_decoder_failures()
         self._reset_state()
 
         try:
             self._open_file()
+            if not self.is_vu and self.file_size > MAX_CARD_FILE_BYTES:
+                self.results["metadata"]["integrity_check"] = "File Too Large"
+                self.results["metadata"]["parse_error"] = {
+                    "code": "file_too_large",
+                    "message": (f"Not a plausible card download: {self.file_size} bytes "
+                                f"(a card holds at most {MAX_CARD_FILE_BYTES} bytes)"),
+                }
+                return self.results
+            if self.is_vu and self._too_many_vu_sections():
+                self.results["metadata"]["integrity_check"] = "Malformed File"
+                self.results["metadata"]["parse_error"] = {
+                    "code": "too_many_sections",
+                    "message": (f"Not a plausible vehicle-unit download: more than "
+                                f"{MAX_VU_SECTIONS} sections"),
+                }
+                return self.results
             # Structural pass: this is the foundation. If it fails there is no
             # data to show, so it stays a fatal parse_error below.
             self._run_structural_parse()
@@ -202,6 +249,7 @@ class TachoParser:
             self.results["metadata"]["coverage_pct"] = \
                 self.results.get("coverage", {}).get("covered_pct", 100.0)
             self._run_phase("activity_dedup", self._dedup_and_sort_activities)
+            self._run_phase("last_recorded_day", self._mark_last_recorded_day)
             chain_phase_ok = self._run_phase(
                 "certificate_chain", self._validate_certificate_chain)
             self._run_phase("g1_vu_signatures", self._verify_g1_vu_signatures)
@@ -279,7 +327,23 @@ class TachoParser:
         self.card_cert_g1 = None
         self.validation_status = "Pending"
         self._chain_trust = {"G1": False, "G2": False}
+        self._expired_certificate_roles = []
         self._chain_present = {"G1": False, "G2": False}
+
+    def _too_many_vu_sections(self):
+        """True when the VU stream holds more than :data:`MAX_VU_SECTIONS` sections.
+
+        Counts with the canonical section iterator and stops at the limit, so a
+        genuine download costs a few hundred cheap steps and a crafted one no
+        more than the limit.
+        """
+        from core.parser.vu_dispatcher import iter_vu_sections
+        count = 0
+        for _section in iter_vu_sections(self.raw_data):
+            count += 1
+            if count > MAX_VU_SECTIONS:
+                return True
+        return False
 
     def _open_file(self):
         """Memory-map the file and detect VU vs card (first byte 0x76 = VU)."""
@@ -897,24 +961,116 @@ class TachoParser:
         unique.sort(key=lambda x: _safe_parse_date(x.get("date")) or datetime.min, reverse=True)
         self.results["activities"] = unique
 
-    def _signature_timestamp(self):
-        """The moment the download was signed, for certificate-date evaluation.
+    def _mark_last_recorded_day(self):
+        """Mark where the recording of the download's most recent day ends.
 
-        For a VU download this is the latest VuDownloadActivityData
-        ``downloading_time``; for a driver card the EF Card_Download date.
-        Returns ``None`` when the file carries no such timestamp, so an undated
-        file keeps its historical "not checked" behaviour instead of being
-        judged against the wall clock (a historic download's expired certificate
-        remains useful evidence).
+        Every earlier day is closed by the next day's 00:00 status entry; the
+        most recent one is not, and its last entry used to be stretched to
+        24:00, inventing hours (a card downloaded at 18:49 whose last entry was
+        "DRIVE at 15:59" showed 8 h of extra driving). The file carries no
+        reliable download time: VuDownloadActivityData and EF Card_Download
+        hold the *previous* download. The cut is therefore the last recorded
+        instant: the day's latest status change, or — for a VU — the
+        VuDownloadablePeriod ``maxDownloadableTime`` when it falls on that day
+        (the latest data the unit held). A ``maxDownloadableTime`` on a later
+        date means the unit recorded past this day, which is then complete.
+        The activity totals treat the time after the cut as UNKNOWN
+        (``core.utils.activity_stats.recorded_until_seconds``).
         """
-        candidates = []
+        from core.utils.activity_stats import parse_time
+        def _day_date(value):
+            try:
+                return datetime.strptime(value, "%d/%m/%Y")
+            except (ValueError, TypeError):
+                return None
+
+        days = [(d, _day_date(d.get("date")))
+                for d in self.results.get("activities") or [] if isinstance(d, dict)]
+        days = [(d, when) for d, when in days if when is not None]
+        if not days:
+            return
+        latest, latest_date = max(days, key=lambda item: item[1])
+        times = [parse_time(ch.get("time", "")) for ch in latest.get("changes") or []
+                 if isinstance(ch, dict)]
+        times = [t for t in times if t is not None]
+        cut = max(times) if times else None
+        if self.is_vu:
+            for period in self.results.get("downloadable_periods") or []:
+                if not isinstance(period, dict):
+                    continue
+                newest = _parse_timestamp(period.get("max_downloadable_time"))
+                if newest is None:
+                    continue
+                if newest.date() > latest_date.date():
+                    return
+                if newest.date() == latest_date.date():
+                    secs = newest.hour * 3600 + newest.minute * 60
+                    cut = secs if cut is None else max(cut, secs)
+        if cut is None:
+            return
+        latest["recorded_until"] = f"{cut // 3600:02d}:{cut % 3600 // 60:02d}"
+
+    def _signature_timestamp(self):
+        """The reference instant certificate dates are judged against.
+
+        The file carries no reliable download time: VuDownloadActivityData
+        ``downloading_time`` and EF Card_Download hold the *previous* download
+        (verified on real files), so judging certificates against them could
+        call a certificate valid that had already expired when this data was
+        recorded. The reference is therefore the latest instant the file
+        records:
+
+        * the most recent activity day, at its ``recorded_until`` cut (set by
+          ``_mark_last_recorded_day``, which runs just before the
+          certificate-chain phase) or else its latest status change;
+        * for a VU, every VuDownloadablePeriod ``max_downloadable_time``;
+        * the download-time fields above, kept as a lower bound.
+
+        Instants later than the wall clock (plus a day of clock skew) are
+        ignored: a corrupt date must not make every certificate look expired.
+        Returns ``None`` when nothing usable is found, so an undated file keeps
+        its historical "not checked" behaviour instead of being judged against
+        the wall clock (a historic download's expired certificate remains
+        useful evidence). The same instant is passed to ``verify_vu_download``,
+        which runs in the earlier VU-semantics phase before ``recorded_until``
+        exists; the result is identical there, because that cut is only ever
+        the day's latest change or a same-day ``max_downloadable_time``, both
+        of which are candidates here already.
+        """
+        from core.utils.activity_stats import parse_time
+        parsed = []
         for entry in self.results.get("download_activities") or []:
             if isinstance(entry, dict):
-                candidates.append(entry.get("downloading_time"))
+                parsed.append(_parse_timestamp(entry.get("downloading_time")))
         for entry in self.results.get("card_downloads") or []:
             if isinstance(entry, dict):
-                candidates.append(entry.get("download_time"))
-        parsed = [t for t in (_parse_timestamp(value) for value in candidates) if t]
+                parsed.append(_parse_timestamp(entry.get("download_time")))
+        if self.is_vu:
+            for period in self.results.get("downloadable_periods") or []:
+                if isinstance(period, dict):
+                    parsed.append(_parse_timestamp(period.get("max_downloadable_time")))
+        latest_day = None
+        for day in self.results.get("activities") or []:
+            if not isinstance(day, dict):
+                continue
+            try:
+                when = datetime.strptime(day.get("date"), "%d/%m/%Y")
+            except (ValueError, TypeError):
+                continue
+            if latest_day is None or when > latest_day[1]:
+                latest_day = (day, when)
+        if latest_day is not None:
+            day, when = latest_day
+            secs = parse_time(day.get("recorded_until", ""))
+            if secs is None:
+                times = [parse_time(ch.get("time", "")) for ch in day.get("changes") or []
+                         if isinstance(ch, dict)]
+                times = [t for t in times if t is not None]
+                secs = max(times) if times else 0
+            parsed.append(datetime.fromtimestamp(
+                when.replace(tzinfo=timezone.utc).timestamp() + secs, tz=timezone.utc))
+        horizon = datetime.now(timezone.utc).timestamp() + 86400
+        parsed = [t for t in parsed if t is not None and t.timestamp() <= horizon]
         return max(parsed) if parsed else None
 
     def _validate_certificate_chain(self):
@@ -990,6 +1146,22 @@ class TachoParser:
                 chain_trust["G1"] = True
             temporal.update(self.validator.last_chain_temporal_validity)
 
+        # Certificate dates are judged at the moment the download was signed
+        # (see _signature_timestamp), never against today's clock. The G2 CVC
+        # and X.509 paths already fail closed on them inside the validator; the
+        # G1 path only *reports* EOV, so a G1 chain that unwraps cleanly but
+        # whose card/MSCA certificate had expired when the data was signed must
+        # not read as verified. The signatures are still mathematically sound,
+        # so the verdict is "unverified", not "invalid/corrupt".
+        expired_roles = sorted(
+            role for role, value in temporal.items()
+            if isinstance(value, dict)
+            and value.get("status") in ("expired", "not_yet_valid"))
+        if status is True and expired_roles:
+            status = "Expired at download time"
+            chain_trust = {gen: False for gen in chain_trust}
+        self._expired_certificate_roles = expired_roles
+
         self._chain_trust = chain_trust
         self._chain_present = chain_present
 
@@ -1013,6 +1185,19 @@ class TachoParser:
             self.card_public_key = pubkey
         elif status == "Cannot Verify (Missing ERCA Root)":
             self.validation_status = "Unverified (Missing ERCA Root)"
+        elif status == "Expired at download time":
+            self.validation_status = (
+                "Unverified (certificate expired at download time: "
+                + ", ".join(expired_roles) + ")")
+            # Keep the key: the EF/TREP signatures are still checked and
+            # reported, they just cannot lift the verdict to verified.
+            self.card_public_key = pubkey
+        elif status == "Partial — MSCA→Card FAILED":
+            # The card certificate is not signed by the MSCA it presents: the
+            # chain is broken outright, not partially verified. Reporting the
+            # validator's "Partial …" wording verbatim mapped it to PARTIAL and
+            # let a valid VU chain elsewhere in the file overwrite it below.
+            self.validation_status = "Invalid Certificate Chain (MSCA→Card signature FAILED)"
         elif status is not False:
             self.validation_status = str(status)
         else:
@@ -1026,10 +1211,17 @@ class TachoParser:
             # prove the VU payload, not the card, and must never launder a
             # broken card chain. The overall verdict is the worst of the parts,
             # not the best.
-            card_chain_failed = had_certs and status is False
+            card_chain_failed = had_certs and (
+                status is False or status == "Partial — MSCA→Card FAILED")
             sv = self.results.get("signature_verification") or {}
             if sv.get("msca_to_vu") is True and not card_chain_failed:
-                if sv.get("all_treps_valid") and sv.get("root_anchored") and \
+                if sv.get("certificate_dates_invalid"):
+                    # Signatures hold, but the VU/MSCA certificate was not
+                    # valid when the download was signed.
+                    self.validation_status = (
+                        "Unverified (VU certificate expired at download time: "
+                        + ", ".join(sv["certificate_dates_invalid"]) + ")")
+                elif sv.get("all_treps_valid") and sv.get("root_anchored") and \
                         not sv.get("unsigned_bytes"):
                     self.validation_status = "Verified (VU Chain)"
                 elif sv.get("all_treps_valid") and sv.get("root_anchored"):
@@ -1243,6 +1435,26 @@ class TachoParser:
             report["treps"].append(entry)
 
         report["all_treps_valid"] = signed_messages > 0 and all_valid
+
+        expired_roles = getattr(self, "_expired_certificate_roles", None) or []
+        if expired_roles:
+            report["certificate_dates_invalid"] = list(expired_roles)
+
+        # The message walk is contiguous from offset 0 and stops at the first
+        # position it cannot frame. Bytes after the last framed message are
+        # authenticated by no TREP signature, exactly like the gaps the G2
+        # verifier reports (core.crypto.vu_signature._unsigned_gaps), so a
+        # download carrying them must not read as fully verified. A short
+        # ``0x76 0x00`` download trailer is not payload.
+        raw = bytes(self.raw_data)
+        tail_start = messages[-1]["end"]
+        tail = len(raw) - tail_start
+        is_trailer = (2 <= tail <= 8 and raw[tail_start] == 0x76
+                      and raw[tail_start + 1] == 0x00)
+        if tail > 0 and not is_trailer:
+            report["unsigned_bytes"] = tail
+            report["unsigned_ranges"] = [[tail_start, len(raw)]]
+
         valid_count = sum(entry["signature_valid"] is True for entry in report["treps"])
         report["summary"] = (
             f"G1 VU TREP signatures: {valid_count}/{signed_messages} valid"
@@ -1250,7 +1462,10 @@ class TachoParser:
         self.results["signature_verification"] = report
 
         if self.validation_status.startswith("Verified"):
-            if report["all_treps_valid"]:
+            if report["all_treps_valid"] and report.get("unsigned_bytes"):
+                self.validation_status = (
+                    "Partial (G1 VU — unsigned bytes outside the signed sections)")
+            elif report["all_treps_valid"]:
                 self.validation_status = "Verified (G1 VU chain and TREP signatures)"
             elif report["missing_signatures"]:
                 self.validation_status = "Incomplete (G1 VU TREP signatures missing)"

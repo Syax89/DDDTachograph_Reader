@@ -90,6 +90,20 @@ python -m app.cli file.ddd --pdf report.pdf
 python -m app.cli file.ddd --csv report.csv
 ```
 
+**GNSS positions for a map** (G2/G2.2 files; generation 1 records no
+positions, so its file is empty but valid):
+
+```bash
+python -m app.cli file.ddd --gpx route.gpx
+python -m app.cli file.ddd --kml route.kml
+```
+
+The route (positions recorded every 3 h of accumulated driving) is a track;
+the start/end of each daily work period, border crossings and load/unload
+operations are waypoints. No driver name or card number is written. GPX/KML
+are not part of `--all`; a bare `--gpx`/`--kml` next to `--all` writes into
+that directory, and in a batch `--gpx DIR`/`--kml DIR` write one file per input.
+
 **All formats at once** (JSON, PDF, Excel, CSV into a directory):
 
 ```bash
@@ -107,6 +121,51 @@ missing `reportlab`), the others are still produced, the failure is reported on
 standard error as a `Warning: …` line (for a missing `reportlab`: `Warning: PDF export
 requires reportlab (pip install reportlab): …`; other failures read
 `Warning: … generation failed: …`), and the process exits non-zero.
+
+### Driving and Rest Times (Regulation (EC) No 561/2006)
+
+`--rules` adds an **indicative** check of a driver card's recorded activity
+against the driving-time, break and rest rules of Regulation (EC) No 561/2006:
+
+```bash
+python -m app.cli card.ddd --rules              # text report on screen
+python -m app.cli card.ddd --rules --json -     # JSON, with the report under "regulation_561"
+```
+
+On its own, `--rules` prints only the report (add `--summary` for the summary
+too). With `--json` the report is added to the JSON under the key
+`regulation_561` — only when `--rules` is given, so the default JSON keeps its
+shape. The report lists *findings*, each with the rule, its article, the period
+(UTC), the measured value, the limit and an explanation, plus a per-rule count
+of what was assessed.
+
+What is checked — the days are joined into one continuous UTC timeline, so
+periods running over midnight are measured as a whole:
+
+| Rule | Article | Limit |
+|------|---------|-------|
+| Break after driving | 7 | 4 h 30 driving, then 45 min — or 15 min followed by 30 min — of rest |
+| Daily driving | 6(1) | 9 h between two daily rests, 10 h at most twice per fixed week |
+| Weekly / fortnightly driving | 6(2), 6(3) | 56 h per Monday–Sunday week, 90 h in two consecutive weeks |
+| Daily rest | 8(1)–(2) | 11 h (or 3 h + 9 h, or reduced 9 h) within 24 h of the previous rest |
+| Reduced daily rests | 8(4) | at most three between two weekly rests |
+| Weekly rest | 8(6) | starts within six 24-hour periods of the previous one; two per two weeks, one of them ≥ 45 h |
+
+Only *Rest* counts as a break or rest: *Work* and *Availability* do not. A
+finding is either an **infringement** or **indeterminate**. Periods the card did
+not record (card not inserted, missing days, the time after the download) can
+never produce an infringement: when a result depends on whether such a period
+was rest, it is indeterminate. Periods recorded in crew mode make break and
+daily results indeterminate too, because the multi-manning rules are not
+modelled; nor are reduced-weekly-rest compensation, ferry/train interruptions,
+derogations and exemptions (the report lists them under *Not modelled*).
+
+Vehicle-unit downloads are not analysed: a vehicle unit records per vehicle and
+card slot, not per driver, so the report only says so. Analyse the driver card.
+
+> **The result is indicative, not a legal determination.** It reflects only
+> the recorded data and a subset of the Regulation; use it to find periods
+> worth a closer look, not to decide whether a driver broke the law.
 
 ### Verbose Output
 
@@ -131,17 +190,39 @@ matters: `python -m app.cli file.ddd --json out.json --quiet`.
 
 ---
 
+## Period Report (per driver / vehicle and month)
+
+```bash
+python -m app.cli downloads/ -r --period-report months.xlsx   # or .csv
+python -m app.cli card.ddd --period-report                    # print the table
+```
+
+One row per driver card (card downloads) or vehicle (VU downloads, by plate)
+and month: days recorded, days with driving, Drive/Work/Rest/Available/Unknown
+minutes, distance and — for drivers — the number of indicative Regulation (EC)
+No 561/2006 infringements and indeterminate results (see `--rules`), counted in
+the month their period starts. Overlapping downloads of the same driver or
+vehicle are merged day by day, so a day held by two files counts once (the
+more complete copy wins). Distance is the card's daily distance, or for a VU
+the odometer increase from the previous calendar day. The report can be
+combined with any other option; without FILE the table goes to the screen.
+
 ## Complete Option Reference
 
 | Flag | Argument | Description |
 |------|----------|-------------|
-| *(positional)* | `FILE` | Path to the `.ddd` file to analyse (required) |
+| *(positional)* | `PATH …` | One or more `.ddd` files or directories (required); more than one, or any directory, makes a [batch](#batch-processing) |
+| `-r`, `--recursive` | — | In a batch, also scan the subdirectories of a directory argument |
 | `--json` | `[FILE]` | Generate JSON output (optional output path) |
 | `--pdf` | `[FILE]` | Generate PDF report (optional output path; needs `reportlab`) |
 | `--excel` | `[FILE]` | Generate Excel report (optional output path; needs `openpyxl`) |
 | `--csv` | `[FILE]` | Generate CSV report (optional output path) |
-| `--all` | `[DIR]` | Generate all four formats into a directory |
+| `--gpx` | `[FILE]` | Export the GNSS positions as GPX (optional output path) |
+| `--kml` | `[FILE]` | Export the GNSS positions as KML (optional output path) |
+| `--period-report` | `[FILE]` | Monthly totals per driver/vehicle over every input (`.csv`/`.xlsx`; printed without FILE) |
+| `--all` | `[DIR]` | Generate all four formats into a directory (in a batch: every file's reports into that one directory) |
 | `--summary` | — | Show the compact text summary on screen |
+| `--rules` | — | Indicative Regulation (EC) No 561/2006 driving/rest-time analysis (driver cards); added to `--json` as `regulation_561` |
 | `--version` | — | Print the reader version (`TachoReader 2.9.1`) |
 | `-v`, `--verbose` | — | Verbose debug output |
 | `-q`, `--quiet` | — | Suppress all screen output (files only); `--json -` still writes the JSON to standard output |
@@ -149,21 +230,76 @@ matters: `python -m app.cli file.ddd --json out.json --quiet`.
 **Exit codes:** `0` on success; `1` when the file is missing, cannot be parsed,
 carries no decodable tachograph structure (`Error: no tachograph structure was
 decoded` — no card, VU or certificate record could be decoded from it), or an
-export failed; `2` for a usage error (unknown flag, missing file argument).
+export failed; `2` for a usage error (unknown flag, missing file argument,
+`--json -` with several inputs). In a batch, `0` means every input was processed
+and `1` that at least one failed — the others were still processed.
 
 ---
 
 ## Batch Processing
 
-The CLI processes one file per invocation. To process a directory, loop in the shell:
+Give several paths, or a directory, and the CLI processes them all in one run:
 
 ```bash
-for f in DDD/*.ddd; do
-  python -m app.cli "$f" --json --quiet
-done
+python -m app.cli DDD/ --summary                   # every .ddd in DDD/
+python -m app.cli DDD/ --recursive --all reports/   # sub-folders too, all formats
+python -m app.cli a.ddd b.ddd "c d.ddd" --excel xlsx/
 ```
 
-Quote `"$f"`: tachograph download names often contain spaces.
+**Which files.** A file argument is processed as given. A directory contributes
+the `.ddd` files directly inside it (the extension in any letter case: `.ddd`,
+`.DDD`), in name order; `-r` / `--recursive` adds those in its subdirectories.
+Other files are ignored. A file reached twice (a file and its own folder) is
+processed once. A directory holding no `.ddd` file is reported as an error.
+
+**When it is a batch.** More than one path, or any directory — even one that
+holds a single file — is a batch. A single file path is the classic run
+described above, unchanged.
+
+**Where the outputs go.** In a batch an output argument names a **directory**,
+created if needed, and every input gets its own auto-named file in it
+(`<file>_<timestamp>.<ext>`, with a numeric suffix rather than an overwrite when
+two inputs share a name):
+
+| Flag in a batch | Writes |
+|-----------------|--------|
+| `--json DIR` / `--pdf DIR` / `--excel DIR` / `--csv DIR` | one file per input into `DIR` |
+| bare `--json` / `--pdf` / `--excel` / `--csv` | one auto-named file per input in the current directory |
+| `--all DIR` | all four formats of every input into `DIR` |
+| bare `--all` | one `<file>_output/` directory per input, as for a single file |
+| `--json -` | refused (exit `2`): standard output cannot hold several JSON documents |
+
+If an output path exists and is not a directory, the run stops with exit `1`
+before any file is parsed.
+
+**What is printed.** A batch never writes JSON to standard output. Each input
+prints its summary when `--summary` is given or when no output flag is, then its
+list of generated files; errors and warnings go to standard error and name the
+file (`Error: DDD/x.ddd: no tachograph structure was decoded`). The run ends
+with a table of every input:
+
+```
+============================================================
+BATCH SUMMARY: 3 inputs, 2 OK, 1 failed
+============================================================
+File            Gen              Type  Integrity   Days  Errors
+DDD/card.ddd    G1 (Digital)     Card  verified     242  -
+DDD/vu.ddd      G2.2 (Smart V2)  VU    partial       31  -
+DDD/broken.ddd  -                -     -              -  no tachograph structure was decoded
+```
+
+*Integrity* is the canonical verdict — `verified`, `partial`, `unverified` or
+`corrupt` — the same classification the window's integrity badge uses; *Days*
+counts the distinct days with activity records. `-q` holds back the summaries,
+the file lists and the table; errors still reach standard error.
+
+**Errors.** One bad input never stops the batch: it is reported, gets its row in
+the table, and the next input is processed. The exit code is `1` if any input
+failed (missing, unparsable, not a tachograph download, an export failed, or an
+empty directory), `0` otherwise.
+
+Files are processed one after another in a single process; there is no parallel
+mode.
 
 ---
 

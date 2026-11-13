@@ -2407,3 +2407,9 @@ msgstr "Ökuréttindanúmer"
 
 msgid "Licence Issuing Nation"
 msgstr "Útgáfuland ökuréttinda"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

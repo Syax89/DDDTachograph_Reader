@@ -90,8 +90,8 @@ def _is_cvc(data):
 
 _CVC_CURVE_NAMES = {
     "2b2403030208010107": "brainpoolP256r1",
-    "2b2403030208010b0d": "brainpoolP384r1",
-    "2b2403030208010d0b": "brainpoolP512r1",
+    "2b240303020801010b": "brainpoolP384r1",
+    "2b240303020801010d": "brainpoolP512r1",
     "2a8648ce3d030107": "NIST P-256",
     "2b81040022": "NIST P-384",
     "2b81040023": "NIST P-521",

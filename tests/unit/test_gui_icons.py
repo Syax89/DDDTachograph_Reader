@@ -41,6 +41,7 @@ import tkinter as tk  # noqa: E402
 
 import app.gui as gui  # noqa: E402
 import app.i18n as i18n  # noqa: E402
+from tests.unit.gui_sources import GUI_MODULES, gui_source  # noqa: E402
 from app import icons  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -152,7 +153,7 @@ def _literal_icon_requests():
     indirect ones (``_add_section(..., icon=...)``, ``_SummaryHeader(...)``,
     the status badge) are checked from the live render below.
     """
-    tree = ast.parse((REPO_ROOT / "app" / "gui.py").read_text(encoding="utf-8"))
+    tree = ast.parse(gui_source())
     requests = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
@@ -185,7 +186,7 @@ def test_the_indirect_icon_arguments_also_exist():
     Derived the same way (the string literals in those positions), so renaming
     an icon in the set breaks this instead of blanking a row at runtime.
     """
-    tree = ast.parse((REPO_ROOT / "app" / "gui.py").read_text(encoding="utf-8"))
+    tree = ast.parse(gui_source())
     names = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
@@ -310,7 +311,8 @@ def test_the_set_is_found_from_the_package_not_the_working_directory(monkeypatch
 
 # ── no emoji left in what the interface shows ─────────────────────────────
 
-@pytest.mark.parametrize("module", ["app/gui.py", "app/cli.py"])
+@pytest.mark.parametrize("module", [str(p.relative_to(REPO_ROOT)) for p in GUI_MODULES]
+                         + ["app/cli.py"])
 def test_no_emoji_is_left_in_any_rendered_string(module):
     offenders = {}
     for text in _source_strings(REPO_ROOT / module):

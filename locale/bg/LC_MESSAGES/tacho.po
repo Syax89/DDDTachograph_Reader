@@ -2407,3 +2407,9 @@ msgstr "Номер на свидетелството"
 
 msgid "Licence Issuing Nation"
 msgstr "Издаваща държава на свидетелството"
+
+msgid "GPX (.gpx)"
+msgstr "Формат GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "Формат KML (.kml)"

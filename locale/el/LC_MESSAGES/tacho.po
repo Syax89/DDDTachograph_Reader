@@ -2407,3 +2407,9 @@ msgstr "Αριθμός άδειας"
 
 msgid "Licence Issuing Nation"
 msgstr "Χώρα έκδοσης άδειας"
+
+msgid "GPX (.gpx)"
+msgstr "Μορφότυπο GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "Μορφότυπο KML (.kml)"

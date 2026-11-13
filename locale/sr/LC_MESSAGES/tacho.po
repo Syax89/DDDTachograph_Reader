@@ -2407,3 +2407,9 @@ msgstr "Број возачке дозволе"
 
 msgid "Licence Issuing Nation"
 msgstr "Држава издавања возачке дозволе"
+
+msgid "GPX (.gpx)"
+msgstr "GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML (.kml)"

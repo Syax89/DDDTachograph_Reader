@@ -395,13 +395,43 @@ def generate_g22_vu(out):
 
 # ─── Main ───
 
-if __name__ == "__main__":
-    out_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "mock_data")
+MOCK_FILES = (
+    ("mock_g1_card.ddd", "generate_g1_card"),
+    ("mock_g1_vu.ddd", "generate_g1_vu"),
+    ("mock_g2_card.ddd", "generate_g2_card"),
+    ("mock_g2_vu.ddd", "generate_g2_vu"),
+    ("mock_g22_card.ddd", "generate_g22_card"),
+    ("mock_g22_vu.ddd", "generate_g22_vu"),
+)
+
+#: Where the suite and CI expect the mocks (git-ignored, regenerated on demand).
+DEFAULT_OUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "mock_data")
+
+
+def generate_all(out_dir=DEFAULT_OUT_DIR, only_missing=False, verbose=True):
+    """Write the six mock downloads into ``out_dir``; return how many were written.
+
+    ``only_missing`` leaves existing files alone (the test suite's
+    ``pytest_configure`` uses it, so a plain ``pytest tests/`` runs the
+    mock-based tests exactly as CI does instead of skipping them).
+    """
     os.makedirs(out_dir, exist_ok=True)
-    generate_g1_card(os.path.join(out_dir, "mock_g1_card.ddd"))
-    generate_g1_vu(os.path.join(out_dir, "mock_g1_vu.ddd"))
-    generate_g2_card(os.path.join(out_dir, "mock_g2_card.ddd"))
-    generate_g2_vu(os.path.join(out_dir, "mock_g2_vu.ddd"))
-    generate_g22_card(os.path.join(out_dir, "mock_g22_card.ddd"))
-    generate_g22_vu(os.path.join(out_dir, "mock_g22_vu.ddd"))
-    print(f"\nGenerated 6 mock DDD files in {out_dir}")
+    written = 0
+    for name, fn in MOCK_FILES:
+        path = os.path.join(out_dir, name)
+        if only_missing and os.path.exists(path):
+            continue
+        if verbose:
+            globals()[fn](path)
+        else:
+            import contextlib
+            import io
+            with contextlib.redirect_stdout(io.StringIO()):
+                globals()[fn](path)
+        written += 1
+    return written
+
+
+if __name__ == "__main__":
+    count = generate_all()
+    print(f"\nGenerated {count} mock DDD files in {DEFAULT_OUT_DIR}")

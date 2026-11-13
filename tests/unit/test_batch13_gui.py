@@ -187,7 +187,8 @@ def _tree_day_vehicles(data):
     captured = []
 
     def _capture(parent, day, is_vu, activities, day_km, changes_count,
-                 driver_info, slot_schedule, markers, oos_events, vehicle_info):
+                 driver_info, slot_schedule, markers, oos_events, vehicle_info,
+                 recorded_until=None):
         captured.append((day, [v["plate"] for v in vehicle_info]))
         return "daynode"
 

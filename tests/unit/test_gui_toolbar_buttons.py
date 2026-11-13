@@ -184,16 +184,40 @@ def test_open_button_still_runs_the_open_file_command(explorer):
     assert str(explorer.btn_open.cget("command")).split("_", 1)[-1] == "open_file"
 
 
-def test_export_still_starts_disabled_and_keeps_its_four_entries(explorer):
+def test_export_still_starts_disabled_and_keeps_its_entries(explorer):
     assert str(explorer.btn_export.cget("state")) == "disabled"
 
     menu = explorer.nametowidget(explorer.btn_export["menu"])
-    labels = [menu.entrycget(index, "label")
-              for index in range(menu.index("end") + 1)]
+    entries = range(menu.index("end") + 1)
+    labels = [menu.entrycget(index, "label") for index in entries
+              if menu.type(index) == "command"]
     assert labels == [i18n._("PDF (.pdf)"), i18n._("Excel (.xlsx)"),
-                      i18n._("CSV (.csv)"), i18n._("JSON (.json)")]
-    assert [menu.type(index) for index in range(menu.index("end") + 1)] == \
-        ["command"] * 4, "the split menu still opens a plain command list"
+                      i18n._("CSV (.csv)"), i18n._("JSON (.json)"),
+                      i18n._("GPX (.gpx)"), i18n._("KML (.kml)")]
+    # Reports first, then the two map formats behind one separator.
+    assert [menu.type(index) for index in entries] == \
+        ["command"] * 4 + ["separator"] + ["command"] * 2
+
+
+def test_gpx_export_writes_the_positions(explorer, monkeypatch, tmp_path):
+    target = tmp_path / "route.gpx"
+    shown = []
+    monkeypatch.setattr("app.gui.filedialog.asksaveasfilename",
+                        lambda **kwargs: str(target))
+    monkeypatch.setattr("app.gui.messagebox.showinfo",
+                        lambda *args, **kwargs: shown.append(args), raising=False)
+    explorer.current_file = "sample.ddd"
+    explorer.current_data = {"metadata": {}, "places": [
+        {"timestamp": "2025-01-01T08:00:00+00:00",
+         "latitude": 45.0, "longitude": 9.0}]}
+    explorer._export_gpx()
+    for _ in range(200):
+        explorer.update()
+        if shown:
+            break
+        explorer.after(10)
+    assert shown, "the export never completed"
+    assert 'lat="45.000000" lon="9.000000"' in target.read_text(encoding="utf-8")
 
 
 def test_toolbar_placement_is_unchanged(explorer):

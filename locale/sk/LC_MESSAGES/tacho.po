@@ -2407,3 +2407,9 @@ msgstr "Číslo vodičského preukazu"
 
 msgid "Licence Issuing Nation"
 msgstr "Vydávajúci štát vodičského preukazu"
+
+msgid "GPX (.gpx)"
+msgstr "Dokument GPX (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "Dokument KML (.kml)"

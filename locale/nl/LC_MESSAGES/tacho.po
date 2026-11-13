@@ -2407,3 +2407,9 @@ msgstr "Rijbewijsnummer"
 
 msgid "Licence Issuing Nation"
 msgstr "Afgevend land van het rijbewijs"
+
+msgid "GPX (.gpx)"
+msgstr "GPX-document (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML-document (.kml)"

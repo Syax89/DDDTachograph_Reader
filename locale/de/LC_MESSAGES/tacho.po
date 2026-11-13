@@ -2407,3 +2407,9 @@ msgstr "Führerscheinnummer"
 
 msgid "Licence Issuing Nation"
 msgstr "Ausstellungsland des Führerscheins"
+
+msgid "GPX (.gpx)"
+msgstr "GPX-Datei (.gpx)"
+
+msgid "KML (.kml)"
+msgstr "KML-Datei (.kml)"
