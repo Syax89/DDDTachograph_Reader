@@ -317,3 +317,14 @@ def test_without_the_file_the_generation_groups_remain(explorer, mocks, tmp_path
     explorer.update()
     top = [explorer.tree.item(i, "text") for i in explorer.tree.get_children("")]
     assert any(text.startswith("Generation") for text in top)
+
+
+def test_only_problems_carry_an_icon():
+    from app.gui_explorer_structure import StructureMixin
+    from core.structure import Unit
+    icon = StructureMixin._unit_icon_name
+    assert icon(Unit("section", "Overview", 0, 10, signature=True)) is None
+    assert icon(Unit("section", "Overview", 0, 10)) is None
+    assert icon(Unit("gap", "Padding", 0, 10)) is None
+    assert icon(Unit("section", "Overview", 0, 10, signature=False)) == "status-error"
+    assert icon(Unit("gap", "Unrecognised bytes", 0, 10)) == "status-warning"

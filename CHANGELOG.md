@@ -10,7 +10,8 @@
     their RSA signatures;
   - a driver card lists its elementary files in the generation-1 and
     generation-2 applications, each with the signature that follows it;
-  - every section and EF shows whether its signature verified;
+  - a section or EF whose signature does not verify is marked in red;
+    verified parts carry no mark (the verdict is in the table header);
   - selecting a part decodes that part's own bytes; a *Bytes* switch shows
     it as a hex dump with offsets;
   - padding and unrecognised bytes between parts are listed too, so the

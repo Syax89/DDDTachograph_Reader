@@ -179,8 +179,9 @@ class StructureMixin:
 
     @staticmethod
     def _unit_icon_name(unit):
-        if unit.signature is True:
-            return "status-ok"
+        """An icon only where something is wrong: a signature that did not
+        verify, or bytes no part of the file explains. A verified part is
+        drawn plain (its verdict is in the table header)."""
         if unit.signature is False:
             return "status-error"
         if unit.kind == "gap" and unit.title != "Padding":
