@@ -279,6 +279,10 @@ def content_rows(value, key=None, cuts=None, one_driver=True):
                 technical = getattr(cols, "technical", frozenset())
                 pairs = [(c, v) for c, v in zip(cols, rows[0], strict=False)
                          if str(v).strip()]
+                shown = {str(v) for c, v in pairs if c not in technical}
+                # A technical field that only repeats a shown value is dropped.
+                pairs = [(c, v) for c, v in pairs
+                         if c not in technical or str(v) not in shown]
                 pairs.sort(key=lambda pair: pair[0] in technical)
                 return [_("Field"), _("Value")], [[c, v] for c, v in pairs]
             return cols, rows
@@ -576,7 +580,6 @@ class StructureMixin:
                                    "signed: they authenticate the key.")])
 
         # ── how, and by whom ──
-        meta = data.get("metadata") or {}
         sv = data.get("signature_verification") or {}
         dtype = getattr(sig, "_dtype", None)
         if sig.kind == "array":                                   # G2 / G2.2 vehicle unit
@@ -611,8 +614,6 @@ class StructureMixin:
             rows.append([_("Certificate chain"), self._chain_text(
                 sv.get("msca_to_vu"), sv.get("root_anchored"), None)])
         rows.append([_("Signature"), _("{length} bytes").format(length=size)])
-        if meta.get("generation"):
-            rows.append([_("Generation"), str(meta.get("generation"))])
         return rows
 
     @staticmethod
