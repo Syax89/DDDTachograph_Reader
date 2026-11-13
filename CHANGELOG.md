@@ -1,4 +1,25 @@
-## [Unreleased]
+## [2.10.0] - 2026-11-13
+
+<!-- release-notes:start -->
+**Integrity you can trust**
+- Broken or expired certificate chains no longer show as *Verified*, and bytes outside the signed sections of a G1 vehicle-unit download are now reported (*Partial*).
+- Certificates on brainpoolP384r1/P512r1 now verify, and ERCA link certificates are supported for the next root change. All 243 published MSCA certificates verify against the shipped ERCA root.
+
+**Correct daily totals**
+- Vehicle-unit days no longer show *Unknown 24:00* or totals over 24 h for a single driver.
+- The last day of a download ends where the recording ends instead of at midnight, so no driving hours are invented.
+
+**New**
+- Indicative driving and rest-time analysis under Regulation (EC) 561/2006: `tacho-cli card.ddd --rules`.
+- Several files or whole folders in one CLI run, with a summary table.
+- Monthly report per driver and vehicle: `--period-report months.xlsx`.
+- GNSS positions exported as GPX or KML, from the Export menu or with `--gpx` / `--kml`.
+
+**Sturdier**
+- Malformed or crafted files are rejected in under a second instead of stalling the reader.
+
+[Full changelog](https://github.com/Syax89/DDDTachograph_Reader/blob/v2.10.0/CHANGELOG.md).
+<!-- release-notes:end -->
 
 ### Added
 
