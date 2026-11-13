@@ -192,7 +192,7 @@ JSON is not produced here: the CLI and the GUI serialise the parser result direc
 
 ### GUI Layer
 
-- **app/gui.py**: Desktop application (tkinter/ttk). Regedit-style section tree on the left, Excel-style data table or an interactive chart on the right. Data-driven: sections are derived from the parser output. A loaded file opens on the summary panel, and with no file loaded the right pane shows the empty state (open action + recently opened files). Every label the GUI draws comes from `app/ui_text.py`.
+- **app/gui.py** (+ `app/gui_base.py`, the `app/gui_explorer_*.py` mixins, `gui_speed_chart.py`, `gui_day_detail.py`, `gui_data.py`, `gui_text.py`): Desktop application (tkinter/ttk); `app.gui` re-exports every name of those modules. Regedit-style section tree on the left, Excel-style data table or an interactive chart on the right. Data-driven: sections are derived from the parser output. A loaded file opens on the summary panel, and with no file loaded the right pane shows the empty state (open action + recently opened files). Every label the GUI draws comes from `app/ui_text.py`.
 - **app/theme.py**: the single source of the palette (`SURFACE`, `TEXT_*`, `ACCENT`, `ACTIVITY_*`, `DANGER*`, ...) and of the font specs (`FONT_*`) the GUI paints. `app/gui.py` holds no colour literal of its own, so a palette change is a one-file edit.
 - **app/icons.py**: decodes `assets/icons/png/<size>/<name>.png` and caches the image per Tk interpreter; the size is chosen for the display scale (`nearest_size`), never resampled.
 - **app/i18n.py**: installs gettext from `locale/<lang>/LC_MESSAGES/tacho.mo`, owns `LANGUAGES` (34 entries), and persists the language and the *Translate file contents* preference in the per-user `settings.json`.

@@ -110,13 +110,16 @@
   out). Tests that read real files from `DDD/` no longer assume the original
   author's corpus: they skip when the needed kind of download is absent and
   check exact corpus counts only on that corpus.
-- `app/gui.py` shrank from 8 200 to 6 300 lines: the detailed-speed chart moved
-  to `app/gui_speed_chart.py`, the day-detail window to `app/gui_day_detail.py`,
-  the data preparation to `app/gui_data.py` and the panel/About text to
-  `app/gui_text.py` (unchanged code; `app.gui` re-exports every name). Tests
-  that inspect the GUI's source for msgids, colours, icons and emoji read every
-  GUI module. `DataTable`, the activity timeline and `TachoExplorer` stay: they
-  share the UI-scale and event-pump state the suite patches on `app.gui`.
+- `app/gui.py` went from 8 200 to about 550 lines: it keeps the main window
+  class `TachoExplorer`, now composed from seven mixins
+  (`app/gui_explorer_{shell,load,export,status,tree,dashboard,summary}.py`),
+  and the entry points. The shared foundation (DPI and event pump, icons,
+  `DataTable`, activity timeline, help window, helpers) is `app/gui_base.py`;
+  the speed chart, day-detail window, data preparation and panel text have
+  their own modules. Code moved unchanged and `app.gui` re-exports every name;
+  the names the tests patch on `app.gui` are read through `gui_base._live`, so
+  those patches still apply. Tests that inspect the GUI's source read every
+  `app/gui*.py` module.
 
 ---
 
