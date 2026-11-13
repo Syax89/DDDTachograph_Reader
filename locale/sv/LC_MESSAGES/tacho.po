@@ -2546,14 +2546,15 @@ msgstr "Slut på givarnedladdning"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Inga poster: denna matris är tom och innehåller bara sitt huvud."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Inga poster: alla platser i denna fil är tomma (aldrig skrivna)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Inga data: denna del markerar bara slutet på givarnedladdningen."
 
-msgid "Card download through a vehicle unit"
-msgstr "Kortnedladdning via fordonsenhet"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Icke-standardhuvud: fordonsenhetens kortnedladdningsmarkör"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Inga data: denna markör visar att kortet laddades ned via en fordonsenhet."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Inte standard: filen börjar med fordonsenhetens kortnedladdningsmarkör (76 06) i stället för kortets första fil. Kortdata är intakta, men vissa program kanske inte öppnar filen."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Inga poster: alla platser innehåller det tomma värde som förordningen anger (inget registrerades)."

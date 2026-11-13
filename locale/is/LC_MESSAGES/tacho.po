@@ -2546,14 +2546,15 @@ msgstr "Lok niðurhals skynjara"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Engar færslur: þetta fylki er tómt og inniheldur aðeins hausinn."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Engar færslur: öll hólf þessarar skrár eru tóm (aldrei skrifuð)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Engin gögn: þessi hluti markar aðeins lok niðurhals skynjarans."
 
-msgid "Card download through a vehicle unit"
-msgstr "Niðurhal korts um ökutækiseiningu"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Óstaðlaður haus: kortaniðurhalsmerki ökutækiseiningar"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Engin gögn: þetta merki sýnir að kortinu var hlaðið niður um ökutækiseiningu."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Ekki staðlað: skráin byrjar á kortaniðurhalsmerki ökutækiseiningarinnar (76 06) í stað fyrstu skrár kortsins. Gögn kortsins eru heil, en sum forrit opna hugsanlega ekki þessa skrá."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Engar færslur: öll hólf innihalda tóma gildið sem reglugerðin skilgreinir (ekkert var skráð)."

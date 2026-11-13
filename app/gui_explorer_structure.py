@@ -263,9 +263,11 @@ def content_rows(value, key=None, cuts=None, one_driver=True):
 #: switch away). Functions, so the text follows the interface language.
 _EMPTY_WORDS = {
     "array": lambda: _("No records: this array is empty and holds only its header."),
-    "blank": lambda: _("No records: every slot of this file is blank (never written)."),
+    "blank": lambda: _("No records: every slot holds the empty value the regulation defines (nothing was recorded)."),
     "terminator": lambda: _("No data: this part only marks the end of the sensor download."),
-    "marker": lambda: _("No data: this marker says the card was downloaded through a vehicle unit."),
+    "marker": lambda: _("Not standard: the file starts with the vehicle unit's card download "
+                        "marker (76 06) instead of the card's first file. The card data are "
+                        "intact, but some programs may not open this file."),
 }
 
 
@@ -323,7 +325,7 @@ class StructureMixin:
         drawn plain (its verdict is in the table header)."""
         if unit.signature is False:
             return "status-error"
-        if unit.kind == "gap" and unit.title != "Padding":
+        if (unit.kind == "gap" and unit.title != "Padding") or unit.empty == "marker":
             return "status-warning"
         return None
 

@@ -2546,14 +2546,15 @@ msgstr "Sensora lejupielādes beigas"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Nav ierakstu: šis masīvs ir tukšs un satur tikai galveni."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Nav ierakstu: visas šī faila vietas ir tukšas (nekad nav rakstītas)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Nav datu: šī daļa tikai iezīmē sensora lejupielādes beigas."
 
-msgid "Card download through a vehicle unit"
-msgstr "Kartes lejupielāde caur transportlīdzekļa vienību"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Nestandarta galvene: transportlīdzekļa vienības kartes lejupielādes marķieris"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Nav datu: šis marķieris norāda, ka karte lejupielādēta caur transportlīdzekļa vienību."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Nestandarta: fails sākas ar transportlīdzekļa vienības kartes lejupielādes marķieri (76 06), nevis ar kartes pirmo failu. Kartes dati ir neskarti, bet dažas programmas šo failu var neatvērt."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Nav ierakstu: visās vietās ir regulā noteiktā tukšā vērtība (nekas netika reģistrēts)."

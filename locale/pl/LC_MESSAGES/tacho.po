@@ -2546,14 +2546,15 @@ msgstr "Koniec pobierania danych czujnika"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Brak rekordów: ta tablica jest pusta i zawiera tylko nagłówek."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Brak rekordów: wszystkie pozycje tego pliku są puste (nigdy nie zapisane)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Brak danych: ta część oznacza tylko koniec pobierania danych czujnika."
 
-msgid "Card download through a vehicle unit"
-msgstr "Pobranie danych z karty przez urządzenie pojazdu"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Niestandardowy nagłówek: znacznik pobierania karty z VU"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Brak danych: ten znacznik oznacza, że kartę pobrano przez urządzenie pojazdu."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Niestandardowy: plik zaczyna się od znacznika pobierania karty urządzenia pojazdu (76 06) zamiast od pierwszego pliku karty. Dane karty są nienaruszone, ale niektóre programy mogą nie otworzyć tego pliku."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Brak rekordów: wszystkie pozycje zawierają pustą wartość określoną w rozporządzeniu (nic nie zarejestrowano)."

@@ -2546,14 +2546,15 @@ msgstr "Az érzékelőletöltés vége"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Nincs rekord: ez a tömb üres, csak a fejlécét tartalmazza."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Nincs rekord: a fájl minden helye üres (soha nem írták)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Nincs adat: ez a rész csak az érzékelőletöltés végét jelzi."
 
-msgid "Card download through a vehicle unit"
-msgstr "Kártyaletöltés járműegységen keresztül"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Nem szabványos fejléc: a járműegység kártyaletöltési jelölője"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Nincs adat: ez a jelölő azt mutatja, hogy a kártyát járműegységen keresztül töltötték le."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Nem szabványos: a fájl a járműegység kártyaletöltési jelölőjével (76 06) kezdődik a kártya első fájlja helyett. A kártya adatai épek, de egyes programok nem biztos, hogy megnyitják ezt a fájlt."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Nincs rekord: minden hely a rendelet által meghatározott üres értéket tartalmazza (semmit nem rögzítettek)."

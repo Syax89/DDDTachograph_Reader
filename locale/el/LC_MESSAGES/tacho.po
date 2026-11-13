@@ -2546,14 +2546,15 @@ msgstr "Τέλος μεταφόρτωσης αισθητήρα"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Καμία εγγραφή: ο πίνακας είναι κενός και περιέχει μόνο την κεφαλίδα του."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Καμία εγγραφή: όλες οι θέσεις του αρχείου είναι κενές (δεν γράφτηκαν ποτέ)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Κανένα δεδομένο: αυτό το τμήμα σηματοδοτεί μόνο το τέλος της μεταφόρτωσης του αισθητήρα."
 
-msgid "Card download through a vehicle unit"
-msgstr "Μεταφόρτωση κάρτας μέσω μονάδας οχήματος"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Μη τυποποιημένη κεφαλίδα: δείκτης μεταφόρτωσης κάρτας της VU"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Κανένα δεδομένο: αυτός ο δείκτης δείχνει ότι η κάρτα μεταφορτώθηκε μέσω μονάδας οχήματος."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Μη τυποποιημένο: το αρχείο ξεκινά με τον δείκτη μεταφόρτωσης κάρτας της μονάδας οχήματος (76 06) αντί για το πρώτο αρχείο της κάρτας. Τα δεδομένα της κάρτας είναι ακέραια, αλλά ορισμένα προγράμματα ίσως να μην ανοίγουν αυτό το αρχείο."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Καμία εγγραφή: όλες οι θέσεις περιέχουν την κενή τιμή που ορίζει ο κανονισμός (δεν καταγράφηκε τίποτα)."

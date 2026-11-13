@@ -2546,14 +2546,15 @@ msgstr "Sfârșitul descărcării senzorului"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Nicio înregistrare: acest tablou este gol și conține doar antetul."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Nicio înregistrare: toate pozițiile acestui fișier sunt goale (niciodată scrise)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Nicio dată: această parte marchează doar sfârșitul descărcării senzorului."
 
-msgid "Card download through a vehicle unit"
-msgstr "Descărcare card prin unitatea vehiculului"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Antet nestandard: marcaj de descărcare card al VU"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Nicio dată: acest marcaj arată că cardul a fost descărcat prin unitatea vehiculului."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Nestandard: fișierul începe cu marcajul de descărcare card al unității vehiculului (76 06) în loc de primul fișier al cardului. Datele cardului sunt intacte, dar unele programe s-ar putea să nu deschidă acest fișier."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Nicio înregistrare: toate pozițiile conțin valoarea goală definită de regulament (nu s-a înregistrat nimic)."

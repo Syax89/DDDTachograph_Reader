@@ -25,7 +25,9 @@
     the terminator of a sensor download; the download interface version
     (TREP 00) is decoded;
   - padding and unrecognised bytes between parts are listed too, so the
-    parts add up to the whole file.
+    parts add up to the whole file; a card file that starts with a vehicle
+    unit's card download marker (76 06) is flagged as non-standard, since
+    other programs may not open it.
   Summary, Daily Activities and Detailed Speed stay as views at the top.
   Exports and the JSON are unchanged.
 

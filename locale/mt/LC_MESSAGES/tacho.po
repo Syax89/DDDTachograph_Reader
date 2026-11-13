@@ -2546,14 +2546,15 @@ msgstr "Tmiem it-tniżżil tas-sensur"
 msgid "No records: this array is empty and holds only its header."
 msgstr "L-ebda rekord: dan l-array huwa vojt u fih biss l-intestatura tiegħu."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "L-ebda rekord: il-postijiet kollha ta' dan il-fajl huma vojta (qatt miktuba)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "L-ebda data: din il-parti timmarka biss it-tmiem tat-tniżżil tas-sensur."
 
-msgid "Card download through a vehicle unit"
-msgstr "Tniżżil tal-karta permezz tal-unità tal-vettura"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Intestatura mhux standard: marker tat-tniżżil tal-karta tal-VU"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "L-ebda data: dan il-marker juri li l-karta tniżżlet permezz tal-unità tal-vettura."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Mhux standard: il-fajl jibda bil-marker tat-tniżżil tal-karta tal-unità tal-vettura (76 06) minflok bl-ewwel fajl tal-karta. Id-data tal-karta hija intatta, iżda xi programmi jistgħu ma jiftħux dan il-fajl."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "L-ebda rekord: il-postijiet kollha fihom il-valur vojt li jiddefinixxi r-regolament (xejn ma ġie rreġistrat)."

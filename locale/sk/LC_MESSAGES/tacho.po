@@ -2546,14 +2546,15 @@ msgstr "Koniec sťahovania snímača"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Žiadne záznamy: toto pole je prázdne a obsahuje len hlavičku."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Žiadne záznamy: všetky pozície tohto súboru sú prázdne (nikdy nezapísané)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Žiadne údaje: táto časť len označuje koniec sťahovania snímača."
 
-msgid "Card download through a vehicle unit"
-msgstr "Stiahnutie karty cez palubnú jednotku"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Neštandardná hlavička: značka stiahnutia karty z VU"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Žiadne údaje: táto značka hovorí, že karta bola stiahnutá cez palubnú jednotku."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Neštandardný: súbor začína značkou stiahnutia karty palubnej jednotky (76 06) namiesto prvého súboru karty. Údaje karty sú neporušené, ale niektoré programy tento súbor nemusia otvoriť."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Žiadne záznamy: všetky pozície obsahujú prázdnu hodnotu definovanú nariadením (nič nebolo zaznamenané)."

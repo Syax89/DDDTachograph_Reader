@@ -2546,14 +2546,15 @@ msgstr "Konec prenosa tipala"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Ni zapisov: to polje je prazno in vsebuje samo glavo."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Ni zapisov: vsa mesta te datoteke so prazna (nikoli zapisana)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Ni podatkov: ta del le označuje konec prenosa tipala."
 
-msgid "Card download through a vehicle unit"
-msgstr "Prenos kartice prek enote vozila"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Nestandardna glava: oznaka prenosa kartice VU"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Ni podatkov: ta oznaka pove, da je bila kartica prenesena prek enote vozila."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Nestandardno: datoteka se začne z oznako prenosa kartice enote vozila (76 06) namesto s prvo datoteko kartice. Podatki kartice so nedotaknjeni, vendar nekateri programi te datoteke morda ne bodo odprli."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Ni zapisov: vsa mesta vsebujejo prazno vrednost, ki jo določa uredba (nič ni bilo zabeleženo)."

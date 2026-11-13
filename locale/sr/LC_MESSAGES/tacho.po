@@ -2546,14 +2546,15 @@ msgstr "Крај преузимања сензора"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Нема записа: овај низ је празан и садржи само заглавље."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Нема записа: сва места ове датотеке су празна (никада уписана)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Нема података: овај део само означава крај преузимања сензора."
 
-msgid "Card download through a vehicle unit"
-msgstr "Преузимање картице преко јединице возила"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Нестандардно заглавље: ознака преузимања картице са VU"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Нема података: ова ознака показује да је картица преузета преко јединице возила."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Нестандардно: датотека почиње ознаком преузимања картице јединице возила (76 06) уместо првом датотеком картице. Подаци картице су нетакнути, али неки програми можда неће отворити ову датотеку."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Нема записа: сва места садрже празну вредност коју прописује уредба (ништа није забележено)."

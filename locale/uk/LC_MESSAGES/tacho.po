@@ -2546,14 +2546,15 @@ msgstr "Кінець вивантаження датчика"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Немає записів: цей масив порожній і містить лише заголовок."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Немає записів: усі комірки цього файлу порожні (ніколи не записувалися)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Немає даних: ця частина лише позначає кінець вивантаження датчика."
 
-msgid "Card download through a vehicle unit"
-msgstr "Вивантаження картки через бортовий пристрій"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Нестандартний заголовок: маркер вивантаження картки бортового пристрою"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Немає даних: цей маркер означає, що картку вивантажено через бортовий пристрій."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Нестандартний файл: він починається з маркера вивантаження картки бортового пристрою (76 06) замість першого файлу картки. Дані картки цілі, але деякі програми можуть не відкрити цей файл."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Немає записів: усі комірки містять порожнє значення, визначене регламентом (нічого не записано)."

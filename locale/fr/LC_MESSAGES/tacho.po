@@ -2546,14 +2546,15 @@ msgstr "Fin du téléchargement du capteur"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Aucun enregistrement : ce tableau est vide et ne contient que son en-tête."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Aucun enregistrement : tous les emplacements de ce fichier sont vides (jamais écrits)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Aucune donnée : cette partie marque seulement la fin du téléchargement du capteur."
 
-msgid "Card download through a vehicle unit"
-msgstr "Téléchargement de carte via une unité embarquée"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "En-tête non standard : marqueur de téléchargement de carte de l'UEV"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Aucune donnée : ce marqueur indique que la carte a été téléchargée via une unité embarquée."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Non standard : le fichier commence par le marqueur de téléchargement de carte de l'unité embarquée (76 06) au lieu du premier fichier de la carte. Les données de la carte sont intactes, mais certains programmes pourraient ne pas ouvrir ce fichier."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Aucun enregistrement : tous les emplacements contiennent la valeur vide définie par le règlement (rien n'a été enregistré)."

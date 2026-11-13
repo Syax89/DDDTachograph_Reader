@@ -2546,14 +2546,15 @@ msgstr "Sensör indirmesinin sonu"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Kayıt yok: bu dizi boş ve yalnızca başlığını içeriyor."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Kayıt yok: bu dosyanın tüm yuvaları boş (hiç yazılmamış)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Veri yok: bu bölüm yalnızca sensör indirmesinin sonunu işaretler."
 
-msgid "Card download through a vehicle unit"
-msgstr "Araç ünitesi üzerinden kart indirme"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Standart dışı başlık: araç ünitesinin kart indirme işareti"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Veri yok: bu işaret kartın bir araç ünitesi üzerinden indirildiğini gösterir."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Standart dışı: dosya, kartın ilk dosyası yerine araç ünitesinin kart indirme işaretiyle (76 06) başlıyor. Kart verileri sağlam, ancak bazı programlar bu dosyayı açmayabilir."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Kayıt yok: tüm yuvalar yönetmeliğin tanımladığı boş değeri içeriyor (hiçbir şey kaydedilmedi)."

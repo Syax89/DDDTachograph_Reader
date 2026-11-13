@@ -2546,14 +2546,15 @@ msgstr "Ende des Sensor-Downloads"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Keine Datensätze: Dieses Array ist leer und enthält nur seinen Kopf."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Keine Datensätze: Alle Plätze dieser Datei sind leer (nie beschrieben)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Keine Daten: Dieser Teil markiert nur das Ende des Sensor-Downloads."
 
-msgid "Card download through a vehicle unit"
-msgstr "Kartendownload über eine Fahrzeugeinheit"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Nicht standardmäßiger Kopf: Kartendownload-Markierung der FE"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Keine Daten: Diese Markierung zeigt, dass die Karte über eine Fahrzeugeinheit heruntergeladen wurde."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Nicht standardkonform: Die Datei beginnt mit der Kartendownload-Markierung der Fahrzeugeinheit (76 06) statt mit der ersten Datei der Karte. Die Kartendaten sind intakt, aber manche Programme öffnen diese Datei möglicherweise nicht."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Keine Datensätze: Alle Plätze enthalten den von der Verordnung festgelegten Leerwert (nichts wurde aufgezeichnet)."

@@ -2546,14 +2546,15 @@ msgstr "Anduri allalaadimise lõpp"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Kirjeid pole: see massiiv on tühi ja sisaldab ainult päist."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Kirjeid pole: faili kõik kohad on tühjad (pole kunagi kirjutatud)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Andmeid pole: see osa tähistab ainult anduri allalaadimise lõppu."
 
-msgid "Card download through a vehicle unit"
-msgstr "Kaardi allalaadimine sõidukiüksuse kaudu"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Mittestandardne päis: sõidukiüksuse kaardi allalaadimise märgis"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Andmeid pole: see märgis näitab, et kaart laaditi alla sõidukiüksuse kaudu."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Mittestandardne: fail algab sõidukiüksuse kaardi allalaadimise märgisega (76 06) kaardi esimese faili asemel. Kaardi andmed on terved, kuid mõni programm ei pruugi seda faili avada."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Kirjeid pole: kõik kohad sisaldavad määrusega määratud tühja väärtust (midagi ei salvestatud)."

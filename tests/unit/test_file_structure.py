@@ -394,4 +394,7 @@ def test_a_card_downloaded_through_a_vu_starts_with_its_marker(tmp_path):
     units = build_layout(card, TachoParser(str(path)).parse())
     _tiles(card, units)
     assert (units[0].title, units[0].empty, units[0].tag) == (
-        "Card download through a vehicle unit", "marker", "TREP 0x06")
+        "Non-standard header: vehicle unit card download marker", "marker", "TREP 0x06")
+    # not a standard card file: flagged, since other programs may refuse it
+    from app.gui_explorer_structure import StructureMixin
+    assert StructureMixin._unit_icon_name(units[0]) == "status-warning"

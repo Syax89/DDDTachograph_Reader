@@ -2546,14 +2546,15 @@ msgstr "Край на изтеглянето от датчика"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Няма записи: този масив е празен и съдържа само заглавката си."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Няма записи: всички позиции на този файл са празни (никога не са записвани)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Няма данни: тази част само отбелязва края на изтеглянето от датчика."
 
-msgid "Card download through a vehicle unit"
-msgstr "Изтегляне на карта чрез бордовото устройство"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Нестандартна заглавка: маркер за изтегляне на карта от ПБ"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Няма данни: този маркер показва, че картата е изтеглена чрез бордовото устройство."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Нестандартен: файлът започва с маркера за изтегляне на карта на бордовото устройство (76 06) вместо с първия файл на картата. Данните на картата са непокътнати, но някои програми може да не отворят този файл."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Няма записи: всички позиции съдържат празната стойност, определена от регламента (нищо не е записано)."

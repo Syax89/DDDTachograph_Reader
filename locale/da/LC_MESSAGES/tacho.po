@@ -2546,14 +2546,15 @@ msgstr "Slut på sensordownload"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Ingen poster: dette array er tomt og indeholder kun sit hoved."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Ingen poster: alle pladser i denne fil er tomme (aldrig skrevet)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Ingen data: denne del markerer kun slutningen på sensordownloadet."
 
-msgid "Card download through a vehicle unit"
-msgstr "Kortdownload via køretøjsenhed"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Ikke-standard header: køretøjsenhedens kortdownloadmarkør"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Ingen data: denne markør viser, at kortet er downloadet via en køretøjsenhed."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Ikke standard: filen begynder med køretøjsenhedens kortdownloadmarkør (76 06) i stedet for kortets første fil. Kortdataene er intakte, men nogle programmer kan muligvis ikke åbne filen."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Ingen poster: alle pladser indeholder den tomme værdi, som forordningen fastsætter (intet blev registreret)."

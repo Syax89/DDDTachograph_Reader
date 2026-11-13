@@ -2546,14 +2546,15 @@ msgstr "Fundi i shkarkimit të sensorit"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Asnjë regjistrim: ky varg është bosh dhe ka vetëm kokën e tij."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Asnjë regjistrim: të gjitha vendet e këtij skedari janë bosh (asnjëherë të shkruara)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Asnjë e dhënë: kjo pjesë shënon vetëm fundin e shkarkimit të sensorit."
 
-msgid "Card download through a vehicle unit"
-msgstr "Shkarkimi i kartës përmes njësisë së automjetit"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Kokë jo standarde: shënuesi i shkarkimit të kartës nga VU"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Asnjë e dhënë: ky shënues tregon se karta u shkarkua përmes njësisë së automjetit."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Jo standard: skedari fillon me shënuesin e shkarkimit të kartës të njësisë së automjetit (76 06) në vend të skedarit të parë të kartës. Të dhënat e kartës janë të paprekura, por disa programe mund të mos e hapin këtë skedar."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Asnjë regjistrim: të gjitha vendet përmbajnë vlerën bosh që përcakton rregullorja (nuk u regjistrua asgjë)."

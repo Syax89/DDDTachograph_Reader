@@ -2546,14 +2546,15 @@ msgstr "Deireadh íoslódáil an bhraiteora"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Gan taifid: tá an t-eagar seo folamh agus níl ann ach a cheanntásc."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Gan taifid: tá gach sliotán sa chomhad seo bán (níor scríobhadh riamh)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Gan sonraí: ní dhéanann an chuid seo ach deireadh íoslódáil an bhraiteora a mharcáil."
 
-msgid "Card download through a vehicle unit"
-msgstr "Íoslódáil cárta trí aonad feithicle"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Ceanntásc neamhchaighdeánach: marcóir íoslódála cárta an aonaid feithicle"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Gan sonraí: léiríonn an marcóir seo gur íoslódáladh an cárta trí aonad feithicle."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Neamhchaighdeánach: tosaíonn an comhad le marcóir íoslódála cárta an aonaid feithicle (76 06) in ionad chéad chomhad an chárta. Tá sonraí an chárta slán, ach b'fhéidir nach n-osclóidh roinnt ríomhchlár an comhad seo."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Gan taifid: tá an luach folamh a shainíonn an rialachán i ngach sliotán (níor taifeadadh aon rud)."

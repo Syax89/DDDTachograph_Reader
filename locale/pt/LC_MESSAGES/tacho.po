@@ -2546,14 +2546,15 @@ msgstr "Fim da descarga do sensor"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Sem registos: esta matriz está vazia e contém apenas o cabeçalho."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Sem registos: todas as posições deste ficheiro estão vazias (nunca escritas)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Sem dados: esta parte apenas marca o fim da descarga do sensor."
 
-msgid "Card download through a vehicle unit"
-msgstr "Descarga do cartão através de uma unidade do veículo"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Cabeçalho não normalizado: marcador de descarga de cartão da UV"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Sem dados: este marcador indica que o cartão foi descarregado através de uma unidade do veículo."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Não normalizado: o ficheiro começa com o marcador de descarga de cartão da unidade do veículo (76 06) em vez do primeiro ficheiro do cartão. Os dados do cartão estão intactos, mas alguns programas podem não abrir este ficheiro."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Sem registos: todas as posições contêm o valor vazio definido pelo regulamento (nada foi registado)."

@@ -2546,14 +2546,15 @@ msgstr "Канец выгрузкі датчыка"
 msgid "No records: this array is empty and holds only its header."
 msgstr "Няма запісаў: гэты масіў пусты і змяшчае толькі загаловак."
 
-msgid "No records: every slot of this file is blank (never written)."
-msgstr "Няма запісаў: усе ячэйкі гэтага файла пустыя (ніколі не запісваліся)."
 
 msgid "No data: this part only marks the end of the sensor download."
 msgstr "Няма даных: гэтая частка толькі адзначае канец выгрузкі датчыка."
 
-msgid "Card download through a vehicle unit"
-msgstr "Выгрузка карткі праз бартавую прыладу"
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Нестандартны загаловак: маркер выгрузкі карткі бартавой прылады"
 
-msgid "No data: this marker says the card was downloaded through a vehicle unit."
-msgstr "Няма даных: гэты маркер азначае, што картка выгружана праз бартавую прыладу."
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Нестандартны файл: ён пачынаецца з маркера выгрузкі карткі бартавой прылады (76 06) замест першага файла карткі. Даныя карткі цэлыя, але некаторыя праграмы могуць не адкрыць гэты файл."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Няма запісаў: усе ячэйкі змяшчаюць пустое значэнне, вызначанае рэгламентам (нічога не запісана)."
