@@ -101,6 +101,7 @@
   hold a few hundred at most) and a card file over 1 MB (real cards stay under
   200 kB) are refused up front as malformed (`too_many_sections` /
   `file_too_large`) instead of being walked for tens of seconds.
+
 ### Maintenance
 
 - `pytest tests/` now generates the synthetic mock downloads before collection
