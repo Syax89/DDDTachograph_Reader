@@ -580,11 +580,16 @@ def _widest_node(app):
 
 
 def test_a_node_wider_than_the_pane_is_reached_by_scrolling_not_cut(explorer):
-    """The G2.2 card has node names no fixed pane width fits (33 of 34
-    languages overflow it): the column is as wide as the widest label and a
-    horizontal scrollbar reaches the end of it."""
+    """A node name no fixed pane width fits (a long label in a long-worded
+    language): the column is as wide as the widest label and a horizontal
+    scrollbar reaches the end of it."""
     explorer.geometry(MINIMUM_SIZE)
     _open_mock(explorer, "mock_g22_card.ddd")
+    first = explorer.tree.get_children("")[0]
+    explorer.tree.insert(first, "end", text="Τοποθεσία κάρτας και επαλήθευση "
+                         "για ημερήσια περίοδο εργασίας · Driver Card Application "
+                         "Identification V 2")
+    explorer._fit_tree_column()
     explorer.update()
     explorer.update()
     assert int(explorer.tree.column("#0", "width")) >= _widest_node(explorer)

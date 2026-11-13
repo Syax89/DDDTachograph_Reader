@@ -289,7 +289,11 @@ def test_selecting_a_unit_shows_its_records_and_its_bytes(explorer, built):
     from app import gui
     _open(explorer, built["card"])
     tree = explorer.tree
-    node = next(i for i in _nodes(tree) if tree.item(i, "text").endswith("0x0520"))
+    node = next(i for i in _nodes(tree)
+                if (explorer._payloads.get(i) or ("",))[0] == "__unit__"
+                and explorer._payloads[i][1].tag == "EF 0x0520"
+                and explorer._payloads[i][1].kind == "ef")
+    assert tree.item(node, "text") == "Identification"          # the name only
     tree.selection_set(node)
     explorer._on_tree_select_impl(None)
     explorer.update()

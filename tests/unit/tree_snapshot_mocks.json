@@ -50,103 +50,103 @@
 ],
 [
 2,
-"EF ICC  ·  0x0002",
+"EF ICC",
 "",
 []
 ],
 [
 2,
-"EF IC  ·  0x0005",
+"EF IC",
 "",
 []
 ],
 [
 2,
-"Identification  ·  0x0520",
+"Identification",
 "",
 []
 ],
 [
 2,
-"Driving Licence Info  ·  0x0521",
+"Driving Licence Info",
 "",
 []
 ],
 [
 2,
-"Application Identification  ·  0x0501",
+"Application Identification",
 "",
 []
 ],
 [
 2,
-"Driver Activity Data  ·  0x0504",
+"Driver Activity Data",
 "",
 []
 ],
 [
 2,
-"Vehicles Used  ·  0x0505",
+"Vehicles Used",
 "",
 []
 ],
 [
 2,
-"Places  ·  0x0506",
+"Places",
 "",
 []
 ],
 [
 2,
-"Current Usage  ·  0x0507",
+"Current Usage",
 "",
 []
 ],
 [
 2,
-"Control Activity Data  ·  0x0508",
+"Control Activity Data",
 "",
 []
 ],
 [
 2,
-"Controller Activity Data  ·  0x050C",
+"Controller Activity Data",
 "",
 []
 ],
 [
 2,
-"Card Download  ·  0x050E",
+"Card Download",
 "",
 []
 ],
 [
 2,
-"Specific Conditions  ·  0x0522",
+"Specific Conditions",
 "",
 []
 ],
 [
 2,
-"Events Data  ·  0x0502",
+"Events Data",
 "",
 []
 ],
 [
 2,
-"Faults Data  ·  0x0503",
+"Faults Data",
 "",
 []
 ],
 [
 2,
-"Signature  ·  199 B",
+"Signature",
 "",
 []
 ],
 [
 2,
-"Signature  ·  199 B",
+"Signature",
 "",
 []
 ],
@@ -300,7 +300,7 @@
 ],
 [
 2,
-"Card ICC Identification  ·  0x0101",
+"Card ICC Identification",
 "",
 []
 ],
@@ -312,103 +312,103 @@
 ],
 [
 2,
-"Card Identification  ·  0x0102",
+"Card Identification",
 "",
 []
 ],
 [
 2,
-"Driver Card Holder Identification  ·  0x0201",
+"Driver Card Holder Identification",
 "",
 []
 ],
 [
 2,
-"Driver Activity Data  ·  0x0504",
+"Driver Activity Data",
 "",
 []
 ],
 [
 2,
-"Vehicles Used  ·  0x0505",
+"Vehicles Used",
 "",
 []
 ],
 [
 2,
-"Vehicle Units Used  ·  0x0523",
+"Vehicle Units Used",
 "",
 []
 ],
 [
 2,
-"GNSS Places  ·  0x0524",
+"GNSS Places",
 "",
 []
 ],
 [
 2,
-"Places  ·  0x0506",
+"Places",
 "",
 []
 ],
 [
 2,
-"Controller Activity Data  ·  0x050C",
+"Controller Activity Data",
 "",
 []
 ],
 [
 2,
-"Specific Conditions  ·  0x0522",
+"Specific Conditions",
 "",
 []
 ],
 [
 2,
-"Events Data  ·  0x0502",
+"Events Data",
 "",
 []
 ],
 [
 2,
-"Faults Data  ·  0x0503",
+"Faults Data",
 "",
 []
 ],
 [
 2,
-"Signature  ·  205 B",
+"Signature",
 "",
 []
 ],
 [
 2,
-"Signature  ·  205 B",
+"Signature",
 "",
 []
 ],
 [
 2,
-"Company Holder Data  ·  0x2020",
+"Company Holder Data",
 "",
 []
 ],
 [
 2,
-"Card Issuer Identification  ·  0x0100",
+"Card Issuer Identification",
 "",
 []
 ],
 [
 2,
-"Control Activity Data  ·  0x0508",
+"Control Activity Data",
 "",
 []
 ],
 [
 2,
-"Card Download  ·  0x050E",
+"Card Download",
 "",
 []
 ],
@@ -488,19 +488,19 @@
 ],
 [
 1,
-"Overview  ·  0x21",
+"Overview",
 "",
 []
 ],
 [
 2,
-"Record type 0x2 B  ·  403",
+"Record type 0x2 B",
 "",
 []
 ],
 [
 1,
-"Padding  ·  1 B",
+"Padding",
 "",
 []
 ],
@@ -568,7 +568,7 @@
 ],
 [
 2,
-"Card ICC Identification  ·  0x0101",
+"Card ICC Identification",
 "",
 []
 ],
@@ -580,121 +580,121 @@
 ],
 [
 2,
-"Card Identification  ·  0x0102",
+"Card Identification",
 "",
 []
 ],
 [
 2,
-"Driver Card Holder Identification  ·  0x0201",
+"Driver Card Holder Identification",
 "",
 []
 ],
 [
 2,
-"Driver Activity Data  ·  0x0504",
+"Driver Activity Data",
 "",
 []
 ],
 [
 2,
-"Application Identification V2  ·  0x0525",
+"Application Identification V2",
 "",
 []
 ],
 [
 2,
-"Places Authentication  ·  0x0526",
+"Places Authentication",
 "",
 []
 ],
 [
 2,
-"GNSS Places Authentication  ·  0x0527",
+"GNSS Places Authentication",
 "",
 []
 ],
 [
 2,
-"Border Crossings  ·  0x0528",
+"Border Crossings",
 "",
 []
 ],
 [
 2,
-"Load Unload Operations  ·  0x0529",
+"Load Unload Operations",
 "",
 []
 ],
 [
 2,
-"Load Type Entries  ·  0x0530",
+"Load Type Entries",
 "",
 []
 ],
 [
 2,
-"Vehicles Used  ·  0x0505",
+"Vehicles Used",
 "",
 []
 ],
 [
 2,
-"Vehicle Units Used  ·  0x0523",
+"Vehicle Units Used",
 "",
 []
 ],
 [
 2,
-"GNSS Places  ·  0x0524",
+"GNSS Places",
 "",
 []
 ],
 [
 2,
-"Places  ·  0x0506",
+"Places",
 "",
 []
 ],
 [
 2,
-"Controller Activity Data  ·  0x050C",
+"Controller Activity Data",
 "",
 []
 ],
 [
 2,
-"Events Data  ·  0x0502",
+"Events Data",
 "",
 []
 ],
 [
 2,
-"Faults Data  ·  0x0503",
+"Faults Data",
 "",
 []
 ],
 [
 2,
-"Signature  ·  205 B",
+"Signature",
 "",
 []
 ],
 [
 2,
-"Signature  ·  205 B",
+"Signature",
 "",
 []
 ],
 [
 2,
-"Company Holder Data  ·  0x2020",
+"Company Holder Data",
 "",
 []
 ],
 [
 2,
-"Card Issuer Identification  ·  0x0100",
+"Card Issuer Identification",
 "",
 []
 ],
@@ -774,25 +774,25 @@
 ],
 [
 1,
-"Overview  ·  0x31",
+"Overview",
 "",
 []
 ],
 [
 2,
-"Record type 0x35  ·  1317",
+"Record type 0x35",
 "",
 []
 ],
 [
 2,
-"Card slots  ·  0",
+"Card slots",
 "",
 []
 ],
 [
 1,
-"Unrecognised bytes  ·  93 B",
+"Unrecognised bytes",
 "icon6",
 []
 ],

@@ -26,12 +26,6 @@ from core.utils.activity_stats import compute_activity_totals, recorded_until_se
 _PUMP_EVERY = 200
 
 
-def _size_text(length):
-    if length >= 10 * 1024:
-        return f"{length / 1024:.1f} kB"
-    return f"{length} B"
-
-
 def _signature_text(verdict):
     if verdict is True:
         return _("Signature verified")
@@ -45,12 +39,6 @@ def _signature_words(state):
             "not valid": _("Signature not valid"),
             "not checked": _("Signature not checked"),
             "not signed": _("Not signed")}.get(state, state)
-
-
-def _records_count(value):
-    if isinstance(value, (list, tuple, set)):
-        return len(value)
-    return 1
 
 
 def _flat(record):
@@ -310,26 +298,13 @@ class StructureMixin:
         return root
 
     def _unit_text(self, unit):
-        """Tree text: the name, then what tells two siblings apart.
+        """Tree text: the part's name only (an Activities section keeps its day).
 
-        A section or EF reads ``Activities 07/07/2025 · TREP 0x32``, an array
-        ``VU Activity Daily Record · 90 × 2 B``, a signature or a gap its size.
-        Offsets and lengths are in the table header of every unit.
+        Identifiers, counts, offsets and sizes are in the table of the part,
+        not in the tree.
         """
         title = ui_text.label(unit.title)
-        if unit.kind == "array":
-            count = getattr(unit, "count", None)
-            return f"{title}  \u00b7  {count}" if count is not None else title
-        if unit.detail:
-            title = f"{title} {unit.detail}"
-        if unit.kind == "group":
-            return title
-        if unit.kind in ("signature", "gap"):
-            return f"{title}  \u00b7  {_size_text(unit.length)}"
-        # The identifier without its kind ("0x0504", "0x32"): the kind is the
-        # level of the tree, and the full tag is in the table header.
-        code = unit.tag.rsplit(" ", 1)[-1] if unit.tag else ""
-        return f"{title}  \u00b7  {code}" if code else title
+        return f"{title} {unit.detail}" if unit.detail and unit.kind == "section" else title
 
     @staticmethod
     def _unit_icon_name(unit):
@@ -356,11 +331,9 @@ class StructureMixin:
         if unit.kind in ("section", "ef") and unit.decoder is not None:
             groups = unit.content()
             if len(groups) > 1:
-                for key, value in groups.items():
+                for key in groups:
                     child = self.tree.insert(
-                        iid, tk.END,
-                        text=f"{ui_text.label(content_title(key))}  ·  "
-                             f"{_records_count(value)}")
+                        iid, tk.END, text=ui_text.label(content_title(key)))
                     self._payloads[child] = ("__unit__", unit, key)
         for child in unit.children:
             self._add_unit(iid, child)
@@ -392,7 +365,7 @@ class StructureMixin:
                 if isinstance(day, dict) and recorded_until_seconds(day) is not None}
         one_driver = not ((getattr(self, "_opened_data", None) or {})
                           .get("metadata") or {}).get("is_vu")
-        title = ui_text.label(unit.title) + (f" {unit.detail}" if unit.detail else "")
+        title = self._unit_text(unit)
         meta = self._unit_meta(unit)
         byte_view = self._unit_bytes(unit)
         if key is None and unit.children and all(c.kind == "array" for c in unit.children):
