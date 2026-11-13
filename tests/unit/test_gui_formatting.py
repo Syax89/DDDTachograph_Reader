@@ -11,7 +11,8 @@ from app.gui import DayDetailWindow, TachoExplorer, _changes_for_slot, _columns_
 
 
 def test_gui_scalar_formatting_matches_existing_display_output():
-    assert fmt_val("2026-06-01T10:30:00+00:00") == "2026-06-01 10:30Z"
+    # Table dates read dd/mm/yyyy like the day tables, with the UTC zone spelled out.
+    assert fmt_val("2026-06-01T10:30:00+00:00") == "01/06/2026 10:30 UTC"
     assert fmt_val("I", key="nation") == "Italy"
     assert fmt_val(0x21, key="trep") == "33  (TREP 21)"
     assert fmt_val({"card_number": ""}) == "—"

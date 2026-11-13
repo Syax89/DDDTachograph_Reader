@@ -2413,3 +2413,9 @@ msgstr "Fișier GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "Fișier KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Coloane tehnice"
+
+msgid "Record details"
+msgstr "Detaliile înregistrării"

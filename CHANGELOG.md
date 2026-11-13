@@ -1,3 +1,23 @@
+## [Unreleased]
+
+### Changed
+
+- **Record tables are easier to read.**
+  - Technical columns — raw values (`*_raw`, `*_hex`) and codes that a
+    description already spells out (`event_type_code` beside the description,
+    `type_code` beside the entry type, the numeric calibration purpose) — are
+    hidden by default behind a *Technical columns* switch in the table bar.
+  - Codes read as words: the event record purpose ("Longest event for one of
+    the last 10 days of occurrence") and the card slot (driver / co-driver).
+  - One date format everywhere: `07/07/2025 03:49 UTC`, or the date alone for
+    expiry and due dates; sorting stays chronological.
+  - Columns are sized to their text (measured in the table font) instead of
+    being squeezed into the window, so descriptions, dates and card numbers are
+    no longer cut short; a wide table scrolls sideways.
+  - Double-click (or Enter) on a row opens every field of the record,
+    technical ones included.
+  - Exports and the JSON are unchanged.
+
 ## [2.10.0] - 2026-11-13
 
 <!-- release-notes:start -->

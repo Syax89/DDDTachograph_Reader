@@ -83,9 +83,9 @@ def test_the_confidence_value_is_still_in_the_result():
     assert data["sensor_info"]["confidence"] == "low"
 
 
-@pytest.mark.parametrize("key, value", [("last_date", "2023-07-27"),
-                                        ("param_distance_km", 120)])
-def test_other_sensor_rows_are_unaffected(key, value):
+@pytest.mark.parametrize("key, value, shown", [("last_date", "2023-07-27", "27/07/2023"),
+                                               ("param_distance_km", 120, "120")])
+def test_other_sensor_rows_are_unaffected(key, value, shown):
     """A single skipped key must not shift or drop its neighbours."""
     data = _result()
     data["sensor_info"][key] = value
@@ -93,4 +93,4 @@ def test_other_sensor_rows_are_unaffected(key, value):
     _headers, rows = gui._kv_rows(data["sensor_info"])
     assert dict((row[0], row[1]) for row in rows)["Param Distance KM" if
                                                    key == "param_distance_km"
-                                                   else "Last Date"] == str(value)
+                                                   else "Last Date"] == shown

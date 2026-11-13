@@ -2413,3 +2413,9 @@ msgstr "Μορφότυπο GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "Μορφότυπο KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Τεχνικές στήλες"
+
+msgid "Record details"
+msgstr "Λεπτομέρειες εγγραφής"

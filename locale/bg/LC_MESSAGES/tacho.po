@@ -2413,3 +2413,9 @@ msgstr "Формат GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "Формат KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Технически колони"
+
+msgid "Record details"
+msgstr "Подробности за записа"
