@@ -86,15 +86,14 @@ from urllib.parse import urlparse  # noqa: E402
 from app.engine import TachoParser  # noqa: E402
 from core.utils.encoding import BytesEncoder  # noqa: E402
 
-from core.utils.version import APP_NAME, __version__  # noqa: E402
+from core.utils.version import __version__  # noqa: E402
 from core.utils import load_trace  # noqa: E402
 from core.utils import report_format  # noqa: E402
 from core.utils.report_format import (  # noqa: E402
     NATION_COLS, VERDICT_CORRUPT, VERDICT_PARTIAL, VERDICT_VERIFIED,
-    fmt_known_structure, fmt_scalar, integrity_verdict, visible_columns)
+    fmt_known_structure, fmt_scalar, integrity_verdict)
 from core.utils.activity_stats import (  # noqa: E402
-    DAILY_DRIVE_LIMIT_MIN, QUALIFYING_BREAK_MIN,
-    RULE_CONTINUOUS_DRIVING, RULE_DAILY_DRIVING, evaluate_driving_rules,
+    DAILY_DRIVE_LIMIT_MIN, evaluate_driving_rules,
     recorded_until_seconds)
 from core.decoders.common import nation_full_name  # noqa: E402
 from app.i18n import (  # noqa: E402
@@ -117,6 +116,37 @@ from app.gui_day_detail import (  # noqa: E402,F401  (moved; re-exported)
     _format_duration,
     _hhmm_to_min,
     _parse_iso,
+)
+from app.gui_text import (  # noqa: E402,F401  (moved; re-exported)
+    CARD_ENVELOPE_NOTICE,
+    CARD_HEADER_NOTICE,
+    DONATION_URL,
+    HIDDEN_KEYS,
+    LEADING_KEYS,
+    PROJECT_URL,
+    TRAILING_KEYS,
+    _bool_text,
+    _columns_for,
+    _drop_empty_values,
+    _envelope_notice,
+    _header_notice,
+    _integrity_bullets,
+    _signature_verdict_clause,
+    _summary_block,
+    about_text,
+    help_links,
+)
+from app.gui_data import (  # noqa: E402,F401  (moved; re-exported)
+    _activity_days,
+    _attach_day_distance,
+    _calibration_days_left,
+    _compute_activity_totals,
+    _driver_names_by_date,
+    _driving_rule_explanation,
+    _fmt_duration_minutes,
+    _utc_speed_block,
+    detailed_speed_blocks_by_day,
+    detailed_speed_by_day,
 )
 from app.gui_speed_chart import (  # noqa: E402,F401  (moved; re-exported)
     DetailedSpeedChart,
@@ -369,47 +399,6 @@ _BADGE_WORDS = {
 }
 
 
-# Internal keys to hide from columns (service noise). Keys starting with "_"
-# (e.g. "_key" dedup markers) are always hidden — see _columns_for.
-# ``record_type`` is the file's internal record code: of no use on screen, it is
-# kept for the exports, where it sits next to the section title.
-HIDDEN_KEYS = {"source", "raw_tail_hex", "name", "size", "confidence", "record_type",
-               # Same conformance bookkeeping report_format.HIDDEN_KEYS hides:
-               # the verdict lives in the JSON, the table keeps its columns.
-               "normative", "spec_reference", "conformance_reason",
-               "low_confidence_fields", "end_semantics",
-               "manufacturer_error_code",
-               "event_fault_version", "type_status", "manufacturer_status",
-               # VuCardIWRecord tail: previous vehicle, numeric manual-input
-               # flag and completeness bookkeeping stay in the JSON; the table
-               # layout is the owner's and did not change (a visible column
-               # would also need a translated label in all 33 catalogs).
-               "previous_vehicle", "manual_input_flag",
-               "manual_input_flag_meaning", "record_bytes", "record_complete",
-               "missing_bytes", "raw_tail_bytes",
-               # CardSlotsStatus complete typing (numeric nibble + assignment
-               # status): JSON only, the table keeps its existing columns.
-               "driver_slot_code", "codriver_slot_code",
-               "driver_slot_type", "codriver_slot_type",
-               "driver_slot_status", "codriver_slot_status",
-               # EntryTypeDailyWorkPeriod assignment status (assigned / not
-               # assigned for generation 1 / unknown above the shared six).
-               "entry_type_status", "calibration_variant_source",
-               "digital_map_version_raw",
-               # Technical-data detail: ExtendedSerialNumber / seal subfields,
-               # the CardStructureVersion halves, the calibration variant and
-               # the unresolved-encoding statuses stay in the JSON export only.
-               "card_serial", "card_structure_version_parts",
-               "equipment_type_status",
-               "month_year_status", "seal_identifier", "calibration_variant",
-               "digital_map_version_status", "consent_status", "consent_raw"}
-# Descriptive columns pushed to table start.
-# Bookkeeping of the all-TREP decoding pass (status/provenance/diagnostics):
-# the shared set, so the window hides exactly what the exports hide.
-HIDDEN_KEYS |= set(report_format.BOOKKEEPING_KEYS)
-LEADING_KEYS = ["description", "purpose", "control_type_label", "calibration_purpose_label"]
-# Technical columns pushed to table end.
-TRAILING_KEYS: list[str] = []
 
 #: Whether the driving-time infractions are *shown*. **False by default.**
 #:
@@ -472,11 +461,6 @@ def _fmt_dict(d):
 #: follows the "translate file contents" preference instead.
 
 
-def _bool_text(value):
-    """A boolean as the word the UI shows: a cell, so the tick decides."""
-    if ui_text.translate_data_enabled():
-        return _("Yes") if value else _("No")
-    return "Yes" if value else "No"
 
 
 def fmt_val(v, key=None):
@@ -515,22 +499,6 @@ def fmt_val(v, key=None):
                       label_translator=ui_text.data_text)
 
 
-def _columns_for(records, transformer):
-    """Derive column order from the union of record keys."""
-    if transformer:
-        sample = transformer(records[0])
-        if isinstance(sample, list):
-            sample = sample[0]
-        return list(sample.keys())
-    # Reversed leading keys preserve this view's historical front-insertion
-    # order while the shared helper performs visibility filtering.
-    return visible_columns(
-        records,
-        hidden_keys=HIDDEN_KEYS,
-        leading_keys=tuple(reversed(LEADING_KEYS)),
-        trailing_keys=TRAILING_KEYS,
-        value_column_for_non_dict=True,
-    )
 
 
 def _rows_for(records, transformer):
@@ -618,322 +586,36 @@ def _kv_rows(d):
     return ([_("Field"), _("Value")], rows)
 
 
-def _summary_block(rows):
-    """Return the first block of a ``(label, value, is_header)`` summary page.
-
-    ``_build_driver_summary`` and ``_build_vehicle_summary`` each build a whole
-    panel of stacked blocks separated by blank ``("", "", True)`` rows. The
-    file overview reuses one block of each (the identity, the vehicle) by
-    calling the builder and taking its leading block, so the two pages can
-    never disagree about the same facts.
-    """
-    block = []
-    for index, row in enumerate(rows):
-        if index and row[2]:
-            break  # a separator row or the next block header ends the block
-        block.append(row)
-    return block
-
-
-def _drop_empty_values(rows):
-    """Drop the ``N/A`` rows of a borrowed block, keeping headers.
-
-    The section builders emit a handful of rows unconditionally, with the
-    model's ``"N/A"`` sentinel (``core/registry/models.py``) as the value. On a
-    section page that reads as "we looked and found nothing"; in a one-page
-    overview it is noise, so an unknown fact is simply not listed.
-    """
-    return [row for row in rows
-            if row[2] or str(row[1]).strip() not in ("", "N/A")]
-
-
-def _activity_days(activities):
-    """Return one file's activity days as ``[(sort_key, display_text), ...]``.
-
-    The sort key is the ISO form :func:`_activity_to_iso` derives, because the
-    decoders emit ``dd/mm/yyyy`` (which sorts lexicographically wrong); the
-    display text is the day exactly as the file recorded it, like the Date
-    column of the Daily-Activities dashboard. A day recorded twice (two
-    download sections, or both card slots) is counted once.
-    """
-    days = {}
-    for record in activities if isinstance(activities, list) else []:
-        if not isinstance(record, dict):
-            continue
-        raw = record.get("date")
-        if raw in (None, ""):
-            continue
-        days.setdefault(_activity_to_iso(str(raw)), str(raw))
-    return sorted(days.items())
-
-
-def _utc_speed_block(block):
-    """Return a block's UTC start and raw samples, or ``None`` if invalid."""
-    if not isinstance(block, dict):
-        return None
-    timestamp = block.get("timestamp") or block.get("begin")
-    samples = block.get("_chart_speeds_kmh", block.get("speeds_kmh"))
-    if not isinstance(timestamp, str) or not isinstance(samples, list):
-        return None
-    try:
-        start = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    return (start.replace(tzinfo=timezone.utc) if start.tzinfo is None
-            else start.astimezone(timezone.utc)), samples
 
 
 
 
-def _attach_day_distance(days, is_vu):
-    """Store each day's distance as ``_day_km`` and return ``{id(day): km}``.
-
-    *days* must be in chronological order. A VU activity block carries an
-    odometer reading, so its distance is the delta from the previous day. A
-    driver-card activity record carries no odometer at all — only
-    ActivityDayDistance (Annex 1B §2.24), the kilometres driven that day — so
-    the day's distance is used as-is. Differencing it against the previous day,
-    as the card route used to, produced a number with no meaning (and left the
-    day at 0 km in the tree, which only ever looked at VU days).
-    """
-    distances = {}
-    prev_odo = 0
-    for day in days:
-        odo = day.get("odometer_km", 0) or 0
-        km = 0
-        if is_vu and prev_odo and odo and odo > prev_odo:
-            km = odo - prev_odo
-        if not km:
-            km = int(day.get("day_distance_km") or 0)
-        if odo:
-            prev_odo = odo
-        day["_day_km"] = km
-        distances[id(day)] = km
-    return distances
 
 
 
 
-def _compute_activity_totals(changes, recorded_until=None):
-    """Return dict {ACTIVITY: total_minutes} from a list of activity changes.
-
-    Changes are grouped per card slot (driver) first, so crew days (two
-    drivers recording simultaneously in slots ``First``/``Second``) keep
-    their timelines independent.
-
-    Drive/Work durations are summed across slots (each driver accumulates
-    independently).  Rest/Available durations are kept at the **maximum**
-    across slots because they share the same 24h day and cannot exceed it.
-    """
-    from core.utils.activity_stats import compute_activity_totals as _shared
-    return _shared(changes, recorded_until)
 
 
 
 
-def _driver_names_by_date(activity_list, iw_records, slot_name):
-    """Return ``{date_iso: {driver name}}`` for one VU slot view.
-
-    Each card insertion/withdrawal record (VuCardIWRecord) is walked day by
-    day and a driver is attached to a day when that day's ``card_inserted``
-    activity changes put the card in *slot_name*. Only days that carry such a
-    change can ever match, so the walk is clipped to the range of those days:
-    the decoders accept a withdrawal time up to 2100, and one corrupt record
-    used to cost ~36 000 iterations (each re-scanning every change) on the Tk
-    thread, freezing the GUI. For sane data the result is unchanged.
-    """
-    # (date_iso, minute_of_day) -> slot, from the unfiltered activity changes
-    slot_by_minute: dict[tuple[str, int], str] = {}
-    for day_data in activity_list:
-        if not isinstance(day_data, dict):
-            continue
-        date_iso = _activity_to_iso(str(day_data.get("date", "")))
-        for ch in day_data.get("changes") or []:
-            if not isinstance(ch, dict) or not ch.get("card_inserted"):
-                continue
-            t = ch.get("time", "")
-            if isinstance(t, str) and ":" in t:
-                try:
-                    h, m = t.split(":")[:2]
-                    minute = int(h) * 60 + int(m)
-                except ValueError:
-                    continue
-                slot = str(ch.get("slot") or "")
-                if slot:
-                    slot_by_minute[(date_iso, minute)] = slot
-    # First slot seen per day: the "any time on this day" fallback.
-    first_slot_by_day: dict[str, str] = {}
-    for (d, _m), s in slot_by_minute.items():
-        first_slot_by_day.setdefault(d, s)
-    known_days = []
-    for d in first_slot_by_day:
-        try:
-            known_days.append(datetime.strptime(d, "%Y-%m-%d").date())
-        except ValueError:
-            pass
-    iw_by_date: dict[str, set] = {}
-    if not known_days:
-        return iw_by_date
-    first_day, last_day = min(known_days), max(known_days)
-
-    for iw in iw_records:
-        if not isinstance(iw, dict):
-            continue
-        name = f"{iw.get('holder_first_names','')} {iw.get('holder_surname','')}".strip()
-        if not name or name == "N/A N/A":
-            continue
-        ins_str = iw.get("insertion_time", "")
-        ins_dt = None
-        for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
-            try:
-                ins_dt = datetime.strptime(ins_str[:19], fmt)
-            except (ValueError, IndexError, TypeError):
-                pass
-        if ins_dt is None:
-            continue
-        wit_str = iw.get("withdrawal_time", "")
-        wit_dt = None
-        if isinstance(wit_str, str) and wit_str:
-            for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
-                try:
-                    wit_dt = datetime.strptime(wit_str[:19], fmt)
-                except (ValueError, IndexError):
-                    pass
-        if wit_dt is None:
-            wit_dt = ins_dt
-        current = max(ins_dt.date(), first_day)
-        end = min(wit_dt.date(), last_day)
-        while current <= end:
-            day_iso = current.isoformat()
-            iw_slot = ""
-            # Look for a card_inserted event within 2 minutes on the insertion day
-            if current == ins_dt.date():
-                ins_minute = ins_dt.hour * 60 + ins_dt.minute
-                for offset in range(-2, 3):
-                    check_min = ins_minute + offset
-                    if 0 <= check_min < 1440:
-                        iw_slot = slot_by_minute.get((day_iso, check_min), "")
-                        if iw_slot:
-                            break
-            if not iw_slot:
-                # Fallback: use card_inserted from any time on this day
-                iw_slot = first_slot_by_day.get(day_iso, "")
-            if iw_slot in ("First", "Second") and iw_slot == slot_name:
-                iw_by_date.setdefault(day_iso, set()).add(name)
-            current += timedelta(days=1)
-    return iw_by_date
-
-
-def _calibration_days_left(next_date, now=None):
-    """Whole days from ``now`` to the next calibration date, or ``None``.
-
-    Accepts a ``datetime`` or the two string shapes the decoders produce: ISO
-    8601 (G2, ``2025-01-21T09:04:31+00:00``, sometimes with ``Z`` or without
-    an offset) and the G1 ``DD/MM/YYYY[ HH:MM]`` form. A value without a time
-    zone is read as UTC: comparing a naive date with an aware ``now`` used to
-    raise ``TypeError``, which the caller swallowed, so the "calibration
-    expired / due soon" flag silently disappeared.
-    """
-    from datetime import datetime, timezone
-    if now is None:
-        now = datetime.now(timezone.utc)
-    nd = None
-    if isinstance(next_date, datetime):
-        nd = next_date
-    elif isinstance(next_date, str) and next_date.strip():
-        text = next_date.strip()
-        try:
-            nd = datetime.fromisoformat(text.replace("Z", "+00:00"))
-        except ValueError:
-            try:
-                nd = datetime.strptime(text[:10], "%d/%m/%Y")
-            except ValueError:
-                return None
-    if nd is None:
-        return None
-    if nd.tzinfo is None:
-        nd = nd.replace(tzinfo=timezone.utc)
-    return (nd - now).days
-
-
-def _fmt_duration_minutes(mins):
-    """Render a minute count as 'Xh Ym'."""
-    return f"{mins // 60}h {mins % 60:02d}m"
-
-
-def _driving_rule_explanation(breaches):
-    """One tooltip line per broken driving-time rule, with the measured value.
-
-    The rules come from Regulation (EC) 561/2006 — art. 6(1) (daily driving)
-    and art. 7 (continuous driving) — see
-    :func:`core.utils.activity_stats.evaluate_driving_rules`. Each line states
-    what was measured and against which limit, in the same duration format the
-    Drive column uses, so the flag can be checked against the numbers on
-    screen instead of being taken on trust.
-    """
-    lines = []
-    for breach in breaches:
-        if breach.rule == RULE_DAILY_DRIVING:
-            lines.append(_("Daily driving {driven} \u2014 limit {limit}").format(
-                driven=_fmt_duration_minutes(breach.measured_min),
-                limit=_fmt_duration_minutes(breach.limit_min)))
-        elif breach.rule == RULE_CONTINUOUS_DRIVING:
-            lines.append(_("Continuous driving {driven} without a {pause} min "
-                           "break \u2014 limit {limit}").format(
-                driven=_fmt_duration_minutes(breach.measured_min),
-                pause=QUALIFYING_BREAK_MIN,
-                limit=_fmt_duration_minutes(breach.limit_min)))
-    return "\n".join(lines)
 
 
 
 
-def detailed_speed_by_day(data, on_progress=None):
-    """Return UTC detailed-speed samples grouped by ISO date.
-
-    *on_progress* is called once per speed block. The GUI passes its event-loop
-    pump there (see ``TachoExplorer._pump_render``): one block holds thousands
-    of one-second samples, so a file's worth of them is long enough to freeze
-    the busy bar if the loop is never given a turn.
-    """
-    grouped = {}
-    blocks = list(data.get("speed_blocks") or [])
-    for block in blocks:
-        if on_progress is not None:
-            on_progress()
-        decoded = _utc_speed_block(block)
-        if decoded is None:
-            continue
-        start, samples = decoded
-        for offset, speed in enumerate(samples):
-            if not isinstance(speed, int) or speed == 0xFF:
-                continue
-            moment = start + timedelta(seconds=offset)
-            day = moment.date().isoformat()
-            grouped.setdefault(day, {})[moment.hour * 3600 + moment.minute * 60 + moment.second] = speed
-    return {day: sorted(samples.items()) for day, samples in grouped.items()}
 
 
-def detailed_speed_blocks_by_day(blocks, on_progress=None):
-    """Group raw records by every UTC day for which they contain a sample.
 
-    *on_progress* behaves as in :func:`detailed_speed_by_day`.
-    """
-    grouped = {}
-    for block in blocks if isinstance(blocks, list) else []:
-        if on_progress is not None:
-            on_progress()
-        decoded = _utc_speed_block(block)
-        if decoded is None:
-            continue
-        start, samples = decoded
-        days = set()
-        for offset, speed in enumerate(samples):
-            if isinstance(speed, int) and speed != 0xFF:
-                days.add((start + timedelta(seconds=offset)).date().isoformat())
-        for day in days:
-            grouped.setdefault(day, []).append(block)
-    return grouped
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2012,109 +1694,16 @@ def _resource_path(rel):
     return os.path.join(base, rel)
 
 
-#: Informational bullet for a card image relayed through the vehicle unit. It is a
-#: NOTE, never a damage claim: the file is the standard card plus the transfer header
-#: the saving tool kept (SID 0x76 + TREP 06), which DDP_050 strips for the storage
-#: form. Other programs reject that form, so the customer is told what it is.
-CARD_ENVELOPE_NOTICE = _(
-    "Card image downloaded through the vehicle unit: the two leading bytes "
-    "are the transfer header (SID + TREP 06) kept by the tool that saved it, not the "
-    "standard storage form of a card file (DDP_050). Some other programs report such "
-    "a file as corrupt; this reader reports the card's own signature verdict "
-    "separately.")
 
 
-def _envelope_notice(data):
-    """The informational bullet for a stand-alone TREP 06 envelope, or None."""
-    meta = (data or {}).get("metadata") or {}
-    envelope = meta.get("envelope")
-    if not isinstance(envelope, dict):
-        return None
-    if meta.get("is_vu") is not False:
-        return None
-    return "\u2022 " + CARD_ENVELOPE_NOTICE
 
 
-#: Informational bullet for a card file whose opening record is not the record a
-#: standard download starts with (``metadata["header_form"]``). Like the envelope
-#: note it describes the file's FORM and hands the trust question to the count in
-#: the note itself: a file altered at its header may still carry every signed EF
-#: untouched, so the note must never read as a clean bill of health.
-CARD_HEADER_NOTICE = _(
-    "File header differs from a standard download: the first record is {tag}, "
-    "where a card download starts with the card's identification record "
-    "(0x0002 or 0x0005 for a G1 card, 0x0101 for a G2 card).")
 
 
-def _signature_verdict_clause(data):
-    """How many card-data signatures could not be verified, as one sentence.
-
-    Counts come from the verification report itself (``failed`` + ``skipped`` of
-    ``total``), so a file whose signatures all verified says "0 of N" instead of
-    borrowing a reassuring word, and one with no report at all says exactly that.
-    """
-    efv = (data or {}).get("ef_signature_verification") or {}
-    total = int(efv.get("total") or 0)
-    if not total:
-        return _("No EF signatures verified")
-    unverified = int(efv.get("failed") or 0) + int(efv.get("skipped") or 0)
-    return _("{unverified} of {total} signature(s) could not be verified").format(
-        unverified=unverified, total=total)
 
 
-def _header_notice(data):
-    """The informational bullet for a non-standard card header, or None."""
-    meta = (data or {}).get("metadata") or {}
-    header = meta.get("header_form")
-    if not isinstance(header, dict) or not header.get("first_record"):
-        return None
-    if meta.get("is_vu") is not False:
-        return None
-    return "\u2022 {} {}.".format(
-        CARD_HEADER_NOTICE.format(tag=header["first_record"]),
-        _signature_verdict_clause(data))
 
 
-def _integrity_bullets(data):
-    """``(bullets, notices)`` for *data* without a GUI instance.
-
-    *bullets* is what ``_check_integrity`` shows (real warnings plus the
-    informational envelope notice); *notices* is the subset that is a fact about
-    the file's form rather than a problem, so a caller can keep the banner honest.
-    """
-    meta = (data or {}).get("metadata") or {}
-    efv = (data or {}).get("ef_signature_verification") or {}
-    integrity = str(meta.get("integrity_check") or "")
-    warnings = []
-    failed = int(efv.get("failed") or 0)
-    skipped = int(efv.get("skipped") or 0)
-    if failed:
-        warnings.append(f"\u2022 EF data signatures: {failed} failed verification")
-    if skipped:
-        warnings.append(
-            f"\u2022 Card data signatures: {skipped} EF signature(s) not checked")
-    if (meta.get("is_vu") is not True and not failed and not skipped
-            and "Verified" not in integrity and integrity):
-        warnings.append(f"\u2022 Card integrity: {integrity}")
-    # Structure findings: the walk may have consumed every byte, so the reason is
-    # the section's array list — name it instead of blaming the walk.
-    findings = meta.get("vu_integrity") or []
-    schema_findings = [f for f in findings if f.get("status") == "schema_violation"]
-    if schema_findings:
-        details = "; ".join(
-            f"{f.get('trep', '?')}: {f.get('detail', '')}".strip()
-            for f in schema_findings)
-        warnings.append("\u2022 Section structure (schema violation): " + details)
-    truncated = [f for f in findings
-                 if f.get("status") in ("trailing_bytes", "array_truncated",
-                                        "card_download_incomplete")]
-    trep = meta.get("trep_report") or {}
-    if truncated or (not trep.get("complete_walk", True) and not schema_findings):
-        warnings.append("\u2022 The structural walk did not reach the end of file")
-    # Form notes, never problems: a card image relayed through the vehicle unit,
-    # and a card whose header is not the record a standard download opens with.
-    notices = [note for note in (_envelope_notice(data), _header_notice(data)) if note]
-    return warnings + notices, notices
 
 
 # ── Help: one list of addresses, one About text, two entry points ───────────
@@ -2125,44 +1714,11 @@ def _integrity_bullets(data):
 # the end of the toolbar. Both read the same data below: one list of addresses,
 # one About text, so the two entry points cannot drift apart.
 
-#: The project's public address.
-PROJECT_URL = "https://github.com/Syax89/DDDTachograph_Reader"
-
-#: The donation link the project already publishes (README.md).
-DONATION_URL = "https://buymeacoffee.com/syax89"
 
 
-def help_links():
-    """``(label, url)`` for every address the Help entries open.
-
-    The one source of both entry points: the macOS Help menu and the
-    Windows/Linux Help dialog render this list. The labels are msgids and are
-    translated at call time, so a language switch reaches them too.
-    """
-    return (
-        (_("DDD Reader on GitHub"), PROJECT_URL),
-        (_("Report an issue"), f"{PROJECT_URL}/issues"),
-        (_("Releases"), f"{PROJECT_URL}/releases"),
-        (_("Buy me a coffee"), DONATION_URL),
-    )
 
 
-def about_text():
-    """The About body: name, version, licence and credits.
 
-    Shown by the Help dialog and by the macOS About panel, which is the same
-    text: the application menu's "About" item calls the Tcl command published in
-    :meth:`TachoExplorer._install_macos_help_menu`.
-    """
-    return "\n".join((
-        _("{app} version {version}").format(app=APP_NAME, version=__version__),
-        _("An open-source reader for digital tachograph (.ddd) files: card and "
-          "vehicle-unit downloads, parsed, signature-checked and exportable."),
-        _("License: MIT"),
-        _("Credits: the field layouts and the cryptographic checks follow "
-          "Commission Regulation (EU) 2016/799 (Annex 1C), Regulation (EEC) "
-          "3821/85 (Annex 1B) and Regulations (EU) 2021/1228 and 2023/980."),
-    ))
 
 
 #: LaunchServices' URL opener. `/usr/bin/open` is part of macOS itself, so it is

@@ -1,7 +1,7 @@
 """The GUI's source modules, for tests that inspect the interface's code.
 
-``app/gui.py`` delegates the detailed-speed chart and the day-detail window to
-their own modules; a check over "every msgid / colour / icon / emoji the GUI
+``app/gui.py`` delegates the detailed-speed chart, the day-detail window, the
+data preparation and the panel text to their own modules; a check over "every msgid / colour / icon / emoji the GUI
 uses" must read all of them, or code moved out of gui.py would escape it.
 """
 from pathlib import Path
@@ -12,6 +12,8 @@ GUI_MODULES = (
     REPO_ROOT / "app" / "gui.py",
     REPO_ROOT / "app" / "gui_day_detail.py",
     REPO_ROOT / "app" / "gui_speed_chart.py",
+    REPO_ROOT / "app" / "gui_data.py",
+    REPO_ROOT / "app" / "gui_text.py",
 )
 
 
