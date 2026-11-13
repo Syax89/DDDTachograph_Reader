@@ -41,7 +41,7 @@ import tkinter as tk  # noqa: E402
 
 import app.gui as gui  # noqa: E402
 import app.i18n as i18n  # noqa: E402
-from tests.unit.gui_sources import gui_source  # noqa: E402
+from tests.unit.gui_sources import GUI_MODULES, gui_source  # noqa: E402
 from app import icons  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -311,9 +311,8 @@ def test_the_set_is_found_from_the_package_not_the_working_directory(monkeypatch
 
 # ── no emoji left in what the interface shows ─────────────────────────────
 
-@pytest.mark.parametrize("module", ["app/gui.py", "app/gui_day_detail.py",
-                                    "app/gui_speed_chart.py", "app/gui_data.py",
-                                    "app/gui_text.py", "app/cli.py"])
+@pytest.mark.parametrize("module", [str(p.relative_to(REPO_ROOT)) for p in GUI_MODULES]
+                         + ["app/cli.py"])
 def test_no_emoji_is_left_in_any_rendered_string(module):
     offenders = {}
     for text in _source_strings(REPO_ROOT / module):

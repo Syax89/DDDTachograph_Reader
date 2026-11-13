@@ -253,7 +253,7 @@ def test_activity_colour_maps_reference_the_activity_names():
     The two share a hex value today, so comparing values cannot tell
     "this is Drive" from "this is selected"; the assignment can.
     """
-    colours = _colours_dict_values(GUI_PATH, "ACTIVITY_COLORS")
+    colours = _colours_dict_values(REPO_ROOT / "app" / "gui_base.py", "ACTIVITY_COLORS")
     assert sorted(colours) == sorted(ACTIVITY_CONSTANTS)
     for code, value in colours.items():
         assert isinstance(value, ast.Name), (code, ast.dump(value))

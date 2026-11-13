@@ -6,7 +6,6 @@ glitch, and a horizontal scrollbar sat under tables that fitted. Section
 dividers were rows of 40 dash characters that stopped well short of the pane
 and looked like typed text rather than a rule.
 """
-import inspect
 
 import pytest
 
@@ -14,7 +13,6 @@ pytest.importorskip("tkinter")
 
 import tkinter as tk  # noqa: E402
 
-from app import gui  # noqa: E402
 from app.gui import DataTable  # noqa: E402
 
 
@@ -69,4 +67,5 @@ def test_the_scrollbar_follows_whether_a_column_runs_off_the_edge(table):
 
 def test_the_summary_dividers_are_not_rows_of_dash_characters():
     """A dash row was the old separator; the bands and spacers replaced it."""
-    assert '"\\u2500" * 40' not in inspect.getsource(gui.TachoExplorer)
+    from tests.unit.gui_sources import gui_source
+    assert '"\\u2500" * 40' not in gui_source()

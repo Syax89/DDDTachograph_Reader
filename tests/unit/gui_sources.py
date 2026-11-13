@@ -1,20 +1,16 @@
 """The GUI's source modules, for tests that inspect the interface's code.
 
-``app/gui.py`` delegates the detailed-speed chart, the day-detail window, the
-data preparation and the panel text to their own modules; a check over "every msgid / colour / icon / emoji the GUI
-uses" must read all of them, or code moved out of gui.py would escape it.
+``app/gui.py`` keeps only the main window class and the entry points; the rest
+of the interface lives in ``app/gui_*.py`` (foundation, window mixins, charts,
+day detail, data preparation, panel text). A check over "every msgid / colour /
+icon / emoji the GUI uses" must read all of them, or code moved out of gui.py
+would escape it.
 """
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-GUI_MODULES = (
-    REPO_ROOT / "app" / "gui.py",
-    REPO_ROOT / "app" / "gui_day_detail.py",
-    REPO_ROOT / "app" / "gui_speed_chart.py",
-    REPO_ROOT / "app" / "gui_data.py",
-    REPO_ROOT / "app" / "gui_text.py",
-)
+GUI_MODULES = tuple(sorted((REPO_ROOT / "app").glob("gui*.py")))
 
 
 def gui_source():
