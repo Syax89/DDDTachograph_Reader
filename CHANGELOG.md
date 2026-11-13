@@ -1,4 +1,21 @@
-## [Unreleased]
+## [2.11.0] - 2026-11-13
+
+<!-- release-notes:start -->
+**See the file as it is stored**
+- A new *File Structure* tree shows every part of the download in file order: the sections of a vehicle unit (one per day) and their records, or the elementary files of a driver card. Selecting a part shows what it holds in plain words; a *Bytes* switch shows the raw bytes.
+- Signatures explain themselves: verified or not, what that means, which data they cover, the algorithm and who signed. Only problems are marked in the tree.
+- Codes read as words: manufacturers (official JRC list), card and equipment types, countries, code pages, and the card chip's serial number and approval number.
+- Empty parts say why they are empty, and a card file with a non-standard vehicle-unit header is flagged, since other programs may not open it.
+
+**Easier tables**
+- Technical columns are hidden behind a switch, dates share one format, columns fit their text, and a double-click opens the whole record.
+
+**Fixes**
+- A driver-card day on which the card moved to the other slot no longer adds up to more than 24 hours.
+- The card chip identification (EF_ICC) is read at the right offsets.
+
+[Full changelog](https://github.com/Syax89/DDDTachograph_Reader/blob/v2.11.0/CHANGELOG.md).
+<!-- release-notes:end -->
 
 ### Added
 
@@ -12,8 +29,9 @@
     generation-2 applications, each with the signature that follows it;
   - a section or EF whose signature does not verify is marked in red;
     verified parts carry no mark (the verdict is in the table header);
-  - parts are named in words ("Activity changes · 90", "Card Insertion /
-    Withdrawal · 1"); the regulation's record name is in the table header;
+  - the tree carries names only ("Activities 07/07/2025", "Activity
+    changes", "Identification"); identifiers, sizes and the regulation's
+    record name are in the table header;
   - a section reads as a summary — the day, the odometer at midnight, who
     inserted a card and when, the activity totals, the places, the signature
     — with offsets, sizes and record types behind *Technical columns*; a card
@@ -72,6 +90,10 @@
   - Double-click (or Enter) on a row opens every field of the record,
     technical ones included.
   - Exports and the JSON are unchanged.
+
+### Maintenance
+
+- pytest requirement updated to 9.2.0 (Dependabot).
 
 ## [2.10.0] - 2026-11-13
 

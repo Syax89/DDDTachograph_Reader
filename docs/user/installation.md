@@ -128,7 +128,7 @@ python -m app.gui --version
 ```
 
 The help text should display the available options and example commands without
-errors, and `--version` should print the reader version (`TachoReader 2.10.0`).
+errors, and `--version` should print the reader version (`TachoReader 2.11.0`).
 
 For the released builds, verify the installed app instead:
 

@@ -223,7 +223,7 @@ combined with any other option; without FILE the table goes to the screen.
 | `--all` | `[DIR]` | Generate all four formats into a directory (in a batch: every file's reports into that one directory) |
 | `--summary` | — | Show the compact text summary on screen |
 | `--rules` | — | Indicative Regulation (EC) No 561/2006 driving/rest-time analysis (driver cards); added to `--json` as `regulation_561` |
-| `--version` | — | Print the reader version (`TachoReader 2.10.0`) |
+| `--version` | — | Print the reader version (`TachoReader 2.11.0`) |
 | `-v`, `--verbose` | — | Verbose debug output |
 | `-q`, `--quiet` | — | Suppress all screen output (files only); `--json -` still writes the JSON to standard output |
 
