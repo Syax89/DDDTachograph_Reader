@@ -2419,3 +2419,87 @@ msgstr "Tekniske kolonner"
 
 msgid "Record details"
 msgstr "Postdetaljer"
+
+msgid "File Structure"
+msgstr "Filstruktur"
+
+msgid "Signature verified"
+msgstr "Signatur verificeret"
+
+msgid "Signature not valid"
+msgstr "Ugyldig signatur"
+
+msgid "Signature not checked"
+msgstr "Signatur ikke kontrolleret"
+
+msgid "Not signed"
+msgstr "Ikke signeret"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Forskydning {offset} · {length} byte"
+
+msgid "Text"
+msgstr "Tekst"
+
+msgid "Content"
+msgstr "Indhold"
+
+msgid "Records"
+msgstr "Poster"
+
+msgid "Unit"
+msgstr "Enhed"
+
+msgid "Signature"
+msgstr "Signatur"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} enheder · {length} byte"
+
+msgid "Bytes"
+msgstr "Byte"
+
+msgid "Events and faults"
+msgstr "Hændelser og fejl"
+
+msgid "Detailed speed"
+msgstr "Detaljeret hastighed"
+
+msgid "Technical data"
+msgstr "Tekniske data"
+
+msgid "Card download"
+msgstr "Kortdownload"
+
+msgid "Sensor data"
+msgstr "Sensordata"
+
+msgid "Download interface version"
+msgstr "Version af downloadgrænsefladen"
+
+msgid "Padding"
+msgstr "Udfyldning"
+
+msgid "Unrecognised bytes"
+msgstr "Ukendte byte"
+
+msgid "Tachograph application, generation 1"
+msgstr "Fartskriverapplikation, generation 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Fartskriverapplikation, generation 2"
+
+msgid "Record Arrays"
+msgstr "Postarrays"
+
+msgid "Elementary Files"
+msgstr "Elementære filer"
+
+msgid "Record Array"
+msgstr "Postarray"
+
+msgid "Elementary File"
+msgstr "Elementær fil"
+
+msgid "File Identifier"
+msgstr "Fil-id"

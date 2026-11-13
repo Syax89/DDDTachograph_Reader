@@ -2419,3 +2419,87 @@ msgstr "Techniniai stulpeliai"
 
 msgid "Record details"
 msgstr "Įrašo išsami informacija"
+
+msgid "File Structure"
+msgstr "Failo struktūra"
+
+msgid "Signature verified"
+msgstr "Parašas patikrintas"
+
+msgid "Signature not valid"
+msgstr "Parašas negaliojantis"
+
+msgid "Signature not checked"
+msgstr "Parašas nepatikrintas"
+
+msgid "Not signed"
+msgstr "Nepasirašyta"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Poslinkis {offset} · {length} baitų"
+
+msgid "Text"
+msgstr "Tekstas"
+
+msgid "Content"
+msgstr "Turinys"
+
+msgid "Records"
+msgstr "Įrašai"
+
+msgid "Unit"
+msgstr "Vienetas"
+
+msgid "Signature"
+msgstr "Parašas"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} vienetų · {length} baitų"
+
+msgid "Bytes"
+msgstr "Baitai"
+
+msgid "Events and faults"
+msgstr "Įvykiai ir gedimai"
+
+msgid "Detailed speed"
+msgstr "Išsamus greitis"
+
+msgid "Technical data"
+msgstr "Techniniai duomenys"
+
+msgid "Card download"
+msgstr "Kortelės atsisiuntimas"
+
+msgid "Sensor data"
+msgstr "Jutiklio duomenys"
+
+msgid "Download interface version"
+msgstr "Atsisiuntimo sąsajos versija"
+
+msgid "Padding"
+msgstr "Užpildas"
+
+msgid "Unrecognised bytes"
+msgstr "Neatpažinti baitai"
+
+msgid "Tachograph application, generation 1"
+msgstr "Tachografo programa, 1 karta"
+
+msgid "Tachograph application, generation 2"
+msgstr "Tachografo programa, 2 karta"
+
+msgid "Record Arrays"
+msgstr "Įrašų masyvai"
+
+msgid "Elementary Files"
+msgstr "Elementarieji failai"
+
+msgid "Record Array"
+msgstr "Įrašų masyvas"
+
+msgid "Elementary File"
+msgstr "Elementarusis failas"
+
+msgid "File Identifier"
+msgstr "Failo identifikatorius"

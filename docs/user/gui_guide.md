@@ -125,12 +125,13 @@ The tree organizes all parsed data into sections. Clicking a section shows its r
 | **File Info** | File name, origin (Driver Card / Vehicle Unit, including "from VU download"), generation, integrity, decoder failures |
 | **Driver / Cardholder** | Card holder identity (driver card files) |
 | **Vehicle** / **Sensor** | VIN, plate, registration nation, tachograph (next calibration, tyre size, authorised speed) — or the sensor identification of a vehicle unit that reports one |
-| **Generation 1 [Annex 1B]**, **Generation 2 [Annex 1C]**, **Generation 2.2 [Annex 1C · 2023/980]** | The records the file of that generation carries, one node per record type, named after the record: daily activities and detailed speed as expandable day lists, everything else as a table. Only the generations the file actually reaches appear |
-| **Decode units**, **Co-Driver Activities**, **Manufacturer Extensions** | Shown only when the file has them: how every byte of a vehicle-unit download was accounted for, an observed co-driver activity array, and record types with no regulation-defined layout, listed with their raw bytes |
+| **Daily Activities**, **Detailed Speed** | Views over the whole file: one node per day with its activity chart (and the day-detail window), and the daily speed charts of a vehicle unit |
+| **File Structure** | The file as it is stored, part by part, in file order. A vehicle-unit download is a list of TREP sections (*Overview*, one *Activities* section per day, *Events and faults*, *Detailed speed*, *Technical data*), each made of its RecordArrays; a generation-1 vehicle unit lists its messages with their RSA signature. A driver card lists its elementary files (EF) in the two applications it holds — generation 1 and generation 2 — each EF with the signature that follows it. Every node shows a green tick when its signature verified and a red mark when it did not. Selecting a node decodes that part of the file on its own; the **Bytes** switch in the table bar shows the same part as a hex dump (offset, hex, text). Bytes that belong to no part of the file are listed as *Padding* or *Unrecognised bytes* |
+| **Co-Driver Activities**, **Manufacturer Extensions** | Shown only when the file has them: an observed co-driver activity array, and record types with no regulation-defined layout, listed with their raw bytes |
 | **Security & Certificates** | Signature results, decoded certificates, card chip identification, and EF signature verification details |
 | **Raw / Unparsed Data** | Every byte range the structural walk could not decode, with its offset, length and hex preview — shown only when there is one |
 
-Sections only appear when the loaded file actually contains that kind of data — a G1 driver card will not show the Generation 2 or Generation 2.2 nodes.
+Sections only appear when the loaded file actually contains that kind of data. When the file itself can no longer be read (moved or deleted after it was opened), the records are grouped by generation instead of by file structure.
 
 Nation fields (registration, issuing, sensor) are shown with their **full country name** (e.g. *Italy*, *Germany*) rather than the raw code; with **Translate file contents** ticked the name appears in the interface language, otherwise in English.
 

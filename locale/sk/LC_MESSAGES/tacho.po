@@ -2419,3 +2419,87 @@ msgstr "Technické stĺpce"
 
 msgid "Record details"
 msgstr "Podrobnosti záznamu"
+
+msgid "File Structure"
+msgstr "Štruktúra súboru"
+
+msgid "Signature verified"
+msgstr "Podpis overený"
+
+msgid "Signature not valid"
+msgstr "Podpis neplatný"
+
+msgid "Signature not checked"
+msgstr "Podpis neoverený"
+
+msgid "Not signed"
+msgstr "Nepodpísané"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Posun {offset} · {length} bajtov"
+
+msgid "Text"
+msgstr "Text"
+
+msgid "Content"
+msgstr "Obsah"
+
+msgid "Records"
+msgstr "Záznamy"
+
+msgid "Unit"
+msgstr "Jednotka"
+
+msgid "Signature"
+msgstr "Podpis"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} jednotiek · {length} bajtov"
+
+msgid "Bytes"
+msgstr "Bajty"
+
+msgid "Events and faults"
+msgstr "Udalosti a poruchy"
+
+msgid "Detailed speed"
+msgstr "Podrobná rýchlosť"
+
+msgid "Technical data"
+msgstr "Technické údaje"
+
+msgid "Card download"
+msgstr "Stiahnutie karty"
+
+msgid "Sensor data"
+msgstr "Údaje snímača"
+
+msgid "Download interface version"
+msgstr "Verzia rozhrania na sťahovanie"
+
+msgid "Padding"
+msgstr "Výplň"
+
+msgid "Unrecognised bytes"
+msgstr "Nerozpoznané bajty"
+
+msgid "Tachograph application, generation 1"
+msgstr "Aplikácia tachografu, generácia 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Aplikácia tachografu, generácia 2"
+
+msgid "Record Arrays"
+msgstr "Polia záznamov"
+
+msgid "Elementary Files"
+msgstr "Elementárne súbory"
+
+msgid "Record Array"
+msgstr "Pole záznamov"
+
+msgid "Elementary File"
+msgstr "Elementárny súbor"
+
+msgid "File Identifier"
+msgstr "Identifikátor súboru"

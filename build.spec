@@ -107,6 +107,7 @@ a = Analysis(
         'core.parser.trep_inventory',
         'core.parser.vu_dispatcher',
         'core.registry.registry',
+        'core.structure.layout',
         'core.registry.models',
         'core.utils.activity_stats',
         'core.utils.ber_tlv',

@@ -2419,3 +2419,87 @@ msgstr "Tæknilegir dálkar"
 
 msgid "Record details"
 msgstr "Upplýsingar um færslu"
+
+msgid "File Structure"
+msgstr "Skráarskipan"
+
+msgid "Signature verified"
+msgstr "Undirskrift staðfest"
+
+msgid "Signature not valid"
+msgstr "Ógild undirskrift"
+
+msgid "Signature not checked"
+msgstr "Undirskrift ekki athuguð"
+
+msgid "Not signed"
+msgstr "Óundirritað"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Hliðrun {offset} · {length} bæti"
+
+msgid "Text"
+msgstr "Texti"
+
+msgid "Content"
+msgstr "Innihald"
+
+msgid "Records"
+msgstr "Færslur"
+
+msgid "Unit"
+msgstr "Eining"
+
+msgid "Signature"
+msgstr "Undirskrift"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} einingar · {length} bæti"
+
+msgid "Bytes"
+msgstr "Bæti"
+
+msgid "Events and faults"
+msgstr "Atburðir og bilanir"
+
+msgid "Detailed speed"
+msgstr "Nákvæmur hraði"
+
+msgid "Technical data"
+msgstr "Tæknigögn"
+
+msgid "Card download"
+msgstr "Niðurhal korts"
+
+msgid "Sensor data"
+msgstr "Gögn skynjara"
+
+msgid "Download interface version"
+msgstr "Útgáfa niðurhalsviðmóts"
+
+msgid "Padding"
+msgstr "Fylling"
+
+msgid "Unrecognised bytes"
+msgstr "Óþekkt bæti"
+
+msgid "Tachograph application, generation 1"
+msgstr "Ökuritaforrit, kynslóð 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Ökuritaforrit, kynslóð 2"
+
+msgid "Record Arrays"
+msgstr "Færslufylki"
+
+msgid "Elementary Files"
+msgstr "Grunnskrár"
+
+msgid "Record Array"
+msgstr "Færslufylki"
+
+msgid "Elementary File"
+msgstr "Grunnskrá"
+
+msgid "File Identifier"
+msgstr "Auðkenni skráar"

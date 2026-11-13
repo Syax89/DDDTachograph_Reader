@@ -2419,3 +2419,87 @@ msgstr "Technikai oszlopok"
 
 msgid "Record details"
 msgstr "Rekord részletei"
+
+msgid "File Structure"
+msgstr "Fájlszerkezet"
+
+msgid "Signature verified"
+msgstr "Aláírás ellenőrizve"
+
+msgid "Signature not valid"
+msgstr "Érvénytelen aláírás"
+
+msgid "Signature not checked"
+msgstr "Aláírás nincs ellenőrizve"
+
+msgid "Not signed"
+msgstr "Nincs aláírva"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Eltolás {offset} · {length} bájt"
+
+msgid "Text"
+msgstr "Szöveg"
+
+msgid "Content"
+msgstr "Tartalom"
+
+msgid "Records"
+msgstr "Rekordok"
+
+msgid "Unit"
+msgstr "Egység"
+
+msgid "Signature"
+msgstr "Aláírás"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} egység · {length} bájt"
+
+msgid "Bytes"
+msgstr "Bájtok"
+
+msgid "Events and faults"
+msgstr "Események és hibák"
+
+msgid "Detailed speed"
+msgstr "Részletes sebesség"
+
+msgid "Technical data"
+msgstr "Műszaki adatok"
+
+msgid "Card download"
+msgstr "Kártyaletöltés"
+
+msgid "Sensor data"
+msgstr "Érzékelőadatok"
+
+msgid "Download interface version"
+msgstr "A letöltési interfész verziója"
+
+msgid "Padding"
+msgstr "Kitöltés"
+
+msgid "Unrecognised bytes"
+msgstr "Fel nem ismert bájtok"
+
+msgid "Tachograph application, generation 1"
+msgstr "Menetíró-alkalmazás, 1. generáció"
+
+msgid "Tachograph application, generation 2"
+msgstr "Menetíró-alkalmazás, 2. generáció"
+
+msgid "Record Arrays"
+msgstr "Rekordtömbök"
+
+msgid "Elementary Files"
+msgstr "Elemi fájlok"
+
+msgid "Record Array"
+msgstr "Rekordtömb"
+
+msgid "Elementary File"
+msgstr "Elemi fájl"
+
+msgid "File Identifier"
+msgstr "Fájlazonosító"

@@ -2419,3 +2419,87 @@ msgstr "Kolumny techniczne"
 
 msgid "Record details"
 msgstr "Szczegóły rekordu"
+
+msgid "File Structure"
+msgstr "Struktura pliku"
+
+msgid "Signature verified"
+msgstr "Podpis zweryfikowany"
+
+msgid "Signature not valid"
+msgstr "Podpis nieprawidłowy"
+
+msgid "Signature not checked"
+msgstr "Podpis niesprawdzony"
+
+msgid "Not signed"
+msgstr "Niepodpisany"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Przesunięcie {offset} · {length} bajtów"
+
+msgid "Text"
+msgstr "Tekst"
+
+msgid "Content"
+msgstr "Zawartość"
+
+msgid "Records"
+msgstr "Rekordy"
+
+msgid "Unit"
+msgstr "Jednostka"
+
+msgid "Signature"
+msgstr "Podpis"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} jednostek · {length} bajtów"
+
+msgid "Bytes"
+msgstr "Bajty"
+
+msgid "Events and faults"
+msgstr "Zdarzenia i usterki"
+
+msgid "Detailed speed"
+msgstr "Szczegółowa prędkość"
+
+msgid "Technical data"
+msgstr "Dane techniczne"
+
+msgid "Card download"
+msgstr "Pobieranie danych z karty"
+
+msgid "Sensor data"
+msgstr "Dane czujnika"
+
+msgid "Download interface version"
+msgstr "Wersja interfejsu pobierania"
+
+msgid "Padding"
+msgstr "Wypełnienie"
+
+msgid "Unrecognised bytes"
+msgstr "Nierozpoznane bajty"
+
+msgid "Tachograph application, generation 1"
+msgstr "Aplikacja tachografu, generacja 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Aplikacja tachografu, generacja 2"
+
+msgid "Record Arrays"
+msgstr "Tablice rekordów"
+
+msgid "Elementary Files"
+msgstr "Pliki elementarne"
+
+msgid "Record Array"
+msgstr "Tablica rekordów"
+
+msgid "Elementary File"
+msgstr "Plik elementarny"
+
+msgid "File Identifier"
+msgstr "Identyfikator pliku"

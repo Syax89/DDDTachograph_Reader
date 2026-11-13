@@ -2419,3 +2419,87 @@ msgstr "Технички колони"
 
 msgid "Record details"
 msgstr "Детали за записот"
+
+msgid "File Structure"
+msgstr "Структура на датотеката"
+
+msgid "Signature verified"
+msgstr "Потписот е проверен"
+
+msgid "Signature not valid"
+msgstr "Потписот не е важечки"
+
+msgid "Signature not checked"
+msgstr "Потписот не е проверен"
+
+msgid "Not signed"
+msgstr "Непотпишано"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Поместување {offset} · {length} бајти"
+
+msgid "Text"
+msgstr "Текст"
+
+msgid "Content"
+msgstr "Содржина"
+
+msgid "Records"
+msgstr "Записи"
+
+msgid "Unit"
+msgstr "Единица"
+
+msgid "Signature"
+msgstr "Потпис"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} единици · {length} бајти"
+
+msgid "Bytes"
+msgstr "Бајти"
+
+msgid "Events and faults"
+msgstr "Настани и дефекти"
+
+msgid "Detailed speed"
+msgstr "Детална брзина"
+
+msgid "Technical data"
+msgstr "Технички податоци"
+
+msgid "Card download"
+msgstr "Преземање од картичка"
+
+msgid "Sensor data"
+msgstr "Податоци од сензорот"
+
+msgid "Download interface version"
+msgstr "Верзија на интерфејсот за преземање"
+
+msgid "Padding"
+msgstr "Пополнување"
+
+msgid "Unrecognised bytes"
+msgstr "Непрепознаени бајти"
+
+msgid "Tachograph application, generation 1"
+msgstr "Апликација на тахографот, генерација 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Апликација на тахографот, генерација 2"
+
+msgid "Record Arrays"
+msgstr "Низи од записи"
+
+msgid "Elementary Files"
+msgstr "Елементарни датотеки"
+
+msgid "Record Array"
+msgstr "Низа од записи"
+
+msgid "Elementary File"
+msgstr "Елементарна датотека"
+
+msgid "File Identifier"
+msgstr "Идентификатор на датотеката"

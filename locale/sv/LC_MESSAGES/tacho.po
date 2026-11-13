@@ -2419,3 +2419,87 @@ msgstr "Tekniska kolumner"
 
 msgid "Record details"
 msgstr "Postdetaljer"
+
+msgid "File Structure"
+msgstr "Filstruktur"
+
+msgid "Signature verified"
+msgstr "Signatur verifierad"
+
+msgid "Signature not valid"
+msgstr "Ogiltig signatur"
+
+msgid "Signature not checked"
+msgstr "Signatur ej kontrollerad"
+
+msgid "Not signed"
+msgstr "Ej signerad"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Förskjutning {offset} · {length} byte"
+
+msgid "Text"
+msgstr "Text"
+
+msgid "Content"
+msgstr "Innehåll"
+
+msgid "Records"
+msgstr "Poster"
+
+msgid "Unit"
+msgstr "Enhet"
+
+msgid "Signature"
+msgstr "Signatur"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} enheter · {length} byte"
+
+msgid "Bytes"
+msgstr "Byte"
+
+msgid "Events and faults"
+msgstr "Händelser och fel"
+
+msgid "Detailed speed"
+msgstr "Detaljerad hastighet"
+
+msgid "Technical data"
+msgstr "Tekniska data"
+
+msgid "Card download"
+msgstr "Kortnedladdning"
+
+msgid "Sensor data"
+msgstr "Givardata"
+
+msgid "Download interface version"
+msgstr "Version av nedladdningsgränssnittet"
+
+msgid "Padding"
+msgstr "Utfyllnad"
+
+msgid "Unrecognised bytes"
+msgstr "Okända byte"
+
+msgid "Tachograph application, generation 1"
+msgstr "Färdskrivarapplikation, generation 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Färdskrivarapplikation, generation 2"
+
+msgid "Record Arrays"
+msgstr "Postmatriser"
+
+msgid "Elementary Files"
+msgstr "Elementära filer"
+
+msgid "Record Array"
+msgstr "Postmatris"
+
+msgid "Elementary File"
+msgstr "Elementär fil"
+
+msgid "File Identifier"
+msgstr "Fil-id"

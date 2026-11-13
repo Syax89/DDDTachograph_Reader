@@ -2419,3 +2419,87 @@ msgstr "Kolonni tekniċi"
 
 msgid "Record details"
 msgstr "Dettalji tar-rekord"
+
+msgid "File Structure"
+msgstr "Struttura tal-fajl"
+
+msgid "Signature verified"
+msgstr "Firma vverifikata"
+
+msgid "Signature not valid"
+msgstr "Firma mhux valida"
+
+msgid "Signature not checked"
+msgstr "Firma mhux ikkontrollata"
+
+msgid "Not signed"
+msgstr "Mhux iffirmat"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Offset {offset} · {length} byte"
+
+msgid "Text"
+msgstr "Test"
+
+msgid "Content"
+msgstr "Kontenut"
+
+msgid "Records"
+msgstr "Rekords"
+
+msgid "Unit"
+msgstr "Unità"
+
+msgid "Signature"
+msgstr "Firma"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} unità · {length} byte"
+
+msgid "Bytes"
+msgstr "Byte"
+
+msgid "Events and faults"
+msgstr "Avvenimenti u ħsarat"
+
+msgid "Detailed speed"
+msgstr "Veloċità dettaljata"
+
+msgid "Technical data"
+msgstr "Data teknika"
+
+msgid "Card download"
+msgstr "Tniżżil tal-karta"
+
+msgid "Sensor data"
+msgstr "Data tas-sensur"
+
+msgid "Download interface version"
+msgstr "Verżjoni tal-interfaċċja tat-tniżżil"
+
+msgid "Padding"
+msgstr "Mili"
+
+msgid "Unrecognised bytes"
+msgstr "Byte mhux rikonoxxuti"
+
+msgid "Tachograph application, generation 1"
+msgstr "Applikazzjoni tat-takografu, ġenerazzjoni 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Applikazzjoni tat-takografu, ġenerazzjoni 2"
+
+msgid "Record Arrays"
+msgstr "Arrays ta' rekords"
+
+msgid "Elementary Files"
+msgstr "Fajls elementari"
+
+msgid "Record Array"
+msgstr "Array ta' rekords"
+
+msgid "Elementary File"
+msgstr "Fajl elementari"
+
+msgid "File Identifier"
+msgstr "Identifikatur tal-fajl"

@@ -53,6 +53,10 @@ MOCK_DIR = REPO_ROOT / "tests" / "mock_data"
 #: The two G2 files whose every node the tree must be able to show in full.
 CLIPPED_TREE_FILES = ("mock_g2_card.ddd", "mock_g2_vu.ddd")
 
+#: Files whose whole tree fits the minimum pane (the card's file structure
+#: names its elementary files, which do not).
+FITTING_TREE_FILES = ("mock_g1_vu.ddd", "mock_g2_vu.ddd")
+
 #: Both window geometries the product supports: the default and the minimum.
 GEOMETRIES = ("1280x760", MINIMUM_SIZE)
 
@@ -365,7 +369,7 @@ def test_return_on_a_node_without_a_day_detail_keeps_the_treeview_behaviour(expl
     explorer.update()
     assert not gui.DayDetailWindow._open_windows
 
-    parent = _find_node(explorer, gui._("Generation 2 [Annex 1C]"))
+    parent = _find_node(explorer, gui._("File Structure"))
     assert parent is not None and explorer.tree.get_children(parent)
     explorer.tree.item(parent, open=True)
     explorer.tree.selection_set(parent)
@@ -592,12 +596,13 @@ def test_a_node_wider_than_the_pane_is_reached_by_scrolling_not_cut(explorer):
     assert first > 0 and last == 1.0
 
 
-@pytest.mark.parametrize("name", CLIPPED_TREE_FILES)
+@pytest.mark.parametrize("name", FITTING_TREE_FILES)
 def test_a_tree_that_fits_the_pane_has_no_horizontal_scrollbar(explorer, name):
     explorer.geometry(MINIMUM_SIZE)
     _open_mock(explorer, name)
     explorer.update()
     explorer.update()
+    assert _widest_node(explorer) <= explorer.tree.winfo_width()
     assert not _tree_hbar(explorer).winfo_ismapped()
 
 

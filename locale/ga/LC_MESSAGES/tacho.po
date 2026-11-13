@@ -2419,3 +2419,87 @@ msgstr "Colúin theicniúla"
 
 msgid "Record details"
 msgstr "Sonraí an taifid"
+
+msgid "File Structure"
+msgstr "Struchtúr an chomhaid"
+
+msgid "Signature verified"
+msgstr "Síniú fíoraithe"
+
+msgid "Signature not valid"
+msgstr "Síniú neamhbhailí"
+
+msgid "Signature not checked"
+msgstr "Síniú gan seiceáil"
+
+msgid "Not signed"
+msgstr "Gan síniú"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Fritháireamh {offset} · {length} beart"
+
+msgid "Text"
+msgstr "Téacs"
+
+msgid "Content"
+msgstr "Ábhar"
+
+msgid "Records"
+msgstr "Taifid"
+
+msgid "Unit"
+msgstr "Aonad"
+
+msgid "Signature"
+msgstr "Síniú"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} aonad · {length} beart"
+
+msgid "Bytes"
+msgstr "Bearta"
+
+msgid "Events and faults"
+msgstr "Imeachtaí agus lochtanna"
+
+msgid "Detailed speed"
+msgstr "Luas mionsonraithe"
+
+msgid "Technical data"
+msgstr "Sonraí teicniúla"
+
+msgid "Card download"
+msgstr "Íoslódáil cárta"
+
+msgid "Sensor data"
+msgstr "Sonraí braiteora"
+
+msgid "Download interface version"
+msgstr "Leagan an chomhéadain íoslódála"
+
+msgid "Padding"
+msgstr "Líonadh"
+
+msgid "Unrecognised bytes"
+msgstr "Bearta nár aithníodh"
+
+msgid "Tachograph application, generation 1"
+msgstr "Feidhmchlár tacagraif, glúin 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Feidhmchlár tacagraif, glúin 2"
+
+msgid "Record Arrays"
+msgstr "Eagair taifead"
+
+msgid "Elementary Files"
+msgstr "Comhaid bhunúsacha"
+
+msgid "Record Array"
+msgstr "Eagar taifead"
+
+msgid "Elementary File"
+msgstr "Comhad bunúsach"
+
+msgid "File Identifier"
+msgstr "Aitheantóir comhaid"

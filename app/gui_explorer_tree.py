@@ -469,11 +469,16 @@ class TreeMixin:
             self._add_section("", _("Decoder Failures"), cols, rows,
                               icon="status-warning")
 
+        # The file's own structure is the base of the tree when its bytes are
+        # at hand; the generation groups below are only the fallback for a
+        # result without them.
+        units = self._file_layout(data)
+
         # ── Empirical / manufacturer extensions ──
         # Data outside the regulation is SHOWN like everything else, with the
         # informational note in the section's meta line (never a warning).
         for key, label, icon in (
-                ("vu_units", _("Decode units"), "generation"),
+                *(() if units else (("vu_units", _("Decode units"), "generation"),)),
                 ("co_driver_activities", _("Co-Driver Activities"), "events"),
                 ("unmapped_record_types", _("Manufacturer Extensions"),
                  "status-unknown")):
@@ -525,8 +530,13 @@ class TreeMixin:
                     "", _("CORRUPTED / PARTIAL FILE"), cols, rows,
                     summary=True, icon="status-warning")
 
-        # ── Generations tree (single source of truth) ──
         generations = data.get("generations", {})
+        if units:
+            self._populate_views(data, generations)
+            self._populate_structure(units)
+            generations = {"Security": generations.get("Security")}
+
+        # ── Generations tree (fallback without the file's bytes) ──
         for gen_name, gen_items in generations.items():
             if gen_name == "Security":
                 continue  # handled by _populate_security
@@ -609,6 +619,37 @@ class TreeMixin:
         # overview never leaves the pane blank.
         if summary_iid and self.tree.exists(summary_iid):
             self._auto_select_iid = summary_iid
+
+    def _populate_views(self, data, generations):
+        """Daily activities and detailed speed: views over the whole file.
+
+        They sit above the file structure, at the top level, and are built from
+        the same lists the generation groups carried.
+        """
+        daily = speed = None
+        for gen_items in (generations or {}).values():
+            if not isinstance(gen_items, dict):
+                continue
+            for item_name, item_data in gen_items.items():
+                if (daily is None and item_name in ("DriverActivityData", "Daily Activities")
+                        and isinstance(item_data, list)):
+                    daily = item_data
+                elif speed is None and item_name in ("DetailedSpeed", "Detailed Speed (0x052C)"):
+                    speed = item_data
+        if daily:
+            self._pump_render()
+            with load_trace.span("populate_daily_activities", days=len(daily)):
+                self._populate_daily_activities("", data, daily)
+            self._icon_last_top_node("date-range")
+        if speed:
+            self._pump_render()
+            self._populate_detailed_speed("", data, speed)
+            self._icon_last_top_node("statistics")
+
+    def _icon_last_top_node(self, icon):
+        top = self.tree.get_children("")
+        if top:
+            self.tree.item(top[-1], image=_icon(icon, 16, self.tree) or "")
 
     def _populate_unparsed(self, data):
         """Surface bytes the structural walk could not decode.
@@ -783,6 +824,12 @@ class TreeMixin:
             return
         payload = self._payloads.get(sel[0])
         if payload:
+            if payload[0] == "__unit__":
+                self._show_unit(payload[1], payload[2])
+                return
+            if payload[0] == "__unit_index__":
+                self._show_unit_index(payload[1])
+                return
             if payload[0] == "__speed_chart__":
                 self._show_speed_chart(payload[1], payload[2],
                                        payload[3] if len(payload) > 3 else None)

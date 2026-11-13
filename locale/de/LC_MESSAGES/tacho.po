@@ -2419,3 +2419,87 @@ msgstr "Technische Spalten"
 
 msgid "Record details"
 msgstr "Datensatzdetails"
+
+msgid "File Structure"
+msgstr "Dateistruktur"
+
+msgid "Signature verified"
+msgstr "Signatur geprüft"
+
+msgid "Signature not valid"
+msgstr "Signatur ungültig"
+
+msgid "Signature not checked"
+msgstr "Signatur nicht geprüft"
+
+msgid "Not signed"
+msgstr "Nicht signiert"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Offset {offset} · {length} Bytes"
+
+msgid "Text"
+msgstr "Text"
+
+msgid "Content"
+msgstr "Inhalt"
+
+msgid "Records"
+msgstr "Datensätze"
+
+msgid "Unit"
+msgstr "Einheit"
+
+msgid "Signature"
+msgstr "Signatur"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} Einheiten · {length} Bytes"
+
+msgid "Bytes"
+msgstr "Bytes"
+
+msgid "Events and faults"
+msgstr "Ereignisse und Störungen"
+
+msgid "Detailed speed"
+msgstr "Detaillierte Geschwindigkeit"
+
+msgid "Technical data"
+msgstr "Technische Daten"
+
+msgid "Card download"
+msgstr "Kartendownload"
+
+msgid "Sensor data"
+msgstr "Sensordaten"
+
+msgid "Download interface version"
+msgstr "Version der Download-Schnittstelle"
+
+msgid "Padding"
+msgstr "Füllbytes"
+
+msgid "Unrecognised bytes"
+msgstr "Nicht erkannte Bytes"
+
+msgid "Tachograph application, generation 1"
+msgstr "Fahrtenschreiberanwendung, Generation 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Fahrtenschreiberanwendung, Generation 2"
+
+msgid "Record Arrays"
+msgstr "Record-Arrays"
+
+msgid "Elementary Files"
+msgstr "Elementardateien"
+
+msgid "Record Array"
+msgstr "Record-Array"
+
+msgid "Elementary File"
+msgstr "Elementardatei"
+
+msgid "File Identifier"
+msgstr "Dateikennung"

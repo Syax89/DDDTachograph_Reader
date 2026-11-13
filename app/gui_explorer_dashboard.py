@@ -947,14 +947,14 @@ class DashboardMixin:
         self._show_dashboard(_("Detailed Speed"),
                              date_range, kpis, columns, table_rows)
 
-    def _show_table(self, title, cols, rows, meta=""):
+    def _show_table(self, title, cols, rows, meta="", alternate=None):
         self._cleanup_dashboard()
         self._hide_empty_state()
         self.speed_chart.pack_forget()
         self.activity_chart.pack_forget()
         if not self.table.winfo_manager():
             self.table.pack(fill=tk.BOTH, expand=True)
-        self.table.show(title, cols, rows, meta)
+        self.table.show(title, cols, rows, meta, alternate=alternate)
 
     def _show_empty(self, title, message):
         """Render an explicit empty-state so a data-less node does not leave

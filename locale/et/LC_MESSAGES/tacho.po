@@ -2419,3 +2419,87 @@ msgstr "Tehnilised veerud"
 
 msgid "Record details"
 msgstr "Kirje üksikasjad"
+
+msgid "File Structure"
+msgstr "Faili struktuur"
+
+msgid "Signature verified"
+msgstr "Allkiri kontrollitud"
+
+msgid "Signature not valid"
+msgstr "Allkiri kehtetu"
+
+msgid "Signature not checked"
+msgstr "Allkirja ei kontrollitud"
+
+msgid "Not signed"
+msgstr "Allkirjastamata"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Nihe {offset} · {length} baiti"
+
+msgid "Text"
+msgstr "Tekst"
+
+msgid "Content"
+msgstr "Sisu"
+
+msgid "Records"
+msgstr "Kirjed"
+
+msgid "Unit"
+msgstr "Üksus"
+
+msgid "Signature"
+msgstr "Allkiri"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} üksust · {length} baiti"
+
+msgid "Bytes"
+msgstr "Baidid"
+
+msgid "Events and faults"
+msgstr "Sündmused ja rikked"
+
+msgid "Detailed speed"
+msgstr "Üksikasjalik kiirus"
+
+msgid "Technical data"
+msgstr "Tehnilised andmed"
+
+msgid "Card download"
+msgstr "Kaardi allalaadimine"
+
+msgid "Sensor data"
+msgstr "Anduri andmed"
+
+msgid "Download interface version"
+msgstr "Allalaadimisliidese versioon"
+
+msgid "Padding"
+msgstr "Täide"
+
+msgid "Unrecognised bytes"
+msgstr "Tundmatud baidid"
+
+msgid "Tachograph application, generation 1"
+msgstr "Sõidumeerikurakendus, 1. põlvkond"
+
+msgid "Tachograph application, generation 2"
+msgstr "Sõidumeerikurakendus, 2. põlvkond"
+
+msgid "Record Arrays"
+msgstr "Kirjemassiivid"
+
+msgid "Elementary Files"
+msgstr "Elementaarfailid"
+
+msgid "Record Array"
+msgstr "Kirjemassiiv"
+
+msgid "Elementary File"
+msgstr "Elementaarfail"
+
+msgid "File Identifier"
+msgstr "Faili identifikaator"

@@ -2419,3 +2419,87 @@ msgstr "Coloane tehnice"
 
 msgid "Record details"
 msgstr "Detaliile înregistrării"
+
+msgid "File Structure"
+msgstr "Structura fișierului"
+
+msgid "Signature verified"
+msgstr "Semnătură verificată"
+
+msgid "Signature not valid"
+msgstr "Semnătură nevalidă"
+
+msgid "Signature not checked"
+msgstr "Semnătură neverificată"
+
+msgid "Not signed"
+msgstr "Nesemnat"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Decalaj {offset} · {length} octeți"
+
+msgid "Text"
+msgstr "Text"
+
+msgid "Content"
+msgstr "Conținut"
+
+msgid "Records"
+msgstr "Înregistrări"
+
+msgid "Unit"
+msgstr "Unitate"
+
+msgid "Signature"
+msgstr "Semnătură"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} unități · {length} octeți"
+
+msgid "Bytes"
+msgstr "Octeți"
+
+msgid "Events and faults"
+msgstr "Evenimente și defecțiuni"
+
+msgid "Detailed speed"
+msgstr "Viteză detaliată"
+
+msgid "Technical data"
+msgstr "Date tehnice"
+
+msgid "Card download"
+msgstr "Descărcare card"
+
+msgid "Sensor data"
+msgstr "Datele senzorului"
+
+msgid "Download interface version"
+msgstr "Versiunea interfeței de descărcare"
+
+msgid "Padding"
+msgstr "Umplutură"
+
+msgid "Unrecognised bytes"
+msgstr "Octeți nerecunoscuți"
+
+msgid "Tachograph application, generation 1"
+msgstr "Aplicația tahografului, generația 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Aplicația tahografului, generația 2"
+
+msgid "Record Arrays"
+msgstr "Tablouri de înregistrări"
+
+msgid "Elementary Files"
+msgstr "Fișiere elementare"
+
+msgid "Record Array"
+msgstr "Tablou de înregistrări"
+
+msgid "Elementary File"
+msgstr "Fișier elementar"
+
+msgid "File Identifier"
+msgstr "Identificator de fișier"

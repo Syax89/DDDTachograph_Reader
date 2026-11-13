@@ -254,11 +254,13 @@ from app.gui_explorer_load import LoadMixin
 from app.gui_explorer_export import ExportMixin
 from app.gui_explorer_status import StatusMixin
 from app.gui_explorer_tree import TreeMixin
+from app.gui_explorer_structure import StructureMixin
 from app.gui_explorer_dashboard import DashboardMixin
 from app.gui_explorer_summary import SummaryMixin
 
 
-class TachoExplorer(ShellMixin, LoadMixin, ExportMixin, StatusMixin, TreeMixin, DashboardMixin, SummaryMixin, tk.Tk):
+class TachoExplorer(ShellMixin, LoadMixin, ExportMixin, StatusMixin, TreeMixin,
+                   StructureMixin, DashboardMixin, SummaryMixin, tk.Tk):
     #: Idle defaults for the busy/render state read by ``_parse_done``,
     #: ``_start_parse`` and ``_pump_render``. They exist on the class as well as
     #: on the instance because a tkinter widget resolves a missing attribute

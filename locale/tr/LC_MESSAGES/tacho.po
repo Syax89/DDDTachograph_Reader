@@ -2419,3 +2419,87 @@ msgstr "Teknik sütunlar"
 
 msgid "Record details"
 msgstr "Kayıt ayrıntıları"
+
+msgid "File Structure"
+msgstr "Dosya yapısı"
+
+msgid "Signature verified"
+msgstr "İmza doğrulandı"
+
+msgid "Signature not valid"
+msgstr "İmza geçersiz"
+
+msgid "Signature not checked"
+msgstr "İmza denetlenmedi"
+
+msgid "Not signed"
+msgstr "İmzasız"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Konum {offset} · {length} bayt"
+
+msgid "Text"
+msgstr "Metin"
+
+msgid "Content"
+msgstr "İçerik"
+
+msgid "Records"
+msgstr "Kayıtlar"
+
+msgid "Unit"
+msgstr "Birim"
+
+msgid "Signature"
+msgstr "İmza"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} birim · {length} bayt"
+
+msgid "Bytes"
+msgstr "Baytlar"
+
+msgid "Events and faults"
+msgstr "Olaylar ve arızalar"
+
+msgid "Detailed speed"
+msgstr "Ayrıntılı hız"
+
+msgid "Technical data"
+msgstr "Teknik veriler"
+
+msgid "Card download"
+msgstr "Kart indirme"
+
+msgid "Sensor data"
+msgstr "Sensör verileri"
+
+msgid "Download interface version"
+msgstr "İndirme arayüzü sürümü"
+
+msgid "Padding"
+msgstr "Dolgu"
+
+msgid "Unrecognised bytes"
+msgstr "Tanınmayan baytlar"
+
+msgid "Tachograph application, generation 1"
+msgstr "Takograf uygulaması, 1. nesil"
+
+msgid "Tachograph application, generation 2"
+msgstr "Takograf uygulaması, 2. nesil"
+
+msgid "Record Arrays"
+msgstr "Kayıt dizileri"
+
+msgid "Elementary Files"
+msgstr "Temel dosyalar"
+
+msgid "Record Array"
+msgstr "Kayıt dizisi"
+
+msgid "Elementary File"
+msgstr "Temel dosya"
+
+msgid "File Identifier"
+msgstr "Dosya tanımlayıcısı"

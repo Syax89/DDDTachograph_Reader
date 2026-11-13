@@ -2419,3 +2419,87 @@ msgstr "Технічні стовпці"
 
 msgid "Record details"
 msgstr "Відомості про запис"
+
+msgid "File Structure"
+msgstr "Структура файлу"
+
+msgid "Signature verified"
+msgstr "Підпис перевірено"
+
+msgid "Signature not valid"
+msgstr "Підпис недійсний"
+
+msgid "Signature not checked"
+msgstr "Підпис не перевірено"
+
+msgid "Not signed"
+msgstr "Без підпису"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Зміщення {offset} · {length} байтів"
+
+msgid "Text"
+msgstr "Текст"
+
+msgid "Content"
+msgstr "Вміст"
+
+msgid "Records"
+msgstr "Записи"
+
+msgid "Unit"
+msgstr "Блок"
+
+msgid "Signature"
+msgstr "Підпис"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} блоків · {length} байтів"
+
+msgid "Bytes"
+msgstr "Байти"
+
+msgid "Events and faults"
+msgstr "Події та несправності"
+
+msgid "Detailed speed"
+msgstr "Детальна швидкість"
+
+msgid "Technical data"
+msgstr "Технічні дані"
+
+msgid "Card download"
+msgstr "Вивантаження картки"
+
+msgid "Sensor data"
+msgstr "Дані датчика"
+
+msgid "Download interface version"
+msgstr "Версія інтерфейсу вивантаження"
+
+msgid "Padding"
+msgstr "Заповнення"
+
+msgid "Unrecognised bytes"
+msgstr "Нерозпізнані байти"
+
+msgid "Tachograph application, generation 1"
+msgstr "Застосунок тахографа, покоління 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Застосунок тахографа, покоління 2"
+
+msgid "Record Arrays"
+msgstr "Масиви записів"
+
+msgid "Elementary Files"
+msgstr "Елементарні файли"
+
+msgid "Record Array"
+msgstr "Масив записів"
+
+msgid "Elementary File"
+msgstr "Елементарний файл"
+
+msgid "File Identifier"
+msgstr "Ідентифікатор файлу"

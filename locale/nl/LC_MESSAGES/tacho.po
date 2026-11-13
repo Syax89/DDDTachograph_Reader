@@ -2419,3 +2419,87 @@ msgstr "Technische kolommen"
 
 msgid "Record details"
 msgstr "Recorddetails"
+
+msgid "File Structure"
+msgstr "Bestandsstructuur"
+
+msgid "Signature verified"
+msgstr "Handtekening geverifieerd"
+
+msgid "Signature not valid"
+msgstr "Handtekening ongeldig"
+
+msgid "Signature not checked"
+msgstr "Handtekening niet gecontroleerd"
+
+msgid "Not signed"
+msgstr "Niet ondertekend"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Offset {offset} · {length} bytes"
+
+msgid "Text"
+msgstr "Tekst"
+
+msgid "Content"
+msgstr "Inhoud"
+
+msgid "Records"
+msgstr "Records"
+
+msgid "Unit"
+msgstr "Eenheid"
+
+msgid "Signature"
+msgstr "Handtekening"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} eenheden · {length} bytes"
+
+msgid "Bytes"
+msgstr "Bytes"
+
+msgid "Events and faults"
+msgstr "Gebeurtenissen en storingen"
+
+msgid "Detailed speed"
+msgstr "Gedetailleerde snelheid"
+
+msgid "Technical data"
+msgstr "Technische gegevens"
+
+msgid "Card download"
+msgstr "Kaartdownload"
+
+msgid "Sensor data"
+msgstr "Sensorgegevens"
+
+msgid "Download interface version"
+msgstr "Versie van de downloadinterface"
+
+msgid "Padding"
+msgstr "Opvulling"
+
+msgid "Unrecognised bytes"
+msgstr "Niet-herkende bytes"
+
+msgid "Tachograph application, generation 1"
+msgstr "Tachograaftoepassing, generatie 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Tachograaftoepassing, generatie 2"
+
+msgid "Record Arrays"
+msgstr "Record-arrays"
+
+msgid "Elementary Files"
+msgstr "Elementaire bestanden"
+
+msgid "Record Array"
+msgstr "Record-array"
+
+msgid "Elementary File"
+msgstr "Elementair bestand"
+
+msgid "File Identifier"
+msgstr "Bestandsidentificatie"

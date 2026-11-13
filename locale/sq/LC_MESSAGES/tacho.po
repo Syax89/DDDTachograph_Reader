@@ -2419,3 +2419,87 @@ msgstr "Kolona teknike"
 
 msgid "Record details"
 msgstr "Detajet e regjistrimit"
+
+msgid "File Structure"
+msgstr "Struktura e skedarit"
+
+msgid "Signature verified"
+msgstr "Nënshkrimi u verifikua"
+
+msgid "Signature not valid"
+msgstr "Nënshkrim i pavlefshëm"
+
+msgid "Signature not checked"
+msgstr "Nënshkrimi nuk u kontrollua"
+
+msgid "Not signed"
+msgstr "I panënshkruar"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Zhvendosja {offset} · {length} bajte"
+
+msgid "Text"
+msgstr "Tekst"
+
+msgid "Content"
+msgstr "Përmbajtja"
+
+msgid "Records"
+msgstr "Regjistrime"
+
+msgid "Unit"
+msgstr "Njësia"
+
+msgid "Signature"
+msgstr "Nënshkrimi"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} njësi · {length} bajte"
+
+msgid "Bytes"
+msgstr "Bajte"
+
+msgid "Events and faults"
+msgstr "Ngjarje dhe defekte"
+
+msgid "Detailed speed"
+msgstr "Shpejtësia e detajuar"
+
+msgid "Technical data"
+msgstr "Të dhëna teknike"
+
+msgid "Card download"
+msgstr "Shkarkimi i kartës"
+
+msgid "Sensor data"
+msgstr "Të dhënat e sensorit"
+
+msgid "Download interface version"
+msgstr "Versioni i ndërfaqes së shkarkimit"
+
+msgid "Padding"
+msgstr "Mbushje"
+
+msgid "Unrecognised bytes"
+msgstr "Bajte të panjohura"
+
+msgid "Tachograph application, generation 1"
+msgstr "Aplikacioni i takografit, gjenerata 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Aplikacioni i takografit, gjenerata 2"
+
+msgid "Record Arrays"
+msgstr "Vargje regjistrimesh"
+
+msgid "Elementary Files"
+msgstr "Skedarë elementarë"
+
+msgid "Record Array"
+msgstr "Varg regjistrimesh"
+
+msgid "Elementary File"
+msgstr "Skedar elementar"
+
+msgid "File Identifier"
+msgstr "Identifikuesi i skedarit"

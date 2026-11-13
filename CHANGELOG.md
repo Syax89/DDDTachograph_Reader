@@ -1,5 +1,23 @@
 ## [Unreleased]
 
+### Added
+
+- **File Structure tree.** The section tree now shows the file the way it is
+  stored, in file order, instead of grouping records by generation:
+  - a vehicle-unit download is its TREP sections (Overview, one Activities
+    section per day, Events and faults, Detailed speed, Technical data), each
+    made of its RecordArrays; a generation-1 download lists its messages and
+    their RSA signatures;
+  - a driver card lists its elementary files in the generation-1 and
+    generation-2 applications, each with the signature that follows it;
+  - every section and EF shows whether its signature verified;
+  - selecting a part decodes that part's own bytes; a *Bytes* switch shows
+    it as a hex dump with offsets;
+  - padding and unrecognised bytes between parts are listed too, so the
+    parts add up to the whole file.
+  Summary, Daily Activities and Detailed Speed stay as views at the top.
+  Exports and the JSON are unchanged.
+
 ### Changed
 
 - **Record tables are easier to read.**

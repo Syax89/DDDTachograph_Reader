@@ -2419,3 +2419,87 @@ msgstr "Tehniskās kolonnas"
 
 msgid "Record details"
 msgstr "Ieraksta informācija"
+
+msgid "File Structure"
+msgstr "Faila struktūra"
+
+msgid "Signature verified"
+msgstr "Paraksts pārbaudīts"
+
+msgid "Signature not valid"
+msgstr "Paraksts nav derīgs"
+
+msgid "Signature not checked"
+msgstr "Paraksts nav pārbaudīts"
+
+msgid "Not signed"
+msgstr "Nav parakstīts"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Nobīde {offset} · {length} baiti"
+
+msgid "Text"
+msgstr "Teksts"
+
+msgid "Content"
+msgstr "Saturs"
+
+msgid "Records"
+msgstr "Ieraksti"
+
+msgid "Unit"
+msgstr "Vienība"
+
+msgid "Signature"
+msgstr "Paraksts"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} vienības · {length} baiti"
+
+msgid "Bytes"
+msgstr "Baiti"
+
+msgid "Events and faults"
+msgstr "Notikumi un kļūmes"
+
+msgid "Detailed speed"
+msgstr "Detalizēts ātrums"
+
+msgid "Technical data"
+msgstr "Tehniskie dati"
+
+msgid "Card download"
+msgstr "Kartes lejupielāde"
+
+msgid "Sensor data"
+msgstr "Sensora dati"
+
+msgid "Download interface version"
+msgstr "Lejupielādes saskarnes versija"
+
+msgid "Padding"
+msgstr "Aizpildījums"
+
+msgid "Unrecognised bytes"
+msgstr "Neatpazīti baiti"
+
+msgid "Tachograph application, generation 1"
+msgstr "Tahogrāfa lietotne, 1. paaudze"
+
+msgid "Tachograph application, generation 2"
+msgstr "Tahogrāfa lietotne, 2. paaudze"
+
+msgid "Record Arrays"
+msgstr "Ierakstu masīvi"
+
+msgid "Elementary Files"
+msgstr "Elementārie faili"
+
+msgid "Record Array"
+msgstr "Ierakstu masīvs"
+
+msgid "Elementary File"
+msgstr "Elementārais fails"
+
+msgid "File Identifier"
+msgstr "Faila identifikators"

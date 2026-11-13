@@ -882,6 +882,13 @@ class DataTable(ttk.Frame):
         self.technical_check = ttk.Checkbutton(
             filt, text=_("Technical columns"), variable=self.technical_var,
             command=self._toggle_technical)
+        # A file-structure unit can also be read as bytes: the same switch for
+        # every unit, held for the session like the technical columns.
+        self.bytes_var = tk.BooleanVar(value=False)
+        self.bytes_check = ttk.Checkbutton(
+            filt, text=_("Bytes"), variable=self.bytes_var,
+            command=self._toggle_bytes)
+        self._views = None
         body = ttk.Frame(self)
         body.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
 
@@ -993,9 +1000,32 @@ class DataTable(ttk.Frame):
         elif not needed and self._xsb.winfo_manager():
             self._xsb.grid_remove()
 
-    def show(self, title, columns, rows, meta=""):
+    def show(self, title, columns, rows, meta="", alternate=None):
         """Display a table: sets headers (click to sort), sizes columns,
-        resets the filter and renders all rows."""
+        resets the filter and renders all rows.
+
+        *alternate* is a second ``(columns, rows)`` view of the same thing (the
+        bytes of a file unit): a *Bytes* switch then flips between the two.
+        """
+        self._views = (title, columns, rows, meta, alternate) if alternate else None
+        if alternate:
+            self.bytes_check.pack(side=tk.RIGHT, padx=(8, 0))
+            if self.bytes_var.get():
+                columns, rows = alternate
+        else:
+            self.bytes_check.pack_forget()
+        self._show_now(title, columns, rows, meta)
+
+    def _toggle_bytes(self):
+        """Flip the current unit between its records and its bytes."""
+        if not self._views:
+            return
+        title, columns, rows, meta, alternate = self._views
+        if self.bytes_var.get():
+            columns, rows = alternate
+        self._show_now(title, columns, rows, meta)
+
+    def _show_now(self, title, columns, rows, meta=""):
         if self._fit_after_id is not None:
             self.tv.after_cancel(self._fit_after_id)
             self._fit_after_id = None

@@ -2419,3 +2419,87 @@ msgstr "Τεχνικές στήλες"
 
 msgid "Record details"
 msgstr "Λεπτομέρειες εγγραφής"
+
+msgid "File Structure"
+msgstr "Δομή αρχείου"
+
+msgid "Signature verified"
+msgstr "Η υπογραφή επαληθεύτηκε"
+
+msgid "Signature not valid"
+msgstr "Μη έγκυρη υπογραφή"
+
+msgid "Signature not checked"
+msgstr "Η υπογραφή δεν ελέγχθηκε"
+
+msgid "Not signed"
+msgstr "Χωρίς υπογραφή"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Μετατόπιση {offset} · {length} byte"
+
+msgid "Text"
+msgstr "Κείμενο"
+
+msgid "Content"
+msgstr "Περιεχόμενο"
+
+msgid "Records"
+msgstr "Εγγραφές"
+
+msgid "Unit"
+msgstr "Μονάδα"
+
+msgid "Signature"
+msgstr "Υπογραφή"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} μονάδες · {length} byte"
+
+msgid "Bytes"
+msgstr "Byte"
+
+msgid "Events and faults"
+msgstr "Συμβάντα και βλάβες"
+
+msgid "Detailed speed"
+msgstr "Λεπτομερής ταχύτητα"
+
+msgid "Technical data"
+msgstr "Τεχνικά δεδομένα"
+
+msgid "Card download"
+msgstr "Μεταφόρτωση κάρτας"
+
+msgid "Sensor data"
+msgstr "Δεδομένα αισθητήρα"
+
+msgid "Download interface version"
+msgstr "Έκδοση διεπαφής μεταφόρτωσης"
+
+msgid "Padding"
+msgstr "Συμπλήρωση"
+
+msgid "Unrecognised bytes"
+msgstr "Μη αναγνωρισμένα byte"
+
+msgid "Tachograph application, generation 1"
+msgstr "Εφαρμογή ταχογράφου, γενιά 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Εφαρμογή ταχογράφου, γενιά 2"
+
+msgid "Record Arrays"
+msgstr "Πίνακες εγγραφών"
+
+msgid "Elementary Files"
+msgstr "Στοιχειώδη αρχεία"
+
+msgid "Record Array"
+msgstr "Πίνακας εγγραφών"
+
+msgid "Elementary File"
+msgstr "Στοιχειώδες αρχείο"
+
+msgid "File Identifier"
+msgstr "Αναγνωριστικό αρχείου"

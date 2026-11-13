@@ -2419,3 +2419,87 @@ msgstr "Tehnični stolpci"
 
 msgid "Record details"
 msgstr "Podrobnosti zapisa"
+
+msgid "File Structure"
+msgstr "Struktura datoteke"
+
+msgid "Signature verified"
+msgstr "Podpis preverjen"
+
+msgid "Signature not valid"
+msgstr "Podpis ni veljaven"
+
+msgid "Signature not checked"
+msgstr "Podpis ni preverjen"
+
+msgid "Not signed"
+msgstr "Ni podpisano"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Odmik {offset} · {length} bajtov"
+
+msgid "Text"
+msgstr "Besedilo"
+
+msgid "Content"
+msgstr "Vsebina"
+
+msgid "Records"
+msgstr "Zapisi"
+
+msgid "Unit"
+msgstr "Enota"
+
+msgid "Signature"
+msgstr "Podpis"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} enot · {length} bajtov"
+
+msgid "Bytes"
+msgstr "Bajti"
+
+msgid "Events and faults"
+msgstr "Dogodki in okvare"
+
+msgid "Detailed speed"
+msgstr "Podrobna hitrost"
+
+msgid "Technical data"
+msgstr "Tehnični podatki"
+
+msgid "Card download"
+msgstr "Prenos s kartice"
+
+msgid "Sensor data"
+msgstr "Podatki tipala"
+
+msgid "Download interface version"
+msgstr "Različica vmesnika za prenos"
+
+msgid "Padding"
+msgstr "Polnilo"
+
+msgid "Unrecognised bytes"
+msgstr "Neprepoznani bajti"
+
+msgid "Tachograph application, generation 1"
+msgstr "Aplikacija tahografa, generacija 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Aplikacija tahografa, generacija 2"
+
+msgid "Record Arrays"
+msgstr "Polja zapisov"
+
+msgid "Elementary Files"
+msgstr "Elementarne datoteke"
+
+msgid "Record Array"
+msgstr "Polje zapisov"
+
+msgid "Elementary File"
+msgstr "Elementarna datoteka"
+
+msgid "File Identifier"
+msgstr "Identifikator datoteke"

@@ -2419,3 +2419,87 @@ msgstr "Технические столбцы"
 
 msgid "Record details"
 msgstr "Сведения о записи"
+
+msgid "File Structure"
+msgstr "Структура файла"
+
+msgid "Signature verified"
+msgstr "Подпись проверена"
+
+msgid "Signature not valid"
+msgstr "Подпись недействительна"
+
+msgid "Signature not checked"
+msgstr "Подпись не проверена"
+
+msgid "Not signed"
+msgstr "Без подписи"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Смещение {offset} · {length} байт"
+
+msgid "Text"
+msgstr "Текст"
+
+msgid "Content"
+msgstr "Содержимое"
+
+msgid "Records"
+msgstr "Записи"
+
+msgid "Unit"
+msgstr "Блок"
+
+msgid "Signature"
+msgstr "Подпись"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} блоков · {length} байт"
+
+msgid "Bytes"
+msgstr "Байты"
+
+msgid "Events and faults"
+msgstr "События и неисправности"
+
+msgid "Detailed speed"
+msgstr "Подробная скорость"
+
+msgid "Technical data"
+msgstr "Технические данные"
+
+msgid "Card download"
+msgstr "Выгрузка карты"
+
+msgid "Sensor data"
+msgstr "Данные датчика"
+
+msgid "Download interface version"
+msgstr "Версия интерфейса выгрузки"
+
+msgid "Padding"
+msgstr "Заполнение"
+
+msgid "Unrecognised bytes"
+msgstr "Нераспознанные байты"
+
+msgid "Tachograph application, generation 1"
+msgstr "Приложение тахографа, поколение 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Приложение тахографа, поколение 2"
+
+msgid "Record Arrays"
+msgstr "Массивы записей"
+
+msgid "Elementary Files"
+msgstr "Элементарные файлы"
+
+msgid "Record Array"
+msgstr "Массив записей"
+
+msgid "Elementary File"
+msgstr "Элементарный файл"
+
+msgid "File Identifier"
+msgstr "Идентификатор файла"

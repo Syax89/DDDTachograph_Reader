@@ -2419,3 +2419,87 @@ msgstr "Tekniset sarakkeet"
 
 msgid "Record details"
 msgstr "Tietueen tiedot"
+
+msgid "File Structure"
+msgstr "Tiedoston rakenne"
+
+msgid "Signature verified"
+msgstr "Allekirjoitus vahvistettu"
+
+msgid "Signature not valid"
+msgstr "Allekirjoitus ei kelpaa"
+
+msgid "Signature not checked"
+msgstr "Allekirjoitusta ei tarkistettu"
+
+msgid "Not signed"
+msgstr "Ei allekirjoitettu"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Siirtymä {offset} · {length} tavua"
+
+msgid "Text"
+msgstr "Teksti"
+
+msgid "Content"
+msgstr "Sisältö"
+
+msgid "Records"
+msgstr "Tietueet"
+
+msgid "Unit"
+msgstr "Yksikkö"
+
+msgid "Signature"
+msgstr "Allekirjoitus"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} yksikköä · {length} tavua"
+
+msgid "Bytes"
+msgstr "Tavut"
+
+msgid "Events and faults"
+msgstr "Tapahtumat ja viat"
+
+msgid "Detailed speed"
+msgstr "Yksityiskohtainen nopeus"
+
+msgid "Technical data"
+msgstr "Tekniset tiedot"
+
+msgid "Card download"
+msgstr "Kortin lataus"
+
+msgid "Sensor data"
+msgstr "Anturin tiedot"
+
+msgid "Download interface version"
+msgstr "Latausrajapinnan versio"
+
+msgid "Padding"
+msgstr "Täyte"
+
+msgid "Unrecognised bytes"
+msgstr "Tunnistamattomat tavut"
+
+msgid "Tachograph application, generation 1"
+msgstr "Ajopiirturisovellus, sukupolvi 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Ajopiirturisovellus, sukupolvi 2"
+
+msgid "Record Arrays"
+msgstr "Tietuetaulukot"
+
+msgid "Elementary Files"
+msgstr "Perustiedostot"
+
+msgid "Record Array"
+msgstr "Tietuetaulukko"
+
+msgid "Elementary File"
+msgstr "Perustiedosto"
+
+msgid "File Identifier"
+msgstr "Tiedoston tunniste"
