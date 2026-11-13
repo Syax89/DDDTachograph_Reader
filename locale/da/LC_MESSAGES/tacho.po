@@ -2558,3 +2558,63 @@ msgstr "Ikke standard: filen begynder med køretøjsenhedens kortdownloadmarkør
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Ingen poster: alle pladser indeholder den tomme værdi, som forordningen fastsætter (intet blev registreret)."
+
+msgid "Raw value"
+msgstr "Råværdi"
+
+msgid "Result"
+msgstr "Resultat"
+
+msgid "What it means"
+msgstr "Hvad det betyder"
+
+msgid "Signed data"
+msgstr "Signerede data"
+
+msgid "Algorithm"
+msgstr "Algoritme"
+
+msgid "Signed by"
+msgstr "Signeret af"
+
+msgid "Certificate chain"
+msgstr "Certifikatkæde"
+
+msgid "Vehicle unit"
+msgstr "Køretøjsenhed"
+
+msgid "Driver card"
+msgstr "Førerkort"
+
+msgid "{length} bytes"
+msgstr "{length} byte"
+
+msgid "Member State authority"
+msgstr "Medlemsstatens myndighed"
+
+msgid "European root (ERCA)"
+msgstr "Europæisk rod (ERCA)"
+
+msgid "not verified"
+msgstr "ikke verificeret"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "De signerede data er ikke ændret, siden de blev signeret."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "De signerede data er ændret efter signeringen, eller signaturen er beskadiget."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Forordningen udelader denne fil fra kortets signerede data, så dens signatur indgår ikke i integritetskontrollen."
+
+msgid "No key was available to check this signature."
+msgstr "Der var ingen nøgle til rådighed til at kontrollere denne signatur."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} byte, fra {start} til {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certifikaterne i begyndelsen af afsnittet er ikke signeret: de autentificerer nøglen."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Se Sikkerhed og certifikater: kontrollen af EF-signaturerne kontrollerer ikke certifikatkæden."

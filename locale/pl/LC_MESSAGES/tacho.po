@@ -2558,3 +2558,63 @@ msgstr "Niestandardowy: plik zaczyna się od znacznika pobierania karty urządze
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Brak rekordów: wszystkie pozycje zawierają pustą wartość określoną w rozporządzeniu (nic nie zarejestrowano)."
+
+msgid "Raw value"
+msgstr "Wartość surowa"
+
+msgid "Result"
+msgstr "Wynik"
+
+msgid "What it means"
+msgstr "Co to oznacza"
+
+msgid "Signed data"
+msgstr "Dane podpisane"
+
+msgid "Algorithm"
+msgstr "Algorytm"
+
+msgid "Signed by"
+msgstr "Podpisane przez"
+
+msgid "Certificate chain"
+msgstr "Łańcuch certyfikatów"
+
+msgid "Vehicle unit"
+msgstr "Urządzenie pojazdu"
+
+msgid "Driver card"
+msgstr "Karta kierowcy"
+
+msgid "{length} bytes"
+msgstr "{length} bajtów"
+
+msgid "Member State authority"
+msgstr "Organ państwa członkowskiego"
+
+msgid "European root (ERCA)"
+msgstr "Europejski urząd główny (ERCA)"
+
+msgid "not verified"
+msgstr "niezweryfikowany"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Podpisane dane nie zostały zmienione od chwili podpisania."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Podpisane dane zmieniono po podpisaniu lub podpis jest uszkodzony."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Rozporządzenie wyłącza ten plik z podpisanych danych karty, więc jego podpis nie jest częścią kontroli integralności."
+
+msgid "No key was available to check this signature."
+msgstr "Nie było dostępnego klucza do sprawdzenia tego podpisu."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bajtów, od {start} do {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certyfikaty na początku sekcji nie są podpisane: uwierzytelniają klucz."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Zobacz Bezpieczeństwo i certyfikaty: sprawdzenie podpisów EF nie weryfikuje łańcucha certyfikatów."

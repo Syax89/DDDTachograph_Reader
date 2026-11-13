@@ -2558,3 +2558,63 @@ msgstr "Nestandartinis: failas prasideda transporto priemonės bloko kortelės a
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Įrašų nėra: visose vietose yra reglamente nustatyta tuščia reikšmė (nieko neužregistruota)."
+
+msgid "Raw value"
+msgstr "Neapdorota reikšmė"
+
+msgid "Result"
+msgstr "Rezultatas"
+
+msgid "What it means"
+msgstr "Ką tai reiškia"
+
+msgid "Signed data"
+msgstr "Pasirašyti duomenys"
+
+msgid "Algorithm"
+msgstr "Algoritmas"
+
+msgid "Signed by"
+msgstr "Pasirašė"
+
+msgid "Certificate chain"
+msgstr "Sertifikatų grandinė"
+
+msgid "Vehicle unit"
+msgstr "Transporto priemonės blokas"
+
+msgid "Driver card"
+msgstr "Vairuotojo kortelė"
+
+msgid "{length} bytes"
+msgstr "{length} baitų"
+
+msgid "Member State authority"
+msgstr "Valstybės narės institucija"
+
+msgid "European root (ERCA)"
+msgstr "Europos šaknis (ERCA)"
+
+msgid "not verified"
+msgstr "nepatikrinta"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Pasirašyti duomenys nuo pasirašymo nepakeisti."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Pasirašyti duomenys pakeisti po pasirašymo arba parašas pažeistas."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Reglamentas šį failą išskiria iš pasirašytų kortelės duomenų, todėl jo parašas nėra vientisumo patikros dalis."
+
+msgid "No key was available to check this signature."
+msgstr "Šiam parašui patikrinti nebuvo rakto."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} baitų, nuo {start} iki {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Skyriaus pradžioje esantys sertifikatai nepasirašyti: jie autentifikuoja raktą."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Žr. Sauga ir sertifikatai: EF parašų patikra netikrina sertifikatų grandinės."

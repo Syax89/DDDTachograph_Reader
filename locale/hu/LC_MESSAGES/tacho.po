@@ -2558,3 +2558,63 @@ msgstr "Nem szabványos: a fájl a járműegység kártyaletöltési jelölőjé
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Nincs rekord: minden hely a rendelet által meghatározott üres értéket tartalmazza (semmit nem rögzítettek)."
+
+msgid "Raw value"
+msgstr "Nyers érték"
+
+msgid "Result"
+msgstr "Eredmény"
+
+msgid "What it means"
+msgstr "Mit jelent"
+
+msgid "Signed data"
+msgstr "Aláírt adatok"
+
+msgid "Algorithm"
+msgstr "Algoritmus"
+
+msgid "Signed by"
+msgstr "Aláírta"
+
+msgid "Certificate chain"
+msgstr "Tanúsítványlánc"
+
+msgid "Vehicle unit"
+msgstr "Járműegység"
+
+msgid "Driver card"
+msgstr "Járművezetői kártya"
+
+msgid "{length} bytes"
+msgstr "{length} bájt"
+
+msgid "Member State authority"
+msgstr "A tagállami hatóság"
+
+msgid "European root (ERCA)"
+msgstr "Európai gyökér (ERCA)"
+
+msgid "not verified"
+msgstr "nincs ellenőrizve"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Az aláírt adatok az aláírás óta nem változtak."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Az aláírt adatokat az aláírás után módosították, vagy az aláírás sérült."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "A rendelet kizárja ezt a fájlt a kártya aláírt adatai közül, ezért aláírása nem része az integritás-ellenőrzésnek."
+
+msgid "No key was available to check this signature."
+msgstr "Nem állt rendelkezésre kulcs az aláírás ellenőrzéséhez."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bájt, {start} és {end} között"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "A szakasz elején lévő tanúsítványok nincsenek aláírva: a kulcsot hitelesítik."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Lásd Biztonság és tanúsítványok: az EF-aláírások ellenőrzése nem ellenőrzi a tanúsítványláncot."

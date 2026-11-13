@@ -2558,3 +2558,63 @@ msgstr "Ei standardin mukainen: tiedosto alkaa ajoneuvoyksikön kortinlatausmerk
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Ei tietueita: kaikissa paikoissa on asetuksen määrittämä tyhjä arvo (mitään ei tallennettu)."
+
+msgid "Raw value"
+msgstr "Raaka-arvo"
+
+msgid "Result"
+msgstr "Tulos"
+
+msgid "What it means"
+msgstr "Mitä se tarkoittaa"
+
+msgid "Signed data"
+msgstr "Allekirjoitetut tiedot"
+
+msgid "Algorithm"
+msgstr "Algoritmi"
+
+msgid "Signed by"
+msgstr "Allekirjoittaja"
+
+msgid "Certificate chain"
+msgstr "Varmenneketju"
+
+msgid "Vehicle unit"
+msgstr "Ajoneuvoyksikkö"
+
+msgid "Driver card"
+msgstr "Kuljettajakortti"
+
+msgid "{length} bytes"
+msgstr "{length} tavua"
+
+msgid "Member State authority"
+msgstr "Jäsenvaltion viranomainen"
+
+msgid "European root (ERCA)"
+msgstr "Eurooppalainen juuri (ERCA)"
+
+msgid "not verified"
+msgstr "ei vahvistettu"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Allekirjoitettuja tietoja ei ole muutettu allekirjoittamisen jälkeen."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Allekirjoitettuja tietoja on muutettu allekirjoittamisen jälkeen tai allekirjoitus on vioittunut."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Asetus jättää tämän tiedoston kortin allekirjoitettujen tietojen ulkopuolelle, joten sen allekirjoitus ei kuulu eheystarkistukseen."
+
+msgid "No key was available to check this signature."
+msgstr "Tämän allekirjoituksen tarkistamiseen ei ollut avainta."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} tavua, {start}–{end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Osion alussa olevia varmenteita ei allekirjoiteta: ne todentavat avaimen."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Katso Suojaus ja varmenteet: EF-allekirjoitusten tarkistus ei tarkista varmenneketjua."

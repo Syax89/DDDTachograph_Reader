@@ -2558,3 +2558,63 @@ msgstr "Nestandarta: fails sākas ar transportlīdzekļa vienības kartes lejupi
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Nav ierakstu: visās vietās ir regulā noteiktā tukšā vērtība (nekas netika reģistrēts)."
+
+msgid "Raw value"
+msgstr "Neapstrādāta vērtība"
+
+msgid "Result"
+msgstr "Rezultāts"
+
+msgid "What it means"
+msgstr "Ko tas nozīmē"
+
+msgid "Signed data"
+msgstr "Parakstītie dati"
+
+msgid "Algorithm"
+msgstr "Algoritms"
+
+msgid "Signed by"
+msgstr "Parakstījis"
+
+msgid "Certificate chain"
+msgstr "Sertifikātu ķēde"
+
+msgid "Vehicle unit"
+msgstr "Transportlīdzekļa vienība"
+
+msgid "Driver card"
+msgstr "Vadītāja karte"
+
+msgid "{length} bytes"
+msgstr "{length} baiti"
+
+msgid "Member State authority"
+msgstr "Dalībvalsts iestāde"
+
+msgid "European root (ERCA)"
+msgstr "Eiropas sakne (ERCA)"
+
+msgid "not verified"
+msgstr "nav pārbaudīts"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Parakstītie dati kopš parakstīšanas nav mainīti."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Parakstītie dati mainīti pēc parakstīšanas vai paraksts ir bojāts."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Regula izslēdz šo failu no kartes parakstītajiem datiem, tāpēc tā paraksts nav integritātes pārbaudes daļa."
+
+msgid "No key was available to check this signature."
+msgstr "Šī paraksta pārbaudei nebija pieejamas atslēgas."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} baiti, no {start} līdz {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Sertifikāti sadaļas sākumā nav parakstīti: tie autentificē atslēgu."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Skatīt Drošība un sertifikāti: EF parakstu pārbaude nepārbauda sertifikātu ķēdi."

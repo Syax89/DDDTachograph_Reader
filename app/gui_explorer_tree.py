@@ -752,11 +752,12 @@ class TreeMixin:
         if certs:
             cols, rows = _rows_for(certs, None)
             self._add_section(gnode, _("Certificates"), cols, rows)
+        from app.gui_explorer_structure import content_rows
         if chip:
-            cols, rows = _kv_rows(chip)
+            cols, rows = content_rows(chip)
             self._add_section(gnode, _("IC Chip (EF_ICC / EF_IC)"), cols, rows)
         if icc:
-            cols, rows = _kv_rows(icc)
+            cols, rows = content_rows(icc)
             self._add_section(gnode, _("ICC Identification"), cols, rows)
         for auth_key, auth_label in [("gnss_auth", "GNSS Authentication (0x960F)"),
                                       ("load_unload_auth", "Load/Unload Authentication (0x6399)")]:

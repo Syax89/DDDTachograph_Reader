@@ -2558,3 +2558,63 @@ msgstr "Nestandard: fișierul începe cu marcajul de descărcare card al unită�
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Nicio înregistrare: toate pozițiile conțin valoarea goală definită de regulament (nu s-a înregistrat nimic)."
+
+msgid "Raw value"
+msgstr "Valoare brută"
+
+msgid "Result"
+msgstr "Rezultat"
+
+msgid "What it means"
+msgstr "Ce înseamnă"
+
+msgid "Signed data"
+msgstr "Date semnate"
+
+msgid "Algorithm"
+msgstr "Algoritm"
+
+msgid "Signed by"
+msgstr "Semnat de"
+
+msgid "Certificate chain"
+msgstr "Lanț de certificate"
+
+msgid "Vehicle unit"
+msgstr "Unitatea vehiculului"
+
+msgid "Driver card"
+msgstr "Card de conducător"
+
+msgid "{length} bytes"
+msgstr "{length} octeți"
+
+msgid "Member State authority"
+msgstr "Autoritatea statului membru"
+
+msgid "European root (ERCA)"
+msgstr "Rădăcina europeană (ERCA)"
+
+msgid "not verified"
+msgstr "neverificat"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Datele semnate nu au fost modificate de când au fost semnate."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Datele semnate au fost modificate după semnare sau semnătura este deteriorată."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Regulamentul exclude acest fișier din datele semnate ale cardului, deci semnătura sa nu face parte din verificarea integrității."
+
+msgid "No key was available to check this signature."
+msgstr "Nu a fost disponibilă nicio cheie pentru verificarea acestei semnături."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} octeți, de la {start} la {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certificatele de la începutul secțiunii nu sunt semnate: ele autentifică cheia."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Vezi Securitate și certificate: verificarea semnăturilor EF nu verifică lanțul de certificate."

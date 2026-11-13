@@ -2558,3 +2558,63 @@ msgstr "Нестандартний файл: він починається з м
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Немає записів: усі комірки містять порожнє значення, визначене регламентом (нічого не записано)."
+
+msgid "Raw value"
+msgstr "Сире значення"
+
+msgid "Result"
+msgstr "Результат"
+
+msgid "What it means"
+msgstr "Що це означає"
+
+msgid "Signed data"
+msgstr "Підписані дані"
+
+msgid "Algorithm"
+msgstr "Алгоритм"
+
+msgid "Signed by"
+msgstr "Підписано"
+
+msgid "Certificate chain"
+msgstr "Ланцюжок сертифікатів"
+
+msgid "Vehicle unit"
+msgstr "Бортовий пристрій"
+
+msgid "Driver card"
+msgstr "Картка водія"
+
+msgid "{length} bytes"
+msgstr "{length} байтів"
+
+msgid "Member State authority"
+msgstr "Орган держави-члена"
+
+msgid "European root (ERCA)"
+msgstr "Європейський корінь (ERCA)"
+
+msgid "not verified"
+msgstr "не перевірено"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Підписані дані не змінювалися з моменту підписання."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Підписані дані змінено після підписання, або підпис пошкоджено."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Регламент виключає цей файл із підписаних даних картки, тому його підпис не входить до перевірки цілісності."
+
+msgid "No key was available to check this signature."
+msgstr "Для перевірки цього підпису не було доступного ключа."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} байтів, з {start} по {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Сертифікати на початку розділу не підписані: вони засвідчують ключ."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Див. Безпека та сертифікати: перевірка підписів EF не перевіряє ланцюжок сертифікатів."

@@ -2558,3 +2558,63 @@ msgstr "Inte standard: filen börjar med fordonsenhetens kortnedladdningsmarkör
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Inga poster: alla platser innehåller det tomma värde som förordningen anger (inget registrerades)."
+
+msgid "Raw value"
+msgstr "Råvärde"
+
+msgid "Result"
+msgstr "Resultat"
+
+msgid "What it means"
+msgstr "Vad det betyder"
+
+msgid "Signed data"
+msgstr "Signerade data"
+
+msgid "Algorithm"
+msgstr "Algoritm"
+
+msgid "Signed by"
+msgstr "Signerad av"
+
+msgid "Certificate chain"
+msgstr "Certifikatkedja"
+
+msgid "Vehicle unit"
+msgstr "Fordonsenhet"
+
+msgid "Driver card"
+msgstr "Förarkort"
+
+msgid "{length} bytes"
+msgstr "{length} byte"
+
+msgid "Member State authority"
+msgstr "Medlemsstatens myndighet"
+
+msgid "European root (ERCA)"
+msgstr "Europeisk rot (ERCA)"
+
+msgid "not verified"
+msgstr "inte verifierad"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "De signerade uppgifterna har inte ändrats sedan de signerades."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "De signerade uppgifterna ändrades efter signeringen, eller så är signaturen skadad."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Förordningen undantar denna fil från kortets signerade data, så dess signatur ingår inte i integritetskontrollen."
+
+msgid "No key was available to check this signature."
+msgstr "Ingen nyckel fanns tillgänglig för att kontrollera denna signatur."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} byte, från {start} till {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certifikaten i början av avsnittet är inte signerade: de autentiserar nyckeln."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Se Säkerhet och certifikat: kontrollen av EF-signaturerna kontrollerar inte certifikatkedjan."

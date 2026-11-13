@@ -2558,3 +2558,63 @@ msgstr "Nestandardno: datoteka se začne z oznako prenosa kartice enote vozila (
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Ni zapisov: vsa mesta vsebujejo prazno vrednost, ki jo določa uredba (nič ni bilo zabeleženo)."
+
+msgid "Raw value"
+msgstr "Surova vrednost"
+
+msgid "Result"
+msgstr "Rezultat"
+
+msgid "What it means"
+msgstr "Kaj to pomeni"
+
+msgid "Signed data"
+msgstr "Podpisani podatki"
+
+msgid "Algorithm"
+msgstr "Algoritem"
+
+msgid "Signed by"
+msgstr "Podpisal"
+
+msgid "Certificate chain"
+msgstr "Veriga potrdil"
+
+msgid "Vehicle unit"
+msgstr "Enota vozila"
+
+msgid "Driver card"
+msgstr "Voznikova kartica"
+
+msgid "{length} bytes"
+msgstr "{length} bajtov"
+
+msgid "Member State authority"
+msgstr "Organ države članice"
+
+msgid "European root (ERCA)"
+msgstr "Evropski koren (ERCA)"
+
+msgid "not verified"
+msgstr "ni preverjeno"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Podpisani podatki se od podpisa niso spremenili."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Podpisani podatki so bili po podpisu spremenjeni ali je podpis poškodovan."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Uredba ta datoteko izključuje iz podpisanih podatkov kartice, zato njen podpis ni del preverjanja celovitosti."
+
+msgid "No key was available to check this signature."
+msgstr "Za preverjanje tega podpisa ni bilo na voljo nobenega ključa."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bajtov, od {start} do {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Potrdila na začetku razdelka niso podpisana: overjajo ključ."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Glejte Varnost in potrdila: preverjanje podpisov EF ne preverja verige potrdil."

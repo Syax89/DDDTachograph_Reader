@@ -98,6 +98,9 @@ def technical_columns(keys):
             technical.append(key)
         elif f"{key}_label" in present or f"{key}_description" in present:
             technical.append(key)
+        elif key in ("fault_type", "event_type") and worded:
+            # The numeric type of a record whose description spells it out.
+            technical.append(key)
         elif key.endswith("_code"):
             stem = key[:-len("_code")]
             if stem in present or worded:

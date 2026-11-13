@@ -19,7 +19,7 @@ from app.gui_base import (  # noqa: F401
     ui_text,
 )
 from app.gui_text import Columns
-from core.structure import build_layout, content_title, hex_rows
+from core.structure import build_layout, content_title, hex_rows, signed_range
 from core.utils.activity_stats import compute_activity_totals, recorded_until_seconds
 
 #: Tree rows inserted between two pumps of the event loop.
@@ -243,7 +243,25 @@ def content_rows(value, key=None, cuts=None, one_driver=True):
     if isinstance(value, dict):
         shown = {k: v for k, v in value.items()
                  if k not in HIDDEN_KEYS and not str(k).startswith("_")}
-        return _kv_rows(shown)
+        labelled = {k[:-len("_label")] for k in shown if str(k).endswith("_label")}
+        if not labelled:
+            return _kv_rows(shown)
+        # A field the decoder also says in words: one row, the words as the
+        # value and the raw code in a technical column.
+        raw_col = _("Raw value")
+        cols = Columns([_("Field"), _("Value"), raw_col], technical=[raw_col])
+        rows = []
+        for k, v in shown.items():
+            if str(k).endswith("_label") and k[:-len("_label")] in shown:
+                continue
+            if k in labelled:
+                row = [ui_text.label(k), fmt_val(shown[f"{k}_label"], key=k),
+                       fmt_val(v, key=k)]
+            else:
+                row = [ui_text.label(k), fmt_val(v, key=k), ""]
+            if str(row[1]).strip() or str(row[2]).strip():
+                rows.append(row)
+        return cols, rows
     if isinstance(value, (list, tuple)):
         if value and all(isinstance(item, dict) for item in value):
             records = [_day_totals(_flat(item), cuts or {}, one_driver)
@@ -254,7 +272,16 @@ def content_rows(value, key=None, cuts=None, one_driver=True):
             if key == "elementary_files":
                 records = [dict(r, signature=_signature_words(r.get("signature")))
                            for r in records]
-            return _rows_for(records, None)
+            cols, rows = _rows_for(records, None)
+            if len(rows) == 1 and key not in _NAMED_PARTS:
+                # One record reads down, not across: Field / Value, its
+                # technical fields last.
+                technical = getattr(cols, "technical", frozenset())
+                pairs = [(c, v) for c, v in zip(cols, rows[0], strict=False)
+                         if str(v).strip()]
+                pairs.sort(key=lambda pair: pair[0] in technical)
+                return [_("Field"), _("Value")], [[c, v] for c, v in pairs]
+            return cols, rows
         return [_("Value")], [[fmt_val(item)] for item in value]
     return [_("Value")], [[fmt_val(value)]]
 
@@ -269,6 +296,45 @@ _EMPTY_WORDS = {
                         "marker (76 06) instead of the card's first file. The card data are "
                         "intact, but some programs may not open this file."),
 }
+
+
+def is_signature(unit):
+    """A signature part: a G1/card signature element or a G2 SignatureRecord array."""
+    return unit.kind == "signature" or (unit.kind == "array"
+                                        and unit.tag == "RecordArray 0x08")
+
+
+def _hash_for(curve):
+    """The hash Annex 1C Appendix 11 (CSM_50) pairs with a curve size."""
+    import re
+    match = re.search(r"(\d{3})", str(curve))
+    bits = int(match.group(1)) if match else 0
+    return "SHA-256" if bits <= 256 else "SHA-384" if bits <= 384 else "SHA-512"
+
+
+def _curve_for_size(size):
+    """Curve size from an ECDSA signature length (r || s)."""
+    return {64: "256-bit curve", 96: "384-bit curve", 128: "512-bit curve",
+            132: "521-bit curve"}.get(size, "")
+
+
+def _curve_oid_name(oid):
+    from core.utils.constants import EC_CURVE_OIDS
+    return EC_CURVE_OIDS.get(str(oid or "").lower(), "")
+
+
+def _first_certificate(units, tag):
+    """The decoded certificate of the first part with *tag* (an array or an EF)."""
+    for top in units or []:
+        for part in top.walk():
+            if part.tag != tag or part.kind == "signature":
+                continue
+            for value in part.content().values():
+                records = value if isinstance(value, list) else [value]
+                for record in records:
+                    if isinstance(record, dict) and (record.get("chr") or record.get("car")):
+                        return record
+    return None
 
 
 class StructureMixin:
@@ -304,6 +370,7 @@ class StructureMixin:
         root = self.tree.insert("", tk.END, text=_("File Structure"),
                                 image=_icon("raw-data", 16, self.tree) or "")
         self._payloads[root] = ("__unit_index__", units)
+        self._layout_units = units
         self._structure_rows = 0
         for unit in units:
             self._add_unit(root, unit)
@@ -380,7 +447,9 @@ class StructureMixin:
         title = self._unit_text(unit)
         meta = self._unit_meta(unit)
         byte_view = self._unit_bytes(unit)
-        if key is None and unit.children and all(c.kind == "array" for c in unit.children):
+        if key is None and is_signature(unit):
+            cols, rows = [_("Field"), _("Value")], self._signature_rows(unit)
+        elif key is None and unit.children and all(c.kind == "array" for c in unit.children):
             cols, rows = self._section_overview(unit)
         elif key is None and unit.kind == "group":
             cols, rows = self._group_overview(unit, one_driver)
@@ -458,3 +527,102 @@ class StructureMixin:
                          _signature_text(ef.signature) if signed else _("Not signed"),
                          ef.tag, f"0x{ef.offset:08X}", ef.length])
         return cols, rows
+
+    def _signature_rows(self, sig):
+        """A signature in words: the verdict, what it signs, how, and by whom.
+
+        The signature value itself stays behind the *Bytes* switch.
+        """
+        data = getattr(self, "_opened_data", None) or {}
+        units = getattr(self, "_layout_units", None) or []
+        owner = sig.parent
+        verdict = sig.signature
+        if verdict is None and owner is not None:
+            verdict = owner.signature
+        size = sig.length - (5 if sig.kind == "array" or owner is not None
+                             and owner.kind == "ef" else 0)
+        rows = []
+
+        # ── the verdict, and what it means ──
+        unsigned_ef = (owner is not None and owner.tag == "EF 0x050E")
+        if verdict is True:
+            rows += [[_("Result"), _("Signature verified")],
+                     [_("What it means"),
+                      _("The signed data have not been changed since they were signed.")]]
+        elif verdict is False:
+            rows += [[_("Result"), _("Signature not valid")],
+                     [_("What it means"),
+                      _("The signed data were changed after signing, or the signature is damaged.")]]
+        else:
+            rows.append([_("Result"), _("Signature not checked")])
+            if unsigned_ef:
+                rows.append([_("What it means"),
+                             _("The regulation leaves this file out of the signed card data, "
+                               "so its signature is not part of the integrity check.")])
+            else:
+                rows.append([_("What it means"),
+                             _("No key was available to check this signature.")])
+
+        # ── what it signs ──
+        span = signed_range(sig)
+        if span and owner is not None:
+            start, length = span
+            rows.append([_("Signed data"), _("{part}: {length} bytes, from {start} to {end}").format(
+                part=self._unit_text(owner), length=length,
+                start=f"0x{start:08X}", end=f"0x{start + max(length, 1) - 1:08X}")])
+            if owner.tag in ("TREP 0x01", "TREP 0x21", "TREP 0x31") or (
+                    owner.children and owner.children[0].tag in ("RecordArray 0x04",)):
+                rows.append(["", _("The certificates at the start of the section are not "
+                                   "signed: they authenticate the key.")])
+
+        # ── how, and by whom ──
+        meta = data.get("metadata") or {}
+        sv = data.get("signature_verification") or {}
+        dtype = getattr(sig, "_dtype", None)
+        if sig.kind == "array":                                   # G2 / G2.2 vehicle unit
+            cert = _first_certificate(units, "RecordArray 0x0F") or {}
+            curve = (cert.get("curve") or _curve_oid_name(cert.get("curve_oid"))
+                     or _curve_for_size(size))
+            rows.append([_("Algorithm"), f"ECDSA {curve} \u00b7 {_hash_for(curve)}"])
+            signer = _("Vehicle unit")
+            if cert.get("chr"):
+                signer += f" \u00b7 {cert['chr']}"
+            rows.append([_("Signed by"), signer])
+            rows.append([_("Certificate chain"), self._chain_text(
+                sv.get("msca_to_vu"), sv.get("root_anchored"), cert.get("car"))])
+        elif owner is not None and owner.kind == "ef":            # driver card EF
+            if dtype == 0x03:
+                cert = _first_certificate(units, "EF 0xC101") or {}
+                curve = cert.get("curve") or _curve_for_size(size)
+                rows.append([_("Algorithm"), f"ECDSA {curve} \u00b7 {_hash_for(curve)}"])
+            else:
+                cert = {}
+                rows.append([_("Algorithm"), "RSA 1024 bit \u00b7 ISO/IEC 9796-2 \u00b7 SHA-1"])
+            signer = _("Driver card")
+            if cert.get("chr"):
+                signer += f" \u00b7 {cert['chr']}"
+            rows.append([_("Signed by"), signer])
+            rows.append([_("Certificate chain"),
+                         _("See Security & Certificates: checking the EF signatures "
+                           "does not check the certificate chain.")])
+        else:                                                     # G1 vehicle unit
+            rows.append([_("Algorithm"), "RSA 1024 bit \u00b7 ISO/IEC 9796-2 \u00b7 SHA-1"])
+            rows.append([_("Signed by"), _("Vehicle unit")])
+            rows.append([_("Certificate chain"), self._chain_text(
+                sv.get("msca_to_vu"), sv.get("root_anchored"), None)])
+        rows.append([_("Signature"), _("{length} bytes").format(length=size)])
+        if meta.get("generation"):
+            rows.append([_("Generation"), str(meta.get("generation"))])
+        return rows
+
+    @staticmethod
+    def _chain_text(msca_to_vu, root_anchored, car):
+        issuer = _("Member State authority")
+        if car:
+            issuer += f" {car}"
+        chain = f"{_('Vehicle unit')} \u2190 {issuer} \u2190 {_('European root (ERCA)')}"
+        if msca_to_vu and root_anchored:
+            return f"{chain}  \u00b7  {_('verified')}"
+        if msca_to_vu is False or root_anchored is False:
+            return f"{chain}  \u00b7  {_('not verified')}"
+        return chain

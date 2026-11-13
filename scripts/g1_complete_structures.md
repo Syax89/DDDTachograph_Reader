@@ -38,8 +38,8 @@
 | 1 | 8 | CardExtendedSerialNumber | ExtendedSerialNumber | 8 byte serial |
 | 9 | 8 | CardApprovalNumber | SimpleString(8) | Approval code |
 | 17 | 1 | CardPersonaliserId | UInt8 | Personaliser ID |
-| 18 | 4 | EmbedderIcAssemblerId | Object | CountryCode(2) + BCD(2) + ManufacturerInfo(1) |
-| 22 | 2 | IcIdentifier | UInt16 | IC identifier |
+| 18 | 5 | EmbedderIcAssemblerId | Object | CountryCode(2) + BCD(2) + ManufacturerInfo(1) |
+| 23 | 2 | IcIdentifier | UInt16 | IC identifier |
 | 24+ | — | HistoricalInfo | variable | Historical bytes (ISO 7816) |
 
 **Nota**: La dimensione totale non è fissa a causa dei campi variabili. Il decoder attuale legge i primi 9 byte come clock_stop + ic_data e interpreta il resto come historical_info testuale.
@@ -94,8 +94,8 @@
 | 1 | 8 | CardExtendedSerialNumber | HexValue(8) | Serial number |
 | 9 | 8 | CardApprovalNumber | SimpleString(8) | Approval code |
 | 17 | 1 | CardPersonaliserId | UInt8 | |
-| 18 | 4 | EmbedderIcAssemblerId | Object | Country(2) + BCD(2) + Mfr(1) |
-| 22 | 2 | IcIdentifier | UInt16 | |
+| 18 | 5 | EmbedderIcAssemblerId | Object | Country(2) + BCD(2) + Mfr(1) |
+| 23 | 2 | IcIdentifier | UInt16 | |
 
 **Nota**: Questo è un tag G2, non G1. Nel contesto del codebase locale, viene dispatchato per entrambe le generazioni.
 

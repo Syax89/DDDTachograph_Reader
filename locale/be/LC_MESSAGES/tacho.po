@@ -2558,3 +2558,63 @@ msgstr "Нестандартны файл: ён пачынаецца з марк
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Няма запісаў: усе ячэйкі змяшчаюць пустое значэнне, вызначанае рэгламентам (нічога не запісана)."
+
+msgid "Raw value"
+msgstr "Зыходнае значэнне"
+
+msgid "Result"
+msgstr "Вынік"
+
+msgid "What it means"
+msgstr "Што гэта значыць"
+
+msgid "Signed data"
+msgstr "Падпісаныя даныя"
+
+msgid "Algorithm"
+msgstr "Алгарытм"
+
+msgid "Signed by"
+msgstr "Падпісана"
+
+msgid "Certificate chain"
+msgstr "Ланцужок сертыфікатаў"
+
+msgid "Vehicle unit"
+msgstr "Бартавая прылада"
+
+msgid "Driver card"
+msgstr "Картка вадзіцеля"
+
+msgid "{length} bytes"
+msgstr "{length} байтаў"
+
+msgid "Member State authority"
+msgstr "Орган дзяржавы-члена"
+
+msgid "European root (ERCA)"
+msgstr "Еўрапейскі корань (ERCA)"
+
+msgid "not verified"
+msgstr "не праверана"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Падпісаныя даныя не змяняліся з моманту падпісання."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Падпісаныя даныя зменены пасля падпісання, або подпіс пашкоджаны."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Рэгламент выключае гэты файл з падпісаных даных карткі, таму яго подпіс не ўваходзіць у праверку цэласнасці."
+
+msgid "No key was available to check this signature."
+msgstr "Для праверкі гэтага подпісу не было даступнага ключа."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} байтаў, з {start} па {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Сертыфікаты ў пачатку раздзела не падпісаныя: яны пацвярджаюць ключ."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Гл. Бяспека і сертыфікаты: праверка подпісаў EF не правярае ланцужок сертыфікатаў."

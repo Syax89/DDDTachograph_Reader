@@ -2558,3 +2558,63 @@ msgstr "Нестандардно: датотека почиње ознаком �
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Нема записа: сва места садрже празну вредност коју прописује уредба (ништа није забележено)."
+
+msgid "Raw value"
+msgstr "Сирова вредност"
+
+msgid "Result"
+msgstr "Резултат"
+
+msgid "What it means"
+msgstr "Шта то значи"
+
+msgid "Signed data"
+msgstr "Потписани подаци"
+
+msgid "Algorithm"
+msgstr "Алгоритам"
+
+msgid "Signed by"
+msgstr "Потписао"
+
+msgid "Certificate chain"
+msgstr "Ланац сертификата"
+
+msgid "Vehicle unit"
+msgstr "Јединица возила"
+
+msgid "Driver card"
+msgstr "Возачка картица"
+
+msgid "{length} bytes"
+msgstr "{length} бајтова"
+
+msgid "Member State authority"
+msgstr "Орган државе чланице"
+
+msgid "European root (ERCA)"
+msgstr "Европски корен (ERCA)"
+
+msgid "not verified"
+msgstr "није проверено"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Потписани подаци нису мењани откад су потписани."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Потписани подаци су промењени после потписивања или је потпис оштећен."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Уредба искључује ову датотеку из потписаних података картице, па њен потпис није део провере целовитости."
+
+msgid "No key was available to check this signature."
+msgstr "Није био доступан кључ за проверу овог потписа."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} бајтова, од {start} до {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Сертификати на почетку одељка нису потписани: они аутентификују кључ."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Видети Безбедност и сертификати: провера потписа EF не проверава ланац сертификата."

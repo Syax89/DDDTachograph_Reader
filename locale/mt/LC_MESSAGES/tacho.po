@@ -2558,3 +2558,63 @@ msgstr "Mhux standard: il-fajl jibda bil-marker tat-tniżżil tal-karta tal-unit
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "L-ebda rekord: il-postijiet kollha fihom il-valur vojt li jiddefinixxi r-regolament (xejn ma ġie rreġistrat)."
+
+msgid "Raw value"
+msgstr "Valur mhux ipproċessat"
+
+msgid "Result"
+msgstr "Riżultat"
+
+msgid "What it means"
+msgstr "Xi jfisser"
+
+msgid "Signed data"
+msgstr "Data ffirmata"
+
+msgid "Algorithm"
+msgstr "Algoritmu"
+
+msgid "Signed by"
+msgstr "Iffirmat minn"
+
+msgid "Certificate chain"
+msgstr "Katina ta' ċertifikati"
+
+msgid "Vehicle unit"
+msgstr "Unità tal-vettura"
+
+msgid "Driver card"
+msgstr "Karta tas-sewwieq"
+
+msgid "{length} bytes"
+msgstr "{length} byte"
+
+msgid "Member State authority"
+msgstr "Awtorità tal-Istat Membru"
+
+msgid "European root (ERCA)"
+msgstr "Għerq Ewropew (ERCA)"
+
+msgid "not verified"
+msgstr "mhux ivverifikat"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Id-data ffirmata ma nbidlitx minn meta ġiet iffirmata."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Id-data ffirmata nbidlet wara l-firma, jew il-firma hija bil-ħsara."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Ir-regolament jeskludi dan il-fajl mid-data ffirmata tal-karta, għalhekk il-firma tiegħu mhix parti mill-kontroll tal-integrità."
+
+msgid "No key was available to check this signature."
+msgstr "Ma kienet disponibbli l-ebda ċavetta biex tiġi kkontrollata din il-firma."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} byte, minn {start} sa {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Iċ-ċertifikati fil-bidu tat-taqsima mhumiex iffirmati: jawtentikaw iċ-ċavetta."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Ara Sigurtà u ċertifikati: il-kontroll tal-firem tal-EF ma jivverifikax il-katina taċ-ċertifikati."

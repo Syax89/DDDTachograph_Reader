@@ -2558,3 +2558,63 @@ msgstr "Neštandardný: súbor začína značkou stiahnutia karty palubnej jedno
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Žiadne záznamy: všetky pozície obsahujú prázdnu hodnotu definovanú nariadením (nič nebolo zaznamenané)."
+
+msgid "Raw value"
+msgstr "Surová hodnota"
+
+msgid "Result"
+msgstr "Výsledok"
+
+msgid "What it means"
+msgstr "Čo to znamená"
+
+msgid "Signed data"
+msgstr "Podpísané údaje"
+
+msgid "Algorithm"
+msgstr "Algoritmus"
+
+msgid "Signed by"
+msgstr "Podpísal"
+
+msgid "Certificate chain"
+msgstr "Reťazec certifikátov"
+
+msgid "Vehicle unit"
+msgstr "Palubná jednotka"
+
+msgid "Driver card"
+msgstr "Karta vodiča"
+
+msgid "{length} bytes"
+msgstr "{length} bajtov"
+
+msgid "Member State authority"
+msgstr "Orgán členského štátu"
+
+msgid "European root (ERCA)"
+msgstr "Európsky koreň (ERCA)"
+
+msgid "not verified"
+msgstr "neoverené"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Podpísané údaje sa od podpisu nezmenili."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Podpísané údaje sa po podpise zmenili alebo je podpis poškodený."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Nariadenie vylučuje tento súbor z podpísaných údajov karty, jeho podpis preto nie je súčasťou kontroly integrity."
+
+msgid "No key was available to check this signature."
+msgstr "Na kontrolu tohto podpisu nebol k dispozícii žiadny kľúč."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bajtov, od {start} do {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certifikáty na začiatku oddielu nie sú podpísané: overujú kľúč."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Pozri Zabezpečenie a certifikáty: kontrola podpisov EF neoveruje reťazec certifikátov."

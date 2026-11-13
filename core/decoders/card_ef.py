@@ -5,7 +5,8 @@ from datetime import datetime, timezone
 
 from core.utils.logger import get_logger, redact
 from core.utils.constants import MAX_ODO_DISTANCE_KM
-from core.decoders.common import _decode_gnss_coord, decode_date, decode_string, get_nation, is_known_nation, mark_heuristic
+from core.decoders.common import _decode_gnss_coord, decode_date, decode_extended_serial_number, decode_string, get_nation, is_known_nation, mark_heuristic
+from core.utils.manufacturer_codes import manufacturer_name
 from core.utils.event_codes import describe_calibration_purpose, describe_control_type, describe_event, describe_fault
 
 _log = get_logger(__name__)
@@ -719,6 +720,55 @@ def parse_card_gnss_places(val, results):
     except (struct.error, IndexError, ValueError) as exc:
         _log.debug("Card GNSS places parse failed: %s", exc)
 
+def _icc_fields(val):
+    """CardIccIdentification after its clockStop octet (Annex 1B/1C §2.23).
+
+    cardExtendedSerialNumber (8), cardApprovalNumber (8), cardPersonaliserID
+    (1, a ManufacturerCode), embedderIcAssemblerId (5: countryCode IA5 2,
+    moduleEmbedder BCD 2, manufacturerInformation 1) and icIdentifier (2): 25
+    octets with clockStop. The embedder identifier was read as 4 octets, which
+    moved icIdentifier one octet early and left its last octet as "historical"
+    bytes. The raw values keep their keys; ``*_label`` keys say them in words.
+    """
+    out = {}
+    if len(val) >= 9:
+        out["extended_serial_number"] = val[1:9].hex().upper()
+        serial = decode_extended_serial_number(val, 1)
+        if serial:
+            parts = [str(serial["serial_number"])]
+            if serial.get("month_year_status") == "valid":
+                parts.append(f"{serial['month']:02d}/20{serial['year_suffix']:02d}")
+            if serial.get("manufacturer"):
+                parts.append(serial["manufacturer"])
+            out["extended_serial_number_label"] = " \u00b7 ".join(parts)
+    if len(val) >= 17:
+        out["approval_number"] = val[9:17].hex().upper()
+        text = decode_string(val[9:17])
+        if text:
+            out["approval_number_label"] = text
+    if len(val) >= 18:
+        out["personaliser_id"] = f"0x{val[17]:02X}"
+        name = manufacturer_name(val[17])
+        if name:
+            out["personaliser_id_label"] = name
+    if len(val) >= 23:
+        out["embedder_ic_assembler_id"] = val[18:23].hex().upper()
+        country = decode_string(val[18:20])
+        out["embedder_ic_assembler_id_label"] = " \u00b7 ".join(
+            part for part in (country, val[20:22].hex().upper(),
+                              f"0x{val[22]:02X}") if part)
+    if len(val) >= 25:
+        out["ic_identifier"] = f"0x{struct.unpack('>H', val[23:25])[0]:04X}"
+    if len(val) > 25:
+        historical = val[25:]
+        text = decode_string(historical)
+        if text:
+            out["historical_info"] = text
+        else:
+            out["historical_bytes"] = historical.hex().upper()
+    return out
+
+
 def parse_g2_card_icc_identification(val, results):
     """Parse CardIccIdentification (tag 0x0101) — Annex 1C §2.23.
 
@@ -727,7 +777,7 @@ def parse_g2_card_icc_identification(val, results):
       ExtendedSerialNumber    8  HexValue
       ApprovalNumber          8  HexValue
       PersonaliserId          1  UInt8
-      EmbedderIcAssemblerId   4  HexValue
+      EmbedderIcAssemblerId   5  CountryCode(2) + ModuleEmbedder BCD(2) + Info(1)
       IcIdentifier            2  UInt16
       HistoricalBytes   variable  (remaining)
     Minimum: 24 bytes
@@ -738,23 +788,7 @@ def parse_g2_card_icc_identification(val, results):
         chip_info = {
             "clock_stop": "Normal" if val[0] == 0 else f"Stopped(0x{val[0]:02X})",
         }
-        if len(val) >= 9:
-            chip_info["extended_serial_number"] = val[1:9].hex().upper()
-        if len(val) >= 17:
-            chip_info["approval_number"] = val[9:17].hex().upper()
-        if len(val) >= 18:
-            chip_info["personaliser_id"] = f"0x{val[17]:02X}"
-        if len(val) >= 22:
-            chip_info["embedder_ic_assembler_id"] = val[18:22].hex().upper()
-        if len(val) >= 24:
-            chip_info["ic_identifier"] = f"0x{struct.unpack('>H', val[22:24])[0]:04X}"
-        if len(val) > 24:
-            historical = val[24:]
-            text = decode_string(historical)
-            if text:
-                chip_info["historical_info"] = text
-            else:
-                chip_info["historical_bytes"] = historical.hex().upper()
+        chip_info.update(_icc_fields(val))
 
         results.setdefault("card_icc", {}).update(chip_info)
     except (struct.error, IndexError, ValueError) as exc:
@@ -768,10 +802,10 @@ def parse_ef_icc(val, results):
       ExtendedSerialNumber    8  HexValue
       ApprovalNumber          8  HexValue
       PersonaliserId          1  UInt8
-      EmbedderIcAssemblerId   4  HexValue
+      EmbedderIcAssemblerId   5  CountryCode(2) + ModuleEmbedder BCD(2) + Info(1)
       IcIdentifier            2  UInt16
       HistoricalBytes   variable  (remaining data)
-    Minimum: 24 bytes (1+8+8+1+4+2)
+    Size: 25 bytes (1+8+8+1+5+2)
     """
     if len(val) < 4:
         return
@@ -780,23 +814,7 @@ def parse_ef_icc(val, results):
         chip_info = {
             "clock_stop": "Normal" if clock_stop == 0 else f"Stopped(0x{clock_stop:02X})",
         }
-        if len(val) >= 9:
-            chip_info["extended_serial_number"] = val[1:9].hex().upper()
-        if len(val) >= 17:
-            chip_info["approval_number"] = val[9:17].hex().upper()
-        if len(val) >= 18:
-            chip_info["personaliser_id"] = f"0x{val[17]:02X}"
-        if len(val) >= 22:
-            chip_info["embedder_ic_assembler_id"] = val[18:22].hex().upper()
-        if len(val) >= 24:
-            chip_info["ic_identifier"] = f"0x{struct.unpack('>H', val[22:24])[0]:04X}"
-        if len(val) > 24:
-            historical = val[24:]
-            text = decode_string(historical)
-            if text:
-                chip_info["historical_info"] = text
-            else:
-                chip_info["historical_bytes"] = historical.hex().upper()
+        chip_info.update(_icc_fields(val))
 
         results.setdefault("card_chip", {}).update(chip_info)
     except (struct.error, IndexError, ValueError) as exc:

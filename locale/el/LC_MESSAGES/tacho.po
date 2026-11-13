@@ -2558,3 +2558,63 @@ msgstr "Μη τυποποιημένο: το αρχείο ξεκινά με το�
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Καμία εγγραφή: όλες οι θέσεις περιέχουν την κενή τιμή που ορίζει ο κανονισμός (δεν καταγράφηκε τίποτα)."
+
+msgid "Raw value"
+msgstr "Ακατέργαστη τιμή"
+
+msgid "Result"
+msgstr "Αποτέλεσμα"
+
+msgid "What it means"
+msgstr "Τι σημαίνει"
+
+msgid "Signed data"
+msgstr "Υπογεγραμμένα δεδομένα"
+
+msgid "Algorithm"
+msgstr "Αλγόριθμος"
+
+msgid "Signed by"
+msgstr "Υπογράφηκε από"
+
+msgid "Certificate chain"
+msgstr "Αλυσίδα πιστοποιητικών"
+
+msgid "Vehicle unit"
+msgstr "Μονάδα οχήματος"
+
+msgid "Driver card"
+msgstr "Κάρτα οδηγού"
+
+msgid "{length} bytes"
+msgstr "{length} byte"
+
+msgid "Member State authority"
+msgstr "Αρχή του κράτους μέλους"
+
+msgid "European root (ERCA)"
+msgstr "Ευρωπαϊκή ρίζα (ERCA)"
+
+msgid "not verified"
+msgstr "μη επαληθευμένη"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Τα υπογεγραμμένα δεδομένα δεν έχουν αλλάξει από την υπογραφή τους."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Τα υπογεγραμμένα δεδομένα άλλαξαν μετά την υπογραφή ή η υπογραφή είναι κατεστραμμένη."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Ο κανονισμός εξαιρεί αυτό το αρχείο από τα υπογεγραμμένα δεδομένα της κάρτας, οπότε η υπογραφή του δεν αποτελεί μέρος του ελέγχου ακεραιότητας."
+
+msgid "No key was available to check this signature."
+msgstr "Δεν υπήρχε διαθέσιμο κλειδί για τον έλεγχο αυτής της υπογραφής."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} byte, από {start} έως {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Τα πιστοποιητικά στην αρχή της ενότητας δεν υπογράφονται: πιστοποιούν το κλειδί."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Δείτε Ασφάλεια και πιστοποιητικά: ο έλεγχος των υπογραφών EF δεν ελέγχει την αλυσίδα πιστοποιητικών."

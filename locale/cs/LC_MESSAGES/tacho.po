@@ -2558,3 +2558,63 @@ msgstr "Nestandardní: soubor začíná značkou stažení karty palubní jednot
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Žádné záznamy: všechny pozice obsahují prázdnou hodnotu definovanou nařízením (nic nebylo zaznamenáno)."
+
+msgid "Raw value"
+msgstr "Surová hodnota"
+
+msgid "Result"
+msgstr "Výsledek"
+
+msgid "What it means"
+msgstr "Co to znamená"
+
+msgid "Signed data"
+msgstr "Podepsaná data"
+
+msgid "Algorithm"
+msgstr "Algoritmus"
+
+msgid "Signed by"
+msgstr "Podepsal"
+
+msgid "Certificate chain"
+msgstr "Řetězec certifikátů"
+
+msgid "Vehicle unit"
+msgstr "Palubní jednotka"
+
+msgid "Driver card"
+msgstr "Karta řidiče"
+
+msgid "{length} bytes"
+msgstr "{length} bajtů"
+
+msgid "Member State authority"
+msgstr "Orgán členského státu"
+
+msgid "European root (ERCA)"
+msgstr "Evropský kořen (ERCA)"
+
+msgid "not verified"
+msgstr "neověřeno"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Podepsaná data nebyla od podpisu změněna."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Podepsaná data byla po podpisu změněna nebo je podpis poškozen."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Nařízení vylučuje tento soubor z podepsaných dat karty, jeho podpis proto není součástí kontroly integrity."
+
+msgid "No key was available to check this signature."
+msgstr "Pro kontrolu tohoto podpisu nebyl k dispozici žádný klíč."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bajtů, od {start} do {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certifikáty na začátku oddílu nejsou podepsány: ověřují klíč."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Viz Zabezpečení a certifikáty: kontrola podpisů EF neověřuje řetězec certifikátů."

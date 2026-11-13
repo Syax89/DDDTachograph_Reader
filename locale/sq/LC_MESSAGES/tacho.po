@@ -2558,3 +2558,63 @@ msgstr "Jo standard: skedari fillon me shënuesin e shkarkimit të kartës të n
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Asnjë regjistrim: të gjitha vendet përmbajnë vlerën bosh që përcakton rregullorja (nuk u regjistrua asgjë)."
+
+msgid "Raw value"
+msgstr "Vlera e papërpunuar"
+
+msgid "Result"
+msgstr "Rezultati"
+
+msgid "What it means"
+msgstr "Çfarë do të thotë"
+
+msgid "Signed data"
+msgstr "Të dhënat e nënshkruara"
+
+msgid "Algorithm"
+msgstr "Algoritmi"
+
+msgid "Signed by"
+msgstr "Nënshkruar nga"
+
+msgid "Certificate chain"
+msgstr "Zinxhiri i certifikatave"
+
+msgid "Vehicle unit"
+msgstr "Njësia e automjetit"
+
+msgid "Driver card"
+msgstr "Karta e drejtuesit"
+
+msgid "{length} bytes"
+msgstr "{length} bajte"
+
+msgid "Member State authority"
+msgstr "Autoriteti i shtetit anëtar"
+
+msgid "European root (ERCA)"
+msgstr "Rrënja evropiane (ERCA)"
+
+msgid "not verified"
+msgstr "e paverifikuar"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Të dhënat e nënshkruara nuk janë ndryshuar që kur u nënshkruan."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Të dhënat e nënshkruara u ndryshuan pas nënshkrimit, ose nënshkrimi është i dëmtuar."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Rregullorja e përjashton këtë skedar nga të dhënat e nënshkruara të kartës, prandaj nënshkrimi i tij nuk është pjesë e kontrollit të integritetit."
+
+msgid "No key was available to check this signature."
+msgstr "Nuk kishte çelës të disponueshëm për të kontrolluar këtë nënshkrim."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bajte, nga {start} deri në {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certifikatat në fillim të seksionit nuk janë të nënshkruara: ato vërtetojnë çelësin."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Shih Siguria dhe certifikatat: kontrolli i nënshkrimeve EF nuk kontrollon zinxhirin e certifikatave."

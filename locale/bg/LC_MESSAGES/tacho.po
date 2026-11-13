@@ -2558,3 +2558,63 @@ msgstr "Нестандартен: файлът започва с маркера 
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Няма записи: всички позиции съдържат празната стойност, определена от регламента (нищо не е записано)."
+
+msgid "Raw value"
+msgstr "Сурова стойност"
+
+msgid "Result"
+msgstr "Резултат"
+
+msgid "What it means"
+msgstr "Какво означава"
+
+msgid "Signed data"
+msgstr "Подписани данни"
+
+msgid "Algorithm"
+msgstr "Алгоритъм"
+
+msgid "Signed by"
+msgstr "Подписано от"
+
+msgid "Certificate chain"
+msgstr "Верига от сертификати"
+
+msgid "Vehicle unit"
+msgstr "Бордово устройство"
+
+msgid "Driver card"
+msgstr "Карта на водача"
+
+msgid "{length} bytes"
+msgstr "{length} байта"
+
+msgid "Member State authority"
+msgstr "Орган на държавата членка"
+
+msgid "European root (ERCA)"
+msgstr "Европейски корен (ERCA)"
+
+msgid "not verified"
+msgstr "непроверен"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Подписаните данни не са променяни след подписването им."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Подписаните данни са променени след подписването или подписът е повреден."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Регламентът изключва този файл от подписаните данни на картата, затова подписът му не е част от проверката за цялост."
+
+msgid "No key was available to check this signature."
+msgstr "Нямаше наличен ключ за проверка на този подпис."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} байта, от {start} до {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Сертификатите в началото на раздела не са подписани: те удостоверяват ключа."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Вижте Сигурност и сертификати: проверката на подписите на EF не проверява веригата от сертификати."

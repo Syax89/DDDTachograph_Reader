@@ -28,10 +28,23 @@
     parts add up to the whole file; a card file that starts with a vehicle
     unit's card download marker (76 06) is flagged as non-standard, since
     other programs may not open it.
+  - a signature reads in words: the verdict and what it means, the data it
+    signs (the Overview's certificates excluded, as the verifier does), the
+    algorithm (ECDSA curve and hash, or RSA 1024 / ISO/IEC 9796-2 / SHA-1),
+    who signed and the certificate chain; the value stays behind *Bytes*;
+  - codes read as words: equipment type, code page, nation under every key,
+    position authentication, no-card slots, a bare manufacturer code (from
+    the JRC registry), the card chip's serial number, approval number,
+    personaliser and assembler; a single record reads down (Field / Value).
   Summary, Daily Activities and Detailed Speed stay as views at the top.
   Exports and the JSON are unchanged.
 
 ### Fixed
+
+- **EF_ICC (card chip identification) was read one octet off.** Its
+  embedderIcAssemblerId has five octets (country code, module embedder,
+  manufacturer information), not four, so the IC identifier came from the
+  wrong octets and its last octet showed up as "historical bytes".
 
 - **Driver-card days on which the card changed slot no longer exceed 24 hours.**
   A card records one driver; its slot bit only says which slot of the vehicle

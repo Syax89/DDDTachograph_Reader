@@ -218,14 +218,14 @@ def test_a_day_row_sums_its_changes_up():
         {"activity": "DRIVE", "time": "06:00", "slot": "First"},
         {"activity": "REST", "time": "10:30", "slot": "First"}]}
     cols, rows = content_rows([day], "activities")
-    shown = dict(zip(cols, rows[0], strict=True))
-    assert not any("items" in str(v) for v in rows[0])
+    shown = dict((row[0], row[1]) for row in rows)        # one record reads down
+    assert not any("items" in str(row[1]) for row in rows)
     assert shown["Drive"] == "4:30"
     assert shown["Rest"] == "19:30"
     assert shown["Unknown"] == "0:00"
     # the last day of a download ends where the recording ends
     cols, rows = content_rows([day], "activities", {"01/05/2025": 12 * 3600})
-    assert dict(zip(cols, rows[0], strict=True))["Rest"] == "7:30"     # 0-6 and 10:30-12
+    assert dict((row[0], row[1]) for row in rows)["Rest"] == "7:30"     # 0-6 and 10:30-12
 
 
 def test_hex_rows():

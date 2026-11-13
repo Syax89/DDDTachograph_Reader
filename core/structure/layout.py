@@ -90,6 +90,7 @@ class Unit:
     signature: Optional[bool] = None   # True verified, False failed, None not checked
     children: list = field(default_factory=list)
     decoder: Optional[Callable[[], dict]] = None
+    parent: Optional["Unit"] = field(default=None, repr=False, compare=False)
     _content: Optional[dict] = field(default=None, repr=False)
 
     @property
@@ -584,4 +585,45 @@ def build_layout(raw: bytes, results: dict) -> list:
         # standard and some programs may refuse it, so it is flagged.
         units[0] = Unit("section", "Non-standard header: vehicle unit card download marker",
                         0, 2, tag="TREP 0x06", empty="marker")
+    for unit in units:
+        _link_parents(unit)
     return units
+
+
+def _link_parents(unit: Unit) -> None:
+    for child in unit.children:
+        child.parent = unit
+        _link_parents(child)
+
+
+def signed_range(signature: Unit) -> Optional[tuple]:
+    """``(offset, length)`` of the bytes a signature part signs, or ``None``.
+
+    * a G2/G2.2 VU section: its RecordArrays before the signature array
+      (the SID/TREP marker is not signed, DDP_029..DDP_033);
+    * a G1 VU message: its body, after the SID/TREP marker (Annex 1B);
+    * a card EF signature: the value of the EF data element it follows.
+    """
+    owner = signature.parent
+    if owner is None:
+        return None
+    if signature.kind == "array" and owner.kind == "section":
+        # The Overview's leading certificate arrays (0x04, 0x0F) authenticate
+        # the key and are not signed (core.crypto.vu_signature).
+        start = owner.offset + 2
+        for child in owner.children:
+            if child.tag in ("RecordArray 0x04", "RecordArray 0x0F") and child.offset == start:
+                start = child.end
+            else:
+                break
+        return start, signature.offset - start
+    if signature.kind == "signature" and owner.kind == "section":
+        start = owner.offset + 2
+        if owner.tag == "TREP 0x01":
+            # The G1 Overview opens with the MSCA and VU certificates
+            # (2 x 194 bytes), excluded from the signed data (Annex 1B App. 11).
+            start += 194 + 194
+        return start, signature.offset - start
+    if signature.kind == "signature" and owner.kind == "ef":
+        return owner.offset + 5, owner.length - 5
+    return None

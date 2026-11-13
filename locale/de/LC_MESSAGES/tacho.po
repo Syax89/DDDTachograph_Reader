@@ -2558,3 +2558,63 @@ msgstr "Nicht standardkonform: Die Datei beginnt mit der Kartendownload-Markieru
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Keine Datensätze: Alle Plätze enthalten den von der Verordnung festgelegten Leerwert (nichts wurde aufgezeichnet)."
+
+msgid "Raw value"
+msgstr "Rohwert"
+
+msgid "Result"
+msgstr "Ergebnis"
+
+msgid "What it means"
+msgstr "Bedeutung"
+
+msgid "Signed data"
+msgstr "Signierte Daten"
+
+msgid "Algorithm"
+msgstr "Algorithmus"
+
+msgid "Signed by"
+msgstr "Signiert von"
+
+msgid "Certificate chain"
+msgstr "Zertifikatskette"
+
+msgid "Vehicle unit"
+msgstr "Fahrzeugeinheit"
+
+msgid "Driver card"
+msgstr "Fahrerkarte"
+
+msgid "{length} bytes"
+msgstr "{length} Bytes"
+
+msgid "Member State authority"
+msgstr "Behörde des Mitgliedstaats"
+
+msgid "European root (ERCA)"
+msgstr "Europäische Wurzel (ERCA)"
+
+msgid "not verified"
+msgstr "nicht geprüft"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Die signierten Daten wurden seit der Signatur nicht verändert."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Die signierten Daten wurden nach der Signatur verändert oder die Signatur ist beschädigt."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Die Verordnung nimmt diese Datei von den signierten Kartendaten aus, daher gehört ihre Signatur nicht zur Integritätsprüfung."
+
+msgid "No key was available to check this signature."
+msgstr "Für die Prüfung dieser Signatur war kein Schlüssel verfügbar."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} Bytes, von {start} bis {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Die Zertifikate am Anfang des Abschnitts sind nicht signiert: Sie authentifizieren den Schlüssel."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Siehe Sicherheit & Zertifikate: Die Prüfung der EF-Signaturen prüft nicht die Zertifikatskette."

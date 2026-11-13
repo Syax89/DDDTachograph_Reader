@@ -489,9 +489,11 @@ def _fmt_dict(d):
 
 
 
-#: EquipmentType of a card (Annex 1C §2.67), as a card number carries it.
-_CARD_TYPES = {1: "Driver card", 2: "Workshop card", 3: "Control card",
-               4: "Company card"}
+#: EquipmentType (Annex 1C §2.67): the kind of card or device a number names.
+_EQUIPMENT_TYPES = {1: "Driver card", 2: "Workshop card", 3: "Control card",
+                    4: "Company card", 5: "Manufacturing card", 6: "Vehicle unit",
+                    7: "Motion sensor", 8: "GNSS facility",
+                    9: "Remote communication device"}
 
 
 def fmt_val(v, key=None):
@@ -518,12 +520,35 @@ def fmt_val(v, key=None):
     if key == "card_slot" and isinstance(v, int) and not isinstance(v, bool) and v in (0, 1):
         # CardSlotNumber (Annex 1B §2.34): 0 driver slot, 1 co-driver slot.
         return ui_text.data_text("Driver slot" if v == 0 else "Co-driver slot")
-    if key == "card_type" and isinstance(v, int) and not isinstance(v, bool) and v in _CARD_TYPES:
-        # EquipmentType of a FullCardNumber (Annex 1C §2.67).
-        return ui_text.data_text(_CARD_TYPES[v])
-    if key == "generation" and isinstance(v, int) and not isinstance(v, bool) and v in (1, 2):
+    name = str(key or "")
+    is_int = isinstance(v, int) and not isinstance(v, bool)
+    if is_int and name.endswith("card_type") and v == 0:
+        # A FullCardNumber of type 0 with no nation: no card was inserted.
+        return ui_text.data_text("No card")
+    if is_int and (name.endswith("card_type") or name.endswith("equipment_type")) \
+            and v in _EQUIPMENT_TYPES:
+        # EquipmentType (Annex 1C §2.67), also the type of a FullCardNumber.
+        return ui_text.data_text(_EQUIPMENT_TYPES[v])
+    if is_int and name.endswith("generation") and v in (1, 2):
         return ui_text.data_text(f"Generation {v}")
-    if key == "record_purpose" and isinstance(v, int) and not isinstance(v, bool):
+    if is_int and name.endswith("code_page") and (1 <= v <= 16 or v in (80, 85)):
+        # CodePage (Annex 1B §2.17): ISO/IEC 8859 parts 1-16, KOI8-R, KOI8-U.
+        return {80: "KOI8-R", 85: "KOI8-U"}.get(v, f"ISO/IEC 8859-{v}")
+    if is_int and name.endswith("authentication_status") and v in (0, 1):
+        # PositionAuthenticationStatus (Annex 1C §2.117a).
+        return ui_text.data_text("Authenticated" if v else "Not authenticated")
+    if is_int and name in ("manufacturer_code", "personaliser_code"):
+        from core.utils.manufacturer_codes import manufacturer_name
+        registered = manufacturer_name(v)
+        if registered:
+            return f"{registered} (0x{v:02X})"
+    if is_int and name in ("fault_purpose", "event_purpose"):
+        name = "record_purpose"
+    if isinstance(v, str) and name.endswith("nation") and name not in NATION_COLS \
+            and 0 < len(v.strip()) <= 3:
+        # A nation code under another key (card_driver_nation, card_nation...).
+        return fmt_scalar(v, key="nation", label_translator=ui_text.data_text)
+    if name == "record_purpose" and isinstance(v, int) and not isinstance(v, bool):
         # EventFaultRecordPurpose is a code (Annex 1B §2.72); the reader wants
         # the sentence, e.g. "the longest event for one of the last 10 days".
         from core.utils.event_codes import describe_record_purpose

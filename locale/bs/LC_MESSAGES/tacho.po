@@ -2558,3 +2558,63 @@ msgstr "Nestandardno: datoteka počinje oznakom preuzimanja kartice jedinice voz
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Nema zapisa: sva mjesta sadrže praznu vrijednost koju propisuje uredba (ništa nije zabilježeno)."
+
+msgid "Raw value"
+msgstr "Sirova vrijednost"
+
+msgid "Result"
+msgstr "Rezultat"
+
+msgid "What it means"
+msgstr "Šta to znači"
+
+msgid "Signed data"
+msgstr "Potpisani podaci"
+
+msgid "Algorithm"
+msgstr "Algoritam"
+
+msgid "Signed by"
+msgstr "Potpisao"
+
+msgid "Certificate chain"
+msgstr "Lanac certifikata"
+
+msgid "Vehicle unit"
+msgstr "Jedinica vozila"
+
+msgid "Driver card"
+msgstr "Vozačka kartica"
+
+msgid "{length} bytes"
+msgstr "{length} bajtova"
+
+msgid "Member State authority"
+msgstr "Organ države članice"
+
+msgid "European root (ERCA)"
+msgstr "Evropski korijen (ERCA)"
+
+msgid "not verified"
+msgstr "nije provjereno"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Potpisani podaci nisu mijenjani otkako su potpisani."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Potpisani podaci su promijenjeni nakon potpisivanja ili je potpis oštećen."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Uredba isključuje ovu datoteku iz potpisanih podataka kartice, pa njen potpis nije dio provjere cjelovitosti."
+
+msgid "No key was available to check this signature."
+msgstr "Nije bio dostupan ključ za provjeru ovog potpisa."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bajtova, od {start} do {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certifikati na početku odjeljka nisu potpisani: oni autentificiraju ključ."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Vidi Sigurnost i certifikati: provjera potpisa EF ne provjerava lanac certifikata."

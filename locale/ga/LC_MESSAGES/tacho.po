@@ -2558,3 +2558,63 @@ msgstr "Neamhchaighdeánach: tosaíonn an comhad le marcóir íoslódála cárta
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Gan taifid: tá an luach folamh a shainíonn an rialachán i ngach sliotán (níor taifeadadh aon rud)."
+
+msgid "Raw value"
+msgstr "Luach amh"
+
+msgid "Result"
+msgstr "Toradh"
+
+msgid "What it means"
+msgstr "Cad is ciall dó"
+
+msgid "Signed data"
+msgstr "Sonraí sínithe"
+
+msgid "Algorithm"
+msgstr "Algartam"
+
+msgid "Signed by"
+msgstr "Sínithe ag"
+
+msgid "Certificate chain"
+msgstr "Slabhra deimhnithe"
+
+msgid "Vehicle unit"
+msgstr "Aonad feithicle"
+
+msgid "Driver card"
+msgstr "Cárta tiománaí"
+
+msgid "{length} bytes"
+msgstr "{length} beart"
+
+msgid "Member State authority"
+msgstr "Údarás an Bhallstáit"
+
+msgid "European root (ERCA)"
+msgstr "Fréamh Eorpach (ERCA)"
+
+msgid "not verified"
+msgstr "gan fíorú"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Níor athraíodh na sonraí sínithe ó síníodh iad."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Athraíodh na sonraí sínithe tar éis an tsínithe, nó tá an síniú damáistithe."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Fágann an rialachán an comhad seo as sonraí sínithe an chárta, mar sin níl a shíniú mar chuid den seiceáil sláine."
+
+msgid "No key was available to check this signature."
+msgstr "Ní raibh aon eochair ar fáil chun an síniú seo a sheiceáil."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} beart, ó {start} go {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Níl na deimhnithe ag tús na rannóige sínithe: fíordheimhníonn siad an eochair."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Féach Slándáil agus deimhnithe: ní sheiceálann seiceáil síniú na EF an slabhra deimhnithe."

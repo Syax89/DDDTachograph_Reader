@@ -2558,3 +2558,63 @@ msgstr "Ekki staðlað: skráin byrjar á kortaniðurhalsmerki ökutækiseininga
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Engar færslur: öll hólf innihalda tóma gildið sem reglugerðin skilgreinir (ekkert var skráð)."
+
+msgid "Raw value"
+msgstr "Hrágildi"
+
+msgid "Result"
+msgstr "Niðurstaða"
+
+msgid "What it means"
+msgstr "Hvað það þýðir"
+
+msgid "Signed data"
+msgstr "Undirrituð gögn"
+
+msgid "Algorithm"
+msgstr "Reiknirit"
+
+msgid "Signed by"
+msgstr "Undirritað af"
+
+msgid "Certificate chain"
+msgstr "Vottorðakeðja"
+
+msgid "Vehicle unit"
+msgstr "Ökutækiseining"
+
+msgid "Driver card"
+msgstr "Ökumannskort"
+
+msgid "{length} bytes"
+msgstr "{length} bæti"
+
+msgid "Member State authority"
+msgstr "Yfirvald aðildarríkis"
+
+msgid "European root (ERCA)"
+msgstr "Evrópsk rót (ERCA)"
+
+msgid "not verified"
+msgstr "ekki staðfest"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Undirrituðu gögnunum hefur ekki verið breytt frá undirritun."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Undirrituðu gögnunum var breytt eftir undirritun eða undirskriftin er skemmd."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Reglugerðin undanskilur þessa skrá frá undirrituðum gögnum kortsins, svo undirskrift hennar er ekki hluti af heilleikaathuguninni."
+
+msgid "No key was available to check this signature."
+msgstr "Enginn lykill var tiltækur til að athuga þessa undirskrift."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bæti, frá {start} til {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Vottorðin í upphafi hlutans eru ekki undirrituð: þau sannvotta lykilinn."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Sjá Öryggi og vottorð: athugun á EF-undirskriftum athugar ekki vottorðakeðjuna."

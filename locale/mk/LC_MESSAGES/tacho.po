@@ -2558,3 +2558,63 @@ msgstr "Нестандардно: датотеката започнува со �
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Нема записи: сите места ја содржат празната вредност што ја пропишува регулативата (ништо не е запишано)."
+
+msgid "Raw value"
+msgstr "Сурова вредност"
+
+msgid "Result"
+msgstr "Резултат"
+
+msgid "What it means"
+msgstr "Што значи"
+
+msgid "Signed data"
+msgstr "Потпишани податоци"
+
+msgid "Algorithm"
+msgstr "Алгоритам"
+
+msgid "Signed by"
+msgstr "Потпишано од"
+
+msgid "Certificate chain"
+msgstr "Синџир на сертификати"
+
+msgid "Vehicle unit"
+msgstr "Единица на возилото"
+
+msgid "Driver card"
+msgstr "Возачка картичка"
+
+msgid "{length} bytes"
+msgstr "{length} бајти"
+
+msgid "Member State authority"
+msgstr "Орган на државата членка"
+
+msgid "European root (ERCA)"
+msgstr "Европски корен (ERCA)"
+
+msgid "not verified"
+msgstr "не е проверено"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Потпишаните податоци не се менувани откако се потпишани."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Потпишаните податоци се променети по потпишувањето или потписот е оштетен."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Регулативата ја исклучува оваа датотека од потпишаните податоци на картичката, па нејзиниот потпис не е дел од проверката на интегритет."
+
+msgid "No key was available to check this signature."
+msgstr "Немаше достапен клуч за проверка на овој потпис."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} бајти, од {start} до {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Сертификатите на почетокот на делот не се потпишани: тие го автентицираат клучот."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Видете Безбедност и сертификати: проверката на потписите на EF не го проверува синџирот на сертификати."

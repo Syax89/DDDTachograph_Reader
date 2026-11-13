@@ -2558,3 +2558,63 @@ msgstr "Mittestandardne: fail algab sõidukiüksuse kaardi allalaadimise märgis
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Kirjeid pole: kõik kohad sisaldavad määrusega määratud tühja väärtust (midagi ei salvestatud)."
+
+msgid "Raw value"
+msgstr "Toorväärtus"
+
+msgid "Result"
+msgstr "Tulemus"
+
+msgid "What it means"
+msgstr "Mida see tähendab"
+
+msgid "Signed data"
+msgstr "Allkirjastatud andmed"
+
+msgid "Algorithm"
+msgstr "Algoritm"
+
+msgid "Signed by"
+msgstr "Allkirjastaja"
+
+msgid "Certificate chain"
+msgstr "Sertifikaadiahel"
+
+msgid "Vehicle unit"
+msgstr "Sõidukiüksus"
+
+msgid "Driver card"
+msgstr "Juhikaart"
+
+msgid "{length} bytes"
+msgstr "{length} baiti"
+
+msgid "Member State authority"
+msgstr "Liikmesriigi asutus"
+
+msgid "European root (ERCA)"
+msgstr "Euroopa juur (ERCA)"
+
+msgid "not verified"
+msgstr "kontrollimata"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Allkirjastatud andmeid pole pärast allkirjastamist muudetud."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Allkirjastatud andmeid muudeti pärast allkirjastamist või allkiri on kahjustatud."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Määrus jätab selle faili kaardi allkirjastatud andmetest välja, seega ei kuulu selle allkiri terviklikkuse kontrolli."
+
+msgid "No key was available to check this signature."
+msgstr "Selle allkirja kontrollimiseks polnud ühtegi võtit."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} baiti, {start} kuni {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Jaotise alguses olevad sertifikaadid pole allkirjastatud: need autendivad võtme."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Vt Turvalisus ja sertifikaadid: EF-allkirjade kontroll ei kontrolli sertifikaadiahelat."

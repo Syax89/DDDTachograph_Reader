@@ -2558,3 +2558,63 @@ msgstr "Standart dışı: dosya, kartın ilk dosyası yerine araç ünitesinin k
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Kayıt yok: tüm yuvalar yönetmeliğin tanımladığı boş değeri içeriyor (hiçbir şey kaydedilmedi)."
+
+msgid "Raw value"
+msgstr "Ham değer"
+
+msgid "Result"
+msgstr "Sonuç"
+
+msgid "What it means"
+msgstr "Ne anlama geliyor"
+
+msgid "Signed data"
+msgstr "İmzalı veriler"
+
+msgid "Algorithm"
+msgstr "Algoritma"
+
+msgid "Signed by"
+msgstr "İmzalayan"
+
+msgid "Certificate chain"
+msgstr "Sertifika zinciri"
+
+msgid "Vehicle unit"
+msgstr "Araç ünitesi"
+
+msgid "Driver card"
+msgstr "Sürücü kartı"
+
+msgid "{length} bytes"
+msgstr "{length} bayt"
+
+msgid "Member State authority"
+msgstr "Üye devlet makamı"
+
+msgid "European root (ERCA)"
+msgstr "Avrupa kökü (ERCA)"
+
+msgid "not verified"
+msgstr "doğrulanmadı"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "İmzalı veriler imzalandıktan sonra değiştirilmedi."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "İmzalı veriler imzadan sonra değiştirildi veya imza bozuk."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Yönetmelik bu dosyayı kartın imzalı verilerinin dışında tutar, bu nedenle imzası bütünlük denetiminin parçası değildir."
+
+msgid "No key was available to check this signature."
+msgstr "Bu imzayı denetlemek için kullanılabilir anahtar yoktu."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bayt, {start} ile {end} arası"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Bölümün başındaki sertifikalar imzalı değildir: anahtarı doğrularlar."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Bkz. Güvenlik ve sertifikalar: EF imzalarının denetimi sertifika zincirini denetlemez."

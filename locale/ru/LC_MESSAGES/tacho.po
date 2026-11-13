@@ -2558,3 +2558,63 @@ msgstr "Нестандартный файл: он начинается с мар
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Нет записей: все ячейки содержат пустое значение, определённое регламентом (ничего не записано)."
+
+msgid "Raw value"
+msgstr "Исходное значение"
+
+msgid "Result"
+msgstr "Результат"
+
+msgid "What it means"
+msgstr "Что это значит"
+
+msgid "Signed data"
+msgstr "Подписанные данные"
+
+msgid "Algorithm"
+msgstr "Алгоритм"
+
+msgid "Signed by"
+msgstr "Подписано"
+
+msgid "Certificate chain"
+msgstr "Цепочка сертификатов"
+
+msgid "Vehicle unit"
+msgstr "Бортовое устройство"
+
+msgid "Driver card"
+msgstr "Карта водителя"
+
+msgid "{length} bytes"
+msgstr "{length} байт"
+
+msgid "Member State authority"
+msgstr "Орган государства-члена"
+
+msgid "European root (ERCA)"
+msgstr "Европейский корень (ERCA)"
+
+msgid "not verified"
+msgstr "не проверено"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Подписанные данные не изменялись с момента подписания."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Подписанные данные изменены после подписания, или подпись повреждена."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Регламент исключает этот файл из подписанных данных карты, поэтому его подпись не входит в проверку целостности."
+
+msgid "No key was available to check this signature."
+msgstr "Для проверки этой подписи не было доступного ключа."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} байт, с {start} по {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Сертификаты в начале раздела не подписаны: они удостоверяют ключ."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "См. Безопасность и сертификаты: проверка подписей EF не проверяет цепочку сертификатов."

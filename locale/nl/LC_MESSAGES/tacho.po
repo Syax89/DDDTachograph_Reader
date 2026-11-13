@@ -2558,3 +2558,63 @@ msgstr "Niet standaard: het bestand begint met de kaartdownloadmarkering van de 
 
 msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
 msgstr "Geen records: alle plaatsen bevatten de lege waarde die de verordening voorschrijft (er is niets geregistreerd)."
+
+msgid "Raw value"
+msgstr "Ruwe waarde"
+
+msgid "Result"
+msgstr "Resultaat"
+
+msgid "What it means"
+msgstr "Wat het betekent"
+
+msgid "Signed data"
+msgstr "Ondertekende gegevens"
+
+msgid "Algorithm"
+msgstr "Algoritme"
+
+msgid "Signed by"
+msgstr "Ondertekend door"
+
+msgid "Certificate chain"
+msgstr "Certificaatketen"
+
+msgid "Vehicle unit"
+msgstr "Voertuigunit"
+
+msgid "Driver card"
+msgstr "Bestuurderskaart"
+
+msgid "{length} bytes"
+msgstr "{length} bytes"
+
+msgid "Member State authority"
+msgstr "Autoriteit van de lidstaat"
+
+msgid "European root (ERCA)"
+msgstr "Europese root (ERCA)"
+
+msgid "not verified"
+msgstr "niet geverifieerd"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "De ondertekende gegevens zijn sinds de ondertekening niet gewijzigd."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "De ondertekende gegevens zijn na de ondertekening gewijzigd, of de handtekening is beschadigd."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "De verordening sluit dit bestand uit van de ondertekende kaartgegevens, dus de handtekening ervan valt buiten de integriteitscontrole."
+
+msgid "No key was available to check this signature."
+msgstr "Er was geen sleutel beschikbaar om deze handtekening te controleren."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bytes, van {start} tot {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "De certificaten aan het begin van de sectie zijn niet ondertekend: ze authenticeren de sleutel."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Zie Beveiliging en certificaten: de controle van de EF-handtekeningen controleert de certificaatketen niet."
