@@ -2413,3 +2413,208 @@ msgstr "GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Kolona teknike"
+
+msgid "Record details"
+msgstr "Detajet e regjistrimit"
+
+msgid "File Structure"
+msgstr "Struktura e skedarit"
+
+msgid "Signature verified"
+msgstr "Nënshkrimi u verifikua"
+
+msgid "Signature not valid"
+msgstr "Nënshkrim i pavlefshëm"
+
+msgid "Signature not checked"
+msgstr "Nënshkrimi nuk u kontrollua"
+
+msgid "Not signed"
+msgstr "I panënshkruar"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Zhvendosja {offset} · {length} bajte"
+
+msgid "Text"
+msgstr "Tekst"
+
+msgid "Content"
+msgstr "Përmbajtja"
+
+msgid "Records"
+msgstr "Regjistrime"
+
+msgid "Unit"
+msgstr "Njësia"
+
+msgid "Signature"
+msgstr "Nënshkrimi"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} njësi · {length} bajte"
+
+msgid "Bytes"
+msgstr "Bajte"
+
+msgid "Events and faults"
+msgstr "Ngjarje dhe defekte"
+
+msgid "Detailed speed"
+msgstr "Shpejtësia e detajuar"
+
+msgid "Technical data"
+msgstr "Të dhëna teknike"
+
+msgid "Card download"
+msgstr "Shkarkimi i kartës"
+
+msgid "Sensor data"
+msgstr "Të dhënat e sensorit"
+
+msgid "Download interface version"
+msgstr "Versioni i ndërfaqes së shkarkimit"
+
+msgid "Padding"
+msgstr "Mbushje"
+
+msgid "Unrecognised bytes"
+msgstr "Bajte të panjohura"
+
+msgid "Tachograph application, generation 1"
+msgstr "Aplikacioni i takografit, gjenerata 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Aplikacioni i takografit, gjenerata 2"
+
+msgid "Record Arrays"
+msgstr "Vargje regjistrimesh"
+
+msgid "Elementary Files"
+msgstr "Skedarë elementarë"
+
+msgid "Record Array"
+msgstr "Varg regjistrimesh"
+
+msgid "Elementary File"
+msgstr "Skedar elementar"
+
+msgid "File Identifier"
+msgstr "Identifikuesi i skedarit"
+
+msgid "Activity changes"
+msgstr "Ndryshime aktiviteti"
+
+msgid "Card slots"
+msgstr "Foletë e kartave"
+
+msgid "VU date and time"
+msgstr "Data dhe ora e VU"
+
+msgid "Member State certificate"
+msgstr "Certifikata e shtetit anëtar"
+
+msgid "Odometer at midnight"
+msgstr "Kilometrazhi në mesnatë"
+
+msgid "Day"
+msgstr "Dita"
+
+msgid "Registration plate"
+msgstr "Targa"
+
+msgid "VU certificate"
+msgstr "Certifikata e VU"
+
+msgid "None"
+msgstr "Asnjë"
+
+msgid "{count} records"
+msgstr "{count} regjistrime"
+
+msgid "{count} days"
+msgstr "{count} ditë"
+
+msgid "Record type"
+msgstr "Lloji i regjistrimit"
+
+msgid "End of sensor download"
+msgstr "Fundi i shkarkimit të sensorit"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Asnjë regjistrim: ky varg është bosh dhe ka vetëm kokën e tij."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Asnjë e dhënë: kjo pjesë shënon vetëm fundin e shkarkimit të sensorit."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Kokë jo standarde: shënuesi i shkarkimit të kartës nga VU"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Jo standard: skedari fillon me shënuesin e shkarkimit të kartës të njësisë së automjetit (76 06) në vend të skedarit të parë të kartës. Të dhënat e kartës janë të paprekura, por disa programe mund të mos e hapin këtë skedar."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Asnjë regjistrim: të gjitha vendet përmbajnë vlerën bosh që përcakton rregullorja (nuk u regjistrua asgjë)."
+
+msgid "Raw value"
+msgstr "Vlera e papërpunuar"
+
+msgid "Result"
+msgstr "Rezultati"
+
+msgid "What it means"
+msgstr "Çfarë do të thotë"
+
+msgid "Signed data"
+msgstr "Të dhënat e nënshkruara"
+
+msgid "Algorithm"
+msgstr "Algoritmi"
+
+msgid "Signed by"
+msgstr "Nënshkruar nga"
+
+msgid "Certificate chain"
+msgstr "Zinxhiri i certifikatave"
+
+msgid "Vehicle unit"
+msgstr "Njësia e automjetit"
+
+msgid "Driver card"
+msgstr "Karta e drejtuesit"
+
+msgid "{length} bytes"
+msgstr "{length} bajte"
+
+msgid "Member State authority"
+msgstr "Autoriteti i shtetit anëtar"
+
+msgid "European root (ERCA)"
+msgstr "Rrënja evropiane (ERCA)"
+
+msgid "not verified"
+msgstr "e paverifikuar"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Të dhënat e nënshkruara nuk janë ndryshuar që kur u nënshkruan."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Të dhënat e nënshkruara u ndryshuan pas nënshkrimit, ose nënshkrimi është i dëmtuar."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Rregullorja e përjashton këtë skedar nga të dhënat e nënshkruara të kartës, prandaj nënshkrimi i tij nuk është pjesë e kontrollit të integritetit."
+
+msgid "No key was available to check this signature."
+msgstr "Nuk kishte çelës të disponueshëm për të kontrolluar këtë nënshkrim."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bajte, nga {start} deri në {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certifikatat në fillim të seksionit nuk janë të nënshkruara: ato vërtetojnë çelësin."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Shih Siguria dhe certifikatat: kontrolli i nënshkrimeve EF nuk kontrollon zinxhirin e certifikatave."

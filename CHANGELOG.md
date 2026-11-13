@@ -1,3 +1,78 @@
+## [Unreleased]
+
+### Added
+
+- **File Structure tree.** The section tree now shows the file the way it is
+  stored, in file order, instead of grouping records by generation:
+  - a vehicle-unit download is its TREP sections (Overview, one Activities
+    section per day, Events and faults, Detailed speed, Technical data), each
+    made of its RecordArrays; a generation-1 download lists its messages and
+    their RSA signatures;
+  - a driver card lists its elementary files in the generation-1 and
+    generation-2 applications, each with the signature that follows it;
+  - a section or EF whose signature does not verify is marked in red;
+    verified parts carry no mark (the verdict is in the table header);
+  - parts are named in words ("Activity changes · 90", "Card Insertion /
+    Withdrawal · 1"); the regulation's record name is in the table header;
+  - a section reads as a summary — the day, the odometer at midnight, who
+    inserted a card and when, the activity totals, the places, the signature
+    — with offsets, sizes and record types behind *Technical columns*; a card
+    application lists each EF with what it holds and its signature;
+  - selecting a part decodes that part's own bytes; a *Bytes* switch shows
+    it as a hex dump with offsets;
+  - a part with no record says why instead of showing hex: an empty
+    RecordArray (only its header), a card EF whose slots were never written,
+    the terminator of a sensor download; the download interface version
+    (TREP 00) is decoded;
+  - padding and unrecognised bytes between parts are listed too, so the
+    parts add up to the whole file; a card file that starts with a vehicle
+    unit's card download marker (76 06) is flagged as non-standard, since
+    other programs may not open it.
+  - a signature reads in words: the verdict and what it means, the data it
+    signs (the Overview's certificates excluded, as the verifier does), the
+    algorithm (ECDSA curve and hash, or RSA 1024 / ISO/IEC 9796-2 / SHA-1),
+    who signed and the certificate chain; the value stays behind *Bytes*;
+  - codes read as words: equipment type, code page, nation under every key,
+    position authentication, no-card slots, a bare manufacturer code (from
+    the JRC registry), the card chip's serial number, approval number,
+    personaliser and assembler; a single record reads down (Field / Value).
+  Summary, Daily Activities and Detailed Speed stay as views at the top.
+  Exports and the JSON are unchanged.
+
+### Fixed
+
+- **EF_ICC (card chip identification) was read one octet off.** Its
+  embedderIcAssemblerId has five octets (country code, module embedder,
+  manufacturer information), not four, so the IC identifier came from the
+  wrong octets and its last octet showed up as "historical bytes".
+
+- **Driver-card days on which the card changed slot no longer exceed 24 hours.**
+  A card records one driver; its slot bit only says which slot of the vehicle
+  unit it sat in. Reading the two slots as two drivers (the vehicle-unit
+  reading) counted the hours before the move twice, and such a day showed up to
+  33 h 40 (with ~17 h of *Unknown*) in the Daily Activities dashboard, the
+  summary totals, the PDF/CLI totals, the monthly table and the period report.
+  Card days are now one timeline, as the 561 analysis already did; vehicle-unit
+  days are unchanged. Every day of the 13 sample files now adds up to 24 h.
+
+### Changed
+
+- **Record tables are easier to read.**
+  - Technical columns — raw values (`*_raw`, `*_hex`) and codes that a
+    description already spells out (`event_type_code` beside the description,
+    `type_code` beside the entry type, the numeric calibration purpose) — are
+    hidden by default behind a *Technical columns* switch in the table bar.
+  - Codes read as words: the event record purpose ("Longest event for one of
+    the last 10 days of occurrence") and the card slot (driver / co-driver).
+  - One date format everywhere: `07/07/2025 03:49 UTC`, or the date alone for
+    expiry and due dates; sorting stays chronological.
+  - Columns are sized to their text (measured in the table font) instead of
+    being squeezed into the window, so descriptions, dates and card numbers are
+    no longer cut short; a wide table scrolls sideways.
+  - Double-click (or Enter) on a row opens every field of the record,
+    technical ones included.
+  - Exports and the JSON are unchanged.
+
 ## [2.10.0] - 2026-11-13
 
 <!-- release-notes:start -->

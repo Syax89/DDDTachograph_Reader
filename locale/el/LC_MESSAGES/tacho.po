@@ -2413,3 +2413,208 @@ msgstr "Μορφότυπο GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "Μορφότυπο KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Τεχνικές στήλες"
+
+msgid "Record details"
+msgstr "Λεπτομέρειες εγγραφής"
+
+msgid "File Structure"
+msgstr "Δομή αρχείου"
+
+msgid "Signature verified"
+msgstr "Η υπογραφή επαληθεύτηκε"
+
+msgid "Signature not valid"
+msgstr "Μη έγκυρη υπογραφή"
+
+msgid "Signature not checked"
+msgstr "Η υπογραφή δεν ελέγχθηκε"
+
+msgid "Not signed"
+msgstr "Χωρίς υπογραφή"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Μετατόπιση {offset} · {length} byte"
+
+msgid "Text"
+msgstr "Κείμενο"
+
+msgid "Content"
+msgstr "Περιεχόμενο"
+
+msgid "Records"
+msgstr "Εγγραφές"
+
+msgid "Unit"
+msgstr "Μονάδα"
+
+msgid "Signature"
+msgstr "Υπογραφή"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} μονάδες · {length} byte"
+
+msgid "Bytes"
+msgstr "Byte"
+
+msgid "Events and faults"
+msgstr "Συμβάντα και βλάβες"
+
+msgid "Detailed speed"
+msgstr "Λεπτομερής ταχύτητα"
+
+msgid "Technical data"
+msgstr "Τεχνικά δεδομένα"
+
+msgid "Card download"
+msgstr "Μεταφόρτωση κάρτας"
+
+msgid "Sensor data"
+msgstr "Δεδομένα αισθητήρα"
+
+msgid "Download interface version"
+msgstr "Έκδοση διεπαφής μεταφόρτωσης"
+
+msgid "Padding"
+msgstr "Συμπλήρωση"
+
+msgid "Unrecognised bytes"
+msgstr "Μη αναγνωρισμένα byte"
+
+msgid "Tachograph application, generation 1"
+msgstr "Εφαρμογή ταχογράφου, γενιά 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Εφαρμογή ταχογράφου, γενιά 2"
+
+msgid "Record Arrays"
+msgstr "Πίνακες εγγραφών"
+
+msgid "Elementary Files"
+msgstr "Στοιχειώδη αρχεία"
+
+msgid "Record Array"
+msgstr "Πίνακας εγγραφών"
+
+msgid "Elementary File"
+msgstr "Στοιχειώδες αρχείο"
+
+msgid "File Identifier"
+msgstr "Αναγνωριστικό αρχείου"
+
+msgid "Activity changes"
+msgstr "Αλλαγές δραστηριότητας"
+
+msgid "Card slots"
+msgstr "Υποδοχές κάρτας"
+
+msgid "VU date and time"
+msgstr "Ημερομηνία και ώρα VU"
+
+msgid "Member State certificate"
+msgstr "Πιστοποιητικό κράτους μέλους"
+
+msgid "Odometer at midnight"
+msgstr "Χιλιόμετρα τα μεσάνυχτα"
+
+msgid "Day"
+msgstr "Ημέρα"
+
+msgid "Registration plate"
+msgstr "Πινακίδα κυκλοφορίας"
+
+msgid "VU certificate"
+msgstr "Πιστοποιητικό VU"
+
+msgid "None"
+msgstr "Κανένα"
+
+msgid "{count} records"
+msgstr "{count} εγγραφές"
+
+msgid "{count} days"
+msgstr "{count} ημέρες"
+
+msgid "Record type"
+msgstr "Τύπος εγγραφής"
+
+msgid "End of sensor download"
+msgstr "Τέλος μεταφόρτωσης αισθητήρα"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Καμία εγγραφή: ο πίνακας είναι κενός και περιέχει μόνο την κεφαλίδα του."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Κανένα δεδομένο: αυτό το τμήμα σηματοδοτεί μόνο το τέλος της μεταφόρτωσης του αισθητήρα."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Μη τυποποιημένη κεφαλίδα: δείκτης μεταφόρτωσης κάρτας της VU"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Μη τυποποιημένο: το αρχείο ξεκινά με τον δείκτη μεταφόρτωσης κάρτας της μονάδας οχήματος (76 06) αντί για το πρώτο αρχείο της κάρτας. Τα δεδομένα της κάρτας είναι ακέραια, αλλά ορισμένα προγράμματα ίσως να μην ανοίγουν αυτό το αρχείο."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Καμία εγγραφή: όλες οι θέσεις περιέχουν την κενή τιμή που ορίζει ο κανονισμός (δεν καταγράφηκε τίποτα)."
+
+msgid "Raw value"
+msgstr "Ακατέργαστη τιμή"
+
+msgid "Result"
+msgstr "Αποτέλεσμα"
+
+msgid "What it means"
+msgstr "Τι σημαίνει"
+
+msgid "Signed data"
+msgstr "Υπογεγραμμένα δεδομένα"
+
+msgid "Algorithm"
+msgstr "Αλγόριθμος"
+
+msgid "Signed by"
+msgstr "Υπογράφηκε από"
+
+msgid "Certificate chain"
+msgstr "Αλυσίδα πιστοποιητικών"
+
+msgid "Vehicle unit"
+msgstr "Μονάδα οχήματος"
+
+msgid "Driver card"
+msgstr "Κάρτα οδηγού"
+
+msgid "{length} bytes"
+msgstr "{length} byte"
+
+msgid "Member State authority"
+msgstr "Αρχή του κράτους μέλους"
+
+msgid "European root (ERCA)"
+msgstr "Ευρωπαϊκή ρίζα (ERCA)"
+
+msgid "not verified"
+msgstr "μη επαληθευμένη"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Τα υπογεγραμμένα δεδομένα δεν έχουν αλλάξει από την υπογραφή τους."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Τα υπογεγραμμένα δεδομένα άλλαξαν μετά την υπογραφή ή η υπογραφή είναι κατεστραμμένη."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Ο κανονισμός εξαιρεί αυτό το αρχείο από τα υπογεγραμμένα δεδομένα της κάρτας, οπότε η υπογραφή του δεν αποτελεί μέρος του ελέγχου ακεραιότητας."
+
+msgid "No key was available to check this signature."
+msgstr "Δεν υπήρχε διαθέσιμο κλειδί για τον έλεγχο αυτής της υπογραφής."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} byte, από {start} έως {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Τα πιστοποιητικά στην αρχή της ενότητας δεν υπογράφονται: πιστοποιούν το κλειδί."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Δείτε Ασφάλεια και πιστοποιητικά: ο έλεγχος των υπογραφών EF δεν ελέγχει την αλυσίδα πιστοποιητικών."

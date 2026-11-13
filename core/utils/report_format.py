@@ -8,7 +8,7 @@ humanised (``vehicle_plate`` → ``Vehicle Plate``).
 """
 import re
 
-from core.utils.activity_stats import compute_activity_totals, recorded_until_seconds
+from core.utils.activity_stats import is_card_result, compute_activity_totals, recorded_until_seconds
 
 # Tachograph "data not available" sentinels.
 _NOT_AVAILABLE_INTS = {0xFFFFFF, 0xFFFFFFFF}
@@ -633,7 +633,7 @@ ACTIVITY_COLS = ["Drive", "Work", "Rest", "Available", "Unknown"]
 ACTIVITY_COL_KEYS = ["drive", "work", "rest", "available", "unknown"]
 
 
-def _compute_day_hours(day):
+def _compute_day_hours(day, one_driver=False):
     """Per-day activity buckets in minutes, grouped by card slot.
 
     Delegates to :func:`core.utils.activity_stats.compute_activity_totals`, the
@@ -649,7 +649,8 @@ def _compute_day_hours(day):
     buckets = {"drive": 0, "work": 0, "rest": 0, "available": 0, "unknown": 0}
     if not isinstance(changes, list) or not changes:
         return buckets, 0
-    totals = compute_activity_totals(changes, recorded_until_seconds(day))
+    totals = compute_activity_totals(changes, recorded_until_seconds(day),
+                                     one_driver=one_driver)
     buckets["drive"] = totals["DRIVE"]
     buckets["work"] = totals["WORK"]
     buckets["rest"] = totals["REST"]
@@ -746,7 +747,7 @@ def _month_key(date_str):
     return text[-7:] if len(text) >= 7 else text
 
 
-def build_monthly_activity_report(activities):
+def build_monthly_activity_report(activities, one_driver=False):
     months = {}
     for day in activities:
         if not isinstance(day, dict):
@@ -778,7 +779,7 @@ def build_monthly_activity_report(activities):
             # hard 0 for every heuristic G1 VU day (F-F2 / XF-F5). Use the
             # same fallback as ``expand_activities`` below.
             km = fmt_value(_day_km_value(day))
-            buckets, total = _compute_day_hours(day)
+            buckets, total = _compute_day_hours(day, one_driver)
             unknown_str = _hours_str(buckets["unknown"])
             if buckets["unknown"] > 0:
                 unknown_str = "\u26a0 " + unknown_str
@@ -1009,7 +1010,8 @@ def section_tables(data, max_rows=None):
         if key == "activities":
             if not isinstance(items, list):
                 items = [items]
-            headers, rows = build_monthly_activity_report(items)
+            headers, rows = build_monthly_activity_report(
+                items, one_driver=is_card_result(data))
             if not rows:
                 continue
         elif key == "ef_signature_verification" and isinstance(items, dict):

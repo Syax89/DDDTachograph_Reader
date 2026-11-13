@@ -86,7 +86,7 @@ GENERIC_FALLBACK_CASES = [
     # underscore-prefixed key: GUI shows it, report hides it
     ({"_key": "v"}, "_key=v", ""),
     # ISO timestamp: GUI shortens it, report shortens it too
-    ({"t": "2024-01-23T08:37:00+00:00"}, "t=2024-01-23 08:37Z",
+    ({"t": "2024-01-23T08:37:00+00:00"}, "t=23/01/2024 08:37 UTC",
      "T: 2024-01-23 08:37Z"),
     # 0xFFFFFF sentinel + float
     ({"big": 16777215, "f": 1.5}, "big=N/A, f=1.5", "Big: N/A, F: 1.5"),

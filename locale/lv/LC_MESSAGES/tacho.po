@@ -2413,3 +2413,208 @@ msgstr "GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Tehniskās kolonnas"
+
+msgid "Record details"
+msgstr "Ieraksta informācija"
+
+msgid "File Structure"
+msgstr "Faila struktūra"
+
+msgid "Signature verified"
+msgstr "Paraksts pārbaudīts"
+
+msgid "Signature not valid"
+msgstr "Paraksts nav derīgs"
+
+msgid "Signature not checked"
+msgstr "Paraksts nav pārbaudīts"
+
+msgid "Not signed"
+msgstr "Nav parakstīts"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Nobīde {offset} · {length} baiti"
+
+msgid "Text"
+msgstr "Teksts"
+
+msgid "Content"
+msgstr "Saturs"
+
+msgid "Records"
+msgstr "Ieraksti"
+
+msgid "Unit"
+msgstr "Vienība"
+
+msgid "Signature"
+msgstr "Paraksts"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} vienības · {length} baiti"
+
+msgid "Bytes"
+msgstr "Baiti"
+
+msgid "Events and faults"
+msgstr "Notikumi un kļūmes"
+
+msgid "Detailed speed"
+msgstr "Detalizēts ātrums"
+
+msgid "Technical data"
+msgstr "Tehniskie dati"
+
+msgid "Card download"
+msgstr "Kartes lejupielāde"
+
+msgid "Sensor data"
+msgstr "Sensora dati"
+
+msgid "Download interface version"
+msgstr "Lejupielādes saskarnes versija"
+
+msgid "Padding"
+msgstr "Aizpildījums"
+
+msgid "Unrecognised bytes"
+msgstr "Neatpazīti baiti"
+
+msgid "Tachograph application, generation 1"
+msgstr "Tahogrāfa lietotne, 1. paaudze"
+
+msgid "Tachograph application, generation 2"
+msgstr "Tahogrāfa lietotne, 2. paaudze"
+
+msgid "Record Arrays"
+msgstr "Ierakstu masīvi"
+
+msgid "Elementary Files"
+msgstr "Elementārie faili"
+
+msgid "Record Array"
+msgstr "Ierakstu masīvs"
+
+msgid "Elementary File"
+msgstr "Elementārais fails"
+
+msgid "File Identifier"
+msgstr "Faila identifikators"
+
+msgid "Activity changes"
+msgstr "Darbību maiņas"
+
+msgid "Card slots"
+msgstr "Karšu sloti"
+
+msgid "VU date and time"
+msgstr "Transportlīdzekļa vienības datums un laiks"
+
+msgid "Member State certificate"
+msgstr "Dalībvalsts sertifikāts"
+
+msgid "Odometer at midnight"
+msgstr "Odometra rādījums pusnaktī"
+
+msgid "Day"
+msgstr "Diena"
+
+msgid "Registration plate"
+msgstr "Reģistrācijas numurs"
+
+msgid "VU certificate"
+msgstr "Transportlīdzekļa vienības sertifikāts"
+
+msgid "None"
+msgstr "Nav"
+
+msgid "{count} records"
+msgstr "{count} ieraksti"
+
+msgid "{count} days"
+msgstr "{count} dienas"
+
+msgid "Record type"
+msgstr "Ieraksta tips"
+
+msgid "End of sensor download"
+msgstr "Sensora lejupielādes beigas"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Nav ierakstu: šis masīvs ir tukšs un satur tikai galveni."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Nav datu: šī daļa tikai iezīmē sensora lejupielādes beigas."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Nestandarta galvene: transportlīdzekļa vienības kartes lejupielādes marķieris"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Nestandarta: fails sākas ar transportlīdzekļa vienības kartes lejupielādes marķieri (76 06), nevis ar kartes pirmo failu. Kartes dati ir neskarti, bet dažas programmas šo failu var neatvērt."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Nav ierakstu: visās vietās ir regulā noteiktā tukšā vērtība (nekas netika reģistrēts)."
+
+msgid "Raw value"
+msgstr "Neapstrādāta vērtība"
+
+msgid "Result"
+msgstr "Rezultāts"
+
+msgid "What it means"
+msgstr "Ko tas nozīmē"
+
+msgid "Signed data"
+msgstr "Parakstītie dati"
+
+msgid "Algorithm"
+msgstr "Algoritms"
+
+msgid "Signed by"
+msgstr "Parakstījis"
+
+msgid "Certificate chain"
+msgstr "Sertifikātu ķēde"
+
+msgid "Vehicle unit"
+msgstr "Transportlīdzekļa vienība"
+
+msgid "Driver card"
+msgstr "Vadītāja karte"
+
+msgid "{length} bytes"
+msgstr "{length} baiti"
+
+msgid "Member State authority"
+msgstr "Dalībvalsts iestāde"
+
+msgid "European root (ERCA)"
+msgstr "Eiropas sakne (ERCA)"
+
+msgid "not verified"
+msgstr "nav pārbaudīts"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Parakstītie dati kopš parakstīšanas nav mainīti."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Parakstītie dati mainīti pēc parakstīšanas vai paraksts ir bojāts."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Regula izslēdz šo failu no kartes parakstītajiem datiem, tāpēc tā paraksts nav integritātes pārbaudes daļa."
+
+msgid "No key was available to check this signature."
+msgstr "Šī paraksta pārbaudei nebija pieejamas atslēgas."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} baiti, no {start} līdz {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Sertifikāti sadaļas sākumā nav parakstīti: tie autentificē atslēgu."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Skatīt Drošība un sertifikāti: EF parakstu pārbaude nepārbauda sertifikātu ķēdi."

@@ -591,7 +591,8 @@ class DashboardMixin:
                     day_km = card_day_km.get(id(day_data), 0)
                     odo = 0
                 day_cut = recorded_until_seconds(day_data)
-                day_tots = _compute_activity_totals(changes, day_cut)
+                day_tots = _compute_activity_totals(changes, day_cut,
+                                                    one_driver=not is_vu)
                 # Driving-time rules of Reg. (EC) 561/2006: art. 6(1) (more than
                 # 9 h of daily driving) and art. 7 (more than 4 h 30 min of
                 # continuous driving without a qualifying break). A crew day is
@@ -601,7 +602,8 @@ class DashboardMixin:
                 # (:data:`SHOW_DRIVING_INFRACTIONS`) must not stop the
                 # computation, so flipping the switch back is one line and the
                 # verdict is already there.
-                day_rules = _live.evaluate_driving_rules(changes, day_cut)
+                day_rules = _live.evaluate_driving_rules(changes, day_cut,
+                                                         one_driver=not is_vu)
                 for act in totals_global:
                     totals_global[act] += day_tots[act]
                 for act in m_tot:
@@ -947,14 +949,14 @@ class DashboardMixin:
         self._show_dashboard(_("Detailed Speed"),
                              date_range, kpis, columns, table_rows)
 
-    def _show_table(self, title, cols, rows, meta=""):
+    def _show_table(self, title, cols, rows, meta="", alternate=None):
         self._cleanup_dashboard()
         self._hide_empty_state()
         self.speed_chart.pack_forget()
         self.activity_chart.pack_forget()
         if not self.table.winfo_manager():
             self.table.pack(fill=tk.BOTH, expand=True)
-        self.table.show(title, cols, rows, meta)
+        self.table.show(title, cols, rows, meta, alternate=alternate)
 
     def _show_empty(self, title, message):
         """Render an explicit empty-state so a data-less node does not leave

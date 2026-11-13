@@ -2413,3 +2413,208 @@ msgstr "GPX-fájl (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "KML-fájl (.kml)"
+
+msgid "Technical columns"
+msgstr "Technikai oszlopok"
+
+msgid "Record details"
+msgstr "Rekord részletei"
+
+msgid "File Structure"
+msgstr "Fájlszerkezet"
+
+msgid "Signature verified"
+msgstr "Aláírás ellenőrizve"
+
+msgid "Signature not valid"
+msgstr "Érvénytelen aláírás"
+
+msgid "Signature not checked"
+msgstr "Aláírás nincs ellenőrizve"
+
+msgid "Not signed"
+msgstr "Nincs aláírva"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Eltolás {offset} · {length} bájt"
+
+msgid "Text"
+msgstr "Szöveg"
+
+msgid "Content"
+msgstr "Tartalom"
+
+msgid "Records"
+msgstr "Rekordok"
+
+msgid "Unit"
+msgstr "Egység"
+
+msgid "Signature"
+msgstr "Aláírás"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} egység · {length} bájt"
+
+msgid "Bytes"
+msgstr "Bájtok"
+
+msgid "Events and faults"
+msgstr "Események és hibák"
+
+msgid "Detailed speed"
+msgstr "Részletes sebesség"
+
+msgid "Technical data"
+msgstr "Műszaki adatok"
+
+msgid "Card download"
+msgstr "Kártyaletöltés"
+
+msgid "Sensor data"
+msgstr "Érzékelőadatok"
+
+msgid "Download interface version"
+msgstr "A letöltési interfész verziója"
+
+msgid "Padding"
+msgstr "Kitöltés"
+
+msgid "Unrecognised bytes"
+msgstr "Fel nem ismert bájtok"
+
+msgid "Tachograph application, generation 1"
+msgstr "Menetíró-alkalmazás, 1. generáció"
+
+msgid "Tachograph application, generation 2"
+msgstr "Menetíró-alkalmazás, 2. generáció"
+
+msgid "Record Arrays"
+msgstr "Rekordtömbök"
+
+msgid "Elementary Files"
+msgstr "Elemi fájlok"
+
+msgid "Record Array"
+msgstr "Rekordtömb"
+
+msgid "Elementary File"
+msgstr "Elemi fájl"
+
+msgid "File Identifier"
+msgstr "Fájlazonosító"
+
+msgid "Activity changes"
+msgstr "Tevékenységváltások"
+
+msgid "Card slots"
+msgstr "Kártyahelyek"
+
+msgid "VU date and time"
+msgstr "A járműegység dátuma és ideje"
+
+msgid "Member State certificate"
+msgstr "Tagállami tanúsítvány"
+
+msgid "Odometer at midnight"
+msgstr "Kilométeróra-állás éjfélkor"
+
+msgid "Day"
+msgstr "Nap"
+
+msgid "Registration plate"
+msgstr "Rendszám"
+
+msgid "VU certificate"
+msgstr "Járműegység-tanúsítvány"
+
+msgid "None"
+msgstr "Nincs"
+
+msgid "{count} records"
+msgstr "{count} rekord"
+
+msgid "{count} days"
+msgstr "{count} nap"
+
+msgid "Record type"
+msgstr "Rekordtípus"
+
+msgid "End of sensor download"
+msgstr "Az érzékelőletöltés vége"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Nincs rekord: ez a tömb üres, csak a fejlécét tartalmazza."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Nincs adat: ez a rész csak az érzékelőletöltés végét jelzi."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Nem szabványos fejléc: a járműegység kártyaletöltési jelölője"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Nem szabványos: a fájl a járműegység kártyaletöltési jelölőjével (76 06) kezdődik a kártya első fájlja helyett. A kártya adatai épek, de egyes programok nem biztos, hogy megnyitják ezt a fájlt."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Nincs rekord: minden hely a rendelet által meghatározott üres értéket tartalmazza (semmit nem rögzítettek)."
+
+msgid "Raw value"
+msgstr "Nyers érték"
+
+msgid "Result"
+msgstr "Eredmény"
+
+msgid "What it means"
+msgstr "Mit jelent"
+
+msgid "Signed data"
+msgstr "Aláírt adatok"
+
+msgid "Algorithm"
+msgstr "Algoritmus"
+
+msgid "Signed by"
+msgstr "Aláírta"
+
+msgid "Certificate chain"
+msgstr "Tanúsítványlánc"
+
+msgid "Vehicle unit"
+msgstr "Járműegység"
+
+msgid "Driver card"
+msgstr "Járművezetői kártya"
+
+msgid "{length} bytes"
+msgstr "{length} bájt"
+
+msgid "Member State authority"
+msgstr "A tagállami hatóság"
+
+msgid "European root (ERCA)"
+msgstr "Európai gyökér (ERCA)"
+
+msgid "not verified"
+msgstr "nincs ellenőrizve"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Az aláírt adatok az aláírás óta nem változtak."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Az aláírt adatokat az aláírás után módosították, vagy az aláírás sérült."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "A rendelet kizárja ezt a fájlt a kártya aláírt adatai közül, ezért aláírása nem része az integritás-ellenőrzésnek."
+
+msgid "No key was available to check this signature."
+msgstr "Nem állt rendelkezésre kulcs az aláírás ellenőrzéséhez."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bájt, {start} és {end} között"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "A szakasz elején lévő tanúsítványok nincsenek aláírva: a kulcsot hitelesítik."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Lásd Biztonság és tanúsítványok: az EF-aláírások ellenőrzése nem ellenőrzi a tanúsítványláncot."

@@ -2413,3 +2413,208 @@ msgstr "Fișier GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "Fișier KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Coloane tehnice"
+
+msgid "Record details"
+msgstr "Detaliile înregistrării"
+
+msgid "File Structure"
+msgstr "Structura fișierului"
+
+msgid "Signature verified"
+msgstr "Semnătură verificată"
+
+msgid "Signature not valid"
+msgstr "Semnătură nevalidă"
+
+msgid "Signature not checked"
+msgstr "Semnătură neverificată"
+
+msgid "Not signed"
+msgstr "Nesemnat"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Decalaj {offset} · {length} octeți"
+
+msgid "Text"
+msgstr "Text"
+
+msgid "Content"
+msgstr "Conținut"
+
+msgid "Records"
+msgstr "Înregistrări"
+
+msgid "Unit"
+msgstr "Unitate"
+
+msgid "Signature"
+msgstr "Semnătură"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} unități · {length} octeți"
+
+msgid "Bytes"
+msgstr "Octeți"
+
+msgid "Events and faults"
+msgstr "Evenimente și defecțiuni"
+
+msgid "Detailed speed"
+msgstr "Viteză detaliată"
+
+msgid "Technical data"
+msgstr "Date tehnice"
+
+msgid "Card download"
+msgstr "Descărcare card"
+
+msgid "Sensor data"
+msgstr "Datele senzorului"
+
+msgid "Download interface version"
+msgstr "Versiunea interfeței de descărcare"
+
+msgid "Padding"
+msgstr "Umplutură"
+
+msgid "Unrecognised bytes"
+msgstr "Octeți nerecunoscuți"
+
+msgid "Tachograph application, generation 1"
+msgstr "Aplicația tahografului, generația 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Aplicația tahografului, generația 2"
+
+msgid "Record Arrays"
+msgstr "Tablouri de înregistrări"
+
+msgid "Elementary Files"
+msgstr "Fișiere elementare"
+
+msgid "Record Array"
+msgstr "Tablou de înregistrări"
+
+msgid "Elementary File"
+msgstr "Fișier elementar"
+
+msgid "File Identifier"
+msgstr "Identificator de fișier"
+
+msgid "Activity changes"
+msgstr "Schimbări de activitate"
+
+msgid "Card slots"
+msgstr "Sloturi card"
+
+msgid "VU date and time"
+msgstr "Data și ora VU"
+
+msgid "Member State certificate"
+msgstr "Certificatul statului membru"
+
+msgid "Odometer at midnight"
+msgstr "Kilometraj la miezul nopții"
+
+msgid "Day"
+msgstr "Zi"
+
+msgid "Registration plate"
+msgstr "Număr de înmatriculare"
+
+msgid "VU certificate"
+msgstr "Certificatul VU"
+
+msgid "None"
+msgstr "Niciunul"
+
+msgid "{count} records"
+msgstr "{count} înregistrări"
+
+msgid "{count} days"
+msgstr "{count} zile"
+
+msgid "Record type"
+msgstr "Tip de înregistrare"
+
+msgid "End of sensor download"
+msgstr "Sfârșitul descărcării senzorului"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Nicio înregistrare: acest tablou este gol și conține doar antetul."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Nicio dată: această parte marchează doar sfârșitul descărcării senzorului."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Antet nestandard: marcaj de descărcare card al VU"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Nestandard: fișierul începe cu marcajul de descărcare card al unității vehiculului (76 06) în loc de primul fișier al cardului. Datele cardului sunt intacte, dar unele programe s-ar putea să nu deschidă acest fișier."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Nicio înregistrare: toate pozițiile conțin valoarea goală definită de regulament (nu s-a înregistrat nimic)."
+
+msgid "Raw value"
+msgstr "Valoare brută"
+
+msgid "Result"
+msgstr "Rezultat"
+
+msgid "What it means"
+msgstr "Ce înseamnă"
+
+msgid "Signed data"
+msgstr "Date semnate"
+
+msgid "Algorithm"
+msgstr "Algoritm"
+
+msgid "Signed by"
+msgstr "Semnat de"
+
+msgid "Certificate chain"
+msgstr "Lanț de certificate"
+
+msgid "Vehicle unit"
+msgstr "Unitatea vehiculului"
+
+msgid "Driver card"
+msgstr "Card de conducător"
+
+msgid "{length} bytes"
+msgstr "{length} octeți"
+
+msgid "Member State authority"
+msgstr "Autoritatea statului membru"
+
+msgid "European root (ERCA)"
+msgstr "Rădăcina europeană (ERCA)"
+
+msgid "not verified"
+msgstr "neverificat"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Datele semnate nu au fost modificate de când au fost semnate."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Datele semnate au fost modificate după semnare sau semnătura este deteriorată."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Regulamentul exclude acest fișier din datele semnate ale cardului, deci semnătura sa nu face parte din verificarea integrității."
+
+msgid "No key was available to check this signature."
+msgstr "Nu a fost disponibilă nicio cheie pentru verificarea acestei semnături."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} octeți, de la {start} la {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certificatele de la începutul secțiunii nu sunt semnate: ele autentifică cheia."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Vezi Securitate și certificate: verificarea semnăturilor EF nu verifică lanțul de certificate."

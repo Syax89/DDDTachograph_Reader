@@ -2413,3 +2413,208 @@ msgstr "Formát GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "Formát KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Technické sloupce"
+
+msgid "Record details"
+msgstr "Podrobnosti záznamu"
+
+msgid "File Structure"
+msgstr "Struktura souboru"
+
+msgid "Signature verified"
+msgstr "Podpis ověřen"
+
+msgid "Signature not valid"
+msgstr "Podpis neplatný"
+
+msgid "Signature not checked"
+msgstr "Podpis neověřen"
+
+msgid "Not signed"
+msgstr "Nepodepsáno"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Posun {offset} · {length} bajtů"
+
+msgid "Text"
+msgstr "Text"
+
+msgid "Content"
+msgstr "Obsah"
+
+msgid "Records"
+msgstr "Záznamy"
+
+msgid "Unit"
+msgstr "Jednotka"
+
+msgid "Signature"
+msgstr "Podpis"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} jednotek · {length} bajtů"
+
+msgid "Bytes"
+msgstr "Bajty"
+
+msgid "Events and faults"
+msgstr "Události a poruchy"
+
+msgid "Detailed speed"
+msgstr "Podrobná rychlost"
+
+msgid "Technical data"
+msgstr "Technické údaje"
+
+msgid "Card download"
+msgstr "Stažení karty"
+
+msgid "Sensor data"
+msgstr "Údaje snímače"
+
+msgid "Download interface version"
+msgstr "Verze rozhraní pro stahování"
+
+msgid "Padding"
+msgstr "Výplň"
+
+msgid "Unrecognised bytes"
+msgstr "Nerozpoznané bajty"
+
+msgid "Tachograph application, generation 1"
+msgstr "Aplikace tachografu, generace 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Aplikace tachografu, generace 2"
+
+msgid "Record Arrays"
+msgstr "Pole záznamů"
+
+msgid "Elementary Files"
+msgstr "Elementární soubory"
+
+msgid "Record Array"
+msgstr "Pole záznamů"
+
+msgid "Elementary File"
+msgstr "Elementární soubor"
+
+msgid "File Identifier"
+msgstr "Identifikátor souboru"
+
+msgid "Activity changes"
+msgstr "Změny činnosti"
+
+msgid "Card slots"
+msgstr "Sloty karet"
+
+msgid "VU date and time"
+msgstr "Datum a čas VU"
+
+msgid "Member State certificate"
+msgstr "Certifikát členského státu"
+
+msgid "Odometer at midnight"
+msgstr "Stav počítadla o půlnoci"
+
+msgid "Day"
+msgstr "Den"
+
+msgid "Registration plate"
+msgstr "Registrační značka"
+
+msgid "VU certificate"
+msgstr "Certifikát VU"
+
+msgid "None"
+msgstr "Žádné"
+
+msgid "{count} records"
+msgstr "{count} záznamů"
+
+msgid "{count} days"
+msgstr "{count} dní"
+
+msgid "Record type"
+msgstr "Typ záznamu"
+
+msgid "End of sensor download"
+msgstr "Konec stahování snímače"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Žádné záznamy: toto pole je prázdné a obsahuje jen hlavičku."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Žádná data: tato část jen označuje konec stahování snímače."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Nestandardní hlavička: značka stažení karty z VU"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Nestandardní: soubor začíná značkou stažení karty palubní jednotky (76 06) místo prvního souboru karty. Data karty jsou neporušená, ale některé programy tento soubor nemusí otevřít."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Žádné záznamy: všechny pozice obsahují prázdnou hodnotu definovanou nařízením (nic nebylo zaznamenáno)."
+
+msgid "Raw value"
+msgstr "Surová hodnota"
+
+msgid "Result"
+msgstr "Výsledek"
+
+msgid "What it means"
+msgstr "Co to znamená"
+
+msgid "Signed data"
+msgstr "Podepsaná data"
+
+msgid "Algorithm"
+msgstr "Algoritmus"
+
+msgid "Signed by"
+msgstr "Podepsal"
+
+msgid "Certificate chain"
+msgstr "Řetězec certifikátů"
+
+msgid "Vehicle unit"
+msgstr "Palubní jednotka"
+
+msgid "Driver card"
+msgstr "Karta řidiče"
+
+msgid "{length} bytes"
+msgstr "{length} bajtů"
+
+msgid "Member State authority"
+msgstr "Orgán členského státu"
+
+msgid "European root (ERCA)"
+msgstr "Evropský kořen (ERCA)"
+
+msgid "not verified"
+msgstr "neověřeno"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Podepsaná data nebyla od podpisu změněna."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Podepsaná data byla po podpisu změněna nebo je podpis poškozen."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Nařízení vylučuje tento soubor z podepsaných dat karty, jeho podpis proto není součástí kontroly integrity."
+
+msgid "No key was available to check this signature."
+msgstr "Pro kontrolu tohoto podpisu nebyl k dispozici žádný klíč."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bajtů, od {start} do {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certifikáty na začátku oddílu nejsou podepsány: ověřují klíč."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Viz Zabezpečení a certifikáty: kontrola podpisů EF neověřuje řetězec certifikátů."

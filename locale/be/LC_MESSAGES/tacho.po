@@ -2413,3 +2413,208 @@ msgstr "GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Тэхнічныя слупкі"
+
+msgid "Record details"
+msgstr "Падрабязнасці запісу"
+
+msgid "File Structure"
+msgstr "Структура файла"
+
+msgid "Signature verified"
+msgstr "Подпіс правераны"
+
+msgid "Signature not valid"
+msgstr "Подпіс несапраўдны"
+
+msgid "Signature not checked"
+msgstr "Подпіс не правераны"
+
+msgid "Not signed"
+msgstr "Без подпісу"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Зрух {offset} · {length} байтаў"
+
+msgid "Text"
+msgstr "Тэкст"
+
+msgid "Content"
+msgstr "Змесціва"
+
+msgid "Records"
+msgstr "Запісы"
+
+msgid "Unit"
+msgstr "Блок"
+
+msgid "Signature"
+msgstr "Подпіс"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} блокаў · {length} байтаў"
+
+msgid "Bytes"
+msgstr "Байты"
+
+msgid "Events and faults"
+msgstr "Падзеі і няспраўнасці"
+
+msgid "Detailed speed"
+msgstr "Падрабязная хуткасць"
+
+msgid "Technical data"
+msgstr "Тэхнічныя даныя"
+
+msgid "Card download"
+msgstr "Выгрузка карткі"
+
+msgid "Sensor data"
+msgstr "Даныя датчыка"
+
+msgid "Download interface version"
+msgstr "Версія інтэрфейсу выгрузкі"
+
+msgid "Padding"
+msgstr "Запаўненне"
+
+msgid "Unrecognised bytes"
+msgstr "Нераспазнаныя байты"
+
+msgid "Tachograph application, generation 1"
+msgstr "Праграма тахографа, пакаленне 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Праграма тахографа, пакаленне 2"
+
+msgid "Record Arrays"
+msgstr "Масівы запісаў"
+
+msgid "Elementary Files"
+msgstr "Элементарныя файлы"
+
+msgid "Record Array"
+msgstr "Масіў запісаў"
+
+msgid "Elementary File"
+msgstr "Элементарны файл"
+
+msgid "File Identifier"
+msgstr "Ідэнтыфікатар файла"
+
+msgid "Activity changes"
+msgstr "Змены дзейнасці"
+
+msgid "Card slots"
+msgstr "Слоты картак"
+
+msgid "VU date and time"
+msgstr "Дата і час бартавой прылады"
+
+msgid "Member State certificate"
+msgstr "Сертыфікат дзяржавы-члена"
+
+msgid "Odometer at midnight"
+msgstr "Прабег апоўначы"
+
+msgid "Day"
+msgstr "Дзень"
+
+msgid "Registration plate"
+msgstr "Рэгістрацыйны нумар"
+
+msgid "VU certificate"
+msgstr "Сертыфікат бартавой прылады"
+
+msgid "None"
+msgstr "Няма"
+
+msgid "{count} records"
+msgstr "Запісаў: {count}"
+
+msgid "{count} days"
+msgstr "Дзён: {count}"
+
+msgid "Record type"
+msgstr "Тып запісу"
+
+msgid "End of sensor download"
+msgstr "Канец выгрузкі датчыка"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Няма запісаў: гэты масіў пусты і змяшчае толькі загаловак."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Няма даных: гэтая частка толькі адзначае канец выгрузкі датчыка."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Нестандартны загаловак: маркер выгрузкі карткі бартавой прылады"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Нестандартны файл: ён пачынаецца з маркера выгрузкі карткі бартавой прылады (76 06) замест першага файла карткі. Даныя карткі цэлыя, але некаторыя праграмы могуць не адкрыць гэты файл."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Няма запісаў: усе ячэйкі змяшчаюць пустое значэнне, вызначанае рэгламентам (нічога не запісана)."
+
+msgid "Raw value"
+msgstr "Зыходнае значэнне"
+
+msgid "Result"
+msgstr "Вынік"
+
+msgid "What it means"
+msgstr "Што гэта значыць"
+
+msgid "Signed data"
+msgstr "Падпісаныя даныя"
+
+msgid "Algorithm"
+msgstr "Алгарытм"
+
+msgid "Signed by"
+msgstr "Падпісана"
+
+msgid "Certificate chain"
+msgstr "Ланцужок сертыфікатаў"
+
+msgid "Vehicle unit"
+msgstr "Бартавая прылада"
+
+msgid "Driver card"
+msgstr "Картка вадзіцеля"
+
+msgid "{length} bytes"
+msgstr "{length} байтаў"
+
+msgid "Member State authority"
+msgstr "Орган дзяржавы-члена"
+
+msgid "European root (ERCA)"
+msgstr "Еўрапейскі корань (ERCA)"
+
+msgid "not verified"
+msgstr "не праверана"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Падпісаныя даныя не змяняліся з моманту падпісання."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Падпісаныя даныя зменены пасля падпісання, або подпіс пашкоджаны."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Рэгламент выключае гэты файл з падпісаных даных карткі, таму яго подпіс не ўваходзіць у праверку цэласнасці."
+
+msgid "No key was available to check this signature."
+msgstr "Для праверкі гэтага подпісу не было даступнага ключа."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} байтаў, з {start} па {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Сертыфікаты ў пачатку раздзела не падпісаныя: яны пацвярджаюць ключ."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Гл. Бяспека і сертыфікаты: праверка подпісаў EF не правярае ланцужок сертыфікатаў."

@@ -169,7 +169,11 @@ TachoResult
 └── signed_daily_records: List[Dict]
 ```
 
-`build_generations_tree()` (line 552) organizes results into a hierarchical view: `{Generation 1: {...}, Generation 2: {...}, Generation 2.2: {...}}`.
+`build_generations_tree()` (line 552) organizes results into a hierarchical view: `{Generation 1: {...}, Generation 2: {...}, Generation 2.2: {...}}`. The GUI uses it for the daily-activity and detailed-speed views, and as the tree only when the file's bytes are not at hand.
+
+### File layout (`core/structure/layout.py`)
+
+`build_layout(raw, results)` describes the file as it is stored: a list of `Unit`s in file order (TREP sections and their RecordArrays for a G2/G2.2 VU, TREP messages and their RSA signatures for a G1 VU, EF data and signature elements grouped by application for a card), with the gaps between them as `Padding` / `Unrecognised bytes` units, so the top-level units tile the file. Each unit carries its offset, length, tag and the signature verdict the parser reached, and a lazy decoder that runs the parser's own decoders on that unit's bytes alone (`decode_vu_record`, `g1_walker.decode_g1_message`, `DeterministicParser._dispatch_decoder` on a fresh result). It never changes the parse result. The GUI's *File Structure* node (`app/gui_explorer_structure.py`) is built from it.
 
 ### SignatureValidator (`core/crypto/signature.py:27`)
 

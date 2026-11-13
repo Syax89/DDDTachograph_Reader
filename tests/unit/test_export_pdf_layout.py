@@ -450,6 +450,7 @@ def test_cover_totals_follow_the_shared_two_slot_engine(tmp_path):
     ]}
     expected = compute_activity_totals(crew_day["changes"])
     data = minimal_data()
+    data["metadata"]["is_vu"] = True       # two slots, two drivers: a vehicle unit
     data["activities"] = [crew_day]
 
     _path, spy = render(tmp_path, data)

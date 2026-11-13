@@ -142,6 +142,8 @@ from app.gui_day_detail import (  # noqa: E402,F401  (moved; re-exported)
     _parse_iso,
 )
 from app.gui_text import (  # noqa: E402,F401  (moved; re-exported)
+    Columns,
+    technical_columns,
     CARD_ENVELOPE_NOTICE,
     CARD_HEADER_NOTICE,
     DONATION_URL,
@@ -487,6 +489,13 @@ def _fmt_dict(d):
 
 
 
+#: EquipmentType (Annex 1C §2.67): the kind of card or device a number names.
+_EQUIPMENT_TYPES = {1: "Driver card", 2: "Workshop card", 3: "Control card",
+                    4: "Company card", 5: "Manufacturing card", 6: "Vehicle unit",
+                    7: "Motion sensor", 8: "GNSS facility",
+                    9: "Remote communication device"}
+
+
 def fmt_val(v, key=None):
     """Render any parser value for display: booleans as Yes/No, floats
     trimmed, large ints with thousands spaces, 0xFFFFFF sentinels as N/A,
@@ -508,6 +517,42 @@ def fmt_val(v, key=None):
         if all(not isinstance(x, (dict, list)) for x in v):
             return ", ".join(fmt_val(x) for x in v)
         return f"[{len(v)} items]"
+    if key == "card_slot" and isinstance(v, int) and not isinstance(v, bool) and v in (0, 1):
+        # CardSlotNumber (Annex 1B §2.34): 0 driver slot, 1 co-driver slot.
+        return ui_text.data_text("Driver slot" if v == 0 else "Co-driver slot")
+    name = str(key or "")
+    is_int = isinstance(v, int) and not isinstance(v, bool)
+    if is_int and name.endswith("card_type") and v == 0:
+        # A FullCardNumber of type 0 with no nation: no card was inserted.
+        return ui_text.data_text("No card")
+    if is_int and (name.endswith("card_type") or name.endswith("equipment_type")) \
+            and v in _EQUIPMENT_TYPES:
+        # EquipmentType (Annex 1C §2.67), also the type of a FullCardNumber.
+        return ui_text.data_text(_EQUIPMENT_TYPES[v])
+    if is_int and name.endswith("generation") and v in (1, 2):
+        return ui_text.data_text(f"Generation {v}")
+    if is_int and name.endswith("code_page") and (1 <= v <= 16 or v in (80, 85)):
+        # CodePage (Annex 1B §2.17): ISO/IEC 8859 parts 1-16, KOI8-R, KOI8-U.
+        return {80: "KOI8-R", 85: "KOI8-U"}.get(v, f"ISO/IEC 8859-{v}")
+    if is_int and name.endswith("authentication_status") and v in (0, 1):
+        # PositionAuthenticationStatus (Annex 1C §2.117a).
+        return ui_text.data_text("Authenticated" if v else "Not authenticated")
+    if is_int and name in ("manufacturer_code", "personaliser_code"):
+        from core.utils.manufacturer_codes import manufacturer_name
+        registered = manufacturer_name(v)
+        if registered:
+            return f"{registered} (0x{v:02X})"
+    if is_int and name in ("fault_purpose", "event_purpose"):
+        name = "record_purpose"
+    if isinstance(v, str) and name.endswith("nation") and name not in NATION_COLS \
+            and 0 < len(v.strip()) <= 3:
+        # A nation code under another key (card_driver_nation, card_nation...).
+        return fmt_scalar(v, key="nation", label_translator=ui_text.data_text)
+    if name == "record_purpose" and isinstance(v, int) and not isinstance(v, bool):
+        # EventFaultRecordPurpose is a code (Annex 1B §2.72); the reader wants
+        # the sentence, e.g. "the longest event for one of the last 10 days".
+        from core.utils.event_codes import describe_record_purpose
+        return ui_text.data_text(describe_record_purpose(v))
     if isinstance(v, str) and key in NATION_COLS:
         # The nation cell expands "I" to "Italy": that is fmt_scalar's job.
         return fmt_scalar(v, key=key, label_translator=ui_text.data_text)
@@ -517,12 +562,42 @@ def fmt_val(v, key=None):
         # falls through unchanged. Formatting still has to happen: fmt_scalar
         # turns ISO timestamps into the display form.
         text = ui_text.activity(v) if key == "activity" else ui_text.data_text(v)
-        return fmt_scalar(text, key=key, include_code_label=True,
-                          label_translator=ui_text.data_text)
+        return _table_date(fmt_scalar(text, key=key, include_code_label=True,
+                                      label_translator=ui_text.data_text), key)
     return fmt_scalar(v, key=key, include_code_label=True,
                       label_translator=ui_text.data_text)
 
 
+
+
+_ISO_SHORT_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2})(Z?))?$")
+#: Columns whose midnight timestamp is a calendar date (an expiry, a birth or
+#: a calibration due date), so the time adds nothing and is left out.
+_DATE_ONLY_HINTS = ("date", "expiry", "birth", "valid", "issue")
+
+
+def _table_date(text, key=None):
+    """A table date in one shape everywhere: ``07/07/2025 03:49 UTC``.
+
+    The day tables already read ``dd/mm/yyyy``; record tables showed
+    ``2025-07-07 03:49Z`` beside them. A UTC time keeps its zone spelled out,
+    and a midnight value in a date-like column (``card_expiry``,
+    ``next_calibration_date`` …) is shown as the date alone. Anything that is
+    not such a date is returned unchanged.
+    """
+    if not isinstance(text, str):
+        return text
+    m = _ISO_SHORT_RE.match(text)
+    if not m:
+        return text
+    year, month, day, hour, minute, zone = m.groups()
+    date = f"{day}/{month}/{year}"
+    if hour is None:
+        return date
+    if hour == "00" and minute == "00" and key and any(
+            hint in str(key).lower() for hint in _DATE_ONLY_HINTS):
+        return date
+    return f"{date} {hour}:{minute}" + (" UTC" if zone else "")
 
 
 def _rows_for(records, transformer):
@@ -542,7 +617,33 @@ def _rows_for(records, transformer):
     # Transformer output keys are already display labels; raw record keys go
     # through the display-text layer, which humanises and translates them (rows
     # above keep the raw key order).
-    headers = cols if transformer else [ui_text.label(c) for c in cols]
+    if transformer:
+        return cols, rows
+    technical = set(technical_columns(cols))
+
+    renamed = {}
+    for col in cols:
+        for suffix in ("_label", "_description"):
+            stem = col[:-len(suffix)] if col.endswith(suffix) else None
+            if stem and stem in technical:
+                renamed[stem] = col
+
+    def heading(col):
+        # "Calibration Purpose Label" beside a hidden numeric "Calibration
+        # Purpose" is the purpose itself: the worded column takes the plain
+        # name, and the number behind the switch is called the code it is.
+        for stem, worded in renamed.items():
+            if col == worded:
+                return ui_text.label(stem)
+            if col == stem:
+                return ui_text.label(f"{stem}_code")
+        return ui_text.label(col)
+
+    labels = {c: heading(c) for c in cols}
+    if len(set(labels.values())) != len(labels):
+        labels = {c: ui_text.label(c) for c in cols}   # never two equal headings
+    headers = Columns([labels[c] for c in cols],
+                      technical=[labels[c] for c in cols if c in technical])
     return headers, rows
 
 
@@ -809,6 +910,20 @@ class DataTable(ttk.Frame):
         self.filter_var.trace_add("write", lambda *_args: self._schedule_filter())
         self.filter_entry = ttk.Entry(filt, textvariable=self.filter_var)
         self.filter_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(4, 0))
+        # Technical columns (raw values, codes that a description already
+        # spells out) stay one click away instead of crowding every row. The
+        # choice holds for the session, across tables.
+        self.technical_var = tk.BooleanVar(value=False)
+        self.technical_check = ttk.Checkbutton(
+            filt, text=_("Technical columns"), variable=self.technical_var,
+            command=self._toggle_technical)
+        # A file-structure unit can also be read as bytes: the same switch for
+        # every unit, held for the session like the technical columns.
+        self.bytes_var = tk.BooleanVar(value=False)
+        self.bytes_check = ttk.Checkbutton(
+            filt, text=_("Bytes"), variable=self.bytes_var,
+            command=self._toggle_bytes)
+        self._views = None
         body = ttk.Frame(self)
         body.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
 
@@ -848,6 +963,16 @@ class DataTable(ttk.Frame):
 
         self._cols = []
         self._all_rows = []
+        # Section tables keep every column of a row in ``_all_rows`` and show
+        # the subset in ``_cols``: ``_full_cols`` names all of them,
+        # ``_vis_idx`` maps a shown column to its place in the row. Views that
+        # set ``_cols`` themselves (summary, dashboards) are not projected —
+        # see :meth:`_visible_values`.
+        self._full_cols = []
+        self._technical = frozenset()
+        self._vis_idx = None
+        self._projected_cols = None
+        self._detail_enabled = False
         # Treeview iid -> stable row key, filled by _render for rows that have
         # one (see _TableRow); the dashboard tooltips are looked up through it.
         self._iid_keys = {}
@@ -861,6 +986,13 @@ class DataTable(ttk.Frame):
         self._summary_mode = False
 
         self.tv.bind("<Configure>", lambda e: self._schedule_fit())
+        # Double-click (or Enter) on a record opens every field of it. A
+        # bindtag of its own, because the dashboards unbind and rebind the
+        # widget's own <Double-1> whenever they take the table over.
+        detail_tag = f"DataTableDetail{id(self)}"
+        self.tv.bindtags(self.tv.bindtags() + (detail_tag,))
+        self.tv.bind_class(detail_tag, "<Double-1>", self._open_detail)
+        self.tv.bind_class(detail_tag, "<Return>", self._open_detail)
 
         # The table is the only way out of the file with its data in a form
         # another program can take, and a treeview copies nothing by itself.
@@ -903,9 +1035,32 @@ class DataTable(ttk.Frame):
         elif not needed and self._xsb.winfo_manager():
             self._xsb.grid_remove()
 
-    def show(self, title, columns, rows, meta=""):
+    def show(self, title, columns, rows, meta="", alternate=None):
         """Display a table: sets headers (click to sort), sizes columns,
-        resets the filter and renders all rows."""
+        resets the filter and renders all rows.
+
+        *alternate* is a second ``(columns, rows)`` view of the same thing (the
+        bytes of a file unit): a *Bytes* switch then flips between the two.
+        """
+        self._views = (title, columns, rows, meta, alternate) if alternate else None
+        if alternate:
+            self.bytes_check.pack(side=tk.RIGHT, padx=(8, 0))
+            if self.bytes_var.get():
+                columns, rows = alternate
+        else:
+            self.bytes_check.pack_forget()
+        self._show_now(title, columns, rows, meta)
+
+    def _toggle_bytes(self):
+        """Flip the current unit between its records and its bytes."""
+        if not self._views:
+            return
+        title, columns, rows, meta, alternate = self._views
+        if self.bytes_var.get():
+            columns, rows = alternate
+        self._show_now(title, columns, rows, meta)
+
+    def _show_now(self, title, columns, rows, meta=""):
         if self._fit_after_id is not None:
             self.tv.after_cancel(self._fit_after_id)
             self._fit_after_id = None
@@ -920,12 +1075,49 @@ class DataTable(ttk.Frame):
             + (f"   \u2014   {meta}" if meta else ""))
         self.filter_var.set("")
 
-        self._cols = list(columns)
+        self._full_cols = list(columns)
+        self._technical = frozenset(getattr(columns, "technical", ()))
+        self._detail_enabled = isinstance(columns, Columns)
+        if self._technical:
+            self.technical_check.pack(side=tk.RIGHT, padx=(8, 0))
+        else:
+            self.technical_check.pack_forget()
+        self._project_columns()
+        self._update_count(len(rows), meta)
         self._sort_state = {}
         self._fitted = False
         self._summary_mode = False
         self.tv["show"] = "headings"
 
+        self._configure_columns()
+        self.set_rows(rows)
+        self.tv.update_idletasks()
+        self._fit_columns()
+        _flush(self.tv)
+        self._sync_xscroll()
+        if self._fit_after_id is not None:
+            self.tv.after_cancel(self._fit_after_id)
+            self._fit_after_id = None
+
+    def _project_columns(self):
+        """Choose the shown columns: all, or all but the technical ones."""
+        show_all = bool(self.technical_var.get()) or not self._technical
+        self._vis_idx = [i for i, c in enumerate(self._full_cols)
+                         if show_all or c not in self._technical]
+        self._cols = [self._full_cols[i] for i in self._vis_idx]
+        self._projected_cols = self._cols
+
+    def _update_count(self, n_rows, meta=""):
+        """"Rows · Columns" for what is shown (hidden technical ones not counted)."""
+        self._count_meta = meta
+        self._count_rows = n_rows
+        self.count_lbl.config(
+            text=_("Rows: {rows} \u00b7 Columns: {columns}").format(
+                rows=n_rows, columns=len(self._cols))
+            + (f"   \u2014   {meta}" if meta else ""))
+
+    def _configure_columns(self):
+        """Headings (click to sort) and minimum widths for the shown columns."""
         self.tv["columns"] = self._cols
         for c in self._cols:
             # The heading is anchored like the cells under it (clam centres a
@@ -936,14 +1128,101 @@ class DataTable(ttk.Frame):
             min_w = max(len(str(c)) * _px(9) + _px(24), _px(60))
             self.tv.column(c, minwidth=min_w, anchor=tk.W, stretch=False)
 
-        self.set_rows(rows)
+    def _toggle_technical(self):
+        """Show or hide the technical columns of the current table."""
+        if not self._technical or self._projected_cols is not self._cols:
+            return
+        self._project_columns()
+        self._update_count(getattr(self, "_count_rows", len(self._all_rows)),
+                           getattr(self, "_count_meta", ""))
+        self._sort_state = {}
+        self._configure_columns()
+        self._fitted = False
+        self._apply_filter()
         self.tv.update_idletasks()
         self._fit_columns()
-        _flush(self.tv)
         self._sync_xscroll()
-        if self._fit_after_id is not None:
-            self.tv.after_cancel(self._fit_after_id)
-            self._fit_after_id = None
+
+    def _visible_values(self, row):
+        """The cells of *row* for the shown columns.
+
+        Only a table set up by :meth:`show` is projected; a view that assigns
+        ``_cols`` itself (the summary panel, the dashboards) draws its rows as
+        they are.
+        """
+        if self._vis_idx is None or self._projected_cols is not self._cols:
+            return list(row)
+        return [row[i] if i < len(row) else "" for i in self._vis_idx]
+
+    def _column_index(self, col):
+        """Position of *col* in a stored row (full row for projected tables)."""
+        if self._vis_idx is not None and self._projected_cols is self._cols:
+            return self._full_cols.index(col)
+        return self._cols.index(col)
+
+    def _open_detail(self, _event=None):
+        """Every field of the selected record, in a window of its own.
+
+        The table shows one line per record, so a long description or a column
+        behind the *Technical columns* switch is out of sight; this lists all
+        of the record's columns, technical ones included, as field/value rows.
+        """
+        if not self._detail_enabled or self._projected_cols is not self._cols:
+            return None
+        selected = self.tv.selection()
+        if not selected:
+            return None
+        index = self.tv.index(selected[0])
+        shown = getattr(self, "_shown_rows", None) or self._all_rows
+        if index >= len(shown):
+            return None
+        row = shown[index]
+        win = tk.Toplevel(self)
+        win.title(_("Record details"))
+        win.transient(self.winfo_toplevel())
+        frame = ttk.Frame(win, padding=_px(8))
+        frame.pack(fill=tk.BOTH, expand=True)
+        tv = ttk.Treeview(frame, columns=("field", "value"), show="headings",
+                          height=min(max(len(self._full_cols), 3), 24))
+        tv.heading("field", text=_("Field"), anchor=tk.W)
+        tv.heading("value", text=_("Value"), anchor=tk.W)
+        ysb = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tv.yview)
+        tv.configure(yscrollcommand=ysb.set)
+        tv.grid(row=0, column=0, sticky="nsew")
+        ysb.grid(row=0, column=1, sticky="ns")
+        frame.rowconfigure(0, weight=1)
+        frame.columnconfigure(0, weight=1)
+        font = self._table_font()
+        field_w = value_w = _px(120)
+        for i, col in enumerate(self._full_cols):
+            value = row[i] if i < len(row) else ""
+            value = _bool_text(value) if isinstance(value, bool) else value
+            tv.insert("", tk.END, values=(col, value),
+                      tags=("even" if i % 2 == 0 else "odd",))
+            field_w = max(field_w, font.measure(str(col)) + _px(24))
+            value_w = max(value_w, font.measure(str(value)) + _px(24))
+        tv.tag_configure("even", background=ROW_EVEN)
+        tv.tag_configure("odd", background=ROW_ODD)
+        tv.column("field", width=min(field_w, _px(320)), stretch=False)
+        tv.column("value", width=min(value_w, _px(720)), stretch=True)
+        win.bind("<Escape>", lambda _e: win.destroy())
+        # Centred on the main window, so it opens beside the row it describes
+        # on every platform (a window manager may still move it).
+        win.update_idletasks()
+        top = self.winfo_toplevel()
+        x = top.winfo_rootx() + max((top.winfo_width() - win.winfo_reqwidth()) // 2, 0)
+        y = top.winfo_rooty() + max((top.winfo_height() - win.winfo_reqheight()) // 3, 0)
+        win.geometry(f"+{x}+{y}")
+        tv.focus_set()
+        return "break"
+
+    def _table_font(self):
+        """The font the table draws its cells with, for measuring text."""
+        try:
+            name = ttk.Style(self).lookup("Treeview", "font") or "TkDefaultFont"
+            return tkfont.nametofont(name)
+        except (tk.TclError, RuntimeError):
+            return tkfont.nametofont("TkDefaultFont")
 
     def _fit_columns(self):
         """Distribute available width proportionally to content length.
@@ -959,24 +1238,38 @@ class DataTable(ttk.Frame):
         if available < 50:
             self._fit_after_id = self.tv.after(200, self._fit_columns)
             return
-        weights = [max(max(self._content_width(c), len(str(c)) * _px(9)) + _px(24), _px(70)) for c in self._cols]
-        total_weight = sum(weights)
-        if total_weight == 0:
+        # Each column gets the width its text needs (heading and cells, measured
+        # in the table's font, capped so one long description cannot take the
+        # whole window). Spare room is shared out; a table wider than the
+        # window scrolls sideways instead of cutting every column short, which
+        # used to leave descriptions and dates unreadable ("Driving without an
+        # ap…", "2025-03-(").
+        needed = [max(self._content_width(c), _px(70)) for c in self._cols]
+        total = sum(needed)
+        if total == 0:
             return
-        # Leave room for scrollbar
-        usable = max(available - _px(20), _px(100))
-        for c, w in zip(self._cols, weights, strict=False):
-            min_w = max(len(str(c)) * _px(9) + _px(24), _px(70))
-            self.tv.column(c, width=max(int(usable * w / total_weight), min_w))
+        usable = max(available - _px(20), _px(100))   # room for the scrollbar
+        scale = usable / total if total < usable else 1.0
+        for c, w in zip(self._cols, needed, strict=False):
+            self.tv.column(c, width=int(w * scale))
         self._fitted = True
 
+    #: Widest a column is sized to; longer text is read in the record window.
+    _MAX_COLUMN_WIDTH = 420
+
     def _content_width(self, col):
-        idx = self._cols.index(col)
-        longest = len(str(col))
+        """Pixels the heading and the cells of *col* need (first 200 rows)."""
+        idx = self._column_index(col)
+        try:
+            measure = self._table_font().measure
+        except (tk.TclError, RuntimeError):
+            def measure(text):
+                return len(text) * _px(8)
+        widest = measure(str(col)) + _px(18)       # room for the sort arrow
         for r in self._all_rows[:200]:
             if idx < len(r):
-                longest = max(longest, len(str(r[idx])))
-        return longest * _px(8)
+                widest = max(widest, measure(str(r[idx])))
+        return min(widest + _px(20), _px(self._MAX_COLUMN_WIDTH))
 
     def _schedule_fit(self):
         if self._fitted or self._summary_mode:
@@ -1021,6 +1314,7 @@ class DataTable(ttk.Frame):
         """
         if summary is None:
             summary = self._summary_mode
+        self._shown_rows = list(rows)
         self.tv.delete(*self.tv.get_children())
         self._iid_keys = {}
         for i, r in enumerate(rows):
@@ -1043,7 +1337,7 @@ class DataTable(ttk.Frame):
                 # over the zebra stripe, and travels with the row through the
                 # re-render a sort or a filter change causes — see _TableRow.
                 tag = getattr(r, "tag", None) or ("even" if i % 2 == 0 else "odd")
-                vals = list(r)
+                vals = self._visible_values(r)
             # Summary rows are built with raw values; a bool must not reach the
             # screen as Python's "True"/"False".
             vals = [_bool_text(v) if isinstance(v, bool) else v for v in vals]
@@ -1074,9 +1368,10 @@ class DataTable(ttk.Frame):
         """Toggle-sort by column; dd/mm/yyyy dates sort chronologically,
         numeric strings numerically, "Xh YYm" durations by their minutes, and
         everything else alphabetically."""
-        idx = self._cols.index(col)
+        idx = self._column_index(col)
         descending = self._sort_state.get(col, False)
-        date_re = re.compile(r"^(\d{2})/(\d{2})/(\d{4})$")
+        # dd/mm/yyyy, optionally with the time of a record date ("03:49 UTC").
+        date_re = re.compile(r"^(\d{2})/(\d{2})/(\d{4})(?: (\d{2}):(\d{2}))?(?: UTC)?$")
         # Every activity column of the dashboard holds a duration in the
         # ``_fmt_duration_minutes`` shape ("9h 30m"), optionally followed by the
         # infringement marker ("  !"). Compared as text, "12h 00m" sorted before
@@ -1088,8 +1383,10 @@ class DataTable(ttk.Frame):
             v = row[idx] if idx < len(row) else ""
             s = str(v)
             m = date_re.match(s)
-            if m:  # dd/mm/yyyy → chronological
-                return (0, int(m.group(3)) * 10000 + int(m.group(2)) * 100 + int(m.group(1)))
+            if m:  # dd/mm/yyyy [HH:MM] → chronological
+                day = int(m.group(3)) * 10000 + int(m.group(2)) * 100 + int(m.group(1))
+                minutes = int(m.group(4) or 0) * 60 + int(m.group(5) or 0)
+                return (0, day * 10000 + minutes)
             d = duration_re.match(s)
             if d:  # "Xh YYm" → minutes, so 12h sorts after 5h
                 return (0, int(d.group(1)) * 60 + int(d.group(2)))
@@ -1328,7 +1625,8 @@ class ActivityTimelineChart(ttk.Frame):
         for ch in changes:
             if isinstance(ch, dict):
                 blocks.setdefault(label(ch.get("slot") or "First"), [])
-        for raw_slot, segments in day_segments(changes, recorded_until).items():
+        for raw_slot, segments in day_segments(changes, recorded_until,
+                                               one_driver=not is_vu).items():
             blocks.setdefault(label(raw_slot), []).extend(segments)
         return blocks
 

@@ -2413,3 +2413,208 @@ msgstr "Ficheiro GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "Ficheiro KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Colunas técnicas"
+
+msgid "Record details"
+msgstr "Detalhes do registo"
+
+msgid "File Structure"
+msgstr "Estrutura do ficheiro"
+
+msgid "Signature verified"
+msgstr "Assinatura verificada"
+
+msgid "Signature not valid"
+msgstr "Assinatura inválida"
+
+msgid "Signature not checked"
+msgstr "Assinatura não verificada"
+
+msgid "Not signed"
+msgstr "Não assinado"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Deslocamento {offset} · {length} bytes"
+
+msgid "Text"
+msgstr "Texto"
+
+msgid "Content"
+msgstr "Conteúdo"
+
+msgid "Records"
+msgstr "Registos"
+
+msgid "Unit"
+msgstr "Unidade"
+
+msgid "Signature"
+msgstr "Assinatura"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} unidades · {length} bytes"
+
+msgid "Bytes"
+msgstr "Bytes"
+
+msgid "Events and faults"
+msgstr "Eventos e falhas"
+
+msgid "Detailed speed"
+msgstr "Velocidade detalhada"
+
+msgid "Technical data"
+msgstr "Dados técnicos"
+
+msgid "Card download"
+msgstr "Descarga do cartão"
+
+msgid "Sensor data"
+msgstr "Dados do sensor"
+
+msgid "Download interface version"
+msgstr "Versão da interface de descarga"
+
+msgid "Padding"
+msgstr "Preenchimento"
+
+msgid "Unrecognised bytes"
+msgstr "Bytes não reconhecidos"
+
+msgid "Tachograph application, generation 1"
+msgstr "Aplicação de tacógrafo, geração 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Aplicação de tacógrafo, geração 2"
+
+msgid "Record Arrays"
+msgstr "Matrizes de registos"
+
+msgid "Elementary Files"
+msgstr "Ficheiros elementares"
+
+msgid "Record Array"
+msgstr "Matriz de registos"
+
+msgid "Elementary File"
+msgstr "Ficheiro elementar"
+
+msgid "File Identifier"
+msgstr "Identificador do ficheiro"
+
+msgid "Activity changes"
+msgstr "Mudanças de atividade"
+
+msgid "Card slots"
+msgstr "Ranhuras de cartão"
+
+msgid "VU date and time"
+msgstr "Data e hora da UV"
+
+msgid "Member State certificate"
+msgstr "Certificado do Estado-Membro"
+
+msgid "Odometer at midnight"
+msgstr "Conta-quilómetros à meia-noite"
+
+msgid "Day"
+msgstr "Dia"
+
+msgid "Registration plate"
+msgstr "Matrícula"
+
+msgid "VU certificate"
+msgstr "Certificado da UV"
+
+msgid "None"
+msgstr "Nenhum"
+
+msgid "{count} records"
+msgstr "{count} registos"
+
+msgid "{count} days"
+msgstr "{count} dias"
+
+msgid "Record type"
+msgstr "Tipo de registo"
+
+msgid "End of sensor download"
+msgstr "Fim da descarga do sensor"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Sem registos: esta matriz está vazia e contém apenas o cabeçalho."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Sem dados: esta parte apenas marca o fim da descarga do sensor."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Cabeçalho não normalizado: marcador de descarga de cartão da UV"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Não normalizado: o ficheiro começa com o marcador de descarga de cartão da unidade do veículo (76 06) em vez do primeiro ficheiro do cartão. Os dados do cartão estão intactos, mas alguns programas podem não abrir este ficheiro."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Sem registos: todas as posições contêm o valor vazio definido pelo regulamento (nada foi registado)."
+
+msgid "Raw value"
+msgstr "Valor bruto"
+
+msgid "Result"
+msgstr "Resultado"
+
+msgid "What it means"
+msgstr "O que significa"
+
+msgid "Signed data"
+msgstr "Dados assinados"
+
+msgid "Algorithm"
+msgstr "Algoritmo"
+
+msgid "Signed by"
+msgstr "Assinado por"
+
+msgid "Certificate chain"
+msgstr "Cadeia de certificados"
+
+msgid "Vehicle unit"
+msgstr "Unidade do veículo"
+
+msgid "Driver card"
+msgstr "Cartão de condutor"
+
+msgid "{length} bytes"
+msgstr "{length} bytes"
+
+msgid "Member State authority"
+msgstr "Autoridade do Estado-Membro"
+
+msgid "European root (ERCA)"
+msgstr "Raiz europeia (ERCA)"
+
+msgid "not verified"
+msgstr "não verificada"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Os dados assinados não foram alterados desde que foram assinados."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Os dados assinados foram alterados depois da assinatura, ou a assinatura está danificada."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "O regulamento exclui este ficheiro dos dados assinados do cartão, pelo que a sua assinatura não faz parte da verificação de integridade."
+
+msgid "No key was available to check this signature."
+msgstr "Não havia nenhuma chave disponível para verificar esta assinatura."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bytes, de {start} a {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Os certificados no início da secção não são assinados: autenticam a chave."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Ver Segurança e certificados: verificar as assinaturas dos EF não verifica a cadeia de certificados."

@@ -2413,3 +2413,208 @@ msgstr "GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Tæknilegir dálkar"
+
+msgid "Record details"
+msgstr "Upplýsingar um færslu"
+
+msgid "File Structure"
+msgstr "Skráarskipan"
+
+msgid "Signature verified"
+msgstr "Undirskrift staðfest"
+
+msgid "Signature not valid"
+msgstr "Ógild undirskrift"
+
+msgid "Signature not checked"
+msgstr "Undirskrift ekki athuguð"
+
+msgid "Not signed"
+msgstr "Óundirritað"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Hliðrun {offset} · {length} bæti"
+
+msgid "Text"
+msgstr "Texti"
+
+msgid "Content"
+msgstr "Innihald"
+
+msgid "Records"
+msgstr "Færslur"
+
+msgid "Unit"
+msgstr "Eining"
+
+msgid "Signature"
+msgstr "Undirskrift"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} einingar · {length} bæti"
+
+msgid "Bytes"
+msgstr "Bæti"
+
+msgid "Events and faults"
+msgstr "Atburðir og bilanir"
+
+msgid "Detailed speed"
+msgstr "Nákvæmur hraði"
+
+msgid "Technical data"
+msgstr "Tæknigögn"
+
+msgid "Card download"
+msgstr "Niðurhal korts"
+
+msgid "Sensor data"
+msgstr "Gögn skynjara"
+
+msgid "Download interface version"
+msgstr "Útgáfa niðurhalsviðmóts"
+
+msgid "Padding"
+msgstr "Fylling"
+
+msgid "Unrecognised bytes"
+msgstr "Óþekkt bæti"
+
+msgid "Tachograph application, generation 1"
+msgstr "Ökuritaforrit, kynslóð 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Ökuritaforrit, kynslóð 2"
+
+msgid "Record Arrays"
+msgstr "Færslufylki"
+
+msgid "Elementary Files"
+msgstr "Grunnskrár"
+
+msgid "Record Array"
+msgstr "Færslufylki"
+
+msgid "Elementary File"
+msgstr "Grunnskrá"
+
+msgid "File Identifier"
+msgstr "Auðkenni skráar"
+
+msgid "Activity changes"
+msgstr "Breytingar á virkni"
+
+msgid "Card slots"
+msgstr "Kortaraufar"
+
+msgid "VU date and time"
+msgstr "Dagsetning og tími ökutækiseiningar"
+
+msgid "Member State certificate"
+msgstr "Vottorð aðildarríkis"
+
+msgid "Odometer at midnight"
+msgstr "Kílómetrastaða á miðnætti"
+
+msgid "Day"
+msgstr "Dagur"
+
+msgid "Registration plate"
+msgstr "Skráningarnúmer"
+
+msgid "VU certificate"
+msgstr "Vottorð ökutækiseiningar"
+
+msgid "None"
+msgstr "Ekkert"
+
+msgid "{count} records"
+msgstr "{count} færslur"
+
+msgid "{count} days"
+msgstr "{count} dagar"
+
+msgid "Record type"
+msgstr "Færslugerð"
+
+msgid "End of sensor download"
+msgstr "Lok niðurhals skynjara"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Engar færslur: þetta fylki er tómt og inniheldur aðeins hausinn."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Engin gögn: þessi hluti markar aðeins lok niðurhals skynjarans."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Óstaðlaður haus: kortaniðurhalsmerki ökutækiseiningar"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Ekki staðlað: skráin byrjar á kortaniðurhalsmerki ökutækiseiningarinnar (76 06) í stað fyrstu skrár kortsins. Gögn kortsins eru heil, en sum forrit opna hugsanlega ekki þessa skrá."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Engar færslur: öll hólf innihalda tóma gildið sem reglugerðin skilgreinir (ekkert var skráð)."
+
+msgid "Raw value"
+msgstr "Hrágildi"
+
+msgid "Result"
+msgstr "Niðurstaða"
+
+msgid "What it means"
+msgstr "Hvað það þýðir"
+
+msgid "Signed data"
+msgstr "Undirrituð gögn"
+
+msgid "Algorithm"
+msgstr "Reiknirit"
+
+msgid "Signed by"
+msgstr "Undirritað af"
+
+msgid "Certificate chain"
+msgstr "Vottorðakeðja"
+
+msgid "Vehicle unit"
+msgstr "Ökutækiseining"
+
+msgid "Driver card"
+msgstr "Ökumannskort"
+
+msgid "{length} bytes"
+msgstr "{length} bæti"
+
+msgid "Member State authority"
+msgstr "Yfirvald aðildarríkis"
+
+msgid "European root (ERCA)"
+msgstr "Evrópsk rót (ERCA)"
+
+msgid "not verified"
+msgstr "ekki staðfest"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Undirrituðu gögnunum hefur ekki verið breytt frá undirritun."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Undirrituðu gögnunum var breytt eftir undirritun eða undirskriftin er skemmd."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Reglugerðin undanskilur þessa skrá frá undirrituðum gögnum kortsins, svo undirskrift hennar er ekki hluti af heilleikaathuguninni."
+
+msgid "No key was available to check this signature."
+msgstr "Enginn lykill var tiltækur til að athuga þessa undirskrift."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bæti, frá {start} til {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Vottorðin í upphafi hlutans eru ekki undirrituð: þau sannvotta lykilinn."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Sjá Öryggi og vottorð: athugun á EF-undirskriftum athugar ekki vottorðakeðjuna."

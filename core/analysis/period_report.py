@@ -148,7 +148,8 @@ def build_period_report(results: list[tuple[str, dict]]) -> list[dict]:
                 "sources": ", ".join(sorted(set(slot["sources"]))),
             })
             totals = compute_activity_totals(day.get("changes") or [],
-                                             recorded_until_seconds(day))
+                                             recorded_until_seconds(day),
+                                             one_driver=kind == "driver")
             row["days_recorded"] += 1
             if totals["DRIVE"]:
                 row["days_driving"] += 1

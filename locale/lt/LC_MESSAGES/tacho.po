@@ -2413,3 +2413,208 @@ msgstr "GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Techniniai stulpeliai"
+
+msgid "Record details"
+msgstr "Įrašo išsami informacija"
+
+msgid "File Structure"
+msgstr "Failo struktūra"
+
+msgid "Signature verified"
+msgstr "Parašas patikrintas"
+
+msgid "Signature not valid"
+msgstr "Parašas negaliojantis"
+
+msgid "Signature not checked"
+msgstr "Parašas nepatikrintas"
+
+msgid "Not signed"
+msgstr "Nepasirašyta"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Poslinkis {offset} · {length} baitų"
+
+msgid "Text"
+msgstr "Tekstas"
+
+msgid "Content"
+msgstr "Turinys"
+
+msgid "Records"
+msgstr "Įrašai"
+
+msgid "Unit"
+msgstr "Vienetas"
+
+msgid "Signature"
+msgstr "Parašas"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} vienetų · {length} baitų"
+
+msgid "Bytes"
+msgstr "Baitai"
+
+msgid "Events and faults"
+msgstr "Įvykiai ir gedimai"
+
+msgid "Detailed speed"
+msgstr "Išsamus greitis"
+
+msgid "Technical data"
+msgstr "Techniniai duomenys"
+
+msgid "Card download"
+msgstr "Kortelės atsisiuntimas"
+
+msgid "Sensor data"
+msgstr "Jutiklio duomenys"
+
+msgid "Download interface version"
+msgstr "Atsisiuntimo sąsajos versija"
+
+msgid "Padding"
+msgstr "Užpildas"
+
+msgid "Unrecognised bytes"
+msgstr "Neatpažinti baitai"
+
+msgid "Tachograph application, generation 1"
+msgstr "Tachografo programa, 1 karta"
+
+msgid "Tachograph application, generation 2"
+msgstr "Tachografo programa, 2 karta"
+
+msgid "Record Arrays"
+msgstr "Įrašų masyvai"
+
+msgid "Elementary Files"
+msgstr "Elementarieji failai"
+
+msgid "Record Array"
+msgstr "Įrašų masyvas"
+
+msgid "Elementary File"
+msgstr "Elementarusis failas"
+
+msgid "File Identifier"
+msgstr "Failo identifikatorius"
+
+msgid "Activity changes"
+msgstr "Veiklos pakeitimai"
+
+msgid "Card slots"
+msgstr "Kortelių lizdai"
+
+msgid "VU date and time"
+msgstr "Transporto priemonės bloko data ir laikas"
+
+msgid "Member State certificate"
+msgstr "Valstybės narės sertifikatas"
+
+msgid "Odometer at midnight"
+msgstr "Odometro rodmuo vidurnaktį"
+
+msgid "Day"
+msgstr "Diena"
+
+msgid "Registration plate"
+msgstr "Valstybinis numeris"
+
+msgid "VU certificate"
+msgstr "Transporto priemonės bloko sertifikatas"
+
+msgid "None"
+msgstr "Nėra"
+
+msgid "{count} records"
+msgstr "{count} įrašų"
+
+msgid "{count} days"
+msgstr "{count} dienų"
+
+msgid "Record type"
+msgstr "Įrašo tipas"
+
+msgid "End of sensor download"
+msgstr "Jutiklio atsisiuntimo pabaiga"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Įrašų nėra: šis masyvas tuščias ir turi tik antraštę."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Duomenų nėra: ši dalis tik žymi jutiklio atsisiuntimo pabaigą."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Nestandartinė antraštė: TPB kortelės atsisiuntimo žymeklis"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Nestandartinis: failas prasideda transporto priemonės bloko kortelės atsisiuntimo žymekliu (76 06), o ne pirmuoju kortelės failu. Kortelės duomenys nepažeisti, bet kai kurios programos gali neatidaryti šio failo."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Įrašų nėra: visose vietose yra reglamente nustatyta tuščia reikšmė (nieko neužregistruota)."
+
+msgid "Raw value"
+msgstr "Neapdorota reikšmė"
+
+msgid "Result"
+msgstr "Rezultatas"
+
+msgid "What it means"
+msgstr "Ką tai reiškia"
+
+msgid "Signed data"
+msgstr "Pasirašyti duomenys"
+
+msgid "Algorithm"
+msgstr "Algoritmas"
+
+msgid "Signed by"
+msgstr "Pasirašė"
+
+msgid "Certificate chain"
+msgstr "Sertifikatų grandinė"
+
+msgid "Vehicle unit"
+msgstr "Transporto priemonės blokas"
+
+msgid "Driver card"
+msgstr "Vairuotojo kortelė"
+
+msgid "{length} bytes"
+msgstr "{length} baitų"
+
+msgid "Member State authority"
+msgstr "Valstybės narės institucija"
+
+msgid "European root (ERCA)"
+msgstr "Europos šaknis (ERCA)"
+
+msgid "not verified"
+msgstr "nepatikrinta"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Pasirašyti duomenys nuo pasirašymo nepakeisti."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Pasirašyti duomenys pakeisti po pasirašymo arba parašas pažeistas."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Reglamentas šį failą išskiria iš pasirašytų kortelės duomenų, todėl jo parašas nėra vientisumo patikros dalis."
+
+msgid "No key was available to check this signature."
+msgstr "Šiam parašui patikrinti nebuvo rakto."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} baitų, nuo {start} iki {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Skyriaus pradžioje esantys sertifikatai nepasirašyti: jie autentifikuoja raktą."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Žr. Sauga ir sertifikatai: EF parašų patikra netikrina sertifikatų grandinės."

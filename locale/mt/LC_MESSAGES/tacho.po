@@ -2413,3 +2413,208 @@ msgstr "GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Kolonni tekniċi"
+
+msgid "Record details"
+msgstr "Dettalji tar-rekord"
+
+msgid "File Structure"
+msgstr "Struttura tal-fajl"
+
+msgid "Signature verified"
+msgstr "Firma vverifikata"
+
+msgid "Signature not valid"
+msgstr "Firma mhux valida"
+
+msgid "Signature not checked"
+msgstr "Firma mhux ikkontrollata"
+
+msgid "Not signed"
+msgstr "Mhux iffirmat"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Offset {offset} · {length} byte"
+
+msgid "Text"
+msgstr "Test"
+
+msgid "Content"
+msgstr "Kontenut"
+
+msgid "Records"
+msgstr "Rekords"
+
+msgid "Unit"
+msgstr "Unità"
+
+msgid "Signature"
+msgstr "Firma"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} unità · {length} byte"
+
+msgid "Bytes"
+msgstr "Byte"
+
+msgid "Events and faults"
+msgstr "Avvenimenti u ħsarat"
+
+msgid "Detailed speed"
+msgstr "Veloċità dettaljata"
+
+msgid "Technical data"
+msgstr "Data teknika"
+
+msgid "Card download"
+msgstr "Tniżżil tal-karta"
+
+msgid "Sensor data"
+msgstr "Data tas-sensur"
+
+msgid "Download interface version"
+msgstr "Verżjoni tal-interfaċċja tat-tniżżil"
+
+msgid "Padding"
+msgstr "Mili"
+
+msgid "Unrecognised bytes"
+msgstr "Byte mhux rikonoxxuti"
+
+msgid "Tachograph application, generation 1"
+msgstr "Applikazzjoni tat-takografu, ġenerazzjoni 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Applikazzjoni tat-takografu, ġenerazzjoni 2"
+
+msgid "Record Arrays"
+msgstr "Arrays ta' rekords"
+
+msgid "Elementary Files"
+msgstr "Fajls elementari"
+
+msgid "Record Array"
+msgstr "Array ta' rekords"
+
+msgid "Elementary File"
+msgstr "Fajl elementari"
+
+msgid "File Identifier"
+msgstr "Identifikatur tal-fajl"
+
+msgid "Activity changes"
+msgstr "Bidliet fl-attività"
+
+msgid "Card slots"
+msgstr "Slots tal-karti"
+
+msgid "VU date and time"
+msgstr "Data u ħin tal-VU"
+
+msgid "Member State certificate"
+msgstr "Ċertifikat tal-Istat Membru"
+
+msgid "Odometer at midnight"
+msgstr "Odometru f'nofs il-lejl"
+
+msgid "Day"
+msgstr "Jum"
+
+msgid "Registration plate"
+msgstr "Numru tar-reġistrazzjoni"
+
+msgid "VU certificate"
+msgstr "Ċertifikat tal-VU"
+
+msgid "None"
+msgstr "Xejn"
+
+msgid "{count} records"
+msgstr "{count} rekords"
+
+msgid "{count} days"
+msgstr "{count} jiem"
+
+msgid "Record type"
+msgstr "Tip ta' rekord"
+
+msgid "End of sensor download"
+msgstr "Tmiem it-tniżżil tas-sensur"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "L-ebda rekord: dan l-array huwa vojt u fih biss l-intestatura tiegħu."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "L-ebda data: din il-parti timmarka biss it-tmiem tat-tniżżil tas-sensur."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Intestatura mhux standard: marker tat-tniżżil tal-karta tal-VU"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Mhux standard: il-fajl jibda bil-marker tat-tniżżil tal-karta tal-unità tal-vettura (76 06) minflok bl-ewwel fajl tal-karta. Id-data tal-karta hija intatta, iżda xi programmi jistgħu ma jiftħux dan il-fajl."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "L-ebda rekord: il-postijiet kollha fihom il-valur vojt li jiddefinixxi r-regolament (xejn ma ġie rreġistrat)."
+
+msgid "Raw value"
+msgstr "Valur mhux ipproċessat"
+
+msgid "Result"
+msgstr "Riżultat"
+
+msgid "What it means"
+msgstr "Xi jfisser"
+
+msgid "Signed data"
+msgstr "Data ffirmata"
+
+msgid "Algorithm"
+msgstr "Algoritmu"
+
+msgid "Signed by"
+msgstr "Iffirmat minn"
+
+msgid "Certificate chain"
+msgstr "Katina ta' ċertifikati"
+
+msgid "Vehicle unit"
+msgstr "Unità tal-vettura"
+
+msgid "Driver card"
+msgstr "Karta tas-sewwieq"
+
+msgid "{length} bytes"
+msgstr "{length} byte"
+
+msgid "Member State authority"
+msgstr "Awtorità tal-Istat Membru"
+
+msgid "European root (ERCA)"
+msgstr "Għerq Ewropew (ERCA)"
+
+msgid "not verified"
+msgstr "mhux ivverifikat"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Id-data ffirmata ma nbidlitx minn meta ġiet iffirmata."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Id-data ffirmata nbidlet wara l-firma, jew il-firma hija bil-ħsara."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Ir-regolament jeskludi dan il-fajl mid-data ffirmata tal-karta, għalhekk il-firma tiegħu mhix parti mill-kontroll tal-integrità."
+
+msgid "No key was available to check this signature."
+msgstr "Ma kienet disponibbli l-ebda ċavetta biex tiġi kkontrollata din il-firma."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} byte, minn {start} sa {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Iċ-ċertifikati fil-bidu tat-taqsima mhumiex iffirmati: jawtentikaw iċ-ċavetta."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Ara Sigurtà u ċertifikati: il-kontroll tal-firem tal-EF ma jivverifikax il-katina taċ-ċertifikati."

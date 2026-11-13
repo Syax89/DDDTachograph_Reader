@@ -20,116 +20,140 @@
 ],
 [
 0,
-"Generation 1 [Annex 1B]",
+"Daily Activities",
 "icon4",
 []
 ],
 [
 1,
-"Driver Card Application Identification",
-"",
-[]
-],
-[
-1,
-"Events Data",
-"",
-[]
-],
-[
-1,
-"Faults Data",
-"",
-[]
-],
-[
-1,
-"Daily Activities",
-"",
-[]
-],
-[
-2,
 "01/05/2025",
 "",
 []
 ],
 [
-3,
+2,
 "Daily Activities 01/05/2025",
 "",
 []
 ],
 [
-1,
-"Vehicles Used",
-"",
+0,
+"File Structure",
+"icon5",
 []
 ],
 [
 1,
-"Places",
+"Tachograph application, generation 1",
 "",
 []
 ],
 [
-1,
-"Calibration Data",
+2,
+"EF ICC",
 "",
 []
 ],
 [
-1,
-"Card Download",
+2,
+"EF IC",
 "",
 []
 ],
 [
-1,
+2,
 "Identification",
 "",
 []
 ],
 [
-1,
+2,
 "Driving Licence Info",
 "",
 []
 ],
 [
-1,
+2,
+"Application Identification",
+"",
+[]
+],
+[
+2,
+"Driver Activity Data",
+"",
+[]
+],
+[
+2,
+"Vehicles Used",
+"",
+[]
+],
+[
+2,
+"Places",
+"",
+[]
+],
+[
+2,
 "Current Usage",
 "",
 []
 ],
 [
-1,
-"Vehicle Identification",
+2,
+"Control Activity Data",
 "",
 []
 ],
 [
-1,
-"ICC Chip Identification",
+2,
+"Controller Activity Data",
 "",
 []
 ],
 [
-1,
+2,
+"Card Download",
+"",
+[]
+],
+[
+2,
 "Specific Conditions",
 "",
 []
 ],
 [
-1,
-"Card Download Records",
+2,
+"Events Data",
+"",
+[]
+],
+[
+2,
+"Faults Data",
+"",
+[]
+],
+[
+2,
+"Signature",
+"",
+[]
+],
+[
+2,
+"Signature",
 "",
 []
 ],
 [
 0,
 "Security & Certificates",
-"icon5",
+"icon6",
 []
 ],
 [
@@ -153,7 +177,7 @@
 [
 0,
 "EF Signature Verification",
-"icon6",
+"icon7",
 []
 ]
 ],
@@ -225,334 +249,6 @@
 []
 ]
 ],
-"mock_g22_card.ddd": [
-[
-0,
-"Summary",
-"icon1",
-[]
-],
-[
-0,
-"File Info",
-"icon2",
-[]
-],
-[
-0,
-"Driver / Cardholder",
-"icon3",
-[]
-],
-[
-0,
-"Generation 1 [Annex 1B]",
-"icon4",
-[]
-],
-[
-1,
-"Events Data",
-"",
-[]
-],
-[
-1,
-"Faults Data",
-"",
-[]
-],
-[
-1,
-"Daily Activities",
-"",
-[]
-],
-[
-2,
-"01/05/2025",
-"",
-[]
-],
-[
-3,
-"Daily Activities 01/05/2025",
-"",
-[]
-],
-[
-1,
-"Vehicles Used",
-"",
-[]
-],
-[
-1,
-"Places",
-"",
-[]
-],
-[
-1,
-"Calibration Data",
-"",
-[]
-],
-[
-1,
-"Identification",
-"",
-[]
-],
-[
-0,
-"Generation 2 [Annex 1C]",
-"icon4",
-[]
-],
-[
-1,
-"Card Issuer Identification",
-"",
-[]
-],
-[
-1,
-"Card ICC Identification",
-"",
-[]
-],
-[
-1,
-"Driver Card Holder Identification",
-"",
-[]
-],
-[
-1,
-"Card Identification",
-"",
-[]
-],
-[
-1,
-"Company Holder Data",
-"",
-[]
-],
-[
-1,
-"Vehicle Units Used",
-"",
-[]
-],
-[
-1,
-"Vehicles Used",
-"",
-[]
-],
-[
-1,
-"GNSS Accumulated Driving",
-"",
-[]
-],
-[
-1,
-"Places",
-"",
-[]
-],
-[
-1,
-"Events Data",
-"",
-[]
-],
-[
-1,
-"Faults Data",
-"",
-[]
-],
-[
-1,
-"Daily Activities",
-"",
-[]
-],
-[
-2,
-"01/05/2025",
-"",
-[]
-],
-[
-3,
-"Daily Activities 01/05/2025",
-"",
-[]
-],
-[
-1,
-"Calibration Data",
-"",
-[]
-],
-[
-0,
-"Generation 2.2 [Annex 1C · 2023/980]",
-"icon4",
-[]
-],
-[
-1,
-"Driver Card Application Identification V 2",
-"",
-[]
-],
-[
-1,
-"Card Place Auth Daily Work Period",
-"",
-[]
-],
-[
-1,
-"GNSS Auth Accumulated Driving",
-"",
-[]
-],
-[
-1,
-"Card Border Crossings",
-"",
-[]
-],
-[
-1,
-"Card Load Unload Operations",
-"",
-[]
-],
-[
-1,
-"Card Load Type Entries",
-"",
-[]
-],
-[
-1,
-"GNSS Accumulated Driving",
-"",
-[]
-],
-[
-0,
-"Security & Certificates",
-"icon5",
-[]
-],
-[
-1,
-"EF Signatures (Card Data Integrity)",
-"",
-[]
-],
-[
-1,
-"EF Signature Details",
-"",
-[]
-],
-[
-1,
-"ICC Identification",
-"",
-[]
-],
-[
-0,
-"EF Signature Verification",
-"icon6",
-[]
-]
-],
-"mock_g22_vu.ddd": [
-[
-0,
-"Summary",
-"icon1",
-[]
-],
-[
-0,
-"File Info",
-"icon2",
-[]
-],
-[
-0,
-"Decode units",
-"icon3",
-[]
-],
-[
-0,
-"Manufacturer Extensions",
-"icon4",
-[]
-],
-[
-0,
-"Raw / Unparsed Data",
-"icon5",
-[]
-],
-[
-0,
-"Vehicle",
-"icon6",
-[]
-],
-[
-0,
-"CORRUPTED / PARTIAL FILE",
-"icon7",
-[]
-],
-[
-0,
-"Generation 2 [Annex 1C]",
-"icon3",
-[]
-],
-[
-1,
-"ECDSA Signature Verification",
-"",
-[]
-],
-[
-1,
-"VU Record Array Summary",
-"",
-[]
-],
-[
-0,
-"Security & Certificates",
-"icon8",
-[]
-],
-[
-1,
-"Signature Verification",
-"",
-[]
-]
-],
 "mock_g2_card.ddd": [
 [
 0,
@@ -574,182 +270,152 @@
 ],
 [
 0,
-"Generation 1 [Annex 1B]",
+"Daily Activities",
 "icon4",
 []
 ],
 [
 1,
-"Events Data",
-"",
-[]
-],
-[
-1,
-"Faults Data",
-"",
-[]
-],
-[
-1,
-"Daily Activities",
-"",
-[]
-],
-[
-2,
 "01/05/2025",
 "",
 []
 ],
 [
-3,
+2,
 "Daily Activities 01/05/2025",
 "",
 []
 ],
 [
-1,
-"Vehicles Used",
-"",
-[]
-],
-[
-1,
-"Places",
-"",
-[]
-],
-[
-1,
-"Calibration Data",
-"",
-[]
-],
-[
-1,
-"Card Download",
-"",
-[]
-],
-[
-1,
-"Identification",
-"",
-[]
-],
-[
-1,
-"Specific Conditions",
-"",
-[]
-],
-[
-1,
-"Card Download Records",
-"",
-[]
-],
-[
 0,
-"Generation 2 [Annex 1C]",
-"icon4",
+"File Structure",
+"icon5",
 []
 ],
 [
 1,
-"Card Issuer Identification",
+"Tachograph application, generation 1",
 "",
 []
 ],
 [
-1,
+2,
 "Card ICC Identification",
 "",
 []
 ],
 [
 1,
-"Driver Card Holder Identification",
-"",
-[]
-],
-[
-1,
-"Card Identification",
-"",
-[]
-],
-[
-1,
-"Company Holder Data",
-"",
-[]
-],
-[
-1,
-"Vehicle Units Used",
-"",
-[]
-],
-[
-1,
-"Vehicles Used",
-"",
-[]
-],
-[
-1,
-"GNSS Accumulated Driving",
-"",
-[]
-],
-[
-1,
-"Places",
-"",
-[]
-],
-[
-1,
-"Events Data",
-"",
-[]
-],
-[
-1,
-"Faults Data",
-"",
-[]
-],
-[
-1,
-"Daily Activities",
+"Tachograph application, generation 2",
 "",
 []
 ],
 [
 2,
-"01/05/2025",
+"Card Identification",
 "",
 []
 ],
 [
-3,
-"Daily Activities 01/05/2025",
+2,
+"Driver Card Holder Identification",
 "",
 []
 ],
 [
-1,
-"Calibration Data",
+2,
+"Driver Activity Data",
+"",
+[]
+],
+[
+2,
+"Vehicles Used",
+"",
+[]
+],
+[
+2,
+"Vehicle Units Used",
+"",
+[]
+],
+[
+2,
+"GNSS Places",
+"",
+[]
+],
+[
+2,
+"Places",
+"",
+[]
+],
+[
+2,
+"Controller Activity Data",
+"",
+[]
+],
+[
+2,
+"Specific Conditions",
+"",
+[]
+],
+[
+2,
+"Events Data",
+"",
+[]
+],
+[
+2,
+"Faults Data",
+"",
+[]
+],
+[
+2,
+"Signature",
+"",
+[]
+],
+[
+2,
+"Signature",
+"",
+[]
+],
+[
+2,
+"Company Holder Data",
+"",
+[]
+],
+[
+2,
+"Card Issuer Identification",
+"",
+[]
+],
+[
+2,
+"Control Activity Data",
+"",
+[]
+],
+[
+2,
+"Card Download",
 "",
 []
 ],
 [
 0,
 "Security & Certificates",
-"icon5",
+"icon6",
 []
 ],
 [
@@ -773,7 +439,7 @@
 [
 0,
 "EF Signature Verification",
-"icon6",
+"icon7",
 []
 ]
 ],
@@ -792,56 +458,348 @@
 ],
 [
 0,
-"Decode units",
-"icon3",
-[]
-],
-[
-0,
 "Manufacturer Extensions",
-"icon4",
+"icon3",
 []
 ],
 [
 0,
 "Raw / Unparsed Data",
-"icon5",
+"icon4",
 []
 ],
 [
 0,
 "Vehicle",
-"icon6",
+"icon5",
 []
 ],
 [
 0,
 "CORRUPTED / PARTIAL FILE",
-"icon7",
+"icon6",
 []
 ],
 [
 0,
-"Generation 2 [Annex 1C]",
-"icon3",
+"File Structure",
+"icon4",
 []
 ],
 [
 1,
-"ECDSA Signature Verification",
+"Overview",
+"",
+[]
+],
+[
+2,
+"Record type 0x2 B",
 "",
 []
 ],
 [
 1,
-"VU Record Array Summary",
+"Padding",
 "",
 []
 ],
 [
 0,
 "Security & Certificates",
-"icon8",
+"icon7",
+[]
+],
+[
+1,
+"Signature Verification",
+"",
+[]
+]
+],
+"mock_g22_card.ddd": [
+[
+0,
+"Summary",
+"icon1",
+[]
+],
+[
+0,
+"File Info",
+"icon2",
+[]
+],
+[
+0,
+"Driver / Cardholder",
+"icon3",
+[]
+],
+[
+0,
+"Daily Activities",
+"icon4",
+[]
+],
+[
+1,
+"01/05/2025",
+"",
+[]
+],
+[
+2,
+"Daily Activities 01/05/2025",
+"",
+[]
+],
+[
+0,
+"File Structure",
+"icon5",
+[]
+],
+[
+1,
+"Tachograph application, generation 1",
+"",
+[]
+],
+[
+2,
+"Card ICC Identification",
+"",
+[]
+],
+[
+1,
+"Tachograph application, generation 2",
+"",
+[]
+],
+[
+2,
+"Card Identification",
+"",
+[]
+],
+[
+2,
+"Driver Card Holder Identification",
+"",
+[]
+],
+[
+2,
+"Driver Activity Data",
+"",
+[]
+],
+[
+2,
+"Application Identification V2",
+"",
+[]
+],
+[
+2,
+"Places Authentication",
+"",
+[]
+],
+[
+2,
+"GNSS Places Authentication",
+"",
+[]
+],
+[
+2,
+"Border Crossings",
+"",
+[]
+],
+[
+2,
+"Load Unload Operations",
+"",
+[]
+],
+[
+2,
+"Load Type Entries",
+"",
+[]
+],
+[
+2,
+"Vehicles Used",
+"",
+[]
+],
+[
+2,
+"Vehicle Units Used",
+"",
+[]
+],
+[
+2,
+"GNSS Places",
+"",
+[]
+],
+[
+2,
+"Places",
+"",
+[]
+],
+[
+2,
+"Controller Activity Data",
+"",
+[]
+],
+[
+2,
+"Events Data",
+"",
+[]
+],
+[
+2,
+"Faults Data",
+"",
+[]
+],
+[
+2,
+"Signature",
+"",
+[]
+],
+[
+2,
+"Signature",
+"",
+[]
+],
+[
+2,
+"Company Holder Data",
+"",
+[]
+],
+[
+2,
+"Card Issuer Identification",
+"",
+[]
+],
+[
+0,
+"Security & Certificates",
+"icon6",
+[]
+],
+[
+1,
+"EF Signatures (Card Data Integrity)",
+"",
+[]
+],
+[
+1,
+"EF Signature Details",
+"",
+[]
+],
+[
+1,
+"ICC Identification",
+"",
+[]
+],
+[
+0,
+"EF Signature Verification",
+"icon7",
+[]
+]
+],
+"mock_g22_vu.ddd": [
+[
+0,
+"Summary",
+"icon1",
+[]
+],
+[
+0,
+"File Info",
+"icon2",
+[]
+],
+[
+0,
+"Manufacturer Extensions",
+"icon3",
+[]
+],
+[
+0,
+"Raw / Unparsed Data",
+"icon4",
+[]
+],
+[
+0,
+"Vehicle",
+"icon5",
+[]
+],
+[
+0,
+"CORRUPTED / PARTIAL FILE",
+"icon6",
+[]
+],
+[
+0,
+"File Structure",
+"icon4",
+[]
+],
+[
+1,
+"Overview",
+"",
+[]
+],
+[
+2,
+"Record type 0x35",
+"",
+[]
+],
+[
+2,
+"Card slots",
+"",
+[]
+],
+[
+1,
+"Unrecognised bytes",
+"icon6",
+[]
+],
+[
+0,
+"Security & Certificates",
+"icon7",
 []
 ],
 [

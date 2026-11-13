@@ -482,6 +482,46 @@ def _result_records(results):
             if isinstance(value, list)}
 
 
+def _dispatch_trep02(body, res, message_offset=None):
+    # The walk yields exact bodies, so try the deterministic layout first:
+    # the heuristic wrapper rejects short bodies (< 50 bytes) that are
+    # legitimate card-not-inserted days (18-byte TREP 02 messages).
+    if not _parse_trep_02_g1_structured(body, res,
+                                        message_offset=message_offset):
+        _parse_trep_02_activities(body, res)
+
+
+#: TREPs whose handler takes the message offset: a stored record's identity is
+#: its position in the download, never a subset of its decoded fields.
+_OFFSET_AWARE = (0x01, 0x02, 0x03, 0x05)
+
+
+def _g1_handler(trep):
+    """The handler of one TREP (looked up per call, so a patched name applies)."""
+    return {
+        0x01: parse_g1_vu_overview,
+        0x02: _dispatch_trep02,
+        0x03: _parse_trep_03_events_faults,
+        0x04: _parse_trep_04_speed,
+        0x05: _parse_trep_05_technical,
+        0x06: _parse_trep_06_card_download,
+        0x11: _parse_sensor_download,
+    }.get(trep)
+
+
+def decode_g1_message(trep, body, results, message_offset=None):
+    """Run the TREP handler of one G1 message body, exactly as the walk does.
+
+    Returns the handler's outcome (``None`` when the TREP has no handler).
+    """
+    handler = _g1_handler(trep)
+    if handler is None:
+        return None
+    if trep in _OFFSET_AWARE:
+        return handler(body, results, message_offset=message_offset)
+    return handler(body, results)
+
+
 def walk_g1_vu(data, results):
     """Semantic dispatch of a G1 VU download via the deterministic walk.
 
@@ -529,25 +569,6 @@ def walk_g1_vu(data, results):
                               "status": "trailing_bytes",
                               "missing_bytes": 0,
                               "trailing_bytes": trailing})
-    def _dispatch_trep02(body, res, message_offset=None):
-        # The walk yields exact bodies, so try the deterministic layout first:
-        # the heuristic wrapper rejects short bodies (< 50 bytes) that are
-        # legitimate card-not-inserted days (18-byte TREP 02 messages).
-        if not _parse_trep_02_g1_structured(body, res,
-                                            message_offset=message_offset):
-            _parse_trep_02_activities(body, res)
-
-    # Each handler receives the message offset: a stored record's identity is its
-    # position in the download, never a subset of its decoded fields.
-    dispatch = {
-        0x01: parse_g1_vu_overview,
-        0x02: _dispatch_trep02,
-        0x03: _parse_trep_03_events_faults,
-        0x04: _parse_trep_04_speed,
-        0x05: _parse_trep_05_technical,
-        0x06: _parse_trep_06_card_download,
-        0x11: _parse_sensor_download,
-    }
     dispatch_failed = False
     card_regions = []
     heuristic_units = []
@@ -583,14 +604,12 @@ def walk_g1_vu(data, results):
                 "delegated": False,
             })
             continue
-        handler = dispatch.get(msg["trep"])
+        handler = _g1_handler(msg["trep"])
         if handler is None:
             continue
         try:
-            if msg["trep"] in (0x01, 0x02, 0x03, 0x05):
-                outcome = handler(body, results, message_offset=msg["pos"])
-            else:
-                outcome = handler(body, results)
+            outcome = decode_g1_message(msg["trep"], body, results,
+                                        message_offset=msg["pos"])
             if outcome is False:
                 # A structured parser that *reports* a structural failure is a
                 # failed unit just like one that raises: the heuristic gets its

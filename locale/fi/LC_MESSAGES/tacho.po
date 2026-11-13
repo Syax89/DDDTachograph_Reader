@@ -2413,3 +2413,208 @@ msgstr "GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Tekniset sarakkeet"
+
+msgid "Record details"
+msgstr "Tietueen tiedot"
+
+msgid "File Structure"
+msgstr "Tiedoston rakenne"
+
+msgid "Signature verified"
+msgstr "Allekirjoitus vahvistettu"
+
+msgid "Signature not valid"
+msgstr "Allekirjoitus ei kelpaa"
+
+msgid "Signature not checked"
+msgstr "Allekirjoitusta ei tarkistettu"
+
+msgid "Not signed"
+msgstr "Ei allekirjoitettu"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Siirtymä {offset} · {length} tavua"
+
+msgid "Text"
+msgstr "Teksti"
+
+msgid "Content"
+msgstr "Sisältö"
+
+msgid "Records"
+msgstr "Tietueet"
+
+msgid "Unit"
+msgstr "Yksikkö"
+
+msgid "Signature"
+msgstr "Allekirjoitus"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} yksikköä · {length} tavua"
+
+msgid "Bytes"
+msgstr "Tavut"
+
+msgid "Events and faults"
+msgstr "Tapahtumat ja viat"
+
+msgid "Detailed speed"
+msgstr "Yksityiskohtainen nopeus"
+
+msgid "Technical data"
+msgstr "Tekniset tiedot"
+
+msgid "Card download"
+msgstr "Kortin lataus"
+
+msgid "Sensor data"
+msgstr "Anturin tiedot"
+
+msgid "Download interface version"
+msgstr "Latausrajapinnan versio"
+
+msgid "Padding"
+msgstr "Täyte"
+
+msgid "Unrecognised bytes"
+msgstr "Tunnistamattomat tavut"
+
+msgid "Tachograph application, generation 1"
+msgstr "Ajopiirturisovellus, sukupolvi 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Ajopiirturisovellus, sukupolvi 2"
+
+msgid "Record Arrays"
+msgstr "Tietuetaulukot"
+
+msgid "Elementary Files"
+msgstr "Perustiedostot"
+
+msgid "Record Array"
+msgstr "Tietuetaulukko"
+
+msgid "Elementary File"
+msgstr "Perustiedosto"
+
+msgid "File Identifier"
+msgstr "Tiedoston tunniste"
+
+msgid "Activity changes"
+msgstr "Toimintojen vaihdot"
+
+msgid "Card slots"
+msgstr "Korttipaikat"
+
+msgid "VU date and time"
+msgstr "Ajoneuvoyksikön päivämäärä ja aika"
+
+msgid "Member State certificate"
+msgstr "Jäsenvaltion varmenne"
+
+msgid "Odometer at midnight"
+msgstr "Matkamittarin lukema keskiyöllä"
+
+msgid "Day"
+msgstr "Päivä"
+
+msgid "Registration plate"
+msgstr "Rekisterikilpi"
+
+msgid "VU certificate"
+msgstr "Ajoneuvoyksikön varmenne"
+
+msgid "None"
+msgstr "Ei mitään"
+
+msgid "{count} records"
+msgstr "{count} tietuetta"
+
+msgid "{count} days"
+msgstr "{count} päivää"
+
+msgid "Record type"
+msgstr "Tietuetyyppi"
+
+msgid "End of sensor download"
+msgstr "Anturin latauksen loppu"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Ei tietueita: tämä taulukko on tyhjä ja sisältää vain otsikkonsa."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Ei tietoja: tämä osa merkitsee vain anturin latauksen loppua."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Epästandardi otsikko: ajoneuvoyksikön kortinlatausmerkki"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Ei standardin mukainen: tiedosto alkaa ajoneuvoyksikön kortinlatausmerkillä (76 06) kortin ensimmäisen tiedoston sijaan. Kortin tiedot ovat ehjät, mutta jotkin ohjelmat eivät ehkä avaa tätä tiedostoa."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Ei tietueita: kaikissa paikoissa on asetuksen määrittämä tyhjä arvo (mitään ei tallennettu)."
+
+msgid "Raw value"
+msgstr "Raaka-arvo"
+
+msgid "Result"
+msgstr "Tulos"
+
+msgid "What it means"
+msgstr "Mitä se tarkoittaa"
+
+msgid "Signed data"
+msgstr "Allekirjoitetut tiedot"
+
+msgid "Algorithm"
+msgstr "Algoritmi"
+
+msgid "Signed by"
+msgstr "Allekirjoittaja"
+
+msgid "Certificate chain"
+msgstr "Varmenneketju"
+
+msgid "Vehicle unit"
+msgstr "Ajoneuvoyksikkö"
+
+msgid "Driver card"
+msgstr "Kuljettajakortti"
+
+msgid "{length} bytes"
+msgstr "{length} tavua"
+
+msgid "Member State authority"
+msgstr "Jäsenvaltion viranomainen"
+
+msgid "European root (ERCA)"
+msgstr "Eurooppalainen juuri (ERCA)"
+
+msgid "not verified"
+msgstr "ei vahvistettu"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Allekirjoitettuja tietoja ei ole muutettu allekirjoittamisen jälkeen."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Allekirjoitettuja tietoja on muutettu allekirjoittamisen jälkeen tai allekirjoitus on vioittunut."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Asetus jättää tämän tiedoston kortin allekirjoitettujen tietojen ulkopuolelle, joten sen allekirjoitus ei kuulu eheystarkistukseen."
+
+msgid "No key was available to check this signature."
+msgstr "Tämän allekirjoituksen tarkistamiseen ei ollut avainta."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} tavua, {start}–{end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Osion alussa olevia varmenteita ei allekirjoiteta: ne todentavat avaimen."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Katso Suojaus ja varmenteet: EF-allekirjoitusten tarkistus ei tarkista varmenneketjua."

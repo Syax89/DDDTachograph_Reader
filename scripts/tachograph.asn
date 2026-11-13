@@ -257,12 +257,11 @@ CardIccIdentification ::= SEQUENCE {
     cardApprovalNumber          SimpleString{8},
     cardPersonaliserId          INTEGER (0..255),
     embedderIcAssemblerId       SEQUENCE {
-        countryCode    INTEGER (0..65535),
-        bcdCode        INTEGER (0..99),
-        manufacturer   INTEGER (0..255)
+        countryCode                IA5String (SIZE(2)),
+        moduleEmbedder             BCDString (SIZE(2)),
+        manufacturerInformation    OCTET STRING (SIZE(1))
     },
-    icIdentifier                INTEGER (0..65535),
-    historicalInfo              OCTET STRING OPTIONAL
+    icIdentifier                OCTET STRING (SIZE(2))
 }
 
 -- ── Certificates ──

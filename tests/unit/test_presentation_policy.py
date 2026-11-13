@@ -275,7 +275,7 @@ def test_g1_overview_shows_the_vu_clock_as_its_first_row():
     parse_g1_vu_overview(_overview_body(), results)
     _headers, rows = gui._kv_rows(results["vu_overview"])
     assert rows[0][0] == gui.ui_text.label("current_date_time")
-    assert rows[0][1].startswith("2024-04-05 19:34")
+    assert rows[0][1].startswith("05/04/2024 19:34")
 
 
 def test_download_interface_version_is_a_panel_row():

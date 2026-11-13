@@ -2413,3 +2413,208 @@ msgstr "GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Teknik sütunlar"
+
+msgid "Record details"
+msgstr "Kayıt ayrıntıları"
+
+msgid "File Structure"
+msgstr "Dosya yapısı"
+
+msgid "Signature verified"
+msgstr "İmza doğrulandı"
+
+msgid "Signature not valid"
+msgstr "İmza geçersiz"
+
+msgid "Signature not checked"
+msgstr "İmza denetlenmedi"
+
+msgid "Not signed"
+msgstr "İmzasız"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Konum {offset} · {length} bayt"
+
+msgid "Text"
+msgstr "Metin"
+
+msgid "Content"
+msgstr "İçerik"
+
+msgid "Records"
+msgstr "Kayıtlar"
+
+msgid "Unit"
+msgstr "Birim"
+
+msgid "Signature"
+msgstr "İmza"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} birim · {length} bayt"
+
+msgid "Bytes"
+msgstr "Baytlar"
+
+msgid "Events and faults"
+msgstr "Olaylar ve arızalar"
+
+msgid "Detailed speed"
+msgstr "Ayrıntılı hız"
+
+msgid "Technical data"
+msgstr "Teknik veriler"
+
+msgid "Card download"
+msgstr "Kart indirme"
+
+msgid "Sensor data"
+msgstr "Sensör verileri"
+
+msgid "Download interface version"
+msgstr "İndirme arayüzü sürümü"
+
+msgid "Padding"
+msgstr "Dolgu"
+
+msgid "Unrecognised bytes"
+msgstr "Tanınmayan baytlar"
+
+msgid "Tachograph application, generation 1"
+msgstr "Takograf uygulaması, 1. nesil"
+
+msgid "Tachograph application, generation 2"
+msgstr "Takograf uygulaması, 2. nesil"
+
+msgid "Record Arrays"
+msgstr "Kayıt dizileri"
+
+msgid "Elementary Files"
+msgstr "Temel dosyalar"
+
+msgid "Record Array"
+msgstr "Kayıt dizisi"
+
+msgid "Elementary File"
+msgstr "Temel dosya"
+
+msgid "File Identifier"
+msgstr "Dosya tanımlayıcısı"
+
+msgid "Activity changes"
+msgstr "Faaliyet değişiklikleri"
+
+msgid "Card slots"
+msgstr "Kart yuvaları"
+
+msgid "VU date and time"
+msgstr "Araç ünitesinin tarih ve saati"
+
+msgid "Member State certificate"
+msgstr "Üye devlet sertifikası"
+
+msgid "Odometer at midnight"
+msgstr "Gece yarısı kilometre"
+
+msgid "Day"
+msgstr "Gün"
+
+msgid "Registration plate"
+msgstr "Plaka"
+
+msgid "VU certificate"
+msgstr "Araç ünitesi sertifikası"
+
+msgid "None"
+msgstr "Yok"
+
+msgid "{count} records"
+msgstr "{count} kayıt"
+
+msgid "{count} days"
+msgstr "{count} gün"
+
+msgid "Record type"
+msgstr "Kayıt türü"
+
+msgid "End of sensor download"
+msgstr "Sensör indirmesinin sonu"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Kayıt yok: bu dizi boş ve yalnızca başlığını içeriyor."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Veri yok: bu bölüm yalnızca sensör indirmesinin sonunu işaretler."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Standart dışı başlık: araç ünitesinin kart indirme işareti"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Standart dışı: dosya, kartın ilk dosyası yerine araç ünitesinin kart indirme işaretiyle (76 06) başlıyor. Kart verileri sağlam, ancak bazı programlar bu dosyayı açmayabilir."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Kayıt yok: tüm yuvalar yönetmeliğin tanımladığı boş değeri içeriyor (hiçbir şey kaydedilmedi)."
+
+msgid "Raw value"
+msgstr "Ham değer"
+
+msgid "Result"
+msgstr "Sonuç"
+
+msgid "What it means"
+msgstr "Ne anlama geliyor"
+
+msgid "Signed data"
+msgstr "İmzalı veriler"
+
+msgid "Algorithm"
+msgstr "Algoritma"
+
+msgid "Signed by"
+msgstr "İmzalayan"
+
+msgid "Certificate chain"
+msgstr "Sertifika zinciri"
+
+msgid "Vehicle unit"
+msgstr "Araç ünitesi"
+
+msgid "Driver card"
+msgstr "Sürücü kartı"
+
+msgid "{length} bytes"
+msgstr "{length} bayt"
+
+msgid "Member State authority"
+msgstr "Üye devlet makamı"
+
+msgid "European root (ERCA)"
+msgstr "Avrupa kökü (ERCA)"
+
+msgid "not verified"
+msgstr "doğrulanmadı"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "İmzalı veriler imzalandıktan sonra değiştirilmedi."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "İmzalı veriler imzadan sonra değiştirildi veya imza bozuk."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Yönetmelik bu dosyayı kartın imzalı verilerinin dışında tutar, bu nedenle imzası bütünlük denetiminin parçası değildir."
+
+msgid "No key was available to check this signature."
+msgstr "Bu imzayı denetlemek için kullanılabilir anahtar yoktu."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bayt, {start} ile {end} arası"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Bölümün başındaki sertifikalar imzalı değildir: anahtarı doğrularlar."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Bkz. Güvenlik ve sertifikalar: EF imzalarının denetimi sertifika zincirini denetlemez."

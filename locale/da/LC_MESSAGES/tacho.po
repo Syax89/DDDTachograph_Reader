@@ -2413,3 +2413,208 @@ msgstr "GPX-dokument (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "KML-dokument (.kml)"
+
+msgid "Technical columns"
+msgstr "Tekniske kolonner"
+
+msgid "Record details"
+msgstr "Postdetaljer"
+
+msgid "File Structure"
+msgstr "Filstruktur"
+
+msgid "Signature verified"
+msgstr "Signatur verificeret"
+
+msgid "Signature not valid"
+msgstr "Ugyldig signatur"
+
+msgid "Signature not checked"
+msgstr "Signatur ikke kontrolleret"
+
+msgid "Not signed"
+msgstr "Ikke signeret"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Forskydning {offset} · {length} byte"
+
+msgid "Text"
+msgstr "Tekst"
+
+msgid "Content"
+msgstr "Indhold"
+
+msgid "Records"
+msgstr "Poster"
+
+msgid "Unit"
+msgstr "Enhed"
+
+msgid "Signature"
+msgstr "Signatur"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} enheder · {length} byte"
+
+msgid "Bytes"
+msgstr "Byte"
+
+msgid "Events and faults"
+msgstr "Hændelser og fejl"
+
+msgid "Detailed speed"
+msgstr "Detaljeret hastighed"
+
+msgid "Technical data"
+msgstr "Tekniske data"
+
+msgid "Card download"
+msgstr "Kortdownload"
+
+msgid "Sensor data"
+msgstr "Sensordata"
+
+msgid "Download interface version"
+msgstr "Version af downloadgrænsefladen"
+
+msgid "Padding"
+msgstr "Udfyldning"
+
+msgid "Unrecognised bytes"
+msgstr "Ukendte byte"
+
+msgid "Tachograph application, generation 1"
+msgstr "Fartskriverapplikation, generation 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Fartskriverapplikation, generation 2"
+
+msgid "Record Arrays"
+msgstr "Postarrays"
+
+msgid "Elementary Files"
+msgstr "Elementære filer"
+
+msgid "Record Array"
+msgstr "Postarray"
+
+msgid "Elementary File"
+msgstr "Elementær fil"
+
+msgid "File Identifier"
+msgstr "Fil-id"
+
+msgid "Activity changes"
+msgstr "Aktivitetsskift"
+
+msgid "Card slots"
+msgstr "Kortpladser"
+
+msgid "VU date and time"
+msgstr "Køretøjsenhedens dato og tid"
+
+msgid "Member State certificate"
+msgstr "Medlemsstatens certifikat"
+
+msgid "Odometer at midnight"
+msgstr "Kilometertal ved midnat"
+
+msgid "Day"
+msgstr "Dag"
+
+msgid "Registration plate"
+msgstr "Registreringsnummer"
+
+msgid "VU certificate"
+msgstr "Køretøjsenhedens certifikat"
+
+msgid "None"
+msgstr "Ingen"
+
+msgid "{count} records"
+msgstr "{count} poster"
+
+msgid "{count} days"
+msgstr "{count} dage"
+
+msgid "Record type"
+msgstr "Posttype"
+
+msgid "End of sensor download"
+msgstr "Slut på sensordownload"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Ingen poster: dette array er tomt og indeholder kun sit hoved."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Ingen data: denne del markerer kun slutningen på sensordownloadet."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Ikke-standard header: køretøjsenhedens kortdownloadmarkør"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Ikke standard: filen begynder med køretøjsenhedens kortdownloadmarkør (76 06) i stedet for kortets første fil. Kortdataene er intakte, men nogle programmer kan muligvis ikke åbne filen."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Ingen poster: alle pladser indeholder den tomme værdi, som forordningen fastsætter (intet blev registreret)."
+
+msgid "Raw value"
+msgstr "Råværdi"
+
+msgid "Result"
+msgstr "Resultat"
+
+msgid "What it means"
+msgstr "Hvad det betyder"
+
+msgid "Signed data"
+msgstr "Signerede data"
+
+msgid "Algorithm"
+msgstr "Algoritme"
+
+msgid "Signed by"
+msgstr "Signeret af"
+
+msgid "Certificate chain"
+msgstr "Certifikatkæde"
+
+msgid "Vehicle unit"
+msgstr "Køretøjsenhed"
+
+msgid "Driver card"
+msgstr "Førerkort"
+
+msgid "{length} bytes"
+msgstr "{length} byte"
+
+msgid "Member State authority"
+msgstr "Medlemsstatens myndighed"
+
+msgid "European root (ERCA)"
+msgstr "Europæisk rod (ERCA)"
+
+msgid "not verified"
+msgstr "ikke verificeret"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "De signerede data er ikke ændret, siden de blev signeret."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "De signerede data er ændret efter signeringen, eller signaturen er beskadiget."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Forordningen udelader denne fil fra kortets signerede data, så dens signatur indgår ikke i integritetskontrollen."
+
+msgid "No key was available to check this signature."
+msgstr "Der var ingen nøgle til rådighed til at kontrollere denne signatur."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} byte, fra {start} til {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Certifikaterne i begyndelsen af afsnittet er ikke signeret: de autentificerer nøglen."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Se Sikkerhed og certifikater: kontrollen af EF-signaturerne kontrollerer ikke certifikatkæden."

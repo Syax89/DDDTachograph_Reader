@@ -2413,3 +2413,208 @@ msgstr "Dokument GPX (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "Dokument KML (.kml)"
+
+msgid "Technical columns"
+msgstr "Tehnični stolpci"
+
+msgid "Record details"
+msgstr "Podrobnosti zapisa"
+
+msgid "File Structure"
+msgstr "Struktura datoteke"
+
+msgid "Signature verified"
+msgstr "Podpis preverjen"
+
+msgid "Signature not valid"
+msgstr "Podpis ni veljaven"
+
+msgid "Signature not checked"
+msgstr "Podpis ni preverjen"
+
+msgid "Not signed"
+msgstr "Ni podpisano"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Odmik {offset} · {length} bajtov"
+
+msgid "Text"
+msgstr "Besedilo"
+
+msgid "Content"
+msgstr "Vsebina"
+
+msgid "Records"
+msgstr "Zapisi"
+
+msgid "Unit"
+msgstr "Enota"
+
+msgid "Signature"
+msgstr "Podpis"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} enot · {length} bajtov"
+
+msgid "Bytes"
+msgstr "Bajti"
+
+msgid "Events and faults"
+msgstr "Dogodki in okvare"
+
+msgid "Detailed speed"
+msgstr "Podrobna hitrost"
+
+msgid "Technical data"
+msgstr "Tehnični podatki"
+
+msgid "Card download"
+msgstr "Prenos s kartice"
+
+msgid "Sensor data"
+msgstr "Podatki tipala"
+
+msgid "Download interface version"
+msgstr "Različica vmesnika za prenos"
+
+msgid "Padding"
+msgstr "Polnilo"
+
+msgid "Unrecognised bytes"
+msgstr "Neprepoznani bajti"
+
+msgid "Tachograph application, generation 1"
+msgstr "Aplikacija tahografa, generacija 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Aplikacija tahografa, generacija 2"
+
+msgid "Record Arrays"
+msgstr "Polja zapisov"
+
+msgid "Elementary Files"
+msgstr "Elementarne datoteke"
+
+msgid "Record Array"
+msgstr "Polje zapisov"
+
+msgid "Elementary File"
+msgstr "Elementarna datoteka"
+
+msgid "File Identifier"
+msgstr "Identifikator datoteke"
+
+msgid "Activity changes"
+msgstr "Spremembe dejavnosti"
+
+msgid "Card slots"
+msgstr "Reže za kartice"
+
+msgid "VU date and time"
+msgstr "Datum in čas VU"
+
+msgid "Member State certificate"
+msgstr "Potrdilo države članice"
+
+msgid "Odometer at midnight"
+msgstr "Stanje števca ob polnoči"
+
+msgid "Day"
+msgstr "Dan"
+
+msgid "Registration plate"
+msgstr "Registrska tablica"
+
+msgid "VU certificate"
+msgstr "Potrdilo VU"
+
+msgid "None"
+msgstr "Brez"
+
+msgid "{count} records"
+msgstr "{count} zapisov"
+
+msgid "{count} days"
+msgstr "{count} dni"
+
+msgid "Record type"
+msgstr "Vrsta zapisa"
+
+msgid "End of sensor download"
+msgstr "Konec prenosa tipala"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Ni zapisov: to polje je prazno in vsebuje samo glavo."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Ni podatkov: ta del le označuje konec prenosa tipala."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Nestandardna glava: oznaka prenosa kartice VU"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Nestandardno: datoteka se začne z oznako prenosa kartice enote vozila (76 06) namesto s prvo datoteko kartice. Podatki kartice so nedotaknjeni, vendar nekateri programi te datoteke morda ne bodo odprli."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Ni zapisov: vsa mesta vsebujejo prazno vrednost, ki jo določa uredba (nič ni bilo zabeleženo)."
+
+msgid "Raw value"
+msgstr "Surova vrednost"
+
+msgid "Result"
+msgstr "Rezultat"
+
+msgid "What it means"
+msgstr "Kaj to pomeni"
+
+msgid "Signed data"
+msgstr "Podpisani podatki"
+
+msgid "Algorithm"
+msgstr "Algoritem"
+
+msgid "Signed by"
+msgstr "Podpisal"
+
+msgid "Certificate chain"
+msgstr "Veriga potrdil"
+
+msgid "Vehicle unit"
+msgstr "Enota vozila"
+
+msgid "Driver card"
+msgstr "Voznikova kartica"
+
+msgid "{length} bytes"
+msgstr "{length} bajtov"
+
+msgid "Member State authority"
+msgstr "Organ države članice"
+
+msgid "European root (ERCA)"
+msgstr "Evropski koren (ERCA)"
+
+msgid "not verified"
+msgstr "ni preverjeno"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "Podpisani podatki se od podpisa niso spremenili."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "Podpisani podatki so bili po podpisu spremenjeni ali je podpis poškodovan."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "Uredba ta datoteko izključuje iz podpisanih podatkov kartice, zato njen podpis ni del preverjanja celovitosti."
+
+msgid "No key was available to check this signature."
+msgstr "Za preverjanje tega podpisa ni bilo na voljo nobenega ključa."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bajtov, od {start} do {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "Potrdila na začetku razdelka niso podpisana: overjajo ključ."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Glejte Varnost in potrdila: preverjanje podpisov EF ne preverja verige potrdil."

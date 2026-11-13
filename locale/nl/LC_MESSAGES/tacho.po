@@ -2413,3 +2413,208 @@ msgstr "GPX-document (.gpx)"
 
 msgid "KML (.kml)"
 msgstr "KML-document (.kml)"
+
+msgid "Technical columns"
+msgstr "Technische kolommen"
+
+msgid "Record details"
+msgstr "Recorddetails"
+
+msgid "File Structure"
+msgstr "Bestandsstructuur"
+
+msgid "Signature verified"
+msgstr "Handtekening geverifieerd"
+
+msgid "Signature not valid"
+msgstr "Handtekening ongeldig"
+
+msgid "Signature not checked"
+msgstr "Handtekening niet gecontroleerd"
+
+msgid "Not signed"
+msgstr "Niet ondertekend"
+
+msgid "Offset {offset} · {length} bytes"
+msgstr "Offset {offset} · {length} bytes"
+
+msgid "Text"
+msgstr "Tekst"
+
+msgid "Content"
+msgstr "Inhoud"
+
+msgid "Records"
+msgstr "Records"
+
+msgid "Unit"
+msgstr "Eenheid"
+
+msgid "Signature"
+msgstr "Handtekening"
+
+msgid "{count} units · {length} bytes"
+msgstr "{count} eenheden · {length} bytes"
+
+msgid "Bytes"
+msgstr "Bytes"
+
+msgid "Events and faults"
+msgstr "Gebeurtenissen en storingen"
+
+msgid "Detailed speed"
+msgstr "Gedetailleerde snelheid"
+
+msgid "Technical data"
+msgstr "Technische gegevens"
+
+msgid "Card download"
+msgstr "Kaartdownload"
+
+msgid "Sensor data"
+msgstr "Sensorgegevens"
+
+msgid "Download interface version"
+msgstr "Versie van de downloadinterface"
+
+msgid "Padding"
+msgstr "Opvulling"
+
+msgid "Unrecognised bytes"
+msgstr "Niet-herkende bytes"
+
+msgid "Tachograph application, generation 1"
+msgstr "Tachograaftoepassing, generatie 1"
+
+msgid "Tachograph application, generation 2"
+msgstr "Tachograaftoepassing, generatie 2"
+
+msgid "Record Arrays"
+msgstr "Record-arrays"
+
+msgid "Elementary Files"
+msgstr "Elementaire bestanden"
+
+msgid "Record Array"
+msgstr "Record-array"
+
+msgid "Elementary File"
+msgstr "Elementair bestand"
+
+msgid "File Identifier"
+msgstr "Bestandsidentificatie"
+
+msgid "Activity changes"
+msgstr "Activiteitswijzigingen"
+
+msgid "Card slots"
+msgstr "Kaartsleuven"
+
+msgid "VU date and time"
+msgstr "Datum en tijd van de VU"
+
+msgid "Member State certificate"
+msgstr "Certificaat van de lidstaat"
+
+msgid "Odometer at midnight"
+msgstr "Kilometerstand om middernacht"
+
+msgid "Day"
+msgstr "Dag"
+
+msgid "Registration plate"
+msgstr "Kenteken"
+
+msgid "VU certificate"
+msgstr "VU-certificaat"
+
+msgid "None"
+msgstr "Geen"
+
+msgid "{count} records"
+msgstr "{count} records"
+
+msgid "{count} days"
+msgstr "{count} dagen"
+
+msgid "Record type"
+msgstr "Recordtype"
+
+msgid "End of sensor download"
+msgstr "Einde van de sensordownload"
+
+msgid "No records: this array is empty and holds only its header."
+msgstr "Geen records: deze array is leeg en bevat alleen de kop."
+
+
+msgid "No data: this part only marks the end of the sensor download."
+msgstr "Geen gegevens: dit deel markeert alleen het einde van de sensordownload."
+
+msgid "Non-standard header: vehicle unit card download marker"
+msgstr "Niet-standaard kop: kaartdownloadmarkering van de VU"
+
+msgid "Not standard: the file starts with the vehicle unit's card download marker (76 06) instead of the card's first file. The card data are intact, but some programs may not open this file."
+msgstr "Niet standaard: het bestand begint met de kaartdownloadmarkering van de voertuigunit (76 06) in plaats van het eerste bestand van de kaart. De kaartgegevens zijn intact, maar sommige programma's openen dit bestand mogelijk niet."
+
+msgid "No records: every slot holds the empty value the regulation defines (nothing was recorded)."
+msgstr "Geen records: alle plaatsen bevatten de lege waarde die de verordening voorschrijft (er is niets geregistreerd)."
+
+msgid "Raw value"
+msgstr "Ruwe waarde"
+
+msgid "Result"
+msgstr "Resultaat"
+
+msgid "What it means"
+msgstr "Wat het betekent"
+
+msgid "Signed data"
+msgstr "Ondertekende gegevens"
+
+msgid "Algorithm"
+msgstr "Algoritme"
+
+msgid "Signed by"
+msgstr "Ondertekend door"
+
+msgid "Certificate chain"
+msgstr "Certificaatketen"
+
+msgid "Vehicle unit"
+msgstr "Voertuigunit"
+
+msgid "Driver card"
+msgstr "Bestuurderskaart"
+
+msgid "{length} bytes"
+msgstr "{length} bytes"
+
+msgid "Member State authority"
+msgstr "Autoriteit van de lidstaat"
+
+msgid "European root (ERCA)"
+msgstr "Europese root (ERCA)"
+
+msgid "not verified"
+msgstr "niet geverifieerd"
+
+msgid "The signed data have not been changed since they were signed."
+msgstr "De ondertekende gegevens zijn sinds de ondertekening niet gewijzigd."
+
+msgid "The signed data were changed after signing, or the signature is damaged."
+msgstr "De ondertekende gegevens zijn na de ondertekening gewijzigd, of de handtekening is beschadigd."
+
+msgid "The regulation leaves this file out of the signed card data, so its signature is not part of the integrity check."
+msgstr "De verordening sluit dit bestand uit van de ondertekende kaartgegevens, dus de handtekening ervan valt buiten de integriteitscontrole."
+
+msgid "No key was available to check this signature."
+msgstr "Er was geen sleutel beschikbaar om deze handtekening te controleren."
+
+msgid "{part}: {length} bytes, from {start} to {end}"
+msgstr "{part}: {length} bytes, van {start} tot {end}"
+
+msgid "The certificates at the start of the section are not signed: they authenticate the key."
+msgstr "De certificaten aan het begin van de sectie zijn niet ondertekend: ze authenticeren de sleutel."
+
+msgid "See Security & Certificates: checking the EF signatures does not check the certificate chain."
+msgstr "Zie Beveiliging en certificaten: de controle van de EF-handtekeningen controleert de certificaatketen niet."

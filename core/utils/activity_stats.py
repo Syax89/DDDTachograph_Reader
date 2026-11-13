@@ -7,7 +7,12 @@ use exactly the same slot-aware semantics as the GUI timeline.
 Semantics:
 - Changes are grouped per card slot (``First``/``Second``) first, so crew
   days (two drivers recording simultaneously) keep their timelines
-  independent.
+  independent. That holds for a vehicle unit only: a driver card records one
+  holder, and its slot bit says which slot the card sat in, so a card day is
+  one timeline (``one_driver=True``). Splitting it made a day on which the
+  card moved from slot 1 to slot 2 count the hours before the move twice
+  (once as activity in slot 1, once as an UNKNOWN lead-in of slot 2): 33 h 40
+  in one day.
 - Drive/Work durations are summed across slots (each driver accumulates
   independently).
 - Rest/Available/Unknown durations are kept at the **maximum** across slots
@@ -122,7 +127,26 @@ def parse_time(time_str):
     return hours * 3600 + minutes * 60
 
 
-def _activity_segments(changes, recorded_until=None):
+def is_card_result(data) -> bool:
+    """True when a parse result is a driver-card download (one holder).
+
+    A malformed or absent ``metadata`` reads as a card, the parser's default.
+    """
+    meta = data.get("metadata") if isinstance(data, dict) else None
+    return not (meta.get("is_vu") if isinstance(meta, dict) else False)
+
+
+def one_timeline(changes):
+    """A driver card's changes as one holder's timeline (the slot dropped).
+
+    Of two changes at the same minute the later one in the list owns it: the
+    segmentation sorts stably.
+    """
+    return [dict(ch, slot="First") if isinstance(ch, dict) else ch
+            for ch in changes or []]
+
+
+def _activity_segments(changes, recorded_until=None, one_driver=False):
     """Return ``{slot: [(start_second, end_second, kind), ...]}`` for one day.
 
     The one place where a day's changes become a timeline. Changes are grouped
@@ -133,6 +157,8 @@ def _activity_segments(changes, recorded_until=None):
     lost, and :func:`compute_activity_totals` and
     :func:`evaluate_driving_rules` always agree about which minutes were DRIVE.
     """
+    if one_driver:
+        changes = one_timeline(changes)
     per_slot: dict[str, list[tuple[int, str]]] = {}
     for ch in changes:
         if not isinstance(ch, dict):
@@ -212,7 +238,7 @@ def recorded_until_seconds(day):
     return parse_time(value) if value else None
 
 
-def day_segments(changes, recorded_until=None):
+def day_segments(changes, recorded_until=None, one_driver=False):
     """Public name of the shared day segmentation (see :func:`_activity_segments`).
 
     Consumers that draw a day rather than total it — the GUI activity timeline
@@ -220,7 +246,7 @@ def day_segments(changes, recorded_until=None):
     dashboard can never disagree about which minutes were DRIVE, REST or an
     unrecorded (UNKNOWN) period.
     """
-    return _activity_segments(changes, recorded_until)
+    return _activity_segments(changes, recorded_until, one_driver)
 
 
 def _slots_with_a_card(changes):
@@ -238,7 +264,7 @@ def _slots_with_a_card(changes):
     return carded
 
 
-def compute_activity_totals(changes, recorded_until=None):
+def compute_activity_totals(changes, recorded_until=None, one_driver=False):
     """Return dict {ACTIVITY: total_minutes} from a list of activity changes.
 
     Keys: DRIVE, WORK, REST, AVAILABLE, UNKNOWN. Any activity label outside the
@@ -250,6 +276,8 @@ def compute_activity_totals(changes, recorded_until=None):
     max, like REST/AVAILABLE).
     """
     totals = {a: 0 for a in ACTIVITY_KINDS + (UNKNOWN_ACTIVITY,)}
+    if one_driver:
+        changes = one_timeline(changes)
     carded = _slots_with_a_card(changes)
     for slot, segments in _activity_segments(changes, recorded_until).items():
         if carded and slot not in carded:
@@ -272,7 +300,8 @@ def compute_activity_totals(changes, recorded_until=None):
     return totals
 
 
-def evaluate_driving_rules(changes, recorded_until=None) -> DrivingRuleReport:
+def evaluate_driving_rules(changes, recorded_until=None,
+                           one_driver=False) -> DrivingRuleReport:
     """Return the driving-time rules broken by one day of changes.
 
     Only two rules are judged — Regulation (EC) No 561/2006 art. 6(1) (daily
@@ -323,7 +352,7 @@ def evaluate_driving_rules(changes, recorded_until=None) -> DrivingRuleReport:
         without a qualifying break, and the list of breaches (each with the
         measured value, the limit it broke and the slot it belongs to).
     """
-    segments = _activity_segments(changes, recorded_until)
+    segments = _activity_segments(changes, recorded_until, one_driver)
     drive_min = 0
     longest_stretch = 0
     breaches: list[DrivingRuleBreach] = []

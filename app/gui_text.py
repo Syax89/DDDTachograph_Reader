@@ -69,8 +69,51 @@ def _bool_text(value):
     return "Yes" if value else "No"
 
 
+def technical_columns(keys):
+    """The columns of a record that repeat, in machine form, what another one says.
+
+    They stay in the record (the JSON and the exports keep everything) and in
+    the table behind its *Technical columns* switch, but a reader does not need
+    them to read the row:
+
+    * ``*_raw`` / ``*_hex`` — the undecoded value next to its decoded form
+      (``odometer_raw`` next to ``odometer_km``, ``timestamp_raw`` next to
+      ``timestamp``, ``sensor_serial_hex`` next to ``sensor_serial``);
+    * ``X`` when ``X_label`` or ``X_description`` is there (the numeric
+      ``calibration_purpose`` next to ``calibration_purpose_label``);
+    * ``*_code`` when the record already says it in words: its stem
+      (``manufacturer_code`` → ``manufacturer``), a label, or a description
+      (``event_type_code`` → ``description``, ``type_code`` →
+      ``entry_type_description``).
+
+    A code with no words beside it is the only form of that fact, so it stays.
+    """
+    keys = [str(k) for k in keys]
+    present = set(keys)
+    worded = ("description" in present
+              or any(k.endswith(("_description", "_label")) for k in present))
+    technical = []
+    for key in keys:
+        if key.endswith(("_raw", "_hex")):
+            technical.append(key)
+        elif f"{key}_label" in present or f"{key}_description" in present:
+            technical.append(key)
+        elif key in ("fault_type", "event_type") and worded:
+            # The numeric type of a record whose description spells it out.
+            technical.append(key)
+        elif key.endswith("_code"):
+            stem = key[:-len("_code")]
+            if stem in present or worded:
+                technical.append(key)
+    return technical
+
+
 def _columns_for(records, transformer):
-    """Derive column order from the union of record keys."""
+    """Derive column order from the union of record keys.
+
+    Technical columns (:func:`technical_columns`) come last, so a table that
+    hides them keeps every other column where it was.
+    """
     if transformer:
         sample = transformer(records[0])
         if isinstance(sample, list):
@@ -78,13 +121,28 @@ def _columns_for(records, transformer):
         return list(sample.keys())
     # Reversed leading keys preserve this view's historical front-insertion
     # order while the shared helper performs visibility filtering.
-    return visible_columns(
+    cols = visible_columns(
         records,
         hidden_keys=HIDDEN_KEYS,
         leading_keys=tuple(reversed(LEADING_KEYS)),
         trailing_keys=TRAILING_KEYS,
         value_column_for_non_dict=True,
     )
+    technical = set(technical_columns(cols))
+    return [c for c in cols if c not in technical] + [c for c in cols if c in technical]
+
+
+class Columns(list):
+    """Table headers that also name which of them are technical.
+
+    A plain list everywhere a list is expected (payloads, tests, the CSV-like
+    copy); :class:`app.gui_base.DataTable` reads ``technical`` to decide what
+    its *Technical columns* switch shows and hides.
+    """
+
+    def __init__(self, headers, technical=()):
+        super().__init__(headers)
+        self.technical = frozenset(technical)
 
 
 def _summary_block(rows):
